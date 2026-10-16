@@ -48,7 +48,7 @@ static void inspect_owner(void){
  if(fwp_gc.ncollect<=before)exit(3);if(released)exit(1);
 }
 static __attribute__((noinline)) V protocol(void){
- V conn=fwp_sock_new(-1,1);SOCK(conn)->tls=watched_ssl;copy_active=1;
+ V conn=fwp_sock_new(-1,1);STREAM(conn)->tls=watched_ssl;copy_active=1;
  return fwp_p_tls_alpn(conn);
 }
 static int probe(int argc,char **argv){
@@ -163,9 +163,12 @@ int main(int argc,char **argv){int status=probe(argc,argv);if(status)_Exit(statu
             );
         }
     }
-    let needle="    /* Protocol bytes live in SSL storage, outside the collector's heap. */\n    FWP_KEEP_ALIVE(c);";
+    // A conservative trace may retain a stale register on some architectures,
+    // so removing a compiler fence does not reliably release the session.
+    // Deliberately release its actual owner before copying borrowed bytes.
+    let needle = "    V result = fwp_str_new(p ? (const char *)p : \"\", p ? n : 0);";
     assert!(generated.contains(needle));
-    let broken = generated.replacen(needle, "    /* omit borrowed protocol owner fence */", 1);
+    let broken = generated.replacen(needle, &format!("    fwp_sock_drop(c);\n{needle}"), 1);
     fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, "-O1").unwrap();
     let out = Command::new(&exe)
         .args([dir.join("cert.pem"), dir.join("key.pem")])

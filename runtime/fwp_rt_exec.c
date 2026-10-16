@@ -11,26 +11,6 @@ static void fwp_cli_text_drop(V value) {
 #endif
 }
 
-/* Private spines reverse in place. Allocate their cells as mutable so minor
- * collections rescan older cells after reversal introduces younger links. */
-static V fwp_private_cons_owned(V field, V tail) {
-    fwp_obj *cell = (fwp_obj *)fwp_alloc(sizeof(fwp_obj) + 2 * sizeof(V));
-    cell->tag = 1; cell->n = 2;
-    cell->f[0] = field; cell->f[1] = tail;
-    FWP_KEEP_ALIVE(field);
-    FWP_KEEP_ALIVE(tail);
-    return fwp_rc_fresh(PTR(cell));
-}
-static V fwp_private_reverse_owned(V xs) {
-    V result = 0;
-    while (xs) {
-        V next = OBJ(xs)->f[1];
-        OBJ(xs)->f[1] = result;
-        result = xs;
-        xs = next;
-    }
-    return result;
-}
 /* ------------------------------------------------------------- text parse */
 
 typedef struct { const char *s; size_t n, i; } fwp_tp;

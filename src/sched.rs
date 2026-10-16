@@ -401,9 +401,24 @@ static SHUTDOWN: AtomicBool = AtomicBool::new(false);
 #[cfg(not(target_family = "wasm"))]
 static SIGNALS: std::sync::Once = std::sync::Once::new();
 
-#[cfg(not(target_family = "wasm"))]
+#[cfg(all(not(target_family = "wasm"), not(windows)))]
 extern "C" fn on_signal(_: i32) {
     SHUTDOWN.store(true, AO::SeqCst);
+}
+
+#[cfg(windows)]
+extern "system" fn on_console_signal(signal: u32) -> i32 {
+    if !matches!(signal, 0..=2) {
+        return 0;
+    }
+    SHUTDOWN.store(true, AO::SeqCst);
+    1
+}
+
+#[cfg(windows)]
+#[link(name = "kernel32")]
+extern "system" {
+    fn SetConsoleCtrlHandler(handler: extern "system" fn(u32) -> i32, add: i32) -> i32;
 }
 
 #[cfg(not(windows))]
@@ -435,7 +450,7 @@ type NFds = std::ffi::c_uint;
 extern "C" {
     #[cfg(not(windows))]
     fn poll(fds: *mut PollFd, n: NFds, timeout: i32) -> i32;
-    #[cfg(not(target_family = "wasm"))]
+    #[cfg(all(not(target_family = "wasm"), not(windows)))]
     fn signal(sig: i32, handler: extern "C" fn(i32)) -> usize;
 }
 
@@ -531,6 +546,9 @@ fn earliest(a: Option<Instant>, b: Option<Instant>) -> Option<Instant> {
 /// is not a decimal number up to 65535 (Rust alone would accept `+80`,
 /// and look up an empty host).
 fn check_addr(addr: &str) -> Result<(), String> {
+    if addr.as_bytes().contains(&0) {
+        return Err("socket address contains a NUL byte".into());
+    }
     let ok = match addr.rsplit_once(':') {
         Some((host, port)) => {
             !host.is_empty()
@@ -1384,6 +1402,9 @@ impl<'p> Interp<'p> {
                 "dns.resolve" => {
                     let host = a[0].as_str().to_string();
                     self.check_cancel()?;
+                    if host.contains('\0') {
+                        return Err(self.io_err("resolve", "hostname contains a NUL byte"));
+                    }
                     let r = self.world.blocking(|| {
                         (host.as_str(), 0)
                             .to_socket_addrs()
@@ -1405,8 +1426,18 @@ impl<'p> Interp<'p> {
                     // WebAssembly has no signals: only a requested shutdown
                     #[cfg(not(target_family = "wasm"))]
                     SIGNALS.call_once(|| unsafe {
-                        signal(2, on_signal);
-                        signal(15, on_signal);
+                        #[cfg(not(windows))]
+                        {
+                            signal(2, on_signal);
+                            signal(15, on_signal);
+                        }
+                        #[cfg(windows)]
+                        if SetConsoleCtrlHandler(on_console_signal, 1) == 0 {
+                            panic!(
+                                "cannot install shutdown handler: {}",
+                                std::io::Error::last_os_error()
+                            );
+                        }
                     });
                     Value::bool(SHUTDOWN.load(AO::SeqCst))
                 }

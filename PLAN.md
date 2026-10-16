@@ -73,26 +73,27 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) is accepted. It adds
-checked ARC for synchronous WASI programs, streams structural hashes without an
-encoding buffer, and combines eligible hashing pipelines into loops. All nine
-production jobs and documentation passed; the squash tree and one-line message
-were verified. [Delivery history](docs/roadmap-history.md) retains the gates,
-measurements and repaired macOS test scheduling.
+[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) is accepted. It reduces
+temporary memory in hashing and numerical calculations while preserving results,
+floating-point operation order and errors. All nine production jobs and the
+documentation check passed, and the merged files match the tested commit.
+[Delivery history](docs/roadmap-history.md) retains the checks and measurements.
 
-[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) is the only open delivery.
-It borrows temporary hash fields, constructs integer range arrays directly, owns
-vector wrappers/boxed lanes/reduction accumulators and removes eligible F64
-list/vector intermediates. Sole-use splats stay scalar while preserving ordered
-multiplication/addition, aliases, effects and traps. All six focused native jobs,
-both WASI jobs and four-host cost/paired checks pass. Require fresh full production
-and documentation checks for the final combined PR head before squash merge.
+The current delivery, [PR #153](https://github.com/e6qu/fun-with-pipes/pull/153),
+reduces temporary numerical storage and gives decoded values and network
+resources explicit cleanup. UDP/TCP/TLS handles close when their last owner is
+released, including function and task captures. The combined preparation also
+owns copied service headers and bodies, removes temporary header-copy buffers,
+and checks raw protocol allocation failures and size overflow. It fixes Windows
+socket error wording to agree with the interpreter.
 
-The following preparation owns ternary, URL/form/HTTP and compressed-byte/frame
-decoder results and partial constructions. It also repairs the Windows web-test
-prerequisites and shutdown handling exposed by the broader checks. Its actual
-results and unresolved Windows validation are in the handoff. Keep it separate
-until #152 merges; historical preparation branches are evidence, not extra tasks.
+The numerical/socket batch and copied service results have focused checks on
+all six native hosts, and both actual WASI regressions pass. Tests deliberately
+fail allocations and omit cleanup to verify that they detect lost storage.
+The [service report](docs/measurements/service-values-2026-10-16.json) retains
+binary formats, symbols, allocation counts and the tested source revision.
+Full production acceptance must still pass on the final combined head. Keep one
+delivery PR open; the handoff identifies the current checks and next action.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

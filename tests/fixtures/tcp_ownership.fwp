@@ -1,0 +1,54 @@
+# The helper returns an address, so its listener must close before the next bind.
+address : () -> String ! {Network, Error[IoError]}
+address = const "127.0.0.1:0" | tcp.listen | tcp.local-addr
+Holder = { address: String, read: () -> String ! {Network} }
+holder : Listener -> Holder ! {Network}
+holder = make Holder {
+    address = tcp.local-addr,
+    read = const | flip compose tcp.local-addr,
+}
+inside : Holder -> Bool ! {Network}
+inside =
+    tap (.read | apply () | ignore)
+    | .address
+    | attempt tcp.listen
+    | result.is-ok
+after : Holder -> String ! {Network}
+after = tap (.read | apply () | ignore) | .address
+pair : Listener -> (Conn, Conn) ! {Async, Network, Error[IoError]}
+pair = both (tcp.local-addr | tcp.connect) tcp.accept
+exchange : (Conn, Conn) -> String ! {Async, Network, Error[IoError]}
+exchange =
+    tap (.0 | tcp.write ("ping" | string.to-bytes))
+    | .1
+    | tcp.read 4
+    | string.from-bytes
+    | option.unwrap-or "?"
+waiting : Listener -> () -> () ! {Async, Network}
+waiting = curry (.0 | attempt tcp.accept | ignore)
+close-pending : Listener -> (Option[()], Option[()]) ! {Async, IO, Network, FileIO}
+close-pending =
+    make {
+        socket = id,
+        first = compose waiting task.spawn,
+        second = compose waiting task.spawn,
+    }
+    | tap (const () | task.yield)
+    | tap (.socket | tcp.stop)
+    | both (.first | task.await) (.second | task.await)
+main = [
+    () | address | tcp.listen | tcp.stop | const "rebound" | echo,
+    "127.0.0.1:0" | tcp.listen | holder | inside | echo,
+    "127.0.0.1:0"
+    | tcp.listen
+    | holder
+    | after
+    | tcp.listen
+    | tcp.stop
+    | const "holder released"
+    | echo,
+    "127.0.0.1:0" | tcp.listen | pair | exchange | echo,
+    "127.0.0.1:0" | tcp.listen | tcp.accept-for 1ms | option.is-some | echo,
+    "127.0.0.1:0" | tcp.listen | close-pending | echo,
+    range 0 64 | each (const "127.0.0.1:0" | tcp.listen | ignore),
+] | ignore

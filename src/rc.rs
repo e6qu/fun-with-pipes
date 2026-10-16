@@ -55,6 +55,9 @@ pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
                         | "std::Task"
                         | "std::Channel"
                         | "std::File"
+                        | "std::UdpSocket"
+                        | "std::Conn"
+                        | "std::Listener"
                 ) =>
         {
             true

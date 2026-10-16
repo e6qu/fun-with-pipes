@@ -23,7 +23,7 @@ if (!(Test-Path (Join-Path $prefix 'tools/openssl/openssl.exe')) -or
     & "$checkout/bootstrap-vcpkg.bat" -disableMetrics
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     $env:VCPKG_MAX_CONCURRENCY = '2'
-    & "$checkout/vcpkg.exe" install "openssl[tools]:$triplet" "curl[core,openssl,tool]:$triplet" "--host-triplet=$triplet" "--x-install-root=$install" --clean-after-build
+    & "$checkout/vcpkg.exe" install "openssl[tools]:$triplet" "curl[core,openssl,http2,tool]:$triplet" "--host-triplet=$triplet" "--x-install-root=$install" --clean-after-build
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 Add-Content $env:GITHUB_ENV 'FWP_WINDOWS_DEPS_READY=1'
@@ -37,7 +37,7 @@ Add-Content $env:GITHUB_PATH "$prefix/tools/openssl"
 $curl = Join-Path $prefix 'tools/curl/curl.exe'
 if (!(Test-Path $curl)) { throw "Native OpenSSL curl not found: $curl" }
 $curlVersion = & $curl --version
-if ($LASTEXITCODE -ne 0 -or ($curlVersion -join "`n") -notmatch 'OpenSSL/') {
+if ($LASTEXITCODE -ne 0 -or ($curlVersion -join "`n") -notmatch 'OpenSSL/' -or ($curlVersion -join "`n") -notmatch 'HTTP2') {
     throw "TLS peer tests require the OpenSSL curl client: $curlVersion"
 }
 Write-Output $curlVersion

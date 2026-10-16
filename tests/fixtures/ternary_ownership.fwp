@@ -1,0 +1,27 @@
+# A trit is -1, 0 or +1. Five trits fit in one packed byte. TInt[N]
+# contains N trits, written most significant first when converted to a list.
+small : I64 -> Option[TInt[2]]
+small = tint.of-int
+wide : I64 -> Option[TInt[40]]
+wide = tint.of-int
+from-small : List[Trit] -> Option[TInt[2]]
+from-small = tint.from-trits
+from-wide : List[Trit] -> Option[TInt[40]]
+from-wide = tint.from-trits
+main = [
+    [-1, 0, 1] | map (trit.from-sign | trit.to-int) | echo,
+    [-5, -4, -1, 0, 1, 4, 5] | map small | echo,
+    [-6078832729528464401, -6078832729528464400, 6078832729528464400, 6078832729528464401]
+        | map (wide | option.map (both tint.to-int (tint.trits | map trit.to-int))) | echo,
+    [] | from-small | echo,
+    [trit.zero, trit.zero, trit.zero] | from-small | echo,
+    0t+-0-+ | tint.trits | both (map trit.to-int) (trits.pack | bytes.to-list) | echo,
+    [trit.pos, trit.neg, trit.zero, trit.pos, trit.neg, trit.pos]
+        | trits.pack | both bytes.to-list (trits.unpack 6 | map trit.to-int) | echo,
+    [] | trits.pack | both bytes.length (trits.unpack 9223372036854775807 | length) | echo,
+    [0u8, 1u8, 242u8, 243u8, 255u8] | bytes.from-list
+        | both bytes.to-list (trits.unpack 9223372036854775807 | map trit.to-int) | echo,
+    [trit.pos] | trits.pack | trits.unpack -1 | length | echo,
+    range -32 32 | map (wide | option.map (tint.trits | from-wide | option.map tint.to-int)) | hash | echo,
+    range 0 64 | map (const 0t+-0-+0+-0-+ | packed.from-tint | both .bytes packed.to-tint) | hash | echo,
+] | ignore

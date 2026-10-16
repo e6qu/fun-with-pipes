@@ -620,6 +620,11 @@ The `--gc arc` mode checks eligibility and reclaims supported immutable
 values and scoped File/State owners by reference counts. It supports native
 main, CLI and typed executable protocol entries, and C libraries whose inputs
 are copied and whose results contain no managed pointers. For example,
+`fwp build` takes one input file. Unknown options, unsupported optimization
+levels and options missing a required value fail before producing an artifact.
+For a shared C library, use `--cdylib`; the compiler does not guess another mode
+from a misspelled option.
+
 `fwp build --gc arc --staticlib stats.fwp -o libstats.a` can export a
 `String -> I64` function: it copies the input for the call and returns the count
 by value. A `String -> String` export is rejected because the existing C ABI

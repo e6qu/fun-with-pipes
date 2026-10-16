@@ -1,0 +1,67 @@
+# A helper releases its socket when it returns only the address. The next bind
+# can reuse that address. A holder keeps its socket alive through a closure.
+Holder = { address: String, read: () -> String ! {Network} }
+address : () -> String ! {Network, Error[IoError]}
+address = const "127.0.0.1:0" | udp.bind | udp.local-addr
+holder : UdpSocket -> Holder ! {Network}
+holder = make Holder {
+    address = udp.local-addr,
+    read = const | flip compose udp.local-addr,
+}
+inside : Holder -> Bool ! {Network}
+inside =
+    tap (.read | apply () | ignore) | .address | attempt udp.bind | result.is-ok
+after : Holder -> String ! {Network}
+after = tap (.read | apply () | ignore) | .address
+udp-echo : UdpSocket -> String ! {Async, Network, Error[IoError]}
+udp-echo =
+    tap (fork (flip udp.send-to ("ping" | string.to-bytes)) udp.local-addr id)
+    | udp.recv-from 100
+    | .0
+    | string.from-bytes
+    | option.unwrap-or "?"
+delayed : UdpSocket -> () -> String ! {Async, IO, Network, FileIO}
+delayed = curry (.0 | tap (const 1s | task.sleep) | udp.local-addr)
+waiting : UdpSocket -> () -> () ! {Async, IO, Network, FileIO}
+waiting = curry (.0 | attempt (udp.recv-from 64) | ignore)
+close-pending : UdpSocket -> (Option[()], Option[()]) ! {Async, IO, Network, FileIO}
+close-pending =
+    make {
+        socket = id,
+        first = compose waiting task.spawn,
+        second = compose waiting task.spawn,
+    }
+    | tap (const () | task.yield)
+    | tap (.socket | udp.close)
+    | both (.first | task.await) (.second | task.await)
+main = [
+    () | address | udp.bind | udp.close | const "rebound" | echo,
+    "127.0.0.1:0" | udp.bind | holder | inside | echo,
+    "127.0.0.1:0"
+    | udp.bind
+    | holder
+    | after
+    | udp.bind
+    | udp.close
+    | const "holder released"
+    | echo,
+    "127.0.0.1:0" | udp.bind | tap udp.close | udp.local-addr | echo,
+    "127.0.0.1:0" | udp.bind | udp-echo | echo,
+    task.spawn (delayed (udp.bind "127.0.0.1:0"))
+    | tap task.cancel
+    | task.await
+    | echo,
+    task.spawn (waiting (udp.bind "127.0.0.1:0"))
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
+    | echo,
+    "127.0.0.1:0" | udp.bind | close-pending | echo,
+    "127.0.0.1:0\0ignored" | attempt udp.bind | result.is-ok | echo,
+    "127.0.0.1:0"
+    | udp.bind
+    | attempt (udp.send-to "127.0.0.1:9\0ignored" ("x" | string.to-bytes))
+    | result.is-ok
+    | echo,
+    range 0 64 | each (const "127.0.0.1:0" | udp.bind | ignore),
+] | ignore

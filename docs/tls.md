@@ -69,6 +69,13 @@ execution; acceptance remains recorded in the handoff.
 
 Connections use TLS 1.2 or 1.3, with OpenSSL's default ciphers.
 
+A socket reset is an IO error, not a successful empty read. On Windows, the
+native runtime reads Winsock's error value, matching the interpreter; that value
+is separate from the C library's `errno`. A completed TLS shutdown still returns
+end-of-stream. The focused tests check these cases independently of network
+packet timing, alongside real mutual-TLS connections.
+
+
 ## Connections
 
 `lib/tls.fwp` ([stdlib.md](stdlib.md#tls)). A TLS connection is a `Conn`,
@@ -77,6 +84,14 @@ like a TCP connection: `tcp.read`, `tcp.write`, `tcp.read-for`,
 TLS, so code written for TCP connections works over TLS unchanged (the HTTP
 server and client of `lib/http.fwp` are such code). `tls.read`,
 `tls.write`, ... are the same functions under the TLS names.
+
+A connection owns both a socket and its TLS session. Copies share that same
+connection. `tcp.close` closes it for every copy; automatic cleanup closes it
+when its final owner finishes. A function or task that captures the connection
+keeps it alive. Closing a listener does not close connections it has already
+accepted: those connections retain the TLS configuration they still need.
+[Ownership](ownership.md#tcp-and-tls-socket-preparation) distinguishes the current
+TCP/TLS preparation and its tests from accepted checked-ARC support.
 
 | Function | |
 |---|---|

@@ -1,0 +1,855 @@
+{
+  "sourceHead": "ffe6fc7d8c475ecabf72f9db7bcd9b2d0ebd984b",
+  "nativeRun": 38910056368,
+  "wasiRegressionHead": "7c3889acda856e8c569c9a5effedc5146770c5b7",
+  "wasiRegressionRun": 38908635005,
+  "status": "All six native jobs and both actual WASI regression jobs pass",
+  "workload": "UDP socket lifetimes through original function scopes, aliases, closure/record holders, cancelled tasks and two simultaneous receivers; 4096 real bind/drop cycles, 301 aliases, constructor failure, every one of three managed receive allocations, and real shared-library calls/unload while a host socket stays open. TCP/UDP addresses containing NUL are rejected before prefix use. Invalid compiler options produce no artifact.",
+  "validation": "Raw and optimized interpreter outputs match O1/O2 native tracing stress/reuse and checked ARC. Physical-free-disabled tracing preserves logical socket cleanup. ARC binaries and libraries exclude tracing symbols. Native cleanup controls deliberately omit descriptor, partial-field, wait-list and library-finalizer cleanup; each must fail. Header size equals the previous socket representation, with aligned UDP counters sharing the TLS payload slot under the socket-kind tag. A missing-tag destructor control fails. Library calls repeat 32 times per load across three load/unload cycles; tracing uses both reuse-poison settings, ARC physically frees and explicitly rejects reuse-poison mode.",
+  "limits": "No throughput, latency, allocation-traffic or C/Rust performance claim. Zero final storage means measured UDP values/scratch and UDP descriptors return to their initialized baseline; persistent scheduler state, the epoll descriptor and allocator reservations are not zero process memory. Weak finalizers remain for unproved sharing in tracing builds. Opaque closure holders are scoped conservatively, which can inhibit optimization. Native sockets are not supported WASI networking. WASI runs include actual modules plus native collector-free allocator controls; compiler/runtime ownership sources match the native head, while later CLI/test changes require full production validation. Retained artifacts cover executable lifetime/cleanup probes; library/tag/CLI outcomes are in CI test results rather than separate archived binaries.",
+  "sourceSha256": {
+    "runtime/fwp_rt_task.c": "dfbebb359c0202b87409f947692858bb7881084415991b177c73f964fc335e2b",
+    "runtime/fwp_rt_decode.c": "439a4e7342dff986fefda0edccb481e331c39534e8eabb07cbd6ec0114bb2f42",
+    "runtime/fwp_rt_prims.c": "79d9932979a90575b29bf539dc1c16df97e06976c0187d50e43b3f77f7968f5c",
+    "src/cgen.rs": "550c8bac0f3cb0b6d712fbef5af95f164303905f3a31e693c97ddc18bf4e2897",
+    "src/arc.rs": "e15de0388332512da3cf1275db3410c9fd3c18e67b5f105a959e7403da634acb",
+    "src/rc.rs": "58a8a531d27325315c82cd71e3cf93a1b6835b309db13e6571a0848803e17f5e",
+    "src/resource.rs": "d8fa1a91c22b067973d6bc0812769def91c97ea0426f9ae29c2a12f116f1c1f7",
+    "src/opt.rs": "d6a307e9cf591b194f1dcd29232e08b5e9073cf6ba490595f0449c5a48629952",
+    "src/ownership.rs": "4efd7948dd1f1f2fe874968a992718bf42329d0c210381b33af87cd8af1b54d0",
+    "src/ir.rs": "907e9b62aa93ec3c8219f8bdb892e378fce054e1b031bdec1b76ac6dc59da16d",
+    "src/main.rs": "6f86b37ef3c659f8874f1071ba313ade649342df627400f3f783a672e79dd818",
+    "src/sched.rs": "b990bef4ca49d0abcae21560de118ee45ce7e71424ff7875d58c20b3dbf86c77",
+    "tests/udp_ownership.rs": "aabecbd37f2542b694cc3ef58f9f96ccaa85479370997c625746a127e8472ade",
+    "tests/native_sockets.rs": "84fe30ef53edb82b0932c0159d7325c2b4f7f28be8c376300e79d476c1fbf550",
+    "tests/compiler_options.rs": "dfa278e22af5bf17d1d60d8f86335a4c9f4ba474ebcbfef68897d4dfeda49bda",
+    "tests/fixtures/udp_ownership.fwp": "b0362e5e1c2a0dbe5f3364f8f074738a20aa8b884e94f3398319ab16ac87c7f1",
+    "tests/fixtures/udp_owner_cleanup.c": "c927c32e0d40f4f49f44df6d17766461726ce410ed7d3eb3cc724b2fa59db2b8",
+    "tests/fixtures/udp_owner_peer.c": "4a10e6583c1e14bd6bef0b4a5d7bc6b6342da7c983858dfff072f95f65fe8814",
+    "tests/fixtures/udp_unload.c": "252b8668507b9d3ec35929764bb9416efe7a7c012122dfc0e4b8c06d21f38efb",
+    "tests/fixtures/udp_unload_host.c": "199aceaabb294fa556cc0765e36b8a9d3ef13b3181bbd284822feb77001a0648",
+    "tests/fixtures/udp_library.fwp": "fb16410b67baab2cae294a0c9213d608d978b946f386e069481dbe08291a5c3d",
+    "tests/fixtures/socket_kind_cleanup.c": "5da167414078a208409dd5b4f5853364bb971efc843246dfa45b8cc051db03cb",
+    "tests/fixtures/socket_address_validation.fwp": "eeca254acc1b3824bc70ad1a26da6e5c5b76fa672d4272eb9026f9f26158c4dd"
+  },
+  "hosts": [
+    {
+      "runner": "windows-11-arm",
+      "job": {
+        "databaseId": 117003325556,
+        "name": "paths (windows-11-arm)",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-16T13:44:25Z",
+        "completedAt": "2026-10-16T13:49:20Z"
+      },
+      "modes": [
+        {
+          "mode": "tracing",
+          "cleanupOutput": "UDP: 4096 bind/drop cycles, 301 aliases, constructor and all 3 receive failures; final descriptors/buffers/managed storage 0\n",
+          "artifacts": {
+            "udp-tracing.c": {
+              "sha256": "7a157e6c6d5380969346ef21365274c1833b033566593d7a7bfe609300f69637",
+              "bytes": 958661
+            },
+            "udp-tracing.exe": {
+              "sha256": "dba76e021b90f3b32190a0b881b0e769560386877f996106d2030fa33b537824",
+              "bytes": 307712,
+              "format": "PE32+ executable (console) Aarch64, for MS Windows"
+            },
+            "udp-tracing.txt": {
+              "sha256": "6241058d5a5648a006cfb237a5f3fbc949becbd63a077ab444afea83aea7f39c",
+              "bytes": 126
+            },
+            "lifetime-tracing--O1.c": {
+              "sha256": "675e8a5981ddd06dd38f469298e97d6e088e2642818ff745e1c0a3b5a8c29996",
+              "bytes": 955823
+            },
+            "lifetime-tracing--O1.exe": {
+              "sha256": "7e424f55b60c9a2d275ba3f6f2c747df236ac534f440c2cec0554b8314a1323b",
+              "bytes": 352768
+            },
+            "lifetime-tracing--O1.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-tracing--O1.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-tracing--O1.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            },
+            "lifetime-tracing--O2.c": {
+              "sha256": "675e8a5981ddd06dd38f469298e97d6e088e2642818ff745e1c0a3b5a8c29996",
+              "bytes": 955823
+            },
+            "lifetime-tracing--O2.exe": {
+              "sha256": "8aa75e84f4a69fdaf136e051669b80a771e9280154ed18635bfc61d11b5e135b",
+              "bytes": 344576
+            },
+            "lifetime-tracing--O2.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-tracing--O2.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-tracing--O2.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            }
+          }
+        },
+        {
+          "mode": "arc",
+          "cleanupOutput": "UDP: 4096 bind/drop cycles, 301 aliases, constructor and all 3 receive failures; final descriptors/buffers/managed storage 0\n",
+          "artifacts": {
+            "udp-arc.c": {
+              "sha256": "ed21a739e22d7797453fe29cb09976d9e44fe5ca8887a1ba14cd57197b7daf81",
+              "bytes": 958684
+            },
+            "udp-arc.exe": {
+              "sha256": "fe69f9f43d2daabefe081377d10a40576f9d520cf6890d5ee25074f8f9f1c9e8",
+              "bytes": 325120,
+              "format": "PE32+ executable (console) Aarch64, for MS Windows"
+            },
+            "udp-arc.txt": {
+              "sha256": "6241058d5a5648a006cfb237a5f3fbc949becbd63a077ab444afea83aea7f39c",
+              "bytes": 126
+            },
+            "lifetime-arc--O1.c": {
+              "sha256": "74cbcfe113c6e5dee130fabe3b4729ae6e3547027dc9033f18d622d4e14b6221",
+              "bytes": 955883
+            },
+            "lifetime-arc--O1.exe": {
+              "sha256": "44c551a53bff866de37c0aa11af471e7b198147c68a09ce5fb0a6abb587855f9",
+              "bytes": 372224
+            },
+            "lifetime-arc--O1.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-arc--O1.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-arc--O1.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            },
+            "lifetime-arc--O2.c": {
+              "sha256": "74cbcfe113c6e5dee130fabe3b4729ae6e3547027dc9033f18d622d4e14b6221",
+              "bytes": 955883
+            },
+            "lifetime-arc--O2.exe": {
+              "sha256": "c899240539df3a416f951821cc8426f29fe5df7719fff6d072757c4adf2c89a1",
+              "bytes": 361472
+            },
+            "lifetime-arc--O2.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-arc--O2.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-arc--O2.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            }
+          }
+        }
+      ]
+    },
+    {
+      "runner": "macos-15",
+      "job": {
+        "databaseId": 117003325827,
+        "name": "paths (macos-15)",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-16T13:45:48Z",
+        "completedAt": "2026-10-16T13:48:32Z"
+      },
+      "modes": [
+        {
+          "mode": "tracing",
+          "cleanupOutput": "UDP: 4096 bind/drop cycles, 301 aliases, constructor and all 3 receive failures; final descriptors/buffers/managed storage 0\n",
+          "artifacts": {
+            "udp-tracing.c": {
+              "sha256": "7a157e6c6d5380969346ef21365274c1833b033566593d7a7bfe609300f69637",
+              "bytes": 958661
+            },
+            "udp-tracing.exe": {
+              "sha256": "b81ce882ef0aecdaaf4ffc28adc1a33643db06c706dfabc938b642239792e36b",
+              "bytes": 252032,
+              "format": "Mach-O 64-bit executable arm64"
+            },
+            "udp-tracing.txt": {
+              "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+              "bytes": 125
+            },
+            "lifetime-tracing--O1.c": {
+              "sha256": "675e8a5981ddd06dd38f469298e97d6e088e2642818ff745e1c0a3b5a8c29996",
+              "bytes": 955823
+            },
+            "lifetime-tracing--O1.exe": {
+              "sha256": "c528cd9867b5c1e8c934bc455c7e35b8f605ed2bced143b9fc4b46452c0075cd",
+              "bytes": 308376
+            },
+            "lifetime-tracing--O1.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-tracing--O1.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-tracing--O1.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            },
+            "lifetime-tracing--O2.c": {
+              "sha256": "675e8a5981ddd06dd38f469298e97d6e088e2642818ff745e1c0a3b5a8c29996",
+              "bytes": 955823
+            },
+            "lifetime-tracing--O2.exe": {
+              "sha256": "8ba5b563a567f7297cd844cde1e5b1ba0e3d87eb187028e85b5aa2509513cb7c",
+              "bytes": 291864
+            },
+            "lifetime-tracing--O2.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-tracing--O2.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-tracing--O2.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            }
+          }
+        },
+        {
+          "mode": "arc",
+          "cleanupOutput": "UDP: 4096 bind/drop cycles, 301 aliases, constructor and all 3 receive failures; final descriptors/buffers/managed storage 0\n",
+          "artifacts": {
+            "udp-arc.c": {
+              "sha256": "ed21a739e22d7797453fe29cb09976d9e44fe5ca8887a1ba14cd57197b7daf81",
+              "bytes": 958684
+            },
+            "udp-arc.exe": {
+              "sha256": "da1287181da7189e3290afdf9a761ceaf47ef0aaceb2c98561f0d5d80dd5b38c",
+              "bytes": 268192,
+              "format": "Mach-O 64-bit executable arm64"
+            },
+            "udp-arc.txt": {
+              "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+              "bytes": 125
+            },
+            "lifetime-arc--O1.c": {
+              "sha256": "74cbcfe113c6e5dee130fabe3b4729ae6e3547027dc9033f18d622d4e14b6221",
+              "bytes": 955883
+            },
+            "lifetime-arc--O1.exe": {
+              "sha256": "41986136c26c60b12bb464d3b71a267a6cfc622d3116ad219cb0943cb1d96e0c",
+              "bytes": 324696
+            },
+            "lifetime-arc--O1.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-arc--O1.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-arc--O1.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            },
+            "lifetime-arc--O2.c": {
+              "sha256": "74cbcfe113c6e5dee130fabe3b4729ae6e3547027dc9033f18d622d4e14b6221",
+              "bytes": 955883
+            },
+            "lifetime-arc--O2.exe": {
+              "sha256": "322655f5ba2abf8533a1616f69d2f2b130e7be8477abbd491d97a65b99c39f81",
+              "bytes": 308136
+            },
+            "lifetime-arc--O2.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-arc--O2.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-arc--O2.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            }
+          }
+        }
+      ]
+    },
+    {
+      "runner": "windows-2025",
+      "job": {
+        "databaseId": 117003325929,
+        "name": "paths (windows-2025)",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-16T13:44:43Z",
+        "completedAt": "2026-10-16T13:49:28Z"
+      },
+      "modes": [
+        {
+          "mode": "tracing",
+          "cleanupOutput": "UDP: 4096 bind/drop cycles, 301 aliases, constructor and all 3 receive failures; final descriptors/buffers/managed storage 0\n",
+          "artifacts": {
+            "udp-tracing.c": {
+              "sha256": "7a157e6c6d5380969346ef21365274c1833b033566593d7a7bfe609300f69637",
+              "bytes": 958661
+            },
+            "udp-tracing.exe": {
+              "sha256": "3ac5bb0340925a61740ee2840fdf966f3e1594c4522ed77e4a0a76f18c7a1052",
+              "bytes": 339456,
+              "format": "PE32+ executable (console) x86-64, for MS Windows"
+            },
+            "udp-tracing.txt": {
+              "sha256": "6241058d5a5648a006cfb237a5f3fbc949becbd63a077ab444afea83aea7f39c",
+              "bytes": 126
+            },
+            "lifetime-tracing--O1.c": {
+              "sha256": "675e8a5981ddd06dd38f469298e97d6e088e2642818ff745e1c0a3b5a8c29996",
+              "bytes": 955823
+            },
+            "lifetime-tracing--O1.exe": {
+              "sha256": "342260fef6aa4f593c5ed1cb10ea412ce7e9303640ec2dcdfafabd0b778ee6b4",
+              "bytes": 389120
+            },
+            "lifetime-tracing--O1.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-tracing--O1.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-tracing--O1.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            },
+            "lifetime-tracing--O2.c": {
+              "sha256": "675e8a5981ddd06dd38f469298e97d6e088e2642818ff745e1c0a3b5a8c29996",
+              "bytes": 955823
+            },
+            "lifetime-tracing--O2.exe": {
+              "sha256": "437a0e998c68ee86b714d1f54ba0ed7e69c36f2f194518997e100b71ed90de22",
+              "bytes": 385024
+            },
+            "lifetime-tracing--O2.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-tracing--O2.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-tracing--O2.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            }
+          }
+        },
+        {
+          "mode": "arc",
+          "cleanupOutput": "UDP: 4096 bind/drop cycles, 301 aliases, constructor and all 3 receive failures; final descriptors/buffers/managed storage 0\n",
+          "artifacts": {
+            "udp-arc.c": {
+              "sha256": "ed21a739e22d7797453fe29cb09976d9e44fe5ca8887a1ba14cd57197b7daf81",
+              "bytes": 958684
+            },
+            "udp-arc.exe": {
+              "sha256": "2bf614d928b9ba9065e713d9152473927ea10ac0e32dd8b6d79a16c8ba6511d3",
+              "bytes": 361984,
+              "format": "PE32+ executable (console) x86-64, for MS Windows"
+            },
+            "udp-arc.txt": {
+              "sha256": "6241058d5a5648a006cfb237a5f3fbc949becbd63a077ab444afea83aea7f39c",
+              "bytes": 126
+            },
+            "lifetime-arc--O1.c": {
+              "sha256": "74cbcfe113c6e5dee130fabe3b4729ae6e3547027dc9033f18d622d4e14b6221",
+              "bytes": 955883
+            },
+            "lifetime-arc--O1.exe": {
+              "sha256": "cd2cba841e8e38d88ef332655e39e34ad257c6441b88c57f51b2185e5e1905da",
+              "bytes": 413696
+            },
+            "lifetime-arc--O1.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-arc--O1.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-arc--O1.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            },
+            "lifetime-arc--O2.c": {
+              "sha256": "74cbcfe113c6e5dee130fabe3b4729ae6e3547027dc9033f18d622d4e14b6221",
+              "bytes": 955883
+            },
+            "lifetime-arc--O2.exe": {
+              "sha256": "778164c0884d782039f5cace782aec699accb7b5386a23ff0d87dee82b271004",
+              "bytes": 406528
+            },
+            "lifetime-arc--O2.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-arc--O2.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-arc--O2.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            }
+          }
+        }
+      ]
+    },
+    {
+      "runner": "ubuntu-24.04-arm",
+      "job": {
+        "databaseId": 117003326003,
+        "name": "paths (ubuntu-24.04-arm)",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-16T13:44:00Z",
+        "completedAt": "2026-10-16T13:47:12Z"
+      },
+      "modes": [
+        {
+          "mode": "tracing",
+          "cleanupOutput": "UDP: 4096 bind/drop cycles, 301 aliases, constructor and all 3 receive failures; final descriptors/buffers/managed storage 0\n",
+          "artifacts": {
+            "udp-tracing.c": {
+              "sha256": "7a157e6c6d5380969346ef21365274c1833b033566593d7a7bfe609300f69637",
+              "bytes": 958661
+            },
+            "udp-tracing.exe": {
+              "sha256": "bf1681eaa3adb032b81c364f1daec149167a9e1880be6e3b8a75f6d8649ae91b",
+              "bytes": 317080,
+              "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=7ef7b1138dc1036e8a4a12264cf7e65f1cc041eb, for GNU/Linux 3.7.0, not stripped"
+            },
+            "udp-tracing.txt": {
+              "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+              "bytes": 125
+            },
+            "lifetime-tracing--O1.c": {
+              "sha256": "675e8a5981ddd06dd38f469298e97d6e088e2642818ff745e1c0a3b5a8c29996",
+              "bytes": 955823
+            },
+            "lifetime-tracing--O1.exe": {
+              "sha256": "b13b325d8462e4fb9964e0fc2ae60bd526c329213440ae20e72b83d8217517e1",
+              "bytes": 390728
+            },
+            "lifetime-tracing--O1.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-tracing--O1.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-tracing--O1.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            },
+            "lifetime-tracing--O2.c": {
+              "sha256": "675e8a5981ddd06dd38f469298e97d6e088e2642818ff745e1c0a3b5a8c29996",
+              "bytes": 955823
+            },
+            "lifetime-tracing--O2.exe": {
+              "sha256": "577699e14444d66cc810dd71b78bf81116de22065932d95da98001af6da1a307",
+              "bytes": 390744
+            },
+            "lifetime-tracing--O2.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-tracing--O2.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-tracing--O2.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            }
+          }
+        },
+        {
+          "mode": "arc",
+          "cleanupOutput": "UDP: 4096 bind/drop cycles, 301 aliases, constructor and all 3 receive failures; final descriptors/buffers/managed storage 0\n",
+          "artifacts": {
+            "udp-arc.c": {
+              "sha256": "ed21a739e22d7797453fe29cb09976d9e44fe5ca8887a1ba14cd57197b7daf81",
+              "bytes": 958684
+            },
+            "udp-arc.exe": {
+              "sha256": "0efca6994b06c5754034c77c307eb579b939484723514df1054f55a3a8d44104",
+              "bytes": 382264,
+              "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=f463d8111f4d3d9b2c2a76431146e39604f04cff, for GNU/Linux 3.7.0, not stripped"
+            },
+            "udp-arc.txt": {
+              "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+              "bytes": 125
+            },
+            "lifetime-arc--O1.c": {
+              "sha256": "74cbcfe113c6e5dee130fabe3b4729ae6e3547027dc9033f18d622d4e14b6221",
+              "bytes": 955883
+            },
+            "lifetime-arc--O1.exe": {
+              "sha256": "6656254a91311f6bf7596f40fec7dc7942c101e3e380b42f9beaab4638523ac9",
+              "bytes": 455880
+            },
+            "lifetime-arc--O1.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-arc--O1.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-arc--O1.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            },
+            "lifetime-arc--O2.c": {
+              "sha256": "74cbcfe113c6e5dee130fabe3b4729ae6e3547027dc9033f18d622d4e14b6221",
+              "bytes": 955883
+            },
+            "lifetime-arc--O2.exe": {
+              "sha256": "e6bd2900ec777f6927ccc889578e00612c0d48f07188e3a1058a909b54155d95",
+              "bytes": 390352
+            },
+            "lifetime-arc--O2.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-arc--O2.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-arc--O2.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            }
+          }
+        }
+      ]
+    },
+    {
+      "runner": "macos-15-intel",
+      "job": {
+        "databaseId": 117003326039,
+        "name": "paths (macos-15-intel)",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-16T13:49:23Z",
+        "completedAt": "2026-10-16T13:57:40Z"
+      },
+      "modes": [
+        {
+          "mode": "tracing",
+          "cleanupOutput": "UDP: 4096 bind/drop cycles, 301 aliases, constructor and all 3 receive failures; final descriptors/buffers/managed storage 0\n",
+          "artifacts": {
+            "udp-tracing.c": {
+              "sha256": "7a157e6c6d5380969346ef21365274c1833b033566593d7a7bfe609300f69637",
+              "bytes": 958661
+            },
+            "udp-tracing.exe": {
+              "sha256": "ff3216d3a9bd3c124b1fa61b026d50d09f3a10a1938adaeb99abf3529b4c7f48",
+              "bytes": 262224,
+              "format": "Mach-O 64-bit executable x86_64"
+            },
+            "udp-tracing.txt": {
+              "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+              "bytes": 125
+            },
+            "lifetime-tracing--O1.c": {
+              "sha256": "675e8a5981ddd06dd38f469298e97d6e088e2642818ff745e1c0a3b5a8c29996",
+              "bytes": 955823
+            },
+            "lifetime-tracing--O1.exe": {
+              "sha256": "b1f184a780862ed2c760224767da67df729bb61c61154ba448add887a4702d1e",
+              "bytes": 305880
+            },
+            "lifetime-tracing--O1.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-tracing--O1.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-tracing--O1.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            },
+            "lifetime-tracing--O2.c": {
+              "sha256": "675e8a5981ddd06dd38f469298e97d6e088e2642818ff745e1c0a3b5a8c29996",
+              "bytes": 955823
+            },
+            "lifetime-tracing--O2.exe": {
+              "sha256": "3430c515537081dbdf6c53aab4bb5542197dcd518851a8476a67f7fc1322ef30",
+              "bytes": 301776
+            },
+            "lifetime-tracing--O2.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-tracing--O2.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-tracing--O2.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            }
+          }
+        },
+        {
+          "mode": "arc",
+          "cleanupOutput": "UDP: 4096 bind/drop cycles, 301 aliases, constructor and all 3 receive failures; final descriptors/buffers/managed storage 0\n",
+          "artifacts": {
+            "udp-arc.c": {
+              "sha256": "ed21a739e22d7797453fe29cb09976d9e44fe5ca8887a1ba14cd57197b7daf81",
+              "bytes": 958684
+            },
+            "udp-arc.exe": {
+              "sha256": "24e6ec80cf6d38a2b357ec30abdd78f6da4e8aa54947a9156b0caec967f0f3a5",
+              "bytes": 282400,
+              "format": "Mach-O 64-bit executable x86_64"
+            },
+            "udp-arc.txt": {
+              "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+              "bytes": 125
+            },
+            "lifetime-arc--O1.c": {
+              "sha256": "74cbcfe113c6e5dee130fabe3b4729ae6e3547027dc9033f18d622d4e14b6221",
+              "bytes": 955883
+            },
+            "lifetime-arc--O1.exe": {
+              "sha256": "d5c4604c25d9e4147aa72088364bf2e1b98a83d03066b6c7f9bf43a45435ea8d",
+              "bytes": 334344
+            },
+            "lifetime-arc--O1.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-arc--O1.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-arc--O1.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            },
+            "lifetime-arc--O2.c": {
+              "sha256": "74cbcfe113c6e5dee130fabe3b4729ae6e3547027dc9033f18d622d4e14b6221",
+              "bytes": 955883
+            },
+            "lifetime-arc--O2.exe": {
+              "sha256": "b667283e1aa7eba9d0b601865bd7b12a1e80379ef37514874e03a2bd7c127530",
+              "bytes": 326112
+            },
+            "lifetime-arc--O2.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-arc--O2.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-arc--O2.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            }
+          }
+        }
+      ]
+    },
+    {
+      "runner": "ubuntu-latest",
+      "job": {
+        "databaseId": 117003326357,
+        "name": "paths (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "success",
+        "startedAt": "2026-10-16T13:49:56Z",
+        "completedAt": "2026-10-16T13:52:36Z"
+      },
+      "modes": [
+        {
+          "mode": "tracing",
+          "cleanupOutput": "UDP: 4096 bind/drop cycles, 301 aliases, constructor and all 3 receive failures; final descriptors/buffers/managed storage 0\n",
+          "artifacts": {
+            "udp-tracing.c": {
+              "sha256": "7a157e6c6d5380969346ef21365274c1833b033566593d7a7bfe609300f69637",
+              "bytes": 958661
+            },
+            "udp-tracing.exe": {
+              "sha256": "9da997d552847332454e2473a75f3aff671498a5b9b0073e2a0a319560d9e1e1",
+              "bytes": 315416,
+              "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=5c009c18c018363e5dd5965ea0699f23024a8767, for GNU/Linux 3.2.0, not stripped"
+            },
+            "udp-tracing.txt": {
+              "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+              "bytes": 125
+            },
+            "lifetime-tracing--O1.c": {
+              "sha256": "675e8a5981ddd06dd38f469298e97d6e088e2642818ff745e1c0a3b5a8c29996",
+              "bytes": 955823
+            },
+            "lifetime-tracing--O1.exe": {
+              "sha256": "d27dd1760339962040f9b56409866306572ae17ac0ae935cf852dda51053fd2d",
+              "bytes": 376904
+            },
+            "lifetime-tracing--O1.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-tracing--O1.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-tracing--O1.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            },
+            "lifetime-tracing--O2.c": {
+              "sha256": "675e8a5981ddd06dd38f469298e97d6e088e2642818ff745e1c0a3b5a8c29996",
+              "bytes": 955823
+            },
+            "lifetime-tracing--O2.exe": {
+              "sha256": "9869bb5ef210b70fdba6bcc7be53478097c8d150ca259c17f74e27048ec66bf2",
+              "bytes": 364496
+            },
+            "lifetime-tracing--O2.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-tracing--O2.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-tracing--O2.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            }
+          }
+        },
+        {
+          "mode": "arc",
+          "cleanupOutput": "UDP: 4096 bind/drop cycles, 301 aliases, constructor and all 3 receive failures; final descriptors/buffers/managed storage 0\n",
+          "artifacts": {
+            "udp-arc.c": {
+              "sha256": "ed21a739e22d7797453fe29cb09976d9e44fe5ca8887a1ba14cd57197b7daf81",
+              "bytes": 958684
+            },
+            "udp-arc.exe": {
+              "sha256": "7c9381fea84ac5d4567ddb0ed044df2a20f5be4d357ca6d9ae784ce269002acf",
+              "bytes": 335544,
+              "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=12498e69fa5a08f380cbfb779cd53cc7ceee0cc0, for GNU/Linux 3.2.0, not stripped"
+            },
+            "udp-arc.txt": {
+              "sha256": "874e5d00dffbdd71e157e69f64cf3ded1552d21bc4e2fd0aea2c988890d46468",
+              "bytes": 125
+            },
+            "lifetime-arc--O1.c": {
+              "sha256": "74cbcfe113c6e5dee130fabe3b4729ae6e3547027dc9033f18d622d4e14b6221",
+              "bytes": 955883
+            },
+            "lifetime-arc--O1.exe": {
+              "sha256": "6d98381bc8963be58f5a47cfdede960969c65f36ed009fd88831c6ab27a6b203",
+              "bytes": 409248
+            },
+            "lifetime-arc--O1.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-arc--O1.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-arc--O1.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            },
+            "lifetime-arc--O2.c": {
+              "sha256": "74cbcfe113c6e5dee130fabe3b4729ae6e3547027dc9033f18d622d4e14b6221",
+              "bytes": 955883
+            },
+            "lifetime-arc--O2.exe": {
+              "sha256": "6e17e3155565aacb43a7703711ebc38f9e2f00be2a4622364d5998db8d959db2",
+              "bytes": 388720
+            },
+            "lifetime-arc--O2.stdout": {
+              "sha256": "29fbcd973771a4a6853640fe6c11b0c059fa880c29faef86955d5ed135759a15",
+              "bytes": 77
+            },
+            "lifetime-arc--O2.stderr": {
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "bytes": 0
+            },
+            "lifetime-arc--O2.status": {
+              "sha256": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+              "bytes": 8
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "binaryInspection": {
+    "host": "macos-15 ARM64",
+    "binarySha256": "da1287181da7189e3290afdf9a761ceaf47ef0aaceb2c98561f0d5d80dd5b38c",
+    "commands": [
+      "nm -n udp-arc.exe",
+      "otool -tvV udp-arc.exe"
+    ],
+    "artifacts": {
+      "udp-arc.nm": "0a62729a8e19c9bb17a703546c4cfb2182c1a4c6b2b4382972686077a85aae64",
+      "udp-arc.asm": "ee4e1cecd6635c6143ae5d593862583ca391592d38761c7efaa7635a19a989bb"
+    },
+    "ownerReleaseInstructions": [
+      "_fwp_udp_drop:",
+      "0000000100001390\tstp\tx22, x21, [sp, #-0x30]!",
+      "0000000100001394\tstp\tx20, x19, [sp, #0x10]",
+      "0000000100001398\tstp\tx29, x30, [sp, #0x20]",
+      "000000010000139c\tadd\tx29, sp, #0x20",
+      "00000001000013a0\tcbz\tx0, 0x10000157c",
+      "00000001000013a4\tldr\tx8, [x0, #0x8]",
+      "00000001000013a8\tcbz\tx8, 0x10000157c",
+      "00000001000013ac\tsubs\tx8, x8, #0x1",
+      "00000001000013b0\tstr\tx8, [x0, #0x8]",
+      "00000001000013b4\tb.ne\t0x10000157c"
+    ],
+    "allocationInstructions": [
+      "0000000100001148\tmov\tw0, #0x10",
+      "000000010000114c\tmov\tw1, #0x1",
+      "0000000100001150\tbl\t_fwp_gc_alloc_slow"
+    ],
+    "finding": "The inspected executable loads, decrements and stores a 64-bit owner count at offset 8. Socket construction requests 16 bytes for the header. This agrees with the layout assertions in the six-host tests.",
+    "limits": "This is the instrumented cleanup-test executable. It includes descriptor accounting and failure probes; these instructions are representation evidence, not a production throughput or cache measurement."
+  }
+}

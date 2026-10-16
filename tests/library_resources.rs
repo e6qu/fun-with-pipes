@@ -69,7 +69,7 @@ void setup(int *fds,int *observations,const char *path,const char *cert,const ch
  for(int i=1;i<=3;i++){
   int pair[2];if(socketpair(AF_UNIX,SOCK_STREAM,0,pair))abort();fds[i]=pair[0];fds[i+3]=pair[1];
   V sock=fwp_sock_new(pair[0],1);
-  if(i<=2){SOCK(sock)->tls=SSL_new(client_ctx);SSL_set_fd(SOCK(sock)->tls,pair[0]);}
+  if(i<=2){STREAM(sock)->tls=SSL_new(client_ctx);SSL_set_fd(STREAM(sock)->tls,pair[0]);}
   if(i==2){void *ssl=0;int fd=w_take(sock,&ssl);g_conn *c=g_conn_new(fd,"localhost",0);c->ssl=ssl;}
  }
  for(int i=0;i<2;i++){
@@ -77,8 +77,8 @@ void setup(int *fds,int *observations,const char *path,const char *cert,const ch
   servers[i]=fwp_tls_server_ctx(cert,key,wire,3,"");if(!servers[i])abort();owners[i]=SSL_CTX_get_app_data(servers[i]);
   int listener[2],session[2];if(socketpair(AF_UNIX,SOCK_STREAM,0,listener)||socketpair(AF_UNIX,SOCK_STREAM,0,session))abort();
   fds[7+i*2]=listener[0];fds[8+i*2]=session[0];fds[11+i*2]=listener[1];fds[12+i*2]=session[1];
-  V l=fwp_sock_new(listener[0],0);SOCK(l)->tls=servers[i];
-  V c=fwp_sock_new(session[0],1);SOCK(c)->tls=fwp_tls_accepted(servers[i],session[0]);if(!SOCK(c)->tls||!handshake(SOCK(c)->tls))abort();
+  V l=fwp_sock_new(listener[0],0);STREAM(l)->tls=servers[i];
+  V c=fwp_sock_new(session[0],1);STREAM(c)->tls=fwp_tls_accepted(servers[i],session[0]);if(!STREAM(c)->tls||!handshake(STREAM(c)->tls))abort();
   if(i==1)fwp_p_tcp_stop(l); // Accepted session is the last protocol owner.
  }
  // Explicit close must remain idempotent when finalization follows.
@@ -189,13 +189,13 @@ int main(int argc,char **argv){
             1,
         ),
         (
-            "        else fwp_tls_dispose(s->tls);",
+            "        else fwp_tls_dispose(((fwp_stream *)s)->tls);",
             "        else (void)0; /* omit session */",
             2,
         ),
         (
-            "        else fwp_tls_dispose(s->tls);",
-            "        else fwp_tls_free(s->tls); /* implicit shutdown traffic */",
+            "        else fwp_tls_dispose(((fwp_stream *)s)->tls);",
+            "        else fwp_tls_free(((fwp_stream *)s)->tls); /* implicit shutdown traffic */",
             2,
         ),
         (

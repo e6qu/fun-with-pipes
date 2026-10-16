@@ -1,33 +1,13 @@
 //! HTTP/2 request metadata owns its temporary peer subject through allocating copies.
-use fwp::ir::*;
+#[path = "support/http2_values.rs"]
+mod http2_values;
 use std::process::Command;
 
 #[test]
 fn peer_subject_copy_and_option_failures_release_temporary_storage() {
-    let unit = MT::unit();
-    let program = Program {
-        funcs: vec![
-            Func {
-                name: "available".into(),
-                arity: 1,
-                locals: vec![unit.clone()],
-                ty: MT::Fun(Box::new(unit.clone()), Box::new(MT::con("std::Bool"))),
-                body: Body::Prim("tls.available".into()),
-            },
-            Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
-            },
-        ],
-        exports: vec![("available".into(), 0)],
-        ..Program::default()
-    };
-    let (generated, _) = fwp::cgen::generate_library(&program, "peer_cleanup").unwrap();
+    let generated = http2_values::generated();
     let subject = "char *peer = k->c->ssl ? fwp_tls_peer_subject(k->c->ssl) : 0;";
-    let copy = "pv = fwp_some(fwp_cstr(peer));";
+    let copy = "subject.values[0] = fwp_rc_fresh(fwp_cstr(peer));";
     assert_eq!(generated.matches(subject).count(), 1);
     assert_eq!(generated.matches(copy).count(), 1);
     let generated = generated
@@ -36,15 +16,18 @@ fn peer_subject_copy_and_option_failures_release_temporary_storage() {
             "char *peer = k->c->ssl ? metadata_subject() : 0;",
             1,
         )
-        .replacen(copy, "pv = metadata_option(metadata_copy(peer));", 1);
+        .replacen(copy, "subject.values[0] = fwp_rc_fresh(metadata_copy(peer));", 1)
+        .replacen("result.values[4] = fwp_decode_variant(&subject, 1);", "if(stage==2)fwp_trap(\"metadata option allocation\"); result.values[4] = fwp_decode_variant(&subject, 1);", 1);
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdint.h>
 #include <stdlib.h>
 static int stage,subject_calls,buffer_frees;
 static void *buffer;
 static char *metadata_subject(void);
 static uintptr_t metadata_copy(const char *);
-static uintptr_t metadata_option(uintptr_t);
 static void metadata_free(void *);
 static void metadata_no_free(void *);
 #define free(p) metadata_free(p)
@@ -55,7 +38,6 @@ static void metadata_free(void *p){if(p&&p==buffer){buffer_frees++;buffer=0;}fre
 static void metadata_no_free(void *p){(void)p;}
 static char *metadata_subject(void){subject_calls++;if(stage==3)return 0;buffer=malloc(11);if(!buffer)_Exit(30);memcpy(buffer,"CN=runtime",11);return buffer;}
 static uintptr_t metadata_copy(const char *p){if(stage==1)fwp_trap("metadata string copy");return fwp_cstr(p);}
-static uintptr_t metadata_option(uintptr_t p){if(stage==2)fwp_trap("metadata option allocation");return fwp_some(p);}
 static int recover(void){return 1;}
 static jmp_buf failure;
 static int probe(void){
@@ -69,12 +51,13 @@ static int probe(void){
   c->ssl=stage==4?0:ssl;
   fwp_trap_recover=recover;fwp_trap_jb=&failure;fwp_trap_cleanup=0;
   if(!setjmp(failure)){
-   V result=fwp_p_http2_request(call);
+   V result=fwp_p_http2_request(call,REQUEST_TYPE);
    if(stage==1||stage==2)return 4;
    if(OBJ(result)->n!=5)return 5;
    V subject=OBJ(result)->f[4];
    if(stage==0){if(subject==FWP_NONE||strcmp(STR(OBJ(subject)->f[0])->d,"CN=runtime"))return 6;}
    else if(subject!=FWP_NONE)return 7;
+   REQUEST_TYPE->drop(result);
   }else if(stage!=1&&stage!=2)return 8;
   fwp_trap_recover=0;fwp_trap_jb=0;
   if(buffer_frees!=(stage<3?1:0)){fprintf(stderr,"stage %d frees %d expected %d\n",stage,buffer_frees,stage<3?1:0);return 1;}

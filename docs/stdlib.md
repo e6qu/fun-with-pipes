@@ -146,6 +146,10 @@ SynPat =
     | PBare String
     | PTuple List[SynPat]
     | PUnit
+
+# Renders a syntax value as source text, without evaluating it. For example,
+# `SApply (SName "add") [SInt 1] | syntax.show` returns "add 1". The returned
+# string owns its storage; the input syntax value is unchanged.
 syntax.show : Syntax -> String
 TypeInfo = { name: String, args: List[String], shape: TypeShape }
 
@@ -1105,11 +1109,17 @@ and DNS resolves hostnames to network addresses. A listener accepts incoming
 connections; a connection reads/writes bytes. A host:port address such as
 127.0.0.1:8080 selects this computer and a port. Suspending a task while IO
 waits lets other ready tasks run; it does not make IO instantaneous.
+A socket address containing a NUL byte fails with IoError instead of being
+silently shortened at that byte.
 
 ```fwp
 Listener = builtin
 Conn = builtin
 UdpSocket = builtin
+
+# Listen for connections. Copies share the same listener. Explicit tcp.stop
+# affects every copy; releasing the last owner also closes it. A function or
+# task that captures a listener keeps it alive for its original scope.
 tcp.listen : String -> Listener ! {Network, Error[IoError]}
 tcp.local-addr : Listener -> String ! {Network}
 tcp.accept : Listener -> Conn ! {Async, Network, Error[IoError]}
@@ -1117,6 +1127,9 @@ tcp.accept-for : Duration -> Listener -> Option[Conn] ! {Async, Network, Error[I
 
 # stop listening
 tcp.stop : Listener -> () ! {Network}
+
+# Connect to a remote listener. Connection copies share one byte stream;
+# tcp.close closes it through every copy, and the last owner also closes it.
 tcp.connect : String -> Conn ! {Async, Network, Error[IoError]}
 
 # read up to n bytes; empty at end of stream
@@ -1129,13 +1142,28 @@ tcp.write : Bytes -> Conn -> () ! {Async, Network, Error[IoError]}
 tcp.write-for : Duration -> Bytes -> Conn -> () ! {Async, Network, Error[IoError]}
 tcp.close : Conn -> () ! {Network}
 tcp.peer-addr : Conn -> String ! {Network}
+
+# Bind a UDP socket to a host and port. Port 0 asks the operating system to
+# choose an unused port; udp.local-addr returns the resulting address.
+# Copies refer to the same socket. A closure or task can keep a socket alive.
+# Releasing its final owner closes it; udp.close closes it through every copy.
 udp.bind : String -> UdpSocket ! {Network, Error[IoError]}
 udp.local-addr : UdpSocket -> String ! {Network}
 udp.send-to : String -> Bytes -> UdpSocket -> () ! {Async, Network, Error[IoError]}
+
+# Receive one datagram, up to the requested byte count, and its sender address.
+# The returned bytes and address belong to the caller; the socket stays usable.
 udp.recv-from : I64 -> UdpSocket -> (Bytes, String) ! {Async, Network, Error[IoError]}
+
+# Close the shared socket. Repeating close is safe; pending operations wake
+# and report that the socket is closed.
 udp.close : UdpSocket -> () ! {Network}
 
-# addresses of a host name
+# Resolve a hostname or numeric IP address to distinct address strings, in the
+# order supplied by the operating system. There is no fixed result-count limit.
+# Embedded NUL bytes fail with IoError; they never shorten the hostname.
+# For example, "127.0.0.1" | dns.resolve returns ["127.0.0.1"].
+# This call waits for the system resolver; the returned list owns its strings.
 dns.resolve : String -> List[String] ! {Network, Error[IoError]}
 
 # SIGINT/SIGTERM arrived (or `signal.request-shutdown` was called); the
@@ -2157,18 +2185,21 @@ grpc.code-name : I64 -> String
 grpc.fail : I64 -> String -> a ! {Error[GrpcError]}
 
 # the metadata (request headers, with lower-case names) of the call the
-# current task serves; empty outside a call
+# current task serves; empty outside a call. The returned list and strings are
+# independent copies, so keeping them does not keep the request alive.
 grpc.metadata : () -> List[(String, String)] ! {Network}
 
 # one metadata value of the call being served
 grpc.header : String -> Option[String] ! {Network}
 
 # add a header to the response of the call the current task serves: sent
-# with its first message (so set it before sending any)
+# with its first message (so set it before sending any). Copies both strings,
+# lowercases the name and replaces carriage returns/newlines in the value with
+# spaces. The input strings are unchanged; outside a served call this does nothing.
 grpc.set-header : String -> String -> () ! {Network}
 
 # add a trailer to the response of the call the current task serves: sent
-# with its status
+# with its status. Copies and normalizes the strings as `grpc.set-header` does.
 grpc.set-trailer : String -> String -> () ! {Network}
 
 # run a function whose calls compress their messages with gzip
@@ -2182,7 +2213,8 @@ grpc.with-response-metadata : (() -> a ! {Network | e}) -> (a, List[(String, Str
 
 # the subject of the client's certificate (`CN=alice,O=Example`) of the
 # call the current task serves, when the server requires client
-# certificates (mutual TLS); `None` otherwise
+# certificates (mutual TLS); `None` otherwise. The returned text is an
+# independent copy that remains usable after the call finishes.
 grpc.peer-subject : () -> Option[String] ! {Network}
 
 # run a function whose calls connect over TLS with these options: a CA
@@ -2254,16 +2286,25 @@ log.info : String -> () ! {IO}
 log.warn : String -> () ! {IO}
 log.error : String -> () ! {IO}
 
-# counters only grow; gauges are set; observations add `_count` and `_sum`
+# Metrics store one numeric value per name for the process or library instance.
+# `metrics.add "requests" 1.0` creates a counter or adds to an existing value;
+# negative amounts subtract too. `metrics.set "load" 0.5` replaces its value and
+# marks it as a gauge. An observation updates names ending in `_count` and `_sum`:
+# observing 2.0 then 4.0 gives count 2.0 and sum 6.0. Adding or observing an
+# existing name preserves its kind. Names are complete strings, including NUL.
+# Repeated updates reuse registry entries; distinct names consume more storage.
 metrics.add : String -> F64 -> () ! {IO}
 metrics.set : String -> F64 -> () ! {IO}
 metrics.observe : String -> F64 -> () ! {IO}
 
-# (name, kind, value), in name order
+# Returns copied (name, kind, value) tuples in string order. A snapshot remains
+# unchanged after later updates. Its list and text are freed when no longer used;
+# the registry itself lives until the process exits or the library is closed.
 metrics.snapshot : () -> List[(String, String, F64)] ! {IO}
 metrics.inc : String -> () ! {IO}
 
-# Prometheus text exposition format
+# Formats a snapshot as Prometheus text. Choose metric names valid for that
+# protocol; this renderer does not validate or escape arbitrary registry names.
 metrics.render : () -> String ! {IO}
 ```
 
@@ -2709,10 +2750,6 @@ tensor.grad : TensorExpr[n] -> List[Vector[F64, n]]
 ## Balanced ternary
 
 `lib/ternary.fwp`
-
-Balanced ternary: trits (-1, 0, +1), fixed-width balanced ternary
-integers TInt[N] (literals like 0t+-0, checked arithmetic), and dense
-packing of trits, five per byte.
 
 Balanced ternary is base three with digits -1, 0 and +1, called trits.
 TInt[N] has N trits; 0t+-0 means 1*9 - 1*3 + 0 = 6. Arithmetic checks its

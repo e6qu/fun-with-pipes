@@ -162,6 +162,63 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "grpc.set-header" | "grpc.set-trailer" => (&[B, B], R, None, &[]),
+        "http2.body" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
+        "http2.request" | "grpc.metadata" | "grpc.peer-subject" => {
+            (&[B], ResultOwnership::OwnedTree, None, &[])
+        }
+        "tcp.listen" | "tcp.connect" | "tcp.accept" => {
+            (&[B], ResultOwnership::OwnedResource, None, &[])
+        }
+        "tcp.accept-for" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
+        "tcp.local-addr" | "tcp.peer-addr" | "tls.alpn" => {
+            (&[B], ResultOwnership::FreshLeaf, None, &[])
+        }
+        "tcp.read" => (&[B, B], ResultOwnership::FreshLeaf, None, &[]),
+        "tcp.read-for" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
+        "tcp.write" => (&[B, B], R, None, &[]),
+        "tcp.write-for" => (&[B, B, B], R, None, &[]),
+        "tcp.stop" | "tcp.close" | "tls.handshake" | "tls.secure" | "tls.available" => {
+            (&[B], R, None, &[])
+        }
+        "tls._connect" => (
+            &[B, B, B, B, B, B, B],
+            ResultOwnership::OwnedResource,
+            None,
+            &[],
+        ),
+        "tls._listen" => (&[B, B, B, B, B], ResultOwnership::OwnedResource, None, &[]),
+        "tls.peer-subject" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "udp.bind" => (&[B], ResultOwnership::OwnedResource, None, &[]),
+        "udp.local-addr" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "udp.send-to" => (&[B, B, B], R, None, &[]),
+        "udp.recv-from" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
+        "udp.close" => (&[B], R, None, &[]),
+        "dns.resolve" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "device.run" => (&[B, B, B, B, B], ResultOwnership::FreshLeaf, None, &[]),
+        "device.sum" => (&[B, B, B, B, B], R, None, &[]),
+        "metrics.add" | "metrics.set" | "metrics.observe" => (&[B, B], R, None, &[]),
+        "metrics.snapshot" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "syntax.show" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "url.decode"
+        | "form.decode"
+        | "url.split"
+        | "http.parse-request-head"
+        | "http.parse-response-head" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "zlib.gunzip" | "zlib.inflate" | "ws.inflate" => {
+            (&[B, B], ResultOwnership::OwnedTree, None, &[])
+        }
+        "ws.parse" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
+        "ws.close-parse" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "zlib.crc32" => (&[B, B], R, None, &[]),
+        "http.field-ok" => (&[B, B], R, None, &[]),
+        "http.content-length" => (&[B], R, None, &[]),
+        "int.parse-hex" => (&[B], ResultOwnership::FreshOuter, None, &[]),
+        "trit.from-sign" | "trit.to-int" | "tint.to-int" => (&[B], R, None, &[]),
+        "tint.of-int" | "tint.from-trits" => (&[B], ResultOwnership::FreshOuter, None, &[]),
+        "tint.trits" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        "trits.pack" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "trits.unpack" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
         // Bool tags are immortal immediates; these operations allocate nothing.
         "not" => (&[B], R, None, &[]),
         "and" | "or" => (&[B, B], R, None, &[]),

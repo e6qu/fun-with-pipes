@@ -98,6 +98,9 @@ SynPat =
     | PTuple List[SynPat]
     | PUnit
 
+# Renders a syntax value as source text, without evaluating it. For example,
+# `SApply (SName "add") [SInt 1] | syntax.show` returns "add 1". The returned
+# string owns its storage; the input syntax value is unchanged.
 foreign "fwp" syntax.show : Syntax -> String
 
 # `assert!(cond)` fails with the source text of `cond` when it is False.

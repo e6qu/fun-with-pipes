@@ -62,12 +62,12 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
                         "type `{ty}` has no tracing-free ownership contract: channel payloads cannot contain functions, tasks or channels"
                     ));
                 }
-                "std::Bool" | "std::String" | "std::Bytes" | "std::File" | "std::I8"
-                | "std::I16" | "std::I32" | "std::I64" | "std::I128" | "std::ISize" | "std::U8"
-                | "std::U16" | "std::U32" | "std::U64" | "std::U128" | "std::USize"
-                | "std::F16" | "std::BF16" | "std::F32" | "std::F64" | "std::F128"
-                | "std::TInt" | "std::Trit" | "std::Array" | "std::Map" | "std::Set"
-                | "std::Task" => return Ok(()),
+                "std::Bool" | "std::String" | "std::Bytes" | "std::File" | "std::UdpSocket"
+                | "std::Conn" | "std::Listener" | "std::I8" | "std::I16" | "std::I32"
+                | "std::I64" | "std::I128" | "std::ISize" | "std::U8" | "std::U16" | "std::U32"
+                | "std::U64" | "std::U128" | "std::USize" | "std::F16" | "std::BF16"
+                | "std::F32" | "std::F64" | "std::F128" | "std::TInt" | "std::Trit"
+                | "std::Array" | "std::Map" | "std::Set" | "std::Task" => return Ok(()),
                 _ => {}
             }
             match prog.shapes.get(ty) {
@@ -166,45 +166,6 @@ pub(crate) fn check(prog: &Program, entries: &[crate::ir::FuncId]) -> Result<(),
                     "primitive `{symbol}` returns an uncounted owner"
                 )));
             }
-            continue;
-        }
-        // Concrete word-sized arithmetic emits no managed allocation. Wider
-        // boxed numerics need their own counted-result contract before admission.
-        let arithmetic = matches!(
-            symbol,
-            "trit.from-sign"
-                | "trit.to-int"
-                | "tint.to-int"
-                | "prim.add"
-                | "prim.sub"
-                | "prim.mul"
-                | "prim.div"
-                | "prim.rem"
-                | "prim.neg"
-                | "prim.zero"
-                | "prim.one"
-                | "prim.from-int"
-                | "prim.from-float"
-                | "int.to-float"
-                | "float.convert"
-                | "sqrt"
-                | "exp"
-                | "ln"
-                | "sin"
-                | "cos"
-                | "tan"
-                | "floor"
-                | "ceil"
-                | "round"
-                | "pow"
-                | "abs"
-        );
-        if arithmetic
-            && !crate::rc::needs_rc(&prog.shapes, result)
-            && args
-                .iter()
-                .all(|arg| !crate::rc::needs_rc(&prog.shapes, arg))
-        {
             continue;
         }
         return Err(reject(format!(

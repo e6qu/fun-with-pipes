@@ -104,7 +104,8 @@ grpc.fail = curry (make GrpcError { code = .0, message = .1 } | fail)
 # ------------------------------------------------- metadata and deadlines
 
 # the metadata (request headers, with lower-case names) of the call the
-# current task serves; empty outside a call
+# current task serves; empty outside a call. The returned list and strings are
+# independent copies, so keeping them does not keep the request alive.
 foreign "fwp" grpc.metadata : () -> List[(String, String)] ! {Network}
 
 # one metadata value of the call being served
@@ -112,11 +113,13 @@ grpc.header : String -> Option[String] ! {Network}
 grpc.header = fork json.lookup id (const () | grpc.metadata)
 
 # add a header to the response of the call the current task serves: sent
-# with its first message (so set it before sending any)
+# with its first message (so set it before sending any). Copies both strings,
+# lowercases the name and replaces carriage returns/newlines in the value with
+# spaces. The input strings are unchanged; outside a served call this does nothing.
 foreign "fwp" grpc.set-header : String -> String -> () ! {Network}
 
 # add a trailer to the response of the call the current task serves: sent
-# with its status
+# with its status. Copies and normalizes the strings as `grpc.set-header` does.
 foreign "fwp" grpc.set-trailer : String -> String -> () ! {Network}
 
 # run a function whose calls compress their messages with gzip
@@ -130,7 +133,8 @@ foreign "fwp" grpc.with-response-metadata : (() -> a ! {Network | e}) -> (a, Lis
 
 # the subject of the client's certificate (`CN=alice,O=Example`) of the
 # call the current task serves, when the server requires client
-# certificates (mutual TLS); `None` otherwise
+# certificates (mutual TLS); `None` otherwise. The returned text is an
+# independent copy that remains usable after the call finishes.
 foreign "fwp" grpc.peer-subject : () -> Option[String] ! {Network}
 
 # run a function whose calls connect over TLS with these options: a CA

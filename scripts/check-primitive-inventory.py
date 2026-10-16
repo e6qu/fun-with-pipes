@@ -87,6 +87,37 @@ leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.he
 assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row in rows}
 # These reviewed contract changes are checked against the frozen baseline.
 bundle_contracts = {}
+for symbol in ['tcp.listen', 'tcp.connect', 'tcp.accept']:
+    bundle_contracts[symbol] = (1, 'OwnedResource', [])
+bundle_contracts['tcp.accept-for'] = (2, 'OwnedTree', [])
+for symbol in ['tcp.local-addr', 'tcp.peer-addr', 'tls.alpn']:
+    bundle_contracts[symbol] = (1, 'FreshLeaf', [])
+bundle_contracts['tcp.read'] = (2, 'FreshLeaf', [])
+bundle_contracts['tcp.read-for'] = (3, 'OwnedTree', [])
+bundle_contracts['tcp.write'] = (2, 'Shared', [])
+bundle_contracts['tcp.write-for'] = (3, 'Shared', [])
+for symbol in ['tcp.stop', 'tcp.close', 'tls.handshake', 'tls.secure', 'tls.available']:
+    bundle_contracts[symbol] = (1, 'Shared', [])
+bundle_contracts['tls._connect'] = (7, 'OwnedResource', [])
+bundle_contracts['tls._listen'] = (5, 'OwnedResource', [])
+bundle_contracts['tls.peer-subject'] = (1, 'OwnedTree', [])
+for symbol in ['grpc.set-header', 'grpc.set-trailer']:
+    bundle_contracts[symbol] = (2, 'Shared', [])
+bundle_contracts['http2.body'] = (3, 'OwnedTree', [])
+for symbol in ['http2.request', 'grpc.metadata', 'grpc.peer-subject']:
+    bundle_contracts[symbol] = (1, 'OwnedTree', [])
+bundle_contracts['udp.bind'] = (1, 'OwnedResource', [])
+bundle_contracts['udp.local-addr'] = (1, 'FreshLeaf', [])
+bundle_contracts['udp.send-to'] = (3, 'Shared', [])
+bundle_contracts['udp.recv-from'] = (2, 'OwnedTree', [])
+bundle_contracts['udp.close'] = (1, 'Shared', [])
+bundle_contracts['dns.resolve'] = (1, 'OwnedTree', [])
+bundle_contracts['device.run'] = (5, 'FreshLeaf', [])
+bundle_contracts['device.sum'] = (5, 'Shared', [])
+for symbol in ['metrics.add', 'metrics.set', 'metrics.observe']:
+    bundle_contracts[symbol] = (2, 'Shared', [])
+bundle_contracts['metrics.snapshot'] = (1, 'OwnedTree', [])
+bundle_contracts['syntax.show'] = (1, 'FreshLeaf', [])
 bundle_contracts['not'] = (1, 'Shared', [])
 bundle_contracts['hash'] = (1, 'Shared', [])
 for symbol in ['and', 'or']:
@@ -97,6 +128,23 @@ for symbol in ['prim.zero', 'prim.one']:
 for symbol in ['prim.neg', 'prim.from-int', 'prim.from-float', 'bit.not', 'int.convert', 'float.to-int',
                'float.convert', 'int.to-float', 'sqrt', 'exp', 'ln', 'sin', 'cos', 'tan', 'floor', 'ceil', 'round']:
     bundle_contracts[symbol] = (1, 'Numeric', [])
+for symbol in ['trit.from-sign', 'trit.to-int', 'tint.to-int']:
+    bundle_contracts[symbol] = (1, 'Shared', [])
+for symbol in ['tint.of-int', 'tint.from-trits']:
+    bundle_contracts[symbol] = (1, 'FreshOuter', [])
+bundle_contracts['tint.trits'] = (1, 'OwnedTree', [])
+bundle_contracts['trits.pack'] = (1, 'FreshLeaf', [])
+bundle_contracts['trits.unpack'] = (2, 'OwnedTree', [])
+for symbol in ['url.decode', 'form.decode', 'url.split', 'http.parse-request-head', 'http.parse-response-head']:
+    bundle_contracts[symbol] = (1, 'OwnedTree', [])
+for symbol in ['zlib.gunzip', 'zlib.inflate', 'ws.inflate']:
+    bundle_contracts[symbol] = (2, 'OwnedTree', [])
+bundle_contracts['ws.parse'] = (3, 'OwnedTree', [])
+bundle_contracts['ws.close-parse'] = (1, 'OwnedTree', [])
+bundle_contracts['zlib.crc32'] = (2, 'Shared', [])
+bundle_contracts['http.field-ok'] = (2, 'Shared', [])
+bundle_contracts['http.content-length'] = (1, 'Shared', [])
+bundle_contracts['int.parse-hex'] = (1, 'FreshOuter', [])
 bundle_contracts['abs'] = (1, 'Numeric', [0])
 for symbol in ['prim.add', 'prim.sub', 'prim.mul', 'prim.div', 'prim.rem',
                'wrapping.add', 'wrapping.sub', 'wrapping.mul',

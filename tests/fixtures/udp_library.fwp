@@ -1,0 +1,6 @@
+# The helper's socket must close before its returned address is bound again.
+address : () -> String ! {Network, Error[IoError]}
+address = const "127.0.0.1:0" | udp.bind | udp.local-addr
+export probe : I64 -> Bool ! {Network}
+probe = const () | attempt (address | udp.bind | udp.close) | result.is-ok
+main = 0 | probe | echo

@@ -56,10 +56,18 @@ fn metadata_capture_releases_after_callbacks_and_escaped_tasks() {
     let prepare = "    fwp_scope *s = detached ? 0 : fwp_cur->scope;";
     assert_eq!(generated.matches(prepare).count(), 1);
     generated = generated.replacen(prepare, "    if(fail_spawn&&t->cfn==child){fail_spawn=0;fwp_trap(\"child prepare trap\");}\n    fwp_scope *s = detached ? 0 : fwp_cur->scope;", 1);
+    let allocation = "calloc(1, sizeof *owner)";
+    assert_eq!(generated.matches(allocation).count(), 1);
+    generated = generated.replace(allocation, "capture_alloc(1, sizeof *owner)");
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 #include <stdint.h>
 static int stage,frees,entered,cancelled,trapped,typed,scope_returned,fail_spawn,nested;
+static int fail_capture,callback_entries;
+static void *capture_alloc(size_t,size_t);
 static void *watched,*spawned;
 static uintptr_t snapshot;
 static void *tls_objects[1];static int tls_frees;
@@ -73,6 +81,7 @@ static void no_release(void *);
 "#;
     let fixture = r#"
 #undef free
+static void *capture_alloc(size_t n,size_t size){if(fail_capture){fail_capture=0;return NULL;}return calloc(n,size);}
 static const fwp_desc string_descriptor={.kind=K_STR,.name="String"};
 static void no_release(void *p){(void)p;}
 static void remember_capture(void *p){if(!nested)watched=p;}
@@ -91,7 +100,7 @@ static void child(void *arg,int stop){
  if(stage==8)fwp_cur->gctx=&g_empty_ctx;
 }
 static uintptr_t observed_callback(uintptr_t f){
- check_capture();
+ callback_entries++;check_capture();
  if(nested){h2_hdrs_add(g_ctx_of()->capture,"x",1,"before",6);return 42;}
  if(stage==9){nested=1;V r=fwp_p_grpc_with_response_metadata(0);nested=0;if(OBJ(r)->f[0]!=42||g_ctx_of()->capture->n!=1)_Exit(15);return 42;}
  h2_hdrs_add(g_ctx_of()->capture,"x",1,"before",6);
@@ -144,7 +153,12 @@ int main(void){
  context.tls=0;fwp_cur->gctx=&context;
  if(!setjmp(failed)){fwp_p_grpc_with_tls(options,0,0,1,2,3,4);return 7;}
  if(tls_frees!=1||cap.users!=SIZE_MAX||fwp_cleanups||strcmp(fwp_trap_msg,"too many metadata capture owners"))return 8;
- fwp_cur->gctx=0;fwp_cur->trap_jb=0;FWP_KEEP_ALIVE(options);
+ fwp_cur->gctx=0;FWP_KEEP_ALIVE(options);
+ // Failed capture allocation never enters the callback or installs a context.
+ fail_capture=1;callback_entries=0;
+ if(!setjmp(failed)){fwp_p_grpc_with_response_metadata(0);return 9;}
+ if(fail_capture||callback_entries||fwp_cur->gctx||fwp_cleanups||strcmp(fwp_trap_msg,"cannot allocate response metadata capture"))return 21;
+ fwp_cur->trap_jb=0;
  fwp_lib_finish();return 0;
 }
 "#;

@@ -5,8 +5,11 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, macos-shards, ci-profile]
         default: numerical
+      source_revision:
+        description: Full source commit for the CI profile comparison
+        type: string
       evidence_run:
         description: Completed evidence run to use for generated-code comparisons
         type: string
@@ -15,11 +18,11 @@ on:
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+    if: inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
       fail-fast: false
       matrix:
-        runner: ${{ fromJSON((inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
+        runner: ${{ fromJSON(inputs.suite == 'service-values-linux' && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows' || inputs.suite == 'tcp-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
@@ -35,6 +38,21 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./scripts/setup-windows.ps1
+      - uses: actions/cache/restore@v4
+        id: decoder_tls_cache
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values')
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native Windows TLS dependencies
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values')
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v4
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values') && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
       - name: OpenSSL on macOS
         if: runner.os == 'macOS'
         run: |
@@ -43,8 +61,124 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - if: inputs.suite != 'vectors' && inputs.suite != 'fields' && inputs.suite != 'processes' && inputs.suite != 'mapped-arrays' && inputs.suite != 'zip-maps' && inputs.suite != 'zip-windows' && inputs.suite != 'hash' && inputs.suite != 'hash-windows'
+      - name: Byte decoder cleanup repair
+        if: inputs.suite == 'byte-decoders'
+        run: cargo test --test byte_decoder_ownership -- --nocapture
+      - name: Filesystem ownership
+        if: inputs.suite == 'paths' || inputs.suite == 'filesystem'
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
+      - name: Retrieve immutable CPU kernel baseline
+        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        run: |
+          git fetch --no-tags --depth=1 origin 21a621c699d11a84c05f955935dc95dcfb8adbf2
+          git show 21a621c699d11a84c05f955935dc95dcfb8adbf2:runtime/fwp_rt_kernel.c > kernel-baseline.c
+      - name: UDP lifetimes and socket cleanup
+        if: inputs.suite == 'udp'
+        env:
+          FWP_UDP_ARTIFACTS: udp-evidence
+        run: cargo test --no-fail-fast --lib resource::tests && cargo test --no-fail-fast --test compiler_options --test udp_ownership --test native_sockets --test arc_tasks --test file_values --test file_inline_path
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'udp'
+        with:
+          name: udp-${{ matrix.runner }}
+          path: udp-evidence/
+          if-no-files-found: ignore
+      - name: Copied service result ownership
+        if: inputs.suite == 'service-values' || inputs.suite == 'service-values-linux'
+        env:
+          FWP_REQUIRE_TLS: '1'
+          FWP_SERVICE_ARTIFACTS: service-evidence
+        run: cargo test --no-fail-fast --test service_value_ownership --test grpc_peer_completion --test http2_peer_cleanup --test grpc_capture_resources --test stdlib_doc
+      - name: HTTP/2 body interpreter and native agreement
+        if: ${{ !cancelled() && (inputs.suite == 'service-values' || inputs.suite == 'service-values-linux') }}
+        run: cargo test --lib grpc::web::tests::body_bounds_and_error_order_agree_with_native -- --exact
+      - name: HTTP/2 body source lifetime
+        if: ${{ !cancelled() && (inputs.suite == 'service-values' || inputs.suite == 'service-values-linux') && runner.os != 'Windows' }}
+        run: cargo test --test http2_body_roots
+      - uses: actions/upload-artifact@v7
+        if: always() && (inputs.suite == 'service-values' || inputs.suite == 'service-values-linux')
+        with:
+          name: service-values-${{ matrix.runner }}
+          path: service-evidence/
+          if-no-files-found: error
+      - name: TCP and TLS value ownership
+        if: (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows')
+        env:
+          FWP_REQUIRE_TLS: '1'
+          FWP_TCP_CONSTRUCTOR_ARTIFACTS: tcp-evidence
+          FWP_UDP_ARTIFACTS: tcp-evidence/udp
+        run: |
+          cargo test --no-fail-fast --lib resource::tests
+          cargo test --no-fail-fast --test native_sockets --test udp_ownership --test arc_tasks
+      - name: TLS stream interpreter and native agreement
+        if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
+        env:
+          FWP_REQUIRE_TLS: '1'
+        run: cargo test --test tls streams -- --exact
+      - name: Mutual TLS with checked ARC
+        if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
+        env:
+          FWP_REQUIRE_TLS: '1'
+          FWP_TCP_CONSTRUCTOR_ARTIFACTS: tcp-evidence
+        run: cargo test --test tls mutual_tls -- --exact
+      - name: Native TLS socket errors and clean shutdown
+        if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
+        env:
+          FWP_REQUIRE_TLS: '1'
+        run: cargo test --test tls native_tls_preserves_socket_errors_and_clean_shutdown -- --exact
+      - name: Existing POSIX TLS teardown and session-transfer controls
+        if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') && runner.os != 'Windows' }}
+        run: cargo test --no-fail-fast --test tls_wire_ownership --test tls_alpn_roots --test tls_peer_subject_ownership --test tls_listener_ownership --test connect_cleanup --test library_resources
+      - uses: actions/upload-artifact@v7
+        if: always() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows')
+        with:
+          name: tcp-${{ matrix.runner }}
+          path: tcp-evidence/
+          if-no-files-found: ignore
+      - name: Socket construction, scratch and DNS ownership
+        if: inputs.suite == 'sockets'
+        env:
+          FWP_DECODER_ARTIFACTS: decoder-evidence
+          FWP_TCP_CONSTRUCTOR_ARTIFACTS: decoder-evidence/tcp-constructors
+        run: cargo test --no-fail-fast --test native_sockets --test dns_ownership
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'sockets'
+        with:
+          name: sockets-${{ matrix.runner }}
+          path: decoder-evidence/
+          if-no-files-found: ignore
+      - name: CPU kernel ownership
+        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        env:
+          FWP_KERNEL_ARTIFACTS: kernel-evidence
+          FWP_KERNEL_BASELINE: kernel-baseline.c
+        run: cargo test --no-fail-fast --test cpu_kernel_ownership --test stdlib_doc
+      - name: CPU kernel size validation order
+        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        run: cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact
+      - name: Interpreter final reduction block
+        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        run: cargo test --lib numerics::kernel_boundary_tests::final_reduction_block_does_not_wrap_at_the_address_limit -- --exact
+      - name: CPU kernel sanitized size and cleanup controls
+        if: (inputs.suite == 'kernels' || inputs.suite == 'decoders') && runner.os != 'Windows'
+        run: cargo test --test device_bounds device_allocations_are_bounded_and_cleanup_controls_detect_omissions -- --exact
+      - uses: actions/upload-artifact@v7
+        if: always() && (inputs.suite == 'kernels' || inputs.suite == 'decoders')
+        with:
+          name: kernels-${{ matrix.runner }}
+          path: kernel-evidence/
+          if-no-files-found: ignore
+      - name: Value decoder ownership and partial-failure cleanup
+        if: inputs.suite == 'decoders'
+        env:
+          FWP_DECODER_ARTIFACTS: decoder-evidence
+        run: cargo test --no-fail-fast --test metrics_ownership --test library_unload --test byte_decoder_ownership --test ternary_ownership --test dns_ownership --test native_sockets --test text_decoder_ownership --test web --test std_tests --test arc_execution --test stdlib_doc
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'decoders'
+        with:
+          name: decoders-${{ matrix.runner }}
+          path: decoder-evidence/
+          if-no-files-found: ignore
       - name: Vector ownership, boxed lanes and failure cleanup
         if: inputs.suite == 'vectors'
         env:
@@ -333,6 +467,30 @@ jobs:
           name: compiler-crashes-solvers-${{ matrix.runner }}
           path: ~/Library/Logs/DiagnosticReports/fwp*
           if-no-files-found: ignore
+  library_unload:
+    if: inputs.suite == 'library-unload'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Native Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows.ps1
+      - run: cargo fmt --all -- --check
+      - run: cargo test --test library_unload --test compiler_options -- --nocapture
+      - run: cargo test --test udp_ownership socket_library_unload -- --nocapture
   library:
     if: inputs.suite == 'library'
     strategy:
@@ -840,3 +998,92 @@ jobs:
       - name: Actual WASI semantic agreement
         if: ${{ !cancelled() && inputs.suite == 'wasm' }}
         run: cargo test --no-fail-fast --test wasm --test browser --test exec_invocation_ownership
+
+  ci_profile:
+    if: inputs.suite == 'ci-profile'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      SOURCE_REVISION: ${{ inputs.source_revision }}
+    steps:
+      - name: Require an explicit source revision
+        shell: bash
+        run: '[[ "$SOURCE_REVISION" =~ ^[0-9a-f]{40}$ ]]'
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.source_revision }}
+          path: comparison-source
+      - uses: dtolnay/rust-toolchain@stable
+      - name: OpenSSL 3
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Compare compiler profiles with development checks enabled
+        run: python3 scripts/measure-ci-profile.py --source comparison-source --output ci-profile-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ci-profile-${{ matrix.runner }}
+          path: ci-profile-evidence/
+          if-no-files-found: error
+
+  macos_shards:
+    if: inputs.suite == 'macos-shards'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      RUST_TEST_THREADS: 1
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: OpenSSL
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - name: Coverage and failure propagation
+        run: python3 scripts/test-macos-test-shards.py
+      - name: Real Cargo test artifacts and concurrent execution
+        run: |
+          python3 - <<'PYTHON'
+          import importlib.util, json, os, subprocess
+          from pathlib import Path
+          spec = importlib.util.spec_from_file_location('shards', 'scripts/run-macos-test-shard.py')
+          shards = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(shards)
+          metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--no-deps', '--format-version', '1']))
+          selected = ['compiler_options', 'stdlib_doc', 'native_sockets']
+          command = ['cargo', 'test', '--no-run', '--message-format=json', '--lib', '--bins']
+          for target in selected:
+              command += ['--test', target]
+          built = subprocess.run(command, stdout=subprocess.PIPE, text=True)
+          if built.returncode:
+              print(built.stdout)
+              built.check_returncode()
+          executables = shards.test_executables(built.stdout, metadata, 'regular', selected)
+          raise SystemExit(shards.run_tests(executables, ['--skip', 'golden_programs_under_gc_stress'],
+                                           Path(os.environ['RUNNER_TEMP']) / 'macos-shard-probe'))
+          PYTHON
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: macos-shard-probe-${{ matrix.runner }}
+          path: ${{ runner.temp }}/macos-shard-probe/
+          if-no-files-found: warn

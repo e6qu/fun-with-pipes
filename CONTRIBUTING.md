@@ -93,9 +93,18 @@ tests between jobs. Remove obsolete entries when deleting targets. The runner
 rejects missing, duplicate, obsolete or unknown targets. Unit, example and
 benchmark targets run in regular; the GC job also runs its separate stress suite.
 Both ordinary shards skip `golden_programs_under_gc_stress` so that dedicated
-stress invocation runs exactly once. Together they retain the complete native
-coverage within the existing 90-minute limits. The documentation job verifies
-the real Cargo target set, assignment stability and failure propagation.
+stress invocation runs exactly once. Each shard builds its selected test
+executables once, verifies Cargo produced every requested target, then runs two
+executables concurrently with one harness thread each. Tests keep their existing
+internal workers. Every executable gets a separate uploaded log; any failed test
+fails the job after the remaining targets run. This avoids leaving the runner
+idle between the many single-test executables. The 90-minute limits and target
+assignments are unchanged; the final CI run must establish acceptance.
+
+The documentation job verifies the real Cargo target set, artifact coverage,
+assignment stability, concurrent execution and failure propagation. The stress
+queue starts its two longest measured programs first; [the observed timings](docs/measurements/gc-stress-scheduling-2026-10-16.json)
+explain that ordering without claiming a measured total-CI speedup.
 [Recorded timings](docs/measurements/macos-shards-2026-10-16.json) explain the
 initial balance, including the GC job's separate workload; estimates are not
 passing gates or promises about future runner speed.
@@ -105,11 +114,11 @@ still require Linux `/proc` or `strace`; Darwin-specific regressions in
 than accepting a stress variable with collection disabled.
 
 Production CI builds the Rust compiler and test harnesses at optimization level 1
-with debug assertions and overflow checks explicitly enabled. This reduces the
-candidate cost of repeatedly running the compiler without changing test cases,
-generated-C flags, stress settings or local Cargo defaults. Full passing gates
-and runner measurements, rather than this setting alone, establish whether it
-solves the Intel timeout. [Cargo's profile settings](https://doc.rust-lang.org/cargo/reference/profiles.html)
+with debug assertions and overflow checks explicitly enabled. The measured selected tests run faster with this setting, while initial builds
+take longer; see the [profile comparison](docs/measurements/ci-compiler-profiles-2026-10-16.json).
+PR #152 passed the complete matrix within existing limits. This setting does not
+change test cases, generated-C flags, stress settings or local Cargo defaults,
+and does not guarantee the duration of future runs. [Cargo's profile settings](https://doc.rust-lang.org/cargo/reference/profiles.html)
 define these independent switches.
 
 CI runs a primitive inventory at the exact source commit
@@ -283,12 +292,26 @@ language overhead. “Fewer allocations” does not by itself mean “faster.”
 
 ## Commits and pull requests
 
+Write the description for someone who has not followed the implementation.
+Start with the problem and what changes for a program or its author. Explain a
+concrete before/after example when it helps. Introduce necessary terms in place:
+for example, explain that a reference count records how many owners still use a
+value before discussing changes to that count. A list of internal function names
+or compiler passes is not an explanation of the change.
+
+Summarize validation and remaining limits separately from the changes. For a
+benchmark, name the programs being compared, input sizes, what the timer includes,
+and how to read the reported ratio. Keep source hashes, job IDs, failure history
+and individual timing samples in linked evidence. State whether full CI is still
+running. Rewrite the description around the final change before merging.
+
 - Work on a branch and open a pull request against `main`.
 - Pull requests are merged by **squash**. The title says what changed;
   the description explains why and how it was checked. Supply the
   squash subject explicitly and leave the commit body empty.
-- One topic per pull request. A refactor needed for a feature can go in
-  the same pull request; unrelated clean-ups get their own.
+- Bundle related roadmap work and fixes discovered while testing into a
+  reviewable delivery. Keep one delivery PR open at a time; avoid repeated
+  full test cycles for fragments of the same change.
 - Every commit message is exactly one line, at most 80 characters, with
   no body, trailers or AI attribution. When authorized to merge, wait
   for passing CI and squash-merge with an explicitly supplied subject

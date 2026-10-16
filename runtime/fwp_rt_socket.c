@@ -94,6 +94,14 @@ static int fwp_socket_again(int error) {
 }
 static int fwp_socket_aborted(int error) { return error == WSAECONNABORTED; }
 static const char *fwp_socket_message(int error, char *text, size_t size) {
+    /* Match the interpreter's common socket errors independently of OS language. */
+    switch (error) {
+    case WSAEACCES: return "Permission denied";
+    case WSAEADDRINUSE: return "Address already in use";
+    case WSAECONNABORTED: return "Software caused connection abort";
+    case WSAECONNRESET: return "Connection reset by peer";
+    case WSAECONNREFUSED: return "Connection refused";
+    }
     if (error < WSABASEERR) return strerror(error);
     wchar_t wide[768];
     DWORD n = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,

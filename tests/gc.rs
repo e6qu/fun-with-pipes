@@ -193,7 +193,17 @@ fn golden_programs_under_gc_stress() {
         .map(|e| e.unwrap().path())
         .filter(|p| p.extension().is_some_and(|e| e == "fwp"))
         .collect();
-    entries.sort();
+    // Start the longest measured cases first so other workers can finish the
+    // short programs alongside them. Intel CI run 38925341899 spent 1744s on
+    // collections_build and 175s on http. Keep every case and all four workers.
+    // Workers pop from the end, so the priority cases sort last.
+    entries.sort_by_key(|path| {
+        let long = matches!(
+            path.file_name().and_then(|name| name.to_str()),
+            Some("collections_build.fwp" | "http.fwp")
+        );
+        (long, path.clone())
+    });
     let queue = std::sync::Mutex::new(entries);
     let failures = std::sync::Mutex::new(Vec::new());
     std::thread::scope(|s| {
@@ -202,8 +212,15 @@ fn golden_programs_under_gc_stress() {
                 let Some(path) = queue.lock().unwrap().pop() else {
                     break;
                 };
+                let started = std::time::Instant::now();
+                eprintln!("GC stress example started: {}", path.display());
                 let want = std::fs::read_to_string(path.with_extension("out")).unwrap_or_default();
                 let got = stressed(&path, &dir.0);
+                eprintln!(
+                    "GC stress example finished: {} ({:.2}s)",
+                    path.display(),
+                    started.elapsed().as_secs_f64()
+                );
                 if got != want {
                     retain_stress_failure(&path, &dir.0, &want, &got);
                     failures.lock().unwrap().push(format!(

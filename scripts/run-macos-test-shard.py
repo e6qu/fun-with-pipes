@@ -2,9 +2,12 @@
 """Partition Cargo's test targets across the two required macOS jobs."""
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
 import subprocess
+import sys
+import time
 
 ROOT = Path(__file__).resolve().parent.parent
 SHARDS = {"regular": 0, "gc": 1}
@@ -67,9 +70,63 @@ def command(metadata, shard, schedule):
     return args, sorted(names), selected
 
 
+def test_executables(output, metadata, shard, selected):
+    package = next(package for package in metadata["packages"]
+                   if Path(package["manifest_path"]).resolve() == ROOT / "Cargo.toml")
+    expected = {(target["kind"][0], target["name"]) for target in package["targets"]
+                if (target["kind"] == ["test"] and target["name"] in selected)
+                or (shard == "regular" and len(target["kind"]) == 1
+                    and target["kind"][0] in UNIT_TARGETS)}
+    executables = {}
+    for line in output.splitlines():
+        message = json.loads(line)
+        if message.get("reason") == "compiler-message":
+            rendered = message["message"].get("rendered")
+            if rendered:
+                print(rendered, file=sys.stderr, end="")
+        if (message.get("reason") != "compiler-artifact"
+                or message.get("package_id") != package["id"]
+                or not message["profile"]["test"] or not message.get("executable")):
+            continue
+        target = message["target"]
+        key = (target["kind"][0], target["name"])
+        if len(target["kind"]) != 1 or key not in expected or key in executables:
+            raise ValueError(f"unexpected or duplicate test executable: {key}")
+        executables[key] = message["executable"]
+    if set(executables) != expected:
+        raise ValueError(f"missing test executables: {sorted(expected - set(executables))}")
+    if len(set(executables.values())) != len(executables):
+        raise ValueError("test targets share an executable path")
+    return sorted(executables.items())
+
+
+def run_tests(executables, test_args, logs):
+    logs.mkdir(parents=True, exist_ok=True)
+
+    def run(item):
+        (kind, name), executable = item
+        log = logs / f"{kind}-{name}.log"
+        started = time.monotonic()
+        print(f"Starting {kind}/{name}; log: {log}", flush=True)
+        # Two executable workers, each with one harness thread. Individual tests
+        # keep their existing internal parallelism (for example golden programs).
+        with log.open("wb") as output:
+            result = subprocess.run([executable, "--test-threads=1", *test_args],
+                                    cwd=ROOT, stdout=output, stderr=subprocess.STDOUT)
+        print(f"Finished {kind}/{name}: exit {result.returncode}, "
+              f"{time.monotonic() - started:.2f}s", flush=True)
+        print(log.read_text(errors="replace"), end="", flush=True)
+        return result.returncode
+
+    with ThreadPoolExecutor(max_workers=2) as workers:
+        codes = list(workers.map(run, executables))
+    return 1 if any(codes) else 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--shard", choices=SHARDS, required=True)
+    parser.add_argument("--logs", type=Path, required=True)
     options = parser.parse_args()
     metadata = json.loads(subprocess.check_output(
         ["cargo", "metadata", "--no-deps", "--format-version", "1"], cwd=ROOT))
@@ -77,9 +134,16 @@ def main():
     print(f"macOS {options.shard}: {len(selected)}/{len(all_targets)} "
           "integration targets", flush=True)
     print("\n".join(selected), flush=True)
-    print("Command: " + " ".join(args), flush=True)
-    subprocess.run(args, cwd=ROOT, check=True)
+    split = args.index("--")
+    build_args = args[:split] + ["--no-run", "--message-format=json"]
+    print("Build: " + " ".join(build_args), flush=True)
+    built = subprocess.run(build_args, cwd=ROOT, stdout=subprocess.PIPE, text=True)
+    if built.returncode:
+        print(built.stdout, end="", file=sys.stderr)
+        built.check_returncode()
+    executables = test_executables(built.stdout, metadata, options.shard, selected)
+    return run_tests(executables, args[split + 1:], options.logs)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

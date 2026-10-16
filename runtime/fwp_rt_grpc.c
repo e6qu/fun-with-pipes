@@ -2506,17 +2506,27 @@ static int g_not_metadata(const char *k) {
     return 0;
 }
 
-static V fwp_p_grpc_metadata(void) {
-    g_serving *sv = g_ctx_of()->serving;
+static V fwp_p_grpc_metadata(const fwp_desc *list_type) {
+    g_ctx *ctx = g_ctx_of();
+    g_serving *sv = ctx->serving;
     if (!sv) return 0;
-    V *items = (V *)fwp_alloc((sv->headers->n + 1) * sizeof(V));
-    size_t n = 0;
-    for (size_t i = 0; i < sv->headers->n; i++) {
-        const h2_hdr *h = &sv->headers->v[i];
+    fwp_value_owner result = {0, list_type->drop};
+    fwp_cleanup cleanup; fwp_value_protect(&result, &cleanup);
+    /* Build backwards to preserve header order without a pointer scratch array. */
+    for (size_t i = sv->headers->n; i > 0; i--) {
+        const h2_hdr *h = &sv->headers->v[i - 1];
         if (g_not_metadata(h->name)) continue;
-        items[n++] = fwp_tuple2(fwp_cstr(h->name), fwp_cstr(h->value));
+        fwp_decode_fields fields;
+        fwp_decode_fields_begin(&fields, 2, list_type->elem->fields, 2, NULL);
+        fields.values[0] = fwp_rc_fresh(fwp_cstr(h->name));
+        fields.values[1] = fwp_rc_fresh(fwp_cstr(h->value));
+        fwp_value_owner pair = {fwp_decode_record(&fields), list_type->elem->drop};
+        fwp_cleanup pair_cleanup; fwp_value_protect(&pair, &pair_cleanup);
+        result.value = fwp_rc_fresh(fwp_cons(pair.value, result.value));
+        fwp_value_finish(&pair, &pair_cleanup);
     }
-    return fwp_list_from(items, n);
+    FWP_KEEP_ALIVE(PTR(ctx));
+    return fwp_value_finish(&result, &cleanup);
 }
 
 typedef struct { fwp_task *task; void *saved, *held; } g_context_owner;
@@ -2591,12 +2601,12 @@ static V fwp_p_grpc_set_meta(int trailer, V name, V value) {
     g_serving *sv = g_ctx_of()->serving;
     fwp_str *k = STR(name), *v = STR(value);
     if (!sv || !sv->s || k->len == 0 || k->d[0] == ':') return FWP_UNIT;
-    char *lk = (char *)malloc(k->len + 1), *lv = (char *)malloc(v->len + 1);
-    for (size_t i = 0; i < k->len; i++) lk[i] = (char)tolower((unsigned char)k->d[i]);
-    for (size_t i = 0; i < v->len; i++) lv[i] = v->d[i] == '\r' || v->d[i] == '\n' ? ' ' : v->d[i];
-    h2_hdrs_add(trailer ? &sv->s->out_trailers : &sv->s->out_headers, lk, k->len, lv, v->len);
-    free(lk);
-    free(lv);
+    h2_hdrs *headers = trailer ? &sv->s->out_trailers : &sv->s->out_headers;
+    h2_hdrs_add(headers, k->d, k->len, v->d, v->len);
+    h2_hdr *copy = &headers->v[headers->n - 1];
+    for (size_t i = 0; i < k->len; i++) copy->name[i] = (char)tolower((unsigned char)copy->name[i]);
+    for (size_t i = 0; i < v->len; i++)
+        if (copy->value[i] == '\r' || copy->value[i] == '\n') copy->value[i] = ' ';
     return FWP_UNIT;
 }
 
@@ -2613,6 +2623,7 @@ static V fwp_p_grpc_with_response_metadata(V f) {
     g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
     *ctx = *cur;
     g_capture *owner = (g_capture *)calloc(1, sizeof *owner);
+    if (!owner) fwp_trap("cannot allocate response metadata capture");
     owner->users = 1;
     fwp_cleanup capture_cleanup;
     fwp_cleanup_push(&capture_cleanup, g_capture_release, owner);
@@ -2631,10 +2642,15 @@ static V fwp_p_grpc_with_response_metadata(V f) {
     return result;
 }
 
-static V fwp_p_grpc_peer_subject(void) {
-    g_serving *sv = g_ctx_of()->serving;
+static V fwp_p_grpc_peer_subject(const fwp_desc *option_type) {
+    g_ctx *ctx = g_ctx_of();
+    g_serving *sv = ctx->serving;
     if (!sv || !sv->peer) return FWP_NONE;
-    return fwp_some(fwp_cstr(sv->peer));
+    fwp_decode_fields fields;
+    fwp_decode_fields_begin(&fields, 1, option_type->vfields[1], 1, NULL);
+    fields.values[0] = fwp_rc_fresh(fwp_cstr(sv->peer));
+    FWP_KEEP_ALIVE(PTR(ctx));
+    return fwp_decode_variant(&fields, 1);
 }
 
 /* the text of an `Option[String]` field ("" for None) */

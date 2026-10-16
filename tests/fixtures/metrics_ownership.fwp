@@ -1,0 +1,24 @@
+# A snapshot owns copies: later updates cannot change its earlier values.
+# Names may contain NUL; lookup and ordering must use the entire string.
+main = [
+    metrics.snapshot () | echo,
+    metrics.add "a\u{0}z" 1.0,
+    metrics.add "a\u{0}a" 2.0,
+    metrics.add "a" 3.0,
+    metrics.add "" 4.0,
+    metrics.observe "λ\u{0}x" 2.5,
+    metrics.observe "λ\u{0}x" -0.5,
+    metrics.add "a\u{0}z" -2.0,
+    metrics.snapshot () | echo,
+    (metrics.snapshot (), metrics.set "a" 9.0, metrics.snapshot ()) | echo,
+    metrics.add "a" 0.5,
+    metrics.set "λ\u{0}x_count" 7.0,
+    metrics.observe "λ\u{0}x" 1.0,
+    metrics.snapshot () | echo,
+    range 0 32 | each (const () | metrics.snapshot | hash | echo),
+    range 0 32 | map (show | SStr | both id syntax.show) | echo,
+    [SUnit, SApply (SName "add") [SInt 1], SPipe (SName "x") (SName "sum"),
+     SList [SStr "λ\u{0}x", SInt -1], SRecord [("x", SInt 3)],
+     SMatch [(PCtor "Some" [PHole], SName "id"), (PCtor "None" [], SInt 0)]]
+        | map (both id syntax.show) | echo,
+] | ignore

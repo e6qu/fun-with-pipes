@@ -1,0 +1,26 @@
+# Decoders return Some/None or Ok/Err rather than silently repairing malformed
+# input. Keep the original text beside decoded results to exercise aliases.
+request = string.to-bytes | http.parse-request-head
+response = string.to-bytes | http.parse-response-head
+main = [
+    ["a%20b%2f%C3%BC", "x+y", "%00tail", "%", "%0", "%GG", "%FF", ""]
+        | map (make { 0 = id, 1 = url.decode, 2 = form.decode }) | echo,
+    ["HTTP://user@Example.com:8080/a?q=1#part", "https://[::1]/", "custom://h", "http://h/?x=1",
+     "http://[::1]x/", "http://h:99999/", "http://h:/", "http://:80/", "no-scheme", "http://h/\u{0}"]
+        | map (both id url.split) | echo,
+    ["GET / HTTP/1.1", "POST /λ?q=1 HTTP/1.0\r\nHost: example\r\nX-Test: first\r\nX-Test:\tsecond ",
+     "GET / HTTP/1.1\r\nBad Header: x\r\nGood: y", "GET / HTTP/1.1\r\nGood: y\r\nBad Header: x",
+     "GET / HTTP/1.1\r\nX: a\u{0}b", "GET / HTTP/1.1\r\n", "GET / HTTP/2.0", "GET /", ""]
+        | map (both id request) | echo,
+    ["HTTP/1.1 200 OK", "HTTP/1.0 404 Not Found\r\nX: first\r\nX: second",
+     "HTTP/1.1 200\r\nBad Header: x\r\nGood: y", "HTTP/1.1 200\r\nGood: y\r\nBad Header: x",
+     "HTTP/1.1 200\r\n", "HTTP/1.1 abc bad", "HTTP/1.1 20", ""]
+        | map (both id response) | echo,
+    ["0", "abcdef", "7FFFFFFFFFFFFFF", "FFFFFFFFFFFFFFFF", "xyz", ""] | map http.parse-hex | echo,
+    [("x-name", "value"), ("bad name", "value"), ("good", "a\r\nb")] | map (uncurry http.field-ok) | echo,
+    [[("Content-Length", "12")], [("content-length", "1"), ("CONTENT-LENGTH", "1")], [], [("content-length", "-1")]]
+        | map http.content-length | echo,
+    range 0 32 | map (const "GET / HTTP/1.1\r\nA: 1\r\nB: 2\r\nC: 3" | request) | hash | echo,
+    range 0 32 | map (const "GET / HTTP/1.1\r\nInvalid\r\nB: 2\r\nC: 3" | request) | hash | echo,
+    range 0 32 | map (const "https://example.com/λ?q=1" | url.split) | hash | echo,
+] | ignore

@@ -1,203 +1,178 @@
 # Session handoff
 
-Updated 2026-10-16. [PLAN.md](../PLAN.md) defines completion. None of its seven
-whole work areas is complete. This is the current action list; accepted evidence
-belongs in [delivery history](roadmap-history.md).
+Updated 2026-10-16. [PLAN.md](../PLAN.md) defines seven unfinished work areas.
+[PR #153](https://github.com/e6qu/fun-with-pipes/pull/153) is the only delivery PR.
+It combines decoded-value cleanup, smaller numerical temporaries, socket ownership
+and copied service-result ownership. Do not open a separate service PR or apply
+these preparation changes again.
 
-## Active delivery
+## Current action
 
-[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) is the only open delivery:
-borrowed hash fields, direct range arrays, owned vectors and removal of temporary
-F64 lane storage. Branch `owned-numerics-delivery` is in the main workspace
-`/Users/zardoz/projects/fun-with-pipes`. It is rebased onto accepted #151; its tree
-matched the measured preparation exactly before this final documentation update.
-`numerical-evidence-before-151` preserves that preparation and its measurement
-commit IDs. It is evidence, not another task or delivery PR.
+PR #153 is temporarily draft while its decoder test repair gets focused native
+verification. The failed production run `38946985320` at `a0af12d9` was canceled;
+it must not be accepted. ARM Mac GC found that the replacement instrumentation
+marker `b->d = data` also matched the generic text buffer. The earlier repair
+therefore matched twice and failed its uniqueness assertion before native tests.
 
-Production `38890080777` at `c81b0c9f` cannot be accepted: both Intel macOS jobs
-hit their 90-minute deadlines. Their completed tests pass; the remaining tests
-were not run. ARM macOS regular/stress, Windows ARM64/AMD64, benchmarks and docs
-passed; Linux jobs are still running. The Intel GC shard completed only 60 of
-its 97 targets, so rebalancing alone cannot supply enough capacity.
+The new repair matches the HTTP/2 assignment and its capacity update together,
+keeps the one-match assertion, and counts only successful first allocations.
+Explicit marker/replacement pairs remove the old marker-dependent insertion
+rule. The deliberately omitted buffer/partial-field cleanup controls remain.
+The test also saves whether the buffer is new before `realloc`, so it never
+examines the old pointer after a successful resize. Runtime behavior is unchanged. Five source hooks are unique and exclude the
+text buffer; native verification must still pass.
 
-The proposed repair builds CI's Rust compiler and test harnesses at optimization
-level 1 while explicitly preserving debug assertions and integer overflow checks.
-Generated-C optimization/stress settings, test selection, job count, time limits
-and local Cargo defaults remain unchanged. This is a candidate runtime-cost
-reduction, not a demonstrated speedup. Require fresh production/docs for the new
-head and retain the profile comparison on runners.
-Next: monitor #152's final-head production and documentation gates. Require all
-nine production jobs and documentation on its exact final head, fix failures,
-then squash-merge with an explicit one-line subject and empty
-body. Focused preparation passes below do not replace full acceptance. Verify the
-merge tree, parent and exact message before canceling duplicate postmerge production.
-Then transfer only the following decoder delta onto the accepted numerical squash.
+The focused run `38953880113` at `c3709a4d` passes all four Unix hosts but fails
+both Windows hosts because generated WebSocket code still includes OpenSSL
+headers, even for parsing-only programs. Removing TLS setup was incorrect.
+This repair restores the native TLS toolchain for the focused target. The
+precise decoder markers and pre-resize flag are unchanged.
 
-#151 merged as `3dff03b644c4922845f7c4b9f3a9673dece5ef16` after production
-`38872161681` and docs `38872161673` passed for `27cdc7ff`. Its tree matches that
-head, its parent is #150 (`729db67f`), and its exact single-line message is
-`Own WASI values and eliminate hashing intermediates`. Duplicate postmerge
-production `38884089916` is confirmed canceled. The macOS assignment repair
-preserved all coverage and both Intel jobs passed within unchanged limits.
+Next: publish the restored dependency setup, require the replacement six-host
+`byte-decoders` run, then make #153 ready. All nine production jobs and
+documentation must pass on the final head. Draft-skipped jobs are not acceptance.
+Update `/private/tmp/fwp-ready-153.py` and `/private/tmp/fwp-merge-153.py` with the
+new head/run IDs before use.
 
-Production `38884588161` at `ed936381` failed the ARM macOS regular shard:
-`examples/vector-lanes.fwp` did not match the language formatter. Both formatting
-assertions identify that same file; other tests in that completed shard pass.
-The example is now formatted with the accepted binary under the guard (0.02 s),
-and its format check passes (0.01 s). No implementation changed. CI now checks
-language formatting before lengthy suites on all production targets, using the
-compiler each job already builds. This supplements existing format tests and
-preserves all nine gates. Publish and require fresh final-head production/docs;
-the previous ARM macOS GC, benchmark and docs passes are not new-head acceptance.
+Local formatting (1.22s), five unique runtime hooks excluding text buffers
+(0.19s), and documentation audit (2.80s) pass. Reviewing all canceled production
+logs (13.05s) found only the duplicate-hook failure on both Linux hosts, both
+Windows hosts and ARM Mac GC. Incomplete jobs are not acceptance.
+
+After all final-head gates pass, squash-merge with subject
+`Reduce temporary memory and clean up network resources` and an empty body.
+The whole message must be one line, at most 80 characters, with no trailers or
+attribution. Verify merged files, parent and message; cancel duplicate postmerge
+CI. Update `/private/tmp/fwp-merge-153.py` to the repaired head and supply the new
+production/documentation IDs; it verifies all nine jobs and docs before merging.
+Standing publication, fixes and merge authorization persists. Failing tests are
+work to fix. JIT is excluded.
+
+The Mac runner builds each selected target once and runs two executables at a
+time. Artifact checks reject missing/duplicate targets and every target gets a
+log. GC stress starts its two longest measured cases first, retaining all cases
+and four workers. Scheduling changes preserve the 90-minute limit; they do not
+yet establish a measured total-CI speedup.
+
+## Passing focused checks
+
+Service run `38935341434` passes all six native hosts at `e715de1a29a55fb08fe0ca1b339e5d38e493d4b8`.
+Both actual WASI jobs in `38934584083` pass at `c37b6afa`; later native follow-ups
+do not change WASI code. The [service report](measurements/service-values-2026-10-16.json)
+retains source/binary hashes, native formats, symbols, ARM64 instructions and
+allocation counts. `/private/tmp/fwp-retain-service-values.py` generated it from
+passing jobs and retained artifacts under `/private/tmp/fwp-service-final-evidence`.
+
+Incoming service headers/certificate names and HTTP/2 request/body copies now
+own their returned storage. Every partial-result allocation is tested: 12 header,
+2 certificate-name, 20 request and 2 body failure points return charged storage
+to baseline with collection disabled. Aliases, source mutation, garbage-collection
+stress, memory reuse, header order/duplicates and all body bytes are covered.
+Thirteen body-limit/error-order cases and three request-header cases compare
+actual interpreter and native output. Deliberately omitting cleanup must fail.
+
+Outgoing response headers normalize their owned copies directly, removing two
+temporary string buffers. Raw header and buffer allocation checks preserve prior
+storage and reject size overflow; their existing failure exit status remains
+102. Response-capture allocation now traps before calling the callback or
+installing the context. Its existing escaped-child, cancellation and overflow
+checks pass on all six hosts. Generated standard-library documentation passes too.
+
+Earlier setup failures are repaired. The last Windows fixture failure was CRT
+newline translation; explicit binary stdout preserves the exact-byte comparison.
+Superseded service runs are canceled. Copied results do not establish ownership
+of the service's streams, connections or retained contexts, and do not establish
+that an entire server can execute without tracing.
+
+Existing reports retain decoded-value, numerical-worker, DNS, UDP and TCP/TLS
+checks under `docs/measurements`. Numerical temporary storage falls from 69,648
+to 4,104 bytes for the recorded 8,193-number, one-worker case; the result still
+uses 65,552 bytes. These are memory measurements against earlier fwp, not speed
+or C/Rust parity. Actual ARC socket binaries exclude tracing functions. The
+socket counter fits the previous plain header; TLS adds one session pointer.
+
+Windows now uploads failed TLS, differentiation and output-comparison step logs
+before later checks finish. All nine production jobs and platform coverage remain.
+All 230 integration targets remain assigned to macOS jobs; Windows includes
+service-result, certificate-buffer and response-capture checks.
+
+## Local checks and limits
+
+Keep local checks serial through `python3 scripts/local-guard.py`, with unchanged
+CPU, memory, disk and deadline limits. Full compilation/testing stays on GitHub.
+Earlier local compiler and standalone C builds were refused by automatic review;
+do not retry or bypass that restriction.
+
+Guarded formatting passes (latest 1.28s); macOS partition and new concurrent-runner checks pass (0.96s).
+The final independent roadmap audit passes (3.06s: 50 link sets, 106 immutable preparation
+pairs and seven work areas). `git diff --check` passes. Earlier accepted-interpreter
+examples and the primitive inventory pass (341 contracts, 13 remaining reviews).
+Guarded artifact retention and binary inspection passed in 16.91s.
+The local generated-doc recheck printed a passing test but its monitor failed
+with a process-signal permission error; that invocation was not accepted. The
+same documentation test subsequently passed on all six service CI hosts.
+Final documentation edits pass the bounded audit.
+
+## Accepted delivery and following work
+
+PR #152 is accepted at `1fa0fec690b7747a9ffcf2d72903d16544889258`: all nine
+production jobs and documentation passed, merged files/message were verified,
+and duplicate CI was canceled. [Delivery history](roadmap-history.md) retains it.
+
+Independent preparation is in `/private/tmp/fwp-context-owners`, branch
+`service-context-preparation`, based on `ac3060d1`. Prepared source `975806e9` has six-host run `38953639844`.
+Earlier `38951742782` at `4656043f` exposed a Windows artifact copy using `probe`
+where the compiler writes `probe.exe`; the repair makes that path explicit.
+Windows AMD64's callback/result and decoder cleanup tests passed, but its O2
+child checks still need the replacement run. The new source also protects
+served-request decoding scratch. It adds message-decoding
+trap cleanup and the same two-executable Linux scheduling used on Mac. Queued
+`38949852186` was superseded. Focused actual WASI ARC run `38949856424` passes on both Linux
+architectures, including actual explicit exit at `6b642a82`. Broader WASI/browser run `38947985548` passes on both
+Linux architectures at callback/runtime source `24caa70b`; it predates exit tests. Earlier context checks exposed harness
+and Windows inventory path bugs; repairs are included in the new source. Do not open a second PR. Rebase only its
+delta after `ac3060d1` onto the accepted #153 squash.
+
+That preparation moves scope settings to the stack, copies inherited settings
+inside child tasks, borrows synchronous TLS/capture owners and packs outgoing
+headers into one owned allocation. It also borrows typed callbacks and owns
+returned values/captured header copies. New tests cover aliases, returned
+functions, every partial-result allocation, child lifetimes, failure/cancellation,
+ARC binaries and deliberately broken cleanup. The five proposed new contracts
+need CI inventory and runtime validation. The exit contract is also prepared: no returned owner exists when a process
+terminates. Three new targets have permanent Windows/Mac coverage, giving that
+preparation 233 targets; #153 remains 230.
+
+Retained baseline `9b137078` passed Linux. Intermediate stack-copy `ad77934c`
+passed ordinary allocation/output tests on all six hosts, and all four complete
+Unix jobs. Separate Windows lifetime fixtures failed to compile; the new source
+repairs their API-target header order and environment APIs. Do not count those
+old Windows jobs as full acceptance. Gzip/deadline remove a 64-byte per-call
+managed request; Linux AMD64 service tasks grow from 1,512 to 1,576 bytes in
+that intermediate version. Actual ARM64/AMD64 instructions and all six native
+binary formats are retained in the preparation's measurement report. The current
+revision adds another owner pointer and needs new layout/memory measurements.
+Neither counts nor instruction inspection establishes a speedup or C/Rust parity.
+The preparation handoff records all current checks. Preserve the existing
+effect rule: partial application is pure; only the final arrow may have effects.
+
+After #153 acceptance, continue service streams, connections and retained request
+contexts. Finish the prepared context/callback/exit checks and retain final allocation,
+layout and binary evidence. The stack/packed-header changes need verified child
+lifetimes after scope return, failure and cancellation.
+Do not replace unproved lifetimes with permanent retention. Remaining primitive
+reviews also cover deferred remote results, HTTP/2 serving/sending/responding,
+process exit and GPU execution. Continue the seven work areas below; completing
+this delivery does not finish the language's memory or performance goals.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
-| 1 | In progress | Complete deployment and primitive ownership; remove tracing |
-| 2 | In progress | Deliver borrowed hash fields, direct arrays and scalar lane loops |
-| 3 | In progress | Reduce remaining C/Rust gaps beyond the measured small kernels |
-| 4 | In progress | Reduce derivative recording costs and validate scaling |
-| 5 | In progress | Broaden numerical kernels and resolve runtime OpenCL compilation |
-| 6 | In progress | Retain comparable repeated timing, storage and code evidence |
-| 7 | In progress | Extend maintained programs across deployment boundaries |
-
-## Current implementation and acceptance scope
-
-Hash's explicit nonescape proof means its input is used only during the call;
-borrowing alone does not imply that. Temporary structural-tuple fields borrow
-from live owners, including eligible sole-use named fields. The independent
-ownership verifier checks those lifetimes. Retained aliases, later consumption,
-nominal records, calls, traps and resource frames retain ordinary ownership.
-
-Immediate inline-integer `range | array.from-list` builds packed arrays without
-list nodes. Bounds keep their order; descending/empty ranges stay empty. Wide
-size arithmetic checks the portable array bound before narrowing to WASI's
-machine size. I128/U128 retain boxed storage and cleanup.
-
-Nine vector primitives own wrappers, arrays, boxed aliases and reduction
-accumulators. Partial construction and replaced accumulators release on failure.
-F128 lanes copy payload bits without retaining temporary scalar boxes. Tests
-preserve wrapping lanes, checked division, views and manual-record common prefixes.
-The example and generated library docs introduce notation and optional results.
-
-F64 loops select contiguous storage once. Proved total lane pipelines avoid
-intermediate lists; immediate multiply/sum avoids its product vector. Two
-consecutive sole-use splats can remain scalar. Multiplication rounds before
-ordered additions, empty vectors still evaluate both scalar expressions, and
-retained vectors keep ordinary storage. Effects, eager stage captures and distinct
-first traps retain their order. No floating reassociation or implicit conversion
-is introduced.
-
-## Completed focused gates
-
-Final numerical runtime `b1a34ea0` passes all six native jobs `38877218687`, both
-actual WASI jobs `38877223390`, four-host costs `38877226777` and paired comparison
-`38881665737`. The later changes are evidence/documentation. Native O1/O2 tests
-compare raw and optimized interpretation, tracing stress/verification/reuse and
-checked ARC. Missing cleanup, physical-free, allocation-path and alias controls
-remain in the suite. New macOS targets have explicit assignments: 221 total,
-with no reassignment of #151's existing 219.
-
-Earlier hash/range revision `ac72124c` passes six-native `38864599295`, both WASI
-`38864602220`, four-host costs `38864604854` and paired runs `38866837452` and
-`38867789225`. Vector ownership baseline `637b3eb2` passes six-native
-`38867603162` and both WASI `38867607803`; baseline costs at `6be8f245` pass
-`38869050349`. Direct-dot intermediate `3577ba37` passes six-native `38874211385`,
-both WASI `38874214456` and four-host costs `38874218523`. These are supporting
-preparation evidence, not extra deliveries. Superseded incomplete runs were
-canceled and are not acceptance.
-
-## Measurements and their limits
-
-[Hash field evidence](measurements/hash-borrowed-fields-2026-10-16.json) records
-two managed requests, zero retains and zero final charged storage for both
-workloads on all four hosts; small/large peak charged bytes are 144/32,776.
-The actual ARM64 loop has a stack tuple and register-held state without count or
-allocation calls. [Two paired runs](measurements/hash-borrowed-cpu-2026-10-16.json)
-retain slower samples: first-run macOS regressions did not repeat. No universal
-speedup or C/Rust parity claim follows.
-
-[Baseline vector costs](measurements/vector-lanes-2026-10-16.json) cover four
-lanes × 32,768 iterations and 64 lanes × 8,192. Each iteration fills lanes with
-its index, multiplies by 0.5 and sums in order. Baseline requests were
-262,147/65,539; the [direct-dot intermediate](measurements/vector-direct-intermediate-2026-10-16.json)
-reduced them to 131,074/32,770 but still built two splats per iteration.
-
-[Final scalar-splat evidence](measurements/vector-scalar-splats-2026-10-16.json)
-records two requests total, 40 requested bytes, 48 peak charged bytes and zero
-retains/final storage for both workloads on every host/mode. The two allocations
-belong to final conversion/output. Both retained ARM64 calculation loops keep
-state in registers, with no calls, loads or stores inside those loops. Setup and
-output still cost work; static instructions do not measure dynamic cache misses
-or register spills.
-
-The [paired report](measurements/vector-paired-2026-10-16.json) verifies original
-artifact identities, twelve balanced samples and matching profiles. ARC CPU ratios
-against baseline are 0.161/0.313 on Linux AMD64, 0.116/0.241 on Linux ARM64,
-0.327/0.416 on ARM macOS and 0.270/0.504 on Intel macOS for four/64 lanes.
-[Benchmarks](benchmarks.md) explain remaining C/Rust overhead, exact inputs,
-whole-process timing and differing managed/system allocation scopes. Compilation,
-RSS, binary size, hardware and flags remain in the raw reports. These selected
-programs do not establish whole-language zero-cost abstractions.
-
-## Following owned-value preparation
-
-The following combined delivery is integrated in `/private/tmp/fwp-owned-values-delivery`,
-branch `owned-values-delivery`, at `b7537a6a`, based on `c81b0c9f`. Its current
-handoff is authoritative for owned decoders, metrics, CPU kernels, DNS and socket
-scratch fixes. DNS/decoder checks pass six-native `38897597329` and both WASI
-`38897600949` at preparation `cba3e810`; socket checks `38898918147` are running
-at `7224b3de`, with Linux2, ARM macOS and Windows AMD64 passing.
-The original combined preparation is `/private/tmp/fwp-owned-kernels`, branch
-`owned-cpu-kernels`. Only its delta after
-`3577ba3780c19051845a5beba3f064f608cedf1e` belongs to the next delivery. It includes
-ternary, URL/form/HTTP, compressed-byte, metric and syntax results, plus CPU tensor
-output/scratch ownership. Inventory is 300 contracted declarations and 43 distinct
-remaining review symbols; counts alone do not establish runtime support.
-
-Decoder/Windows repairs at `30399066` pass all six jobs `38886033175`. Both actual
-WASI jobs `38884843627` pass at the preceding `72321a55`; its subsequent HTTP/2
-repair is native-only. The repairs cover native dependency setup, portable
-fixtures, Windows console shutdown, WebSocket clock selection and socket
-would-block handling. Native-only compressed-byte helpers remain unavailable on
-WASI. The worktree handoff retains intermediate evidence and repaired failures.
-
-Metrics/syntax and CPU kernels were added afterward. Actual WASI `38891578037`
-passes both hosts at `c8f4646c`, including registry shutdown, full 32-bit count
-checks and final-block index overflow controls. Native `38893386853` at `457f00d3`
-passes ARM Linux/macOS and AMD64 Linux; Intel macOS is running. Windows kernel,
-decoder and metric checks pass but its newly added library-unload peer needs a
-fixture export repair. Focused six-native `38894911944` at `234da577` validates
-that repair; runtime/WASI sources remain unchanged. See the preparation worktree's
-handoff for precise failure history and current results.
-
-Kernel evidence compares the old and new executor on identical inputs and retains
-C/binaries/disassembly; no timing claim is made. Single-worker native scratch falls
-from 69,648 to 4,104 bytes for 8193 F64 values, while the result array remains.
-Finish the unload repair and evidence, then rebase only the complete preparation
-delta onto accepted #152 before opening its sole next delivery PR. Do not replay
-numerical preparation ancestry. A later full run will also log individual GC
-stress example durations; no concurrency or coverage was reduced.
-
-## Local checks and delivery constraints
-
-All local checks use `python3 scripts/local-guard.py COMMAND...` with unchanged
-limits. No changed compiler was built locally. The earlier diagnostic compilation
-stopped with an OS signal error; no process remained and limits were not raised.
-Do not retry that refused workload. Full builds, suites and benchmarks run on CI.
-
-Final vector source/binary/assembly/profile retention passed (0.20 s), actual loop
-excerpt validation passed (0.15 s), and paired identity/sample checks passed
-(0.19 s). Eight scalar-lane semantic cases passed the accepted interpreter
-(1.36 s). Formatting, source-generated library docs, ownership inventory and
-explicit target checks passed during preparation. Final target assignment checks passed (0.32 s) and the documentation audit
-passed (2.67 s).
-
-Standing authorization covers fixes, publication and squash merge after every
-exact-head gate passes. Every commit is exactly one line, at most 80 characters,
-with no body, trailers or attribution. Keep one delivery PR open at a time.
-Browser/service re-entry, retained host callbacks, remaining numerical/network
-contracts, cycles, derivative scaling and broader applications remain open.
-JIT is excluded; OpenCL's existing runtime compilation is a gap to resolve.
-Default tracing remains; this batch completes none of the seven whole work areas.
+| 1 | In progress | Ownership of services and external contexts; remove tracing |
+| 2 | In progress | Remove remaining functional allocation and counting costs |
+| 3 | In progress | Diagnose and reduce equivalent-work C/Rust gaps |
+| 4 | In progress | Differentiation precision, speed and memory scaling |
+| 5 | In progress | CPU kernels and the runtime OpenCL compilation gap |
+| 6 | In progress | Repeatable performance comparisons |
+| 7 | In progress | Larger representative applications |

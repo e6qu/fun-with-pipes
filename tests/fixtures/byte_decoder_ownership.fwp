@@ -1,0 +1,20 @@
+# A compressed stream is bytes. Successful decoding returns Ok bytes; malformed
+# input or a size limit returns Err text. Keep original inputs beside results.
+main = [
+    ["", "hello hello hello", "λ\u{0}tail"] | map (string.to-bytes | both id (gzip.compress | gzip.decompress)) | echo,
+    ["", "hello hello hello", "λ\u{0}tail"] | map (string.to-bytes | both id (deflate.compress | deflate.decompress)) | echo,
+    "hello" | string.to-bytes | gzip.compress | both (gzip.decompress-max 0) (gzip.decompress-max 5) | echo,
+    "hello" | string.to-bytes | deflate.compress | both (deflate.decompress-max -1) (deflate.decompress-max 5) | echo,
+    [[], [1], [120, 32], [120, 1, 3, 0, 0, 0, 0, 0]] | map (bytes.from-list | deflate.decompress) | echo,
+    [[], [31, 139], [0, 1, 2]] | map (bytes.from-list | gzip.decompress) | echo,
+    "hello" | string.to-bytes | ws._frame False 1 | both id (ws._parse 20 0) | echo,
+    [[], [129], [131, 0], [129, 127, 128, 0, 0, 0, 0, 0, 0, 0], [129, 126, 0, 5, 1]]
+        | map (bytes.from-list | ws._parse 20 0) | echo,
+    [[], [1], [3, 232, 111, 107], [3, 237], [3, 232, 255]]
+        | map (bytes.from-list | ws._close-parse) | echo,
+    ["", "hello hello hello"] | map (string.to-bytes | ws._deflate | both id (ws._inflate 100)) | echo,
+    "hello" | string.to-bytes | ws._deflate | ws._inflate 2 | echo,
+    [255] | bytes.from-list | ws._inflate 100 | echo,
+    "hello" | string.to-bytes | gzip._crc32 0 | echo,
+    range 0 32 | map (const "hello" | string.to-bytes | gzip.compress | gzip.decompress) | hash | echo,
+] | ignore

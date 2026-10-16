@@ -374,7 +374,34 @@ fn mutual_tls() {
     let d = scratch("mutual");
     let file = root().join("tests/tls/mutual.fwp");
     let expected = root().join("tests/tls/mutual.out");
-    for (i, mut cmd) in both_ways(&file, &d, "mutual").into_iter().enumerate() {
+    let mut commands = both_ways(&file, &d, "mutual");
+    if have_cc() {
+        let binary = d.join("mutual-arc.exe");
+        build(
+            &[
+                file.to_str().unwrap(),
+                "--gc",
+                "arc",
+                "-o",
+                binary.to_str().unwrap(),
+            ],
+            &root(),
+        );
+        let symbols = Command::new("nm").arg(&binary).output().unwrap();
+        assert!(symbols.status.success(), "{symbols:?}");
+        let symbols = String::from_utf8_lossy(&symbols.stdout);
+        for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+            assert!(!symbols.contains(name), "ARC TLS binary contains {name}");
+        }
+        if let Some(path) = std::env::var_os("FWP_TCP_CONSTRUCTOR_ARTIFACTS") {
+            let path = PathBuf::from(path);
+            std::fs::create_dir_all(&path).unwrap();
+            std::fs::copy(&binary, path.join("mutual-tls-arc.exe")).unwrap();
+            std::fs::write(path.join("mutual-tls-arc.nm"), symbols.as_bytes()).unwrap();
+        }
+        commands.push(Command::new(binary));
+    }
+    for (i, mut cmd) in commands.into_iter().enumerate() {
         cmd.current_dir(certs);
         let o = run(cmd, 120);
         // TLS 1.3 clients can finish their handshake before receiving the
@@ -1052,5 +1079,108 @@ fn grpc_over_tls() {
                 format!("tls://localhost:{}", srv.port()),
             );
         assert_eq!(text(&run(c2, 120)), expected);
+    }
+}
+
+/// A socket reset must stay an error even when Windows' CRT errno is zero.
+#[test]
+fn native_tls_preserves_socket_errors_and_clean_shutdown() {
+    let Some(_certs) = certs() else { return };
+    use fwp::ir::*;
+    let unit = MT::unit();
+    let program = Program {
+        funcs: vec![Func {
+            name: "available".into(),
+            arity: 1,
+            locals: vec![unit.clone()],
+            ty: MT::Fun(Box::new(unit), Box::new(MT::con("std::Bool"))),
+            body: Body::Prim("tls.available".into()),
+        }],
+        exports: vec![("available".into(), 0)],
+        ..Program::default()
+    };
+    let (generated, _) = fwp::cgen::generate_library(&program, "tls_errors").unwrap();
+    let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
+#include <openssl/ssl.h>
+static int test_read(SSL *ssl,void *data,int n);
+static int test_write(SSL *ssl,const void *data,int n);
+static int test_step(SSL *ssl);
+static int test_error(const SSL *ssl,int result);
+static int test_finished(const SSL *ssl);
+#define SSL_read test_read
+#define SSL_write test_write
+#define SSL_do_handshake test_step
+#define SSL_get_error test_error
+#define SSL_is_init_finished test_finished
+"#;
+    let fixture = r#"
+#undef SSL_read
+#undef SSL_write
+#undef SSL_do_handshake
+#undef SSL_get_error
+#undef SSL_is_init_finished
+static int error_kind=SSL_ERROR_SYSCALL,uncleared;
+#ifdef _WIN32
+#define TEST_RESET WSAECONNRESET
+#else
+#define TEST_RESET ECONNRESET
+#endif
+static int test_step(SSL *ssl){
+ (void)ssl;
+#ifdef _WIN32
+ if(WSAGetLastError()!=0)uncleared++;
+ errno=0;WSASetLastError(TEST_RESET);
+#else
+ if(errno!=0)uncleared++;
+ errno=TEST_RESET;
+#endif
+ return -1;
+}
+static int test_read(SSL *ssl,void *data,int n){(void)data;(void)n;return test_step(ssl);}
+static int test_write(SSL *ssl,const void *data,int n){(void)data;(void)n;return test_step(ssl);}
+static int test_error(const SSL *ssl,int result){(void)ssl;(void)result;return error_kind;}
+static int test_finished(const SSL *ssl){(void)ssl;return 1;}
+static void stale_error(void){errno=EDOM;
+#ifdef _WIN32
+ WSASetLastError(WSAEINVAL);
+#endif
+}
+int main(void){
+ fwp_lib_init();if(fwp_sockets_init())return 246;
+ SSL_CTX *ctx=SSL_CTX_new(TLS_client_method());if(!ctx)return 246;
+ SSL *ssl=SSL_new(ctx);SSL_CTX_free(ctx);if(!ssl)return 246;
+ char byte=0;int wait=99;ssize_t result;
+ stale_error();result=fwp_tls_recv(ssl,&byte,1,&wait);
+ if(result!=-1||errno!=TEST_RESET||uncleared)return 247;
+ stale_error();result=fwp_tls_send(ssl,&byte,1,&wait);
+ if(result!=-1||errno!=TEST_RESET||uncleared)return 247;
+ stale_error();result=fwp_tls_step(ssl,&wait);
+ if(result!=-2||strcmp(fwp_tls_err,"TLS handshake failed: Connection reset by peer")||uncleared)return 247;
+ error_kind=SSL_ERROR_ZERO_RETURN;
+ stale_error();if(fwp_tls_recv(ssl,&byte,1,&wait)!=0||uncleared)return 247;
+ stale_error();if(fwp_tls_send(ssl,&byte,1,&wait)!=-2||uncleared)return 247;
+ stale_error();if(fwp_tls_step(ssl,&wait)!=-2||uncleared)return 247;
+ error_kind=SSL_ERROR_WANT_READ;wait=99;
+ if(fwp_tls_recv(ssl,&byte,1,&wait)!=-1||errno!=EAGAIN||wait!=0)return 247;
+ error_kind=SSL_ERROR_WANT_WRITE;wait=99;
+ if(fwp_tls_send(ssl,&byte,1,&wait)!=-1||errno!=EAGAIN||wait!=1)return 247;
+ SSL_free(ssl);puts("TLS socket errors, waits and clean shutdown preserved");return 0;
+}
+"#;
+    let dir = fwp::cgen::TempDir::new("tls-errors").unwrap();
+    let exe = dir.join("probe.exe");
+    let broken = generated
+        .replace("    int e = WSAGetLastError();", "    int e = 0;")
+        .replace("    int e = errno;", "    int e = 0;");
+    assert_ne!(generated, broken);
+    for opt in ["-O1", "-O2"] {
+        for (source, expected) in [(&generated, 0), (&broken, 247)] {
+            fwp::cgen::compile_c(&format!("{hooks}\n{source}\n{fixture}"), &exe, opt).unwrap();
+            let output = Command::new(&exe).output().unwrap();
+            assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
+        }
     }
 }

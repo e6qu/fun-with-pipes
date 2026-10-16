@@ -1,0 +1,329 @@
+{
+  "sourceHead": "cba3e810ac8d944e324ac758115e84698570494c",
+  "nativeRun": 38897597329,
+  "wasiRegressionRun": 38897600949,
+  "status": "All six native jobs and both actual WASI regression jobs pass",
+  "workload": "Real numeric and localhost lookups plus synthetic 80 distinct IPv4 addresses, a duplicate, IPv6 loopback and an unsupported address family. First-seen order and deduplication are checked. Embedded NUL is rejected in both interpreters and native execution.",
+  "validation": "Raw and optimized interpreter values match O1/O2 native tracing with GC stress/verification and reuse verification, and checked ARC. With collection disabled, charged storage returns to baseline. Every managed allocation failure unwinds both partial lists and native resolver storage; omitted-list and omitted-resolver cleanup controls exit 248.",
+  "limits": "No DNS service latency or C/Rust comparison. Synthetic resolver ownership is measured, not OS-internal allocator behavior. No native allocation-OOM injection inside the operating system. DNS remains unavailable on WASI; WASI checks cover common helper regressions, not networking. Later shared resolver-helper movement and socket scratch repairs require their own checks and final-head production.",
+  "sourceSha256": {
+    "runtime/fwp_rt_decode.c": "45360d68854a36b591e2c95431d1b26989711b219fd2c521ce5305db1a72d0f5",
+    "runtime/fwp_rt_prims.c": "d937667f30df5a8adcfc7d2e4284adce520f50eeb59f662bc868beba8c24d9af",
+    "runtime/fwp_rt_task.c": "76976b643f11d7be9c056ad388e25b8e8e52b045b12eae226eb4915042e8a13e",
+    "src/cgen.rs": "f7f03ec2f79ced956b12051d5b37c2b5462a38409b52c98f1e361814c2215eaf",
+    "src/ownership.rs": "394c1aa281a937710a1824888fa335173db831be02934f51cf06ffb77c376c6e",
+    "src/sched.rs": "e5cfb1f039169759e716b8d16e9f2945bf5ffd094881d43e14d4e66afca356c2",
+    "tests/dns_ownership.rs": "1f58f1777b5638b6fa2093c097bfa236a01b8d9c675cb2bbe48a3e2e736940b5",
+    "tests/fixtures/dns_cleanup.c": "9c7c6e8abcf2e88699c8ad1d4a032eda194e43ccdad6040344854744362ea481",
+    "tests/fixtures/dns_resolver.c": "8196918bdd2007ce5177effc6877bd34146816d341e1194ba545f9193c9a256b",
+    "tests/fixtures/dns_ownership.fwp": "b09c5567f04ee2524964babe0abb0903e892165ed0476f56f2db78f00adffcef"
+  },
+  "hosts": [
+    {
+      "runner": "ubuntu-latest",
+      "jobId": 116961723084,
+      "conclusion": "success",
+      "modes": {
+        "arc": {
+          "distinctAddresses": 81,
+          "managedAllocationRequests": 162,
+          "injectedFailurePositions": 162,
+          "finalChargedDelta": 0,
+          "finalMockResolverAllocations": 0,
+          "artifacts": {
+            "c": {
+              "sha256": "3437379d2ec5343fdef83f407e738083dc69c9cf8817613041159c1f1a10ca4b",
+              "bytes": 668828
+            },
+            "exe": {
+              "sha256": "cf369e2a129ddeb5717222740d3130950e5965ddd5e2d03d5d0ef182df31597e",
+              "bytes": 87040,
+              "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=3dd7285cc0a66b2f6a0ca6df0bef4476f42e5f61, for GNU/Linux 3.2.0, not stripped"
+            },
+            "txt": {
+              "sha256": "e293268f95c9d05d3cb91347aa12ee93d7e9d34f4a684b3e16ec1add47525965",
+              "bytes": 108
+            }
+          }
+        },
+        "tracing": {
+          "distinctAddresses": 81,
+          "managedAllocationRequests": 162,
+          "injectedFailurePositions": 162,
+          "finalChargedDelta": 0,
+          "finalMockResolverAllocations": 0,
+          "artifacts": {
+            "c": {
+              "sha256": "e02331df50fc9e8dc7cd4b32ecc0d8a03f1039bb46aceaa46a2b2ce0e6b54d76",
+              "bytes": 668805
+            },
+            "exe": {
+              "sha256": "ea5933dca4738550ae6c43c39c410c76d9487a43c31087e4d4a2602c66a14450",
+              "bytes": 87448,
+              "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=91114d12ebec1d8b21e528639fae87ba255d4fed, for GNU/Linux 3.2.0, not stripped"
+            },
+            "txt": {
+              "sha256": "e293268f95c9d05d3cb91347aa12ee93d7e9d34f4a684b3e16ec1add47525965",
+              "bytes": 108
+            }
+          }
+        }
+      }
+    },
+    {
+      "runner": "macos-15",
+      "jobId": 116961723388,
+      "conclusion": "success",
+      "modes": {
+        "arc": {
+          "distinctAddresses": 81,
+          "managedAllocationRequests": 162,
+          "injectedFailurePositions": 162,
+          "finalChargedDelta": 0,
+          "finalMockResolverAllocations": 0,
+          "artifacts": {
+            "c": {
+              "sha256": "3437379d2ec5343fdef83f407e738083dc69c9cf8817613041159c1f1a10ca4b",
+              "bytes": 668828
+            },
+            "exe": {
+              "sha256": "3687b3162cbf2f69e33738b22b02e7275223d5cb5675a279bc7ffb8b4ec72323",
+              "bytes": 89536,
+              "format": "Mach-O 64-bit executable arm64"
+            },
+            "txt": {
+              "sha256": "e293268f95c9d05d3cb91347aa12ee93d7e9d34f4a684b3e16ec1add47525965",
+              "bytes": 108
+            }
+          }
+        },
+        "tracing": {
+          "distinctAddresses": 81,
+          "managedAllocationRequests": 162,
+          "injectedFailurePositions": 162,
+          "finalChargedDelta": 0,
+          "finalMockResolverAllocations": 0,
+          "artifacts": {
+            "c": {
+              "sha256": "e02331df50fc9e8dc7cd4b32ecc0d8a03f1039bb46aceaa46a2b2ce0e6b54d76",
+              "bytes": 668805
+            },
+            "exe": {
+              "sha256": "dd5f015460dd0cdcef62e88e98f93fb505c45d828146e89b7847c278a03f395b",
+              "bytes": 89968,
+              "format": "Mach-O 64-bit executable arm64"
+            },
+            "txt": {
+              "sha256": "e293268f95c9d05d3cb91347aa12ee93d7e9d34f4a684b3e16ec1add47525965",
+              "bytes": 108
+            }
+          }
+        }
+      }
+    },
+    {
+      "runner": "ubuntu-24.04-arm",
+      "jobId": 116961723396,
+      "conclusion": "success",
+      "modes": {
+        "arc": {
+          "distinctAddresses": 81,
+          "managedAllocationRequests": 162,
+          "injectedFailurePositions": 162,
+          "finalChargedDelta": 0,
+          "finalMockResolverAllocations": 0,
+          "artifacts": {
+            "c": {
+              "sha256": "3437379d2ec5343fdef83f407e738083dc69c9cf8817613041159c1f1a10ca4b",
+              "bytes": 668828
+            },
+            "exe": {
+              "sha256": "402870f184e355d5b84a65d31920d5f376e5836b9b56902b904972028f1a2bcf",
+              "bytes": 84600,
+              "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=6e5e977fef6270991f86a264a89b167d96c580de, for GNU/Linux 3.7.0, not stripped"
+            },
+            "txt": {
+              "sha256": "e293268f95c9d05d3cb91347aa12ee93d7e9d34f4a684b3e16ec1add47525965",
+              "bytes": 108
+            }
+          }
+        },
+        "tracing": {
+          "distinctAddresses": 81,
+          "managedAllocationRequests": 162,
+          "injectedFailurePositions": 162,
+          "finalChargedDelta": 0,
+          "finalMockResolverAllocations": 0,
+          "artifacts": {
+            "c": {
+              "sha256": "e02331df50fc9e8dc7cd4b32ecc0d8a03f1039bb46aceaa46a2b2ce0e6b54d76",
+              "bytes": 668805
+            },
+            "exe": {
+              "sha256": "95b118677c181a512df035987f517e34c9bc94e8fb68d1107c4a7f9c1180a9c4",
+              "bytes": 85000,
+              "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=6e35445aca91fc2953fde045a7cc95b424bcdb56, for GNU/Linux 3.7.0, not stripped"
+            },
+            "txt": {
+              "sha256": "e293268f95c9d05d3cb91347aa12ee93d7e9d34f4a684b3e16ec1add47525965",
+              "bytes": 108
+            }
+          }
+        }
+      }
+    },
+    {
+      "runner": "windows-11-arm",
+      "jobId": 116961723412,
+      "conclusion": "success",
+      "modes": {
+        "arc": {
+          "distinctAddresses": 81,
+          "managedAllocationRequests": 162,
+          "injectedFailurePositions": 162,
+          "finalChargedDelta": 0,
+          "finalMockResolverAllocations": 0,
+          "artifacts": {
+            "c": {
+              "sha256": "3437379d2ec5343fdef83f407e738083dc69c9cf8817613041159c1f1a10ca4b",
+              "bytes": 668828
+            },
+            "exe": {
+              "sha256": "e79295e431e5f552ba509e1eacf6e3904c740ce507e9abc04300f1b8c881e79b",
+              "bytes": 126464,
+              "format": "PE32+ executable (console) Aarch64, for MS Windows"
+            },
+            "txt": {
+              "sha256": "2d71d4e1998ffa0c2c13523e111c67aefee31b62af69c2fce6e769ddab0a6bde",
+              "bytes": 109
+            }
+          }
+        },
+        "tracing": {
+          "distinctAddresses": 81,
+          "managedAllocationRequests": 162,
+          "injectedFailurePositions": 162,
+          "finalChargedDelta": 0,
+          "finalMockResolverAllocations": 0,
+          "artifacts": {
+            "c": {
+              "sha256": "e02331df50fc9e8dc7cd4b32ecc0d8a03f1039bb46aceaa46a2b2ce0e6b54d76",
+              "bytes": 668805
+            },
+            "exe": {
+              "sha256": "fb59fb8ce9d3544c5c9e86cc83c15620188c9de3f6d03c0f8f3923ff3fe8971d",
+              "bytes": 128512,
+              "format": "PE32+ executable (console) Aarch64, for MS Windows"
+            },
+            "txt": {
+              "sha256": "2d71d4e1998ffa0c2c13523e111c67aefee31b62af69c2fce6e769ddab0a6bde",
+              "bytes": 109
+            }
+          }
+        }
+      }
+    },
+    {
+      "runner": "macos-15-intel",
+      "jobId": 116961723466,
+      "conclusion": "success",
+      "modes": {
+        "arc": {
+          "distinctAddresses": 81,
+          "managedAllocationRequests": 162,
+          "injectedFailurePositions": 162,
+          "finalChargedDelta": 0,
+          "finalMockResolverAllocations": 0,
+          "artifacts": {
+            "c": {
+              "sha256": "3437379d2ec5343fdef83f407e738083dc69c9cf8817613041159c1f1a10ca4b",
+              "bytes": 668828
+            },
+            "exe": {
+              "sha256": "da9fa46cc9db1b58bfd3a5a97bb90c9f84ddb8ed65fa92d08c6b15c83191c84d",
+              "bytes": 72344,
+              "format": "Mach-O 64-bit executable x86_64"
+            },
+            "txt": {
+              "sha256": "e293268f95c9d05d3cb91347aa12ee93d7e9d34f4a684b3e16ec1add47525965",
+              "bytes": 108
+            }
+          }
+        },
+        "tracing": {
+          "distinctAddresses": 81,
+          "managedAllocationRequests": 162,
+          "injectedFailurePositions": 162,
+          "finalChargedDelta": 0,
+          "finalMockResolverAllocations": 0,
+          "artifacts": {
+            "c": {
+              "sha256": "e02331df50fc9e8dc7cd4b32ecc0d8a03f1039bb46aceaa46a2b2ce0e6b54d76",
+              "bytes": 668805
+            },
+            "exe": {
+              "sha256": "d95c8c233b6804f2febe2e5084b3246a94c2a6e2e7382920403038d3e1b6b77d",
+              "bytes": 72768,
+              "format": "Mach-O 64-bit executable x86_64"
+            },
+            "txt": {
+              "sha256": "e293268f95c9d05d3cb91347aa12ee93d7e9d34f4a684b3e16ec1add47525965",
+              "bytes": 108
+            }
+          }
+        }
+      }
+    },
+    {
+      "runner": "windows-2025",
+      "jobId": 116961723514,
+      "conclusion": "success",
+      "modes": {
+        "arc": {
+          "distinctAddresses": 81,
+          "managedAllocationRequests": 162,
+          "injectedFailurePositions": 162,
+          "finalChargedDelta": 0,
+          "finalMockResolverAllocations": 0,
+          "artifacts": {
+            "c": {
+              "sha256": "3437379d2ec5343fdef83f407e738083dc69c9cf8817613041159c1f1a10ca4b",
+              "bytes": 668828
+            },
+            "exe": {
+              "sha256": "fcb0ae1b352c48b334e2356b35431621b73cbb64afd7b0d10880b1fbfdcf8594",
+              "bytes": 137216,
+              "format": "PE32+ executable (console) x86-64, for MS Windows"
+            },
+            "txt": {
+              "sha256": "2d71d4e1998ffa0c2c13523e111c67aefee31b62af69c2fce6e769ddab0a6bde",
+              "bytes": 109
+            }
+          }
+        },
+        "tracing": {
+          "distinctAddresses": 81,
+          "managedAllocationRequests": 162,
+          "injectedFailurePositions": 162,
+          "finalChargedDelta": 0,
+          "finalMockResolverAllocations": 0,
+          "artifacts": {
+            "c": {
+              "sha256": "e02331df50fc9e8dc7cd4b32ecc0d8a03f1039bb46aceaa46a2b2ce0e6b54d76",
+              "bytes": 668805
+            },
+            "exe": {
+              "sha256": "eaae65e650ae45c8804abf04ae7b13fd1d564333460f9533b92c2ac931fed640",
+              "bytes": 139776,
+              "format": "PE32+ executable (console) x86-64, for MS Windows"
+            },
+            "txt": {
+              "sha256": "2d71d4e1998ffa0c2c13523e111c67aefee31b62af69c2fce6e769ddab0a6bde",
+              "bytes": 109
+            }
+          }
+        }
+      }
+    }
+  ]
+}

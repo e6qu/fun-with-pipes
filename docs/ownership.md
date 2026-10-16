@@ -135,6 +135,43 @@ lifetimes and cycles. Unknown calls remain explicit sharing boundaries. The
 [accepted evidence](roadmap-history.md) records platform runs; a skipped test is
 not support for that platform.
 
+## Value decoders
+
+A decoder turns encoded bytes or text into ordinary language values. The current
+preparation gives balanced-ternary conversions, URL/form decoding and HTTP-head
+parsing explicit owners for their results. Complete and partial results must be
+released without relying on a later collection.
+
+The decoder subset passes focused checks on all six native hosts at `30399066`
+(`38886033175`). Actual WASI checks cover its available ternary/text helpers at
+`72321a55` (`38884843627`). These focused results precede the combined batch's
+full production acceptance; the [handoff](development-state.md) records current
+validation. [Earlier allocation evidence](measurements/value-decoders-2026-10-16.json)
+retains the six-host ternary/text counts and the neighboring Windows failures
+that were subsequently repaired.
+
+Compressed bytes and WebSocket frames are also decoding boundaries. Their native
+implementation owns copied bytes/text and result wrappers, including malformed
+input results. Compression encoders protect native output buffers if language
+result allocation traps. Tests count native buffers separately from managed
+storage and deliberately omit cleanup to check detection. This covers synchronous
+conversion of bytes already in memory; socket, server and retained-callback
+lifetimes remain separate work. These helpers are unavailable on WASI.
+
+Ternary list conversions traverse borrowed inputs directly and build owned
+lists. Packing writes the result bytes directly. Partial lists have cleanup if
+node allocation fails. Counts remain bounded by the available input bytes;
+invalid widths and oversized digit lists retain their existing optional results.
+
+URL decoding protects its temporary byte buffer and completed result fields
+until the outer optional value owns them. HTTP parsing copies names/values into
+owned header pairs and lists, without temporary line-index or value arrays.
+It reads headers from last to first while prepending them, preserving source
+order and the existing single invalid-header error. Parse rejection and allocation
+failure release completed fields and buffers. Input text stays borrowed and
+unchanged. Asynchronous connection lifetimes and retained callbacks remain
+separate work; owning a decoded message does not prove those boundaries safe.
+
 ## Representation and numerics
 
 Use the least costly representation that preserves behavior. A large dynamic
@@ -253,6 +290,83 @@ Constructor failures protect the raw stream until registration succeeds. Releasi
 an unshared header removes its library finalizer before freeing storage.
 `FWP_FREE=0` can keep ordinary storage for comparison while resource ownership
 still closes streams. Resource lifetime and physical storage lifetime are distinct.
+
+### UDP socket owners
+
+A UDP socket owns an operating-system descriptor: a handle used to send and
+receive datagrams. Unlike `File`, a socket can be copied and captured by a
+function. Copies refer to the same socket. Explicit `udp.close` closes it for
+all copies, and releasing its final owner also closes it. A closure, record or
+suspended task that holds the socket must keep it alive until its own original
+scope ends. Returning only an address string does not keep the socket alive.
+
+The UDP implementation preserves those original scopes before optimization,
+uses a separate 64-bit logical owner count for descriptors, and owns both fields of a
+received `(Bytes, String)` pair while constructing it. The socket count is aligned
+in the common header. The following TCP/TLS preparation keeps UDP headers the same
+size while giving stream handles a separate TLS field when needed. Failure releases completed
+fields and receive scratch storage. Closing a Linux descriptor wakes its waiting
+tasks and releases its polling records; synchronization after wake does not
+recreate a closed descriptor's record. Disabling physical frees still closes the
+socket when its logical owners finish. Library teardown closes retained sockets
+without taking ownership of host sockets.
+
+All six focused native jobs and both shared-runtime WASI regression jobs pass;
+[the UDP report](measurements/udp-ownership-2026-10-16.json) retains the exact
+results and an ARM64 binary inspection. Full combined production acceptance is
+still required. This does not establish whole-language GC removal. Opaque
+function types do not describe their captures, so programs using UDP currently
+preserve possible closure-holder frames conservatively. This may prevent some
+optimizations; there is no zero-cost or throughput claim. Tracing programs retain
+weak finalizers for unproved sharing, while checked ARC must prove ownership and
+exclude tracing from its binary. TCP/TLS ownership, arbitrary retained callbacks
+and mutable cycles remain separate work.
+
+### TCP and TLS socket preparation
+
+The next preparation extends logical socket owners to TCP connections and
+listeners. Copies share a handle; explicit close affects every copy, while the
+last owner closes the socket automatically. Function and task captures preserve
+the original lifetime. Returned optional connections, bytes and certificate text
+keep their partially built values alive and release them on allocation failure.
+
+For example, the following helper returns an address string. `()` is the unit
+value, used when there is no input data. `const` makes a function that ignores
+that input and returns the address text. Port `0` asks the operating system to
+choose an unused port. Each `|` passes the previous result to the next function.
+
+```fwp
+address : () -> String ! {Network, Error[IoError]}
+address = const "127.0.0.1:0" | tcp.listen | tcp.local-addr
+```
+
+The type says that `address` takes unit, returns a `String`, uses the network,
+and can report an `IoError`. It creates a listener and returns its address.
+The listener belongs to that helper's scope, so returning the string releases
+it; the string itself does not keep a port open. In contrast, returning a
+function that captures the listener keeps it open while that function lives.
+The native tests compare both cases with the interpreter, including rebinding
+the same port. For an application that needs a persistent listener, return or
+retain the listener itself instead of only its address.
+
+The common socket header stores a descriptor, a kind and a 64-bit owner count.
+UDP and programs without TLS keep the previous header size. In a TLS-enabled
+program, a stream handle adds a pointer to the TLS session or listener context;
+that pointer follows the common header in the same allocation. This costs one
+additional pointer for those stream handles, without a separate allocation for
+the count. The passing ARM64 macOS TLS executable requests a 24-byte stream
+header: the count is at byte offset 8, and the TLS pointer is at byte offset 16.
+The plain TCP executable requests 16 bytes. These sizes describe the handle,
+not all memory used by the allocator, operating system or OpenSSL. [The TCP/TLS report](measurements/tcp-tls-ownership-2026-10-16.json) records
+passing focused checks on all six native targets and actual WASI shared-runtime
+regressions. Full combined production acceptance is still required.
+
+ARC executables omit the finalizer-table lookup during socket release because
+they never register these sockets in that table. Tracing programs and unloadable
+libraries keep the lookup so they cannot later finalize reused storage. This
+removes a specific unnecessary operation; it does not remove all count or
+allocator metadata costs. This is preparation, not accepted TCP/TLS support
+without tracing.
 
 ## Checked ARC delivery
 
@@ -477,3 +591,101 @@ changes preserve wrapping integer operations and existing division checks; they
 do not promise stack-only vectors or hardware vector instructions. Native and
 actual WASI acceptance remains tracked in the handoff until the required checks
 pass. General removal of tracing remains unfinished.
+
+## Process metrics and syntax text
+
+The next ownership batch prepares copied metric snapshots and syntax rendering.
+A metric registry stores names and numbers for a process or library instance.
+Repeated updates of an existing name reuse that entry; distinct names require
+more native storage. Process shutdown and library teardown free it. A snapshot
+copies names and kinds into an immutable list of tuples: subsequent updates cannot
+mutate an earlier snapshot. Construction now protects partial strings, tuples and list nodes,
+without a temporary pointer array. This registry lifetime is separate from the
+shorter lifetime of snapshot storage; it is not an allocation-free service claim.
+
+Names use their complete byte length, including embedded NUL, matching interpreter
+lookup and string sorting. Observation suffixes are compared and copied directly
+without a temporary concatenated name. `syntax.show` borrows its syntax tree and
+returns new text; its native formatting buffer is protected if result allocation
+traps. Managed allocation fault tests, missing-cleanup controls, tracing stress,
+checked ARC and actual WASI checks pass in preparation. Windows and POSIX library
+unload tests verify registry release separately. The
+[retained report](measurements/owned-values-and-kernels-2026-10-16.json) records
+the artifacts and repaired test failures; the handoff tracks full acceptance.
+
+### DNS result ownership under validation
+
+`dns.resolve` borrows its hostname and returns an owned list of copied address
+strings. The native implementation releases the operating system's temporary
+resolver entries on success and on recoverable allocation failure, and owns each
+partially built list. It preserves first-seen order and removes duplicate address
+strings without the previous 64-address cutoff. Both engines reject embedded NUL
+bytes instead of passing a shortened hostname to the operating system.
+
+The DNS tests compare real numeric and localhost lookups, then use a deterministic
+resolver peer to check 81 distinct addresses and every result-allocation failure.
+[DNS evidence](measurements/dns-ownership-2026-10-16.json) records six native
+hosts passing, including 162 allocation-failure positions and deliberate omitted
+cleanup. Both actual WASI jobs pass common-helper regressions; they do not test
+DNS. The earlier owned-values/kernel report does not cover DNS. Retained
+networking callbacks still need separate ownership work. This does not add WASI networking or prove faster DNS lookups.
+
+TCP/UDP receive scratch and UDP-send resolver entries are also registered on the
+runtime cleanup stack so cancellation and result-allocation failure can release
+them. Failed native receive allocation traps before the buffer is used. These
+repairs pass all six focused native hosts in `38898918147` at `7224b3de` and do
+not establish socket-handle ownership; the separate socket rules and acceptance
+above cover handles.
+
+### Copied service data
+
+A served request carries headers (name/value strings) and may identify a peer
+certificate. `grpc.metadata` returns an independent list of incoming headers;
+`grpc.peer-subject` returns copied certificate text when available. The combined
+preparation gives these output values ordinary owners and releases partially
+copied fields if construction fails. Metadata preserves the input order and
+duplicate names while omitting protocol headers; it builds directly into the
+result list without a temporary array of pointers.
+
+This does not establish ownership of the service's callbacks, connection,
+stream or retained request context. Those remain separate work. The preparation
+handoff records focused checks; full service execution without tracing has not
+been established by these result-copy changes.
+
+The same preparation gives `http2.request` and `http2.body` owned results.
+A request copies its method, path, headers, remote address and optional certificate
+name; a body copies every byte, including zero and non-text bytes. The source
+stream remains live during copying. Header order and duplicates are preserved,
+and an existing `host` header takes precedence over `:authority`. Partial strings,
+pairs, lists and result wrappers use the existing typed cleanup on failure.
+These changes do not yet own the stream itself or remove tracing from a server.
+These copied results pass focused allocation-failure and lifetime checks on all
+six native hosts at `e715de1a` (`38935341434`). Full delivery acceptance remains
+separate; see the [handoff](development-state.md).
+
+Outgoing gRPC response headers and trailers also copy their input strings.
+Normalization now happens in the owned copy: names become lowercase, and carriage
+returns/newlines in values become spaces. This removes two temporary buffers
+without changing input strings. The protocol layer now checks raw header
+allocations and buffer-size growth before using them. Failed header construction
+preserves earlier entries and frees its partial new strings; impossible sizes
+and allocation failure retain the existing exit status 102. This is a bounded
+allocation check, not a claim that protocol allocation failures can be recovered
+inside a running service. Native controls pass on all six hosts in the same
+focused run. Response-header capture also checks its own allocation: failure
+traps before invoking the callback or installing the new context. Existing child
+task, cancellation and counter-overflow tests remain active.
+
+The [service-result report](measurements/service-values-2026-10-16.json) records
+12 incoming-metadata, 2 certificate-name, 20 request and 2 body allocation-failure
+points, each returning charged result storage to its baseline with collection
+disabled. Raw protocol buffers are counted separately. Returned values still
+allocate and typed cleanup uses stack records; this is cleanup evidence, not a
+speed comparison or a measurement of total server memory.
+
+Each partial-result cleanup record occupies 184 bytes, aligned to eight bytes,
+on all six measured hosts. It keeps up to eight field values inline on the stack.
+The instrumented ARM64 metadata, certificate, request and body functions use
+448, 272, 624 and 288-byte stack frames respectively, including saved registers.
+These are test-binary observations, not bounds on an ordinary server's total
+stack use. The report retains the instructions used to read those sizes.

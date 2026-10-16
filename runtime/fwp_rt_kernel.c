@@ -15,8 +15,8 @@
  * Kernels are fused elementwise expressions in postfix form, evaluated
  * FWP_KCHUNK elements at a time. CpuParallel runs contiguous ranges of
  * chunks on native threads; the workers read the input arrays and write
- * malloc'ed memory, and never allocate from the collected heap (the
- * calling task waits for them, so no collection runs meanwhile).
+ * the owned output array or native reduction storage. Workers never allocate
+ * from the managed heap; the calling task waits until they all finish.
  * Reductions sum blocks of FWP_KBLOCK elements from the left, then the
  * block sums from the left, whatever the number of threads. */
 
@@ -640,12 +640,14 @@ static void fwp_kernel_sums(const fwp_kernel *k, size_t n, size_t b0, size_t nb,
     double *stack = (double *)fwp_k_malloc((k->depth ? k->depth : 1) * FWP_KCHUNK * sizeof(double));
     double buf[FWP_KCHUNK];
     for (size_t b = 0; b < nb; b++) {
-        size_t start = (b0 + b) * FWP_KBLOCK, end = start + FWP_KBLOCK < n ? start + FWP_KBLOCK : n;
+        size_t start = (b0 + b) * FWP_KBLOCK;
+        size_t end = start + (n - start < FWP_KBLOCK ? n - start : FWP_KBLOCK);
         double acc = 0.0;
-        for (size_t i = start; i < end; i += FWP_KCHUNK) {
+        for (size_t i = start; i < end;) {
             size_t m = end - i < FWP_KCHUNK ? end - i : FWP_KCHUNK;
             fwp_kernel_eval(k, i, m, buf, stack);
             for (size_t j = 0; j < m; j++) acc += buf[j];
+            i += m;
         }
         sums[b] = acc;
     }
@@ -723,25 +725,23 @@ static void fwp_kernel_parallel(const fwp_kernel *k, int sum, size_t n, size_t u
 #endif
 #elif !defined(__wasi__)
     pthread_t tids[256];
-    int started[256] = {0};
+    size_t started = 1;
+    for (; started < t; started++) {
 #ifdef FWP_STATIC_MEMORY
-    /* threads on the stacks mapped at startup; the results do not depend
-     * on how many there are */
-    for (size_t i = 1; i < t; i++) {
         pthread_attr_t a;
         pthread_attr_init(&a);
-        pthread_attr_setstack(&a, fwp_static.thread_stack[i - 1], FWP_STATIC_THREAD_STACK);
-        started[i] = pthread_create(&tids[i], &a, fwp_kjob_thread, &jobs[i]) == 0;
+        pthread_attr_setstack(&a, fwp_static.thread_stack[started - 1], FWP_STATIC_THREAD_STACK);
+        int status = pthread_create(&tids[started], &a, fwp_kjob_thread, &jobs[started]);
         pthread_attr_destroy(&a);
-    }
 #else
-    for (size_t i = 1; i < t; i++) started[i] = pthread_create(&tids[i], 0, fwp_kjob_thread, &jobs[i]) == 0;
+        int status = pthread_create(&tids[started], 0, fwp_kjob_thread, &jobs[started]);
 #endif
-    fwp_kjob_do(&jobs[0]);
-    for (size_t i = 1; i < t; i++) {
-        if (started[i]) pthread_join(tids[i], 0);
-        else fwp_kjob_do(&jobs[i]);
+        if (status) break;
     }
+    if (started == t) fwp_kjob_do(&jobs[0]);
+    for (size_t i = 1; i < started; i++)
+        if (pthread_join(tids[i], 0)) abort();
+    if (started != t) fwp_trap("cannot create numerical worker thread");
 #else
     fwp_kjob_do(&jobs[0]);
 #endif
@@ -751,8 +751,19 @@ static int fwp_kernel_workspace_fits(size_t depth) {
     return depth <= SIZE_MAX / FWP_KCHUNK / sizeof(double);
 }
 
+/* The caller owns every temporary across validation, result allocation and
+ * worker startup. A worker-creation failure joins started workers before a trap. */
+typedef struct { fwp_kernel kernel; V output; double *sums; } fwp_kernel_owner;
+static void fwp_kernel_release(void *arg) {
+    fwp_kernel_owner *owner = arg;
+    free((void *)owner->kernel.inputs); owner->kernel.inputs = NULL;
+    free(owner->sums); owner->sums = NULL;
+    if (owner->output) fwp_rc_free_arr(owner->output);
+    owner->output = 0;
+}
+
 /* check a kernel and gather its inputs; *inputs is malloc'ed */
-static void fwp_kernel_prepare(fwp_kernel *k, V code, V consts, V inputs, size_t n) {
+static void fwp_kernel_prepare(fwp_kernel *k, V code, V consts, V inputs, uint64_t n) {
     size_t sp = 0, depth = 0, leaves = 0, nconsts = 0;
     k->code = (const int64_t *)((const V *)fwp_array_data(code));
     k->ncode = fwp_array_len(code);
@@ -776,55 +787,55 @@ static void fwp_kernel_prepare(fwp_kernel *k, V code, V consts, V inputs, size_t
     if (sp != 1 || leaves != nin || nconsts != fwp_array_len(consts)) fwp_trap("device: malformed kernel");
     k->consts = ((const V *)fwp_array_data(consts));
     k->depth = depth;
+    if (nin > SIZE_MAX / sizeof(double *)) fwp_trap("device: kernel too large");
     k->inputs = (const double **)fwp_k_malloc((nin ? nin : 1) * sizeof(double *));
     V xs = inputs;
     for (size_t i = 0; i < nin; i++) {
         V a = OBJ(xs)->f[0];
         if (fwp_array_len(a) != n) {
             char msg[128];
-            snprintf(msg, sizeof msg, "device: input %zu has %llu elements, the kernel %zu", i,
-                     (unsigned long long)fwp_array_len(a), n);
-            free((void *)k->inputs);
+            snprintf(msg, sizeof msg, "device: input %zu has %llu elements, the kernel %llu", i,
+                     (unsigned long long)fwp_array_len(a), (unsigned long long)n);
             fwp_trap(msg);
         }
         k->inputs[i] = (const double *)((const V *)fwp_array_data(a));
         xs = OBJ(xs)->f[1];
     }
-    if (!fwp_kernel_workspace_fits(depth)) {
-        free((void *)k->inputs);
-        fwp_trap("device: kernel too large");
-    }
+    if (!fwp_kernel_workspace_fits(depth)) fwp_trap("device: kernel too large");
 }
 
 static V fwp_p_device_run(V threads, V nv, V code, V consts, V inputs) {
     uint64_t count = (int64_t)nv < 0 ? 0 : (uint64_t)nv;
+    fwp_kernel_owner owner = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_kernel_release, &owner);
+    fwp_kernel_prepare(&owner.kernel, code, consts, inputs, count);
+    if (count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
     size_t n = (size_t)count;
-    fwp_kernel k;
-    fwp_kernel_prepare(&k, code, consts, inputs, n);
-    if (count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) {
-        free((void *)k.inputs);
-        fwp_trap("array too large");
-    }
-    double *out = (double *)fwp_k_malloc(n * sizeof(double));
-    fwp_kernel_parallel(&k, 0, n, (n + FWP_KCHUNK - 1) / FWP_KCHUNK, (int64_t)threads, out);
-    free((void *)k.inputs);
-    V r = fwp_arr_new(n);
-    memcpy(ARR(r)->d, out, n * sizeof(double));
-    free(out);
-    return r;
+    owner.output = fwp_rc_fresh(fwp_arr_new(n));
+    /* Each worker copies evaluated chunks into distinct output byte ranges.
+     * No full-size native output, second copy, or managed allocation in workers. */
+    fwp_kernel_parallel(&owner.kernel, 0, n, n / FWP_KCHUNK + (n % FWP_KCHUNK != 0),
+                        (int64_t)threads, (double *)ARR(owner.output)->d);
+    V result = owner.output; owner.output = 0;
+    fwp_cleanup_pop(&cleanup); fwp_kernel_release(&owner);
+    FWP_KEEP_ALIVE(code); FWP_KEEP_ALIVE(consts); FWP_KEEP_ALIVE(inputs);
+    return result;
 }
 
 static V fwp_p_device_sum(V threads, V nv, V code, V consts, V inputs) {
-    size_t n = (int64_t)nv < 0 ? 0 : (size_t)(int64_t)nv;
-    fwp_kernel k;
-    fwp_kernel_prepare(&k, code, consts, inputs, n);
-    size_t blocks = (n + FWP_KBLOCK - 1) / FWP_KBLOCK;
-    double *sums = (double *)fwp_k_malloc(blocks * sizeof(double));
-    fwp_kernel_parallel(&k, 1, n, blocks, (int64_t)threads, sums);
-    free((void *)k.inputs);
+    uint64_t count = (int64_t)nv < 0 ? 0 : (uint64_t)nv;
+    fwp_kernel_owner owner = {0};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_kernel_release, &owner);
+    fwp_kernel_prepare(&owner.kernel, code, consts, inputs, count);
+    if (count > SIZE_MAX) fwp_trap("device: kernel too large");
+    size_t n = (size_t)count;
+    size_t blocks = n / FWP_KBLOCK + (n % FWP_KBLOCK != 0);
+    owner.sums = (double *)fwp_k_malloc(blocks * sizeof(double));
+    fwp_kernel_parallel(&owner.kernel, 1, n, blocks, (int64_t)threads, owner.sums);
     double total = 0.0;
-    for (size_t b = 0; b < blocks; b++) total += sums[b];
-    free(sums);
+    for (size_t b = 0; b < blocks; b++) total += owner.sums[b];
+    fwp_cleanup_pop(&cleanup); fwp_kernel_release(&owner);
+    FWP_KEEP_ALIVE(code); FWP_KEEP_ALIVE(consts); FWP_KEEP_ALIVE(inputs);
     return fwp_from_f64(total);
 }
 

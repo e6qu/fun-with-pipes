@@ -405,6 +405,7 @@ struct RemoteSpec {
 }
 
 struct Gen<'p> {
+    resource_captures: bool,
     prog: &'p Program,
     uncounted: &'p Program,
     descs: HashMap<MT, usize>,
@@ -534,13 +535,17 @@ impl Gen<'_> {
     fn value_dup(&self, ty: &MT) -> &'static str {
         if matches!(ty, MT::Con(n, _) if n == "std::File") {
             "fwp_file_dup"
+        } else if matches!(ty, MT::Con(n, _) if matches!(n.as_str(), "std::UdpSocket" | "std::Conn" | "std::Listener"))
+        {
+            "fwp_sock_dup"
         } else {
             "fwp_rc_dup"
         }
     }
 
     fn resource_type(&self, ty: &MT) -> bool {
-        crate::resource::contains_file(&self.prog.shapes, ty)
+        crate::resource::contains_resource(&self.prog.shapes, ty)
+            || (self.resource_captures && crate::resource::may_hold_resource(&self.prog.shapes, ty))
     }
 
     fn live_calls(&self, id: FuncId, e: &Expr) -> HashMap<*const Expr, crate::rc::CallLiveness> {
@@ -1648,6 +1653,10 @@ impl<'p> Gen<'p> {
         if matches!(mt, MT::Con(n, _) if n == "std::File") {
             return format!("static void fwp_drop{id}(V v) {{ fwp_file_drop(v); }}\n");
         }
+        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::UdpSocket" | "std::Conn" | "std::Listener"))
+        {
+            return format!("static void fwp_drop{id}(V v) {{ fwp_sock_drop(v); }}\n");
+        }
         if matches!(mt, MT::Con(n, _) if n == "std::Channel") {
             return format!("static void fwp_drop{id}(V v) {{ fwp_channel_drop(v); }}\n");
         }
@@ -2473,9 +2482,11 @@ fn unpack_loop_state(prog: &Program, f: &Func) -> Option<Func> {
     }
     let fields = record_fields(&prog.shapes, &f.locals[0])?;
     if fields.is_empty()
-        || fields
-            .iter()
-            .any(|(_, ty)| crate::resource::contains_file(&prog.shapes, ty))
+        || fields.iter().any(|(_, ty)| {
+            crate::resource::contains_resource(&prog.shapes, ty)
+                || (crate::resource::may_hold_resource(&prog.shapes, ty)
+                    && crate::resource::has_socket_values(&prog.funcs, &prog.shapes))
+        })
     {
         return None;
     }
@@ -5503,6 +5514,64 @@ impl<'p> Gen<'p> {
             }
             return Ok("return fwp_p_simd_dot_f64(l1, l0);".into());
         }
+        if matches!(
+            sym,
+            "url.decode"
+                | "form.decode"
+                | "url.split"
+                | "http.parse-request-head"
+                | "http.parse-response-head"
+        ) {
+            let descriptor = self.desc(&result);
+            let call = match sym {
+                "url.decode" => format!("fwp_p_url_decode(l0, 0, {descriptor})"),
+                "form.decode" => format!("fwp_p_url_decode(l0, 1, {descriptor})"),
+                "url.split" => format!("fwp_p_url_split(l0, {descriptor})"),
+                "http.parse-request-head" => format!("fwp_p_parse_request_head(l0, {descriptor})"),
+                "http.parse-response-head" => {
+                    format!("fwp_p_parse_response_head(l0, {descriptor})")
+                }
+                _ => unreachable!(),
+            };
+            return Ok(format!("return {call};"));
+        }
+        if matches!(
+            sym,
+            "zlib.gunzip" | "zlib.inflate" | "ws.parse" | "ws.close-parse" | "ws.inflate"
+        ) {
+            let descriptor = self.desc(&result);
+            let call = match sym {
+                "zlib.gunzip" => format!("fwp_p_zlib_gunzip(l0, l1, {descriptor})"),
+                "zlib.inflate" => format!("fwp_p_zlib_inflate(l0, l1, {descriptor})"),
+                "ws.parse" => format!("fwp_p_ws_parse(l0, l1, l2, {descriptor})"),
+                "ws.close-parse" => format!("fwp_p_ws_close_parse(l0, {descriptor})"),
+                "ws.inflate" => format!("fwp_p_ws_inflate(l0, l1, {descriptor})"),
+                _ => unreachable!(),
+            };
+            return Ok(format!("return {call};"));
+        }
+        if matches!(sym, "http2.request" | "http2.body") {
+            let descriptor = self.desc(&result);
+            let call = if sym == "http2.request" {
+                format!("fwp_p_http2_request(l0, {descriptor})")
+            } else {
+                format!("fwp_p_http2_body(l0, l1, l2, {descriptor})")
+            };
+            return Ok(format!("return {call};"));
+        }
+        if matches!(sym, "grpc.metadata" | "grpc.peer-subject") {
+            let descriptor = self.desc(&result);
+            let function = if sym == "grpc.metadata" {
+                "fwp_p_grpc_metadata"
+            } else {
+                "fwp_p_grpc_peer_subject"
+            };
+            return Ok(format!("return {function}({descriptor});"));
+        }
+        if sym == "metrics.snapshot" {
+            let descriptor = self.desc(&result);
+            return Ok(format!("return fwp_p_metrics_snapshot({descriptor});"));
+        }
         if sym == "array._range" {
             let MT::Con(name, elements) = &result else {
                 return Err("direct range array result has no element type".into());
@@ -5715,13 +5784,19 @@ impl<'p> Gen<'p> {
             }
             "trit.to-int" | "tint.to-int" => "return l0;".into(),
             "tint.of-int" => format!("return fwp_p_tint_of_int(l0, {});", nk(&elem(&result, 0)).2),
-            "tint.trits" => format!("return fwp_p_tint_trits(l0, {});", nk(&p(0)).2),
+            "tint.trits" => {
+                let drop_list = self.value_drop(&result);
+                format!("return fwp_p_tint_trits(l0, {}, {drop_list});", nk(&p(0)).2)
+            },
             "tint.from-trits" => format!(
                 "return fwp_p_tint_from_trits(l0, {});",
                 nk(&elem(&result, 0)).2
             ),
             "trits.pack" => "return fwp_p_trits_pack(l0);".into(),
-            "trits.unpack" => "return fwp_p_trits_unpack(l0, l1);".into(),
+            "trits.unpack" => {
+                let drop_list = self.value_drop(&result);
+                format!("return fwp_p_trits_unpack(l0, l1, {drop_list});")
+            },
             "env.vars" => {
                 let drop_pair = self.value_drop(&elem(&result, 0));
                 let drop_list = self.value_drop(&result);
@@ -6114,9 +6189,18 @@ impl<'p> Gen<'p> {
                     _ => format!("return fwp_p_tls_handshake(l0, {});", err),
                 }
             }
+            "udp.recv-from" => {
+                let err = self.desc(&MT::con("std::IoError"));
+                let tuple = self.desc(&result);
+                format!("return fwp_p_udp_recv_from(l0, l1, {err}, {tuple});")
+            }
+            "dns.resolve" => {
+                let err = self.desc(&MT::con("std::IoError"));
+                let list = self.desc(&result);
+                format!("return fwp_p_dns_resolve(l0, {err}, {list});")
+            }
             "tcp.listen" | "tcp.accept" | "tcp.accept-for" | "tcp.connect" | "tcp.read"
-            | "tcp.read-for" | "tcp.write" | "tcp.write-for" | "udp.bind" | "udp.send-to" | "udp.recv-from"
-            | "dns.resolve" => {
+            | "tcp.read-for" | "tcp.write" | "tcp.write-for" | "udp.bind" | "udp.send-to" => {
                 let err = self.desc(&MT::con("std::IoError"));
                 let (f, n) = match sym {
                     "tcp.listen" => ("fwp_p_tcp_listen", 1),
@@ -6129,8 +6213,7 @@ impl<'p> Gen<'p> {
                     "tcp.write-for" => ("fwp_p_tcp_write_for", 3),
                     "udp.bind" => ("fwp_p_udp_bind", 1),
                     "udp.send-to" => ("fwp_p_udp_send_to", 3),
-                    "udp.recv-from" => ("fwp_p_udp_recv_from", 2),
-                    _ => ("fwp_p_dns_resolve", 1),
+                    _ => unreachable!("listed socket primitive"),
                 };
                 let args: Vec<String> = (0..n).map(|i| format!("l{}", i)).collect();
                 format!("return {}({}, {});", f, args.join(", "), err)
@@ -6263,11 +6346,6 @@ impl<'p> Gen<'p> {
                     ("string.split-once", "fwp_p_split_once(l0, l1)"),
                     ("bytes.find", "fwp_p_bytes_find(l0, l1)"),
                     ("url.encode", "fwp_p_url_encode(l0)"),
-                    ("url.decode", "fwp_p_url_decode(l0, 0)"),
-                    ("form.decode", "fwp_p_url_decode(l0, 1)"),
-                    ("url.split", "fwp_p_url_split(l0)"),
-                    ("http.parse-request-head", "fwp_p_parse_request_head(l0)"),
-                    ("http.parse-response-head", "fwp_p_parse_response_head(l0)"),
                     ("http.field-ok", "fwp_p_field_ok(l0, l1)"),
                     ("http.content-length", "fwp_p_content_length(l0)"),
                     ("prim.trap", "fwp_p_trap(l0)"),
@@ -6302,11 +6380,8 @@ impl<'p> Gen<'p> {
                     ("metrics.add", "fwp_p_metrics_update(0, l0, l1)"),
                     ("metrics.set", "fwp_p_metrics_update(1, l0, l1)"),
                     ("metrics.observe", "fwp_p_metrics_update(2, l0, l1)"),
-                    ("metrics.snapshot", "fwp_p_metrics_snapshot()"),
-                    ("grpc.metadata", "fwp_p_grpc_metadata()"),
                     ("grpc.with-metadata", "fwp_p_grpc_with_metadata(l0, l1)"),
                     ("grpc.with-deadline", "fwp_p_grpc_with_deadline(l0, l1)"),
-                    ("grpc.peer-subject", "fwp_p_grpc_peer_subject()"),
                     ("grpc.set-header", "fwp_p_grpc_set_meta(0, l0, l1)"),
                     ("grpc.set-trailer", "fwp_p_grpc_set_meta(1, l0, l1)"),
                     (
@@ -6316,26 +6391,19 @@ impl<'p> Gen<'p> {
                     ("grpc.with-gzip", "fwp_p_grpc_with_gzip(l0)"),
                     ("grpc._force", "fwp_p_grpc_force(l0)"),
                     ("http2.serve", "fwp_p_http2_serve(l0, l1, l2, l3, l4)"),
-                    ("http2.request", "fwp_p_http2_request(l0)"),
-                    ("http2.body", "fwp_p_http2_body(l0, l1, l2)"),
                     ("http2.respond", "fwp_p_http2_respond(l0, l1, l2, l3, l4)"),
                     ("http2.data", "fwp_p_http2_data(l0, l1, l2)"),
                     ("http2.pooled", "fwp_p_http2_pooled(l0)"),
                     ("zlib.gzip", "fwp_p_zlib_gzip(l0)"),
-                    ("zlib.gunzip", "fwp_p_zlib_gunzip(l0, l1)"),
                     ("zlib.deflate", "fwp_p_zlib_deflate(l0)"),
                     ("zlib.gzip-chunk", "fwp_p_zlib_gzip_chunk(l0)"),
                     ("zlib.crc32", "fwp_p_zlib_crc32(l0, l1)"),
                     ("zlib.gzip-end", "fwp_p_zlib_gzip_end(l0, l1)"),
-                    ("zlib.inflate", "fwp_p_zlib_inflate(l0, l1)"),
                     ("ws.accept", "fwp_p_ws_accept(l0)"),
                     ("ws.key", "fwp_p_ws_key()"),
                     ("ws.frame", "fwp_p_ws_frame(l0, l1, l2)"),
-                    ("ws.parse", "fwp_p_ws_parse(l0, l1, l2)"),
                     ("ws.close-payload", "fwp_p_ws_close_payload(l0, l1)"),
-                    ("ws.close-parse", "fwp_p_ws_close_parse(l0)"),
                     ("ws.deflate", "fwp_p_ws_deflate(l0)"),
-                    ("ws.inflate", "fwp_p_ws_inflate(l0, l1)"),
                 ];
                 match simple.iter().find(|(n, _)| *n == sym) {
                     Some((_, c)) => format!("return {};", c),
@@ -8391,7 +8459,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let resources = prog.funcs.iter().any(|f| {
         f.locals
             .iter()
-            .any(|t| crate::resource::contains_file(&prog.shapes, t))
+            .any(|t| crate::resource::contains_resource(&prog.shapes, t))
     });
     let reuse = reuse_enabled() || resources;
     let uncounted = prog;
@@ -8428,6 +8496,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         crate::arc::check(prog, &entries)?;
     }
     let mut g = Gen {
+        resource_captures: crate::resource::has_socket_values(&prog.funcs, &prog.shapes),
         prog,
         uncounted,
         descs: HashMap::new(),
@@ -8941,12 +9010,12 @@ static const fwp_exec_spec exec_spec{i} = {{
                     if g.unwind {
                         let _ = writeln!(caps, "    if (CLO(v)->n > {j}) {drop}(CLO(v)->a[{j}]);");
                     } else {
-                        let _ = writeln!(caps, "    if (CLO(v)->n > {j}) {{ if (duplicate) fwp_rc_dup(CLO(v)->a[{j}]); else {drop}(CLO(v)->a[{j}]); }}");
+                        let _ = writeln!(caps, "    if (CLO(v)->n > {j}) {{ if (duplicate) {dup}(CLO(v)->a[{j}]); else {drop}(CLO(v)->a[{j}]); }}");
                     }
                 } else {
                     let _ = writeln!(
                         caps,
-                        "    if (duplicate && CLO(v)->n > {j}) fwp_rc_dup(CLO(v)->a[{j}]);"
+                        "    if (duplicate && CLO(v)->n > {j}) {dup}(CLO(v)->a[{j}]);"
                     );
                 }
                 if !matches!(f.body, Body::Expr(_) | Body::Ctor(_)) {

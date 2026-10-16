@@ -116,10 +116,15 @@ int main(void){int status=probe();if(status)_Exit(status);return 0;}
         ("    fwp_cleanup_push(&cleanup, fwp_connect_finish, &owner);", "    /* omit pending connect guard */",1),
         ("    if (owner->addresses) { freeaddrinfo(owner->addresses); owner->addresses = 0; }", "    owner->addresses=0; /* omit resolver release */",2),
         ("    fwp_cleanup_push(&cleanup, fwp_tls_connect_drop, &c);", "    /* omit TLS connect owner */",1),
-        ("if (SOCK(c)->kind == 1 && SOCK(c)->tls) { fwp_tls_free(SOCK(c)->tls); SOCK(c)->tls = 0; }", "if (0) { /* omit SSL release */ }",3),
+        ("if (SOCK(c)->kind == 1 && STREAM(c)->tls) { fwp_tls_free(STREAM(c)->tls); STREAM(c)->tls = 0; }", "if (0) { /* omit SSL release */ }",3),
     ] {
         assert!(generated.contains(needle),"missing control {needle}");
-        let broken=generated.replacen(needle,replacement,1);
+        let mut broken=generated.replacen(needle,replacement,1);
+        if expected == 3 {
+            // Both explicit close and last-owner cleanup can dispose a session.
+            // Remove both paths to make the missing-release control meaningful.
+            broken = broken.replace("fwp_tls_dispose(((fwp_stream *)s)->tls);", "/* omit final-owner SSL disposal */");
+        }
         fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"),&exe,"-O1").unwrap();
         let out=Command::new(&exe).output().unwrap();
         assert_eq!(out.status.code(),Some(expected),"control {needle}: {}",String::from_utf8_lossy(&out.stderr));

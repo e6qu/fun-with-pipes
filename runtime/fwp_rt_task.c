@@ -427,7 +427,7 @@ static void fwp_wake_all(fwp_wl *wl) {
 typedef struct { fwp_wl rd, wr; uint32_t mask; } fwp_fdw;
 /* entries are allocated individually: wait lists must not move */
 static fwp_fdw **fwp_fdws = 0;
-static size_t fwp_nfdws = 0;
+static size_t fwp_nfdws = 0, fwp_live_fdws = 0;
 
 static fwp_fdw *fwp_fdw_get(int fd) {
     if ((size_t)fd >= fwp_nfdws) {
@@ -437,14 +437,20 @@ static fwp_fdw *fwp_fdw_get(int fd) {
         memset(fwp_fdws + fwp_nfdws, 0, (n - fwp_nfdws) * sizeof(fwp_fdw *));
         fwp_nfdws = n;
     }
-    if (!fwp_fdws[fd]) fwp_fdws[fd] = (fwp_fdw *)fwp_mem_alloc(sizeof(fwp_fdw));
+    if (!fwp_fdws[fd]) {
+        fwp_fdws[fd] = (fwp_fdw *)fwp_mem_alloc(sizeof(fwp_fdw));
+        fwp_live_fdws++;
+    }
     return fwp_fdws[fd];
 }
 
 /* register the events the descriptor's waiters need; -1 if epoll refuses
  * the descriptor */
 static int fwp_fd_sync(int fd) {
-    fwp_fdw *w = fwp_fdw_get(fd);
+    /* A close can wake a parked task and dispose its wait lists before that
+     * task resumes. Synchronizing the old descriptor must not recreate them. */
+    if (fd < 0 || (size_t)fd >= fwp_nfdws || !fwp_fdws[fd]) return 0;
+    fwp_fdw *w = fwp_fdws[fd];
     uint32_t want = (w->rd.head ? EPOLLIN | EPOLLRDHUP : 0) | (w->wr.head ? EPOLLOUT : 0);
     if (want == w->mask) return 0;
     struct epoll_event ev;
@@ -479,6 +485,13 @@ static void fwp_fd_closing(fwp_socket_t fd) {
     w->mask = 0;
     fwp_wake_io(&w->rd);
     fwp_wake_io(&w->wr);
+    fwp_fdws[fd] = NULL;
+    fwp_mem_free(w);
+    if (!--fwp_live_fdws) {
+        fwp_mem_free(fwp_fdws);
+        fwp_fdws = NULL;
+        fwp_nfdws = 0;
+    }
 #else
     (void)fd;
 #endif
@@ -1404,7 +1417,13 @@ static V fwp_p_channel_close(V ch) {
 
 /* kind: 0 listener, 1 conn, 2 udp; tls: a listener's TLS context, a
  * connection's TLS session (fwp_rt_tls.c), or 0 */
-typedef struct { fwp_socket_t fd; int kind; void *tls; } fwp_sock;
+/* Every socket has logical value owners. TLS stream state extends this header;
+ * UDP and programs without TLS do not pay for an unused session pointer. */
+typedef struct { fwp_socket_t fd; int kind; uint64_t refs; } fwp_sock;
+#ifdef FWP_TLS
+typedef struct { fwp_sock socket; void *tls; } fwp_stream;
+#define STREAM(v) ((fwp_stream *)(uintptr_t)(v))
+#endif
 
 #ifdef FWP_TLS
 /* TLS sessions (fwp_rt_tls.c, embedded in programs that use TLS): like
@@ -1475,33 +1494,74 @@ static int fwp_wait_fd(fwp_socket_t fd, int write, int64_t at) {
 }
 
 
-#ifdef FWP_LIBRARY
 /* Implicit teardown must not send close_notify or alter host SIGPIPE policy. */
 static void fwp_sock_final(void *p) {
     fwp_sock *s = (fwp_sock *)p;
 #ifdef FWP_TLS
-    if (s->tls) {
-        if (s->kind == 0) fwp_tls_server_drop(s->tls);
-        else fwp_tls_dispose(s->tls);
-        s->tls = 0;
+    if (s->kind != 2 && ((fwp_stream *)s)->tls) {
+        if (s->kind == 0) fwp_tls_server_drop(((fwp_stream *)s)->tls);
+        else fwp_tls_dispose(((fwp_stream *)s)->tls);
+        ((fwp_stream *)s)->tls = 0;
     }
 #endif
-    if (s->fd != FWP_INVALID_SOCKET) { fwp_socket_close(s->fd); s->fd = FWP_INVALID_SOCKET; }
+    if (s->fd != FWP_INVALID_SOCKET) { fwp_fd_closing(s->fd); fwp_socket_close(s->fd); s->fd = FWP_INVALID_SOCKET; }
 }
-#endif
 
 static V fwp_sock_new(fwp_socket_t fd, int kind) {
-    fwp_sock *s = (fwp_sock *)fwp_mem_alloc(sizeof(fwp_sock));
+    size_t bytes = sizeof(fwp_sock);
+#ifdef FWP_TLS
+    if (kind != 2) bytes = sizeof(fwp_stream);
+#endif
+    fwp_sock *s = (fwp_sock *)fwp_alloc_leaf(bytes);
     s->fd = fd;
     s->kind = kind;
-    s->tls = 0;
-#ifdef FWP_LIBRARY
+    s->refs = 1;
+#ifdef FWP_TLS
+    if (kind != 2) ((fwp_stream *)s)->tls = NULL;
+#endif
+#if defined(FWP_LIBRARY) || !defined(FWP_ARC_ONLY)
     fwp_gc_finalizer(s, fwp_sock_final);
 #endif
-    return PTR(s);
+    return fwp_rc_fresh(PTR(s));
 }
 
 #define SOCK(v) ((fwp_sock *)(uintptr_t)(v))
+
+/* Value owners are independent of conservative allocator sharing. Explicit
+ * close changes the shared descriptor; the final owner also closes it. */
+static void fwp_sock_dup(V value) {
+    if (!value) return;
+    fwp_sock *s = SOCK(value);
+    if (!s->refs) fwp_trap("internal: duplicate discarded socket");
+    if (s->refs == UINT64_MAX) fwp_trap("reference count overflow");
+    s->refs++;
+}
+static void fwp_sock_drop(V value) {
+    if (!value) return;
+    fwp_sock *s = SOCK(value);
+    if (!s->refs || --s->refs) return;
+    fwp_sock_final(s);
+#if defined(FWP_LIBRARY) || !defined(FWP_ARC_ONLY)
+    fwp_gc_forget_finalizer(s);
+#endif
+#if !FWP_GC
+    /* Collector-free allocator configurations own their count metadata and
+     * storage through the same typed free used for other resource headers. */
+    fwp_rc_free_obj(value);
+#elif !defined(FWP_RESOURCE_NO_FREE)
+    if (!fwp_rc_last(value)) return;
+    if (fwp_reuse_verify < 0) {
+        const char *e = getenv("FWP_REUSE_VERIFY");
+        fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
+    }
+    /* This leaf has a socket layout, not a String header. Its zero owners and
+     * invalid descriptor already expose a later accidental use. */
+    if (fwp_reuse_verify) return;
+    intptr_t before = fwp_gc.budget;
+    fwp_mem_free(s);
+    fwp_gc.freed += (double)(fwp_gc.budget - before);
+#endif
+}
 
 /* split "host:port" (host may be bracketed IPv6); the host must not be
  * empty and the port is a decimal number up to 65535, as in the
@@ -1526,8 +1586,13 @@ static int fwp_split_addr(const char *addr, char *host, size_t hn, char *port, s
     return 1;
 }
 
-static struct addrinfo *fwp_resolve(const char *addr, int socktype, int passive, const char *kind,
+static struct addrinfo *fwp_resolve(V address, int socktype, int passive, const char *kind,
                                     const fwp_desc *err) {
+    const char *addr = STR(address)->d;
+    if (memchr(addr, 0, STR(address)->len)) {
+        fwp_io_error(kind, "socket address contains a NUL byte", err);
+        return NULL;
+    }
     if (fwp_sockets_init()) { fwp_os_error(kind, addr, err); return NULL; }
     char host[256], port[32], buf[512];
     if (!fwp_split_addr(addr, host, sizeof host, port, sizeof port)) {
@@ -1562,15 +1627,34 @@ static void fwp_fmt_addr(const struct sockaddr *sa, char *out, size_t n) {
     }
 }
 
+typedef struct { fwp_socket_t fd; struct addrinfo *addresses; } fwp_connect_owner;
+static void fwp_connect_finish(void *p) {
+    fwp_connect_owner *owner = (fwp_connect_owner *)p;
+    int saved = errno;
+    if (owner->fd != FWP_INVALID_SOCKET) {
+        fwp_socket_t fd = owner->fd;
+        owner->fd = FWP_INVALID_SOCKET;
+        fwp_fd_closing(fd);
+        fwp_socket_close(fd);
+    }
+    if (owner->addresses) { freeaddrinfo(owner->addresses); owner->addresses = 0; }
+    errno = saved;
+}
+
 static V fwp_p_tcp_listen(V addr, const fwp_desc *err) {
-    struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_STREAM, 1, "listen", err);
+    struct addrinfo *res = fwp_resolve(addr, SOCK_STREAM, 1, "listen", err);
     fwp_socket_t fd = FWP_INVALID_SOCKET;
     errno = 0;
     for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
         fd = fwp_socket_open(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
         if (fd == FWP_INVALID_SOCKET) continue;
+#ifndef _WIN32
+        /* Winsock SO_REUSEADDR permits a second live listener on this port.
+         * Match the interpreter's ordinary bind policy; Unix reuse permits
+         * restarting after a previous listener closes. */
         int one = 1;
         setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&one, sizeof one);
+#endif
         if (fwp_socket_bind(fd, ai->ai_addr, ai->ai_addrlen) == 0 && fwp_socket_listen(fd, 1024) == 0) break;
         int e = errno;
         fwp_socket_close(fd);
@@ -1583,7 +1667,13 @@ static V fwp_p_tcp_listen(V addr, const fwp_desc *err) {
         int error = errno; fwp_socket_close(fd); errno = error;
         return fwp_os_error("listen", STR(addr)->d, err);
     }
-    return fwp_sock_new(fd, 0);
+    fwp_connect_owner owner = {fd, NULL};
+    fwp_cleanup construction;
+    fwp_cleanup_push(&construction, fwp_connect_finish, &owner);
+    V result = fwp_sock_new(fd, 0);
+    owner.fd = FWP_INVALID_SOCKET;
+    fwp_cleanup_pop(&construction);
+    return result;
 }
 
 static V fwp_p_local_addr(V s) {
@@ -1623,15 +1713,19 @@ static V fwp_accept(V l, int64_t at, const fwp_desc *err) {
             }
             int one = 1;
             setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof one);
+            fwp_connect_owner owner = {fd, NULL};
+            fwp_cleanup construction;
+            fwp_cleanup_push(&construction, fwp_connect_finish, &owner);
             V c = fwp_sock_new(fd, 1);
+            owner.fd = FWP_INVALID_SOCKET;
+            fwp_cleanup_pop(&construction);
 #ifdef FWP_TLS
             /* the handshake happens on the first read or write, in the
              * task that serves the connection */
-            if (SOCK(l)->tls) {
-                SOCK(c)->tls = fwp_tls_accepted(SOCK(l)->tls, fd);
-                if (!SOCK(c)->tls) {
-                    SOCK(c)->fd = FWP_INVALID_SOCKET;
-                    fwp_socket_close(fd);
+            if (STREAM(l)->tls) {
+                STREAM(c)->tls = fwp_tls_accepted(STREAM(l)->tls, fd);
+                if (!STREAM(c)->tls) {
+                    fwp_sock_drop(c);
                     return fwp_io_error("tls", fwp_tls_err, err);
                 }
             }
@@ -1650,7 +1744,13 @@ static V fwp_p_tcp_accept(V l, const fwp_desc *err) { return fwp_accept(l, 0, er
 
 static V fwp_p_tcp_accept_for(V d, V l, const fwp_desc *err) {
     V c = fwp_accept(l, fwp_after(d), err);
-    return c ? fwp_some(c) : FWP_NONE;
+    if (!c) return FWP_NONE;
+    fwp_value_owner owner = {c, fwp_sock_drop};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
+    V result = fwp_rc_fresh(fwp_some(c));
+    fwp_cleanup_pop(&cleanup);
+    return result;
 }
 
 static V fwp_p_tcp_stop(V l) {
@@ -1661,22 +1761,16 @@ static V fwp_p_tcp_stop(V l) {
         fwp_socket_close(fd);
     }
 #ifdef FWP_TLS
-    if (SOCK(l)->tls) { fwp_tls_server_drop(SOCK(l)->tls); SOCK(l)->tls = 0; }
+    if (STREAM(l)->tls) { fwp_tls_server_drop(STREAM(l)->tls); STREAM(l)->tls = 0; }
 #endif
     return FWP_UNIT;
 }
 
-typedef struct { fwp_socket_t fd; struct addrinfo *addresses; } fwp_connect_owner;
-static void fwp_connect_finish(void *p) {
-    fwp_connect_owner *owner = (fwp_connect_owner *)p;
+static void fwp_addrinfo_release(void *arg) {
+    struct addrinfo **result = arg;
     int saved = errno;
-    if (owner->fd != FWP_INVALID_SOCKET) {
-        fwp_socket_t fd = owner->fd;
-        owner->fd = FWP_INVALID_SOCKET;
-        fwp_fd_closing(fd);
-        fwp_socket_close(fd);
-    }
-    if (owner->addresses) { freeaddrinfo(owner->addresses); owner->addresses = 0; }
+    if (*result) freeaddrinfo(*result);
+    *result = NULL;
     errno = saved;
 }
 
@@ -1686,7 +1780,7 @@ static V fwp_p_tcp_connect(V addr, const fwp_desc *err) {
     fwp_connect_owner owner = {FWP_INVALID_SOCKET, 0};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_connect_finish, &owner);
-    struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_STREAM, 0, "connect", err);
+    struct addrinfo *res = fwp_resolve(addr, SOCK_STREAM, 0, "connect", err);
     owner.addresses = res;
     fwp_socket_t fd = FWP_INVALID_SOCKET;
     errno = 0;
@@ -1730,29 +1824,32 @@ static V fwp_tcp_read(V nv, V c, int64_t at, const fwp_desc *err) {
     int64_t n = (int64_t)nv;
     if (n < 1) n = 1;
     char *buf = (char *)malloc((size_t)n);
+    if (!buf) fwp_trap("socket receive allocation failed");
+    fwp_cleanup buffer_cleanup;
+    fwp_cleanup_push(&buffer_cleanup, free, buf);
     for (;;) {
         fwp_socket_t fd = SOCK(c)->fd;
-        if (fd == FWP_INVALID_SOCKET) { free(buf); return fwp_closed_error("connection", err); }
+        if (fd == FWP_INVALID_SOCKET) { fwp_cleanup_pop(&buffer_cleanup); free(buf); return fwp_closed_error("connection", err); }
         int ww = 0;
         ssize_t k;
 #ifdef FWP_TLS
-        if (SOCK(c)->tls) k = fwp_tls_recv(SOCK(c)->tls, buf, (size_t)n, &ww);
+        if (STREAM(c)->tls) k = fwp_tls_recv(STREAM(c)->tls, buf, (size_t)n, &ww);
         else
 #endif
             k = fwp_socket_recv(fd, buf, (size_t)n, 0);
         if (k >= 0) {
             V r = fwp_str_new(buf, (size_t)k);
-            free(buf);
+            fwp_cleanup_pop(&buffer_cleanup); free(buf);
             return r;
         }
 #ifdef FWP_TLS
-        if (k == -2) { free(buf); return fwp_io_error("tls", fwp_tls_err, err); }
+        if (k == -2) { fwp_cleanup_pop(&buffer_cleanup); free(buf); return fwp_io_error("tls", fwp_tls_err, err); }
 #endif
         if (fwp_socket_again(errno)) {
-            if (!fwp_wait_fd(fd, ww, at)) { free(buf); return 0; }
+            if (!fwp_wait_fd(fd, ww, at)) { fwp_cleanup_pop(&buffer_cleanup); free(buf); return 0; }
             continue;
         }
-        free(buf);
+        fwp_cleanup_pop(&buffer_cleanup); free(buf);
         return fwp_os_error("read", 0, err);
     }
 }
@@ -1761,7 +1858,13 @@ static V fwp_p_tcp_read(V n, V c, const fwp_desc *err) { return fwp_tcp_read(n, 
 
 static V fwp_p_tcp_read_for(V d, V n, V c, const fwp_desc *err) {
     V r = fwp_tcp_read(n, c, fwp_after(d), err);
-    return r ? fwp_some(r) : FWP_NONE;
+    if (!r) return FWP_NONE;
+    fwp_value_owner owner = {fwp_rc_fresh(r), fwp_rc_free_obj};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
+    V result = fwp_rc_fresh(fwp_some(r));
+    fwp_cleanup_pop(&cleanup);
+    return result;
 }
 
 /* `at` = 0: no timeout; a "timeout" error when it passes first */
@@ -1773,7 +1876,7 @@ static V fwp_tcp_write(V data, V c, int64_t at, const fwp_desc *err) {
         int ww = 1;
         ssize_t k;
 #ifdef FWP_TLS
-        if (SOCK(c)->tls) k = fwp_tls_send(SOCK(c)->tls, STR(data)->d + off, len - off, &ww);
+        if (STREAM(c)->tls) k = fwp_tls_send(STREAM(c)->tls, STR(data)->d + off, len - off, &ww);
         else
 #endif
             k = fwp_socket_send(fd, STR(data)->d + off, len - off, MSG_NOSIGNAL);
@@ -1803,7 +1906,7 @@ static V fwp_p_sock_close(V c) {
         SOCK(c)->fd = FWP_INVALID_SOCKET;
         fwp_fd_closing(fd);
 #ifdef FWP_TLS
-        if (SOCK(c)->kind == 1 && SOCK(c)->tls) { fwp_tls_free(SOCK(c)->tls); SOCK(c)->tls = 0; }
+        if (SOCK(c)->kind == 1 && STREAM(c)->tls) { fwp_tls_free(STREAM(c)->tls); STREAM(c)->tls = 0; }
 #endif
         if (SOCK(c)->kind == 1) shutdown(fd, SHUT_RDWR);
         fwp_socket_close(fd);
@@ -1812,7 +1915,7 @@ static V fwp_p_sock_close(V c) {
 }
 
 static V fwp_p_udp_bind(V addr, const fwp_desc *err) {
-    struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_DGRAM, 1, "bind", err);
+    struct addrinfo *res = fwp_resolve(addr, SOCK_DGRAM, 1, "bind", err);
     fwp_socket_t fd = FWP_INVALID_SOCKET;
     errno = 0;
     for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
@@ -1830,85 +1933,36 @@ static V fwp_p_udp_bind(V addr, const fwp_desc *err) {
         int error = errno; fwp_socket_close(fd); errno = error;
         return fwp_os_error("bind", STR(addr)->d, err);
     }
-    return fwp_sock_new(fd, 2);
+    fwp_connect_owner owner = {fd, NULL};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_connect_finish, &owner);
+    V result = fwp_sock_new(fd, 2);
+    owner.fd = FWP_INVALID_SOCKET;
+    fwp_cleanup_pop(&cleanup);
+    FWP_KEEP_ALIVE(addr);
+    return result;
 }
 
 static V fwp_p_udp_send_to(V addr, V data, V s, const fwp_desc *err) {
-    struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_DGRAM, 0, "send", err);
+    struct addrinfo *res = fwp_resolve(addr, SOCK_DGRAM, 0, "send", err);
+    fwp_cleanup address_cleanup;
+    fwp_cleanup_push(&address_cleanup, fwp_addrinfo_release, &res);
     for (;;) {
         fwp_socket_t fd = SOCK(s)->fd;
-        if (fd == FWP_INVALID_SOCKET) { freeaddrinfo(res); return fwp_closed_error("socket", err); }
+        if (fd == FWP_INVALID_SOCKET) { fwp_cleanup_pop(&address_cleanup); fwp_addrinfo_release(&res); return fwp_closed_error("socket", err); }
         ssize_t k = fwp_socket_sendto(fd, STR(data)->d, STR(data)->len, 0, res->ai_addr, res->ai_addrlen);
         if (k >= 0) break;
         if (fwp_socket_again(errno)) {
             fwp_wait_fd(fd, 1, 0);
             continue;
         }
-        freeaddrinfo(res);
+        fwp_cleanup_pop(&address_cleanup); fwp_addrinfo_release(&res);
         return fwp_os_error("send", STR(addr)->d, err);
     }
-    freeaddrinfo(res);
+    fwp_cleanup_pop(&address_cleanup); fwp_addrinfo_release(&res);
     return FWP_UNIT;
 }
 
-static V fwp_p_udp_recv_from(V nv, V s, const fwp_desc *err) {
-    int64_t n = (int64_t)nv;
-    if (n < 1) n = 1;
-    char *buf = (char *)malloc((size_t)n);
-    for (;;) {
-        fwp_socket_t fd = SOCK(s)->fd;
-        if (fd == FWP_INVALID_SOCKET) { free(buf); return fwp_closed_error("socket", err); }
-        struct sockaddr_storage ss;
-        socklen_t len = sizeof ss;
-        ssize_t k = fwp_socket_recvfrom(fd, buf, (size_t)n, 0, (struct sockaddr *)&ss, &len);
-        if (k >= 0) {
-            char a[128];
-            fwp_fmt_addr((struct sockaddr *)&ss, a, sizeof a);
-            V r = fwp_tuple2(fwp_str_new(buf, (size_t)k), fwp_cstr(a));
-            free(buf);
-            return r;
-        }
-        if (fwp_socket_again(errno)) {
-            fwp_wait_fd(fd, 0, 0);
-            continue;
-        }
-        free(buf);
-        return fwp_os_error("receive", 0, err);
-    }
-}
 
-static V fwp_p_dns_resolve(V host, const fwp_desc *err) {
-    if (fwp_sockets_init()) return fwp_os_error("resolve", STR(host)->d, err);
-    struct addrinfo hints, *res = 0;
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    int rc = getaddrinfo(STR(host)->d, 0, &hints, &res);
-    if (rc != 0) {
-        char buf[512];
-        snprintf(buf, sizeof buf, "%s: failed to lookup address information: %s", STR(host)->d,
-                 gai_strerror(rc));
-        return fwp_io_error("resolve", buf, err);
-    }
-    V items[64];
-    char seen[64][INET6_ADDRSTRLEN];
-    size_t n = 0;
-    for (struct addrinfo *ai = res; ai && n < 64; ai = ai->ai_next) {
-        char ip[INET6_ADDRSTRLEN];
-        if (ai->ai_family == AF_INET)
-            inet_ntop(AF_INET, &((struct sockaddr_in *)ai->ai_addr)->sin_addr, ip, sizeof ip);
-        else if (ai->ai_family == AF_INET6)
-            inet_ntop(AF_INET6, &((struct sockaddr_in6 *)ai->ai_addr)->sin6_addr, ip, sizeof ip);
-        else continue;
-        int dup = 0;
-        for (size_t i = 0; i < n; i++) if (!strcmp(seen[i], ip)) dup = 1;
-        if (dup) continue;
-        strcpy(seen[n], ip);
-        items[n++] = fwp_cstr(ip);
-    }
-    freeaddrinfo(res);
-    return fwp_list_from(items, n);
-}
 
 #endif /* !FWP_FIBERS */
 
@@ -1965,22 +2019,44 @@ static V fwp_p_request_shutdown(void) {
 
 /* ----- metrics: name -> (kind, value), listed in name order */
 
-typedef struct { char *name; const char *kind; double x; } fwp_metric;
+typedef struct { char *name; size_t len; const char *kind; double x; } fwp_metric;
 static fwp_metric *fwp_metrics = 0;
 static size_t fwp_nmetrics = 0, fwp_metrics_cap = 0;
+static void fwp_metrics_finish(void);
 
-static fwp_metric *fwp_metric_get(const char *name, size_t len, const char *kind) {
+/* The registry owns name bytes for its lifetime. Observation suffixes are
+ * compared/copied directly, without allocating a temporary joined name. */
+static fwp_metric *fwp_metric_get(const char *name, size_t len,
+        const char *suffix, size_t suffix_len, const char *kind) {
+    if (len == SIZE_MAX || suffix_len > SIZE_MAX - len - 1) fwp_trap("out of memory");
+#ifndef FWP_LIBRARY
+    static int registered_finish;
+    if (!registered_finish) {
+        if (atexit(fwp_metrics_finish)) fwp_trap("cannot register metrics cleanup");
+        registered_finish = 1;
+    }
+#endif
+    size_t total = len + suffix_len;
     for (size_t i = 0; i < fwp_nmetrics; i++)
-        if (strlen(fwp_metrics[i].name) == len && !memcmp(fwp_metrics[i].name, name, len))
+        if (fwp_metrics[i].len == total && !memcmp(fwp_metrics[i].name, name, len) &&
+                !memcmp(fwp_metrics[i].name + len, suffix, suffix_len))
             return &fwp_metrics[i];
     if (fwp_nmetrics == fwp_metrics_cap) {
-        fwp_metrics_cap = fwp_metrics_cap ? fwp_metrics_cap * 2 : 16;
-        fwp_metrics = (fwp_metric *)realloc(fwp_metrics, fwp_metrics_cap * sizeof(fwp_metric));
+        if (fwp_metrics_cap > SIZE_MAX / sizeof(fwp_metric) / 2) fwp_trap("out of memory");
+        size_t cap = fwp_metrics_cap ? fwp_metrics_cap * 2 : 16;
+        fwp_metric *next = (fwp_metric *)realloc(fwp_metrics, cap * sizeof(fwp_metric));
+        if (!next) fwp_trap("out of memory");
+        fwp_metrics = next;
+        fwp_metrics_cap = cap;
     }
+    char *copy = (char *)malloc(total + 1);
+    if (!copy) fwp_trap("out of memory");
+    memcpy(copy, name, len);
+    memcpy(copy + len, suffix, suffix_len);
+    copy[total] = 0;
     fwp_metric *m = &fwp_metrics[fwp_nmetrics++];
-    m->name = (char *)malloc(len + 1);
-    memcpy(m->name, name, len);
-    m->name[len] = 0;
+    m->name = copy;
+    m->len = total;
     m->kind = kind;
     m->x = 0;
     return m;
@@ -1990,36 +2066,31 @@ static V fwp_p_metrics_update(int op, V name, V xv) {
     double x = fwp_f64(xv);
     const char *n = STR(name)->d;
     size_t len = STR(name)->len;
-    if (op == 0) fwp_metric_get(n, len, "counter")->x += x;
+    if (op == 0) fwp_metric_get(n, len, "", 0, "counter")->x += x;
     else if (op == 1) {
-        fwp_metric *m = fwp_metric_get(n, len, "gauge");
+        fwp_metric *m = fwp_metric_get(n, len, "", 0, "gauge");
         m->kind = "gauge";
         m->x = x;
     } else {
-        char *buf = (char *)malloc(len + 8);
-        memcpy(buf, n, len);
-        memcpy(buf + len, "_count", 6);
-        fwp_metric_get(buf, len + 6, "summary")->x += 1;
-        memcpy(buf + len, "_sum", 4);
-        fwp_metric_get(buf, len + 4, "summary")->x += x;
-        free(buf);
+        fwp_metric_get(n, len, "_count", 6, "summary")->x += 1;
+        fwp_metric_get(n, len, "_sum", 4, "summary")->x += x;
     }
+    FWP_KEEP_ALIVE(name);
     return FWP_UNIT;
 }
 
 static int fwp_metric_cmp(const void *a, const void *b) {
-    return strcmp(((const fwp_metric *)a)->name, ((const fwp_metric *)b)->name);
+    const fwp_metric *x = a, *y = b;
+    size_t n = x->len < y->len ? x->len : y->len;
+    int order = memcmp(x->name, y->name, n);
+    return order ? order : (x->len > y->len) - (x->len < y->len);
 }
 
-static V fwp_p_metrics_snapshot(void) {
-    qsort(fwp_metrics, fwp_nmetrics, sizeof(fwp_metric), fwp_metric_cmp);
-    V *items = (V *)fwp_alloc((fwp_nmetrics + 1) * sizeof(V));
-    for (size_t i = 0; i < fwp_nmetrics; i++) {
-        V f[3] = {fwp_cstr(fwp_metrics[i].name), fwp_cstr(fwp_metrics[i].kind),
-                  fwp_from_f64(fwp_metrics[i].x)};
-        items[i] = fwp_record(3, f);
-    }
-    return fwp_list_from(items, fwp_nmetrics);
+static void fwp_metrics_finish(void) {
+    for (size_t i = 0; i < fwp_nmetrics; i++) free(fwp_metrics[i].name);
+    free(fwp_metrics);
+    fwp_metrics = 0;
+    fwp_nmetrics = fwp_metrics_cap = 0;
 }
 
 #if defined(FWP_LIBRARY) && !defined(FWP_FIBERS)
@@ -2049,6 +2120,7 @@ static void fwp_library_tasks_finish(void) {
 #ifdef __linux__
     fwp_fdws = 0;
     fwp_nfdws = 0;
+    fwp_live_fdws = 0;
 #endif
     fwp_io_waiting = 0;
     fwp_cur = fwp_root = fwp_zombie = 0;
@@ -2073,10 +2145,7 @@ static void fwp_library_tasks_finish(void) {
     fwp_saved_sigint = fwp_saved_sigterm = fwp_signals_installed = 0;
 #endif
     fwp_shutdown = 0;
-    for (size_t i = 0; i < fwp_nmetrics; i++) free(fwp_metrics[i].name);
-    free(fwp_metrics);
-    fwp_metrics = 0;
-    fwp_nmetrics = fwp_metrics_cap = 0;
+    fwp_metrics_finish();
 }
 #endif
 

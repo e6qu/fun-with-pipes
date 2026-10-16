@@ -1394,10 +1394,12 @@ H2Stream = builtin
 # max-requests-per-connection, idle-timeout), running a function per stream
 # internal
 foreign "fwp" http._h2-serve : Conn -> Bytes -> (I64, I64, Duration) -> (H2Stream -> () ! {Async, IO, Network, FileIO}) -> Option[(String, String, List[(String, String)], Bytes)] -> () ! {Async, IO, Network, FileIO} = "http2.serve"
-# (method, path, headers, remote address, the client's certificate)
+# Copy (method, path, headers, remote address, the client's certificate).
+# The returned strings remain valid after the request stream is released.
 # internal
 foreign "fwp" http._h2-request : H2Stream -> (String, String, List[(String, String)], String, Option[String]) ! {Network} = "http2.request"
-# the request body: `Err` 413 (too large), 408 (too late) or 0 (gone)
+# Copy the request body: `Err` 413 (too large), 408 (too late) or 0 (gone).
+# The returned bytes are independent of the stream buffer.
 # internal
 foreign "fwp" http._h2-body : I64 -> Duration -> H2Stream -> Result[Bytes, I64] ! {Async, Network} = "http2.body"
 # internal
