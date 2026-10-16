@@ -164,3 +164,15 @@ returning; both undergo real unload, host-socket preservation and missing-finali
 controls. The existing `library-unload` workflow now includes that targeted test.
 There is no runtime change in this test increment, so its focused result can be
 combined with the earlier exact-runtime checks before full production acceptance.
+
+`8d9a79cb` exposes two validation issues. Windows ARM64 passes normal UDP,
+allocation/unload and address checks but the isolated TLS-tag probe requested
+OpenSSL linking via the production feature marker. Its valueless preprocessor
+switch now enables only the tested destructor branch; controlled peers supply
+those operations, with no OpenSSL runtime dependency. The WASI workflow's native
+collector-free allocator controls failed because UDP cleanup referenced native
+collector metadata. That path now uses the existing typed collector-free free
+operation, matching File cleanup. Actual WASI program tests passed, but the whole
+regression gate remains failed until all controls pass. Neither failure is waived.
+Fresh six-native and WASI validation is required for this repair; the separate
+ARC-library test increment also remains under validation.

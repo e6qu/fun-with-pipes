@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
-#define FWP_TLS 1
+#define FWP_TLS /* Only the destructor branch; peers provide TLS operations. */
 #ifdef _WIN32
 typedef uintptr_t fwp_socket_t;
 #else

@@ -1535,7 +1535,11 @@ static void fwp_udp_drop(V value) {
     if (!s->refs || --s->refs) return;
     fwp_sock_final(s);
     fwp_gc_forget_finalizer(s);
-#ifndef FWP_RESOURCE_NO_FREE
+#if !FWP_GC
+    /* Collector-free allocator configurations own their count metadata and
+     * storage through the same typed free used for other resource headers. */
+    fwp_rc_free_obj(value);
+#elif !defined(FWP_RESOURCE_NO_FREE)
     if (!fwp_rc_last(value)) return;
     if (fwp_reuse_verify < 0) {
         const char *e = getenv("FWP_REUSE_VERIFY");
