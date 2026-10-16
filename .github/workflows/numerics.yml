@@ -5,8 +5,11 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, decoders, kernels, sockets]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, decoders, kernels, sockets, ci-profile]
         default: numerical
+      source_revision:
+        description: Full source commit for the CI profile comparison
+        type: string
       evidence_run:
         description: Completed evidence run to use for generated-code comparisons
         type: string
@@ -927,3 +930,40 @@ jobs:
       - name: Actual WASI semantic agreement
         if: ${{ !cancelled() && inputs.suite == 'wasm' }}
         run: cargo test --no-fail-fast --test wasm --test browser --test exec_invocation_ownership
+
+  ci_profile:
+    if: inputs.suite == 'ci-profile'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      SOURCE_REVISION: ${{ inputs.source_revision }}
+    steps:
+      - name: Require an explicit source revision
+        shell: bash
+        run: '[[ "$SOURCE_REVISION" =~ ^[0-9a-f]{40}$ ]]'
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.source_revision }}
+          path: comparison-source
+      - uses: dtolnay/rust-toolchain@stable
+      - name: OpenSSL 3
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Compare compiler profiles with development checks enabled
+        run: python3 scripts/measure-ci-profile.py --source comparison-source --output ci-profile-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ci-profile-${{ matrix.runner }}
+          path: ci-profile-evidence/
+          if-no-files-found: error
