@@ -1444,8 +1444,11 @@ typedef struct {
 static int g_sink_send(void *ctx, V x) {
     g_sink *k = (g_sink *)ctx;
     h2_buf b = {0};
+    fwp_cleanup sink_buffer;
+    fwp_cleanup_push(&sink_buffer, g_h2_buffer_release, &b);
     g_encode(&k->enc, x, k->tag, &b);
     int r = g_send_msg(k->c, k->s, b.d, b.len, 0);
+    fwp_cleanup_pop(&sink_buffer);
     h2b_free(&b);
     return r;
 }

@@ -7,9 +7,10 @@ open delivery PR is #153. Do not open a second PR before it is accepted.
 ## Current action
 
 Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
-Base: `ac3060d1`. Current code: `79ce442f399250b13d601391ef2c84ecf55bc376`.
+Base: `ac3060d1`. Current code: `cb0ffeea21a87750bffeb66e72180020b2acf7d8`.
+The compiler change is `79ce442f`; `cb0ffeea` corrects its native test setup.
 
-Next: require native run `38955985581` and actual WebAssembly run `38955989639`
+Next: require native run `38956983459` and actual WebAssembly run `38955989639`
 for the new tuple-forwarding optimization. Fix any failures. Retain its allocation
 comparison against the passing `975806e9` report before claiming the saving.
 After #153 acceptance, rebase only this branch's changes after `ac3060d1` onto
@@ -102,7 +103,13 @@ a deliberately reintroduced result-box allocation must fail its count. The
 fixture enables real task unwind support and initializes the scheduler before
 counting result allocations. Existing
 record-worker and conversion controls run with it. Do not claim the one-allocation
-result until `38955985581` passes, or WebAssembly support until `38955989639` passes.
+result until `38956983459` passes, or WebAssembly support until `38955989639` passes.
+
+A further local repair registers a channel sender's encoded buffer before
+encoding and sending. It releases on success, encoding traps and cancellation
+while the send waits for connection space. The existing response test now covers
+all three paths and requires deliberately omitted sender cleanup to fail. This
+repair is not part of `38956983459`; final combined CI must verify it.
 
 The shared `scripts/run-native-tests.py` also adds explicit `--all` selection for
 Linux. It retains every Cargo target and stress case, with two executable workers
