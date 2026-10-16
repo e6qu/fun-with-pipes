@@ -9,6 +9,7 @@ int main(void) {
     const char *inputs[]={"a%20b%C3%BC", "https://example.com/path?q=1", "GET / HTTP/1.1\r\nA: 1\r\nB: 2", "HTTP/1.1 200 OK\r\nA: 1\r\nB: 2", "GET / HTTP/1.1\r\nInvalid\r\nB: 2"};
     const fwp_desc *types[]={URL_OPTION,URL_PARTS,HTTP_REQUEST,HTTP_RESPONSE,HTTP_REQUEST};
     for(int which=0;which<5;which++) {
+        intptr_t initial_budget=fwp_gc.budget;
         V input=fwp_rc_fresh(fwp_cstr(inputs[which]));
         int failures=0,completed=0;
         for(int allocation=1;allocation<64;allocation++) {
@@ -42,7 +43,8 @@ int main(void) {
             return 247;
         }
         printf("decoder %d: %d allocation requests; final charged delta 0\n",which,failures);
-        fwp_rc_drop(input);
+        if(fwp_rc_release_last(input)) fwp_rc_resource_free_obj(input);
+        if(fwp_gc.budget!=initial_budget) return 248;
     }
     return 0;
 }

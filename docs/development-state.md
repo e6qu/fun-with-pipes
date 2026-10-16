@@ -11,7 +11,8 @@ squash merge. Its repaired macOS assignment preserves every target and limit.
 The main workspace `owned-numerics-delivery` is prepared through `3577ba37`:
 borrowed hash fields, direct range arrays, vector ownership, direct F64 storage,
 proved lane pipeline fusion and direct ordered dot. Combined native `38874211385`,
-WASI `38874214456` and four-host costs `38874218523` are queued/running. Preserve
+WASI `38874214456` and four-host costs `38874218523` pass. The main branch now
+also prepares scalar splat reduction at `b1a34ea0`, with fresh focused gates. Preserve
 its full handoff when transferring or merging that batch.
 
 This worktree `/private/tmp/fwp-owned-decoders`, branch `owned-value-decoders`,
@@ -81,8 +82,14 @@ focused workflow covers all six native hosts, with full Windows inclusion and
 actual WASI fixtures. Local generated-library documentation passes (1.20 s) and the explicit target
 assignment tests pass (0.25 s). The first docs audit caught a missing required
 roadmap-status section in this preparation handoff; that section is restored.
-Next: publish the preparation and run six-native plus two-WASI gates. Fix all failures and retain
-actual allocation/code evidence before the later delivery is marked ready.
+At `27334bdb`, Linux ARM64 job `116899769089` in `38878658827` passed text
+decoder semantics, injected failures and exact request counts, but the ternary
+fixture leaked its packed output: `fwp_rc_drop` only decrements shared counts.
+The fixture now performs last-owner destruction for leaf storage and checks
+its initial budget after freeing inputs too. The same input-cleanup correction
+applies to the text fixture; runtime implementations are unchanged. Keep the
+missing-free negative controls. Next: publish the correction and run fresh six-native and two-WASI gates;
+these preparation results do not establish delivery acceptance.
 
 Focused local commands use the fixed guard:
 

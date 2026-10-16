@@ -14,6 +14,7 @@ static void ternary_drop(V value) {
 }
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+    intptr_t initial_budget=fwp_gc.budget;
     V bytes=fwp_rc_fresh(fwp_str_new("abc",3));
     for(int which=0;which<2;which++) for(int repeat=0;repeat<32;repeat++) {
         intptr_t budget=fwp_gc.budget;
@@ -43,8 +44,10 @@ int main(void) {
     if(ternary_allocations!=1) return 251;
     printf("convert 40 trits: %zu allocation request\n",ternary_allocations);
     if(fwp_rc_release_last(converted)) fwp_rc_resource_free_obj(converted);
-    fwp_rc_drop(packed); ternary_drop(digits);
+    if(fwp_rc_release_last(packed)) fwp_rc_resource_free_obj(packed);
+    ternary_drop(digits);
     if(fwp_gc.budget!=budget) return 248;
-    fwp_rc_drop(bytes);
+    if(fwp_rc_release_last(bytes)) fwp_rc_resource_free_obj(bytes);
+    if(fwp_gc.budget!=initial_budget) return 248;
     return 0;
 }
