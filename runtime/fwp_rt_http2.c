@@ -188,7 +188,7 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
             k = g_io_recv(c, buf, 65536, &ww);
             if (k == 0) break;
             if (k < 0) {
-                if (k == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
+                if (k == -1 && fwp_socket_again(errno)) {
                     fwp_wait_fd(c->fd, ww, fwp_now_ns() + 100000000LL);
                     continue;
                 }
@@ -219,7 +219,7 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
         int ww;
         ssize_t n = g_io_send(c, c->out.d, c->out.len, &ww);
         if (n > 0) { h2b_drop(&c->out, (size_t)n); continue; }
-        if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
+        if (n == -1 && fwp_socket_again(errno)) {
             fwp_wait_fd(c->fd, ww, fwp_now_ns() + 10000000LL);
             continue;
         }

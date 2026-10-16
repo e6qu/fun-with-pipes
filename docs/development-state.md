@@ -93,9 +93,10 @@ job `116910514622` now has working OpenSSL/HTTP2 curl, but native byte/web/std
 checks fail linking `clock_gettime64`: WebSocket mask seeding still called the
 POSIX clock directly. It now reuses the existing platform-aware `fwp_unix_ns`.
 The independent gzip fixture at `c849cd54` is included in the next validation.
-Next: publish the clock repair and run fresh six-native and two-WASI gates.
-Preserve the current ARM Windows dependency build until its cache is saved;
-then supersede unfinished old tests. Fix all failures before delivery acceptance.
+Clock repair `72321a55` is published. Fresh six-native `38884840137` and
+two-WASI `38884843627` are queued/running. Both Windows dependency caches were
+saved; superseded `38881941135` is confirmed canceled. Fix every failure before
+delivery acceptance. PR #152 documentation passes; production is still running.
 
 ## Current progress
 
@@ -145,3 +146,30 @@ Focused local commands use the fixed guard:
 
 The standalone `tests/stdlib_doc.rs` generator was compiled/executed serially
 under the same guard with `FWP_BLESS=1` (1.20 s); its source comments are the input.
+
+## Next preparation: process metrics and syntax rendering
+
+Review the remaining metric contracts in the same owned-value batch. A snapshot
+is an immutable list of name/kind/value tuples; build only that result, with
+partial-result cleanup instead of a temporary pointer array. Metric names must
+preserve embedded NUL bytes and sort identically to interpreter strings. Native
+registry storage intentionally lives for the process or library instance, grows
+with distinct names, and must be released at library teardown; repeated updates
+of the same names must not grow it. This is separate from managed snapshot
+storage. Avoid the temporary concatenated name used for observation suffixes.
+
+Acceptance requires interpreter/native parity for ordering, aliases, embedded
+NUL, negative updates, kind changes and repeated snapshots; ARC and tracing
+stress/reuse checks; every managed construction failure and a missing-cleanup
+control; zero snapshot storage after disposal; actual WASI where available.
+Also review `syntax.show`: protect its native text buffer across result
+allocation, without changing its printed syntax. Test semantic parity and
+failure cleanup before promoting either family to checked ARC support. These
+are planned implementation checks, not claims of passing support.
+
+Clock repair `72321a55` removes the link failure. Both Windows jobs in
+`38884840137` now pass owned decoder tests but fail native cleartext HTTP/2
+web peers: the HTTP/2 server checks only Unix EAGAIN/EWOULDBLOCK/EINTR. It
+therefore treats Winsock would-block as a closed connection. Both receive and
+final-send loops now use the existing `fwp_socket_again` predicate, matching
+the shared gRPC transport. Fresh Windows peers must pass before acceptance.
