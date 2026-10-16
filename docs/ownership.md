@@ -52,8 +52,8 @@ There are three different claims to keep separate:
 `--memory static` provides a bounded memory pool. It does not mean that every
 value has a statically known lifetime. WebAssembly and native libraries release
 typed counted owners but retain unproved shared graphs: they cannot scan arbitrary
-host roots. Checked ARC admits native executables and C libraries with checked
-copying boundaries, described below.
+host roots. Checked ARC admits native executables, synchronous WASI executables,
+and C libraries with checked copying boundaries, described below.
 
 The compiler first tries to eliminate temporary objects, keep fields as scalars,
 and place eligible values on the stack. Values that still need shared storage
@@ -252,7 +252,28 @@ still closes streams. Resource lifetime and physical storage lifetime are distin
 Supported native entries include `main`, exported function executables and CLI
 commands and native C libraries with copied inputs and pointer-free results.
 Each entry starts without assuming an existing state or derivative scope.
-WebAssembly, remote and service entry points remain outside this mode.
+Synchronous WASI main/function/CLI entries also use these checks. Browser,
+asynchronous WASI host tasks, remote calls and service entry points remain
+outside this mode. Focused checks and final delivery acceptance are distinguished
+in [the handoff](development-state.md).
+
+WASI supplies standard streams and file access to a WebAssembly module. Build a
+supported program with `fwp build --gc arc --target wasm32-wasi app.fwp -o app.wasm`
+using the [WASI toolchain](reference.md#targets). Its counted values use the
+existing external count table and typed destruction; this still costs metadata,
+lookups and allocations. A count reaching its last owner removes the table entry
+and frees the storage. A counted value escaping to permanent shared retention
+traps instead of silently leaking. Requests to enable tracing or retained-storage
+verification are rejected, just as in native ARC.
+
+Actual WASI O1/O2 checks compare raw interpretation with repeated collections,
+closures, text reads, caught failures and scoped/nested derivatives. They observe
+physical libc allocations independently of count metadata, after the runtime's
+ordinary shutdown hooks. Omitting object frees or derivative-cache shutdown must
+fail. Function and CLI modules are also inspected for absent tracing functions.
+This checks fwp storage inside the module; the WebAssembly host manages its own
+runtime separately. Native-library flags combined with a WebAssembly target are
+rejected instead of silently building a native library.
 
 For a static or shared C library, scalar inputs are copied by value and string
 inputs are copied into owned language storage during the call. Records can
@@ -414,3 +435,19 @@ and width; redirected streams continue to behave as ordinary input. Descriptor
 validation happens before narrowing to the OS integer type. Terminal tests use a
 real pseudo-terminal on POSIX and a private console on Windows, with a deliberately
 missing restore action required to fail. Platform results remain in the handoff.
+
+## Structural hashing without temporary storage
+
+`hash` returns a deterministic U64 fingerprint of a value's typed binary encoding.
+Integer widths, floating-point bits, length prefixes and field order all contribute.
+It uses FNV-1a, a non-cryptographic hash. The compiler's native implementation
+borrows the input and feeds those bytes directly into the hash state, without
+serializing the whole value into a temporary heap buffer. Packed array elements
+remain borrowed views during the call; hashing does not retain or release them.
+
+The interpreter's existing buffered encoding supplies an independent reference.
+Native/WASI checks compare hashes across scalar widths and nested containers,
+keep aliases live, count both libc and managed allocations inside hash calls,
+and verify that restoring the old buffered implementation fails the zero-allocation
+check. [The handoff](development-state.md) records which checks have passed; this
+change alone is not a measured timing improvement or a C/Rust parity claim.

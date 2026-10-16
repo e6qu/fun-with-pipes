@@ -53,6 +53,31 @@ fn hashes_match_typed_interpretation_and_preserve_aliases() {
                 code.replace_range(start..finish, &thread);
             }
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            if opt == "-O2" {
+                if let Some(path) = std::env::var_os("FWP_HASH_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(path);
+                    std::fs::create_dir_all(&path).unwrap();
+                    let mode = if arc { "arc" } else { "tracing" };
+                    std::fs::copy(&binary, path.join(format!("hash-{mode}.exe"))).unwrap();
+                    std::fs::write(path.join(format!("hash-{mode}.c")), &code).unwrap();
+                    let mut command = Command::new(if cfg!(target_os = "macos") {
+                        "otool"
+                    } else {
+                        "objdump"
+                    });
+                    command
+                        .arg(if cfg!(target_os = "macos") {
+                            "-tvV"
+                        } else {
+                            "-d"
+                        })
+                        .arg(&binary);
+                    let assembly = checked(&mut command);
+                    assert!(String::from_utf8_lossy(&assembly.stdout).contains("fwp_hash_value"));
+                    std::fs::write(path.join(format!("hash-{mode}.asm")), assembly.stdout).unwrap();
+                }
+            }
+
             let mut run = Command::new(&binary);
             if arc {
                 run.env("FWP_GC", "off")
@@ -103,11 +128,13 @@ fn hashing_allocates_nothing_and_the_buffered_control_is_detected() {
         assert_ne!(old, code);
         for opt in ["-O1", "-O2"] {
             for (candidate, expected) in [(&code, 0), (&old, 247)] {
+                // Preserve the generated Windows API selection before observer
+                // headers can select the CRT's older default.
+                let preamble = "#if defined(_WIN32) && !defined(_WIN32_WINNT)\n#define _WIN32_WINNT 0x0a00\n#endif\n";
+                assert_eq!(candidate.matches(preamble).count(), 1);
+                let observed = candidate.replacen(preamble, &format!("{preamble}{OBSERVER}\n"), 1);
                 fwp::cgen::compile_c(
-                    &format!(
-                        "{OBSERVER}\n{candidate}\n{}",
-                        include_str!("fixtures/hash_counts.c")
-                    ),
+                    &format!("{observed}\n{}", include_str!("fixtures/hash_counts.c")),
                     &binary,
                     opt,
                 )

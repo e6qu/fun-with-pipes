@@ -519,7 +519,7 @@ fwp build file.fwp [options]                  compile
                      with the arguments after `--` (stdin from
                      --pgo-input F, or empty), then build with the profile
                      (needs GCC)
-    --gc arc         checked native executables/C libraries with counted ownership;
+    --gc arc         checked native/WASI executables and native C libraries;
                      unsupported value/runtime boundaries diagnose
     --gc tracing     existing tracing compatibility mode (the default)
     --memory static  bounded runtime storage and stacks at startup, with

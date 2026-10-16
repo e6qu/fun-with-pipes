@@ -175,3 +175,18 @@ Next focused gates: `hash` on all six native hosts (including protocol/reference
 agreement and native ARC), plus `wasi-arc` on both actual WASI architectures with
 hash semantics and no-allocation controls added. Neither is final acceptance of
 the upcoming delivery. Keep #150's production head unchanged while it runs.
+
+Hash run `38852608349` at `ef3e86da` first stops at a needless borrowed `format!`
+in the WASI test on Unix. The lint is corrected. Windows AMD64 reaches the hash
+tests: raw/native agreement and final ARC storage pass, but the allocation
+observer prepended CRT headers ahead of the generated Windows 10 API selection.
+The probe now inserts its headers after that existing preamble, without changing
+runtime policy. The old run is superseded, not acceptance. Combined actual-WASI
+hash run `38852610916` still provides independent runtime evidence.
+
+Native hash checks now retain emitted C, binaries and disassembly; WASI entry
+checks retain their modules and symbol listings. Source comments introduce typed
+hash bytes and FNV-1a; generated library docs are regenerated through the existing
+standalone generator (0.37/0.38 s). Ownership/design/reference docs describe the
+synchronous WASI scope, external count-table costs and unproved host boundaries.
+Docs pass (2.43 s); formatting passes (0.98 s).

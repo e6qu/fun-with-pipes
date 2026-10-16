@@ -181,6 +181,15 @@ borrows the current state. Traps release completed states and temporary buffers.
 These rules preserve callback and retain order; the handoff records acceptance
 of the latest failure-cleanup repairs.
 
+### Hashing borrowed values
+
+`hash` computes FNV-1a over the existing typed binary encoding. Its native traversal
+streams bytes directly into the hash state, preserving widths, little-endian
+order, float bits and container order. It borrows arrays and nested fields without
+allocating an encoded copy or adjusting their reference counts. The interpreter's
+buffered encoder remains an independent reference. The handoff records acceptance;
+allocation removal does not by itself establish a wall-time improvement.
+
 ## Runtime
 
 The runtime supplies operations generated programs cannot express as simple C
@@ -275,7 +284,7 @@ workspace may retain at most 512 KiB; the table's capacity is separate.
 [Numerics](numerics.md) defines tokens, precision and scope rules;
 [benchmarks](benchmarks.md) records saved allocations and mixed timing results.
 
-## Checked native ARC execution
+## Checked ARC execution
 
 `--gc arc` asks the compiler to prove that supported values can be released by
 automatic reference counting (ARC), without a tracing collector. It checks
@@ -289,9 +298,11 @@ functions/tasks/channel handles, and scoped C calls. Mutable
 cycles, raw pointers, unproved external callbacks and remote/service contexts
 remain excluded. Checked ARC supports native main and function executables,
 including CLI commands, and C libraries with copied inputs and pointer-free
-results. Every library export is checked as a separate entry. WebAssembly and
-service entry points remain excluded. The allocator still uses metadata and may
-retain reusable pages. See
+results. Every library export is checked as a separate entry. Synchronous WASI
+main/function/CLI entries use the same ownership checks and free counted storage
+through their existing external count table. Browser re-entry, WASI host fibers
+and service entry points remain excluded. The allocators still use metadata;
+native allocation may retain reusable pages. See
 [the precise memory contract](ownership.md#checked-arc-delivery).
 
 ## Executables and the pipe protocol

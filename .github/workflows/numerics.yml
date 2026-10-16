@@ -44,7 +44,15 @@ jobs:
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
       - name: Streaming hash ownership and canonical protocol
         if: inputs.suite == 'hash'
+        env:
+          FWP_HASH_ARTIFACTS: hash-evidence
         run: cargo test --no-fail-fast --test hash_ownership --test protocol --test arc_execution
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'hash'
+        with:
+          name: hash-${{ matrix.runner }}
+          path: hash-evidence/
+          if-no-files-found: ignore
       - name: Field movement and resource lifetime regressions
         if: inputs.suite == 'fields'
         run: cargo test --no-fail-fast --test clock_ownership --test directory_report --test working_directory --test arc_execution --test field_moves --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test borrowed_callbacks --test general_record_update_ownership
@@ -758,6 +766,7 @@ jobs:
       RUST_TEST_THREADS: 2
       FWP_REQUIRE_WASM_RESOURCE_COUNTS: 1
       FWP_REQUIRE_WASI_ARC: 1
+      FWP_WASI_ARC_ARTIFACTS: wasi-arc-evidence
       FWP_REQUIRE_WASI_GOLDENS: 1
       FWP_REQUIRE_FLOAT_WASI: 1
     steps:
@@ -773,6 +782,12 @@ jobs:
       - name: Checked WASI ownership and physical storage
         if: inputs.suite == 'wasi-arc'
         run: cargo test --no-fail-fast --test wasm_arc --test arc_execution --test wasm_resource_counts
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'wasi-arc'
+        with:
+          name: wasi-arc-${{ matrix.runner }}
+          path: wasi-arc-evidence/
+          if-no-files-found: ignore
       - name: WebAssembly compiler and exact Rust arithmetic
         if: inputs.suite == 'wasm'
         env:

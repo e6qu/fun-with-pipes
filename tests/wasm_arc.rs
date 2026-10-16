@@ -221,7 +221,7 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
         ("derivatives", "main = range 0 16 | map (const (range 0 32 | map int.to-float) | vjp (map (mul 2.0)) (repeat 32 1.0) | sum) | sum | echo\n"),
     ];
     for (name, program) in programs {
-        let source = dir.join(&format!("{name}.fwp"));
+        let source = dir.join(format!("{name}.fwp"));
         std::fs::write(&source, program).unwrap();
         let reference = checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
@@ -351,6 +351,16 @@ fn wasi_function_and_cli_entries_reclaim_inputs_and_results() {
                     !symbols.contains(collector),
                     "WASI ARC contains {collector}"
                 );
+            }
+            if opt == "-O2" {
+                if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(path);
+                    std::fs::create_dir_all(&path).unwrap();
+                    let name = if cli { "cli" } else { "function" };
+                    std::fs::copy(&binary, path.join(format!("{name}.wasm"))).unwrap();
+                    std::fs::write(path.join(format!("{name}.symbols")), symbols.as_bytes())
+                        .unwrap();
+                }
             }
         }
     }
