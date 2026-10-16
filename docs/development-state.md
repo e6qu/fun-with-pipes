@@ -71,11 +71,14 @@ run `38879829259` exposed missing OpenSSL/curl prerequisites in the newly added
 Windows web/std-library checks. Ternary and text ownership tests themselves pass
 on both Windows architectures. The workflow now installs the pinned native peer
 dependencies with HTTP/2 curl support. Web tests use that configured client,
-portable gzip fixture construction/null devices and console shutdown events on
+an independent fixed gzip fixture, portable null devices and console shutdown events on
 Windows. Interpreter shutdown registers the corresponding Windows console handler,
 matching native behavior. Full Windows CI includes these web/std-library checks.
 Revision `8f848fde` now has six-native `38881941135` and two-WASI `38881944210`
-queued/running. Fresh runner checks must validate both added byte ownership and
+queued/running. The portable gzip fixture now contains independently generated Python gzip bytes,
+verified against `zipped body` (guarded 0.14 s); formatting passes (1.33 s).
+This test-only follow-up still needs the next final-head gate. Fresh runner checks
+must validate both added byte ownership and
 this repair. The [intermediate evidence](measurements/value-decoders-2026-10-16.json)
 retains all six ternary/text artifact sets and exact counts (guarded 0.13 s),
 including the neighboring Windows gate failures.

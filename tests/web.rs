@@ -355,7 +355,8 @@ fn curl_cleartext(b: Backend) {
     // request bodies with a content encoding
     let dir = scratch(&format!("gz-{:?}", b));
     let gz = dir.join("body.gz");
-    std::fs::write(&gz, fwp::gzip::gzip(b"zipped body")).unwrap();
+    // Fixed Python gzip output keeps this input independent of fwp's encoder.
+    std::fs::write(&gz, include_bytes!("web/zipped-body.gz")).unwrap();
     {
         for v in ["--http1.1", "--http2-prior-knowledge"] {
             assert_eq!(
