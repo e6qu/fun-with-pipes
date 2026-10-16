@@ -84,8 +84,13 @@ ordinary bind behavior. Native TLS read the CRT errno slot, losing Windows socke
 resets; it now clears and captures Winsock's error slot as the interpreter does.
 Clean TLS shutdown is distinguished from a stale socket error. A deterministic
 native test covers handshake/read/write resets, clean shutdown and readiness
-waits; ignoring socket errors must make its negative control fail. These repairs
-need a fresh focused run. Do not normalize an unexpected successful read away.
+waits; ignoring socket errors must make its negative control fail. Runtime repair `a0447849` is under native `38922677306` and WASI `38922688282`.
+ARM macOS and ARM Linux pass. Windows AMD64 passes the TCP, UDP and actual socket
+library tests; its two TLS checks exposed test harness issues: `nm` needs the
+actual `.exe` filename, and prepended OpenSSL headers need the Windows API contract
+selected first. These two test-only repairs get a Windows-only run; keep the
+unchanged-runtime Linux/macOS and WASI checks. Final production still requires
+all nine jobs on one combined exact head. Do not normalize an unexpected successful read away.
 
 The native suite compares raw and optimized interpretation with O1/O2 tracing
 stress and ARC, checks cleanup without collections, and inspects ARC symbols.

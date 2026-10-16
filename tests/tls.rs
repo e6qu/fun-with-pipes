@@ -376,7 +376,7 @@ fn mutual_tls() {
     let expected = root().join("tests/tls/mutual.out");
     let mut commands = both_ways(&file, &d, "mutual");
     if have_cc() {
-        let binary = d.join("mutual-arc");
+        let binary = d.join("mutual-arc.exe");
         build(
             &[
                 file.to_str().unwrap(),
@@ -1101,6 +1101,9 @@ fn native_tls_preserves_socket_errors_and_clean_shutdown() {
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "tls_errors").unwrap();
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <openssl/ssl.h>
 static int test_read(SSL *ssl,void *data,int n);
 static int test_write(SSL *ssl,const void *data,int n);
