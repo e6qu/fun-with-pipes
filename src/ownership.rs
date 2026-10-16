@@ -516,6 +516,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         ),
         // Compiler-only numeric map/list materialization. Callback results are
         // inline numbers; only the returned array owns managed storage.
+        "array._range" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
         "array._map-list" => (
             &[B, B],
             ResultOwnership::OwnedTree,

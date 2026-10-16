@@ -1850,6 +1850,19 @@ static V fwp_p_array_from_list_typed(V xs, void (*dup)(V), const fwp_desc *elem)
     FWP_KEEP_ALIVE(source);
     return fwp_array_builder_finish(&result, &cleanup);
 }
+/* Compiler-only inline integer range immediately consumed as an array. Wide
+ * arithmetic computes the distance without signed overflow or WASI truncation.
+ * No callbacks or boxed elements can interrupt initialization after allocation. */
+static V fwp_p_array_range(V lo, V hi, const fwp_desc *elem) {
+    i128 a = fwp_as_i128(elem->kind, lo), b = fwp_as_i128(elem->kind, hi);
+    u128 count = b > a ? (u128)(b - a) : 0;
+    if (count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
+    size_t n = (size_t)count;
+    V result = fwp_array_typed_new(n, elem);
+    for (size_t i = 0; i < n; i++)
+        fwp_array_store(result, i, (V)(a + (i128)i), elem);
+    return result;
+}
 /* Compiler-only map followed immediately by numeric array construction.
  * Keep the same borrowed source snapshot and callback order as map, but pack
  * inline results directly from scratch instead of building temporary list nodes.

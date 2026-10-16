@@ -5482,6 +5482,22 @@ impl<'p> Gen<'p> {
         if sym == "array.length" {
             return Ok("return (V)(int64_t)fwp_array_len(l0);".into());
         }
+        if sym == "array._range" {
+            let MT::Con(name, elements) = &result else {
+                return Err("direct range array result has no element type".into());
+            };
+            if name != "std::Array"
+                || elements.len() != 1
+                || !matches!(
+                    scalar(&elements[0]),
+                    Some(Scalar::Signed(_)) | Some(Scalar::Unsigned(_))
+                )
+            {
+                return Err("direct range array requires an inline integer result".into());
+            }
+            let descriptor = self.desc(&elements[0]);
+            return Ok(format!("return fwp_p_array_range(l0, l1, {descriptor});"));
+        }
         if sym == "array._map-list" {
             let MT::Con(name, elements) = &result else {
                 return Err("numeric mapped array result has no element type".into());

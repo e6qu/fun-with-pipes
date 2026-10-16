@@ -138,6 +138,16 @@ Resource-bearing captures keep their original frames. The handoff separates
 implementation, focused checks and full acceptance; benchmarks retain the
 unfused baseline.
 
+## Constructing integer range arrays directly
+
+`range lo hi` includes `lo` and excludes `hi`. When its only use is immediate
+`array.from-list`, inline integer elements can be written directly into packed
+array storage, without temporary list nodes. Bounds keep their original evaluation
+order; equal or descending bounds produce an empty array. Wide intermediate
+arithmetic checks the existing array size limit before converting to a machine
+size, including on 32-bit WASI. Boxed I128/U128 elements keep their existing path.
+The ordinary array-fusion comparison switch also controls this transformation.
+
 ## Borrowing array data inside loops
 
 An array slice can store a pointer into another array rather than copying its

@@ -236,8 +236,18 @@ impl<'p> Interp<'p> {
                     }
                     Value::tuple(vec![Value::list(l), Value::list(r)])
                 }
-                "range" => {
+                "range" | "array._range" => {
                     // `i < hi` before each step, so `i + 1` cannot overflow
+                    if sym == "array._range" {
+                        let lo = a[0].as_i128().unwrap();
+                        let hi = a[1].as_i128().unwrap();
+                        let count = (hi - lo).max(0) as u128;
+                        let limit =
+                            (usize::MAX - std::mem::size_of::<u64>()) / std::mem::size_of::<u64>();
+                        if count > limit as u128 {
+                            return trap("array too large");
+                        }
+                    }
                     let mut out = Vec::new();
                     if let (Value::U128(lo), Value::U128(hi)) = (&a[0], &a[1]) {
                         let mut i = *lo;
@@ -254,7 +264,11 @@ impl<'p> Interp<'p> {
                             i += 1;
                         }
                     }
-                    Value::list(out)
+                    if sym == "array._range" {
+                        Value::Array(Rc::new(out))
+                    } else {
+                        Value::list(out)
+                    }
                 }
                 "repeat" => Value::list(vec![a[1].clone(); int(&a[0]).max(0) as usize]),
                 "nth" => {

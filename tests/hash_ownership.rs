@@ -295,8 +295,11 @@ fn hash_reduction_removes_lists_and_temporary_heap_tuples() {
             assert_eq!(code.matches(marker).count(), 1);
             code = code.replace(
                 marker,
-                &format!("static unsigned hash_requests;\n{marker} hash_requests++;"),
+                &format!("static unsigned hash_requests;\n{marker} if(leaf!=0) hash_requests++;"),
             );
+            let initialized = "static inline void *fwp_alloc_init(size_t n) {";
+            assert_eq!(code.matches(initialized).count(), 1);
+            code = code.replace(initialized, &format!("{initialized} hash_requests++;"));
             let start = code
                 .find("static void *fwp_main_thread(void *arg) {")
                 .unwrap();
