@@ -84,6 +84,35 @@ with collection off; current tracing and ARC are measured separately. This is
 an allocation comparison between fwp runtimes, not C/Rust parity or a speed claim.
 C source, executables and disassembly are retained for inspection.
 
+## Additional DNS ownership work
+
+While #152's remaining gates run, extend the same owned-value batch to DNS
+results. Acceptance: own partial/final address lists and the OS resolver result;
+preserve first-seen address order and deduplication; remove native's silent
+64-address truncation to match the interpreter; reject embedded NUL consistently;
+compare raw/optimized interpreter and native tracing/ARC results on numeric and
+localhost inputs. Inject managed allocation failures into deterministic synthetic
+resolver results with more than 64 distinct addresses and duplicates. Missing
+list/OS-result cleanup must fail. Native Windows and POSIX run real tests; this
+does not add WebAssembly networking or counted socket handles. Full CI stays on
+runners. The implementation and tests are prepared, not yet CI-verified; the retained
+kernel report does not cover DNS. The deterministic peer returns 81 unique IPv4/IPv6
+addresses plus a duplicate and unsupported family, checks order, injects all 162
+managed allocation points and requires missing-list/OS-cleanup controls to fail.
+Real numeric/localhost inputs compare both interpreter modes and O1/O2 native
+tracing stress/reuse and ARC, including zero final charged storage. Expected output
+is not a measurement until the new tests pass on runners.
+
+Bounded local checks: `cargo fmt` passed (1.08s); accepted compiler `check
+ tests/fixtures/dns_ownership.fwp` passed (0.26s); standalone library-reference
+regeneration and recheck passed (1.20s). The first inventory run correctly rejected
+an unlisted contract change; after explicitly adding DNS to its audited transitions,
+`check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json
+--output /private/tmp/fwp-dns-inventory.json` passed (0.36s): 301 declarations with
+contracts and 42 distinct symbols still requiring review. The documentation audit
+passed (2.69s), and macOS partition helper tests passed (0.13s). All ran through
+`python3 scripts/local-guard.py`. No local fwp build or native probe was run.
+
 ## Actual preparation results
 
 `30399066f869f4dc06d15a58c884184fcd0f9d2d` passes all six native jobs in

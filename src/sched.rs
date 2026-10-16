@@ -1399,6 +1399,9 @@ impl<'p> Interp<'p> {
                 "dns.resolve" => {
                     let host = a[0].as_str().to_string();
                     self.check_cancel()?;
+                    if host.contains('\0') {
+                        return Err(self.io_err("resolve", "hostname contains a NUL byte"));
+                    }
                     let r = self.world.blocking(|| {
                         (host.as_str(), 0)
                             .to_socket_addrs()

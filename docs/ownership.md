@@ -535,3 +535,18 @@ checked ARC and actual WASI checks pass in preparation. Windows and POSIX librar
 unload tests verify registry release separately. The
 [retained report](measurements/owned-values-and-kernels-2026-10-16.json) records
 the artifacts and repaired test failures; the handoff tracks full acceptance.
+
+### DNS result ownership under validation
+
+`dns.resolve` borrows its hostname and returns an owned list of copied address
+strings. The native implementation releases the operating system's temporary
+resolver entries on success and on recoverable allocation failure, and owns each
+partially built list. It preserves first-seen order and removes duplicate address
+strings without the previous 64-address cutoff. Both engines reject embedded NUL
+bytes instead of passing a shortened hostname to the operating system.
+
+The DNS tests compare real numeric and localhost lookups, then use a deterministic
+resolver peer to check 81 distinct addresses and every result-allocation failure.
+These additions await native CI; the earlier owned-values/kernel report does not
+cover them. Socket handles and retained networking callbacks still need separate
+ownership work. This does not add WASI networking or prove faster DNS lookups.

@@ -6147,9 +6147,13 @@ impl<'p> Gen<'p> {
                     _ => format!("return fwp_p_tls_handshake(l0, {});", err),
                 }
             }
+            "dns.resolve" => {
+                let err = self.desc(&MT::con("std::IoError"));
+                let list = self.desc(&result);
+                format!("return fwp_p_dns_resolve(l0, {err}, {list});")
+            }
             "tcp.listen" | "tcp.accept" | "tcp.accept-for" | "tcp.connect" | "tcp.read"
-            | "tcp.read-for" | "tcp.write" | "tcp.write-for" | "udp.bind" | "udp.send-to" | "udp.recv-from"
-            | "dns.resolve" => {
+            | "tcp.read-for" | "tcp.write" | "tcp.write-for" | "udp.bind" | "udp.send-to" | "udp.recv-from" => {
                 let err = self.desc(&MT::con("std::IoError"));
                 let (f, n) = match sym {
                     "tcp.listen" => ("fwp_p_tcp_listen", 1),
@@ -6163,7 +6167,7 @@ impl<'p> Gen<'p> {
                     "udp.bind" => ("fwp_p_udp_bind", 1),
                     "udp.send-to" => ("fwp_p_udp_send_to", 3),
                     "udp.recv-from" => ("fwp_p_udp_recv_from", 2),
-                    _ => ("fwp_p_dns_resolve", 1),
+                    _ => unreachable!("listed socket primitive"),
                 };
                 let args: Vec<String> = (0..n).map(|i| format!("l{}", i)).collect();
                 format!("return {}({}, {});", f, args.join(", "), err)

@@ -162,6 +162,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "dns.resolve" => (&[B], ResultOwnership::OwnedTree, None, &[]),
         "device.run" => (&[B, B, B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         "device.sum" => (&[B, B, B, B, B], R, None, &[]),
         "metrics.add" | "metrics.set" | "metrics.observe" => (&[B, B], R, None, &[]),

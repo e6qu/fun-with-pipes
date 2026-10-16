@@ -90,7 +90,7 @@ jobs:
         if: inputs.suite == 'decoders'
         env:
           FWP_DECODER_ARTIFACTS: decoder-evidence
-        run: cargo test --no-fail-fast --test metrics_ownership --test library_unload --test byte_decoder_ownership --test ternary_ownership --test text_decoder_ownership --test web --test std_tests --test arc_execution --test stdlib_doc
+        run: cargo test --no-fail-fast --test metrics_ownership --test library_unload --test byte_decoder_ownership --test ternary_ownership --test dns_ownership --test text_decoder_ownership --test web --test std_tests --test arc_execution --test stdlib_doc
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'decoders'
         with:

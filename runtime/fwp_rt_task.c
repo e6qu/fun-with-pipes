@@ -1877,38 +1877,6 @@ static V fwp_p_udp_recv_from(V nv, V s, const fwp_desc *err) {
     }
 }
 
-static V fwp_p_dns_resolve(V host, const fwp_desc *err) {
-    if (fwp_sockets_init()) return fwp_os_error("resolve", STR(host)->d, err);
-    struct addrinfo hints, *res = 0;
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    int rc = getaddrinfo(STR(host)->d, 0, &hints, &res);
-    if (rc != 0) {
-        char buf[512];
-        snprintf(buf, sizeof buf, "%s: failed to lookup address information: %s", STR(host)->d,
-                 gai_strerror(rc));
-        return fwp_io_error("resolve", buf, err);
-    }
-    V items[64];
-    char seen[64][INET6_ADDRSTRLEN];
-    size_t n = 0;
-    for (struct addrinfo *ai = res; ai && n < 64; ai = ai->ai_next) {
-        char ip[INET6_ADDRSTRLEN];
-        if (ai->ai_family == AF_INET)
-            inet_ntop(AF_INET, &((struct sockaddr_in *)ai->ai_addr)->sin_addr, ip, sizeof ip);
-        else if (ai->ai_family == AF_INET6)
-            inet_ntop(AF_INET6, &((struct sockaddr_in6 *)ai->ai_addr)->sin6_addr, ip, sizeof ip);
-        else continue;
-        int dup = 0;
-        for (size_t i = 0; i < n; i++) if (!strcmp(seen[i], ip)) dup = 1;
-        if (dup) continue;
-        strcpy(seen[n], ip);
-        items[n++] = fwp_cstr(ip);
-    }
-    freeaddrinfo(res);
-    return fwp_list_from(items, n);
-}
 
 #endif /* !FWP_FIBERS */
 

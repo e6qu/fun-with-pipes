@@ -1139,7 +1139,11 @@ udp.send-to : String -> Bytes -> UdpSocket -> () ! {Async, Network, Error[IoErro
 udp.recv-from : I64 -> UdpSocket -> (Bytes, String) ! {Async, Network, Error[IoError]}
 udp.close : UdpSocket -> () ! {Network}
 
-# addresses of a host name
+# Resolve a hostname or numeric IP address to distinct address strings, in the
+# order supplied by the operating system. There is no fixed result-count limit.
+# Embedded NUL bytes fail with IoError; they never shorten the hostname.
+# For example, "127.0.0.1" | dns.resolve returns ["127.0.0.1"].
+# This call waits for the system resolver; the returned list owns its strings.
 dns.resolve : String -> List[String] ! {Network, Error[IoError]}
 
 # SIGINT/SIGTERM arrived (or `signal.request-shutdown` was called); the

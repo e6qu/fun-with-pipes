@@ -94,6 +94,66 @@ static V fwp_p_metrics_snapshot(const fwp_desc *list_type) {
     return fwp_value_finish(&list, &cleanup);
 }
 
+#ifndef FWP_FIBERS
+static void fwp_addrinfo_release(void *arg) {
+    struct addrinfo **result = arg;
+    if (*result) freeaddrinfo(*result);
+    *result = NULL;
+}
+/* Resolver entries are temporary native storage; returned strings/list cells
+ * have independent owners. Preserve first occurrence order without a fixed cap. */
+static V fwp_p_dns_resolve(V host, const fwp_desc *err, const fwp_desc *list_type) {
+    fwp_check_cancel();
+    if (memchr(STR(host)->d, 0, STR(host)->len))
+        return fwp_io_error("resolve", "hostname contains a NUL byte", err);
+    if (fwp_sockets_init()) return fwp_os_error("resolve", STR(host)->d, err);
+    struct addrinfo hints, *addresses = NULL;
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    int status = getaddrinfo(STR(host)->d, NULL, &hints, &addresses);
+    if (status) {
+        char message[512];
+        snprintf(message, sizeof message, "%s: failed to lookup address information: %s",
+                 STR(host)->d, gai_strerror(status));
+        return fwp_io_error("resolve", message, err);
+    }
+    fwp_cleanup address_cleanup;
+    fwp_cleanup_push(&address_cleanup, fwp_addrinfo_release, &addresses);
+    fwp_value_owner list = {0, list_type->drop};
+    fwp_cleanup list_cleanup; fwp_value_protect(&list, &list_cleanup);
+    for (const struct addrinfo *ai = addresses; ai; ai = ai->ai_next) {
+        const void *address;
+        if (ai->ai_family == AF_INET)
+            address = &((const struct sockaddr_in *)ai->ai_addr)->sin_addr;
+        else if (ai->ai_family == AF_INET6)
+            address = &((const struct sockaddr_in6 *)ai->ai_addr)->sin6_addr;
+        else continue;
+        char ip[INET6_ADDRSTRLEN];
+        if (!inet_ntop(ai->ai_family, address, ip, sizeof ip))
+            return fwp_os_error("resolve", STR(host)->d, err);
+        size_t length = strlen(ip);
+        int duplicate = 0;
+        for (V prior = list.value; prior; prior = OBJ(prior)->f[1]) {
+            V text = OBJ(prior)->f[0];
+            if (STR(text)->len == length && !memcmp(STR(text)->d, ip, length)) {
+                duplicate = 1; break;
+            }
+        }
+        if (duplicate) continue;
+        fwp_value_owner text = {fwp_rc_fresh(fwp_str_new(ip, length)), list_type->elem->drop};
+        fwp_cleanup text_cleanup; fwp_value_protect(&text, &text_cleanup);
+        list.value = fwp_private_cons_owned(text.value, list.value);
+        fwp_value_finish(&text, &text_cleanup);
+    }
+    list.value = fwp_private_reverse_owned(list.value);
+    V result = fwp_value_finish(&list, &list_cleanup);
+    fwp_cleanup_pop(&address_cleanup); fwp_addrinfo_release(&addresses);
+    FWP_KEEP_ALIVE(host);
+    return result;
+}
+#endif
+
 
 static V fwp_decode_sequence(fwp_decode_fields *f, const fwp_desc *d) {
     if (f->aggregate_type) {
