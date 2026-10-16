@@ -1187,11 +1187,9 @@ Baseline generated fwp C calls splat twice and multiplication once for each mapp
 then releases all three vectors. The retained Linux ARM64 multiply loop uses
 scalar F64 multiplication and handles array representation in the loop; the C
 reference keeps calculations in registers and contains vector `fmul`/`fadd`
-instructions. No dynamic spill/cache claim follows from those excerpts. This
-provides concrete next work: remove eligible list/vector intermediates, avoid
-rebuilding constant weights where semantics permit, and expose contiguous numeric
-storage to the C optimizer. Owned cleanup is verified; zero-cost lane abstraction
-and C/Rust parity remain unfinished.
+instructions. No dynamic spill/cache claim follows from those excerpts. These were the measured costs targeted by the following changes; they are not
+a description of the final scalar-splat implementation. General zero-cost lane
+abstraction and C/Rust parity remain unfinished.
 
 The [intermediate direct-dot report](measurements/vector-direct-intermediate-2026-10-16.json)
 retains all four hosts at `3577ba37`, after list fusion, direct F64 storage access
@@ -1204,6 +1202,32 @@ two calls; the complete artifacts retain their compiled instructions.
 Its checked ARC CPU time is still 4.611 / 2.072 times C on Linux AMD64,
 5.902 / 1.910 on Linux ARM64, 2.193 / 1.690 on ARM macOS and 1.785 / 1.411 on
 Intel macOS. These ratios compare implementations within each run. Comparing
-CPU time with the earlier run does not establish a paired speedup. A following
-revision attempts to remove the two splats when their sole use is that dot;
-its pending gates and measurements are tracked in the handoff.
+CPU time with the earlier run does not establish a paired speedup. The final revision below removes those splats when their sole use is that dot.
+
+The [final scalar-splat report](measurements/vector-scalar-splats-2026-10-16.json)
+records revision `b1a34ea0` on all four hosts. Both workloads now use **two managed
+requests total**, 40 requested bytes, 48 peak charged bytes, zero retains and zero
+final charged storage. These requests belong to final result conversion/output;
+the calculation loop no longer constructs lists, arrays or vector wrappers.
+C/Rust still report zero application heap requests in their narrower calculation
+scope. This does not imply fwp startup or printing uses no system allocation.
+
+Here is the final checked ARC CPU time divided by each reference's time in the
+same run. For example, 1.791 means about 79.1% extra CPU time; 0.887 means about
+11.3% less. Whole-process timings include runtime startup and output, which matter
+especially for the short four-lane workload. Paired before/after measurements
+are still required to isolate the revision change from differences between runs.
+
+| Host | Four lanes / C | Four lanes / Rust | Sixty-four lanes / C | Sixty-four lanes / Rust |
+|---|---:|---:|---:|---:|
+| Linux AMD64 | 1.791 | 1.327 | 1.107 | 1.121 |
+| Linux ARM64 | 1.466 | 1.242 | 0.887 | 0.984 |
+| macOS ARM64 | 1.125 | 0.981 | 1.111 | 0.905 |
+| macOS AMD64 | 1.161 | 1.057 | 1.049 | 0.926 |
+
+The retained ARM64 calculation loops hold state in registers, with no calls,
+loads or stores inside the selected loop bodies. Vector instructions compute
+independent iteration values; scalar additions combine those values in the
+original order. Setup and output remain outside those loops. The actual C,
+assembly and binary identities are recorded; this is static code inspection,
+not a measurement of cache misses or dynamic register spills.

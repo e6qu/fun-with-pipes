@@ -8,8 +8,8 @@ belongs in [delivery history](roadmap-history.md).
 
 [PR #151](https://github.com/e6qu/fun-with-pipes/pull/151) is the only open delivery.
 Its final head is `27cdc7ff1b9c59b025159768b11452ab5adbc58c`, in worktree
-`/private/tmp/fwp-wasi-delivery`. Production `38872161681` has passed ARM macOS (regular/stress), both Windows
-jobs and benchmarks; Linux and Intel macOS remain running. Docs
+`/private/tmp/fwp-wasi-delivery`. Production `38872161681` has passed all four macOS jobs, both Windows jobs
+and benchmarks; both Linux jobs remain running. Docs
 `38872161673` passes for that exact head. Previous head `796f5a4c` did not pass acceptance:
 Intel macOS GC exceeded the 90-minute job limit in `38861611494`; the run was
 canceled after that timeout. Six jobs had passed, with both Linux jobs unfinished.
@@ -95,9 +95,17 @@ rounded product, ordered sum, retained aliases and effect/trap order. No generic
 constant-function conversion or floating reassociation is allowed. Require fresh
 native/WASI gates, four-host allocation/code evidence and paired timings against
 original baseline `38869050349`; keep the intermediate evidence visible.
-Splat reduction revision `b1a34ea0` has native `38877218687`, actual WASI
-`38877223390` and four-host costs `38877226777` queued. These gates must finish
-before paired comparison and full delivery publication.
+Splat reduction revision `b1a34ea0` passes all six native jobs `38877218687`, both
+actual WASI jobs `38877223390` and all four cost jobs `38877226777`. The retained
+[final report](measurements/vector-scalar-splats-2026-10-16.json) verifies every
+source/binary/assembly identity (guarded 0.20 s): both workloads on every host/mode
+use two requests, 40 requested bytes, 48 peak charged bytes, zero retains/final
+storage. Both actual ARM64 loops use register state without calls, loads or
+stores in their calculation bodies (excerpt validation 0.15 s). Setup and output
+are outside those loops; this is not a dynamic cache/spill claim. Same-run C/Rust
+ratios and limits are in benchmarks. Paired run `38881665737` now compares these
+binaries with baseline `38869050349`; it must pass and its raw results be retained
+before the next delivery is finalized.
 Eight semantic cases pass the accepted interpreter (guarded 1.36 s); eager stage
 arguments print before pipe input and their division trap remains first. A
 retained-splat alias case is also included. Formatting passes (1.29 s) and docs
@@ -113,16 +121,17 @@ hash/vector workload; it verifies matching reference sources and artifact hashes
 ## Following ownership preparation
 
 `owned-value-decoders` in `/private/tmp/fwp-owned-decoders`, based on `3577ba37`,
-is prepared through `e912227b`. Only its later delta belongs to the following
-batch. It owns ternary and URL/form/HTTP decoder results, removes scratch arrays
-and tests allocation-failure cleanup. Linux ARM64 at `27334bdb` passed text
-semantics, cleanup and exact allocation assertions, but caught missing last-owner
-leaf destruction in the ternary fixture. The fixture correction also checks
-final input disposal. Fresh six-native `38879829259` and actual WASI
-`38879832821` are queued; superseded `38878658827`/`38878662408` and
-`38876430416`/`38876434029` are confirmed canceled. No second delivery PR is open.
-Its worktree handoff contains local checks and 16 newly explicit primitive
-contracts; this work is not yet accepted and is outside the numerical delta.
+is prepared through `8f848fde`. Only its later delta belongs to the following
+batch. It owns ternary, URL/form/HTTP and compressed-byte/WebSocket decoder
+results, removes scratch arrays and tests allocation-failure cleanup. At previous
+`e912227b`, both WASI jobs passed. Native ternary/text tests passed on Windows,
+but web/std-library checks lacked OpenSSL and HTTP/2 curl prerequisites. The
+preparation repairs those dependencies and Unix-specific web test handling,
+including interpreter console shutdown on Windows. New six-native `38881941135`
+and actual WASI `38881944210` are pending. Its handoff records the expanded 22
+contracts, 50 distinct remaining review symbols, and 224 explicit macOS targets.
+Native compressed-byte helpers remain unavailable on WASI. No second delivery PR
+is open; this work remains outside the numerical delta and is not accepted.
 
 ## Completed focused checks and measurements
 
