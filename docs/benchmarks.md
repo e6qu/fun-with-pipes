@@ -967,8 +967,7 @@ is safe. These remaining costs are candidates for further measured work.
 
 The following CPU ratios compare checked ARC against references measured beside
 it in this post-fusion run. They do not compare absolute times from different
-runners. Twelve-sample paired repeats of both compiler revisions are tracked in
-the handoff before claiming a causal timing gain from fusion.
+runners. The paired repeat below compares both compiler revisions on each host.
 
 | Host | Small / C | Small / Rust | Large / C | Large / Rust |
 |---|---:|---:|---:|---:|
@@ -983,3 +982,39 @@ ratio near 1 is not a universal parity claim. Process startup, input constructio
 and printing are included, and measured absolute times vary between runner
 invocations. The original reports retain all samples, hashes, build cost and
 memory scopes so those limitations remain visible.
+
+### Repeating both hash pipeline revisions together
+
+[The paired report](measurements/hash-pipeline-cpu-2026-10-16.json) runs the
+verified before/after binaries together with the same C/Rust references on each
+host. Twelve samples balance execution position and forward/reverse ordering.
+Times include process startup, input construction and printing; compilation and
+allocation profiles run separately. Source, binary and assembly hashes must
+match the original reports, and separate profiles must reproduce their counts.
+
+Each entry below is after / before. Below 1 means less time; above 1 means more.
+CPU time counts the child process's work; elapsed time also includes waiting.
+
+| Host | Small ARC CPU / elapsed | Large ARC CPU / elapsed | Large tracing CPU / elapsed |
+|---|---:|---:|---:|
+| Linux AMD64 | 0.902 / 1.077 | 0.995 / 0.998 | 0.996 / 0.996 |
+| Linux ARM64 | 0.759 / 0.788 | 1.002 / 1.002 | 0.998 / 0.999 |
+| macOS ARM64 | 0.807 / 0.838 | 0.995 / 1.002 | 1.019 / 1.021 |
+| macOS AMD64 | 0.811 / 0.895 | 0.999 / 0.999 | 1.028 / 1.023 |
+
+Small ARC CPU time falls on every host, but Linux AMD64 elapsed time rises from
+2.325 to 2.505 ms while CPU time falls from 2.017 to 1.818 ms. This is a real
+observed elapsed-time regression, not evidence of a CPU regression. Large traced
+macOS medians also rise. Their CPU sample ranges overlap: ARM64 before/after
+50.510–65.098 / 56.172–64.862 ms, AMD64 74.629–177.625 / 78.872–199.014 ms.
+These samples do not establish a repeatable large-input improvement or regression;
+retain them when assessing subsequent changes instead of discarding slow runs.
+
+The same repeat puts small ARC CPU overhead against C at 87%, 48%, 10% and 29%
+on Linux AMD64, Linux ARM64, macOS ARM64 and macOS AMD64 respectively. Against
+Rust the corresponding ratios are 1.708, 1.303, 0.956 and 1.170. Large ARC / C
+ratios are 1.014, 1.036, 1.031 and 1.327; ARC / Rust ratios are 1.026, 1.032,
+0.999 and 1.404. The Intel Mac gap is substantially wider than the first run's
+near-parity result. Hardware and timing variability are retained in the report;
+neither run justifies a general claim of parity. Remaining tuple allocations,
+array retains and input list construction are concrete next costs to address.
