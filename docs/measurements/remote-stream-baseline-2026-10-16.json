@@ -1,0 +1,200 @@
+{
+  "title": "Cached remote-stream storage before explicit ownership",
+  "source_revision": "deae732b9590da6714005319d08c328e5f102a56",
+  "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38973859489",
+  "host": "Linux AMD64",
+  "workload": "Real g_recv/g_decode/g_force paths with queued protobuf messages containing 16-character strings; 1/32/128 elements, complete consumption, stopping after half, and retaining the first position. Every consumed position is read twice.",
+  "comparison": "Existing fwp runtime across input sizes and consumption patterns, not an alternative implementation or C/Rust speed comparison.",
+  "measurement": "O2, collection/stress/verification disabled; setup and receive allocations separated. Charged bytes include allocator size rounding. Raw queued messages and codec scratch are excluded from charged managed bytes; unread-message count is recorded. Library shutdown releases every queued message.",
+  "results": "Four managed requests and 89 requested bytes per received value, charging 112 bytes. Setup charges 688 bytes. Clearing C roots does not release this storage; cells still depend on tracing or whole-library teardown.",
+  "limits": "Not end-to-end networking, connection-pool behavior, elapsed time, total process memory or proof of explicit ownership. C roots are cleared without inventing a release operation the runtime does not yet provide.",
+  "checks": [
+    "O1/O2 semantic agreement with known decoded strings, stress and verification enabled/disabled",
+    "Repeated forcing returns the cached value without another allocation or receive",
+    "Retained first position survives later consumption",
+    "Library shutdown frees every queued message",
+    "Deliberately removing the forced-cell cache check exits with the expected failure status 34"
+  ],
+  "rows": [
+    {
+      "elements": 1,
+      "mode": 0,
+      "consumed": 1,
+      "setup_requests": 4,
+      "setup_bytes": 623,
+      "receive_requests": 4,
+      "receive_bytes": 89,
+      "setup_charged_bytes": 688,
+      "after_read_charged_bytes": 800,
+      "after_clearing_roots_charged_bytes": 800,
+      "queued_messages": 0,
+      "collections": 0
+    },
+    {
+      "elements": 1,
+      "mode": 1,
+      "consumed": 1,
+      "setup_requests": 4,
+      "setup_bytes": 623,
+      "receive_requests": 4,
+      "receive_bytes": 89,
+      "setup_charged_bytes": 688,
+      "after_read_charged_bytes": 800,
+      "after_clearing_roots_charged_bytes": 800,
+      "queued_messages": 0,
+      "collections": 0
+    },
+    {
+      "elements": 1,
+      "mode": 2,
+      "consumed": 1,
+      "setup_requests": 4,
+      "setup_bytes": 623,
+      "receive_requests": 4,
+      "receive_bytes": 89,
+      "setup_charged_bytes": 688,
+      "after_read_charged_bytes": 800,
+      "after_clearing_roots_charged_bytes": 800,
+      "queued_messages": 0,
+      "collections": 0
+    },
+    {
+      "elements": 32,
+      "mode": 0,
+      "consumed": 32,
+      "setup_requests": 4,
+      "setup_bytes": 623,
+      "receive_requests": 128,
+      "receive_bytes": 2848,
+      "setup_charged_bytes": 688,
+      "after_read_charged_bytes": 4272,
+      "after_clearing_roots_charged_bytes": 4272,
+      "queued_messages": 0,
+      "collections": 0
+    },
+    {
+      "elements": 32,
+      "mode": 1,
+      "consumed": 16,
+      "setup_requests": 4,
+      "setup_bytes": 623,
+      "receive_requests": 64,
+      "receive_bytes": 1424,
+      "setup_charged_bytes": 688,
+      "after_read_charged_bytes": 2480,
+      "after_clearing_roots_charged_bytes": 2480,
+      "queued_messages": 16,
+      "collections": 0
+    },
+    {
+      "elements": 32,
+      "mode": 2,
+      "consumed": 32,
+      "setup_requests": 4,
+      "setup_bytes": 623,
+      "receive_requests": 128,
+      "receive_bytes": 2848,
+      "setup_charged_bytes": 688,
+      "after_read_charged_bytes": 4272,
+      "after_clearing_roots_charged_bytes": 4272,
+      "queued_messages": 0,
+      "collections": 0
+    },
+    {
+      "elements": 128,
+      "mode": 0,
+      "consumed": 128,
+      "setup_requests": 4,
+      "setup_bytes": 623,
+      "receive_requests": 512,
+      "receive_bytes": 11392,
+      "setup_charged_bytes": 688,
+      "after_read_charged_bytes": 15024,
+      "after_clearing_roots_charged_bytes": 15024,
+      "queued_messages": 0,
+      "collections": 0
+    },
+    {
+      "elements": 128,
+      "mode": 1,
+      "consumed": 64,
+      "setup_requests": 4,
+      "setup_bytes": 623,
+      "receive_requests": 256,
+      "receive_bytes": 5696,
+      "setup_charged_bytes": 688,
+      "after_read_charged_bytes": 7856,
+      "after_clearing_roots_charged_bytes": 7856,
+      "queued_messages": 64,
+      "collections": 0
+    },
+    {
+      "elements": 128,
+      "mode": 2,
+      "consumed": 128,
+      "setup_requests": 4,
+      "setup_bytes": 623,
+      "receive_requests": 512,
+      "receive_bytes": 11392,
+      "setup_charged_bytes": 688,
+      "after_read_charged_bytes": 15024,
+      "after_clearing_roots_charged_bytes": 15024,
+      "queued_messages": 0,
+      "collections": 0
+    }
+  ],
+  "environment": {
+    "cpu.txt": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+    "c.txt": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+    "rust.txt": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+  },
+  "files": {
+    "rust.txt": {
+      "bytes": 196,
+      "sha256": "f22d5e4e9ced367e774ce5bc140d9e6b1235c1882fec80d011044851f3ae6369"
+    },
+    "cpu.txt": {
+      "bytes": 3189,
+      "sha256": "4476e601951bb5e5dc85ca4b9d2e3bc795bb83c0d4e62b8d9f2bdec6659b0e7a"
+    },
+    "source.txt": {
+      "bytes": 41,
+      "sha256": "4236cfd4d5265102d2ee094b824fb581d02e3600b0435e7aaf520ecc0629051c"
+    },
+    "c.txt": {
+      "bytes": 110,
+      "sha256": "3635b8631d4ebcd8ed7586f4e01e7a6b44407de9d38db6e01daca9c242ed7a53"
+    },
+    "storage.tsv": {
+      "bytes": 546,
+      "sha256": "6db7bed15533b5e40129206780f4c89939000dbe847178d2a0b9d2f256d6fe55"
+    },
+    "stream-O2.exe": {
+      "bytes": 109464,
+      "sha256": "c1189e9a7e7b69080431ae7928c95046751e719bec51fadc70524a82977a0f5b"
+    },
+    "stream-O1.exe": {
+      "bytes": 101208,
+      "sha256": "ec18e8b3aae00a20cf2d1f8725cfe4460cb9ebbe2d2453ada0181556aefa61c9"
+    },
+    "stream.c": {
+      "bytes": 865126,
+      "sha256": "5a0be40dbad95e009e82129902ad766184465b00550bcd130a72b855dc10a756"
+    },
+    "g_force.asm": {
+      "bytes": 46099,
+      "sha256": "2afc17b4f6cbe12bdc92fba0c526bf37a88b03c014da2ae8835121b157cbf4b1"
+    }
+  },
+  "modes": {
+    "0": "consume all",
+    "1": "stop after (elements + 1) / 2, rounded down",
+    "2": "consume all while keeping the first position"
+  },
+  "native_format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=697b0fdd13f2169201124c548ae2ff491c5d9339, for GNU/Linux 3.2.0, not stripped",
+  "binary_observations": [
+    "Actual AMD64 g_force at 0x3940 tests the forced flag at cell offset 8 (0x3954).",
+    "The cached path loads memo at cell offset 16 (0x395a) and jumps to the return path; receive/decode work starts on the other branch.",
+    "The function retains its common stack frame even on this fast path; no timing improvement is claimed."
+  ]
+}

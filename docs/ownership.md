@@ -781,6 +781,17 @@ receive a second message. The cache can hold both a value and the next stream
 position. Owning the copied result alone therefore does not settle the lifetime
 of the stream, its connection or the task receiving messages.
 
+The [initial Linux AMD64 baseline](measurements/remote-stream-baseline-2026-10-16.json)
+uses real queued protobuf messages containing 16-character strings. Each received
+value adds four managed allocations requesting 89 bytes, charged as 112 bytes
+after allocator rounding. Setup charges another 688 bytes. At 128 received
+values, 15,024 managed bytes remain charged after the C references are cleared,
+with collection disabled. Repeated reads use the saved value without receiving
+or allocating again; deliberately disabling caching fails the check. Library
+shutdown releases all queued messages. This isolates receive/cache storage;
+it excludes socket I/O, connection pooling, raw message storage and timing.
+It establishes a baseline, not explicit stream ownership.
+
 The next service-memory work must establish these facts before removing its
 current collector requirement:
 
