@@ -86,53 +86,55 @@ fn cpu_kernel_results_preserve_values_aliases_and_release_storage() {
     }
 }
 
+fn probe_code(code: String) -> String {
+    let mut code = code
+        .replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1")
+        .replace(
+            "typedef uint64_t V;",
+            "typedef uint64_t V;\nstatic void kernel_allocation(void);",
+        );
+    for (needle, hook) in [
+        (
+            "static inline void *fwp_alloc_init(size_t n) {",
+            " kernel_allocation();",
+        ),
+        (
+            "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
+            " if(leaf!=0) kernel_allocation();",
+        ),
+    ] {
+        assert_eq!(code.matches(needle).count(), 1);
+        code = code.replace(needle, &format!("{needle}{hook}"));
+    }
+    let start = code
+        .find("/* ---------------------------------------------------------------- kernels */")
+        .unwrap();
+    let end = start
+        + code[start..]
+            .find("/* ------------------------------------------------------------------ OpenCL")
+            .unwrap();
+    let kernel = code[start..end]
+        .replace("fwp_k_malloc(", "kernel_malloc(")
+        .replace("free(", "kernel_free(")
+        .replace("CreateThread(", "kernel_create(")
+        .replace("WaitForSingleObject(", "kernel_join(")
+        .replace("pthread_create(", "kernel_create(")
+        .replace("pthread_join(", "kernel_join(");
+    code.replace_range(
+        start..end,
+        &format!("{}\n{kernel}", include_str!("fixtures/cpu_kernel_ledger.c")),
+    );
+    code[..code.find("int main(").unwrap()].to_string()
+        + include_str!("fixtures/cpu_kernel_cleanup.c")
+}
+
 #[test]
 fn kernels_release_output_and_scratch_after_workers_join() {
     let dir = fwp::cgen::TempDir::new("cpu-kernel-cleanup").unwrap();
     let program = include_str!("fixtures/cpu_kernel_ownership.fwp");
     for arc in [false, true] {
         let code = emitted(program, arc, &dir);
-        let mut code = code
-            .replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1")
-            .replace(
-                "typedef uint64_t V;",
-                "typedef uint64_t V;\nstatic void kernel_allocation(void);",
-            );
-        for (needle, hook) in [
-            (
-                "static inline void *fwp_alloc_init(size_t n) {",
-                " kernel_allocation();",
-            ),
-            (
-                "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
-                " if(leaf!=0) kernel_allocation();",
-            ),
-        ] {
-            assert_eq!(code.matches(needle).count(), 1);
-            code = code.replace(needle, &format!("{needle}{hook}"));
-        }
-        let start = code
-            .find("/* ---------------------------------------------------------------- kernels */")
-            .unwrap();
-        let end = start
-            + code[start..]
-                .find(
-                    "/* ------------------------------------------------------------------ OpenCL",
-                )
-                .unwrap();
-        let kernel = code[start..end]
-            .replace("fwp_k_malloc(", "kernel_malloc(")
-            .replace("free(", "kernel_free(")
-            .replace("CreateThread(", "kernel_create(")
-            .replace("WaitForSingleObject(", "kernel_join(")
-            .replace("pthread_create(", "kernel_create(")
-            .replace("pthread_join(", "kernel_join(");
-        code.replace_range(
-            start..end,
-            &format!("{}\n{kernel}", include_str!("fixtures/cpu_kernel_ledger.c")),
-        );
-        let code = code[..code.find("int main(").unwrap()].to_string()
-            + include_str!("fixtures/cpu_kernel_cleanup.c");
+        let code = probe_code(code);
         let missing_inputs = code.replace(
             "kernel_free((void *)owner->kernel.inputs);",
             "/* omitted input-table disposal */",
@@ -190,5 +192,72 @@ fn kernels_release_output_and_scratch_after_workers_join() {
                 }
             }
         }
+    }
+}
+
+#[test]
+fn compare_kernel_allocations_with_the_immutable_runtime_baseline() {
+    let Some(baseline_path) = std::env::var_os("FWP_KERNEL_BASELINE") else {
+        return;
+    };
+    let baseline = std::fs::read_to_string(baseline_path).unwrap();
+    let range = |code: &str| {
+        let start = code
+            .find("/* ---------------------------------------------------------------- kernels */")
+            .unwrap();
+        let end = start
+            + code[start..]
+                .find(
+                    "/* ------------------------------------------------------------------ OpenCL",
+                )
+                .unwrap();
+        start..end
+    };
+    let old_kernel = &baseline[range(&baseline)];
+    assert!(old_kernel.contains("double *out = (double *)fwp_k_malloc(n * sizeof(double));"));
+    assert!(old_kernel.contains("memcpy(ARR(r)->d, out, n * sizeof(double));"));
+    let dir = fwp::cgen::TempDir::new("cpu-kernel-baseline").unwrap();
+    // Same compiled probe, inputs and accounting. Only the kernel executor is
+    // replaced. Tracing mode is common to both revisions, with collection off.
+    let mut code = emitted(
+        include_str!("fixtures/cpu_kernel_ownership.fwp"),
+        false,
+        &dir,
+    );
+    code.replace_range(range(&code), old_kernel);
+    let code = format!("#define KERNEL_BASELINE 1\n{}", probe_code(code));
+    let binary = dir.join("baseline.exe");
+    fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+    let output = checked(
+        Command::new(&binary)
+            .env("FWP_GC", "off")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0"),
+    );
+    if let Some(path) = std::env::var_os("FWP_KERNEL_ARTIFACTS") {
+        let path = std::path::PathBuf::from(path);
+        std::fs::create_dir_all(&path).unwrap();
+        std::fs::write(path.join("kernel-baseline.c"), code).unwrap();
+        std::fs::write(path.join("kernel-baseline-runtime.c"), baseline).unwrap();
+        std::fs::write(path.join("kernel-baseline.txt"), output.stdout).unwrap();
+        std::fs::copy(&binary, path.join("kernel-baseline.exe")).unwrap();
+        let mut command = Command::new(if cfg!(target_os = "macos") {
+            "otool"
+        } else if cfg!(windows) {
+            "llvm-objdump"
+        } else {
+            "objdump"
+        });
+        let assembly = checked(
+            command
+                .arg(if cfg!(target_os = "macos") {
+                    "-tvV"
+                } else {
+                    "-d"
+                })
+                .arg(&binary),
+        );
+        std::fs::write(path.join("kernel-baseline.asm"), assembly.stdout).unwrap();
     }
 }

@@ -89,10 +89,12 @@ both WASI jobs and four-host cost/paired checks pass. Require fresh full product
 and documentation checks for the final combined PR head before squash merge.
 
 The following preparation owns ternary, URL/form/HTTP and compressed-byte/frame
-decoder results and partial constructions. It also repairs the Windows web-test
-prerequisites and shutdown handling exposed by the broader checks. Its actual
-results and unresolved Windows validation are in the handoff. Keep it separate
-until #152 merges; historical preparation branches are evidence, not extra tasks.
+decoder results and partial constructions, metric snapshots, syntax text and CPU
+tensor output/scratch. It also repairs Windows web prerequisites, clocks, socket
+retry checks and shutdown handling. The decoder/Windows subset passes six-host
+checks; metrics and kernels still need combined native/WASI evidence. Keep this
+preparation separate until #152 merges; its current results belong in the handoff,
+and historical preparation branches are evidence rather than extra tasks.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

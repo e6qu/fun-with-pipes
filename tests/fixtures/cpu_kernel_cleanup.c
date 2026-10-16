@@ -29,12 +29,16 @@ int main(void) {
         size_t workers=sum && threads==4 ? 3 : (size_t)threads;
         size_t expected=1+workers+(sum ? 1 : 0);
         size_t peak_bound=sizeof(double *)+workers*2*FWP_KCHUNK*sizeof(double)+(sum ? 3*sizeof(double):0);
+#ifdef KERNEL_BASELINE
+        if(!sum) {expected++;peak_bound+=n*sizeof(double);}
+#endif
         if(fwp_gc.budget!=budget || atomic_load(&kernel_live) ||
            atomic_load(&kernel_requests)!=expected || atomic_load(&kernel_peak)>peak_bound ||
            kernel_managed_requests!=(sum ? 0:1))return 248;
         printf("kernel %s threads %d: native requests %zu, native peak %zu, managed requests %d, final native and charged storage 0\n",
             sum ? "sum":"run",threads,atomic_load(&kernel_requests),atomic_load(&kernel_peak),kernel_managed_requests);
     }
+    #ifndef KERNEL_BASELINE
     for(int which=0;which<3;which++) {
         kernel_counters_reset();
         kernel_managed_left=which==0 ? 1:0;
@@ -50,8 +54,11 @@ int main(void) {
         if(fwp_cleanups || atomic_load(&kernel_live) || fwp_gc.budget!=budget)return 248;
         if(which && (kernel_thread_attempts!=2 || kernel_thread_started!=1 || kernel_thread_joined!=1))return 249;
     }
+    #endif
     fwp_rc_free_obj(inputs);fwp_rc_free_arr(data);fwp_rc_free_arr(constants);fwp_rc_free_arr(code);
     if(fwp_gc.budget!=initial)return 248;
+#ifndef KERNEL_BASELINE
     puts("allocation and worker-start failures: all started workers joined; final storage 0");
+#endif
     return 0;
 }

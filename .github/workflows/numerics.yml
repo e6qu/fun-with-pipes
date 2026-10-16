@@ -60,10 +60,16 @@ jobs:
       - run: cargo clippy --all-targets -- -D warnings
       - if: inputs.suite != 'kernels' && inputs.suite != 'decoders' && inputs.suite != 'vectors' && inputs.suite != 'fields' && inputs.suite != 'processes' && inputs.suite != 'mapped-arrays' && inputs.suite != 'zip-maps' && inputs.suite != 'zip-windows' && inputs.suite != 'hash' && inputs.suite != 'hash-windows'
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
+      - name: Retrieve immutable CPU kernel baseline
+        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        run: |
+          git fetch --no-tags --depth=1 origin 21a621c699d11a84c05f955935dc95dcfb8adbf2
+          git show 21a621c699d11a84c05f955935dc95dcfb8adbf2:runtime/fwp_rt_kernel.c > kernel-baseline.c
       - name: CPU kernel ownership
         if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
         env:
           FWP_KERNEL_ARTIFACTS: kernel-evidence
+          FWP_KERNEL_BASELINE: kernel-baseline.c
         run: cargo test --no-fail-fast --test cpu_kernel_ownership --test stdlib_doc
       - name: CPU kernel size validation order
         if: inputs.suite == 'kernels' || inputs.suite == 'decoders'

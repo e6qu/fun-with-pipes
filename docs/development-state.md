@@ -1,188 +1,146 @@
 # Session handoff
 
-Updated 2026-10-16. This worktree prepares the following ownership batch, not a
-second delivery PR. [PLAN.md](../PLAN.md) retains the seven project work areas.
+Updated 2026-10-16. [PLAN.md](../PLAN.md) retains seven unfinished project areas.
+This is the combined preparation for the delivery after PR #152. Keep one active
+PR, fix failures, and merge only after all final-head production and docs gates.
 
 ## Delivery chain
 
-PR #151 is accepted as `3dff03b644c4922845f7c4b9f3a9673dece5ef16`, with
-identical tested tree and verified one-line message. All nine production jobs
-`38872161681` and docs `38872161673` passed at `27cdc7ff`; duplicate postmerge
-production `38884089916` is confirmed canceled.
+PR #151 is accepted as `3dff03b644c4922845f7c4b9f3a9673dece5ef16`. Its tested
+head `27cdc7ff` passes all nine production jobs `38872161681` and docs
+`38872161673`. Merge tree, parent and one-line message were verified. Duplicate
+postmerge production `38884089916` is confirmed canceled.
 
-PR #152 is now the sole active delivery. Final numerical head is
-`ed936381240c57d4af45d526ac16b744405c0ca6`, with production `38884588161` and
-docs `38884587999` queued/running. The draft-only skipped run is not acceptance.
-Its main-workspace handoff is authoritative for the numerical batch. Focused
-six-native, two-WASI, four-host costs and paired timing passed; do not change
-that PR head for unrelated decoder preparation. Merge only after all final gates.
+[PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) is the only open delivery.
+Final head `ed936381240c57d4af45d526ac16b744405c0ca6` has passing docs
+`38884587999`; production `38884588161` is running with no reported failures.
+Its main-workspace handoff retains numerical evidence and is authoritative for
+that PR. Do not change its head for this preparation. Draft-only skipped jobs
+are not acceptance. Use an explicit one-line subject, at most 80 characters,
+and empty body for squash merge; no attribution or trailers.
 
-This worktree `/private/tmp/fwp-owned-decoders`, branch `owned-value-decoders`,
-is based on `3577ba37`. Only its later delta belongs to the following batch.
-Do not replay or separately publish the numerical preparation chain.
+Current preparation: `/private/tmp/fwp-owned-kernels`, branch `owned-cpu-kernels`.
+It includes decoder/metrics branch `owned-value-decoders` through `21a621c6`, plus
+CPU kernel changes. The complete following-delivery delta starts after
+`3577ba3780c19051845a5beba3f064f608cedf1e`. Rebase only that delta onto accepted
+#152, preserving its final numerical changes, measurements and documentation.
+Do not replay the numerical preparation ancestry or publish competing PRs.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
 | 1 | In progress | Complete deployment and primitive ownership; remove tracing |
-| 2 | In progress | Deliver numerical batch, then owned value decoders |
+| 2 | In progress | Deliver numerical and owned-value batches; reduce remaining abstractions |
 | 3 | In progress | Measure remaining C/Rust gaps and inspect generated code |
 | 4 | In progress | Reduce derivative recording costs and validate scaling |
-| 5 | In progress | Measure lane kernels and resolve runtime OpenCL compilation |
+| 5 | In progress | Validate CPU kernels and resolve runtime OpenCL compilation |
 | 6 | In progress | Retain comparable, repeated measurements and storage costs |
 | 7 | In progress | Extend maintained programs across deployment boundaries |
 
-## Next ownership batch and acceptance
+## Following batch: owned values and CPU kernels
 
-Remove remaining collector-dependent scratch from value decoders. Begin with
-balanced ternary: trits are digits -1, 0 and +1; lists and packed bytes must have
-explicit owners, including partial-list cleanup. Traverse input lists directly,
-write packed bytes directly, and construct owned result lists without scratch
-arrays. Preserve digit order, width checks, negative counts and end-of-input.
-Then review URL/form and HTTP-head decoders: protect temporary native buffers and
-partially decoded fields on parse and allocation failures. Their current success
-and error paths still create unowned composite results and abandoned scratch.
-This is distinct from asynchronous socket/server ownership, which remains open.
+Acceptance requires raw/optimized interpreter/native parity, tracing stress and
+reuse checks, checked ARC storage returning to baseline, injected failures and
+controls that deliberately omit cleanup. Actual WASI validates supported helpers
+and physical frees. Native-only compression/WebSocket helpers remain unavailable
+on WASI. Maintain existing coverage and explicit macOS assignments. Require fresh
+combined full delivery gates after preparation, not just these focused results.
 
-Before claiming support, require raw/optimized interpreter and native parity,
-tracing stress/reuse verification, checked ARC zero final storage, injected
-partial-construction failures and negative controls. Exercise pure decoders on
-actual WASI where supported. Record allocations and generated code for the
-removed scratch; no speedup claim without comparable repeated measurements.
-Add explicit macOS assignments for new test targets without reshuffling old ones.
-Full builds, suites and evidence run on GitHub. Local checks use the unchanged
-fixed `python3 scripts/local-guard.py` limits. No compiler build is permitted as a
-retry of the earlier guard refusal. Keep one delivery PR, exact-head acceptance
-and one-line <=80-character commits with empty bodies and no attribution.
+- Eight balanced-ternary contracts traverse input lists directly and own partial
+  result lists. Packing writes result bytes directly. Digit order, widths,
+  padding and count behavior stay unchanged.
+- Eight text contracts cover URL/form/HTTP-head decoding and scalar helpers.
+  HTTP headers are built without line-index/value scratch arrays. Typed fields
+  protect copied strings, errors and partially constructed results.
+- Six byte contracts cover gzip/deflate, CRC32 and WebSocket parsing/inflation.
+  Encoders also protect native output during managed result allocation. Native
+  allocator OOM still exits; recoverable fault tests inject managed allocations.
+- Five metrics/syntax contracts copy immutable metric snapshots and protect
+  rendering buffers. Complete metric names, including NUL, match interpreter
+  lookup and sorting. Observation suffixes no longer need a joined-name buffer.
+  Registry entries live for the process/library instance and are released on
+  library teardown; repeated updates reuse entries, distinct names require space.
+- Two CPU tensor contracts borrow inputs and own elementwise results/reduction
+  scratch. Workers copy chunks directly into one result array, removing a second
+  full-size native output and copy. Workspace remains per worker; reductions
+  still use one scalar per 4096-element block. Thread-start failure joins started
+  workers before trapping; POSIX no longer silently executes missing workers on
+  the caller. Existing explicit worker bounds/WASI single-thread behavior remain.
 
-## Decoder implementation and validation
+CPU validation keeps malformed-code/input-size order, immutable aliases/views,
+chunk/block boundaries and floating operation order. WASI checks full counts
+before 32-bit conversion; omitted-check controls must expose truncation. Native
+allocation/worker-failure controls must detect omitted input/output disposal.
+The fixed kernel probe uses 8193 F64 values, multiplies each by 0.5, and checks
+both output and ordered reduction with one/four requested workers. It records
+native requested bytes and managed requests, excluding ledger headers. The
+immutable `21a621c6` kernel executor supplies a same-probe tracing-mode baseline,
+with collection off; current tracing and ARC are measured separately. This is
+an allocation comparison between fwp runtimes, not C/Rust parity or a speed claim.
+C source, executables and disassembly are retained for inspection.
 
-Eight ternary and eight URL/form/HTTP contracts own results and protect partial
-construction. They traverse lists and HTTP lines directly, avoiding pointer/index
-scratch arrays. Six compressed-byte contracts cover gzip/deflate, CRC32 and
-WebSocket parsing/inflation; encoders protect native output across managed result
-allocation. Native compression allocation failures retain their process-exit
-policy; managed-allocation injection does not claim recoverable native OOM.
-Those compressed-byte helpers remain unavailable on WASI.
+## Actual preparation results
 
-The retained [ternary/text evidence](measurements/value-decoders-2026-10-16.json)
-at `e912227b` includes all six target artifacts and exact allocation counts.
-It records that whole Windows jobs failed neighboring web prerequisites, despite
-passing decoder tests. Both WASI jobs `38879832821` passed. Packing/converting 40
-trits needs one result allocation. Text decoder cases need 3/7/13/12/6 requests;
-after disposal, charged storage returns to its initial value. These are storage
-measurements, not timing or C/Rust parity claims.
+`30399066f869f4dc06d15a58c884184fcd0f9d2d` passes all six native jobs in
+`38886033175`, including all decoder ownership, Windows web/std-library peers,
+ARC execution and library docs. Earlier `72321a55` passes both actual WASI jobs
+`38884843627`; the subsequent HTTP/2 socket repair is native-only. Metrics and
+CPU kernels were added later and are not covered by those passing runs.
 
-`8f848fde` passes all four Linux/macOS jobs and both WASI jobs `38881944210`.
-It adds compressed-byte tests and installs cached pinned native OpenSSL and HTTP/2
-curl prerequisites for Windows peers. Windows revealed two existing runtime bugs:
+[Intermediate ternary/text evidence](measurements/value-decoders-2026-10-16.json)
+at `e912227b` retains all six target artifact sets and exact counts, explicitly
+recording neighboring Windows gate failures at that revision. Packing/converting
+40 trits needs one result allocation; text cases need 3/7/13/12/6 requests.
+Disposal restores initial charged storage. These are not elapsed-time claims.
 
-- `clock_gettime64` failed to link. `72321a55` uses existing `fwp_unix_ns` instead.
-- After linking, native cleartext HTTP/2 closed sockets on Winsock would-block.
-  `30399066` uses existing `fwp_socket_again` in both server transport loops.
+Validation exposed and repaired these issues:
 
-At `72321a55`, both Windows jobs `38884840137` pass owned decoder tests but fail
-four native HTTP/2 peers. All four Linux/macOS jobs pass, and both actual WASI jobs `38884843627` pass.
-Fresh six-native `38886033175` validates the second repair. Preserve coverage:
-full Windows acceptance now includes web/std-library peers with HTTP/2 curl.
-An independent fixed Python gzip input, portable null device and targeted console
-shutdown replace Unix-only fixture assumptions. Interpreter Windows shutdown
-handles console events consistently with native execution. No tests are removed.
+- A ternary fault fixture decremented a final owner without freeing it. It now
+  performs last-owner destruction and checks input/output storage together.
+- Added Windows peers lacked native OpenSSL/HTTP2 curl prerequisites. Pinned
+  caches, the configured client and portable fixtures now cover both hosts.
+- WebSocket mask seeding called a POSIX clock; it now uses `fwp_unix_ns`.
+- Native HTTP/2 treated Winsock would-block as closure; receive/final-send loops
+  now use existing `fwp_socket_again`. Both Windows peers pass.
 
-Earlier injected ternary checks caught a fixture incorrectly using `fwp_rc_drop`
-for final-owner destruction; `e912227b` fixes input/output disposal and checks the
-initial budget. Missing-field/list/native-buffer cleanup controls remain required.
-Superseded incomplete preparation runs are not acceptance; `38881941135` is
-confirmed canceled after both Windows dependency caches were saved.
+The independent gzip fixture uses fixed Python-produced bytes. Windows shutdown
+uses targeted console events and a corresponding interpreter handler. No failed
+checks are removed. Superseded `38881941135`, `38886468434` and `38886471769` are
+confirmed canceled. Incomplete/canceled runs are not acceptance.
 
-## Local checks
+Combined source `35e8f0ab` has six-native `38887912753` and actual WASI
+`38887916636` queued. Its follow-up adds the immutable kernel allocation baseline
+and streamlines this handoff; publish together before final preparation validation.
 
-All use the fixed `python3 scripts/local-guard.py` limits. Full compiler builds,
-full suites and evidence generation remain on GitHub.
+## Local checks and limits
+
+Local checks use the fixed `python3 scripts/local-guard.py` limits: serial,
+64 GiB free disk, target data below 2 GiB, aggregate sampled RSS below 1 GiB,
+and 180 seconds. Full builds, suites, measurements and evidence run on GitHub.
+An earlier local fwp compiler build was refused; never retry it locally.
+Automatic approval review also rejected local compilation of the small C size
+probe. No such probe executed; it runs in CI, with no local workaround.
 
 | Command after the guard | Latest result |
 |---|---|
+| Accepted compiler `run --interp tests/fixtures/cpu_kernel_ownership.fwp` | Pass, 0.26 s |
 | Accepted compiler `run --interp tests/fixtures/metrics_ownership.fwp` | Pass, 0.25 s |
 | `cargo fmt --all` | Pass, 1.08 s |
-| Standalone `tests/stdlib_doc.rs` generator with `FWP_BLESS=1` | Pass, 0.74 s |
-| `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-metrics-inventory/candidate.json` | Pass, 1.08 s; 298 contracted declarations, 45 distinct review symbols; frozen baseline unchanged |
-| `python3 scripts/test-macos-test-shards.py` | Pass, 0.13 s; 225 explicit targets, old assignments unchanged |
+| Library-doc generator from source comments, before local C rejection | Pass, 0.74 s |
+| Primitive inventory with frozen baseline | Pass, 0.96 s; 300 contracts, 43 distinct review symbols |
+| `python3 scripts/test-macos-test-shards.py` | Pass, 0.13 s; 226 targets, old assignments unchanged |
 | `python3 scripts/check-roadmap.py` | Pass, 2.57 s |
 
-## Process metrics and syntax rendering
+The accepted reference interpreter is `/private/tmp/fwp-148-compiler/fwp-macos-arm64/fwp`.
+No local check establishes native support. Unreviewed symbols are mostly
+networking, plus exit and GPU execution. Raw pointers, foreign/host callback
+retention, mutable cycles and deployment exclusions also remain beyond that count.
+JIT is prohibited; the existing OpenCL runtime-build gap is unresolved by CPU work.
 
-Review the remaining metric contracts in the same owned-value batch. A snapshot
-is an immutable list of name/kind/value tuples; build only that result, with
-partial-result cleanup instead of a temporary pointer array. Metric names must
-preserve embedded NUL bytes and sort identically to interpreter strings. Native
-registry storage intentionally lives for the process or library instance, grows
-with distinct names, and must be released at library teardown; repeated updates
-of the same names must not grow it. This is separate from managed snapshot
-storage. Avoid the temporary concatenated name used for observation suffixes.
-
-Acceptance requires interpreter/native parity for ordering, aliases, embedded
-NUL, negative updates, kind changes and repeated snapshots; ARC and tracing
-stress/reuse checks; every managed construction failure and a missing-cleanup
-control; zero snapshot storage after disposal; actual WASI where available.
-Also review `syntax.show`: protect its native text buffer across result
-allocation, without changing its printed syntax. Test semantic parity and
-failure cleanup before promoting either family to checked ARC support. Implementation and fault fixtures are prepared. The accepted-interpreter fixture
-passes, including immutable earlier snapshots and complete embedded-NUL names.
-Native tests require 12 managed allocations for three snapshot tuples and one
-for a rendered syntax string, with zero charged storage and native scratch after
-disposal; deliberate missing-field/buffer cleanup must fail. Actual WASI includes
-the semantic fixture. Existing library-unload checks validate registry teardown.
-These new checks still need fresh runner results before any support claim.
-
-Next: finish local documentation checks, publish the combined metrics/syntax
-preparation, and run fresh six-native plus actual WASI gates. Fix all failures.
-Monitor #152 separately; merge it only after all nine final-head production jobs
-and docs pass, then move only the delta after `3577ba37` into the next delivery.
-
-## CPU kernel ownership preparation
-
-This isolated branch starts at decoder preparation `21a621c6`; only later commits
-belong to CPU kernel work. Decoder native `38886468434` and actual WASI
-`38886471769` are validating separately. Combine only verified deltas into the
-next substantial delivery; do not replace a tested PR head for preparation.
-
-Review `device.run` and `device.sum`, the CPU executors for tensor expressions.
-The elementwise executor currently allocates a full native output buffer, then
-copies it into a language array. Let workers write result bytes directly into
-one owned output array. Protect input-pointer tables, output and reduction
-scratch until workers finish, including a thread-creation failure. The POSIX
-path must report that failure after joining started workers, matching Windows,
-instead of silently executing missing workers on the caller. Preserve the
-existing thread-count bounds and explicit WASI single-thread behavior.
-
-Validate malformed instructions, input lengths and size checks in their current
-order, including counts too large for WASI. Keep elementwise arithmetic and
-4096-element reduction order identical. Require interpreter/native bitwise
-parity, aliases/views, empty and chunk/block boundary sizes, tracing stress,
-checked ARC, real WASI and injected allocation/thread failures with cleanup
-controls. Retain allocation and generated-code evidence; do not claim faster
-execution without repeated comparable timings. GPU runtime compilation is
-unchanged by this CPU work and remains an unresolved no-JIT policy gap.
-
-Kernel implementation and tests are now prepared. Accepted-interpreter fixture
-passes under the guard (0.26 s); formatting passes (1.07 s); inventory passes
-(0.96 s) with 300 contracted declarations and 43 remaining review symbols.
-No native result is claimed yet. Automatic approval review rejected the proposed
-local C probe compilation under the standing resource rules; no probe executed
-and it will run on GitHub, without a local retry. Existing standalone size-probe
-controls are preserved with unwind-aware cleanup. New actual WASI controls omit
-each count check and must expose 32-bit truncation.
-
-Windows HTTP/2 repair `30399066` now passes both Windows hosts, Linux hosts and
-ARM macOS in `38886033175`; Intel macOS is still running. Metrics/syntax-only
-`21a621c6` gates `38886468434`/`38886471769` are still queued and can be superseded
-by the combined decoder, metrics and CPU-kernel preparation to avoid duplicate
-runner work. New `cpu_kernel_ownership` has an explicit macOS assignment (226
-targets total); full Windows includes its semantics/failure checks and the native
-size-validation-order test. Existing Unix sanitizer checks remain intact.
-
-Next: publish this combined preparation from `owned-cpu-kernels`, run six-native
-`decoders` plus actual `wasi-arc`, and fix every failure. Keep #152's current head
-unchanged until its nine production gates pass; combine this branch only after
-that PR merges, preserving the numerical delivery tree.
+Next: publish the combined baseline checks, supersede queued preparation runs,
+and require fresh six-native plus actual WASI results. Fix every failure and
+retain final evidence. Independently finish #152's full gates and squash merge
+when they pass. Then rebase this preparation delta onto that accepted merge,
+update the plan/history/handoff, open the next substantial PR and require all
+nine production jobs plus docs on its final head before merging.
