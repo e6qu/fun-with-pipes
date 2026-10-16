@@ -650,3 +650,12 @@ This does not establish ownership of the service's callbacks, connection,
 stream or retained request context. Those remain separate work. The preparation
 handoff records focused checks; full service execution without tracing has not
 been established by these result-copy changes.
+
+The same preparation gives `http2.request` and `http2.body` owned results.
+A request copies its method, path, headers, remote address and optional certificate
+name; a body copies every byte, including zero and non-text bytes. The source
+stream remains live during copying. Header order and duplicates are preserved,
+and an existing `host` header takes precedence over `:authority`. Partial strings,
+pairs, lists and result wrappers use the existing typed cleanup on failure.
+These changes do not yet own the stream itself or remove tracing from a server.
+Native failure and lifetime checks are pending for this preparation.

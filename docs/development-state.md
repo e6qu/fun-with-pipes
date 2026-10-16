@@ -27,16 +27,21 @@ Commit and squash subjects remain one line, at most 80 characters, with no body,
 trailers or attribution. JIT is excluded. Keep local checks serial under
 `python3 scripts/local-guard.py`; full compilation/testing belongs on GitHub.
 
-This preparation implements `grpc.metadata` and `grpc.peer-subject`:
+Published `bdb587c7` implements `grpc.metadata` and `grpc.peer-subject`:
 existing typed field/list owners protect partial results; metadata no longer
 allocates a pointer scratch vector. Compiler calls now pass result descriptors,
 and both contracts are OwnedTree. The existing served-peer probe receives its
 option descriptor and releases the returned copy. A new focused probe checks duplicate header order, filtering, copied aliases,
 12 metadata and 2 subject allocation failures, omitted field cleanup, and
-empty public results in tracing/ARC. It has not run; publish this preparation and run the six native
-`service-values` jobs before committing support claims. Full Windows and macOS schedules
-must include the new target. HTTP/2 request
-and body ownership remains untouched.
+empty public results in tracing/ARC. Six native `service-values` jobs are queued/running in `38926254969` for
+`bdb587c7`; no support claim is accepted yet. Full Windows and macOS schedules
+must include the new target. The uncommitted extension also copies HTTP/2 request and body results into typed
+owners. It preserves host precedence, duplicate/header order, all byte values,
+empty results and size/reset/deadline decisions. The new allocation probe expects
+20 request and 2 body allocation failures with no retained result storage;
+existing peer-buffer and source-stream lifetime controls are updated to use
+generated result descriptors. Publish and test this combined preparation next.
+Service stream/context ownership remains outside these result contracts.
 
 Local checks: guarded Rust formatting passes (1.19s); the accepted interpreter
 prints `[]` then `None` for the empty-context fixture (0.25s); the contract

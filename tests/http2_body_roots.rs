@@ -1,46 +1,27 @@
 //! Borrowed HTTP/2 body storage keeps its stream owner live during copying.
-use fwp::ir::*;
+#[path = "support/http2_values.rs"]
+mod http2_values;
 use std::process::Command;
 
 #[test]
 fn body_copy_keeps_the_stream_alive_through_major_collection() {
-    let unit = MT::unit();
-    let program = Program {
-        funcs: vec![
-            Func {
-                name: "available".into(),
-                arity: 1,
-                locals: vec![unit.clone()],
-                ty: MT::Fun(Box::new(unit.clone()), Box::new(MT::con("std::Bool"))),
-                body: Body::Prim("tls.available".into()),
-            },
-            Func {
-                name: "web".into(),
-                arity: 0,
-                locals: vec![],
-                ty: unit,
-                body: Body::Prim("http2.connect".into()),
-            },
-        ],
-        exports: vec![("available".into(), 0)],
-        ..Program::default()
-    };
-    let (generated, _) = fwp::cgen::generate_library(&program, "body_roots").unwrap();
+    let generated = http2_values::generated();
     // GCC and Clang can leave dead call/stream pointers in callee-saved
     // registers. Isolate construction and clear those stale roots in the
     // copying frame; a live post-copy owner fence forces a surviving spill.
     let clear_stale_roots = cfg!(any(target_arch = "x86_64", target_arch = "aarch64"));
     let generated = if clear_stale_roots {
-        let primitive = "static V fwp_p_http2_body(V max, V timeout, V call) {";
+        let primitive =
+            "static V fwp_p_http2_body(V max, V timeout, V call, const fwp_desc *type) {";
         assert_eq!(generated.matches(primitive).count(), 1);
         // This fixture always copies a completed stream. Select its known
         // path so Clang does not spill the owner for an unreachable wait loop.
-        let completed = "        if (s->remote_end) {\n            V b = fwp_str_new((const char *)s->data.d, s->data.len);";
+        let completed = "        if (s->remote_end) {\n            fwp_decode_fields result;";
         assert_eq!(generated.matches(completed).count(), 1);
         generated
             .replacen(
                 primitive,
-                "static __attribute__((always_inline)) inline V fwp_p_http2_body(V max, V timeout, V call) {",
+                "static __attribute__((always_inline)) inline V fwp_p_http2_body(V max, V timeout, V call, const fwp_desc *type) {",
                 1,
             )
             .replacen(
@@ -94,7 +75,7 @@ static __attribute__((noinline)) V body(void){
  watched_body=stream->data.d;
  V call=g_call_value(conn,stream,1,0);copy_active=1;
  struct {uint32_t tag,n;V f[1];} duration={0,1,{0}};
- return fwp_p_http2_body(64,PTR(&duration),call);
+ return fwp_p_http2_body(64,PTR(&duration),call,BODY_TYPE);
 }
 static int probe(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
@@ -104,6 +85,7 @@ static int probe(void){
  if(copy_active||released||OBJ(result)->tag||OBJ(result)->n!=1)return 4;
  V payload=OBJ(result)->f[0];
  if(STR(payload)->len!=sizeof bytes||memcmp(STR(payload)->d,bytes,sizeof bytes))return 5;
+ BODY_TYPE->drop(result);
  fwp_lib_finish();if(released!=1)return 6;
  return 0;
 }

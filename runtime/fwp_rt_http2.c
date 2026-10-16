@@ -242,36 +242,57 @@ static int w_connection_specific(const char *k) {
 
 static V w_pair(const char *k, const char *v) { return fwp_tuple2(fwp_cstr(k), fwp_cstr(v)); }
 
-static V fwp_p_http2_request(V call) {
+static V fwp_p_http2_request(V call, const fwp_desc *type) {
     g_call *k = WCALL(call);
     h2_hdrs *h = &k->s->headers;
-    V *a = (V *)fwp_alloc((h->n + 2) * sizeof(V));
-    size_t n = 0;
+    fwp_decode_fields result;
+    fwp_decode_fields_begin(&result, 5, type->fields, 5, NULL);
+    const fwp_desc *list_type = type->fields[2];
     const char *auth = h2_get(h, ":authority");
-    if (!h2_get(h, "host") && auth) a[n++] = w_pair("host", auth);
-    for (size_t i = 0; i < h->n; i++)
-        if (h->v[i].name[0] != ':') a[n++] = w_pair(h->v[i].name, h->v[i].value);
-    V hs = fwp_list_from(a, n);
+    /* Prepend backwards, including the synthesized host before actual headers. */
+    for (size_t i = h->n + 1; i > 0; i--) {
+        const char *name, *value;
+        if (i == 1) {
+            if (h2_get(h, "host") || !auth) continue;
+            name = "host"; value = auth;
+        } else {
+            name = h->v[i - 2].name; value = h->v[i - 2].value;
+            if (name[0] == ':') continue;
+        }
+        fwp_decode_fields fields;
+        fwp_decode_fields_begin(&fields, 2, list_type->elem->fields, 2, NULL);
+        fields.values[0] = fwp_rc_fresh(fwp_cstr(name));
+        fields.values[1] = fwp_rc_fresh(fwp_cstr(value));
+        fwp_value_owner pair = {fwp_decode_record(&fields), list_type->elem->drop};
+        fwp_cleanup pair_cleanup; fwp_value_protect(&pair, &pair_cleanup);
+        result.values[2] = fwp_rc_fresh(fwp_cons(pair.value, result.values[2]));
+        fwp_value_finish(&pair, &pair_cleanup);
+    }
     char *peer = k->c->ssl ? fwp_tls_peer_subject(k->c->ssl) : 0;
-    V pv = FWP_NONE;
     if (peer) {
         fwp_cleanup peer_cleanup;
         fwp_cleanup_push(&peer_cleanup, fwp_tls_subject_free, peer);
-        pv = fwp_some(fwp_cstr(peer));
+        fwp_decode_fields subject;
+        fwp_decode_fields_begin(&subject, 1, type->fields[4]->vfields[1], 1, NULL);
+        subject.values[0] = fwp_rc_fresh(fwp_cstr(peer));
+        result.values[4] = fwp_decode_variant(&subject, 1);
         fwp_cleanup_pop(&peer_cleanup);
         fwp_tls_subject_free(peer);
     }
     const char *m = h2_get(h, ":method"), *p = h2_get(h, ":path");
-    V f[5] = {fwp_cstr(m ? m : ""), fwp_cstr(p ? p : ""), hs, fwp_cstr(k->c->authority), pv};
-    return fwp_record(5, f);
+    result.values[0] = fwp_rc_fresh(fwp_cstr(m ? m : ""));
+    result.values[1] = fwp_rc_fresh(fwp_cstr(p ? p : ""));
+    result.values[3] = fwp_rc_fresh(fwp_cstr(k->c->authority));
+    FWP_KEEP_ALIVE(call);
+    return fwp_decode_record(&result);
 }
 
 static V w_err_code(int64_t code) {
     V x = (V)code;
-    return fwp_data(1, 1, &x);
+    return fwp_rc_fresh(fwp_data(1, 1, &x));
 }
 
-static V fwp_p_http2_body(V max, V timeout, V call) {
+static V fwp_p_http2_body(V max, V timeout, V call, const fwp_desc *type) {
     g_call *k = WCALL(call);
     int64_t mx = (int64_t)max;
     if (mx < 0) mx = 0;
@@ -280,10 +301,12 @@ static V fwp_p_http2_body(V max, V timeout, V call) {
     for (;;) {
         if ((int64_t)s->data.len > mx) return w_err_code(413);
         if (s->remote_end) {
-            V b = fwp_str_new((const char *)s->data.d, s->data.len);
+            fwp_decode_fields result;
+            fwp_decode_fields_begin(&result, 1, type->vfields[0], 1, NULL);
+            result.values[0] = fwp_rc_fresh(fwp_str_new((const char *)s->data.d, s->data.len));
             /* Body bytes belong to the stream's malloc buffer, not the GC heap. */
             FWP_KEEP_ALIVE(call);
-            return fwp_data(0, 1, &b);
+            return fwp_decode_variant(&result, 0);
         }
         if (s->reset || k->c->dead) return w_err_code(0);
         fwp_check_cancel();

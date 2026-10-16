@@ -101,7 +101,8 @@ for symbol in ['tcp.stop', 'tcp.close', 'tls.handshake', 'tls.secure', 'tls.avai
 bundle_contracts['tls._connect'] = (7, 'OwnedResource', [])
 bundle_contracts['tls._listen'] = (5, 'OwnedResource', [])
 bundle_contracts['tls.peer-subject'] = (1, 'OwnedTree', [])
-for symbol in ['grpc.metadata', 'grpc.peer-subject']:
+bundle_contracts['http2.body'] = (3, 'OwnedTree', [])
+for symbol in ['http2.request', 'grpc.metadata', 'grpc.peer-subject']:
     bundle_contracts[symbol] = (1, 'OwnedTree', [])
 bundle_contracts['udp.bind'] = (1, 'OwnedResource', [])
 bundle_contracts['udp.local-addr'] = (1, 'FreshLeaf', [])

@@ -117,3 +117,51 @@ fn copied_service_values_release_partial_results_and_preserve_aliases() {
         }
     }
 }
+
+#[path = "support/http2_values.rs"]
+mod http2_values;
+
+#[test]
+fn http2_request_and_body_copies_release_every_partial_result() {
+    let dir = fwp::cgen::TempDir::new("http2-values").unwrap();
+    let code = http2_values::generated().replace(
+        "typedef uint64_t V;",
+        "typedef uint64_t V;\nstatic void service_allocation(void);",
+    );
+    let init = "static inline void *fwp_alloc_init(size_t n) {";
+    let leaf = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+    assert!(code.contains(init) && code.contains(leaf));
+    let code = code
+        .replace(init, &format!("{init} service_allocation();"))
+        .replace(leaf, &format!("{leaf} if(leaf!=0) service_allocation();"))
+        + include_str!("fixtures/http2_values_cleanup.c");
+    let broken = code.replace(
+        "if (d && d->drop) d->drop(f->values[i]);",
+        "(void)d; /* omit partially copied HTTP/2 fields */",
+    );
+    assert_ne!(code, broken);
+    let binary = dir.join("http2-values.exe");
+    for opt in ["-O1", "-O2"] {
+        for (source, expected) in [(&code, 0), (&broken, 248)] {
+            fwp::cgen::compile_c(source, &binary, opt).unwrap();
+            let output = Command::new(&binary)
+                .env("FWP_GC", "off")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            if expected == 0 && opt == "-O2" {
+                if let Some(path) = std::env::var_os("FWP_SERVICE_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(path);
+                    std::fs::create_dir_all(&path).unwrap();
+                    std::fs::write(path.join("http2-values.c"), source).unwrap();
+                    std::fs::copy(&binary, path.join("http2-values.exe")).unwrap();
+                    std::fs::write(path.join("http2-values.stdout"), &output.stdout).unwrap();
+                    std::fs::write(path.join("http2-values.stderr"), &output.stderr).unwrap();
+                }
+            }
+            assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
+        }
+    }
+}

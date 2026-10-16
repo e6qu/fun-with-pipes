@@ -85,7 +85,10 @@ jobs:
         env:
           FWP_REQUIRE_TLS: '1'
           FWP_SERVICE_ARTIFACTS: service-evidence
-        run: cargo test --no-fail-fast --test service_value_ownership --test grpc_peer_completion
+        run: cargo test --no-fail-fast --test service_value_ownership --test grpc_peer_completion --test http2_peer_cleanup
+      - name: HTTP/2 body source lifetime
+        if: ${{ !cancelled() && inputs.suite == 'service-values' && runner.os != 'Windows' }}
+        run: cargo test --test http2_body_roots
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'service-values'
         with:

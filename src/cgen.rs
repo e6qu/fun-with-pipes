@@ -5550,6 +5550,15 @@ impl<'p> Gen<'p> {
             };
             return Ok(format!("return {call};"));
         }
+        if matches!(sym, "http2.request" | "http2.body") {
+            let descriptor = self.desc(&result);
+            let call = if sym == "http2.request" {
+                format!("fwp_p_http2_request(l0, {descriptor})")
+            } else {
+                format!("fwp_p_http2_body(l0, l1, l2, {descriptor})")
+            };
+            return Ok(format!("return {call};"));
+        }
         if matches!(sym, "grpc.metadata" | "grpc.peer-subject") {
             let descriptor = self.desc(&result);
             let function = if sym == "grpc.metadata" {
@@ -6382,8 +6391,6 @@ impl<'p> Gen<'p> {
                     ("grpc.with-gzip", "fwp_p_grpc_with_gzip(l0)"),
                     ("grpc._force", "fwp_p_grpc_force(l0)"),
                     ("http2.serve", "fwp_p_http2_serve(l0, l1, l2, l3, l4)"),
-                    ("http2.request", "fwp_p_http2_request(l0)"),
-                    ("http2.body", "fwp_p_http2_body(l0, l1, l2)"),
                     ("http2.respond", "fwp_p_http2_respond(l0, l1, l2, l3, l4)"),
                     ("http2.data", "fwp_p_http2_data(l0, l1, l2)"),
                     ("http2.pooled", "fwp_p_http2_pooled(l0)"),
