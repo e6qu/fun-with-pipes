@@ -206,6 +206,17 @@ checks = make { 0 = apply "A", 1 = apply "B", 2 = apply "C" }
 main = range 0 129 | map (choose | checks) | length | echo
 "#),
         ("text", "main = range 0 64 | map (const \"input.txt\" | file.read) | map string.length | sum | echo\n"),
+        ("file-errors", "main = range 0 64 | map (const \"missing.txt\" | attempt file.read) | length | echo\n"),
+        ("callback-errors", r#"
+step : I64 -> String ! {Error[String]}
+step = if (eq 2) (const "stop" | fail) show
+main = range 0 64 | map (const [1, 2, 3] | attempt (map step)) | length | echo
+"#),
+        ("nested-derivatives", r#"
+square : List[t] -> t where Ring[t], Dup[t]
+square = head | option.unwrap-or zero | fork mul id id
+main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
+"#),
         ("derivatives", "main = range 0 16 | map (const (range 0 32 | map int.to-float) | vjp (map (mul 2.0)) (repeat 32 1.0) | sum) | sum | echo\n"),
     ];
     for (name, program) in programs {

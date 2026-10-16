@@ -113,3 +113,11 @@ Guarded edited-C checks pass list, single-function and CLI physical ledgers and
 missing-free controls (3.50 s). Formatting passes (1.11 s). These run the host's
 non-tracing path using accepted #148 plus the candidate runtime; the actual
 32-bit WASI checks must still pass. The standalone harness also compiles (0.26 s).
+
+Both Linux hosts in `38850138218` reproduce only the same whole-program observer
+assertion; native ARC, allocator/rejection and existing WASI resource controls
+pass on both. Revision `0c2fd3a6` fixes its scope and adds executable-entry/module
+checks. Its queued rerun `38850647488` is superseded before acceptance by this
+expanded fixture set: caught file/callback errors and nested derivatives also
+need physical storage and semantic agreement. Preserve failed-run evidence;
+never treat the earlier partial checks as whole-program acceptance.
