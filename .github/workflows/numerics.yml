@@ -45,11 +45,14 @@ jobs:
       - name: Field movement and resource lifetime regressions
         if: inputs.suite == 'fields'
         run: cargo test --no-fail-fast --test clock_ownership --test directory_report --test working_directory --test arc_execution --test field_moves --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test borrowed_callbacks --test general_record_update_ownership
+      - name: Interpreter console state on Windows
+        if: inputs.suite == 'processes' && runner.os == 'Windows'
+        run: cargo test --lib sys::tty::tests::native_console -- --exact
       - name: Child-process ownership and failure cleanup
         if: inputs.suite == 'processes'
         env:
           FWP_PROCESS_ARTIFACTS: process-evidence
-        run: cargo test --no-fail-fast --test process_ownership --test windows_runtime --test windows_static_memory --test cli --test stdlib_doc
+        run: cargo test --no-fail-fast --test process_ownership --test terminal_ownership --test console_ownership --test windows_runtime --test windows_static_memory --test cli --test stdlib_doc
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'processes'
         with:

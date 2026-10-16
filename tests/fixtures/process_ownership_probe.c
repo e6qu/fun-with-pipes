@@ -34,7 +34,7 @@ static void process_test_free_output(void *pointer) {
 static void process_test_finish(void *pointer) {
     fwp_win_process *process = (fwp_win_process *)pointer;
     HANDLE handles[10]; int count = 0;
-#define PROCESS_HANDLE(h) do { if (h) handles[count++] = (h); } while (0)
+#define PROCESS_HANDLE(h) do { HANDLE saved = (h); if (saved && saved != INVALID_HANDLE_VALUE) handles[count++] = saved; } while (0)
     PROCESS_HANDLE(process->process.hProcess); PROCESS_HANDLE(process->process.hThread);
     PROCESS_HANDLE(process->input);
     for (int i = 0; i < 3; i++) PROCESS_HANDLE(process->inherited[i]);

@@ -289,7 +289,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "process.run-input" => (&[B, B], ResultOwnership::OwnedTree, None, &[]),
         "process.call" => (&[B], R, None, &[]),
         "lines" | "read-line" | "read-lines" | "read-all" | "args" | "env.get" | "env.vars"
-        | "dir.list" => (&[B], ResultOwnership::OwnedTree, None, &[]),
+        | "dir.list" | "term.read-secret" => (&[B], ResultOwnership::OwnedTree, None, &[]),
         "string.chars"
         | "words"
         | "string.codepoints"

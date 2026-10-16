@@ -228,8 +228,8 @@ static V fwp_p_env_cwd(const fwp_desc *error) {
 }
 
 static V fwp_p_term_is_tty(V fd) {
-    int f = (int)(int64_t)fd;
-    if (f < 0 || f > 2) return FWP_FALSE;
+    if ((int64_t)fd < 0 || fd > 2) return FWP_FALSE;
+    int f = (int)fd;
     fwp_flush();
     return isatty(f) ? FWP_TRUE : FWP_FALSE;
 }
@@ -252,28 +252,32 @@ static V fwp_p_term_width(void) {
     return (V)(int64_t)80;
 }
 
-/* a line read with the terminal's echo off (when stdin is one), then a
- * newline on stderr */
+#ifndef __wasi__
+typedef struct { struct termios saved; int changed; } fwp_terminal;
+static void fwp_terminal_restore(void *pointer) {
+    fwp_terminal *terminal = (fwp_terminal *)pointer;
+    if (terminal->changed) tcsetattr(0, TCSAFLUSH, &terminal->saved);
+}
+#endif
+
+/* Restore terminal echo on normal return and before unwinding this frame. */
 static V fwp_p_term_read_secret(void) {
-    fwp_flush();
-    fflush(stderr);
+    fwp_flush(); fflush(stderr);
 #ifndef __wasi__
-    struct termios old, quiet;
-    int tty = isatty(0) && tcgetattr(0, &old) == 0;
-    if (tty) {
-        quiet = old;
+    fwp_terminal terminal = {0};
+    if (isatty(0) && tcgetattr(0, &terminal.saved) == 0) {
+        struct termios quiet = terminal.saved;
         quiet.c_lflag &= ~(tcflag_t)ECHO;
-        tcsetattr(0, TCSAFLUSH, &quiet);
+        terminal.changed = tcsetattr(0, TCSAFLUSH, &quiet) == 0;
     }
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_terminal_restore, &terminal);
 #endif
-    V r = fwp_p_read_line();
+    V result = fwp_p_read_line();
 #ifndef __wasi__
-    if (tty) {
-        tcsetattr(0, TCSAFLUSH, &old);
-        fputc('\n', stderr);
-    }
+    fwp_cleanup_pop(&cleanup); fwp_terminal_restore(&terminal);
+    if (terminal.changed) fputc('\n', stderr);
 #endif
-    return r;
+    return result;
 }
 
 #ifndef __wasi__

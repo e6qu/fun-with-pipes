@@ -312,8 +312,7 @@ mod tty {
         let n = f.len();
         f.copy_from_slice(&x.to_ne_bytes()[..n]);
         // SAFETY: as above.
-        unsafe { tcsetattr(0, TCSAFLUSH, &t) };
-        Some(saved)
+        (unsafe { tcsetattr(0, TCSAFLUSH, &t) } == 0).then_some(saved)
     }
 
     pub fn restore(t: Termios) {
@@ -322,7 +321,181 @@ mod tty {
     }
 }
 
-#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+#[cfg(windows)]
+mod tty {
+    use std::ffi::c_void;
+
+    #[repr(C)]
+    #[derive(Default)]
+    struct Coord {
+        x: i16,
+        y: i16,
+    }
+    #[repr(C)]
+    #[derive(Default)]
+    struct Rect {
+        left: i16,
+        top: i16,
+        right: i16,
+        bottom: i16,
+    }
+    #[repr(C)]
+    #[derive(Default)]
+    struct ScreenBufferInfo {
+        size: Coord,
+        cursor: Coord,
+        attributes: u16,
+        window: Rect,
+        maximum: Coord,
+    }
+    pub struct ConsoleMode {
+        handle: *mut c_void,
+        mode: u32,
+    }
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn GetStdHandle(which: u32) -> *mut c_void;
+        fn GetConsoleMode(handle: *mut c_void, mode: *mut u32) -> i32;
+        fn SetConsoleMode(handle: *mut c_void, mode: u32) -> i32;
+        fn GetConsoleScreenBufferInfo(handle: *mut c_void, info: *mut ScreenBufferInfo) -> i32;
+    }
+    const STD_INPUT_HANDLE: u32 = -10_i32 as u32;
+    const STD_OUTPUT_HANDLE: u32 = -11_i32 as u32;
+    const STD_ERROR_HANDLE: u32 = -12_i32 as u32;
+    const ENABLE_ECHO_INPUT: u32 = 4;
+
+    pub fn columns() -> Option<i64> {
+        for stream in [STD_OUTPUT_HANDLE, STD_ERROR_HANDLE, STD_INPUT_HANDLE] {
+            let mut info = ScreenBufferInfo::default();
+            // SAFETY: the output structure matches CONSOLE_SCREEN_BUFFER_INFO;
+            // invalid/non-console standard handles are rejected by the API.
+            if unsafe { GetConsoleScreenBufferInfo(GetStdHandle(stream), &mut info) } != 0 {
+                return Some(i64::from(info.window.right) - i64::from(info.window.left) + 1);
+            }
+        }
+        None
+    }
+    pub fn echo_off() -> Option<ConsoleMode> {
+        // SAFETY: GetStdHandle returns a borrowed process handle. These calls
+        // validate it and write the mode to the supplied live u32.
+        unsafe {
+            let handle = GetStdHandle(STD_INPUT_HANDLE);
+            let mut mode = 0;
+            if GetConsoleMode(handle, &mut mode) == 0
+                || SetConsoleMode(handle, mode & !ENABLE_ECHO_INPUT) == 0
+            {
+                return None;
+            }
+            Some(ConsoleMode { handle, mode })
+        }
+    }
+    pub fn restore(saved: ConsoleMode) {
+        // SAFETY: restore the mode of the same borrowed console handle.
+        unsafe {
+            SetConsoleMode(saved.handle, saved.mode);
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        #[link(name = "kernel32")]
+        extern "system" {
+            fn AllocConsole() -> i32;
+            fn FreeConsole() -> i32;
+            fn CreateFileW(
+                name: *const u16,
+                access: u32,
+                sharing: u32,
+                security: *mut c_void,
+                creation: u32,
+                flags: u32,
+                template: *mut c_void,
+            ) -> *mut c_void;
+            fn SetStdHandle(which: u32, handle: *mut c_void) -> i32;
+            fn CloseHandle(handle: *mut c_void) -> i32;
+        }
+        #[test]
+        fn native_console() {
+            // Console settings are process-global. Run this body alone in a
+            // child test process so neighboring tests keep their own streams.
+            if std::env::var_os("FWP_TERMINAL_UNIT_CHILD").is_none() {
+                let output = std::process::Command::new(std::env::current_exe().unwrap())
+                    .args([
+                        "--exact",
+                        "sys::tty::tests::native_console",
+                        "--test-threads=1",
+                    ])
+                    .env("FWP_TERMINAL_UNIT_CHILD", "1")
+                    .output()
+                    .unwrap();
+                assert!(output.status.success(), "{output:?}");
+                assert!(
+                    String::from_utf8_lossy(&output.stdout).contains("1 passed"),
+                    "{output:?}"
+                );
+                return;
+            }
+            // SAFETY: this isolated test owns its new console and the handles
+            // opened below. All Win32 output pointers refer to live structures.
+            unsafe {
+                let old_input = GetStdHandle(STD_INPUT_HANDLE);
+                let old_output = GetStdHandle(STD_OUTPUT_HANDLE);
+                let old_error = GetStdHandle(STD_ERROR_HANDLE);
+                FreeConsole();
+                assert_ne!(AllocConsole(), 0);
+                let open = |name: &str| {
+                    let name: Vec<u16> = name.encode_utf16().chain([0]).collect();
+                    const GENERIC_READ_WRITE: u32 = 0xc0000000;
+                    const SHARE_READ_WRITE: u32 = 3;
+                    const OPEN_EXISTING: u32 = 3;
+                    let handle = CreateFileW(
+                        name.as_ptr(),
+                        GENERIC_READ_WRITE,
+                        SHARE_READ_WRITE,
+                        std::ptr::null_mut(),
+                        OPEN_EXISTING,
+                        0,
+                        std::ptr::null_mut(),
+                    );
+                    assert_ne!(handle, -1_isize as *mut c_void);
+                    handle
+                };
+                let input = open("CONIN$");
+                let output = open("CONOUT$");
+                assert_ne!(SetStdHandle(STD_INPUT_HANDLE, input), 0);
+                assert_ne!(SetStdHandle(STD_OUTPUT_HANDLE, output), 0);
+                let mut original = 0;
+                assert_ne!(GetConsoleMode(input, &mut original), 0);
+                let enabled = original | ENABLE_ECHO_INPUT;
+                assert_ne!(SetConsoleMode(input, enabled), 0);
+                let saved = echo_off().expect("real console should disable echo");
+                let mut quiet = 0;
+                assert_ne!(GetConsoleMode(input, &mut quiet), 0);
+                assert_eq!(quiet, enabled & !ENABLE_ECHO_INPUT);
+                restore(saved);
+                let mut restored = 0;
+                assert_ne!(GetConsoleMode(input, &mut restored), 0);
+                assert_eq!(restored, enabled);
+                let mut info = ScreenBufferInfo::default();
+                assert_ne!(GetConsoleScreenBufferInfo(output, &mut info), 0);
+                assert_eq!(
+                    columns(),
+                    Some(i64::from(info.window.right) - i64::from(info.window.left) + 1)
+                );
+                assert_ne!(SetConsoleMode(input, original), 0);
+                assert_ne!(SetStdHandle(STD_INPUT_HANDLE, old_input), 0);
+                assert_ne!(SetStdHandle(STD_OUTPUT_HANDLE, old_output), 0);
+                assert_ne!(SetStdHandle(STD_ERROR_HANDLE, old_error), 0);
+                CloseHandle(input);
+                CloseHandle(output);
+                FreeConsole();
+            }
+        }
+    }
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos", windows)))]
 mod tty {
     pub struct Termios;
 

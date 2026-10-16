@@ -29,6 +29,14 @@ fn console_input_matches_raw_interpretation() {
         ("all", "read-all () | echo"),
         ("line", "[read-line (), read-line (), read-line ()] | echo"),
         ("lines", "read-lines () | echo"),
+        (
+            "secret",
+            "[term.read-secret (), term.read-secret (), term.read-secret ()] | echo",
+        ),
+        (
+            "tty",
+            "[-1, 0, 1, 2, 3, 4294967296, 4294967297] | map term.is-tty | echo",
+        ),
         ("fold", "0 | fold-lines (curry (.0 | add 1)) | echo"),
         ("args", "args () | echo"),
         (
@@ -38,7 +46,7 @@ fn console_input_matches_raw_interpretation() {
     ] {
         std::fs::write(&source, format!("main = {body}\n")).unwrap();
         let all_cases = [bytes.as_slice(), b"", b"\n", b"last\r", b"a\0b\n"];
-        let cases = if name == "args" || name == "environment" {
+        let cases = if name == "args" || name == "environment" || name == "tty" {
             &all_cases[1..2]
         } else {
             &all_cases[..]

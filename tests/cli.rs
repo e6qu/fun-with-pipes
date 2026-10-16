@@ -324,11 +324,35 @@ fn multi_command_program() {
     build(&app(), &["--cli"], &exe);
     check_app(&Runner::Native(exe.clone()));
     // the binary protocol between commands: `even` writes I64 records
-    let sh = format!(
-        "printf '4\\n5\\n8\\n' | FWP_OUT=bin {exe} even | {exe} divide 2",
-        exe = exe.display()
-    );
-    let out = Command::new("sh").arg("-c").arg(&sh).output().unwrap();
+    use std::io::Write;
+    let mut producer = Command::new(&exe)
+        .arg("even")
+        .env("FWP_OUT", "bin")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let consumer = Command::new(&exe)
+        .args(["divide", "2"])
+        .env_remove("FWP_OUT")
+        .stdin(producer.stdout.take().unwrap())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    producer
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(b"4\n5\n8\n")
+        .unwrap();
+    let out = consumer.wait_with_output().unwrap();
+    let produced = producer.wait_with_output().unwrap();
+    assert!(produced.status.success(), "{produced:?}");
+    assert!(produced.stderr.is_empty(), "{produced:?}");
+    assert!(out.status.success(), "{out:?}");
+    assert!(out.stderr.is_empty(), "{out:?}");
     assert_eq!(String::from_utf8_lossy(&out.stdout), "2\n4\n");
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -1104,15 +1128,23 @@ fn example_clis() {
                 let name = func.unwrap_or(stem);
                 // in a hidden directory, which `dirstat` skips
                 let bin = dir.join(".bin");
-                let exe = bin.join(format!("{}-exe", name));
+                let exe = bin.join(format!("{}-exe{}", name, std::env::consts::EXE_SUFFIX));
                 if !exe.exists() {
                     std::fs::create_dir_all(&bin).unwrap();
                     match func {
                         Some(f) => build(&ex(file), &["--fn", f], &exe),
-                        None => build(&ex(file), &["--cli"], &bin.join(stem)),
+                        None => build(
+                            &ex(file),
+                            &["--cli"],
+                            &bin.join(format!("{stem}{}", std::env::consts::EXE_SUFFIX)),
+                        ),
                     }
                     if func.is_none() {
-                        std::fs::rename(bin.join(stem), &exe).unwrap();
+                        std::fs::rename(
+                            bin.join(format!("{stem}{}", std::env::consts::EXE_SUFFIX)),
+                            &exe,
+                        )
+                        .unwrap();
                     }
                 }
                 Runner::Native(exe)
@@ -1129,7 +1161,7 @@ fn example_clis() {
         }
         // the file of `todo` from the environment
         let todo = if runner_native {
-            Runner::Native(dir.join(".bin/todo-exe"))
+            Runner::Native(dir.join(format!(".bin/todo-exe{}", std::env::consts::EXE_SUFFIX)))
         } else {
             Runner::Interp(vec![
                 "--cli".into(),

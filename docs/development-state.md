@@ -171,3 +171,32 @@ workflow suite avoids repeating unrelated evidence generators.
 Next: fix actual compiler/platform failures from the six-host run, then publish
 the complete batch and transfer only changes after `81d113aa` once #148 is
 accepted. Full production acceptance must use that later PR's final head.
+
+
+## Terminal and Windows test repairs in this batch
+
+The first process run passed Linux ARM64/AMD64 and both macOS hosts. Both Windows hosts
+exposed an invalid-handle marker being mistaken for a live resource in the new
+probe, plus existing CLI tests assuming Unix shell paths and extensionless
+executables. The probe now excludes only null/already-closed markers; real owned
+handles remain checked after cleanup. The CLI binary-protocol test connects two
+real child processes directly, and example executable renames use the OS suffix.
+These repairs require the next six-host run.
+
+Related terminal work fixes narrowing a large descriptor into stdin, registers
+POSIX echo restoration during traps, and gives secret-line results an explicit
+owned-tree contract. Windows interpretation now uses actual console APIs for echo
+and width, matching the native implementation. A child-isolated Rust unit test
+checks Win32 modes/width; native C probes use real POSIX pseudo-terminals or a
+private Windows console and require a missing-restore control to fail. Local
+edited-C macOS terminal checks pass at O1/O2 (3.63 s under the guard), including
+trap cleanup and the negative control. Changed-compiler/platform tests remain
+required. Full local builds are not used.
+
+The expanded process tests were published at `48aa61dc`. Derivative comparison
+[38828198160](https://github.com/e6qu/fun-with-pipes/actions/runs/38828198160)
+is queued/running at that head. Terminal and Windows repairs are ready for publication. Formatting passes
+(0.86 s); inventory passes (0.88 s): 257 contracts, eight scalar signatures,
+94 review declarations, 19 templates and 84 review symbols.
+Next: audit and publish these fixes, run the complete six-host process/terminal
+suite, and fix failures before the following delivery's full production gate.

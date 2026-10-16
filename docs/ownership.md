@@ -369,7 +369,6 @@ Timestamps differ between executions; the test checks their format and the
 remaining fields rather than requiring identical clock readings. These records
 still allocate; avoiding that allocation is separate work.
 
-
 Child-process calls borrow their argument strings and input for the duration of
 execution. `process.run` and `process.run-input` return an owned record containing
 the exit status and copied standard-output/error strings; `process.call` returns
@@ -393,3 +392,12 @@ production checks recorded in the handoff; they do not establish ownership for
 networking or arbitrary external-resource contexts. Process calls are synchronous;
 this cleanup does not establish deadline or cancellation responsiveness while
 waiting for a child.
+
+
+Secret terminal input uses the same owned optional string as ordinary line input.
+A registered cleanup restores the original echo setting before a trap leaves the
+read frame. The interpreter and native runtime query real Windows console modes
+and width; redirected streams continue to behave as ordinary input. Descriptor
+validation happens before narrowing to the OS integer type. Terminal tests use a
+real pseudo-terminal on POSIX and a private console on Windows, with a deliberately
+missing restore action required to fail. Platform results remain in the handoff.
