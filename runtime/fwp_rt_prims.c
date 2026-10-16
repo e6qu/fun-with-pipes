@@ -24,16 +24,6 @@ static V *fwp_map_items(V xs, size_t *n) {
     FWP_KEEP_ALIVE(source);
     return a;
 }
-static V fwp_map_finish(V *a, size_t n) {
-    V result = 0;
-    for (size_t i = n; i; i--) {
-        V fields[] = {a[i - 1], result};
-        result = fwp_rc_fresh(fwp_data(1, 2, fields));
-    }
-    FWP_KEEP_ALIVE(a);
-    fwp_mem_free(a);
-    return result;
-}
 /* The completed prefix owns results; the remaining scratch words borrow the
  * source. During spine construction, each last prefix element transfers into
  * the typed partial list, so an allocation failure has exactly one owner. */

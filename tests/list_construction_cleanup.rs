@@ -30,8 +30,8 @@ fn list_construction_releases_on_retain_callback_and_allocation_failure() {
         let declarations="static V generation_node(V *);static V *generation_items(V,size_t *);static void *generation_scratch(size_t);static void generation_initial(V,V);static V generation_call(V,uint32_t,V *);\n";
         code = code
             .replace(
-                "static V fwp_map_finish(",
-                &format!("{declarations}static V fwp_map_finish("),
+                "static V fwp_map_finish_protected(",
+                &format!("{declarations}static V fwp_map_finish_protected("),
             )
             .replace(
                 "fwp_rc_fresh(fwp_data(1, 2, fields))",

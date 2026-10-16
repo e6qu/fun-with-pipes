@@ -2,7 +2,9 @@
 
 Updated 2026-10-16. Preparation worktree: `/private/tmp/fwp-zip-map`, branch
 `fuse-numeric-zip-maps`, anchored at `1850f832`. Current source and fixtures are
-`91146d684d723d835474e2a893a8adbe23004996` for zip/map; text-file changes follow it. Transfer only changes after the anchor;
+`91146d684d723d835474e2a893a8adbe23004996` for zip/map, `0bae98f7` for text files,
+`ad948122` for unzip and `62c9da5b` for related list repairs; fixture corrections
+follow them. Transfer only changes after the anchor;
 its parents are part of the preceding delivery.
 
 The only active delivery is [PR #149](https://github.com/e6qu/fun-with-pipes/pull/149),
@@ -193,8 +195,12 @@ The expanded `zip-maps` suite now includes `unzip_cleanup`, `zip_ownership`,
 older scalar-structure fixture matched exact argument lists and needed updating
 for added destructor arguments; it still verifies the first retain arguments are
 NULL. [Expanded zip/unzip run 38846340365](https://github.com/e6qu/fun-with-pipes/actions/runs/38846340365)
-is running at `ad9481220ddf2f86ec385bf037768c69d2ee6dc9`. Its changes precede the
-additional repairs below.
+at `ad9481220ddf2f86ec385bf037768c69d2ee6dc9` found a test instrumentation
+assumption: zip's allocation-failure probe searched the whole runtime for a
+unique loop, but unzip now has a similar protected loop. The zip, map and
+selection probes now instrument only `fwp_map_finish_protected`. Mac ARM's unzip
+test itself passed. Cancellation was requested for this superseded run and the
+newer `38847170626` at `62c9da5b`; confirm both stop before treating them as closed.
 
 ## Related list-construction failures
 
@@ -223,3 +229,8 @@ generation and state-sequence semantic tests on six native hosts, and a separate
 required WASI count job on each Linux architecture. Full final-head production
 acceptance still follows focused results. Do not mistake the earlier narrower
 run for validation of these newest repairs.
+
+All callers now use protected list construction; the unused unprotected
+`fwp_map_finish` helper is removed. Failure-probe declarations target the retained
+protected helper. Latest formatting passes (1.11 s). Publish these fixture fixes
+and dispatch the combined native/WASI suite; no failing run is acceptance.
