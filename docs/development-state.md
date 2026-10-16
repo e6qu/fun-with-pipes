@@ -1,20 +1,23 @@
 # Session handoff
 
-Updated 2026-10-16. This preparation worktree is `/private/tmp/fwp-zip-map`,
-branch `fuse-numeric-zip-maps`, based on `1850f832`. The only active delivery is
-[PR #149](https://github.com/e6qu/fun-with-pipes/pull/149), ready at
-`5748f7496a8f1db0e93145c53e380a0703affc2f`. Exact-head production
-[38841142126](https://github.com/e6qu/fun-with-pipes/actions/runs/38841142126)
-and [docs 38841118993](https://github.com/e6qu/fun-with-pipes/actions/runs/38841118993)
-are queued. Its CPU/collector diagnostic passes all four hosts; final acceptance
-is still required. Its authoritative handoff
-is in `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
-Do not open another PR or replay parent preparation. Transfer only changes after
-`1850f832` after the current PR passes all nine production jobs and docs and merges.
-Standing authorization covers fixes, publication and squash merge with an explicit
-single-line subject of at most 80 characters and an empty body. No attribution or
-trailers. JIT is excluded. Full builds and measurements run on GitHub; bounded
-local checks use `python3 scripts/local-guard.py COMMAND...` without raising limits.
+Updated 2026-10-16. Preparation worktree: `/private/tmp/fwp-zip-map`, branch
+`fuse-numeric-zip-maps`, anchored at `1850f832`. Current source and fixtures are
+`91146d684d723d835474e2a893a8adbe23004996`. Transfer only changes after the anchor;
+its parents are part of the preceding delivery.
+
+The only active delivery is [PR #149](https://github.com/e6qu/fun-with-pipes/pull/149),
+ready at `5748f7496a8f1db0e93145c53e380a0703affc2f`. Exact-head production
+[38841142126](https://github.com/e6qu/fun-with-pipes/actions/runs/38841142126) is
+running/queued; [docs 38841118993](https://github.com/e6qu/fun-with-pipes/actions/runs/38841118993)
+passes. Its authoritative handoff is in the root worktree. Do not open another
+PR before it merges. Its four-host CPU/collector diagnostic passes, but the nine
+production jobs remain required. Failing tests are tasks to fix.
+
+Standing authorization covers publication and squash merge only after all nine
+production jobs and docs pass for the exact final head. Supply a one-line subject
+of at most 80 characters and an empty body; no trailers or attribution. JIT is
+excluded. Local checks are serial under `python3 scripts/local-guard.py COMMAND...`
+without raising its limits. Full builds, suites and timings run on GitHub.
 
 ## Roadmap status
 
@@ -22,105 +25,92 @@ local checks use `python3 scripts/local-guard.py COMMAND...` without raising lim
 
 | Step | Status | Next concrete work |
 |---|---|---|
-| 1 | In progress | Accept process/terminal ownership, then remaining deployment boundaries |
-| 2 | In progress | Remove immediately consumed numeric zip pairs/list nodes |
-| 3 | In progress | Measure resulting calls, instructions and reference-count traffic |
+| 1 | In progress | Validate partial zip cleanup and remaining deployment boundaries |
+| 2 | In progress | Validate elimination of immediately mapped numeric zip pairs/nodes |
+| 3 | In progress | Measure direct calls, instructions and reference-count traffic |
 | 4 | In progress | Reduce measured derivative initialization intermediates |
 | 5 | Pending | Broaden CPU kernels and resolve runtime OpenCL compilation |
 | 6 | In progress | Retain repeated timings, CPU time and normal-collector profiles |
 | 7 | In progress | Preserve maintained applications across ownership changes |
 
-Next: implement and check numeric `zip | map` elimination, then measure it against
-the same compiler with only this transformation disabled. Continue monitoring
-#149 independently; queued CI gates merging, not preparation.
+Next: fix any failures in this batch's six-host test run and four-host cost run
+below; inspect emitted code and actual instructions before adopting a timing
+claim. Continue monitoring #149, merge it only after exact-head acceptance, then
+transfer this batch for the next substantial PR. Queued CI does not block fixes
+or independent preparation.
 
-## Selected change and acceptance
+## Change and acceptance criteria
 
-The existing four-host derivative allocation profile attributes 4,194,304 of
-25,184,777 managed requests to temporary zip pairs and their list nodes. Array
-construction work in #149 removes a different group of 2,097,152 requests.
-A tiny accepted-compiler IR inspection confirms derivative initialization builds
-numeric pairs and immediately maps a known callback over them.
+The earlier derivative profile attributes 4,194,304 of 25,184,777 managed requests
+to zip pairs and their list nodes. #149 removes a different 2,097,152 requests.
+Numeric derivative initialization builds pairs and immediately maps a known
+callback over them. This candidate uses existing zip-with ownership and a
+specialized callback whose pair fields can remain local, without new syntax.
 
-Recognize immediate `map f (zip ys xs)` with inline numeric inputs and a known
-callback. Use existing `zip-with` ownership machinery and a specialized callback
-body whose pair fields can stay local. Preserve eager input order, shorter-list
-truncation, callback effects/traps, aliases and result cleanup. Managed inputs
-remain outside this initial proof, because changing their last-owner timing could
-change resource behavior. No new surface function or syntax is needed.
+Preserve eager argument order, shorter-list truncation, callback effects/traps,
+aliases and result cleanup. Only inline numeric inputs qualify; managed inputs
+keep their original path. Numeric producer bindings stay around the replacement;
+resource-bearing bindings cannot extend through callbacks. Rejoin single-use
+intermediates through a record prefix only when its earlier fields are plain
+locals/constants, stopping at calls and resource regions.
 
-Allow a single-use intermediate to reach its immediate consumer through record
-fields only when preceding fields are plain locals/constants. Do not cross
-calls, resource regions, effects or traps. Inspect actual generated C/machine
-code: removing one list must not silently replace it with tuple boxing or
-indirect callback calls. Consider borrowed flat callback arguments only after
-this first measurement identifies remaining reference-count traffic.
+Run zip replacement after existing fold/array consumers: replacing map earlier
+would hide their input and reintroduce output lists. Dedicated tests preserve
+those optimizations. `FWP_ZIP_MAP=0` disables only the new transformation for
+comparison. Native code must show removed pairs and known direct callback calls;
+a smaller allocation count alone does not establish faster execution.
 
-Acceptance compares raw and optimized interpretation with native O1/O2 tracing
-and ARC, including empty/unequal inputs, order, checked failures, captures,
-returned tuples/managed results and excluded managed inputs. Count allocations,
-retains and final storage with aliases and deliberate cleanup omissions. Run
-six native hosts, four-host repeated derivative/direct measurements, then the
-full nine production jobs plus docs for the final combined delivery. Performance
-and peak memory must be measured; fewer requests alone do not establish speed.
+Review also found ordinary zip left scratch and already duplicated fields
+unprotected when a later retain traps. The repair owns both pending fields,
+completed pairs and the partial output list. Borrowed inputs remain live through
+final list allocation. This repair applies independently of the optimization.
 
+Acceptance compares raw/optimized interpretation with native O1/O2 tracing/ARC,
+including empty/unequal lists, captures, numeric bindings, checked failures,
+returned tuples/managed results and excluded managed inputs. Counts include
+retained aliases and final storage. Cleanup probes force retain, second-scratch,
+pair and list failures, actual retain overflow, real collection and three
+intentional cleanup omissions. Final delivery still needs the full nine jobs.
 
-## Preparation checks and adjacent cleanup repair
+## Checks and active evidence
 
-The isolated pass compiles against the existing local library after fixing a
-borrow in the first-operation traversal. Small ordered/captured/derivative cases
-match the accepted #148 raw interpreter in tracing and ARC (7.13 s), with the
-newer mapped-array primitive disabled because that older library cannot emit it.
-Six fixture groups match raw interpretation under native tracing stress (7.07 s).
-Their explicit expectations preserve actual argument order: the zip argument
-prints before its piped subject. These are partial compiler checks, not acceptance
-of the rebuilt compiler.
+[Six-host tests 38842838108](https://github.com/e6qu/fun-with-pipes/actions/runs/38842838108)
+and [four-host costs 38842840316](https://github.com/e6qu/fun-with-pipes/actions/runs/38842840316)
+are queued/running at `91146d68`. The earlier queued runs `38842464287` and
+`38842467115` are confirmed canceled; the liveness correction superseded them
+before any job started. No current changed-compiler acceptance is claimed.
 
-Allocation probes with empty/unequal/129-element inputs and retained aliases pass
-tracing/ARC and a missing-result-cleanup control (5.28 s). For 129 pairs, requests
-fall from 390 to 131, requested bytes from 12,408 to 5,176 and retains from 129 to
-zero. Final charged storage returns to the initial value. Native CI and repeated
-workload performance remain pending; do not extrapolate these tiny counts.
+The cost suite compares the same compiler with only `FWP_ZIP_MAP` changed, keeping
+mapped-array construction and other fusion enabled. Direct work constructs 128
+numeric result lists before reducing them; the other cases compute 512 reverse
+derivatives and a second derivative over 256 inputs. Retain eight alternating
+whole-process samples, separate allocations/retains/peak/final memory, compiler
+and flags, compilation time, binary size and actual disassembly. Both variants
+are fwp, not C/Rust. Timings and allocation evidence run only on GitHub.
 
-Review found ordinary `zip` leaves its scratch and already duplicated fields
-unprotected if a later retain traps. The batch now gives its partial result and
-both pending fields explicit cleanup using the existing ownership helpers. Forced failure, real retain-overflow, aliases and three negative controls now
-pass in edited C for tracing/ARC (4.12 s). The old helper fails the same probe
-with leaked references (exit 248); the repaired helper passes. The six-host
-changed-compiler suite remains pending. Managed zip inputs retain their original evaluation
-path; this repair applies even when numeric zip/map fusion is disabled.
+Guarded local checks, supplemental to CI:
 
+- The isolated transformation compiles against an existing prebuilt library
+  (latest 1.25 s), and the test harness compiles (0.50 s). This avoids a full local
+  compiler build; its older backend requires disabling the newer mapped-array
+  primitive for these probes.
+- Six fixture groups match accepted #148 raw interpretation under native tracing
+  stress (7.22 s). Ordered/captured/tiny derivative cases also match native ARC
+  (7.13 s). Explicit expected output follows actual argument order: the zip
+  argument prints before its piped subject. The newest consumer-order and numeric
+  binding fixtures await rebuilt-compiler CI.
+- Allocation/alias checks and missing-result cleanup controls pass tracing/ARC
+  (5.28 s). For 129 numeric pairs, requests fall from 390 to 131, requested bytes
+  from 12,408 to 5,176 and retains from 129 to zero. Final storage returns to its
+  starting value. These are small isolated-pass results, not workload timings.
+- Edited-C cleanup probes reproduce the old leak (exit 248), pass the repair in
+  both modes, and reject omitted pending-field, pair or scratch cleanup. Latest
+  check includes collection during pair/list assembly and passes (3.72 s).
+- A tiny direct workload prints 40.0 under raw interpretation and native ARC with
+  the transformation off/on, and confirms the intended code path (2.29 s).
+  Script parsing (0.13 s), formatting (0.97 s) and docs (2.62 s) pass.
 
-The transformation now runs after existing map/fold and map/array consumers.
-Early zip replacement would hide their map input and reintroduce output lists;
-there is a dedicated regression for that ordering. After this adjustment the
-isolated pass compiles (1.09 s) and the six fixture groups pass again (7.22 s).
-The full Rust test harness compiles against the existing library (0.26 s).
-This is not a local full compiler build or acceptance of its code generation.
-
-The new `zip-maps` six-host suite covers this batch and neighboring array, map,
-ARC and derivative ownership. `zip-map-costs` compares the same compiler with
-only `FWP_ZIP_MAP` off/on, keeping mapped-array construction enabled. It measures
-128 numeric result lists before reducing them, 512 reverse derivatives and the
-256-input nested derivative control. Retain eight alternating whole-process
-samples, separate counts/peak/final memory, retained references, compilation and
-binary sizes, source hashes and actual disassembly. This is fwp versus fwp, not
-C/Rust parity. The measurement script parses (0.13 s); all timings run on GitHub.
-
-
-Numeric producer bindings are preserved around the replacement; only inline
-numbers and lists of inline numbers may extend through the callbacks. Managed or
-resource-bearing bindings are excluded. A tiny version of the direct workload
-matches raw/native output with the transformation off/on (2.29 s). This also
-checks that the intended transformation is actually reached. The old zip cleanup
-regression is reproduced before the repair, rather than inferred from inspection.
-
-Current #149 docs pass at `5748f749`; the nine production jobs have begun running.
-Keep this preparation separate until that delivery merges. No gate is waived.
-
-
-Final review keeps borrowed zip inputs live until after result-list allocation,
-matching the existing map/zip-with contracts. The edited-C cleanup probe passes
-again (4.12 s); pair and list assembly also force real tracing collection. Initial
-queued tests `38842464287` and costs `38842467115` are superseded before any job
-starts. Replace them with this liveness repair, then record the new run IDs.
+The accepted #148 compiler is `/private/tmp/fwp-148-compiler/fwp-macos-arm64/fwp`.
+The isolated-pass harness and probes are `/private/tmp/fwp-zip-*`; they do not
+replace production binaries or native acceptance. No remaining local failure is
+being treated as a pass.

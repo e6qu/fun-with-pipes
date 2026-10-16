@@ -668,7 +668,9 @@ records which source versions completed the required tests.
 
 An allocation-site profile records the native instruction that requested each
 piece of managed storage. This explains what creates temporary objects; it does
-not measure how long that instruction takes. The
+not measure how long that instruction takes. This baseline predates direct
+numeric mapped-array construction; its counts identify the costs that motivated
+that later optimization. The
 [four-host report](measurements/ad-allocation-sites-2026-10-16.json) compares
 ordinary aggregate profiling against a diagnostic build with two allocation
 functions deliberately kept out of line. Requests, requested bytes, retains and
