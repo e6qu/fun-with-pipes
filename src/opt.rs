@@ -424,6 +424,21 @@ impl<'p> Opt<'p> {
                 a1.extend(args);
                 self.apply(*g, a1, depth)
             }
+            // Applying a function returned through a pure binding keeps that
+            // binding first, then exposes the call in its body. Do not extend
+            // resource lifetimes or move an application into a resource frame.
+            Expr::Let(l, v, b)
+                if self.pure(&v)
+                    && !self.resource_locals.contains(&l)
+                    && !crate::resource::anchored(&b, l)
+                    && !crate::resource::may_hold_resource(
+                        self.shapes,
+                        &self.locals[l as usize],
+                    ) =>
+            {
+                let body = self.apply(*b, args, depth);
+                self.expr(Expr::Let(l, v, Box::new(body)), depth)
+            }
             Expr::Func(id) if self.arity(id) > 0 => {
                 let ar = self.arity(id);
                 if args.len() < ar {
@@ -1048,14 +1063,22 @@ fn rewrite_hofs(
                 body = o.expr(body, 0);
             }
             let h = base + made.len();
+            // Reserve the identity before descending, so a repeated callback
+            // shares this specialization instead of expanding recursively.
             made.push(Func {
                 name: format!("{}-fn", sym),
                 arity: (k + n) as u32,
-                locals: o.locals,
+                locals: Vec::new(),
                 ty,
-                body: Body::Expr(body),
+                body: Body::Expr(Expr::Const(crate::value::Value::unit())),
             });
             seen.push((key, h));
+            // Inlining a state callback can expose another known callback,
+            // such as fold inside each. Specialize it before native lowering
+            // chooses direct calls or runtime function dispatch for the loop.
+            rewrite_hofs(&mut body, funcs, shapes, &mut o.locals, base, made, seen);
+            made[h - base].locals = o.locals;
+            made[h - base].body = Body::Expr(body);
             h
         }
     };

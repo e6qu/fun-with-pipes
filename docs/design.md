@@ -148,7 +148,12 @@ adds no syntax or implicit conversion. A known callback's eager captures are
 bound once in their original left-to-right order before input evaluation; the
 existing specialization then sees direct calls. Capture bindings stay outside
 the fused loop and cannot cross effectful or trapping consumer arguments.
-Resource-bearing captures keep their original frames. The handoff separates
+Resource-bearing captures keep their original frames. A pure binding that returns
+an immediately applied function can expose that call while keeping the binding
+first; bindings that may contain resources retain their original boundary.
+Specializing a known state callback also examines newly exposed callbacks, so a
+fold inside that callback can call its known function directly. Repeated callback
+bodies share a specialization rather than expanding recursively. The handoff separates
 implementation, focused checks and full acceptance; benchmarks retain the
 unfused baseline.
 

@@ -209,9 +209,14 @@ construction, updates, printing and cleanup. Both use the same C compiler and
 peak process memory, build commands/times and binary sizes. Separate 32/128-element
 tests count allocations without contaminating timed executables with counters.
 
-This compares two fwp implementations, not fwp with C/Rust. Runtime callback
-dispatch remains in the counting example. The [handoff](development-state.md)
-records verification progress; fewer allocations alone do not establish a speedup.
+The [first comparison](measurements/service-context-iteration-baseline-2026-10-16.json)
+at `dbb9dbec` saves one managed allocation and 32 requested bytes per element,
+but the one-million-element program takes 16.6% longer on Linux AMD64 and 11.8%
+longer on Linux ARM64. AMD64 median process peak memory falls from 79,268 to
+37,688 KiB. Runtime callback dispatch remains in that measured loop; the
+[handoff](development-state.md) tracks its repair and fresh measurements.
+This compares two fwp implementations, not fwp with C/Rust. Fewer allocations
+alone do not establish a speedup.
 
 ## Measurement report index
 

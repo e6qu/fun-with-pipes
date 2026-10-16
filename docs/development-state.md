@@ -7,45 +7,38 @@ The only open delivery PR is #153; do not open a second before it is accepted.
 ## Current action
 
 Workspace: `/private/tmp/fwp-context-owners`, branch `service-context-preparation`.
-Preparation base: `ac3060d1`. The latest test repair limits diagnostics to
-modes that support them; it does not change the compiler or library.
+Preparation base: `ac3060d1`.
 
-Next: verify six-host native run `38969247542` at `dbb9dbec`, including the
-old/new iteration timing comparison, then retain its artifacts and measurements. Functional/allocator checks now
-pass on all six hosts; the larger service suite and timing steps remain. Linux ARM64's narrow run `38968698121`
-passes at `89b54a67`: iteration outputs/aliases/failures, allocation controls,
-state lifetimes and native allocator/collector regressions. The temporary
-debugger job and GDB script are removed. Tests retain generated trap programs
-for actual binary inspection and preserve unexpected outputs from other cases.
+Next: run the callback-specialization repair on Linux AMD64, then repeat the
+native matrix and WebAssembly checks before publication. The new `each` saves
+memory but the first timing comparison is slower; do not accept it on allocation
+counts alone. The optimizer now exposes calls through pure non-resource bindings
+and specializes callbacks discovered inside state handlers. The regression counts
+runtime dispatch as input grows and checks eager captures before input errors,
+including empty inputs. These changes await CI; no local build was run.
 
-The repaired runtime obtains the complete Linux/macOS thread-stack bound from
-pthread APIs, matching Windows' existing OS-bound approach. A watchpoint in
-`38967186882` proved GC erased a live callback at `x29+24`, above the old scan
-limit, while allocating its parent closure. The compiler-frame-bound attempt
-failed and is removed. There is no extra wrapper or permanent-retention scheme;
-ARC and WebAssembly do not gain scanning. Final all-host acceptance is pending.
-Artifacts are under `/private/tmp/fwp-each-trap/38965685165`, `38967186882` and
-`38967903478`; the passing narrow run retains its test logs on GitHub.
+All six native hosts pass at `dbb9dbec` in run `38969247542`. The
+[retained baseline](measurements/service-context-iteration-baseline-2026-10-16.json)
+records service memory, iteration allocation counts, repeated Linux timings,
+binary hashes and generated trap programs. Retention passed under the local
+guard (37.47s). Compared with the old map-based definition, each saves one
+allocation and 32 requested bytes per element. At one million elements it takes
+16.6% longer on Linux AMD64 and 11.8% longer on Linux ARM64. AMD64 median process
+peak memory falls from 79,268 to 37,688 KiB. These are fwp-to-fwp comparisons,
+including startup/input/cleanup; they do not establish C/Rust parity.
 
-The preceding six-host run `38964567808` passed all hosts except Linux ARM64.
-Its allocation comparison saves 96 requests and 3,072 requested bytes over 96
-extra elements. The counting program still uses runtime callback dispatch.
-`measure-list-each.py` compares old/new native timing at 10,000/100,000/1,000,000
-elements, with alternating order, seven samples, process peak memory, compilation
-time and binary sizes. Inspect any regression before accepting the library
-change. These are fwp-to-fwp comparisons, not C/Rust parity. No native build or
-benchmark ran locally.
+The runtime now obtains the complete Linux/macOS thread-stack bound through
+pthread APIs, matching Windows. A debugger watchpoint proved the old scan bound
+missed a live callback at `x29+24`; GC erased it while allocating another closure.
+All six hosts now pass the triggering case, including stress and reuse checks.
+ARC and WebAssembly do not gain stack scanning. The passing artifacts are under
+`/private/tmp/fwp-context-each-evidence/38969247542`; inspect the corrected native
+binaries along with the forthcoming callback changes. Temporary debugger jobs
+and the ineffective compiler-frame-bound attempt have been removed.
 
-Both actual WebAssembly jobs in `38967912068` pass at `16643edf`, including
-semantic agreement and physical reclamation controls. The later OS-bound fix
-changes native-only code. Earlier iteration WASI run `38962206780` also passed.
-Earlier test-setup mistakes are repaired: normal-completion measurement hooks
-are unique, and collector/reuse-retention diagnostics apply only to tracing.
-The Linux ARM64 allocation comparison saves 96 requests and 3,072 requested
-bytes over 96 additional elements against the previous mapping definition.
-This passing allocation check does not establish correct trapping behavior.
-Guarded formatting passes (0.26s) and workflow lint passes (1.27s);
-the last handoff audit passed (2.53s).
+Both actual WebAssembly jobs in `38967912068` pass at `16643edf`; the subsequent
+stack-bound fix is native-only. The new optimizer change requires fresh actual
+WebAssembly checks. Formatting passes (1.11s); full validation remains on CI.
 
 After #153 passes and merges, preserve the preparation's current head under a
 remote evidence tag before rebasing: the reports refer to earlier source commits.

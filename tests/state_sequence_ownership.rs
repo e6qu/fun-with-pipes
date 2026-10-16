@@ -221,6 +221,18 @@ fn each_preserves_aliases_effect_order_and_early_failures() {
             "2\n0\n",
             101,
         ),
+        (
+            "capture-trap",
+            "bad : I64\nbad = 1 | div 0\nmain = each (add bad | ignore) ([9223372036854775807] | map (mul 2))\n",
+            "",
+            101,
+        ),
+        (
+            "empty-capture-trap",
+            "bad : I64\nbad = 1 | div 0\nmain = each (add bad | ignore) []\n",
+            "",
+            101,
+        ),
     ];
     for (name, source, expected, status) in cases {
         let input = dir.0.join(format!("{name}.fwp"));
@@ -233,6 +245,11 @@ fn each_preserves_aliases_effect_order_and_early_failures() {
             .unwrap();
         assert_eq!(raw.status.code(), Some(status), "{raw:?}");
         assert_eq!(raw.stdout, expected.as_bytes());
+        if name.ends_with("capture-trap") {
+            // Creating the callback evaluates its capture before evaluating
+            // the input, even when no element would use that captured value.
+            assert!(String::from_utf8_lossy(&raw.stderr).contains("division by zero"));
+        }
         let optimized = Command::new(compiler)
             .args(["run", "--interp"])
             .env_remove("FWP_NO_OPT")
@@ -344,7 +361,7 @@ fn each_avoids_allocating_a_discarded_result_list() {
             assert_eq!(code.matches(declaration).count(), 1);
             code = code.replace(
                 declaration,
-                "typedef uint64_t V;\nstatic unsigned long long each_requests,each_bytes;",
+                "typedef uint64_t V;\nstatic unsigned long long each_requests,each_bytes,each_calls;",
             );
             for (marker, condition) in [
                 ("static inline void *fwp_alloc_init(size_t n) {", "1"),
@@ -359,13 +376,20 @@ fn each_avoids_allocating_a_discarded_result_list() {
                     &format!("{marker} if({condition}){{each_requests++;each_bytes+=n;}}"),
                 );
             }
+            for marker in [
+                "static V fwp_apply_owned(V f, uint32_t n, V *args) {",
+                "static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start, uint32_t owned_len) {",
+            ] {
+                assert_eq!(code.matches(marker).count(), 1);
+                code = code.replace(marker, &format!("{marker} each_calls++;"));
+            }
             let finish = "    fwp_cl_finish();\n";
             let main = code
                 .find("static void *fwp_main_thread(void *arg) {")
                 .unwrap();
             let (prefix, body) = code.split_at(main);
             assert_eq!(body.matches(finish).count(), 1);
-            code = prefix.to_string() + &body.replace(finish, &format!("{finish}fprintf(stderr,\"each-cost %llu %llu\\n\",each_requests,each_bytes);\n"));
+            code = prefix.to_string() + &body.replace(finish, &format!("{finish}fprintf(stderr,\"each-cost %llu %llu %llu\\n\",each_requests,each_bytes,each_calls);\n"));
             fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
             let output = checked(
                 Command::new(&binary)
@@ -384,7 +408,7 @@ fn each_avoids_allocating_a_discarded_result_list() {
                 .split_whitespace()
                 .map(|value| value.parse().unwrap())
                 .collect();
-            assert_eq!(values.len(), 2);
+            assert_eq!(values.len(), 3);
             counts.insert((name, count), values);
             if let Some(path) = std::env::var_os("FWP_CONTEXT_ARTIFACTS") {
                 let path = PathBuf::from(path);
@@ -404,10 +428,17 @@ fn each_avoids_allocating_a_discarded_result_list() {
         "{counts:?}"
     );
     assert!(growth("fold", 0) <= 96, "{counts:?}");
-    let mut report =
-        String::from("implementation\titerations\tmanaged_requests\trequested_bytes\n");
+    // Known callbacks must stay direct as the input grows. A heap saving alone
+    // must not hide runtime callback dispatch on every element.
+    assert_eq!(growth("fold", 2), 0, "{counts:?}");
+    let mut report = String::from(
+        "implementation\titerations\tmanaged_requests\trequested_bytes\tdynamic_calls\n",
+    );
     for ((name, count), values) in counts {
-        report.push_str(&format!("{name}\t{count}\t{}\t{}\n", values[0], values[1]));
+        report.push_str(&format!(
+            "{name}\t{count}\t{}\t{}\t{}\n",
+            values[0], values[1], values[2]
+        ));
     }
     eprint!("{report}");
     if let Some(path) = std::env::var_os("FWP_CONTEXT_ARTIFACTS") {
