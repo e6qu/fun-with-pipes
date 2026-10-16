@@ -175,6 +175,10 @@ fn f64_lane_pipelines_fuse_without_reordering_effects_or_traps() {
         ("effects", "main = range 0 3 | map (tap echo | int.to-float | simd.splat | dot) | fold (curry (tap echo | uncurry add)) 0.0 | echo\n", false, 0),
         ("distinct-traps", "main = [0, 9223372036854775807] | map (add 1 | int.to-float | simd.splat | dot) | fold (curry (const 1 | div 0 | int.to-float)) 0.0 | echo\n", false, 101),
         ("zero-lanes", "zero : Vec[0, F64] -> F64\nzero = simd.sum\nmain = range 0 16 | map (int.to-float | simd.splat | zero) | sum | echo\n", true, 0),
+        ("retained-splats", "four : Vec[4, F64] -> Vec[4, F64]\nfour = id\nmain = 3.0 | simd.splat | four | both (simd.dot (simd.splat 0.5)) (simd.to-array | array.to-list) | echo\n", false, 0),
+        ("splat-order", "left : () -> F64 ! {IO}\nleft = const 2.0 | tap echo\nright : () -> F64 ! {IO}\nright = const 3.0 | tap echo\ncombine : Vec[4, F64] -> Vec[4, F64] -> F64\ncombine = simd.dot\nmain = left () | simd.splat | combine (right () | simd.splat) | echo\n", false, 0),
+        ("empty-splat-order", "left : () -> F64 ! {IO}\nleft = const 2.0 | tap echo\nright : () -> F64 ! {IO}\nright = const 3.0 | tap echo\ncombine : Vec[0, F64] -> Vec[0, F64] -> F64\ncombine = simd.dot\nmain = left () | simd.splat | combine (right () | simd.splat) | echo\n", false, 0),
+        ("splat-trap-order", "left : () -> F64\nleft = const 9223372036854775807 | add 1 | int.to-float\nright : () -> F64\nright = const 1 | div 0 | int.to-float\ncombine : Vec[4, F64] -> Vec[4, F64] -> F64\ncombine = simd.dot\nmain = left () | simd.splat | combine (right () | simd.splat) | echo\n", false, 101),
     ];
     for (name, body, fused, status) in cases {
         let source = prefix.to_string() + body;
@@ -206,12 +210,39 @@ fn f64_lane_pipelines_fuse_without_reordering_effects_or_traps() {
             "{name}"
         );
         for arc in [false, true] {
-            let code = emitted(&source, arc, &dir);
+            let mut code = emitted(&source, arc, &dir);
+            if name == "values" {
+                code = code.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int lane_count_active; static size_t lane_requests;");
+                for (marker, count) in [
+                    (
+                        "static inline void *fwp_alloc_init(size_t n) {",
+                        "if(lane_count_active) lane_requests++;",
+                    ),
+                    (
+                        "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
+                        "if(lane_count_active && leaf!=0) lane_requests++;",
+                    ),
+                ] {
+                    assert!(code.contains(marker));
+                    code = code.replace(marker, &format!("{marker} {count}"));
+                }
+                let main = code
+                    .find("static void *fwp_main_thread(void *arg) {")
+                    .unwrap();
+                let end = main + code[main..].find("\n}\n").unwrap() + 3;
+                let body = code[main..end]
+                    .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    lane_count_active=1;\n")
+                    .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    lane_count_active=0; if(lane_requests>4) exit(247);\n");
+                code.replace_range(main..end, &body);
+            }
             assert_eq!(code.contains("/* fused :"), fused, "{name}");
+            if name == "retained-splats" {
+                assert!(!code.contains("/* simd._splat-dot-f64 :"));
+            }
             if name == "values" {
                 assert!(
-                    code.contains("/* simd._dot-f64 :"),
-                    "dot still materializes a product vector"
+                    code.contains("/* simd._splat-dot-f64 :"),
+                    "dot still materializes temporary splat vectors"
                 );
             }
             for opt in ["-O1", "-O2"] {

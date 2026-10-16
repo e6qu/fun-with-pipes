@@ -24,6 +24,7 @@ short-floats = { lanes = [-1.0000000000000004, 1.0000000000000002] | array.from-
 long-floats : Vec[4, F64]
 long-floats = { lanes = [1.0, 1.0000000000000002, 99.0] | array.from-list }
 main = [
+    range 0 16 | map (int.to-float | simd.splat | simd._test-v4 | simd.dot (simd.splat -0.5)) | sum | echo,
     short-floats | both (simd.dot long-floats) (simd.to-array | array.to-list) | echo,
     short-floats | simd.mul long-floats | both simd.sum (simd.to-array | array.to-list) | echo,
     [-0.0] | array.from-list | one | option.map (simd.dot (simd.splat 1.0) | hash) | echo,

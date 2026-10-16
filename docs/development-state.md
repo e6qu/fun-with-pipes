@@ -72,43 +72,47 @@ comments/generated docs describe C loops without promising vector instructions.
 
 ## Measured vector optimization in progress
 
-Extend this still-unpublished combined batch with direct F64 lane access. The
-measured kernels repeat representation checks inside each lane operation and
-sum. Resolve flat-array/view addresses once, use byte copies for valid C aliasing,
-and keep input owners alive. Fresh result arrays can be written directly;
-F64 lanes have no child ownership or language arithmetic traps. Preserve exact
-left-to-right sum order (including singleton negative zero), common-prefix
-lengths and all boxed paths. View/alias, cancellation-sensitive floating values and zero-lane checks were
-added to the existing vector regression target; the accepted interpreter passes
-them under the guard (0.26 s). Acceptance
-requires native/interpreter parity, native/WASI ownership gates, four-host
-allocation/code evidence and paired timings against `38869050349`. No speedup
-is claimed before those results. A further narrow proof recognizes F64 lane arithmetic/sums, integer-to-F64
-conversion, and splats whose declared length fits the array limit even on WASI32.
-This lets eligible pipelines discard intermediate lists; integer lane division
-and oversized splats remain unknown to this proof. Explicit tests preserve
-observable effects and distinguishable first traps. A sole immediate F64 multiply/sum now lowers to a direct ordered dot loop,
-removing the product vector while preserving input order, common-prefix lengths,
-individual product rounding and empty/singleton rules. Retained products keep
-ordinary storage. This requires fresh native/WASI and cost runs. Input splats
-remain measured costs to address. The first direct-storage revision `17742b18` passes both actual WASI jobs
-`38873001719` and the Linux ARM64/Windows ARM64 focused native jobs in
-`38872997832`. Its cost run `38873005668` has both Linux results; macOS remains
-queued. The following fusion revision `252b17bc` uses native `38873505915`, WASI
-`38873509149` and costs `38873512960`. These intermediate runs are superseded
-by the combined direct-dot head; cancel unfinished runs to avoid duplicate
-runner work and retain any completed evidence. They do not establish full
-acceptance of direct dot. Fresh six-native, two-WASI and four-cost runs are next.
+Combined revision `3577ba37` passes all six native jobs `38874211385` and both
+actual WASI jobs `38874214456`. It resolves F64 array addresses before lane loops,
+combines eligible lane pipelines without intermediate lists, and removes sole
+immediate product vectors through ordered direct dot. The proof preserves
+floating-point order, common-prefix lengths, aliases, effects and first traps.
 
-Four fusion semantic cases pass the accepted interpreter under the guard
-(0.63 s), including I64 overflow before the consumer's division error. The
-extended rounding/alias fixture also passes (0.26 s). Formatting passes (1.08 s),
-and the inventory audit passes (1.21 s) against its unchanged frozen baseline.
-The paired runner requires an explicit hash/vector workload and verifies matching
-reference sources as well as fwp source/binary/assembly identities. Its renamed
-`scripts/repeat-revision-comparison.py` preserves hash comparison and adds vector
-profiles; a full paired run is still required.
+Cost run `38874218523` has both Linux results; macOS is pending. On both Linux
+hosts, four/sixty-four-lane checked ARC requests fall from 262,147/65,539 to
+131,074/32,770, with zero retains/final storage and 128/1,312 peak charged bytes.
+These unpaired runs do not isolate timing improvements. Remaining CPU overhead
+is about 4.61/2.07 times C on AMD64 and 5.90/1.91 on ARM64. Generated code still
+constructs two splat vectors per iteration.
 
+The following implementation now recognizes both consecutive splats have a sole immediate F64 dot
+use: it binds their scalar values once in their original order and reduces the
+repeated product directly. Keep the portable size proof, zero-lane evaluation, individually
+rounded product, ordered sum, retained aliases and effect/trap order. No generic
+constant-function conversion or floating reassociation is allowed. Require fresh
+native/WASI gates, four-host allocation/code evidence and paired timings against
+original baseline `38869050349`; keep the intermediate evidence visible.
+Seven semantic cases pass the accepted interpreter (guarded 1.24 s); eager stage
+arguments print before pipe input and their division trap remains first. A
+retained-splat alias case is also included. Formatting passes (1.29 s) and docs
+pass (3.15 s). The hot-loop regression counts both initialized-object and leaf
+allocation paths and allows only bounded output allocation.
+
+Earlier direct-storage/fusion runs are superseded and unfinished jobs were
+canceled: `38872997832`, `38873005668`, `38873505915`, `38873509149`, `38873512960`.
+Completed parts remain evidence, not acceptance of the current combined change.
+The paired runner now uses `scripts/repeat-revision-comparison.py` with an explicit
+hash/vector workload; it verifies matching reference sources and artifact hashes.
+
+## Following ownership preparation
+
+`owned-value-decoders` in `/private/tmp/fwp-owned-decoders`, based on `3577ba37`,
+is prepared through `7ff47312`. Only its later delta belongs to the following
+batch. It owns ternary and URL/form/HTTP decoder results, removes scratch arrays
+and tests allocation-failure cleanup. Six-native `38876430416` and actual WASI
+`38876434029` are queued/running. No second delivery PR is open. Its worktree
+handoff contains local checks and the 16 newly explicit primitive contracts;
+this work is not yet accepted and must not be replayed into the numerical delta.
 
 ## Completed focused checks and measurements
 

@@ -449,6 +449,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "zip" => (&[B, B], ResultOwnership::CopiedStructure, None, &[0, 1]),
         "unzip" => (&[B], ResultOwnership::CopiedStructure, None, &[0]),
         "chunks" => (&[B, B], ResultOwnership::CopiedStructure, None, &[1]),
+        "simd._splat-dot-f64" => (&[B, B, B], ResultOwnership::Numeric, None, &[]),
         "simd._dot-f64" => (&[B, B], ResultOwnership::Numeric, None, &[]),
         "simd.splat" | "simd.from-array" | "simd.sum" => {
             (&[B], ResultOwnership::OwnedTree, None, &[])

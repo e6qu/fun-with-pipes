@@ -173,6 +173,15 @@ product in lane order. An empty input prefix returns positive zero. A retained
 product vector still has ordinary storage. The interpreter keeps materialized
 products as an independent semantic reference.
 
+Two consecutive splats can also disappear when their only uses are that first
+direct dot call and both lengths satisfy the portable size proof. The compiler
+binds each scalar input once, in its original order, then sums the repeated
+product. It still evaluates both scalar expressions for an empty vector, while
+performing no multiplication in that case. Retained vectors or intervening work
+prevent this transformation. The product rounds once exactly as each identical
+lane product would; the sum repeats additions in order rather than multiplying
+by the lane count.
+
 ## Reading F64 vector lanes directly
 
 An F64 lane occupies eight contiguous bytes in both ordinary arrays and array
