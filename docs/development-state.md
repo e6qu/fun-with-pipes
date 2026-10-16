@@ -11,7 +11,7 @@ Do not apply either batch again or open a competing delivery PR.
 ## Current action and acceptance
 
 PR #153 remains at `78e9a372abe0daad90318b9ae14751cf6587c31f`. Production
-`38925341899` failed its Windows ARM TLS stream comparison: the native socket
+`38925341899` failed both Windows TLS stream comparisons: the native socket
 formatter used localized Windows reset wording while the interpreter used its
 established common wording. Both implementations still rejected the connection;
 there was no successful read or weakened certificate check. Benchmarks and both
@@ -25,13 +25,15 @@ formatter; the deterministic TLS probe requires the exact reset diagnostic.
 The focused TCP workflow also runs the real TLS stream comparison, in addition
 to mutual TLS and existing socket lifetime/error controls.
 
-Repair `abe3be17` is published; focused Windows run `38931783848` is queued.
+Repair `abe3be17` passes both focused Windows jobs in `38931783848`, including
+the actual TLS stream comparison and all five socket diagnostic comparisons.
 The following workflow edit saves and uploads each failed TLS/autodiff/golden
 step log immediately, while later checks continue, preserving the failing exit
 status. This removes the need to wait for the entire job before reading that log.
-Next: fix the focused run and inspect the remaining old production results for
-additional failures, then publish the verified repair to
-PR #153 and require all nine production jobs plus documentation on the new head.
+Next: combine this repair with the service-value preparation, finish its focused
+checks, then publish the combined head to PR #153 and require all nine production
+jobs plus documentation. This keeps the required full CI restart in one delivery.
+Inspect the remaining old production results for any additional failures.
 Do not restart full CI before incorporating any other discovered failures.
 `/private/tmp/fwp-merge-153.py` still targets the failed old head and must be
 updated to the final head/run IDs before use. Squash subject remains

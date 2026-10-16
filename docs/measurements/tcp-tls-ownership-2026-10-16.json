@@ -1480,5 +1480,35 @@
         "socketDrop": "_fwp_sock_drop:\n0000000100040b4c\tstp\tx22, x21, [sp, #-0x30]!\n0000000100040b50\tstp\tx20, x19, [sp, #0x10]\n0000000100040b54\tstp\tx29, x30, [sp, #0x20]\n0000000100040b58\tadd\tx29, sp, #0x20\n0000000100040b5c\tcbz\tx0, 0x100040b74\n0000000100040b60\tldr\tx8, [x0, #0x8]\n0000000100040b64\tcbz\tx8, 0x100040b74\n0000000100040b68\tsubs\tx8, x8, #0x1\n0000000100040b6c\tstr\tx8, [x0, #0x8]\n0000000100040b70\tb.eq\t0x100040b84\n0000000100040b74\tldp\tx29, x30, [sp, #0x20]\n0000000100040b78\tldp\tx20, x19, [sp, #0x10]\n0000000100040b7c\tldp\tx22, x21, [sp], #0x30\n0000000100040b80\tret\n0000000100040b84\tldr\tw8, [x0, #0x4]\n0000000100040b88\tcmp\tw8, #0x2\n0000000100040b8c\tb.eq\t0x100040be0\n0000000100040b90\tldr\tx19, [x0, #0x10]\n0000000100040b94\tcbz\tx19, 0x100040be0\n0000000100040b98\tmov\tx21, x0\n0000000100040b9c\tcbz\tw8, 0x100040bb0\n0000000100040ba0\tmov\tx0, x19\n0000000100040ba4\tbl\t_fwp_tls_dispose\n0000000100040ba8\tmov\tx0, x21\n0000000100040bac\tb\t0x100040bdc\n0000000100040bb0\tmov\tx0, x19\n0000000100040bb4\tmov\tw1, #0x0\n0000000100040bb8\tbl\t0x100091754 ; symbol stub for: _SSL_CTX_get_ex_data\n0000000100040bbc\tcbz\tx0, 0x100040d18\n0000000100040bc0\tmov\tx20, x0\n0000000100040bc4\tldr\tx8, [x0, #0x10]\n0000000100040bc8\tcbz\tx8, 0x100040d18\n0000000100040bcc\tsubs\tx8, x8, #0x1\n0000000100040bd0\tstr\tx8, [x20, #0x10]\n0000000100040bd4\tmov\tx0, x21\n0000000100040bd8\tb.eq\t0x100040cfc\n0000000100040bdc\tstr\txzr, [x0, #0x10]\n0000000100040be0\tldr\tw8, [x0]\n0000000100040be4\tcmn\tw8, #0x1\n0000000100040be8\tb.eq\t0x100040c04\n0000000100040bec\tmov\tx19, x0\n0000000100040bf0\tmov\tx0, x8\n0000000100040bf4\tbl\t0x100091a18 ; symbol stub for: _close\n0000000100040bf8\tmov\tx0, x19\n0000000100040bfc\tmov\tw8, #-0x1\n0000000100040c00\tstr\tw8, [x19]\n0000000100040c04\tadrp\tx8, 89 ; 0x100099000\n0000000100040c08\tadd\tx8, x8, #0x38\n0000000100040c0c\tldr\tx9, [x8]\n0000000100040c10\tsub\tx9, x0, x9\n0000000100040c14\tldr\tx8, [x8, #0x28]\n0000000100040c18\tcmp\tx9, x8, lsl #16\n0000000100040c1c\tb.hs\t0x100040c68\n0000000100040c20\tadrp\tx8, 89 ; 0x100099000\n0000000100040c24\tldr\tx8, [x8, #0x80]\n0000000100040c28\tlsr\tx10, x9, #16\n0000000100040c2c\tmov\tw11, #0x1228\n0000000100040c30\tmadd\tx8, x10, x11, x8\n0000000100040c34\tldrb\tw10, [x8]\n0000000100040c38\tands\tx9, x9, #0xffff\n0000000100040c3c\tb.ne\t0x100040c48\n0000000100040c40\tcmp\tw10, #0x2\n0000000100040c44\tb.eq\t0x100040c5c\n0000000100040c48\tcmp\tw10, #0x1\n0000000100040c4c\tb.ne\t0x100040c68\n0000000100040c50\tldr\tw10, [x8, #0x20]\n0000000100040c54\tumull\tx9, w9, w10\n0000000100040c58\tadd\tx8, x8, x9, lsr #32\n0000000100040c5c\tadd\tx8, x8, #0x228\n0000000100040c60\tcbnz\tx8, 0x100040c70\n0000000100040c64\tb\t0x100040b74\n0000000100040c68\tmov\tx8, #0x0\n0000000100040c6c\tcbz\tx8, 0x100040b74\n0000000100040c70\tldrb\tw8, [x8]\n0000000100040c74\tcmp\tw8, #0x1\n0000000100040c78\tb.ne\t0x100040b74\n0000000100040c7c\tadrp\tx19, 89 ; 0x100099000\n0000000100040c80\tldr\tw8, [x19, #0xb18]\n0000000100040c84\ttbz\tw8, #0x1f, 0x100040cc8\n0000000100040c88\tmov\tx20, x0\n0000000100040c8c\tadrp\tx0, 82 ; 0x100092000\n0000000100040c90\tadd\tx0, x0, #0x149 ; literal pool for: \"FWP_REUSE_VERIFY\"\n0000000100040c94\tbl\t0x100091ac0 ; symbol stub for: _getenv\n0000000100040c98\tcbz\tx0, 0x100040cbc\n0000000100040c9c\tldrb\tw8, [x0]\n0000000100040ca0\tcbz\tw8, 0x100040cc0\n0000000100040ca4\tadrp\tx1, 82 ; 0x100092000\n0000000100040ca8\tadd\tx1, x1, #0x15a ; literal pool for: \"0\"\n0000000100040cac\tbl\t0x100091c7c ; symbol stub for: _strcmp\n0000000100040cb0\tcmp\tw0, #0x0\n0000000100040cb4\tcset\tw8, ne\n0000000100040cb8\tb\t0x100040cc0\n0000000100040cbc\tmov\tw8, #0x0\n0000000100040cc0\tmov\tx0, x20\n0000000100040cc4\tstr\tw8, [x19, #0xb18]\n0000000100040cc8\tldr\tw8, [x19, #0xb18]\n0000000100040ccc\tcbnz\tw8, 0x100040b74\n0000000100040cd0\tadrp\tx19, 88 ; 0x100098000\n0000000100040cd4\tadd\tx19, x19, #0x8\n0000000100040cd8\tldr\tx20, [x19]\n0000000100040cdc\tbl\t_fwp_mem_free\n0000000100040ce0\tldr\tx8, [x19]\n0000000100040ce4\tsub\tx8, x8, x20\n0000000100040ce8\tscvtf\td0, x8\n0000000100040cec\tldr\td1, [x19, #0x1208]\n0000000100040cf0\tfadd\td0, d1, d0\n0000000100040cf4\tstr\td0, [x19, #0x1208]\n0000000100040cf8\tb\t0x100040b74\n0000000100040cfc\tmov\tx0, x19\n0000000100040d00\tbl\t0x100091748 ; symbol stub for: _SSL_CTX_free\n0000000100040d04\tldr\tx0, [x20]\n0000000100040d08\tbl\t0x100091a84 ; symbol stub for: _free\n0000000100040d0c\tmov\tx0, x20\n0000000100040d10\tbl\t0x100091a84 ; symbol stub for: _free\n0000000100040d14\tb\t0x100040ba8\n0000000100040d18\tbl\t0x1000919b8 ; symbol stub for: _abort"
       }
     ]
+  },
+  "windowsSocketDiagnosticFollowup": {
+    "revision": "abe3be17c0c6a99da999316c5329570760e8c557",
+    "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38931783848",
+    "jobs": [
+      {
+        "name": "paths (windows-11-arm)",
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38931783848/job/117077319791",
+        "conclusion": "success"
+      },
+      {
+        "name": "paths (windows-2025)",
+        "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38931783848/job/117077320045",
+        "conclusion": "success"
+      }
+    ],
+    "change": "Common Windows socket messages now match the interpreter for permission, address-in-use, aborted, reset and refused errors. Unknown socket errors retain their system message.",
+    "checks": [
+      "Five actual native OS error codes are compared against the interpreter formatter at O1/O2.",
+      "Real interpreted/native TLS stream snapshots preserve exact client certificate diagnostics.",
+      "Deterministic TLS reset checks require the exact reset message; missing error capture still fails.",
+      "TCP/UDP lifetime, mutual TLS with checked ARC, native Windows socket-library unload and cancellation controls pass."
+    ],
+    "productionLimit": "This focused repair still requires all nine production jobs and documentation on the final delivery head.",
+    "sourceHashes": {
+      "runtime/fwp_rt_socket.c": "16cedc7fe544b1fb2534a4b32b05f08f03d818cca50cebb6353599581ccb3ee9",
+      "tests/native_sockets.rs": "4aff46b86f041116ce646aa80b370da3d90a25dfae62ae91b42e2a9f4d679883",
+      "tests/tls.rs": "927e06da56c7cdcb41472e6762f486d28bb045afa82ae9641e3c00d790666d6b",
+      "tests/fixtures/native_socket_probe.c": "5ffe21a6ce9e35469d7de02cd3f3c540e191f18f8c1f0dcc6acdd4f0c75d57c1"
+    }
   }
 }
