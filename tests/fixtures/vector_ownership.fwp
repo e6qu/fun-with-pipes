@@ -18,6 +18,18 @@ short-record = { lanes = [2i128, 4i128] | array.from-list }
 long-record : Vec[4, I128]
 long-record = { lanes = [1i128, 2i128, 3i128] | array.from-list }
 main = [
+    # F64 views keep their original backing array alive during every lane loop.
+    [99.0, 10000000000000000.0, 1.0, -10000000000000000.0, -0.0, 88.0]
+        | array.from-list | array.slice 1 4
+        | both array.to-list (four | option.map (make {
+            0 = simd.sum,
+            1 = simd.add (simd.splat 2.0) | simd.to-array | array.to-list,
+            2 = simd.sub (simd.splat 2.0) | simd.to-array | array.to-list,
+            3 = simd.mul (simd.splat -2.0) | simd.to-array | array.to-list,
+            4 = simd.div (simd.splat -2.0) | simd.to-array | array.to-list
+        })) | echo,
+    [-0.0] | array.from-list | one | option.map (simd.sum | hash) | echo,
+    [0.0] | array.from-list | array.slice 0 0 | empty | option.map simd.sum | echo,
     short-record | simd.add long-record | simd.to-array | array.to-list | echo,
 
     170141183460469231731687303715884105727i128 | simd.splat | wide

@@ -1836,7 +1836,11 @@ static V fwp_simd_finish(fwp_array_builder *owner, fwp_cleanup *cleanup) {
 static V fwp_p_simd_splat(V x, size_t n, const fwp_desc *elem) {
     fwp_array_builder result = {fwp_array_typed_new(n, elem), 0, elem};
     fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);
-    for (size_t i = 0; i < n; i++) {
+    if (elem->kind == K_F64) {
+        unsigned char *data = (unsigned char *)ARR(result.value)->d;
+        for (size_t i = 0; i < n; i++) memcpy(data + i * sizeof(V), &x, sizeof x);
+        result.filled = n;
+    } else for (size_t i = 0; i < n; i++) {
         if (elem->kind != K_F128 && elem->dup) elem->dup(x);
         fwp_array_store(result.value, i, x, elem);
         result.filled++;
@@ -1878,17 +1882,25 @@ static V fwp_p_simd_op(int k, int op, V subj, V arg, const char *name, int w, co
     fwp_array_builder result = {fwp_array_typed_new(n, elem), 0, elem};
     fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);
     if (k == K_F64 && op <= OP_DIV) {
+        /* A view and a flat F64 array both expose contiguous eight-byte lanes.
+         * Resolve their addresses once. Byte copies respect C effective types;
+         * casting the V storage to double pointers would not. The fresh result
+         * is not a view and its lanes need no cleanup before wrapper allocation. */
+        const unsigned char *left = fwp_array_data(PTR(xs)), *right = fwp_array_data(PTR(ys));
+        unsigned char *data = (unsigned char *)ARR(result.value)->d;
         for (size_t i = 0; i < n; i++) {
-            double x = fwp_f64(fwp_array_load(PTR(xs), i, elem)), y = fwp_f64(fwp_array_load(PTR(ys), i, elem)), z;
+            double x, y, z;
+            memcpy(&x, left + i * sizeof x, sizeof x);
+            memcpy(&y, right + i * sizeof y, sizeof y);
             switch (op) {
             case OP_ADD: z = x + y; break;
             case OP_SUB: z = x - y; break;
             case OP_MUL: z = x * y; break;
             default: z = x / y;
             }
-            fwp_array_store(result.value, i, fwp_from_f64(z), elem);
-            result.filled++;
+            memcpy(data + i * sizeof z, &z, sizeof z);
         }
+        result.filled = n;
     } else for (size_t i = 0; i < n; i++) {
         V x = fwp_array_load(PTR(xs), i, elem), y = fwp_array_load(PTR(ys), i, elem), value;
         if (op == 5 || op == 6) {
@@ -1912,6 +1924,18 @@ static V fwp_p_simd_sum(int k, V v, const char *name, int w, const fwp_desc *ele
     if (fwp_array_len(PTR(xs)) == 0) {
         V zero = fwp_from_i128(k, 0, name, w);
         return elem->drop ? fwp_rc_fresh(zero) : zero;
+    }
+    if (k == K_F64) {
+        const unsigned char *data = fwp_array_data(PTR(xs));
+        size_t n = fwp_array_len(PTR(xs));
+        double sum; memcpy(&sum, data, sizeof sum);
+        /* Start at the first lane and preserve order: no reassociation or
+         * synthetic +0 which would change a singleton negative zero. */
+        for (size_t i = 1; i < n; i++) {
+            double lane; memcpy(&lane, data + i * sizeof lane, sizeof lane);
+            sum += lane;
+        }
+        FWP_KEEP_ALIVE(v); return fwp_from_f64(sum);
     }
 #ifdef FWP_EXACT_FLOAT
     if (k == K_F128) {
