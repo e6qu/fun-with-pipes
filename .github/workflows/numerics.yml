@@ -87,7 +87,7 @@ jobs:
         if: inputs.suite == 'context-storage' || inputs.suite == 'context-owners'
         env:
           FWP_CONTEXT_ARTIFACTS: context-evidence
-        run: cargo test --no-fail-fast --test service_scope_ownership --test service_context_storage --test grpc_context_restore --test grpc_context_resources --test grpc_capture_resources --test grpc_packed_options --test grpc_environment_cache --test grpc_peer_completion --test http2_peer_cleanup --test library_unload --test arc_tasks --test stdlib_doc -- --nocapture
+        run: cargo test --no-fail-fast --test process_exit_ownership --test service_scope_ownership --test service_context_storage --test grpc_context_restore --test grpc_context_resources --test grpc_capture_resources --test grpc_packed_options --test grpc_environment_cache --test grpc_peer_completion --test http2_peer_cleanup --test library_unload --test arc_tasks --test stdlib_doc -- --nocapture
       - uses: actions/upload-artifact@v7
         if: always() && (inputs.suite == 'context-storage' || inputs.suite == 'context-owners')
         with:
@@ -993,7 +993,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: Checked WASI ownership and physical storage
         if: inputs.suite == 'wasi-arc'
-        run: cargo test --no-fail-fast --test wasm_arc --test arc_execution --test wasm_resource_counts
+        run: cargo test --no-fail-fast --test wasm_arc --test process_exit_ownership --test arc_execution --test wasm_resource_counts
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'wasi-arc'
         with:
@@ -1011,7 +1011,7 @@ jobs:
         run: cargo test --test wasm_resource_counts --test softfloat_core --test float_math --test array_size_limits
       - name: Actual WASI semantic agreement
         if: ${{ !cancelled() && inputs.suite == 'wasm' }}
-        run: cargo test --no-fail-fast --test wasm --test browser --test exec_invocation_ownership
+        run: cargo test --no-fail-fast --test wasm --test browser --test exec_invocation_ownership --test process_exit_ownership
 
   ci_profile:
     if: inputs.suite == 'ci-profile'

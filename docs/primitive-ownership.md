@@ -114,6 +114,7 @@ boundary; it does not establish tracing-free eligibility.
 | Numeric I128/U128 results | Fresh leaf/aggregate ownership or explicitly retained selected aliases; scalar results remain inline |
 | grpc.with-gzip / with-deadline / with-metadata / with-tls | Borrow a synchronous unit-taking callback and transfer its typed result, including captured aliases; stack settings and constructor owners remain alive until return or unwind |
 | grpc.with-response-metadata | Borrow the callback, own its result and independent copied response headers; partial construction releases completed fields and the capture owner; inheriting child tasks keep separate capture references |
+| exit | Borrow the scalar status and terminate the process; no result or callback exists. Process teardown is not normal scope unwinding, and no result-storage reclamation claim follows from it |
 | Remote values and memoized decoding | Preserve retained context/cache owners and independent reader aliases; scratch cleanup alone does not count decoded nodes |
 | Foreign values and retained callbacks | Keep explicit sharing unless host lifetime and teardown are proved |
 | list.flat-map and list.ap | Borrow typed synchronous inputs, adopt owned callback results and own copied spines; partial results, scratch and unwind cleanup have partial-result and failure controls |

@@ -19,7 +19,7 @@ pub enum ResultOwnership {
     Shared,
     /// Immutable static storage; no allocation or reference count is required.
     Static,
-    /// Transfers control to an effect handler; no normal result exists.
+    /// Exits, traps or transfers control to an effect handler; no normal result exists.
     Never,
     /// An owned resource or resource-bearing result prepared by the runtime.
     OwnedResource,
@@ -297,7 +297,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Retained(0)),
             &[0],
         ),
-        "fail" | "prim.trap" => (&[B], ResultOwnership::Never, None, &[]),
+        "fail" | "prim.trap" | "exit" => (&[B], ResultOwnership::Never, None, &[]),
         "attempt" => (
             &[B, B],
             ResultOwnership::OwnedAttempt,

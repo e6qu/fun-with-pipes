@@ -113,6 +113,7 @@ for symbol in ['grpc.set-header', 'grpc.set-trailer']:
 bundle_contracts['http2.body'] = (3, 'OwnedTree', [])
 for symbol in ['http2.request', 'grpc.metadata', 'grpc.peer-subject']:
     bundle_contracts[symbol] = (1, 'OwnedTree', [])
+bundle_contracts['exit'] = (1, 'Never', [])
 bundle_contracts['udp.bind'] = (1, 'OwnedResource', [])
 bundle_contracts['udp.local-addr'] = (1, 'FreshLeaf', [])
 bundle_contracts['udp.send-to'] = (3, 'Shared', [])

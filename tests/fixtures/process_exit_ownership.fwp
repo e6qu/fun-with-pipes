@@ -1,0 +1,10 @@
+# exit ends the process; it does not return a value or run later pipe steps.
+# Give its otherwise-polymorphic result the String type. No string is created,
+# because a successful exit never reaches a caller expecting that result.
+quit : I32 -> String ! {IO}
+quit = exit
+main = [
+    "before" | print,
+    () | args | each (parse-int | option.map quit | ignore),
+    "after" | print,
+] | ignore

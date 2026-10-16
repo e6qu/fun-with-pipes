@@ -16,8 +16,9 @@ Base: `ac3060d1`. Runtime/test source: `24caa70b`; later documentation/evidence
 commits do not change it. Do not open another PR. After #153 acceptance, rebase
 only this branch's delta after `ac3060d1` onto its accepted squash.
 
-Next: publish the test-harness and inventory-path fixes found by Linux ARM64 in native run
-`38947981439`; rerun the six-host context suite on the repaired source. Actual
+Next: require all six native jobs in replacement run `38949318919` at
+`c9b17d41`. It repairs the harness and Windows path failures in `38947981439`,
+which is canceled as superseded. Actual
 WASI/browser run `38947985548` tests runtime source `24caa70b`. Earlier queued native/WASI jobs
 `38946737398`/`38945989400` were canceled as superseded. Retain final allocation,
 layout, compiler/CPU and binary evidence before claiming verified support.
@@ -52,8 +53,8 @@ and partial-cleanup controls, and 13/14 captured-result allocation failure point
 ARC binaries must exclude tracing functions. Scope support does not establish
 collector-free remote calls, service entry points or retained request contexts.
 
-Both new tests have permanent Windows coverage and are assigned to the existing
-Mac GC shard: this preparation has 232 integration targets; #153 has 230.
+The scope/context tests have permanent Windows coverage and are assigned to
+the existing Mac GC shard. The exit follow-up adds a third target; #153 has 230.
 Windows fixture repairs declare the required Windows 10 API target before system
 headers and use `_putenv_s` explicitly instead of POSIX-only environment calls.
 Native Windows verification of those repairs remains pending. Linux ARM64
@@ -67,6 +68,22 @@ startup separately; this does not hide the larger task cost. Windows ARM64
 also exposed host path separators in the inventory keys (`lib\\...` versus
 `lib/...` in the frozen baseline). The scanner and source-hash keys now emit
 repository paths with forward slashes; the contract assertions are unchanged.
+
+## Explicit exit follow-up
+
+Prepared after `c9b17d41`, not yet native-verified: `exit` has the nonreturning
+ownership contract. It borrows its I32 status, produces no result and needs no
+collector. Runtime exit behavior is unchanged: output before exit is preserved,
+later steps do not run, and the process status uses the low eight bits. It does
+not promise ordinary scope unwinding or individually freed live values.
+The proposed inventory becomes 347 contracts/seven remaining reviews.
+
+`process_exit_ownership` tests raw/optimized interpretation, O1/O2 native tracing
+and ARC, actual ARC WASI execution when the required toolchain is configured,
+and native ARC binaries without tracing symbols. It covers zero, 1, 255, 256,
+-1 and both I32 endpoints, using one compiled program per mode/optimization.
+It has permanent Windows/Mac coverage, making 233 preparation targets. Do not
+claim actual WASI support from a native-only job that does not run that check.
 
 ## Retained evidence and limits
 
@@ -111,8 +128,8 @@ six Mac coverage/runner tests (1.10s), and documentation audit (2.67s) pass.
 Artifact download (16.32s), evidence retention (8.18s), and existing binary
 inspection (0.13s each) passed under the guard. No local native build was used.
 
-Service streams/connections, remote results, process exit and GPU ownership
-remain. Preserve the existing effect rule in `docs/design.md`: only the final
+Service streams/connections, remote results and GPU ownership remain; the exit
+follow-up still needs its checks. Preserve the existing effect rule in `docs/design.md`: only the final
 arrow of a binding may have effects, so partial application does not perform
 work. The function-and-string tuple in the ownership fixture tests returned
 functions and shared data together; no parser or effect-rule change is proposed.

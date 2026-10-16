@@ -197,6 +197,7 @@
     "packed_numeric_storage",
     "path_validation",
     "pipe_modes",
+    "process_exit_ownership",
     "process_ownership",
     "protocol",
     "raw_memory_ownership",
