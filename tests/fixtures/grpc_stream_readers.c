@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     const int schema[]={PB_MSG,1,1,4,PB_STR};
     const fwp_desc string_type={.kind=K_STR,.name="String",.drop=fwp_rc_free_obj};
     g_incoming *source=g_incoming_new("queued.string",13);
-    source->c=connection; source->s=stream;
+    source->c=connection; source->s=stream; source->server=1;
     source->dec.schema=schema; source->dec.ty=&string_type;
     g_cell *cell=fwp_mem_alloc(sizeof *cell); cell->src=source;
     stream_reader first={cell,0,0,0,0}, second={cell,0,0,0,0};

@@ -73,7 +73,9 @@ suspended. The existing cache check alone occurs before that suspension. The
 new interpreter/native receive guard lets the second task wait for publication
 and then read the cache. Only the receiving task clears the guard; error and
 cancellation release it and wake waiters. Cancelling a waiter must not cancel the
-receiver. Task pointers here are borrowed identities, not owning back-references.
+receiver. The deterministic cancellation fixture uses a server request stream;
+existing client-call cancellation still resets its stream. Task pointers here
+are borrowed identities, not owning back-references.
 Recursive reading of the same source traps explicitly. This does not add ARC
 eligibility or native cache destruction.
 
@@ -92,7 +94,8 @@ interpreted/native servers; both must print `Some 524800`.
 
 The accepted prebuilt compiler formats this client (0.01s) and type-checks it
 (0.24s) under the guard. Rust formatting passes (1.36s), workflow lint passes
-(1.01s). No compiler or C program was built locally. Rerun `stream-storage` after this harness repair, then `stream-owners` on all
+(1.01s). No compiler or C program was built locally. Harness repair run `38979612600` is running at `c8eb836b`. After it passes,
+run `stream-owners` on all
 six native platforms and retain fresh measurements. The storage fixture also
 retains actual source/cell sizes, alignment and field offsets in `layout.tsv`. The collector now requires the concurrency controls too.
 The preceding six-host source-lifetime run remains tied to `d9ba5154`; it cannot
@@ -117,8 +120,14 @@ last early owner releases it. Native controls reject retained source edges and
 missing caches; existing decode/copy traps must leave the original source intact.
 Actual interpreter/native service combinations remain in the focused workflow.
 
-Six-host run `38978268787` is running at `d9ba5154`; both Linux hosts pass.
-Next verify the other four hosts and retain its report before expanding ownership.
+Six-host run `38978268787` at `d9ba5154` passes Linux and macOS ARM64/AMD64.
+Both Windows jobs failed because instrumentation included CRT headers before
+selecting the runtime's required Windows 10 API contract. The test preambles now
+select that existing contract before their headers; the adjacent render-cleanup
+fixture is corrected too. TLS dependencies were successfully cached. These
+Windows repairs await a fresh run; do not retain the failed run as acceptance.
+Windows production coverage now includes both native cleanup targets, interpreter
+source-lifetime tests and actual shared-stream client/server combinations.
 The collector was checked against the passing one-host run (4.93s) after rejecting
 an incorrect full commit argument; evidence is under
 `/private/tmp/fwp-stream-source-evidence/38977738266`. The measurement fixture now uses the production source

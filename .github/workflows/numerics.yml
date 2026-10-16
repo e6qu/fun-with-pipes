@@ -104,7 +104,7 @@ jobs:
           pathlib.Path("stream-evidence/cpu.txt").write_text(details)
           PYENV
           cargo test --lib grpc::stream_source_tests
-          cargo test --test grpc_force_cleanup -- --nocapture
+          cargo test --test grpc_force_cleanup --test grpc_render_cleanup -- --nocapture
           cargo test --test grpc every_kind_of_call -- --exact
           cargo test --test grpc stream_aliases_are_consistent_across_tasks -- --exact
       - uses: actions/upload-artifact@v7

@@ -33,6 +33,9 @@ fn streamed_error_rendering_releases_partial_and_complete_scratch() {
     assert_eq!(generated.matches(write).count(), 1);
     let generated = generated.replacen(write, "observed_write(&b, x, src->dec.error);", 1);
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 #include <stdint.h>
 static int stage,buffer_frees;

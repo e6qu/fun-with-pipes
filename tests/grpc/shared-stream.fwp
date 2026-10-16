@@ -2,9 +2,11 @@
 # reuse its cached message rather than consume a different message per task.
 import greeter
 
+# iter.later captures the iterator and postpones summing until the task runs.
 start : Iterator[I64] -> Task[I64] ! {Async}
 start = iter.later (iter.fold add 0) | task.spawn
 
+# task.await returns Some sum when a task finishes; both sums are 524800.
 main =
     1024
     | greeter.count
