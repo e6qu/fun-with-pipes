@@ -1,30 +1,23 @@
 # Session handoff
 
 Updated 2026-10-16. [PR #147](https://github.com/e6qu/fun-with-pipes/pull/147)
-merged as `c9127d2d` after all nine production jobs and documentation passed for
-`71c612d0`. Its files and prescribed single-line message were verified; duplicate
-post-merge production run `38825167262` was canceled. The history records links.
+merged as `c9127d2d` after nine production jobs and docs passed at `71c612d0`.
+Its tree and single-line message were verified; duplicate post-merge production
+run `38825167262` was canceled. History holds accepted delivery evidence.
 
-The current delivery is [PR #148](https://github.com/e6qu/fun-with-pipes/pull/148),
-branch `record-moves-and-utilities`, in
-`/Users/zardoz/projects/fun-with-pipes`, based on accepted `c9127d2d`. It contains
-only the changes after old preparation anchor `a2679ecb`, transferred from
-`move-unboxed-fields` at `81d113aa`. Runtime/compiler files match that preparation;
-#147's separate parent fixes remain. Measurement revisions are retained under
-remote `roadmap/revision-record-moves-*` tags. No old preparation is a new task.
-
-PR #148's exact final head is `93b1741abcf5ab2a61460746c0077564e0328c0e`.
+The only current PR is [#148](https://github.com/e6qu/fun-with-pipes/pull/148),
+branch `record-moves-and-utilities`, in `/Users/zardoz/projects/fun-with-pipes`.
+Its final head remains `93b1741abcf5ab2a61460746c0077564e0328c0e`.
 [Production 38825629531](https://github.com/e6qu/fun-with-pipes/actions/runs/38825629531)
-is queued/running; [docs 38825487182](https://github.com/e6qu/fun-with-pipes/actions/runs/38825487182)
-passes. A GitHub ready-event race started `38825485034` for the preceding
-`fd7d852d` head; it was canceled and replaced after verifying the current PR head.
-Ignore that run and skipped draft jobs. Keep the final head unchanged for CI;
-these local progress notes belong in the following delivery.
+is running: benchmark, regular ARM macOS and both Windows jobs pass so far.
+[Docs 38825487182](https://github.com/e6qu/fun-with-pipes/actions/runs/38825487182)
+passes. Ignore canceled old-head `38825485034` and skipped draft jobs.
+Keep that head unchanged; these progress notes belong in the following delivery.
 
 Standing authorization: fix failures, require all nine production jobs and docs
 for the exact final head, then squash merge with an explicit one-line subject of
-at most 80 characters and an empty body. No trailers or attribution. Continue to
-the next substantial PR without requesting permission. JIT is excluded.
+at most 80 characters and empty body. No attribution or trailers. Continue to the
+next substantial PR without another permission request. JIT is excluded.
 
 ## Roadmap status
 
@@ -32,171 +25,101 @@ the next substantial PR without requesting permission. JIT is excluded.
 
 | Step | Status | Next concrete work |
 |---|---|---|
-| 1 | In progress | Accept current ownership coverage; then own child-process boundaries |
-| 2 | In progress | Accept field moves; measure remaining record wrappers and functional intermediates |
-| 3 | In progress | Diagnose remaining C/Rust matrix gaps; rejected helper stays out of runtime |
-| 4 | In progress | Measure derivative timing/memory scaling after accepted F128 precision fixes |
+| 1 | In progress | Accept record/application ownership, then process and terminal boundaries |
+| 2 | In progress | Accept record moves; measure remaining wrappers and functional intermediates |
+| 3 | In progress | Diagnose measured CPU costs with retained native instructions |
+| 4 | In progress | Reproduce derivative slowdowns and test interleaved recording storage |
 | 5 | Pending | Broaden CPU kernels; resolve runtime OpenCL compilation under the no-JIT policy |
-| 6 | In progress | Preserve comparable repeated measurements and establish regression criteria |
-| 7 | In progress | Accept maintained directory/logging tests and extend process-heavy programs |
+| 6 | In progress | Preserve repeated equivalent-work measurements and regression criteria |
+| 7 | In progress | Extend maintained applications with process composition and terminal checks |
 
-Next: monitor this combined delivery’s full final-head production/docs gate.
-Ignore skipped draft jobs. Fix failures, merge when all gates pass, then deliver the separate
-process preparation described below.
+Next: finish #148's final-head gate and merge when all required jobs pass. In
+parallel, finish the six-host process/terminal preparation and derivative
+experiments below. Transfer only its diff after `81d113aa` onto #148's accepted
+squash, refresh this handoff/PLAN/history, open the next combined PR and require
+its own complete final-head production/docs gate. Failures are repair tasks.
 
-## Current batch and evidence
+## Following process and terminal preparation
 
-Record moves avoid temporary child owners when a flattened parent is immediately
-dropped or a boxed parent is unique. Shared parents retain their necessary child
-references. Tests cover sibling cleanup, aliases, scalar pointer-like bits,
-I128 boxes, retain overflow, later traps and original resource lifetimes.
-Working-directory lookup owns copied results and scratch; unavailable directories
-raise `Error[IoError]` kind `cwd` in both engines. Static empty maps/sets and
-Boolean combinations have explicit contracts. Clock records are counted, and
-structured logs now emit one newline per message. Windows probes preserve actual
-binary symbol, native handle and cleanup checks.
+This worktree is `/private/tmp/fwp-process-utilities`, branch
+`owned-process-utilities`, based on `81d113aa`. The runtime/tests are published at
+`7e9e5bd8`; only subsequent experiment/docs edits are local. No process PR is open.
+Do not replay the old parent preparation: #148 already contains its source/tests.
+Preserve root's local handoff when integrating the following delivery.
 
-- The complete focused batch, including clocks, the 192-report maintained
-  application and neighboring ownership regressions, passes all six native hosts
-  in [38823885563](https://github.com/e6qu/fun-with-pipes/actions/runs/38823885563)
-  at `93156ee0`. Both memory modes run at O1/O2 with stress/reuse and negative
-  cleanup controls where applicable. Earlier missing static/Boolean contracts
-  and Windows fixture failures are repaired; no component failure remains open.
-- Numerical solver/run evidence passes all four Linux/macOS hosts in
-  [38817877068](https://github.com/e6qu/fun-with-pipes/actions/runs/38817877068)
-  at `a3d8f16e`. Paired record-move evidence passes in
-  [38821156704](https://github.com/e6qu/fun-with-pipes/actions/runs/38821156704).
-  Eight products now have zero retains/nonfinal releases and sixteen release
-  checks, versus 24/24/56. Forty allocations and 101,392 peak charged bytes remain;
-  final charged storage and collections are zero. C/Rust use twenty-four
-  allocations. Timings vary by host; the slower AMD64 matrix result is retained.
-- Matrix output-parameter experiments pass correctness/profile checks in
-  [38822697830](https://github.com/e6qu/fun-with-pipes/actions/runs/38822697830)
-  and [38823092869](https://github.com/e6qu/fun-with-pipes/actions/runs/38823092869),
-  but timing is mixed with repeated tracing slowdowns. The helper was not adopted.
-  Both runs and actual AMD64 kernel instructions are retained in the measurement
-  reports linked from [benchmarks](benchmarks.md). Smaller code is not a speed claim.
+The batch owns process argument scratch, pipe endpoints, child resources,
+capture buffers, copied output strings and the containing record. It rejects
+NUL arguments before OS calls, reports read/wait failures, retries interrupted
+waits, preserves initially closed standard descriptors, and closes/reaps on
+unwinding. Windows retains its existing reader/handle cleanup with protected
+result construction. Process calls remain synchronous; this is not a proof of
+cancellation/deadline responsiveness while waiting for a child.
 
-Focused local checks use `python3 scripts/local-guard.py COMMAND...`. After
-transfer, formatting passes (1.13 s), primitive inventory passes (0.88 s), and
-the docs/roadmap audit passes (2.56 s). Standalone stdlib regeneration/check
-passed before transfer (0.48 s); generated library files are unchanged.
-Inventory: 254 contracts, eight scalar signatures, 97 review declarations,
-19 templates, 87 review symbols. Local edited-C probes are supplemental; they
-are not changed-compiler acceptance. Full builds, suites and timings stay on CI.
+Tests compare raw interpretation and native tracing/ARC at O1/O2. They exercise
+Unicode/quoted arguments, 64 KiB per output stream, 200 KiB input, early child
+exit, missing commands, partial construction and OS errors. Deliberately missing
+counts or buffer frees must fail. `process.output` checks success and trimmed
+status errors. A maintained shell `normalize` executable runs 64 times; the
+parent retains then releases captured records/strings. Parent and child use the
+same memory mode because tracing-stress environment settings are inherited.
 
-## Following process preparation
+Terminal changes own secret-line results and restore echo before traps unwind.
+Descriptor validation precedes narrowing. Windows interpretation now uses real
+console APIs for echo and width. Tests use real POSIX pseudo-terminals and a
+private Windows console; a missing restore action must fail. An isolated Windows
+Rust unit test checks interpreter console mode/width without affecting other tests.
 
-`/private/tmp/fwp-process-utilities`, branch `owned-process-utilities`, is based
-on `81d113aa`; only changes after that anchor belong to the later batch. Its
-first process batch is published at `610f698b`; preserve later local additions.
-Do not include them in this PR. Once this delivery is accepted, transfer its
-finished changes onto the new main and require another full final-head gate.
+## Checks and repaired failures
 
-Eight baseline captured child calls leave 896 charged bytes when collection is
-explicitly disabled; checked ARC correctly rejects the primitive. The local
-process rewrite tracks argument scratch, pipe endpoints, child lifetime, spawn
-actions and captured buffers, with counted results on both POSIX and Windows.
-It also rejects NUL arguments consistently and preserves child stdio when pipe
-handles occupy initially closed descriptors. Next there: add repeated-call,
-partial-construction and OS-failure regressions; validate before publication.
-Its local handoff records implementation state and the guarded baseline command.
+- [First six-host process run 38827570961](https://github.com/e6qu/fun-with-pipes/actions/runs/38827570961)
+  at `610f698b` passed all four Linux/macOS hosts. Both Windows hosts exposed the
+  same three test failures: the process probe counted an already-closed handle
+  marker, CLI executable renames omitted `.exe`, and a shell pipeline used Unix
+  paths. Fixes preserve checks for every actual owned handle, use the OS suffix,
+  and connect two native processes directly for the binary-protocol test.
+- [Complete process/terminal run 38829032952](https://github.com/e6qu/fun-with-pipes/actions/runs/38829032952)
+  at `7e9e5bd8` is queued/running. It includes composed shell calls, terminal
+  ownership, console regressions, existing Windows/static-memory tests and CLI
+  examples. Native Windows production also runs the new terminal unit/probes and
+  full CLI cases. No new platform acceptance is claimed until results pass.
+- Local checks use `python3 scripts/local-guard.py COMMAND...`. Formatting passes
+  (0.86 s), inventory passes (0.88 s), docs/roadmap audit passes (2.51 s), and
+  standalone library-doc regeneration/check passes (0.62 s). Inventory has 257
+  contracts, eight scalar signatures, 94 review declarations, 19 templates and
+  84 review symbols. Full builds, full suites and timing runs stay on GitHub.
+- Supplemental local probes use the accepted #147 compiler, with current POSIX
+  code inserted into its emitted C. Eight baseline captured calls leave 896
+  charged bytes with collection explicitly disabled; the edited mechanism ends
+  at zero (1.22 s). Failure/negative controls pass (6.30 s), composed shell calls
+  pass (4.32 s), and real macOS terminal restoration/negative control passes
+  (3.63 s). These are mechanism checks, not changed-compiler/platform acceptance.
+  Probe scripts and logs live under `/private/tmp/fwp-process-*` and
+  `/private/tmp/fwp-terminal-*`.
 
-## Local process implementation and next checks
+## Derivative investigation
 
-This handoff is in the later process preparation worktree, whose base remains
-`81d113aa`; the active PR #148 is in the root worktree. No process PR is open.
-The POSIX/Windows runtime and contract changes are published at `610f698b`.
-[Six-host run 38827570961](https://github.com/e6qu/fun-with-pipes/actions/runs/38827570961)
-is queued/running for that exact preparation head.
+[Repeated metadata comparison 38828198160](https://github.com/e6qu/fun-with-pipes/actions/runs/38828198160)
+runs at `48aa61dc` on four Linux/macOS hosts. It compares current fwp ARC against
+the documented separate-allocation tape control from `09f1a029`, with eight
+alternating process samples and a 512-derivative case. Each workload is identical;
+process startup/output are timed, compilation and profiling are separate. This
+is fwp versus fwp, not C/Rust parity. Within the substituted tape section, the
+material changes are paired storage/growth/disposal; later precision comments
+do not change these F64/nested workloads.
 
-Baseline `/private/tmp/fwp-process-baseline.py` passes under the guard (1.21 s):
-#147's downloaded compiler rejects checked ARC; eight captured child calls with
-tracing collection disabled leave 896 charged bytes. A first attempt to switch
-the raw C directly to ARC was correctly rejected by unproved runtime sharing.
-The revised `/private/tmp/fwp-process-mechanism.py` uses current POSIX cleanup and
-borrowed argument emission in that baseline C; eight calls now end with zero
-unreclaimed bytes (guarded 1.22 s). This is an edited-C mechanism check, not new
-compiler or Windows acceptance. Generated C/logs are in matching `/private/tmp`
-paths. Formatting passes (0.86 s).
+Completed ARM reports are in `/private/tmp/fwp-ad-metadata-current`. On ARM macOS,
+512 mapped derivatives have paired/control median ratios 1.086 without reuse and
+1.058 with reuse; Linux ARM ratios are 0.987 and 0.985. Keep all hosts/raw samples
+before drawing a conclusion. In the actual macOS ARM binary, append has 198
+instructions versus 253 in the control; backward has 374 in both. Stack-address
+references are 15 versus 17 for append and 23 for both backward variants; these
+are not classified as register spills. Smaller code does not prove faster code.
 
-The process owner tracks argument scratch, six pipe descriptors, child PID,
-spawn actions and both output buffers. It closes descriptors and reaps a live
-child on unwinding, checks spawn/read/wait errors, and counts/protects both copied
-strings before making the result record. Windows uses its existing handle/reader
-cleanup with the same protected result construction. Interpreter and native code
-reject NUL arguments before OS calls. Child descriptors 0..2 are preserved when
-pipes occupy initially closed standard streams.
-
-The portable child fixture now exercises quoted/Unicode arguments, 64 KiB on
-each output stream, 200 KiB input and early child exit. Repeated-call tests compare
-raw interpretation with native tracing/ARC at O1/O2, with stress/reuse verification
-and zero final charged ARC storage. A second regression forces copy/record/buffer
-failures and POSIX poll/read/wait errors, retries interrupted waits, checks closed
-descriptors and reaped children, and checks Windows handles. Missing-count and
-missing-buffer-free controls must fail. The former Windows-only child fixture is
-shared by existing Windows tests; their semantics are preserved.
-
-Guarded supplemental probes: raw fixture passes (1.47 s), edited-C repeated-call
-tracing/ARC check passes (3.27 s), and edited-C failure/negative-control check
-passes (6.30 s). They use the accepted #147 compiler with the current POSIX
-runtime inserted into its emitted C; actual new-compiler acceptance remains on
-CI. The negative count check accepts either an uncounted outer record or extra
-child counts when a generated worker reconstructs the shared outer record.
-
-Formatting passes (1.11 s), standalone library-doc regeneration/check passes
-(0.62 s), and primitive inventory passes (0.50 s): 256 contracts, eight scalar
-signatures, 95 review declarations, 19 templates and 85 review symbols.
-
-The docs/roadmap audit passes (2.40 s). CI retains emitted repeated-call and
-failure-probe C for inspection.
-
-Additional local tests cover `process.output` success and trimmed error messages,
-and build the maintained `examples/shell/tools.fwp` normalization executable.
-The parent retains 64 results, observes statuses/errors, then transfers and prints
-their output strings. Parent and child use the same memory mode because stress
-settings are inherited. A fixture initially omitted an explicit input signature,
-then accidentally combined a stressed tracing parent with an ARC child; both
-fixture errors are corrected. The focused edited-C composed check passes (4.32 s),
-and the expanded repeated-call/failure checks also pass. These additions await publication while the first actual-compiler run proceeds.
-
-The same batch will repeat the existing paired-versus-separate AD metadata
-comparison on four hosts using its eight alternating samples and sustained
-512-derivative case. This is current fwp versus the documented old tape-runtime
-control, not C/Rust, and includes process startup. The goal is to reproduce the
-previous timing regressions before choosing another layout change; no new
-performance claim or runtime optimization is implied. A dedicated `ad-metadata`
-workflow suite avoids repeating unrelated evidence generators.
-
-Next: fix actual compiler/platform failures from the six-host run, then publish
-the complete batch and transfer only changes after `81d113aa` once #148 is
-accepted. Full production acceptance must use that later PR's final head.
-
-
-## Terminal and Windows test repairs in this batch
-
-The first process run passed Linux ARM64/AMD64 and both macOS hosts. Both Windows hosts
-exposed an invalid-handle marker being mistaken for a live resource in the new
-probe, plus existing CLI tests assuming Unix shell paths and extensionless
-executables. The probe now excludes only null/already-closed markers; real owned
-handles remain checked after cleanup. The CLI binary-protocol test connects two
-real child processes directly, and example executable renames use the OS suffix.
-These repairs require the next six-host run.
-
-Related terminal work fixes narrowing a large descriptor into stdin, registers
-POSIX echo restoration during traps, and gives secret-line results an explicit
-owned-tree contract. Windows interpretation now uses actual console APIs for echo
-and width, matching the native implementation. A child-isolated Rust unit test
-checks Win32 modes/width; native C probes use real POSIX pseudo-terminals or a
-private Windows console and require a missing-restore control to fail. Local
-edited-C macOS terminal checks pass at O1/O2 (3.63 s under the guard), including
-trap cleanup and the negative control. Changed-compiler/platform tests remain
-required. Full local builds are not used.
-
-The expanded process tests were published at `48aa61dc`. Derivative comparison
-[38828198160](https://github.com/e6qu/fun-with-pipes/actions/runs/38828198160)
-is queued/running at that head. Terminal and Windows repairs are ready for publication. Formatting passes
-(0.86 s); inventory passes (0.88 s): 257 contracts, eight scalar signatures,
-94 review declarations, 19 templates and 84 review symbols.
-Next: audit and publish these fixes, run the complete six-host process/terminal
-suite, and fix failures before the following delivery's full production gate.
+The next experiment interleaves the two parents and weights of each operation
+inside the same two allocation blocks. It keeps payload/request counts and
+arithmetic order, removing explicit region moves during growth. Fourteen access
+sites and four offsets are checked before generating the variant; production
+runtime remains unchanged. Tiny numeric/nested correctness checks pass under
+the local guard (1.59 s); complete repeated profile/timing/binary evidence uses
+the `ad-layout` CI suite. Adopt nothing without results and semantic/failure
+regressions. Retain negative evidence if the experiment does not help.
