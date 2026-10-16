@@ -1,8 +1,8 @@
 # Session handoff
 
 Updated 2026-10-16. [PLAN.md](../PLAN.md) defines seven unfinished work areas.
-This branch prepares the combined service-memory, compiler and iteration delivery.
-PR #153 is accepted; keep only one new delivery PR open.
+[PR #154](https://github.com/e6qu/fun-with-pipes/pull/154) is the current draft
+service-memory, compiler and iteration delivery. PR #153 is accepted.
 
 ## Current action
 
@@ -11,15 +11,20 @@ Base: accepted #153, `9bf203d7`. The original preparation is preserved remotely
 by `evidence/service-context-before-delivery-20261016` at `f366dd2b`; reports
 continue to name their measured sources. Do not apply the preparation again.
 
-Next: inspect focused run `38971183112` at `f366dd2b`, then run the
-native matrix and actual WebAssembly checks on the combined branch. The new
-`each` saves memory but the first timing comparison is slower; do not accept it on allocation
-counts alone. The optimizer now exposes calls through pure non-resource bindings
-and specializes callbacks discovered inside state handlers. The regression counts
-runtime dispatch as input grows and checks eager captures before input errors,
-including empty inputs. The functional/allocation step now passes on Linux
-AMD64, including zero extra runtime dispatch as input grows; repeated service checks and timing remain.
-No local build was run.
+Next: verify the corrected callback specialization on Linux AMD64 before
+restarting the six-host matrix and actual WebAssembly checks. Run `38971183112`
+at `f366dd2b` passed iteration semantics and direct-call counts, but failed the
+service-memory comparison: specialized loop bodies rebuilt nested callbacks
+and captured header lists on every element. The new repair binds aggregate
+captures once and specializes known synchronous service callbacks too. Earlier
+arguments and resource frames still constrain moving captures. Existing service
+allocation assertions remain unchanged; the repair awaits CI.
+
+Superseded combined native/WebAssembly runs `38971718592` and `38971721357`
+use `fbfc3555`; cancel them before dispatching replacements. Documentation
+`38971719319` passes. Draft-skipped production and dependency jobs are not
+acceptance. Final timings still need to establish that memory savings do not
+hide the baseline slowdown. Full compilation and testing remain on GitHub.
 
 All six native hosts pass at `dbb9dbec` in run `38969247542`. The
 [retained baseline](measurements/service-context-iteration-baseline-2026-10-16.json)
@@ -53,8 +58,7 @@ with no body/trailers. Duplicate production run `38971260589` was canceled.
 [Delivery history](roadmap-history.md) retains this acceptance.
 
 The combined branch retains accepted byte-decoder fixes and both focused suites.
-Publish one PR, using `/private/tmp/fwp-context-pr-body.md` after updating its
-results. Require all nine production jobs and documentation on its final head.
+Keep PR #154's plain description current using `/private/tmp/fwp-context-pr-body.md`. Require all nine production jobs and documentation on its final head.
 The new dependency-cache workflow's two Windows jobs must also pass when
 introduced. Leave that workflow running after merge so later branches can reuse
 main's dependencies. Focused checks do not replace full acceptance.

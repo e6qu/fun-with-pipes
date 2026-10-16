@@ -891,7 +891,19 @@ fn bind_captures(
     bindings: &mut Vec<(Local, Expr)>,
 ) -> Option<Expr> {
     match e {
-        Expr::Local(_) | Expr::Const(_) => Some(e.clone()),
+        Expr::Local(_) => Some(e.clone()),
+        Expr::Const(v)
+            if !matches!(
+                v,
+                crate::value::Value::Data(..)
+                    | crate::value::Value::Record(_)
+                    | crate::value::Value::Array(_)
+                    | crate::value::Value::Map(_)
+                    | crate::value::Value::Closure(_)
+            ) =>
+        {
+            Some(e.clone())
+        }
         Expr::Func(id) if funcs.get(*id)?.arity > 0 => Some(e.clone()),
         Expr::Apply(f, args) => {
             if let Expr::Func(id) = &**f {
@@ -982,13 +994,15 @@ fn rewrite_hofs(
     let Body::Prim(sym) = &prim_f.body else {
         return;
     };
-    // State handlers also benefit from specializing their known callback:
-    // the generated body exposes saturated iterator consumers to fusion.
-    let (callback, n) = if sym == "run-state" {
-        (1, 1)
-    } else {
-        let Some(n) = hof_arity(sym) else { return };
-        (0, n)
+    // Synchronous handlers call their callback once. Specializing its known
+    // body avoids rebuilding nested partial applications on every invocation.
+    let (callback, n) = match sym.as_str() {
+        "run-state" | "grpc.with-tls" | "grpc.with-metadata" | "grpc.with-deadline" => (1, 1),
+        "grpc.with-gzip" | "grpc.with-response-metadata" => (0, 1),
+        _ => {
+            let Some(n) = hof_arity(sym) else { return };
+            (0, n)
+        }
     };
     let Some(fexpr) = args.get(callback) else {
         return;
@@ -1013,27 +1027,21 @@ fn rewrite_hofs(
         return;
     }
     let mut bindings = Vec::new();
-    let normalized;
-    let fexpr = if o.pure(fexpr) {
-        fexpr
-    } else {
-        // Only the first argument can be lifted before the call without
-        // crossing earlier arguments (run-state's callback is argument 1).
-        if callback != 0 {
-            return;
-        }
-        let count = locals.len();
-        let Some(value) = bind_captures(fexpr, None, funcs, shapes, locals, &mut bindings) else {
-            locals.truncate(count);
-            return;
-        };
-        if bindings.is_empty() || !o.pure(&value) {
-            locals.truncate(count);
-            return;
-        }
-        normalized = value;
-        &normalized
+    // Bind aggregate captures once, including pure constructions. Otherwise
+    // specialization would reconstruct a captured list on every loop element.
+    // Captures cannot cross an earlier computation or resource lifetime.
+    let count = locals.len();
+    let Some(normalized) = bind_captures(fexpr, None, funcs, shapes, locals, &mut bindings) else {
+        locals.truncate(count);
+        return;
     };
+    if !o.pure(&normalized)
+        || (!bindings.is_empty() && args[..callback].iter().any(|arg| !o.trivial(arg)))
+    {
+        locals.truncate(count);
+        return;
+    }
+    let fexpr = &normalized;
     let mut caps = Vec::new();
     free_locals(fexpr, &mut caps);
     let k = caps.len();
