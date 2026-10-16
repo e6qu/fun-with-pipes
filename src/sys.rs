@@ -362,6 +362,12 @@ fn run(argv: Vec<Value>, input: Option<Vec<u8>>) -> Result<Value, Ctl> {
     let Some(prog) = argv.first() else {
         return Err(io_error("spawn", "empty command".into()));
     };
+    if argv.iter().any(|argument| argument.contains('\0')) {
+        return Err(io_error(
+            "spawn",
+            "command argument contains a NUL character".into(),
+        ));
+    }
     let mut cmd = Command::new(prog);
     cmd.args(&argv[1..]);
     let Some(input) = input else {

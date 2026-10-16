@@ -8,6 +8,8 @@
 # is a literal argument rather than a shell wildcard. Exit status 0 means
 # success; output and error streams are separate strings in the result.
 # Use a shell explicitly only when shell parsing is actually intended.
+# A zero byte (`\0`) in any argument is rejected with kind `spawn` before
+# starting the program; it cannot silently truncate an executable name or argument.
 
 # What a finished program wrote, and its exit status (128 plus the signal
 # number when a signal ended it).

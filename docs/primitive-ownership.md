@@ -117,6 +117,7 @@ boundary; it does not establish tracing-free eligibility.
 | list.flat-map and list.ap | Borrow typed synchronous inputs, adopt owned callback results and own copied spines; partial results, scratch and unwind cleanup have partial-result and failure controls |
 | list.transpose | Borrow rows, retain typed element aliases and own new row/outer list nodes; row cursors, completed-column storage and partial columns are released on success or failure; ragged input stops at its shortest row |
 | State handlers | Typed get/put/modify/run-state owners; finite callback-flow proof admits State operations only under a handler. Returned closures require a fresh handler when called; unknown targets are rejected by ARC |
+| process.run-input / process.call | Borrow input/argument strings until the child finishes; captured status/output record owns both copied strings, while call returns an immediate status. Registered cleanup owns temporary buffers, pipe endpoints and child-process resources |
 | External resource contexts | Original scoped/task owners preserve teardown order; counted C context storage does not by itself prove ownership of every fwp graph |
 
 Channel close preserves queued values. Explicit drain breaks the tested counted

@@ -368,3 +368,26 @@ final ARC storage, and deliberately removes one count to verify leak detection.
 Timestamps differ between executions; the test checks their format and the
 remaining fields rather than requiring identical clock readings. These records
 still allocate; avoiding that allocation is separate work.
+
+
+Child-process calls borrow their argument strings and input for the duration of
+execution. `process.run` and `process.run-input` return an owned record containing
+the exit status and copied standard-output/error strings; `process.call` returns
+an immediate status number. A nonzero child exit status is a result, whereas a
+failure to start or communicate with the child raises `Error[IoError]` of kind
+`spawn`. Arguments containing a zero byte are rejected before any OS call.
+
+The process owner releases argument scratch, pipe endpoints and capture buffers.
+It also reaps the child on POSIX and closes Windows process/thread handles. If
+execution unwinds before the child finishes, cleanup terminates and waits for
+that child. Captured strings stay protected while the result record is being
+constructed, so a later allocation failure releases earlier copies. Inputs can
+outlive the call; ownership of them is never transferred to the child.
+
+The new process regressions compare repeated raw-interpreter and native calls,
+including quoted/Unicode arguments, output larger than pipe capacity and a child
+that exits without reading its input. Instrumented probes force construction and
+OS failures, check resource cleanup and reject deliberately missing counts or
+buffer frees. These are candidate contracts pending the six-host and final
+production checks recorded in the handoff; they do not establish ownership for
+networking or arbitrary external-resource contexts.

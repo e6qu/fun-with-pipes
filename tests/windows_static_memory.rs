@@ -37,12 +37,7 @@ static void *static_probe_fiber(SIZE_T commit, SIZE_T reserve, DWORD flags,
 fn fixed_storage_reuses_tasks_workers_and_decimal_scratch() {
     let dir = fwp::cgen::TempDir::new("windows-static").unwrap();
     let helper = dir.join("child λ.exe");
-    fwp::cgen::compile_c(
-        include_str!("fixtures/windows_process_child.c"),
-        &helper,
-        "-O1",
-    )
-    .unwrap();
+    fwp::cgen::compile_c(include_str!("fixtures/process_child.c"), &helper, "-O1").unwrap();
     let source = dir.join("static.fwp");
     std::fs::write(
         &source,

@@ -310,104 +310,152 @@ static int fwp_program_exists(const char *prog) {
     }
 }
 
-/* Run a command: with `capture`, give it `input` and capture its output;
- * without, share the standard streams and return the
- * status. */
+/* Own temporary argument storage, pipe endpoints, output buffers and the child
+ * until waitpid confirms it has been reaped. Unwinding closes and reaps too. */
+typedef struct {
+    char **args;
+    int fds[6];
+    pid_t pid;
+    posix_spawn_file_actions_t actions;
+    int actions_initialized;
+    fwp_buf out, err;
+} fwp_process;
+static void fwp_process_close(int *fd) {
+    if (*fd >= 0) { close(*fd); *fd = -1; }
+}
+static void fwp_process_finish(void *pointer) {
+    fwp_process *process = (fwp_process *)pointer;
+    for (int i = 0; i < 6; i++) fwp_process_close(&process->fds[i]);
+    if (process->pid > 0) {
+        int status;
+        pid_t waited;
+        do { waited = waitpid(process->pid, &status, WNOHANG); } while (waited < 0 && errno == EINTR);
+        if (!waited) {
+            kill(process->pid, SIGKILL);
+            do { waited = waitpid(process->pid, &status, 0); } while (waited < 0 && errno == EINTR);
+        }
+        process->pid = 0;
+    }
+    if (process->actions_initialized) {
+        posix_spawn_file_actions_destroy(&process->actions);
+        process->actions_initialized = 0;
+    }
+    fwp_mem_free(process->args); process->args = NULL;
+    fwp_buf_release(&process->out);
+    fwp_buf_release(&process->err);
+}
+
+/* With capture, send input and collect both streams without pipe deadlock;
+ * otherwise inherit the standard streams and return the child exit status. */
 static V fwp_run_process(V argv, V input, int capture, const fwp_desc *err) {
     size_t n = 0;
-    for (V l = argv; l; l = OBJ(l)->f[1]) n++;
-    if (n == 0) return fwp_io_error("spawn", "empty command", err);
-    char **args = (char **)fwp_alloc((n + 1) * sizeof(char *));
+    for (V list = argv; list; list = OBJ(list)->f[1]) {
+        if (fwp_path_has_nul(OBJ(list)->f[0]))
+            return fwp_io_error("spawn", "command argument contains a NUL character", err);
+        if (n == SIZE_MAX / sizeof(char *) - 1) fwp_trap("too many process arguments");
+        n++;
+    }
+    if (!n) return fwp_io_error("spawn", "empty command", err);
+    fwp_process process = {.fds = {-1, -1, -1, -1, -1, -1}};
+    fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_process_finish, &process);
+    process.args = (char **)fwp_mem_alloc((n + 1) * sizeof(char *));
     n = 0;
-    for (V l = argv; l; l = OBJ(l)->f[1]) args[n++] = STR(OBJ(l)->f[0])->d;
-    args[n] = 0;
-    if (!fwp_program_exists(args[0])) {
-        errno = ENOENT;
-        return fwp_io_error_path("spawn", args[0], err);
+    for (V list = argv; list; list = OBJ(list)->f[1]) process.args[n++] = STR(OBJ(list)->f[0])->d;
+    process.args[n] = NULL;
+    const char *program = STR(OBJ(argv)->f[0])->d;
+    int failed = 0, status;
+    if (!fwp_program_exists(program)) { failed = ENOENT; goto finish; }
+    fwp_flush(); fflush(stderr);
+    int rc = posix_spawn_file_actions_init(&process.actions);
+    if (rc) { failed = rc; goto finish; }
+    process.actions_initialized = 1;
+    if (capture) {
+        for (int i = 0; i < 6; i += 2) {
+            if (pipe(&process.fds[i])) { failed = errno; goto finish; }
+        }
+        const int sources[3] = {process.fds[0], process.fds[3], process.fds[5]};
+        for (int i = 0; i < 3; i++) {
+            rc = posix_spawn_file_actions_adddup2(&process.actions, sources[i], i);
+            if (rc) { failed = rc; goto finish; }
+        }
+        for (int i = 0; i < 6; i++) {
+            /* A pipe can occupy an initially closed standard descriptor.
+             * After dup2, descriptors 0..2 are the child's intended streams. */
+            if (process.fds[i] < 3) continue;
+            rc = posix_spawn_file_actions_addclose(&process.actions, process.fds[i]);
+            if (rc) { failed = rc; goto finish; }
+        }
+    } else if (fwp_prog_out == stderr) {
+        rc = posix_spawn_file_actions_adddup2(&process.actions, 2, 1);
+        if (rc) { failed = rc; goto finish; }
     }
-    fwp_flush();
-    fflush(stderr);
     pid_t pid;
-    if (!capture) {
-        /* the program's own output goes to stderr (FWP_OUT=bin): so does
-         * the called program's */
-        posix_spawn_file_actions_t fa;
-        posix_spawn_file_actions_init(&fa);
-        if (fwp_prog_out == stderr) posix_spawn_file_actions_adddup2(&fa, 2, 1);
-        int rc = posix_spawnp(&pid, args[0], &fa, 0, args, environ);
-        posix_spawn_file_actions_destroy(&fa);
-        if (rc != 0) { errno = rc; return fwp_io_error_path("spawn", args[0], err); }
-        int st;
-        while (waitpid(pid, &st, 0) < 0 && errno == EINTR) {}
-        return (V)(int64_t)fwp_status_code(st);
-    }
-    int in[2], out[2], er[2];
-    if (pipe(in) != 0) return fwp_io_error_path("spawn", args[0], err);
-    if (pipe(out) != 0) { close(in[0]); close(in[1]); return fwp_io_error_path("spawn", args[0], err); }
-    if (pipe(er) != 0) {
-        close(in[0]); close(in[1]); close(out[0]); close(out[1]);
-        return fwp_io_error_path("spawn", args[0], err);
-    }
-    posix_spawn_file_actions_t fa;
-    posix_spawn_file_actions_init(&fa);
-    posix_spawn_file_actions_adddup2(&fa, in[0], 0);
-    posix_spawn_file_actions_adddup2(&fa, out[1], 1);
-    posix_spawn_file_actions_adddup2(&fa, er[1], 2);
-    int fds[6] = {in[0], in[1], out[0], out[1], er[0], er[1]};
-    for (int i = 0; i < 6; i++) posix_spawn_file_actions_addclose(&fa, fds[i]);
-    int rc = posix_spawnp(&pid, args[0], &fa, 0, args, environ);
-    posix_spawn_file_actions_destroy(&fa);
-    close(in[0]);
-    close(out[1]);
-    close(er[1]);
-    if (rc != 0) {
-        close(in[1]); close(out[0]); close(er[0]);
-        errno = rc;
-        return fwp_io_error_path("spawn", args[0], err);
-    }
-    /* write the input and read both outputs without blocking on either */
-    signal(SIGPIPE, SIG_IGN);
-    fcntl(in[1], F_SETFL, fcntl(in[1], F_GETFL) | O_NONBLOCK);
-    fwp_buf ob = {0}, eb = {0};
-    size_t off = 0, len = STR(input)->len;
-    int win = in[1], rout = out[0], rerr = er[0];
-    if (len == 0) { close(win); win = -1; }
-    while (win >= 0 || rout >= 0 || rerr >= 0) {
-        struct pollfd p[3];
-        int np = 0, iw = -1, io = -1, ie = -1;
-        if (win >= 0) { iw = np; p[np].fd = win; p[np++].events = POLLOUT; }
-        if (rout >= 0) { io = np; p[np].fd = rout; p[np++].events = POLLIN; }
-        if (rerr >= 0) { ie = np; p[np].fd = rerr; p[np++].events = POLLIN; }
-        if (poll(p, (nfds_t)np, -1) < 0) {
-            if (errno == EINTR) continue;
-            break;
+    rc = posix_spawnp(&pid, program, &process.actions, NULL, process.args, environ);
+    if (rc) { failed = rc; goto finish; }
+    process.pid = pid;
+    posix_spawn_file_actions_destroy(&process.actions);
+    process.actions_initialized = 0;
+    if (capture) {
+        fwp_process_close(&process.fds[0]);
+        fwp_process_close(&process.fds[3]);
+        fwp_process_close(&process.fds[5]);
+        signal(SIGPIPE, SIG_IGN);
+        int flags = fcntl(process.fds[1], F_GETFL);
+        if (flags < 0 || fcntl(process.fds[1], F_SETFL, flags | O_NONBLOCK) < 0) {
+            failed = errno; goto finish;
         }
-        if (iw >= 0 && p[iw].revents) {
-            ssize_t w = write(win, STR(input)->d + off, len - off);
-            if (w > 0) off += (size_t)w;
-            if (w < 0 && errno != EAGAIN && errno != EINTR) off = len;
-            if (off >= len) { close(win); win = -1; }
-        }
-        char tmp[65536];
-        if (io >= 0 && p[io].revents) {
-            ssize_t r = read(rout, tmp, sizeof tmp);
-            if (r > 0) buf_put(&ob, tmp, (size_t)r);
-            else if (r == 0 || errno != EINTR) { close(rout); rout = -1; }
-        }
-        if (ie >= 0 && p[ie].revents) {
-            ssize_t r = read(rerr, tmp, sizeof tmp);
-            if (r > 0) buf_put(&eb, tmp, (size_t)r);
-            else if (r == 0 || errno != EINTR) { close(rerr); rerr = -1; }
+        size_t off = 0, len = STR(input)->len;
+        if (!len) fwp_process_close(&process.fds[1]);
+        while (process.fds[1] >= 0 || process.fds[2] >= 0 || process.fds[4] >= 0) {
+            struct pollfd pollfds[3];
+            int np = 0, iw = -1, io = -1, ie = -1;
+            if (process.fds[1] >= 0) { iw = np; pollfds[np++] = (struct pollfd){process.fds[1], POLLOUT, 0}; }
+            if (process.fds[2] >= 0) { io = np; pollfds[np++] = (struct pollfd){process.fds[2], POLLIN, 0}; }
+            if (process.fds[4] >= 0) { ie = np; pollfds[np++] = (struct pollfd){process.fds[4], POLLIN, 0}; }
+            if (poll(pollfds, (nfds_t)np, -1) < 0) {
+                if (errno == EINTR) continue;
+                failed = errno; goto finish;
+            }
+            if (iw >= 0 && pollfds[iw].revents) {
+                ssize_t written = write(process.fds[1], STR(input)->d + off, len - off);
+                if (written > 0) off += (size_t)written;
+                /* A child may finish without reading all input, as in the interpreter. */
+                if (written < 0 && errno != EAGAIN && errno != EINTR) off = len;
+                if (off >= len) fwp_process_close(&process.fds[1]);
+            }
+            char bytes[65536];
+            const int positions[2] = {io, ie}, slots[2] = {2, 4};
+            fwp_buf *buffers[2] = {&process.out, &process.err};
+            for (int i = 0; i < 2; i++) if (positions[i] >= 0 && pollfds[positions[i]].revents) {
+                ssize_t count = read(process.fds[slots[i]], bytes, sizeof bytes);
+                if (count > 0) buf_put(buffers[i], bytes, (size_t)count);
+                else if (!count) fwp_process_close(&process.fds[slots[i]]);
+                else if (errno != EINTR) { failed = errno; goto finish; }
+            }
         }
     }
-    int st;
-    while (waitpid(pid, &st, 0) < 0 && errno == EINTR) {}
-    /* fields in canonical order: status, stderr, stdout */
-    V f[3] = {(V)(int64_t)fwp_status_code(st), fwp_str_lossy(eb.d ? eb.d : "", eb.len),
-              fwp_str_lossy(ob.d ? ob.d : "", ob.len)};
-    free(ob.d);
-    free(eb.d);
-    return fwp_record(3, f);
+    pid_t waited;
+    do { waited = waitpid(process.pid, &status, 0); } while (waited < 0 && errno == EINTR);
+    if (waited < 0) { failed = errno; goto finish; }
+    process.pid = 0;
+    V result = (V)(int64_t)fwp_status_code(status);
+    if (capture) {
+        fwp_value_owner stderr_value = {fwp_rc_fresh(fwp_str_lossy(process.err.d ? process.err.d : "", process.err.len)), fwp_rc_free_obj};
+        fwp_cleanup stderr_cleanup; fwp_value_protect(&stderr_value, &stderr_cleanup);
+        fwp_value_owner stdout_value = {fwp_rc_fresh(fwp_str_lossy(process.out.d ? process.out.d : "", process.out.len)), fwp_rc_free_obj};
+        fwp_cleanup stdout_cleanup; fwp_value_protect(&stdout_value, &stdout_cleanup);
+        V fields[3] = {result, stderr_value.value, stdout_value.value};
+        result = fwp_rc_fresh(fwp_record(3, fields));
+        (void)fwp_value_finish(&stdout_value, &stdout_cleanup);
+        (void)fwp_value_finish(&stderr_value, &stderr_cleanup);
+    }
+    fwp_cleanup_pop(&cleanup); fwp_process_finish(&process);
+    FWP_KEEP_ALIVE(argv); FWP_KEEP_ALIVE(input);
+    return result;
+finish:
+    fwp_cleanup_pop(&cleanup); fwp_process_finish(&process);
+    errno = failed;
+    return fwp_io_error_path("spawn", program, err);
 }
 
 static V fwp_p_process_run_input(V input, V argv, const fwp_desc *err) { return fwp_run_process(argv, input, 1, err); }

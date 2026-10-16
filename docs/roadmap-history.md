@@ -48,6 +48,52 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Numerical precision and filesystem ownership (PR #147)
+
+[PR #147](https://github.com/e6qu/fun-with-pipes/pull/147) merged as `c9127d2d`
+at 2026-10-15 23:42 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38814786923)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38814787519)
+passed for `71c612d0`. The squash has identical files and the verified subject
+`Own numerical and filesystem results and preserve gradient precision`, with
+no body or trailers. Duplicate post-merge production run `38825167262` was
+canceled after verifying the identical tree.
+
+Six F64 solvers now own scratch/results and handle partial failures; QR validates
+output bounds. Array loops borrow invariant data pointers. Reverse differentiation
+preserves F128 seeds, weights and adjoints without narrowing through F64. Console
+input, arguments, environment/directory snapshots, file metadata, byte reads and
+ordinary file actions have explicit ownership and error cleanup. OS paths and
+environment names reject embedded zero bytes before accessing a truncated prefix.
+Regression tests also preserve timestamps, write errors and host directory
+messages. See [ownership](ownership.md) and [benchmarks](benchmarks.md) for scoped
+contracts and measured limits. Default tracing and broader roadmap work remain.
+
+## Checked boundaries and numerical kernels (PR #146)
+
+[PR #146](https://github.com/e6qu/fun-with-pipes/pull/146) merged as `be890914`
+at 2026-10-15 22:03 UTC, after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349673)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38803349640)
+passed for `19b14d0b`. The merge has identical files and a single-line message
+with no body or trailers. Duplicate post-merge production run `38814471520` was
+canceled after that verification; its documentation audit passed separately.
+
+The delivery admits checked C-library calls with copied inputs and pointer-free
+results, checks every export independently, and admits channels whose data cannot
+capture channel/task handles or callbacks. List transposition owns fresh immutable
+nodes and cleans partial columns. The allocator correctly charges its first small
+allocation. Fixed-size compiler copies expose matrix vectorization, and runtime
+scheduler ticks disappear only in proved taskless programs. Windows probes now
+use binary output and initialize synthetic task stack roots correctly.
+
+[Retained comparisons](measurements/numerical-memory-modes-2026-10-15.json) cover
+both tracing and checked ARC against equivalent C/Rust kernels on four hosts.
+The [benchmark guide](benchmarks.md) states costs, instruction evidence and limits.
+This delivery does not remove tracing from the default runtime or finish the
+project's ownership/performance objectives. The earlier Intel compiler abort
+passed an unchanged retry; its unexplained cause remains recorded in the handoff.
+
 ## Infix arithmetic and numeric loop cleanup (PR #145)
 
 [PR #145](https://github.com/e6qu/fun-with-pipes/pull/145) merged as `e51b8570`
