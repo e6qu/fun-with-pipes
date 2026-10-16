@@ -110,3 +110,8 @@ Edited-C mechanism checks pass in ARC and tracing (1.17 s each), including a
 missing-free negative control. Formatting passes. These use the accepted #147
 compiler plus current helper C, not the changed compiler. Full acceptance and
 performance evidence remain on CI. The next focused suite is `mapped-arrays`.
+
+The standalone new Rust test harness initially caught a missing mutable Command
+borrow; that fixture is corrected and compiles (0.71 s, three tests listed). The
+queued `38834469846` was dispatched before the correction and must be canceled
+and replaced; it is not acceptance. Runtime source is unchanged by the repair.

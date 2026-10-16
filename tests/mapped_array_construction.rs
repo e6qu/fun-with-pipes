@@ -143,7 +143,7 @@ fn mapped_array_scratch_releases_on_success_and_callback_failure() {
         for opt in ["-O1", "-O2"] {
             let binary = dir.join("probe.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            checked(Command::new(&binary));
+            checked(&mut Command::new(&binary));
             let broken = code.replace(
                 "    fwp_scratch_finish(&items, &cleanup);",
                 "    fwp_cleanup_pop(&cleanup);",
