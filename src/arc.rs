@@ -67,9 +67,8 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
                 | "std::I64" | "std::I128" | "std::ISize" | "std::U8" | "std::U16" | "std::U32"
                 | "std::U64" | "std::U128" | "std::USize" | "std::F16" | "std::BF16"
                 | "std::F32" | "std::F64" | "std::F128" | "std::TInt" | "std::Trit"
-                | "std::Array" | "std::Map" | "std::Set" | "std::Task" | "std::GrpcCell" => {
-                    return Ok(())
-                }
+                | "std::Array" | "std::Map" | "std::Set" | "std::Task" | "std::GrpcCell"
+                | "std::H2Stream" => return Ok(()),
                 _ => {}
             }
             match prog.shapes.get(ty) {
@@ -154,7 +153,7 @@ pub(crate) fn check(prog: &Program, entries: &[crate::ir::FuncId]) -> Result<(),
             if matches!(
                 contract.callback,
                 Some(Callback::Shared(_) | Callback::Retained(_))
-            ) && !matches!(symbol, "task.spawn" | "task.within")
+            ) && !matches!(symbol, "task.spawn" | "task.within" | "http2.serve")
             {
                 return Err(reject(format!(
                     "primitive `{symbol}` retains an unproved callback graph"

@@ -348,13 +348,18 @@ copy transfers ownership of the new data, not ownership of that context.
 | `http2.body` | Borrow limit, timeout and stream | Owned body bytes or an integer error wrapped in a result |
 | `http2.send` | Borrow pool key, optional connection and request | Owned status/header/body record; release partial copies and request owners on failure or cancellation |
 | `http2.pooled` | Borrow pool key | Boolean indicating an available connection with the full matching key |
+| `http2.serve` | Borrow connection, input, limits and upgrade; retain handler captures once per connection | Unit; connection and task owners release on completion, failure and cancellation |
+| `http2.respond`, `http2.data` | Borrow response fields and stream handle through any wait | Boolean; queued protocol bytes are copied, and the handle keeps request/connection storage alive |
+| `signal.shutdown-requested`, `signal.request-shutdown` | Borrow unit | Boolean or unit; read/set the shutdown flag without retaining language values |
 
 Copied values do not borrow the source strings or body buffer. Typed cleanup
 releases partially copied fields if a managed result allocation fails. The source
 stream remains live during copying. The HTTP client extension also gives pooled
 connections, I/O tasks and requests explicit owners. It is under native platform
-validation in [the handoff](development-state.md). HTTP server streams and retained
-handler callbacks still need separate lifetime proofs.
+validation in [the handoff](development-state.md). The server extension gives
+stream handles typed owners and retains handler captures once per connection;
+its platform validation is pending. Handler tasks start with fresh State and
+automatic-differentiation scopes, rather than borrowing a caller's dynamic scope.
 
 ## Remote stream positions
 

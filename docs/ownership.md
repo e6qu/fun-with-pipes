@@ -416,10 +416,22 @@ cancellation notify the peer before releasing request storage. Response strings,
 header pairs and list cells are owned as they are created, so partial copies can
 be released. Completed responses do not borrow the network buffers. Full pool
 keys, including long TLS-option strings, remain distinct without a fixed-size
-temporary buffer. HTTP server handlers are still outside checked ARC; candidate
-implementation is not final platform acceptance. The [HTTP measurements](benchmarks.md#http-clients-without-tracing)
+temporary buffer. HTTP client implementation is not final platform acceptance. The [HTTP measurements](benchmarks.md#http-clients-without-tracing)
 record constant managed storage, remaining allocation/count traffic and larger
 ARC code sections; raw transport/process memory and timing are excluded.
+
+The HTTP server extension is in preparation. A stream handle owns request and
+connection storage; it can survive completion of its handler task without keeping
+that task identity alive. The same allocation carries the task payload, removing
+a separate job record. Connection startup, the inline reader and the writer have
+explicit cleanup; active requests and pending dispatch lists own their streams.
+One retained handler per connection keeps captured values alive if serving fails
+before child tasks finish. Individual jobs borrow that handler. Typed calls retain
+only values that need independent owners. HTTP callbacks run in fresh task scopes:
+a parent State or differentiation scope does not extend into a request task.
+Focused O1/O2 failure, cancellation, escaped-handle and tracing-stress probes pass
+locally; six-platform comparisons, repeated server memory and full acceptance are
+still pending. This does not establish REST/MCP entry support or GPU ownership.
 
 WASI supplies standard streams and file access to a WebAssembly module. Build a
 supported program with `fwp build --gc arc --target wasm32-wasi app.fwp -o app.wasm`
@@ -700,7 +712,8 @@ name; a body copies every byte, including zero and non-text bytes. The source
 stream remains live during copying. Header order and duplicates are preserved,
 and an existing `host` header takes precedence over `:authority`. Partial strings,
 pairs, lists and result wrappers use the existing typed cleanup on failure.
-These changes do not yet own the stream itself or remove tracing from a server.
+Those accepted result-copy changes do not alone establish ownership of the
+stream; the server extension above supplies that separate lifetime contract.
 These copied results pass focused allocation-failure and lifetime checks on all
 six native hosts at `e715de1a` (`38935341434`), followed by full acceptance in
 [PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
@@ -895,8 +908,8 @@ The request record does not gain an owning back-pointer to the connection.
 Client I/O task records have only the scheduler, which runs ready tasks, as owner.
 Their storage releases after their stack and scheduler links are removed, without
 task reference-count updates. Language task handles can have independent aliases and retain their
-shared policy. Server task ownership is described below; HTTP/2 task graphs still need separate
-ownership work.
+shared policy. Server task ownership is described below; the HTTP server
+extension above is under validation.
 Library teardown first shuts down connections used by live I/O tasks, then waits
 for those tasks to finish. This includes connections removed from the reuse pool:
 canceling a task alone is insufficient while it defers cancellation to protect

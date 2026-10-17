@@ -100,7 +100,7 @@ pub enum ResultOwnership {
 pub enum Callback {
     Shared(usize),
     /// Retain a counted callback reference for asynchronous invocation.
-    /// The task takes that owner on entry or releases it on cancellation.
+    /// A task or connection owns it until invocation and cleanup finish.
     Retained(usize),
     /// Invoke synchronously without retaining the callback function itself.
     /// Supplied values borrow by type; returned values carry ownership.
@@ -185,6 +185,10 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "grpc.set-header" | "grpc.set-trailer" => (&[B, B], R, None, &[]),
         "http2.body" | "http2.send" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
         "http2.pooled" => (&[B], R, None, &[]),
+        "http2.respond" => (&[B, B, B, B, B], R, None, &[]),
+        "http2.data" => (&[B, B, B], R, None, &[]),
+        "http2.serve" => (&[B, B, B, B, B], R, Some(Callback::Retained(3)), &[]),
+        "signal.shutdown-requested" | "signal.request-shutdown" => (&[B], R, None, &[]),
         "http2.request" | "grpc.metadata" | "grpc.peer-subject" => {
             (&[B], ResultOwnership::OwnedTree, None, &[])
         }
