@@ -30,15 +30,19 @@ cleanup must fail. Existing
 client and peer fixture mutation anchors are updated, without reducing assertions.
 The first candidate `c3c8fd8b` passes Linux `39022894056`, including all real
 service comparisons and measurements. It duplicated a request for its job. The
-subsequent ownership move and parser-unwind coverage remain unverified.
+ownership move and parser-unwind revision `22e843a4` is running Linux
+`39023556994`. Additional source-construction tests now exercise the actual
+method-building path with request/connection retain overflow and a trap after
+both acquisitions. Omitted source cleanup or request release must fail. These
+last test additions remain unverified.
 
-Next: format/audit and publish the ownership-move revision, run Linux
-`server-repeat`, repair failures and
-compare the unchanged four workloads against `855fe3d1`. Expected outcome:
-request storage no longer grows with call count, while connection storage stays
-constant for one reused connection. Record count increments instead of claiming
-zero runtime cost. Complete source-retain overflow checks as
-needed before final acceptance. Full builds/tests run on GitHub.
+Next: finish Linux `39023556994`, fix failures, publish the extra construction
+controls and run the complete request candidate on native CI. The first version
+leaves 864 managed bytes independent of call count and finalizes every request;
+the move should remove one retain per call without changing allocations or
+memory. Validate that against the unchanged programs before all-six acceptance.
+Record count costs instead of claiming zero overhead. Full builds/tests run
+on GitHub.
 
 ## Remaining work and validation
 
@@ -50,7 +54,8 @@ address that measured overhead without changing ordinary inference or syntax.
 
 Local work uses the root `scripts/local-guard.py` with fixed limits. Worktree
 creation passed in 0.31s, formatting in 1.23s and docs in 2.79s. Native
-checks pass for `c3c8fd8b`; the later move/unwind revision is pending.
+checks pass for `c3c8fd8b`; the later move/unwind revision is pending. Latest
+construction-test formatting passed in 1.29s.
 Downloaded binaries must only be inspected, never executed locally.
 
 ## Roadmap status

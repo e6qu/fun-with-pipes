@@ -48,6 +48,15 @@ fn served_requests_survive_resets_jobs_and_retained_inputs() {
             start,
             &format!("    if (request_stage == 6 || request_stage == 7) fwp_trap(request_stage == 6 ? \"job startup trap\" : \"pending dispatch trap\");\n{start}"),
         );
+    let types = "const fwp_owned_fninfo *types = fwp_fns[m->fn].owned;";
+    let cell = "        g_cell *cell = g_cell_new(src);";
+    for marker in ["} fwp_owned_fninfo;", types, cell] {
+        assert_eq!(generated.matches(marker).count(), 1, "{marker}");
+    }
+    let generated = generated
+        .replace("} fwp_owned_fninfo;", "} fwp_owned_fninfo;\nstatic V request_never_called(V *a){(void)a;_Exit(249); }\nstatic const fwp_owned_fninfo request_source_types={.entry=request_never_called};")
+        .replace(types, "const fwp_owned_fninfo *types = &request_source_types;")
+        .replace(cell, &format!("        if(request_stage==10)fwp_trap(\"source construction trap\");\n{cell}"));
     let prefix = "static int request_finals, request_stage;\n";
     let fixture = include_str!("fixtures/grpc_server_requests.c");
     let controls = [
@@ -89,6 +98,18 @@ fn served_requests_survive_resets_jobs_and_retained_inputs() {
             7,
             244,
         ),
+        (
+            "        fwp_cleanup_push(&source_cleanup, g_incoming_drop, src);",
+            "",
+            9,
+            247,
+        ),
+        (
+            "    if (source->server) g_stream_drop(s);",
+            "    if (source->server) { (void)s; }",
+            9,
+            247,
+        ),
     ];
     let dir = fwp::cgen::TempDir::new("grpc-request-owners").unwrap();
     let binary = dir.join("requests.exe");
@@ -114,7 +135,7 @@ fn served_requests_survive_resets_jobs_and_retained_inputs() {
         fwp::cgen::compile_c(&format!("{prefix}{generated}\n{fixture}"), &binary, opt).unwrap();
         for gc in ["off", "on"] {
             for poison in ["0", "1"] {
-                for stage in 0..8 {
+                for stage in 0..11 {
                     let output = Command::new(&binary)
                         .arg(stage.to_string())
                         .env("FWP_GC", gc)

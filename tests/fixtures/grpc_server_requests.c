@@ -9,6 +9,8 @@ static ssize_t request_receive(g_conn *c,void *data,size_t n,int *wait){
  return (ssize_t)request_wire->len;
 }
 static double request_charge(void){return fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);}
+static void overflow_owner(V value){uint8_t *slot=fwp_rc_slot(value);*slot=254;fwp_rc_dup(value);(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
+static void restore_owner(V value,unsigned n){uint8_t *slot=fwp_rc_slot(value);fwp_rc_forget_slot(slot);*slot=(uint8_t)n;}
 int main(int argc,char **argv){
  if(argc!=2)_Exit(230);int stage=atoi(argv[1]);request_stage=stage;
  const char *verify=getenv("FWP_REUSE_VERIFY");int poison=verify&&*verify&&strcmp(verify,"0");
@@ -38,7 +40,23 @@ int main(int argc,char **argv){
  if(request_finals)_Exit(233); /* a reset must not free a pending request */
  g_stream *s=pending.v[0];
  if(*fwp_rc_slot(PTR(s))!=(stage==1?1:2)||s->listed!=(stage!=1))_Exit(232);
- if(stage==2){
+ if(stage>=8){
+  fwp_rc_fresh(PTR(c));
+  const fwp_desc integer_type={.kind=K_I64,.name="I64"};const fwp_desc *fields[]={&integer_type};
+  fwp_rpc method={0};method.input=1;method.nreq=1;method.req=fields;
+  g_route route={0};route.kind=G_ROUTE_METHOD;route.m=&method;
+  g_job job={0};job.c=c;job.s=s;job.srv=&server;job.route=&route;strcpy(job.what,"source-owner");
+  V overflow=stage==8?PTR(s):PTR(c);if(stage!=10)overflow_owner(overflow);
+  double pending_bytes=request_charge();
+  jmp_buf failure;fwp_cur->trap_jb=&failure;fwp_cur->trap_cleanup=fwp_cleanups;
+  if(!setjmp(failure)){char *message=NULL;g_run_method(&job,&message);_Exit(250);}
+  fwp_cur->trap_jb=0;fwp_cur->trap_cleanup=0;fwp_trap_jb=0;fwp_trap_cleanup=0;
+  if(strcmp(fwp_trap_msg,stage==10?"source construction trap":"reference count overflow")||fwp_cleanups)_Exit(251);
+  if(stage!=10){if((*fwp_rc_wide_link(fwp_rc_slot(overflow)))->count!=SIZE_MAX)_Exit(252);restore_owner(overflow,stage==8?2:1);}
+  if(*fwp_rc_slot(PTR(s))!=2||!fwp_rc_last(PTR(c)))_Exit(247);
+  if(!fwp_gc.enabled&&!poison&&request_charge()!=pending_bytes)_Exit(248);
+  g_unlink(c,s);g_slist_release(&pending);
+ }else if(stage==2){
   g_conn_dead(c,"closed before dispatch");
   if(request_finals||!fwp_rc_last(PTR(s)))_Exit(235);
   g_slist_release(&pending);
@@ -71,7 +89,7 @@ int main(int argc,char **argv){
  }
  finish:
  if(request_finals!=(stage==7?2:1)||c->streams||pending.v||pending.n||fwp_cleanups)_Exit(239);
- fwp_gc_forget_finalizer(c);g_conn_final(c);fwp_mem_free(c);
+ if(stage>=8)g_conn_drop(c);else{fwp_gc_forget_finalizer(c);g_conn_final(c);fwp_mem_free(c);}
  if(!fwp_gc.enabled&&!poison&&(request_charge()!=before||fwp_gc.ncollect)){
   fprintf(stderr,"request stage %d: managed bytes %.0f -> %.0f\n",stage,before,request_charge());_Exit(243);
  }
