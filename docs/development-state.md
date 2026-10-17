@@ -70,24 +70,38 @@ All native builds run on GitHub. Root-guard formatting passed in 1.06–1.16s;
 `/Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py`; retain its fixed
 limits. No downloaded executable has run locally.
 
-Second Linux probe `39003964943` at `c4747dc7` exposed a fixture overflow
-setup using the stream pointer for the connection count; that setup is repaired.
-The unique-task probe still reports status 203; its new diagnostic prints the
-iteration, cancellation mode, entry/completion counters and scheduler zombie.
-Investigate that result rather than assuming the first cancellation fix sufficed.
-Transport buffer/header and server-status fatal paths now use `_Exit(102)`;
-seven task-stack injection cases require the exact diagnostic and exit code.
-These changes are written and formatted (1.15s), not yet validated natively.
+Second Linux probe `39003964943` at `c4747dc7` exposed a bad pointer in the
+connection-overflow fixture setup; that is repaired. Third probe `39004273477`
+at `53dd3314` passes the transport fatal-allocation and connection-owner tests.
+Its remaining unique-task exit status is 204 (encoded process status 52224), not
+203: completion succeeds, but raw storage remains. The new disposal function used
+a counted-storage helper, which intentionally ignores zero-count objects.
+Unique tasks now return their raw allocation directly, without inventing a count;
+shared task handles keep their existing release policy. Physical-freeing-disabled
+builds still retain object storage. The test records exact storage totals and
+retains generated source/binaries for static review. This repair needs native
+validation; no claim of candidate acceptance yet.
 
-Next: publish these fixes, run Linux `connection-repeat`, repair any failures,
-then run all six native hosts and compare with the retained baseline. Also prove
+Root #157 head `57d2a09e` has passing documentation and benchmark; production
+`39004098429` is still running, watched by `97557` with exact-head merge verification.
+
+The baseline report now retains reviewed actual Linux ARM64/AMD64 binaries;
+guarded static inspection took 0.15s per host and recollection 2.02s. The
+benchmark guide explains connection/task allocations versus remaining storage,
+different host task layouts and exclusions. Collector changes require the new
+task, fatal-allocation and POSIX startup checks before accepting a comparison;
+script syntax passed under the root guard in 0.20s.
+
+Next: publish the unique-task storage repair, run Linux `connection-repeat`,
+repair failures, then run all six native hosts and
+compare with the retained baseline. Also prove
 pooled reuse, startup failure and last-owner cleanup before delivery. Rebase or
 transfer the final patch onto accepted #157 before opening the next single PR.
 
 Pending sender language values, server callbacks/channels, remaining host and
 numerical ownership, cycle policies and all seven roadmap areas remain open.
-Fatal allocation paths that call `exit` from task stacks also need repair; do not
-weaken library unload validation. JIT is excluded permanently.
+The fatal transport allocation repairs still need native validation; do not
+weaken library unload checks. JIT is excluded permanently.
 
 ## Roadmap status
 

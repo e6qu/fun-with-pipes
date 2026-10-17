@@ -849,12 +849,27 @@ releases request storage. Infinitely many unfinished operations can still requir
 unbounded storage. [The handoff](development-state.md) records native validation
 and full delivery acceptance; implemented cleanup alone does not establish them.
 
+The next connection candidate separates socket use from connection-storage use.
+A response source can still need terminal metadata after both I/O tasks finish,
+so closing the socket does not by itself free the record. Its last storage owner
+removes the weak collector registration and frees the record and metadata. The
+pool owns reusable connections; calls and detached senders own their references.
+The request record does not gain an owning back-pointer to the connection.
+
+Client I/O task records have only the scheduler as owner. Their storage releases
+after their stack and scheduler links are removed, without task reference-count
+updates. Language task handles can have independent aliases and retain their
+shared policy. Server and HTTP/2 task graphs still need separate ownership work.
+These are candidate contracts, not verified six-platform support; the
+[closed-connection baseline](benchmarks.md#memory-after-closing-connections-and-finishing-their-io-tasks)
+and [handoff](development-state.md) record the evidence and unresolved tests.
+
 The remaining relationships need separate checks:
 
 | Storage | Who currently keeps it alive | Work still needed |
 |---|---|---|
 | Client request | The active connection list, receive source and detached sender hold references in the current preparation. | Accept native completion, failure, cancellation and repeated-call evidence. |
-| Connection | Reader/writer tasks count use of the socket; tracing preserves the connection object and remaining metadata. | Give the pool, calls and tasks explicit storage owners without creating a connection/request cycle. Closing a socket alone does not finish every borrow. |
+| Connection | The candidate gives pool, readers/writers and callers separate storage owners; the socket has its own reader/writer use count. | Prove last-owner cleanup and constant closed-connection storage on all six hosts; closing a socket alone does not finish every borrow. |
 | Pending sender values | The sender points at the remaining input iterator; tracing preserves its values. | Transfer or retain the iterator with its concrete type, then release it after completion, errors or cancellation. Its request description is static compiler metadata. |
 | Server callbacks and response channels | Serving tasks and retained language values can outlive the creating call scope. | Prove each retained handler and channel context, including failure during construction and cycles after external references disappear. |
 | Task identities and wait lists | The scheduler owns parked tasks; request state borrows their identities. | Preserve this direction when adding owners; do not turn back-pointers into owning cycles. |

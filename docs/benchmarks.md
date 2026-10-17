@@ -1754,3 +1754,52 @@ It requires all six native jobs, matching outputs, complete request/message
 release and constant final managed storage. Binary inspection is static;
 downloaded programs are not executed locally. Full production acceptance is
 recorded separately in the [handoff](development-state.md).
+
+### Memory after closing connections and finishing their I/O tasks
+
+A reusable connection is intentionally kept alive for another call. To measure
+storage left after that connection is no longer usable, this separate workload
+closes it and waits for its reader and writer tasks to finish before opening the
+next one. A task is a computation scheduled on the runtime's event loop; finishing
+its work and releasing its task record are separate operations.
+
+[The closed-connection baseline](measurements/closed-remote-baseline-2026-10-17.json)
+uses `4103b0a0`, preserved by `evidence/closed-remote-baseline-20261017`.
+[All six native jobs passed](https://github.com/e6qu/fun-with-pipes/actions/runs/39002767125).
+It measures the same full, partial and retained-reader programs, 64 response
+integers, 1/16/256 batches and three processes per case described above.
+Only the instrumented clients force connection closure. Ordinary native and raw
+interpreter runs establish matching output using normal connection pooling;
+they do different transport work. Revision comparisons must use the same
+connection-closing instrumentation, not compare this with the pooled workload.
+
+All sockets close, both I/O tasks finish, and every request and queued message
+releases. Nevertheless, managed storage grows with the number of closed
+connections. Here are the allocation categories and observed additional remaining
+bytes per connection; allocator-charged bytes include allocation-size rounding.
+
+| Platform | Connection allocation, charged bytes | Two I/O task allocations, charged bytes | Additional remaining bytes per connection |
+|---|---:|---:|---:|
+| Linux AMD64 | 320 | 3,584 | 3,904 |
+| Linux ARM64 | 320 | 12,288 | 12,608 |
+| macOS AMD64 and ARM64 | 320 | 1,280 | 1,600 |
+| Windows AMD64 | 320 | 2,048 | 2,368 |
+| Windows ARM64 | 320 | 1,792 | 2,112 |
+
+The category counters record cumulative allocations, not live-object identities.
+Their sums match the measured growth. Static review of actual Linux binaries
+also shows why these objects remain: connection release closes the transport
+without freeing the connection record, and scheduler cleanup skips task-record
+release for these uncounted I/O tasks. The source and binary fingerprints and
+instruction locations are retained in the report. Task layouts differ by host:
+Linux uses glibc's saved-context structure, macOS uses the runtime's own register
+save layout, and Windows uses native fibers. The measurements do not compare
+scheduling speed or justify changing those implementations without validation.
+
+Counters stop after the final connection closes, I/O tasks finish and cached
+values release, before whole-runtime shutdown. Collection is disabled and
+physical freeing enabled. Stack pools, other raw buffers, TLS/OS/allocator
+metadata, server/process memory and timing are excluded. Empty task lists alone
+do not prove their record storage was freed. This baseline selects the next
+connection/task ownership change; it does not establish checked ARC or speed
+parity with C/Rust. See [the handoff](development-state.md) for candidate validation.

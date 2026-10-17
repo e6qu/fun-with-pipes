@@ -6037,7 +6037,141 @@
         0,
         1217
       ],
-      "binary_observations": null,
+      "binary_observations": {
+        "source_revision": "4103b0a09f06cae69721c29151571ba9e9a621b9",
+        "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+        "observations": [
+          {
+            "client": "full",
+            "source": {
+              "bytes": 938195,
+              "sha256": "38242975974fde95ecac5521d0c2b99d9d0e53aa18145dae9994fbf2a8a07ee4"
+            },
+            "binary": {
+              "bytes": 259136,
+              "sha256": "6363c48379ace1b69f665b939df4aa2bb7ca5307e5eb20ed30ba240a03a7aaea"
+            },
+            "header": "\n/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/full:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000005850\n",
+            "symbols": [
+              "fwp_drop9",
+              "f26",
+              "g_cell_drop",
+              "g_force",
+              "fwp_p_grpc_force",
+              "fwp_apply_owned",
+              "g_stream_drop",
+              "g_stream_reader_release",
+              "g_unlink",
+              "g_sender_peer_finish",
+              "g_conn_dead",
+              "g_conn_drop",
+              "g_conn_release",
+              "fwp_free_zombie",
+              "fwp_task_dispose"
+            ],
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=fwp_drop9,f26,g_cell_drop,g_force,fwp_p_grpc_force,fwp_apply_owned,g_stream_drop,g_stream_reader_release,g_unlink,g_sender_peer_finish,g_conn_dead,g_conn_drop,g_conn_release,fwp_free_zombie,fwp_task_dispose",
+              "/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/full"
+            ],
+            "assembly": {
+              "file": "full.asm",
+              "bytes": 87221,
+              "sha256": "87f8069f6370e45bc3e099f6289431e0ecf60c30f119b98c607885b5e86a6f40"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/full': failed to disassemble missing symbol fwp_p_grpc_force\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/full': failed to disassemble missing symbol g_sender_peer_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/full': failed to disassemble missing symbol g_conn_drop\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/full': failed to disassemble missing symbol g_unlink\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/full': failed to disassemble missing symbol fwp_task_dispose\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/full': failed to disassemble missing symbol g_cell_drop\n"
+          },
+          {
+            "client": "partial",
+            "source": {
+              "bytes": 938922,
+              "sha256": "8d6b8288f8b6b9c9966695f0c4d2a065e0def053fc6e27ad747b4ab131443726"
+            },
+            "binary": {
+              "bytes": 259232,
+              "sha256": "5dad3c4a78661016346d17e75f4046db24efa2c80e3eeb71848a8bfb63821559"
+            },
+            "header": "\n/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/partial:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000005850\n",
+            "symbols": [
+              "fwp_drop9",
+              "f26",
+              "g_cell_drop",
+              "g_force",
+              "fwp_p_grpc_force",
+              "fwp_apply_owned",
+              "g_stream_drop",
+              "g_stream_reader_release",
+              "g_unlink",
+              "g_sender_peer_finish",
+              "g_conn_dead",
+              "g_conn_drop",
+              "g_conn_release",
+              "fwp_free_zombie",
+              "fwp_task_dispose"
+            ],
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=fwp_drop9,f26,g_cell_drop,g_force,fwp_p_grpc_force,fwp_apply_owned,g_stream_drop,g_stream_reader_release,g_unlink,g_sender_peer_finish,g_conn_dead,g_conn_drop,g_conn_release,fwp_free_zombie,fwp_task_dispose",
+              "/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/partial"
+            ],
+            "assembly": {
+              "file": "partial.asm",
+              "bytes": 87224,
+              "sha256": "8d8fb144b864e4e4f80db47cb02a5b73b5d382a6b11695e4bcc516caa110a17c"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/partial': failed to disassemble missing symbol fwp_p_grpc_force\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/partial': failed to disassemble missing symbol g_sender_peer_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/partial': failed to disassemble missing symbol g_conn_drop\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/partial': failed to disassemble missing symbol g_unlink\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/partial': failed to disassemble missing symbol fwp_task_dispose\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/partial': failed to disassemble missing symbol g_cell_drop\n"
+          },
+          {
+            "client": "retained",
+            "source": {
+              "bytes": 958879,
+              "sha256": "16b64f9571cf409b770245a14f899d18b8481146175839b6fd2c4af126a1d5b0"
+            },
+            "binary": {
+              "bytes": 264056,
+              "sha256": "b44dce0cbabb66d4f05c895c5a1ce19a1ebf2298783e8b88d0f870d6cfafbc32"
+            },
+            "header": "\n/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/retained:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000005850\n",
+            "symbols": [
+              "fwp_drop7",
+              "f26",
+              "g_cell_drop",
+              "g_force",
+              "fwp_p_grpc_force",
+              "fwp_apply_owned",
+              "g_stream_drop",
+              "g_stream_reader_release",
+              "g_unlink",
+              "g_sender_peer_finish",
+              "g_conn_dead",
+              "g_conn_drop",
+              "g_conn_release",
+              "fwp_free_zombie",
+              "fwp_task_dispose"
+            ],
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=fwp_drop7,f26,g_cell_drop,g_force,fwp_p_grpc_force,fwp_apply_owned,g_stream_drop,g_stream_reader_release,g_unlink,g_sender_peer_finish,g_conn_dead,g_conn_drop,g_conn_release,fwp_free_zombie,fwp_task_dispose",
+              "/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/retained"
+            ],
+            "assembly": {
+              "file": "retained.asm",
+              "bytes": 87229,
+              "sha256": "1df0fd86a16fef8c102e3c9b8761623a4eb54dbd9cf1ff9b9e1d9d1070c7b542"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/retained': failed to disassemble missing symbol fwp_p_grpc_force\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/retained': failed to disassemble missing symbol g_sender_peer_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/retained': failed to disassemble missing symbol g_conn_drop\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/retained': failed to disassemble missing symbol g_unlink\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/retained': failed to disassemble missing symbol fwp_task_dispose\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-latest/retained': failed to disassemble missing symbol g_cell_drop\n"
+          }
+        ],
+        "limits": "Static inspection only. No downloaded executable ran. Symbols inlined by the compiler can be absent; the typed cache destructor must be present. Disassembly requires human review for loops, frame sizes and register use. No timing claim.",
+        "manual_review": {
+          "client": "full",
+          "connection_release": "g_conn_release at 0x21cc0 uses 40 frame bytes excluding incoming return address. It decrements the transport count, unregisters/closes the descriptor and releases TLS and in/out buffers, then returns at 0x21dcf without freeing the connection record.",
+          "task_release": "fwp_free_zombie at 0xcd30 saves one 8-byte register. After removing stack and GC links it checks counted at 0xcde0; client I/O tasks have zero there and jump to return, bypassing task-object release."
+        }
+      },
       "files": {
         "source.txt": {
           "bytes": 41,
@@ -6318,6 +6452,10 @@
         "stream-owners/streams-no-free-true.c": {
           "bytes": 872904,
           "sha256": "c386f5e396079167b75c2ff77b39e155494de34586a5126ad2b052c7d4fc7139"
+        },
+        "binary-observations.json": {
+          "bytes": 9454,
+          "sha256": "f2afc9489ba7c863de689ed4bbcad2be925aeabbeff7dc15a4694bb65a177cb0"
         }
       }
     },
@@ -18637,7 +18775,141 @@
         0,
         1217
       ],
-      "binary_observations": null,
+      "binary_observations": {
+        "source_revision": "4103b0a09f06cae69721c29151571ba9e9a621b9",
+        "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+        "observations": [
+          {
+            "client": "full",
+            "source": {
+              "bytes": 938195,
+              "sha256": "38242975974fde95ecac5521d0c2b99d9d0e53aa18145dae9994fbf2a8a07ee4"
+            },
+            "binary": {
+              "bytes": 232136,
+              "sha256": "6b055acc900e10663c8a5bc0aa3964c066f5c90f0d2e3dabe8a7f9c0fa1ef2e8"
+            },
+            "header": "\n/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/full:\tfile format elf64-littleaarch64\narchitecture: aarch64\nstart address: 0x0000000000004e40\n",
+            "symbols": [
+              "fwp_drop9",
+              "f26",
+              "g_cell_drop",
+              "g_force",
+              "fwp_p_grpc_force",
+              "fwp_apply_owned",
+              "g_stream_drop",
+              "g_stream_reader_release",
+              "g_unlink",
+              "g_sender_peer_finish",
+              "g_conn_dead",
+              "g_conn_drop",
+              "g_conn_release",
+              "fwp_free_zombie",
+              "fwp_task_dispose"
+            ],
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=fwp_drop9,f26,g_cell_drop,g_force,fwp_p_grpc_force,fwp_apply_owned,g_stream_drop,g_stream_reader_release,g_unlink,g_sender_peer_finish,g_conn_dead,g_conn_drop,g_conn_release,fwp_free_zombie,fwp_task_dispose",
+              "/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/full"
+            ],
+            "assembly": {
+              "file": "full.asm",
+              "bytes": 76923,
+              "sha256": "faa935672a0d3ee7213d1905043cf515a13170c993c6b5546f363e2d46a3f918"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/full': failed to disassemble missing symbol fwp_p_grpc_force\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/full': failed to disassemble missing symbol g_sender_peer_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/full': failed to disassemble missing symbol g_conn_drop\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/full': failed to disassemble missing symbol g_unlink\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/full': failed to disassemble missing symbol fwp_task_dispose\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/full': failed to disassemble missing symbol g_cell_drop\n"
+          },
+          {
+            "client": "partial",
+            "source": {
+              "bytes": 938922,
+              "sha256": "8d6b8288f8b6b9c9966695f0c4d2a065e0def053fc6e27ad747b4ab131443726"
+            },
+            "binary": {
+              "bytes": 297768,
+              "sha256": "51139e9f57b5ed3fe5356a5c3b438a7af9ba6fb316cacecfb26f3a51ea19952a"
+            },
+            "header": "\n/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/partial:\tfile format elf64-littleaarch64\narchitecture: aarch64\nstart address: 0x0000000000004e80\n",
+            "symbols": [
+              "fwp_drop9",
+              "f26",
+              "g_cell_drop",
+              "g_force",
+              "fwp_p_grpc_force",
+              "fwp_apply_owned",
+              "g_stream_drop",
+              "g_stream_reader_release",
+              "g_unlink",
+              "g_sender_peer_finish",
+              "g_conn_dead",
+              "g_conn_drop",
+              "g_conn_release",
+              "fwp_free_zombie",
+              "fwp_task_dispose"
+            ],
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=fwp_drop9,f26,g_cell_drop,g_force,fwp_p_grpc_force,fwp_apply_owned,g_stream_drop,g_stream_reader_release,g_unlink,g_sender_peer_finish,g_conn_dead,g_conn_drop,g_conn_release,fwp_free_zombie,fwp_task_dispose",
+              "/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/partial"
+            ],
+            "assembly": {
+              "file": "partial.asm",
+              "bytes": 76867,
+              "sha256": "b9a0f1ea5422544225b93ab2748d4d724257a40e3bf376453ca1353732df5ec2"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/partial': failed to disassemble missing symbol fwp_p_grpc_force\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/partial': failed to disassemble missing symbol g_sender_peer_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/partial': failed to disassemble missing symbol g_conn_drop\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/partial': failed to disassemble missing symbol g_unlink\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/partial': failed to disassemble missing symbol fwp_task_dispose\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/partial': failed to disassemble missing symbol g_cell_drop\n"
+          },
+          {
+            "client": "retained",
+            "source": {
+              "bytes": 958879,
+              "sha256": "16b64f9571cf409b770245a14f899d18b8481146175839b6fd2c4af126a1d5b0"
+            },
+            "binary": {
+              "bytes": 298488,
+              "sha256": "1595d9a83f2c80e4e5b181a32a796290d96b43585f3f3428c2b36ee54ef29ada"
+            },
+            "header": "\n/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/retained:\tfile format elf64-littleaarch64\narchitecture: aarch64\nstart address: 0x0000000000005180\n",
+            "symbols": [
+              "fwp_drop7",
+              "f26",
+              "g_cell_drop",
+              "g_force",
+              "fwp_p_grpc_force",
+              "fwp_apply_owned",
+              "g_stream_drop",
+              "g_stream_reader_release",
+              "g_unlink",
+              "g_sender_peer_finish",
+              "g_conn_dead",
+              "g_conn_drop",
+              "g_conn_release",
+              "fwp_free_zombie",
+              "fwp_task_dispose"
+            ],
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=fwp_drop7,f26,g_cell_drop,g_force,fwp_p_grpc_force,fwp_apply_owned,g_stream_drop,g_stream_reader_release,g_unlink,g_sender_peer_finish,g_conn_dead,g_conn_drop,g_conn_release,fwp_free_zombie,fwp_task_dispose",
+              "/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/retained"
+            ],
+            "assembly": {
+              "file": "retained.asm",
+              "bytes": 77090,
+              "sha256": "70c3061fa9fb16e8f5f73189faf3d7607cb3ba8d5ac29c49abaf6c456c8e3049"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/retained': failed to disassemble missing symbol fwp_p_grpc_force\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/retained': failed to disassemble missing symbol g_sender_peer_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/retained': failed to disassemble missing symbol g_conn_drop\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/retained': failed to disassemble missing symbol g_unlink\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/retained': failed to disassemble missing symbol fwp_task_dispose\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-closed-client-evidence/39002767125/closed-clients-ubuntu-24.04-arm/retained': failed to disassemble missing symbol g_cell_drop\n"
+          }
+        ],
+        "limits": "Static inspection only. No downloaded executable ran. Symbols inlined by the compiler can be absent; the typed cache destructor must be present. Disassembly requires human review for loops, frame sizes and register use. No timing claim.",
+        "manual_review": {
+          "client": "full",
+          "connection_release": "g_conn_release at 0x1e130 reserves 48 frame bytes including saved registers. It decrements the transport count, unregisters/closes the descriptor and releases TLS and in/out buffers, then returns at 0x1e224 without freeing the connection record.",
+          "task_release": "fwp_free_zombie at 0xbb48 reserves 32 bytes including saved registers. After stack and GC-link removal it loads counted at 0xbbe0; client I/O tasks have zero there and branch at 0xbbec to return, bypassing task-object release."
+        }
+      },
       "files": {
         "source.txt": {
           "bytes": 41,
@@ -18918,6 +19190,10 @@
         "stream-owners/streams-no-free-true.c": {
           "bytes": 872904,
           "sha256": "c386f5e396079167b75c2ff77b39e155494de34586a5126ad2b052c7d4fc7139"
+        },
+        "binary-observations.json": {
+          "bytes": 9573,
+          "sha256": "12ab00303b2342dce47fd4ac51ee5f51fd0a2e8a9db0d2337f2d5873ce279164"
         }
       }
     }

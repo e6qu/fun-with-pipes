@@ -195,7 +195,12 @@ int main(void){
   while(fwp_gc_tasks){fwp_make_ready(fwp_root);fwp_block();fwp_free_zombie();}
   fwp_free_zombie();
   if(finished!=1||entered!=(mode==1?0:1)||fwp_zombie){fprintf(stderr,"unique task iteration=%d mode=%d entered=%d finished=%d zombie=%p\n",i,mode,entered,finished,(void*)fwp_zombie);return 203;}
-  if(measured&&(charged()!=start||fwp_gc.ncollect))return 204;
+#ifndef FWP_RESOURCE_NO_FREE
+  if(measured&&(charged()!=start||fwp_gc.ncollect)){fprintf(stderr,"unique task storage iteration=%d mode=%d before=%.0f after=%.0f collections=%zu\n",i,mode,start,charged(),fwp_gc.ncollect);return 204;}
+#else
+  if(measured&&(charged()<=start||fwp_gc.ncollect))return 205;
+  start=charged();
+#endif
  }
  return 0;
 }
@@ -212,7 +217,14 @@ int main(void){
             let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
             assert_eq!(out.status.code(), Some(204), "unique task release: {out:?}");
         }
-        fwp::cgen::compile_c(&format!("{runtime}\n{unique_probe}"), &exe, opt).unwrap();
+        let unique_code = format!("{runtime}\n{unique_probe}");
+        fwp::cgen::compile_c(&unique_code, &exe, opt).unwrap();
+        if let Some(folder) = std::env::var_os("FWP_REPEATED_CLIENT_ARTIFACTS") {
+            let folder = std::path::PathBuf::from(folder).join("task-owners");
+            std::fs::create_dir_all(&folder).unwrap();
+            std::fs::write(folder.join(format!("unique{opt}.c")), &unique_code).unwrap();
+            std::fs::copy(&exe, folder.join(format!("unique{opt}.exe"))).unwrap();
+        }
         for gc in ["off", "on"] {
             for poison in ["0", "1"] {
                 let out = Command::new(&exe)
@@ -230,6 +242,10 @@ int main(void){
         }
     }
     for opt in ["-O1", "-O2"] {
+        let retained = format!("#define FWP_RESOURCE_NO_FREE 1\n{runtime}\n{unique_probe}");
+        fwp::cgen::compile_c(&retained, &exe, opt).unwrap();
+        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        assert!(out.status.success(), "disabled task freeing {opt}: {out:?}");
         for (control, code) in [
             (&no_duplicate, 2),
             (&no_result, 6),

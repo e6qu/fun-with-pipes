@@ -72,6 +72,9 @@ def main():
         checks += ["boxed_projection_transfers_unique_fields_and_preserves_shared_values",
                    "environment_tls_cache_releases_after_task_and_finalizer_teardown",
                    "failed_environment_tls_construction_releases_unpublished_storage"]
+    if args.closed_connections and baseline:
+        checks += ["task_handles_and_cached_results_have_independent_owners",
+                   "fatal_transport_allocations_report_errors_from_task_stacks"]
     output_tables = args.output.parent / args.output.stem
     output_tables.mkdir(parents=True, exist_ok=True)
     results = []
@@ -91,6 +94,10 @@ def main():
         log = log_path.read_text()
         for check in checks:
             assert re.search(r"test " + re.escape(check) + r" \.\.\. ok", log), (host, check)
+        if args.closed_connections and baseline and not host.startswith("windows-"):
+            for check in ["grpc_connection_startup_releases_failed_task_reservations",
+                          "grpc_connect_and_handshake_release_pending_resources_on_cancellation"]:
+                assert re.search(r"test " + re.escape(check) + r" \.\.\. ok", log), (host, check)
         inventory = json.loads((folder / "primitive-inventory.json").read_text())
         assert inventory["head"] == args.head
         rows = table(folder / "memory.tsv")

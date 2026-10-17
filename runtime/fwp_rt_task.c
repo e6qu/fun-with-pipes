@@ -536,9 +536,16 @@ static void fwp_task_dispose(V value) {
     if (t->result_drop && result) t->result_drop(result);
     fwp_mem_free(t->st);
     t->st = 0;
+    enum fwp_task_ownership ownership = t->ownership;
     t->ownership = FWP_TASK_TRACED;
-    /* Task storage is mutable kind 2, not a record/variant header. */
-    fwp_rc_resource_free_arr(value);
+    /* A sole scheduler owner has no reference count. Counted storage release
+     * deliberately ignores zero-count objects, so unique tasks return their
+     * raw allocation directly. Neither policy uses a record/variant header. */
+    if (ownership == FWP_TASK_UNIQUE) {
+#ifndef FWP_RESOURCE_NO_FREE
+        fwp_mem_free(t);
+#endif
+    } else fwp_rc_resource_free_arr(value);
 }
 
 /* A shared scheduler reference survives alongside language-visible handles. */
