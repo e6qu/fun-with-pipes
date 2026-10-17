@@ -48,6 +48,36 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Remote calls without tracing and record-field moves (PR #161)
+
+[PR #161](https://github.com/e6qu/fun-with-pipes/pull/161) merged as `fd25a10c`
+on 2026-10-17 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39044644736)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39044644846)
+passed at `0e162dcd7544c9fce9aede02f9196fc061e6d258`.
+The merge and tested head share tree `f10f9aa40d5889f959e6d45975381ac2cb6272a8`;
+the parent is accepted #160 (`8ae595df`). The complete message is
+`Compile remote calls with ARC and move unique record fields`.
+Duplicate postmerge production `39051585338` is confirmed cancelled.
+
+Checked gRPC clients/services prove iterator handler lifetimes and own decoded
+replies, channel deliveries and caught errors. Unique plain-data record fields
+move into compiled calls; shared values retain independent owners. Resource
+lifetimes keep their existing rules. [Six-host evidence](measurements/remote-arc-field-moves-2026-10-17.json)
+contains 216 repeated memory rows: greeting retains fall from three to two per
+call, plus one connection retain; allocations and peak/final managed storage are
+unchanged. Linux server final storage is 544 bytes; macOS/Windows zero. Actual
+ARC binaries exclude tracing, but Linux text grows about 2.9–3.4%; stack and
+file-layout costs are recorded separately. This is no timing or C/Rust parity claim.
+
+The first production run (`39038709892`) exposed a stale test expecting two field
+releases where moving needs one. The repair preserves partial/error cleanup and
+adds controls that deliberately restore the old copies. All 710 targets scheduled
+across the four failed jobs finished; only that ownership target failed. Both
+Linux jobs ran 238 targets each, both regular macOS jobs 117 each. The other five
+production jobs and docs passed. Final acceptance reran the complete matrix;
+the original long-running RSS bounds also pass.
+
 ## Server cleanup and borrowed fold values (PR #160)
 
 [PR #160](https://github.com/e6qu/fun-with-pipes/pull/160) merged as `8ae595df`

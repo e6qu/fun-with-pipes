@@ -408,7 +408,9 @@ in [the handoff](development-state.md).
 
 The HTTP client extension is implemented under platform validation. Client
 connections have independent pool, caller and I/O-task owners; startup cleanup
-releases a reserved owner if a background task cannot start. A request keeps its
+releases a reserved owner if a background task cannot start. Client and server
+entry transfer the socket/TLS session only after the connection allocation
+succeeds; failure leaves the original owner intact. A request keeps its
 stream alive until the response is copied or the call fails. Failure and
 cancellation notify the peer before releasing request storage. Response strings,
 header pairs and list cells are owned as they are created, so partial copies can
@@ -1052,8 +1054,8 @@ A split gRPC build can select `--gc arc` for both its client and service entries
 command and iterator lifetime rules. All six native hosts pass focused O1/O2
 interpreter comparisons, cleanup controls and tracing-free binary checks. The
 [repeated comparison](benchmarks.md#remote-services-without-tracing-and-with-fewer-field-retains)
-records remaining memory/count costs; [the handoff](development-state.md) tracks
-final production acceptance. This does not establish complete GC removal.
+records remaining memory/count costs; [PR #161 acceptance](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161)
+records all final production gates. This does not establish complete GC removal.
 
 The compiler follows known iterator continuations, including later steps. A
 single-result remote call consumes its input under the caller's current state
@@ -1098,8 +1100,8 @@ their existing cleanup rules. Tests cover shared parents, shared fields, failure
 after a partial transfer, cancellation on entry and returned values. The current
 six-host checks pass, with one fewer retain per measured greeting and unchanged
 allocation requests. The [comparison](benchmarks.md#remote-services-without-tracing-and-with-fewer-field-retains)
-also records code-size and stack costs. Final production acceptance is tracked in
-[the handoff](development-state.md); the record allocation and sharing costs remain.
+also records code-size and stack costs. PR #161 passed final production acceptance;
+the record allocation and sharing costs remain.
 
 ### Moving values held by a closure
 

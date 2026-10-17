@@ -1,17 +1,30 @@
 # Session handoff
 
-Preparation branch: `owned-http2-client`, isolated at
-`/private/tmp/fwp-owned-http2-client`. PR #161 is still awaiting final acceptance;
-no second PR is open. The root checkout retains its merge watcher and final-head
-CI status. This branch is preparation for the next delivery.
+Current branch: `http-client-delivery`, based on accepted PR #161 (`fd25a10c`).
+The HTTP implementation is integrated as `5ba6e970`; its files match preparation
+`828bf74c8c7484aabcf82962705ff50b103a3107`, retained by immutable tag
+`evidence/http-client-owners-20261017`. This checkout is the current delivery.
+
+PR #161 passed all nine production jobs (`39044644736`) and documentation
+(`39044644846`) at `0e162dcd`. Its squash has the identical tree and the verified
+one-line message without trailers. Duplicate production `39051585338` is cancelled.
+See [history](roadmap-history.md) for the accepted work and failure audit.
 
 ## Next action
 
-Next: publish this preparation commit and run `http-clients` in the numerical
-and ownership workflow on all six native hosts. Inspect all failed jobs/targets
-before batching repairs. Keep PR #161's tested head unchanged; integrate this
-branch and open the next PR only after #161 is accepted. Retain actual binary
-inspection and repeated memory evidence before final-head production acceptance.
+Next: publish the combined repairs and repeat the six-native-host HTTP suite,
+including memory measurements. The [first run](https://github.com/e6qu/fun-with-pipes/actions/runs/39051530853)
+(source `828bf74c`) finished every target and real HTTP comparison. All six hosts
+passed interpreted/native cleartext/TLS calls. The complete failure audit found
+one stale gRPC injection target on all hosts, plus two Unix-only probes on Windows.
+Repairs preserve their negative controls and add both probes to Windows production.
+A separate startup review found client/server socket/TLS transfer happened before
+connection allocation; the candidate now transfers only after success, with a deliberate
+premature-transfer control. Final HTTP acceptance is still pending.
+
+Publish the next PR after focused validation; inspect actual binaries and retain
+repeated memory evidence before all final-head production/docs gates. No HTTP
+delivery has been accepted yet.
 
 ## Batch scope and acceptance
 
@@ -46,8 +59,8 @@ Implementation is in progress; nothing in this batch is accepted yet.
 
 ## Local checks and pending validation
 
-All commands use the root checkout's `scripts/local-guard.py` with this worktree
-as the working directory, sharing its target and resource limits. Set
+Preparation checks used the root checkout's `scripts/local-guard.py` from the
+isolated worktree, sharing its target and resource limits. Set
 `FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3` for C/TLS probes; the initial HTTP
 probe could not find headers until the installed prefix was supplied.
 
@@ -78,3 +91,31 @@ source-root protection during connection-key copying and transport preparation.
 Final Rust formatting, documentation audit (2.64s) and workflow validation pass.
 Run the whole six-host preparation suite. Retain measurements and
 actual machine-code review before claiming allocation, stack or code-size costs.
+
+## Combined repair and measurement checks
+
+All six original jobs completed ten ownership targets and one real-HTTP target
+(66 target executions). All failures are accounted for above. The HTTP comparison
+passed everywhere; no platform is accepted with its failed ownership step.
+
+- Guarded `cargo test --test grpc_client_requests`: passes (25.93s including build),
+  with the omission scoped to gRPC and all O1/O2 controls retained.
+- Guarded `cargo test --test http2_client_ownership`: both tests pass (42.08s),
+  including socket/TLS preservation when allocation fails and a negative control
+  that deliberately transfers too early.
+- Guarded `cargo test --no-fail-fast --test grpc_connect_cleanup --test library_resources`:
+  both pass (23.92s). Probes use native socket widths, explicit Windows/Unix
+  loader APIs and real loopback peers; no test is skipped for Windows.
+- Added a runner-only repeated HTTP measurement: tracing/checked ARC, cleartext/TLS,
+  1/16/256 calls and three measured processes per case. Counts include managed
+  allocations, retains and charged peak/final storage; raw transport/TLS/OS memory
+  and timing are excluded. It compares current fwp modes, not C/Rust or a prior
+  compiler. Runtime results and actual binary review remain pending.
+
+Final startup rerun after adding the server-side control passes (18.53s); its
+first local attempt exposed an ambiguous injection needle, now scoped to the
+server entry. Both integration harnesses compile (1.46s). The repeated source
+passes ARC code emission (1.10s) after adding its concrete fold signature and
+using `IoError` consistently for input/network errors; source formatting passes.
+Rust formatting, documentation (2.86s) and workflow lint (1.02s) pass. The complete
+first-run log audit is retained locally at `/private/tmp/fwp-http-first-audit.json`.

@@ -7,26 +7,47 @@ static char pool_key[4097];
 static void no_start_release(void *arg) { (void)arg; }
 static void connect_client(void *arg, int cancelled) {
     if (cancelled) _Exit(30);
+    volatile V transport = 0;
+    SSL *volatile expected_tls = 0;
     jmp_buf failed;
     jmp_buf *saved = fwp_cur->trap_jb;
     fwp_cleanup *saved_cleanup = fwp_cur->trap_cleanup;
     if (!setjmp(failed)) {
         fwp_cur->trap_jb = &failed; fwp_cur->trap_cleanup = fwp_cleanups;
         V conn = fwp_p_tcp_connect(fwp_cstr(target), ERROR_TYPE);
+        transport = conn;
+        if (startup_stage < 0) {
+            SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
+            if (!ctx) _Exit(31);
+            expected_tls = SSL_new(ctx); SSL_CTX_free(ctx);
+            if (!expected_tls) _Exit(32);
+            STREAM(conn)->tls = expected_tls;
+        }
+        if (startup_stage == -2) { fwp_p_http2_serve(conn, 0, 0, 0, 0); _Exit(33); }
         V option = fwp_data(1, 1, &conn);
         connected = (g_conn *)(uintptr_t)fwp_p_http2_send(fwp_cstr(pool_key), option, 0, ERROR_TYPE, RESPONSE_TYPE);
         FWP_KEEP_ALIVE(option);
     } else trapped++;
     fwp_cur->trap_jb = saved; fwp_cur->trap_cleanup = saved_cleanup;
+    if (startup_stage < 0) {
+        if (!transport || SOCK(transport)->fd == FWP_INVALID_SOCKET || STREAM(transport)->tls != expected_tls) _Exit(10);
+        fwp_p_sock_close(transport);
+    }
+    FWP_KEEP_ALIVE(transport);
 }
 int main(void) {
     fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0)); fwp_trap_recover = g_trap_recover;
     memset(pool_key, 'x', sizeof pool_key - 1); pool_key[sizeof pool_key - 1] = 0;
-    for (startup_stage = 0; startup_stage < 3; startup_stage++) {
+    for (startup_stage = -2; startup_stage < 3; startup_stage++) {
         V listener = fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"), ERROR_TYPE);
         V address = fwp_p_local_addr(listener); snprintf(target, sizeof target, "%s", STR(address)->d);
         pending = 0; started_reader = started_writer = 0; connected = 0; trapped = finalized = 0;
         fwp_task *task = fwp_spawn_task(0, connect_client, 0, 0, 0); fwp_await(task);
+        if (startup_stage < 0) {
+            if (!task->done || !trapped || pending || fwp_cleanups || g_pool) return 11;
+            fwp_p_tcp_stop(listener); FWP_KEEP_ALIVE(listener); FWP_KEEP_ALIVE(PTR(task));
+            continue;
+        }
         g_conn *c = pending;
         if (!task->done || !c || fwp_cleanups || trapped != (startup_stage < 2)) return 1;
         if (startup_stage == 0 && (connected || g_pool || started_reader || started_writer)) return 2;

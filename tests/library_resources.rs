@@ -27,6 +27,9 @@ fn unload_closes_owned_files_sessions_and_transferred_http2_handles() {
     };
     let (generated, header) = fwp::cgen::generate_library(&p, "resources").unwrap();
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <openssl/ssl.h>
 static int *counts;static SSL_CTX *client_ctx;static void *client_name,*client_cache;static SSL_CTX *servers[2];static void *wires[2],*owners[2];
 static void observe_ctx_free(SSL_CTX *ctx);
@@ -61,58 +64,53 @@ static int handshake(SSL *server){
  int ok=SSL_is_init_finished(server)&&SSL_is_init_finished(client)&&n==2&&!memcmp(protocol,"h2",2);
  SSL_free(client);return ok;
 }
-void setup(int *fds,int *observations,const char *path,const char *cert,const char *key){
+/* Use real loopback sockets on all hosts; Windows has no socketpair. */
+static void socket_pair(fwp_socket_t pair[2]) {
+ fwp_socket_t listener=fwp_socket_open(AF_INET,SOCK_STREAM,0);
+ struct sockaddr_in address={0};address.sin_family=AF_INET;address.sin_addr.s_addr=htonl(INADDR_LOOPBACK);
+ socklen_t size=sizeof address;
+ if(listener==FWP_INVALID_SOCKET||fwp_socket_bind(listener,(struct sockaddr *)&address,size)||fwp_socket_listen(listener,1)||getsockname(listener,(struct sockaddr *)&address,&size))abort();
+ pair[0]=fwp_socket_open(AF_INET,SOCK_STREAM,0);
+ if(pair[0]==FWP_INVALID_SOCKET||fwp_socket_connect(pair[0],(struct sockaddr *)&address,size))abort();
+ pair[1]=fwp_socket_accept(listener,0,0);fwp_socket_close(listener);
+ if(pair[1]==FWP_INVALID_SOCKET)abort();
+}
+void setup(uintptr_t *fds,int *observations,const char *path,const char *cert,const char *key){
  fwp_lib_init();counts=observations;
- V file=fwp_p_file_open(fwp_cstr(path),1,0);fds[0]=fileno(((fwp_file *)(uintptr_t)file)->f);
+ V file=fwp_p_file_open(fwp_cstr(path),1,0);
+#ifdef _WIN32
+ fds[0]=(uintptr_t)_get_osfhandle(_fileno(((fwp_file *)(uintptr_t)file)->f));
+#else
+ fds[0]=(uintptr_t)fileno(((fwp_file *)(uintptr_t)file)->f);
+#endif
  V closed=fwp_p_file_open(fwp_cstr(path),0,0);fwp_p_file_close(closed);fwp_p_file_close(closed);
  client_ctx=fwp_tls_client_ctx("",0);client_name=fwp_tls_clients[0].ca;client_cache=fwp_tls_clients;
  for(int i=1;i<=3;i++){
-  int pair[2];if(socketpair(AF_UNIX,SOCK_STREAM,0,pair))abort();fds[i]=pair[0];fds[i+3]=pair[1];
+  fwp_socket_t pair[2];socket_pair(pair);fds[i]=pair[0];fds[i+3]=pair[1];
   V sock=fwp_sock_new(pair[0],1);
   if(i<=2){STREAM(sock)->tls=SSL_new(client_ctx);SSL_set_fd(STREAM(sock)->tls,pair[0]);}
-  if(i==2){void *ssl=0;int fd=w_take(sock,&ssl);g_conn *c=g_conn_new(fd, "", "localhost",0);c->ssl=ssl;}
+  if(i==2){SSL *ssl=0;fwp_socket_t fd=w_take(sock,&ssl);g_conn *c=g_conn_new(fd, "", "localhost",0);c->ssl=ssl;}
  }
  for(int i=0;i<2;i++){
   unsigned char *wire=malloc(4);memcpy(wire,"\x02h2",4);wires[i]=wire;
   servers[i]=fwp_tls_server_ctx(cert,key,wire,3,"");if(!servers[i])abort();owners[i]=SSL_CTX_get_app_data(servers[i]);
-  int listener[2],session[2];if(socketpair(AF_UNIX,SOCK_STREAM,0,listener)||socketpair(AF_UNIX,SOCK_STREAM,0,session))abort();
+  fwp_socket_t listener[2],session[2];socket_pair(listener);socket_pair(session);
   fds[7+i*2]=listener[0];fds[8+i*2]=session[0];fds[11+i*2]=listener[1];fds[12+i*2]=session[1];
   V l=fwp_sock_new(listener[0],0);STREAM(l)->tls=servers[i];
   V c=fwp_sock_new(session[0],1);STREAM(c)->tls=fwp_tls_accepted(servers[i],session[0]);if(!STREAM(c)->tls||!handshake(STREAM(c)->tls))abort();
   if(i==1)fwp_p_tcp_stop(l); // Accepted session is the last protocol owner.
  }
  // Explicit close must remain idempotent when finalization follows.
- int pair[2];if(socketpair(AF_UNIX,SOCK_STREAM,0,pair))abort();
- V closed_sock=fwp_sock_new(pair[0],1);fwp_p_sock_close(closed_sock);fwp_p_sock_close(closed_sock);close(pair[1]);
+ fwp_socket_t pair[2];socket_pair(pair);
+ V closed_sock=fwp_sock_new(pair[0],1);fwp_p_sock_close(closed_sock);fwp_p_sock_close(closed_sock);fwp_socket_close(pair[1]);
 }
 "#;
-    let host = r#"
-#include <dlfcn.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <errno.h>
-int main(int argc,char **argv){
- if(argc!=5)return 30;
- for(int cycle=0;cycle<3;cycle++){
-  void *lib=dlopen(argv[1],RTLD_NOW|RTLD_LOCAL);if(!lib){fprintf(stderr,"%s\n",dlerror());return 31;}
-  void (*setup)(int *,int *,const char *,const char *,const char *)=dlsym(lib,"setup");if(!setup)return 32;
-  int fds[15],counts[8]={0};setup(fds,counts,argv[2],argv[3],argv[4]);
-  if(dlclose(lib))return 33;
-  for(int i=0;i<4;i++)if(fcntl(fds[i],F_GETFD)!=-1||errno!=EBADF){fprintf(stderr,"owned fd %d remains open\n",i);return 1;}
-  for(int i=7;i<11;i++)if(fcntl(fds[i],F_GETFD)!=-1||errno!=EBADF)return 1;
-  if(counts[0]!=1||counts[1]!=4||counts[2]!=0||counts[3]!=1||counts[4]!=1||counts[5]!=2||counts[6]!=2||counts[7]!=2){fprintf(stderr,"ctx=%d ssl=%d shutdown=%d name=%d cache=%d\n",counts[0],counts[1],counts[2],counts[3],counts[4]);return 2;}
-  for(int i=11;i<15;i++){if(fcntl(fds[i],F_GETFD)==-1)return 3;close(fds[i]);}
-  for(int i=4;i<7;i++){if(fcntl(fds[i],F_GETFD)==-1)return 3;close(fds[i]);}
- }
- return 0;
-}
-"#;
+    let host = include_str!("fixtures/library_resources_host.c");
     let dir = std::env::temp_dir().join(format!("fwp-library-resources-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let openssl = std::env::var("FWP_OPENSSL_DIR")
-        .map(|p| format!("{p}/bin/openssl"))
-        .unwrap_or_else(|_| "openssl".into());
+    // The dependency prefix contains headers/libraries; the runner supplies its
+    // OpenSSL command separately on PATH (including Windows).
+    let openssl = "openssl";
     let out = Command::new(openssl)
         .args([
             "req",

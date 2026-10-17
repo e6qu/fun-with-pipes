@@ -126,20 +126,20 @@ static void w_upgraded(g_conn *c, V r, g_slist *fresh);
 /* serve an HTTP/2 connection; one upgraded from HTTP/1.1 (Upgrade: h2c)
  * brings its request, (method, target, headers, body), as stream 1 */
 static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
-    SSL *ssl;
-    fwp_socket_t fd = w_take(conn, &ssl);
+    fwp_socket_t fd = SOCK(conn)->fd;
     if (fd == FWP_INVALID_SOCKET) return FWP_UNIT;
     char peer[128] = "";
     struct sockaddr_storage ss;
     socklen_t sl = sizeof ss;
     if (getpeername(fd, (struct sockaddr *)&ss, &sl) == 0) fwp_fmt_addr((struct sockaddr *)&ss, peer, sizeof peer);
     g_conn *c = g_conn_new(fd, "", peer, 0);
+    c->fd = w_take(conn, &c->ssl);
+    FWP_KEEP_ALIVE(conn);
     c->out.len = 0;
     h2_our_settings(&c->out);
     unsigned char st[6] = {0, 3, 0, 0, 0, W_MAX_STREAMS};
     h2_frame(&c->out, H2_SETTINGS, 0, 0, st, 6);
     c->preface = 0;
-    c->ssl = ssl;
     struct g_web *w = (struct g_web *)fwp_mem_alloc(sizeof *w);
     w->handler = handler;
     int64_t mh = (int64_t)OBJ(limits)->f[0], mr = (int64_t)OBJ(limits)->f[1];
@@ -402,13 +402,15 @@ static V fwp_p_http2_send(V key, V conn, V req, const fwp_desc *err, const fwp_d
     fwp_check_cancel();
     g_conn *c;
     if (conn != FWP_NONE) {
-        SSL *ssl;
-        fwp_socket_t fd = w_take(OBJ(conn)->f[0], &ssl);
+        V transport = OBJ(conn)->f[0];
+        fwp_socket_t fd = SOCK(transport)->fd;
         if (fd == FWP_INVALID_SOCKET) return fwp_io_error("closed", "connection is closed", err);
         c = g_conn_new(fd, "http2 ", STR(key)->d, 0);
         FWP_KEEP_ALIVE(key); /* keep the source string through the allocating copy */
         fwp_rc_fresh(PTR(c)); /* transport_start storage, moved to this call */
-        c->ssl = ssl;
+        /* The input owns the socket/TLS session until allocation succeeds. */
+        c->fd = w_take(transport, &c->ssl);
+        FWP_KEEP_ALIVE(conn);
         c->refs = 1;
         g_connect_start_owner transport_start = {c, 0, 0};
         fwp_cleanup transport_start_cleanup, io_owner;

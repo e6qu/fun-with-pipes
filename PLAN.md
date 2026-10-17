@@ -29,8 +29,7 @@ they do not establish that every abstraction is free or every program avoids GC.
 
 Default native execution still combines reference counting with tracing.
 Checked `--gc arc` removes tracing for supported programs, including accepted
-synchronous WASI entries. Checked gRPC entries are under validation in the current
-delivery. Some
+synchronous WASI entries and gRPC clients/services. Some
 closures, containers and call boundaries still allocate, and measured numerical
 workloads still have performance gaps. See [ownership](docs/ownership.md),
 [numerics](docs/numerics.md) and [benchmarks](docs/benchmarks.md) for current limits.
@@ -81,28 +80,21 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #160](https://github.com/e6qu/fun-with-pipes/pull/160) is accepted after all
-nine production jobs and documentation passed. Server tasks, requests and
-connections now release when their owners finish. Known fold callbacks borrow
-captured values and input elements. Socket shutdown wakes parked readers.
-The repeated server measurements leave constant managed storage, and the original
-long-running memory regression passes. [History](docs/roadmap-history.md) records
-acceptance and the measured allocation, count, code-size and stack costs.
+[PR #161](https://github.com/e6qu/fun-with-pipes/pull/161) is accepted after all
+nine production jobs and documentation passed. Checked gRPC clients and services
+can run without tracing. Remote replies/errors have explicit cleanup, and calls
+move fields from uniquely owned records without redundant retains. Previous
+server cleanup and borrowed fold values remain accepted. [History](docs/roadmap-history.md)
+records the exact commits, checks and measured costs.
 
-The next combined delivery admits checked gRPC client/service builds with
-`--gc arc`, proves when streamed computations run, and cleans up decoded replies
-and caught remote errors on failure or cancellation. It also transfers fields
-from uniquely owned records into compiled function calls without redundant
-reference-count increments. Shared values keep their owners; resource lifetimes
-retain their existing rules. This is implemented work under validation.
-
-Acceptance requires all six native hosts to pass real interpreted/compiled calls,
-cleanup controls, repeated memory measurements and actual binary inspection.
-The measurements compare identical fwp programs with the accepted server baseline;
-report allocation requests, reference counts, managed storage, process RSS and
-code size separately. Require every final-head production job and documentation
-before merge. [The handoff](docs/development-state.md) identifies the exact
-candidate and next action.
+The current delivery gives HTTP client connections, I/O tasks, requests and
+partially built responses explicit owners. It also fixes truncated connection
+keys that could confuse distinct TLS configurations. Implementation is under
+six-platform validation; it does not establish checked HTTP server support.
+Acceptance requires interpreted/native cleartext and TLS comparisons, cleanup
+failure controls, repeated memory counts and actual ARM64/AMD64 binary inspection.
+Require all nine final-head production jobs and documentation before merging.
+[The handoff](docs/development-state.md) identifies the candidate and next action.
 
 Browser/HTTP host entry, retained callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

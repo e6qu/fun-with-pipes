@@ -114,11 +114,12 @@ int main(void){
         cleanup,
         "fwp_cleanup_push(&client_request, no_release, &req);",
     );
-    let abort = "fwp_cleanup_push(&request_abort, g_call_reset, &call);";
+    let abort =
+        "fwp_cleanup_push(&request_abort, g_call_reset, &call);\n        if (r->m.input == 0) {";
     assert_eq!(generated.matches(abort).count(), 1);
     let missing_abort = generated.replace(
         abort,
-        "fwp_cleanup_push(&request_abort, no_release, &call);",
+        "fwp_cleanup_push(&request_abort, no_release, &call);\n        if (r->m.input == 0) {",
     );
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{hooks}\n{missing_abort}\n{fixture}"), &exe, opt).unwrap();

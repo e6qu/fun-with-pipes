@@ -1,0 +1,46 @@
+# Memory measurement: make the requested number of HTTP/2 calls to FWP_BASE.
+# Every /hello response has status 200, so N calls print 200 * N.
+# The response body is received and released even though only status is summed.
+
+base : () -> String ! {IO}
+base = const "FWP_BASE" | env.get | option.unwrap-or "http://127.0.0.1:8080"
+
+get-with : HttpVersion -> String -> ClientResponse ! {Async, IO, Network, Error[IoError]}
+get-with = curry (fork
+    http.send-using
+    (.0
+        | make ClientOptions {
+            tls = const tls.options,
+            version = id,
+            compression = const True,
+        })
+    (.1
+        | fork concat id (const () | base)
+        | make ClientRequest {
+            method = const "GET",
+            url = id,
+            headers = const [],
+            body = const http.no-bytes,
+        }))
+
+# Each step makes one pooled HTTP/2 request and adds its status to the sum.
+step : I64 -> I64 -> I64 ! {Async, IO, Network, Error[IoError]}
+step = curry (both
+        .0
+        (.1 | const "/hello" | get-with HttpVersion.Http2 | .status)
+    | uncurry add)
+
+main =
+    ()
+    | args
+    | head
+    | option.and-then parse-int
+    | (match
+        Some _ -> id
+        None ->
+            "expected a request count"
+            | make IoError { kind = const "input", message = id }
+            | fail)
+    | flip iter.take (iter.count-from 0)
+    | iter.fold step 0
+    | echo

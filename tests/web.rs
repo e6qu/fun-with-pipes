@@ -21,6 +21,9 @@ use std::process::{Child, Command, Stdio};
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
+#[path = "support/client_allocations.rs"]
+mod client_allocations;
+
 fn fwp() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_fwp"))
 }
@@ -691,6 +694,98 @@ fn checked_arc_http_clients_match_interpreter_with_pooled_and_tls_calls() {
         }
     }
     std::fs::remove_dir_all(dir).unwrap();
+}
+
+/// Compare current tracing/ARC costs for identical pooled HTTP/2 calls. These
+/// allocation counters exclude raw transport buffers and are not a speed test.
+#[test]
+#[ignore = "runner-only repeated HTTP client allocation measurement"]
+fn repeated_http_client_memory_measurement() {
+    assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
+    let artifacts = PathBuf::from(
+        std::env::var_os("FWP_HTTP_MEMORY_ARTIFACTS").expect("measurement artifact directory"),
+    );
+    std::fs::create_dir_all(&artifacts).unwrap();
+    let source = root().join("tests/web/repeated-client.fwp");
+    std::fs::copy(&source, artifacts.join("client.fwp")).unwrap();
+    std::fs::write(artifacts.join("scope.txt"), "Current fwp tracing and checked ARC clients perform identical sequential pooled HTTP/2 GET /hello calls against an interpreted loopback server. Each response body is consumed/released and its status contributes 200 to the result. Inputs: 1, 16, 256 calls, cleartext and TLS; three separate instrumented processes per case, with raw interpreter and ordinary native output as controls. Native -O2, ordinary compiler optimization, -ffp-contract=off. Managed allocation requests/bytes, effective retains and allocator-charged peak/final storage start after constant initialization and end after entry execution and cached-value cleanup, before whole-runtime shutdown. GC is disabled and physical freeing enabled in both modes. Pooled connections and detached I/O tasks can remain at this sample. Raw network buffers, TLS/allocator/OS metadata, server memory, process RSS and timing are excluded. This compares memory modes at one revision, not before/after speed or C/Rust parity. Source, ordinary and instrumented C/binaries and raw results are retained.\n").unwrap();
+    let ca = certs().expect("HTTP memory checks require OpenSSL");
+    let mut binaries = Vec::new();
+    for mode in ["tracing", "arc"] {
+        let cfile = artifacts.join(format!("{mode}.c"));
+        let out = Command::new(fwp())
+            .args(["build", "--gc", mode, "--emit-c", "-o"])
+            .arg(&cfile)
+            .arg(&source)
+            .output()
+            .unwrap();
+        assert!(out.status.success(), "{mode}: {out:?}");
+        let generated = std::fs::read_to_string(&cfile).unwrap();
+        let instrumented = client_allocations::instrument_client_allocations(&generated);
+        let measured_c = artifacts.join(format!("{mode}-measured.c"));
+        std::fs::write(measured_c, &instrumented).unwrap();
+        let ordinary = artifacts.join(format!("{mode}.exe"));
+        let measured = artifacts.join(format!("{mode}-measured.exe"));
+        fwp::cgen::compile_c(&generated, &ordinary, "-O2").unwrap();
+        fwp::cgen::compile_c(&instrumented, &measured, "-O2").unwrap();
+        binaries.push((mode, ordinary, measured));
+    }
+    let mut rows = String::from("mode\ttls\tcalls\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\n");
+    for tls in [false, true] {
+        let server = start(Backend::Interp, tls, &[]).unwrap();
+        let base = format!("{}://{}", if tls { "https" } else { "http" }, server.addr);
+        for calls in [1, 16, 256] {
+            let expected = format!("{}\n", calls * 200);
+            let run = |command: &mut Command| {
+                command
+                    .arg(calls.to_string())
+                    .env("FWP_BASE", &base)
+                    .env("SSL_CERT_FILE", ca.join("ca.pem"))
+                    .env("FWP_GC", "off")
+                    .env("FWP_FREE", "1")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap()
+            };
+            let reference = run(Command::new(fwp())
+                .args(["run", "--interp"])
+                .env("FWP_NO_OPT", "1")
+                .arg(&source));
+            assert!(reference.status.success(), "{reference:?}");
+            assert_eq!(String::from_utf8_lossy(&reference.stdout), expected);
+            for (mode, ordinary, measured) in &binaries {
+                for (binary, repetition) in
+                    [(ordinary, 0), (measured, 1), (measured, 2), (measured, 3)]
+                {
+                    let out = run(&mut Command::new(binary));
+                    let prefix = format!("{mode}-tls-{tls}-{calls}-{repetition}");
+                    std::fs::write(artifacts.join(format!("{prefix}.stdout")), &out.stdout)
+                        .unwrap();
+                    std::fs::write(artifacts.join(format!("{prefix}.stderr")), &out.stderr)
+                        .unwrap();
+                    assert!(out.status.success(), "{prefix}: {out:?}");
+                    assert_eq!(String::from_utf8_lossy(&out.stdout), expected, "{prefix}");
+                    let stderr = String::from_utf8(out.stderr).unwrap();
+                    if repetition == 0 {
+                        assert!(stderr.is_empty(), "{prefix}: {stderr}");
+                    } else {
+                        let fields = stderr.trim().strip_prefix("client-memory\t").unwrap();
+                        let values: Vec<u64> =
+                            fields.split('\t').map(|v| v.parse().unwrap()).collect();
+                        assert_eq!(values.len(), 6);
+                        assert!(values[0] > 0 && values[1] > 0);
+                        assert_eq!(values[5], 0, "collections must be disabled");
+                        rows.push_str(&format!("{mode}\t{tls}\t{calls}\t{repetition}\t{fields}\n"));
+                        std::fs::write(artifacts.join("memory.tsv"), &rows).unwrap();
+                    }
+                }
+            }
+        }
+    }
+    println!("{rows}");
 }
 
 #[test]

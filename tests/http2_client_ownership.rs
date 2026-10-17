@@ -8,7 +8,8 @@ fn http2_client_startup_releases_reserved_io_and_connection_owners() {
     let mut generated = http2_values::generated();
     for (before, after) in [
         ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) { if(p==pending)finalized++;"),
-        ("c = g_conn_new(fd, \"http2 \", STR(key)->d, 0);", "c = g_conn_new(fd, \"http2 \", STR(key)->d, 0); pending=c;"),
+        ("c = g_conn_new(fd, \"http2 \", STR(key)->d, 0);", "if(startup_stage==-1)fwp_trap(\"connection allocation failure\"); c = g_conn_new(fd, \"http2 \", STR(key)->d, 0); pending=c;"),
+        ("g_conn *c = g_conn_new(fd, \"\", peer, 0);", "if(startup_stage==-2)fwp_trap(\"server connection allocation failure\"); g_conn *c = g_conn_new(fd, \"\", peer, 0);"),
         ("transport_start.reader = fwp_spawn_task(0, g_reader, c, 0, 1);", "if(startup_stage==0)fwp_trap(\"reader startup failure\"); transport_start.reader=fwp_spawn_task(0,g_reader,c,0,1); started_reader=transport_start.reader;"),
         ("transport_start.writer = fwp_spawn_task(0, g_writer, c, 0, 1);", "if(startup_stage==1)fwp_trap(\"writer startup failure\"); transport_start.writer=fwp_spawn_task(0,g_writer,c,0,1); started_writer=transport_start.writer;"),
         ("c->refs--; /* I/O tasks retain transport; this call keeps storage */", "c->refs--; return PTR(c); /* expose the startup owner without starting a request */"),
@@ -43,10 +44,24 @@ fn http2_client_startup_releases_reserved_io_and_connection_owners() {
     assert_eq!(generated.matches(full_key).count(), 1);
     let truncated_key = generated.replace(full_key,
         "char short_key[1194]; snprintf(short_key,sizeof short_key,\"%s\",STR(key)->d); c = g_conn_new(fd, \"http2 \", short_key, 0);");
+    let read_socket = "fwp_socket_t fd = SOCK(transport)->fd;";
+    assert_eq!(generated.matches(read_socket).count(), 1);
+    let premature_transfer = generated.replace(
+        read_socket,
+        "SSL *lost_tls; fwp_socket_t fd = w_take(transport, &lost_tls);",
+    );
+    let read_server_socket = "static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {\n    fwp_socket_t fd = SOCK(conn)->fd;";
+    assert_eq!(generated.matches(read_server_socket).count(), 1);
+    let premature_server_transfer = generated.replace(
+        read_server_socket,
+        "static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {\n    SSL *lost_tls; fwp_socket_t fd = w_take(conn, &lost_tls);",
+    );
     let dir = fwp::cgen::TempDir::new("http2-client-startup").unwrap();
     let exe = dir.join("probe");
     for opt in ["-O1", "-O2"] {
         for (source, expected) in [
+            (&premature_transfer, 10),
+            (&premature_server_transfer, 10),
             (&missing_reserve, 9),
             (&missing_startup, 9),
             (&truncated_key, 6),

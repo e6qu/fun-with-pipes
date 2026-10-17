@@ -96,6 +96,11 @@ jobs:
           PYENV
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output http-client-evidence/primitive-inventory.json
           cargo test --test web checked_arc_http_clients_match_interpreter_with_pooled_and_tls_calls -- --exact --nocapture
+      - name: Repeated HTTP client memory costs
+        if: ${{ !cancelled() && inputs.suite == 'http-clients' }}
+        env:
+          FWP_HTTP_MEMORY_ARTIFACTS: http-client-evidence/memory
+        run: cargo test --test web repeated_http_client_memory_measurement -- --ignored --exact --nocapture
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'http-clients'
         with:
