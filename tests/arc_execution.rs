@@ -254,7 +254,7 @@ fn wrapped_chain_cleanup_stack_measurement() {
             .arg(&cfile),
     );
     let code = std::fs::read_to_string(&cfile).unwrap();
-    let marker = "::Link */\nstatic void ";
+    let marker = "/* Link */\nstatic void ";
     let start = code.find(marker).expect("typed Link destructor") + marker.len();
     let drop = code[start..].split('(').next().unwrap();
     assert!(drop.starts_with("fwp_drop"));

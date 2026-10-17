@@ -13,7 +13,10 @@ owns another node of exactly the same type; a chain crossing a record and an
 `Option` instead recursively calls two destructors. The proposed workload owns
 one string and one optional next link per position. Before changing code, measure
 stack use at 64 and 1,024 links, verify physical reclamation with collection off,
-and compare its small language example with the interpreter. Run native builds
+and compare its small language example with the interpreter. Initial run
+`38987057363` failed in the fixture lookup: generated type comments use `Link`,
+not its module-qualified name. The lookup now matches the existing convention;
+no stack result was collected from that run. Run native builds
 on GitHub only. Acceptance requires bounded cleanup stack use, correct retained
 aliases and partial cleanup, no new heap work, and full final-head gates. This
 preparation does not admit native remote calls to checked ARC.
