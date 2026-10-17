@@ -140,16 +140,10 @@ int main(void){
         controls.push((generated.replacen(wake, "", 1), 9));
     }
     if !cfg!(target_os = "linux") {
-        let unlink = "fwp_cleanup_push(&waiting, fwp_poll_wait_remove, &wait);";
+        let unlink =
+            "    fwp_poll_wait_remove(&wait); /* unlink before fwp_check_cancel can unwind */";
         assert_eq!(generated.matches(unlink).count(), 1);
-        controls.push((
-            generated.replacen(unlink, "fwp_cleanup_push(&waiting,no_release,&wait);", 1),
-            43,
-        ));
-        let deadline =
-            "        fwp_check_cancel(); /* task deadlines can precede the I/O deadline */";
-        assert_eq!(generated.matches(deadline).count(), 1);
-        controls.push((generated.replacen(deadline, "", 1), 44));
+        controls.push((generated.replacen(unlink, "", 1), 43));
     }
     for opt in ["-O1", "-O2"] {
         for (broken, expected) in &controls {

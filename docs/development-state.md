@@ -15,11 +15,13 @@ Socket closure follows I/O completion; retained users can outlive the socket.
 The new shutdown wake is explicit on polling platforms, using wait records on
 task stacks, without heap allocation or larger task records. Controls cover
 missing cleanup, aliases, partial construction, no-reuse execution, timeout,
-cancellation, task deadlines and simultaneous readers. Review found polling
-waits did not check task deadlines after timer wakeup; the combined preparation
-now checks cancellation there, with the stack wait record protected during
-unwind. A negative control omits that unlink and must leave a detectable stale
-wait record.
+cancellation, task deadlines and simultaneous readers. The combined Windows
+run `39028415848` disproved the proposed extra deadline check: the scheduler
+already marks expired tasks cancelled. The redundant check and cleanup guard
+are removed. The wait record unlinks before the existing exit cancellation
+check can unwind. A negative control omits that unlink and must leave a
+detectable stale wait record (exit 43); a five-second bound still protects
+all lifetime tests from hanging. The original shutdown fix remains necessary.
 
 Known fold/fold-right callbacks borrow their captures and input elements while
 owning the running result. Escaping values acquire owners at their uses. The
@@ -30,8 +32,9 @@ parameters need no counting. Actual channel-loop binaries in #160 retain a
 channel 64 times per call, motivating this change; Linux now verifies removal of those 64 retains; other targets remain pending.
 
 Linux borrowing probe **39027507441** at `f7aeb774` passes.
-Next: finish Windows shutdown probe **39027501833** at `96fa4e2c`; fix failures.
-Then publish one frozen
+Windows shutdown probe **39027501833** at `96fa4e2c` also passes.
+Next: publish the corrected combined candidate after the redundant-check repair,
+then run one frozen
 combined candidate and run all six native hosts, including the added waiter
 lifetime tests. Retain equivalent-workload measurements and actual AMD64/ARM64
 instructions, comparing against root's six-host server-values report. Use the

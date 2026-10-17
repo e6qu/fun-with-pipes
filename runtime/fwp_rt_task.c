@@ -488,15 +488,14 @@ static int fwp_fd_sync(int fd) {
 #else
 /* Polling platforms need an explicit shutdown/close notification: WSAPoll
  * need not report a locally shut-down socket as ready. Nodes live on parked
- * task stacks, with cleanup unlinking them before cancellation unwinds. */
+ * task stacks and unlink before the exit check can unwind cancellation. */
 typedef struct fwp_poll_wait {
     struct fwp_poll_wait *next;
     fwp_socket_t fd;
     fwp_task *task;
 } fwp_poll_wait;
 static fwp_poll_wait *fwp_poll_waits = NULL;
-static void fwp_poll_wait_remove(void *arg) {
-    fwp_poll_wait *wait = arg;
+static void fwp_poll_wait_remove(fwp_poll_wait *wait) {
     for (fwp_poll_wait **p = &fwp_poll_waits; *p; p = &(*p)->next)
         if (*p == wait) { *p = wait->next; return; }
     abort();
@@ -1558,8 +1557,6 @@ static int fwp_wait_fd(fwp_socket_t fd, int write, int64_t at) {
     /* poll/WSAPoll scheduler: re-check readiness every 10ms. A local
      * shutdown/close wakes this task even without an OS readiness event. */
     fwp_poll_wait wait = {fwp_poll_waits, fd, fwp_cur};
-    fwp_cleanup waiting;
-    fwp_cleanup_push(&waiting, fwp_poll_wait_remove, &wait);
     fwp_poll_waits = &wait;
     fwp_cur->io_ready = 0;
     int ready = 0;
@@ -1578,11 +1575,9 @@ static int fwp_wait_fd(fwp_socket_t fd, int write, int64_t at) {
         fwp_io_waiting++;
         fwp_park(0, slice);
         fwp_io_waiting--;
-        fwp_check_cancel(); /* task deadlines can precede the I/O deadline */
         if (fwp_cur->cancelled || (at && fwp_now_ns() >= at)) break;
     }
-    fwp_cleanup_pop(&waiting);
-    fwp_poll_wait_remove(&wait);
+    fwp_poll_wait_remove(&wait); /* unlink before fwp_check_cancel can unwind */
 #endif
     fwp_check_cancel();
     return ready || !(at && fwp_now_ns() >= at);
