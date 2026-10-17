@@ -209,3 +209,212 @@ int main(void){
         }
     }
 }
+
+#[test]
+fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
+    use fwp::value::Value;
+    let unit = MT::unit();
+    let string = MT::con("std::String");
+    let integer = MT::con("std::I64");
+    let method = MT::Fun(
+        Box::new(string.clone()),
+        Box::new(MT::Fun(Box::new(string.clone()), Box::new(string.clone()))),
+    );
+    let continuation = MT::Fun(Box::new(unit.clone()), Box::new(integer.clone()));
+    let program = Program {
+        funcs: vec![
+            Func {
+                name: "available".into(),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: MT::Fun(Box::new(unit.clone()), Box::new(MT::con("std::Bool"))),
+                body: Body::Prim("tls.available".into()),
+            },
+            Func {
+                name: "web".into(),
+                arity: 0,
+                locals: vec![],
+                ty: unit.clone(),
+                body: Body::Prim("http2.connect".into()),
+            },
+            // Keep concrete owning entries for the methods and continuations.
+            Func {
+                name: "method-values".into(),
+                arity: 0,
+                locals: vec![method.clone(), continuation.clone(), continuation.clone()],
+                ty: method.clone(),
+                body: Body::Expr(Expr::Let(
+                    0,
+                    Box::new(Expr::Func(3)),
+                    Box::new(Expr::Let(
+                        1,
+                        Box::new(Expr::Func(6)),
+                        Box::new(Expr::Let(
+                            2,
+                            Box::new(Expr::Func(7)),
+                            Box::new(Expr::Func(4)),
+                        )),
+                    )),
+                )),
+            },
+            Func {
+                name: "first".into(),
+                arity: 2,
+                locals: vec![string.clone(), string.clone()],
+                ty: method.clone(),
+                body: Body::Expr(Expr::Local(0)),
+            },
+            Func {
+                name: "raise".into(),
+                arity: 2,
+                locals: vec![string.clone(), string.clone()],
+                ty: method,
+                body: Body::Expr(Expr::Call(5, vec![Expr::Local(0)])),
+            },
+            Func {
+                name: "fail".into(),
+                arity: 1,
+                locals: vec![string.clone()],
+                ty: MT::Fun(Box::new(string.clone()), Box::new(string)),
+                body: Body::Prim("fail".into()),
+            },
+            Func {
+                name: "end".into(),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: continuation.clone(),
+                body: Body::Expr(Expr::Const(Value::I64(0))),
+            },
+            Func {
+                name: "broken-next".into(),
+                arity: 1,
+                locals: vec![unit],
+                ty: continuation,
+                body: Body::Expr(Expr::Call(
+                    8,
+                    vec![Expr::Const(Value::I64(0)), Expr::Const(Value::I64(1))],
+                )),
+            },
+            Func {
+                name: "div".into(),
+                arity: 2,
+                locals: vec![integer.clone(), integer.clone()],
+                ty: MT::Fun(
+                    Box::new(integer.clone()),
+                    Box::new(MT::Fun(Box::new(integer.clone()), Box::new(integer))),
+                ),
+                body: Body::Prim("div".into()),
+            },
+        ],
+        main: Some(2),
+        exports: vec![("available".into(), 0)],
+        ..Program::default()
+    };
+    let (generated, _) = fwp::cgen::generate_library(&program, "served_values").unwrap();
+    let begin = generated.find("static int g_run_method(").unwrap();
+    let end = begin
+        + generated[begin..]
+            .find("\nstatic void g_put_bytes")
+            .unwrap();
+    let mut method = generated[begin..end].to_owned();
+    for (before, after) in [
+        ("g_recv_one(j, &code, msg)", "owned_request()"),
+        (
+            "pb_decode(m->schema, m->req_node, req->d, req->n, &canon)",
+            "1",
+        ),
+        (
+            "fwp_decode(&rd, m->req[i], &args[na])",
+            "owned_decode(&args[na])",
+        ),
+        (
+            "g_encode(&enc, values.result, m->error != 0, &b);",
+            "owned_response(values.result, &b);",
+        ),
+        (
+            "g_encode(&enc, x, m->error != 0, &b);",
+            "owned_response(x, &b);",
+        ),
+        (
+            "pb_encode(m->schema, m->resp_node, (const unsigned char *)canon.d, canon.len, &b)",
+            "owned_transcode(canon.d, canon.len, &b)",
+        ),
+    ] {
+        assert_eq!(method.matches(before).count(), 1, "{before}");
+        method = method.replacen(before, after, 1);
+    }
+    let declarations = "static g_msg *owned_request(void);\nstatic int owned_decode(V *);\nstatic void owned_response(V,h2_buf *);\nstatic int owned_transcode(const char *,size_t,h2_buf *);\n";
+    let generated = format!(
+        "{}{}{}{}",
+        &generated[..begin],
+        declarations,
+        method,
+        &generated[end..]
+    );
+    let fixture = include_str!("fixtures/grpc_served_values.c");
+    let controls = [
+        (
+            "values->types->drop_arguments(values->args, 0, pending);",
+            "(void)pending;",
+            1,
+        ),
+        ("values->method->result_drop(result);", "(void)result;", 0),
+        ("values->error_type->drop(error);", "(void)error;", 5),
+        (
+            "fwp_cleanup_push(&values_cleanup, g_method_values_release, &values);",
+            "fwp_cleanup_push(&values_cleanup, owned_no_release, &values);",
+            2,
+        ),
+        (
+            "        g_input_release(&output);",
+            "        /* omitted normal output release */",
+            9,
+        ),
+        (
+            "fwp_cleanup_push(&output_cleanup, g_input_release, &output);",
+            "fwp_cleanup_push(&output_cleanup, owned_no_release, &output);",
+            10,
+        ),
+        (
+            "n ? fwp_apply_owned(f, n, args)",
+            "n ? fwp_apply(f, n, args)",
+            0,
+        ),
+    ];
+    let dir = fwp::cgen::TempDir::new("served-value-owners").unwrap();
+    let exe = dir.join("probe");
+    let declaration = "static void owned_no_release(void *);\n";
+    for opt in ["-O1", "-O2"] {
+        for (before, after, stage) in controls {
+            assert_eq!(generated.matches(before).count(), 1, "{before}");
+            let broken = generated.replacen(before, after, 1);
+            fwp::cgen::compile_c(&format!("{declaration}{broken}\n{fixture}"), &exe, opt).unwrap();
+            let output = Command::new(&exe)
+                .arg(stage.to_string())
+                .env("FWP_GC", "off")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(246), "{before}: {output:?}");
+        }
+        fwp::cgen::compile_c(&format!("{declaration}{generated}\n{fixture}"), &exe, opt).unwrap();
+        for stage in [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13] {
+            for gc in ["off", "on"] {
+                for poison in ["0", "1"] {
+                    let output = Command::new(&exe)
+                        .arg(stage.to_string())
+                        .env("FWP_GC", gc)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    assert!(
+                        output.status.success(),
+                        "{opt}/{stage}/{gc}/{poison}: {output:?}"
+                    );
+                }
+            }
+        }
+    }
+}

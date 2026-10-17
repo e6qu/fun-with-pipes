@@ -38,11 +38,11 @@ lifetime work. Do not claim checked ARC or complete GC removal from this change.
 Measure the same four server programs and record remaining memory/count costs.
 Add meaningful failure/alias controls and compare interpreter/native behavior.
 
-Uncommitted implementation now requests typed service entries/result destructors,
+Candidate `89a6c033` requests typed service entries/result destructors,
 transfers decoded arguments into owning application, protects partial arguments
 and results/errors, and advances responses with an owned cursor. The cursor was
 factored into two value words plus explicit destruction metadata; sender records
-keep their previous size. This has not compiled or run on CI yet.
+keep their previous size. Linux probe `39018465355` compiled it, but stopped at an ambiguous test mutation before service checks ran.
 
 Response-encoding fixture patterns and mock method metadata are adapted;
 sender measurement hooks follow the factored cursor. The unused unowned iterator
@@ -51,17 +51,25 @@ Windows task-probe CRLF repair is copied from storage preparation `e6455c0d`;
 preserve it once when transferring deltas. Storage's repaired all-six run is
 `39018276989` at `e6455c0d`, tag `evidence/server-call-storage-windows-20261017`.
 
-Next: publish this implementation for a Linux semantic/lifetime/measurement probe.
-Fix compile/test failures, then add explicit served-value cleanup negative controls
-covering partial decode, returned aliases, continuation failures and cancellation.
-Existing client cursor controls remain required. Measurements/actual binaries and
-all-six/full-production acceptance are outstanding. Do not copy this unverified
-preparation into a delivery or treat a passing first probe as completion.
+Linux probe `39018465355` passed request-buffer, peer and receive cleanup checks.
+The input-owner negative control then matched both the new internal task helper
+and the sender policy. Its mutation now anchors to the sender completion callback;
+this fixes the test without changing either ownership policy.
+
+New served-value controls exercise partial decoding, shared arguments, returned
+aliases, typed errors, iterator continuation/encoding failures and cancellation.
+They include deliberately omitted cleanup to prove leak detection and use real
+generated owning method entries. These controls have not run yet.
+
+Next: publish the repaired control and served-value tests, then run the Linux
+semantic/lifetime/measurement probe. Fix failures before all-six measurements and
+actual binary reviews. Full production acceptance remains outstanding. Preserve
+these limits when transferring preparation into the next delivery.
 
 ## Checks
 
 Compiler metadata formatting passed in 1.27s; runtime/adapted-test formatting
-passed in 1.31s. Documentation audit passed in 3.36s. No native check yet. Full compilation/tests/measurements run on
+passed in 1.31s. The added controls and sender-anchor repair pass formatting in 1.43s and the documentation audit in 3.31s. An initial audit invocation used a nonexistent script name; the corrected `scripts/check-roadmap.py` passed. Native service-value checks remain pending. Full compilation/tests/measurements run on
 GitHub. Local checks use the root `scripts/local-guard.py` with fixed limits;
 never execute downloaded programs locally. JIT is excluded.
 
