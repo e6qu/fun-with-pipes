@@ -155,3 +155,45 @@ main = (10000, 0) | loop step | echo
     );
     eprintln!("closure MiB freed by counts: {} -> {}", freed[0], freed[1]);
 }
+
+#[test]
+fn fixed_function_values_preserve_aliases_and_effect_order() {
+    let dir = Scratch::new("fixed-functions");
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/run/static_functions.fwp");
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let expected = include_str!("run/static_functions.out");
+    let reference = checked(Command::new(fwp).args(["run", "--interp"]).arg(&source));
+    assert_eq!(reference.stdout, expected.as_bytes());
+    for optimized in [false, true] {
+        for mode in ["tracing", "arc"] {
+            let cfile = dir.0.join(format!("fixed-{mode}-{optimized}.c"));
+            let mut command = Command::new(fwp);
+            command
+                .args(["build", "--gc", mode, "--emit-c", "-o"])
+                .arg(&cfile)
+                .arg(&source)
+                .env("FWP_STACK", "0");
+            if !optimized {
+                command.env("FWP_NO_OPT", "1");
+            }
+            checked(&mut command);
+            let code = std::fs::read_to_string(&cfile).unwrap();
+            assert!(
+                code.contains("static fwp_clo fwp_static_function"),
+                "no fixed function values emitted"
+            );
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.0.join(format!("fixed-{mode}-{optimized}{opt}"));
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let stress = if mode == "tracing" { "1" } else { "0" };
+                let result = checked(
+                    Command::new(&binary)
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", stress),
+                );
+                assert_eq!(result.stdout, reference.stdout, "{mode}/{optimized}/{opt}");
+            }
+        }
+    }
+}

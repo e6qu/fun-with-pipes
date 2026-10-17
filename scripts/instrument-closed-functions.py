@@ -37,10 +37,10 @@ def instrument(match):
                   'expression':match[0]})
     return f'(client_active ? (closed_function_counts[{site}]++, 0) : 0, {match[0]})'
 measured = pattern.sub(instrument, code)
-assert sites, 'no eligible function-only partial applications found'
 declaration = 'typedef uint64_t V;'
 assert measured.count(declaration)==1
-measured = measured.replace(declaration, declaration + f'\nstatic uint64_t closed_function_counts[{len(sites)}];')
+if sites:
+    measured = measured.replace(declaration, declaration + f'\nstatic uint64_t closed_function_counts[{len(sites)}];')
 finish = '''
 static void closed_function_profile_finish(void) {
     const char *path = getenv("FWP_CLOSED_PROFILE");

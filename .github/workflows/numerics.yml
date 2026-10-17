@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, chain-cleanup, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -22,6 +22,59 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  fixed_functions:
+    if: inputs.suite == 'fixed-functions'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Native Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows.ps1
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - name: Function lifetime, stack and library regressions
+        run: cargo test --no-fail-fast --test closure_ownership --test closure_cleanup --test stack_ownership --test stack_match_ownership --test arc_library
+      - name: GCC static function representation
+        if: runner.os == 'Linux'
+        env:
+          CC: gcc
+        run: cargo test --test closure_ownership fixed_function_values_preserve_aliases_and_effect_order -- --exact --nocapture
+  fixed_functions_wasi:
+    if: inputs.suite == 'fixed-functions'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_REQUIRE_WASI_ARC: 1
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: WASI toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+      - name: Static capture initialization and checked WASI ownership
+        run: cargo test --test wasm_arc -- --nocapture
   function_captures:
     if: inputs.suite == 'function-captures'
     strategy:
@@ -51,6 +104,10 @@ jobs:
       - run: cargo fmt --all -- --check
       - name: Profile constant function captures in the HTTP server
         run: cargo test --test web http_server_function_capture_allocation_profile -- --ignored --exact --nocapture
+      - name: Record ordinary server instruction and static-data sizes
+        run: |
+          nm -S --defined-only function-capture-evidence/server.exe > function-capture-evidence/server-symbols.txt
+          size -A function-capture-evidence/server.exe > function-capture-evidence/server-sections.txt
       - uses: actions/upload-artifact@v7
         if: always()
         with:

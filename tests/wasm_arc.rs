@@ -581,3 +581,25 @@ fn wasi_cpu_kernels_check_counts_before_32_bit_truncation() {
         }
     }
 }
+
+#[test]
+fn fixed_function_captures_initialize_in_wasi() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-fixed-functions").unwrap();
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let source = root.join("tests/run/static_functions.fwp");
+    let cfile = dir.join("fixed.c");
+    let code = emit(&source, &cfile, &[]);
+    assert!(code.contains("static fwp_clo fwp_static_function"));
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join(&format!("fixed{opt}.wasm"));
+        fwp::cgen::compile_for(&code, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+        let output = checked(&mut wasi(&binary, root));
+        assert_eq!(
+            output.stdout,
+            include_str!("run/static_functions.out").as_bytes()
+        );
+    }
+}

@@ -430,6 +430,8 @@ struct Gen<'p> {
     consts: Vec<String>,
     const_init: String,
     used_closures: Vec<bool>,
+    /// Function values whose captures are all fixed, capture-free functions.
+    static_functions: HashMap<(FuncId, Vec<FuncId>), usize>,
     /// Declarations for foreign C functions: structs, prototypes,
     /// converters and callback trampolines.
     ffi_decls: String,
@@ -2075,6 +2077,31 @@ impl<'p> Gen<'p> {
 
     /// C expression for a constant value (complex values are built once at
     /// startup into a global).
+    fn bare_function(&self, e: &Expr) -> Option<FuncId> {
+        let id = match e {
+            Expr::Func(id) => *id,
+            Expr::Const(Value::Closure(c)) if c.args.is_empty() => c.func,
+            _ => return None,
+        };
+        // Zero-argument definitions must still evaluate, including effects/traps.
+        (self.prog.funcs[id].arity > 0).then_some(id)
+    }
+
+    fn static_function(&mut self, function: FuncId, captures: Vec<FuncId>) -> String {
+        assert!(!captures.is_empty() && captures.len() < self.prog.funcs[function].arity as usize);
+        self.used_closures[function] = true;
+        for &capture in &captures {
+            assert!(self.prog.funcs[capture].arity > 0);
+            self.used_closures[capture] = true;
+        }
+        let next = self.static_functions.len();
+        let id = *self
+            .static_functions
+            .entry((function, captures))
+            .or_insert(next);
+        format!("PTR(&fwp_static_function{id})")
+    }
+
     fn const_expr(&mut self, v: &Value) -> String {
         match v {
             Value::I8(x) => format!("(V)(int64_t){}", x),
@@ -2185,6 +2212,23 @@ impl<'p> Gen<'p> {
             }
             Value::File(_) | Value::Native(_) => "0".into(),
             Value::Closure(c) => {
+                if !c.args.is_empty() && c.args.len() < self.prog.funcs[c.func].arity as usize {
+                    let captures: Option<Vec<_>> = c
+                        .args
+                        .iter()
+                        .map(|value| match value {
+                            Value::Closure(c)
+                                if c.args.is_empty() && self.prog.funcs[c.func].arity > 0 =>
+                            {
+                                Some(c.func)
+                            }
+                            _ => None,
+                        })
+                        .collect();
+                    if let Some(captures) = captures {
+                        return self.static_function(c.func, captures);
+                    }
+                }
                 self.used_closures[c.func] = true;
                 let parts: Vec<String> = c.args.iter().map(|f| self.const_expr(f)).collect();
                 if parts.is_empty() {
@@ -5335,6 +5379,16 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 e as *const Expr,
             ),
             Expr::Apply(f, args) => {
+                if let Some(function) = self.g.bare_function(f) {
+                    if !args.is_empty() && args.len() < self.g.prog.funcs[function].arity as usize {
+                        let captures: Option<Vec<_>> =
+                            args.iter().map(|arg| self.g.bare_function(arg)).collect();
+                        if let Some(captures) = captures {
+                            // No supplied expression evaluates or owns runtime data.
+                            return self.g.static_function(function, captures);
+                        }
+                    }
+                }
                 let children = self.stack_alias(f);
                 let fv = self.expr(f);
                 let xs = self.args(args);
@@ -8825,6 +8879,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         consts: Vec::new(),
         const_init: String::new(),
         used_closures: vec![false; prog.funcs.len()],
+        static_functions: HashMap::new(),
         ffi_decls: String::new(),
         ffi_structs: Vec::new(),
         pb: crate::protobuf::Schema::default(),
@@ -9755,6 +9810,28 @@ static const fwp_exec_spec exec_spec{i} = {{
             let _ = writeln!(out, "static fwp_clo fc{} = {{{}, 0}};", id, id);
         }
     }
+    // Use the actual closure type, including its flexible capture array. Fill
+    // addresses during existing constant initialization: wasm32 cannot relocate
+    // a 32-bit pointer widened into a static 64-bit V initializer. This single
+    // representation works on all targets and allocates no runtime heap storage.
+    let mut static_functions: Vec<_> = g.static_functions.iter().collect();
+    static_functions.sort_by_key(|(_, id)| **id);
+    let mut static_function_init = String::new();
+    for ((function, captures), id) in static_functions {
+        let zeroes = vec!["0"; captures.len()].join(", ");
+        let _ = writeln!(
+            out,
+            "static fwp_clo fwp_static_function{id} = {{{function}, {}, {{{zeroes}}}}};",
+            captures.len()
+        );
+        for (index, capture) in captures.iter().enumerate() {
+            let _ = writeln!(
+                static_function_init,
+                "    fwp_static_function{id}.a[{index}] = PTR(&fc{capture});"
+            );
+        }
+    }
+    g.const_init.insert_str(0, &static_function_init);
     out.push('\n');
     if !g.ffi_decls.is_empty() {
         out.push_str(crate::ffi::PREAMBLE);
