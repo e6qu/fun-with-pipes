@@ -57,7 +57,13 @@ int main(void){
   if(stage==0){if(result||g_pool||started_reader||started_writer)return 1;if(strcmp(fwp_trap_msg,"reader spawn trap"))return 3;}
   if(stage==1){if(result||g_pool||!started_reader||started_writer)return 1;if(strcmp(fwp_trap_msg,"writer spawn trap"))return 4;}
   if(stage==2){if(result!=c||g_pool!=c||!started_reader||!started_writer||c->refs!=2||c->dead||fcntl(c->fd,F_GETFD)==-1)return 1;g_conn_dead(c,"finished");}
-  while(fwp_gc_tasks){fwp_make_ready(fwp_root);fwp_block();fwp_free_zombie();}fwp_free_zombie();
+  // A ready root would prevent the scheduler from polling the closed socket.
+  // Park briefly so its reader wakes naturally; never await a freed I/O handle.
+  int64_t drain_deadline=fwp_now_ns()+10000000000LL;
+  while(fwp_gc_tasks){
+   if(fwp_now_ns()>=drain_deadline){fprintf(stderr,"startup drain timed out at stage %d\n",stage);return 9;}
+   fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();
+  }fwp_free_zombie();
   if(stage==2){if(c->refs||c->fd!=-1||finalized)return 1;g_conn_drop(c);result=0;}
   if(finalized!=1||g_pool||fwp_cleanups)return 1;
   fwp_p_tcp_stop(listener);FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(PTR(task));

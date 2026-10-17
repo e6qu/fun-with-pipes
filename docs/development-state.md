@@ -100,12 +100,19 @@ The no-GC/Wasm allocator fatal paths are not changed by this native repair.
 These additional changes await native validation. Guarded formatting of the
 extended tests passed in 1.03s.
 
-Published `7d6ff905e3c82413f5ef0045fe0b8e56c05a149c` runs Linux
-`connection-repeat` in `39004974271`. Next: inspect/fix this probe, then run all
-six native hosts and
-compare with the retained baseline. Also prove
-pooled reuse, startup failure and last-owner cleanup before delivery. Rebase or
-transfer the final patch onto accepted #157 before opening the next single PR.
+Linux probe `39004974271` at `7d6ff905` passed task ownership (including
+unique physical release, stress/reuse and disabled-free controls), connection
+owners and connection/handshake cancellation. It hung in the newly reached
+startup fixture and was canceled to retrieve its log. The fixture kept the root
+runnable while waiting for socket shutdown, preventing scheduler I/O polling.
+It now parks during draining and has a ten-second deadline with a stage-specific
+error. Other drain fixtures explicitly wake canceled I/O tasks.
+
+`33da866e` published the fifteen-case fatal-error extension. Next: publish the
+startup fixture repair, run `connection-repeat` on all six native hosts, inspect
+actual binaries and compare with the frozen closed-connection baseline. Later
+steps skipped by the canceled probe are still unverified. Transfer the final
+patch onto accepted #157 before opening the next single PR.
 
 Pending sender language values, server callbacks/channels, remaining host and
 numerical ownership, cycle policies and all seven roadmap areas remain open.

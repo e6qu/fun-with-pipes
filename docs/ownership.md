@@ -849,16 +849,20 @@ releases request storage. Infinitely many unfinished operations can still requir
 unbounded storage. [The handoff](development-state.md) records native validation
 and full delivery acceptance; implemented cleanup alone does not establish them.
 
-The next connection candidate separates socket use from connection-storage use.
-A response source can still need terminal metadata after both I/O tasks finish,
-so closing the socket does not by itself free the record. Its last storage owner
-removes the weak collector registration and frees the record and metadata. The
-pool owns reusable connections; calls and detached senders own their references.
+The next connection candidate separates an open socket from the information
+kept about it. Each connection has two background tasks: one reads incoming
+bytes and one writes outgoing bytes. These are its I/O tasks. A response reader
+can still need the final error or completion information after both tasks finish,
+so closing the socket does not by itself free the connection record. Its last
+storage owner removes the collector's cleanup registration and frees that record
+and its metadata. The pool, a cache of reusable connections, owns each connection
+while it is available for another call. Calls and detached senders also keep
+their own references.
 The request record does not gain an owning back-pointer to the connection.
 
-Client I/O task records have only the scheduler as owner. Their storage releases
-after their stack and scheduler links are removed, without task reference-count
-updates. Language task handles can have independent aliases and retain their
+Client I/O task records have only the scheduler, which runs ready tasks, as owner.
+Their storage releases after their stack and scheduler links are removed, without
+task reference-count updates. Language task handles can have independent aliases and retain their
 shared policy. Server and HTTP/2 task graphs still need separate ownership work.
 These are candidate contracts, not verified six-platform support; the
 [closed-connection baseline](benchmarks.md#memory-after-closing-connections-and-finishing-their-io-tasks)
