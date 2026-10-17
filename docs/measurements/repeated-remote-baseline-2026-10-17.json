@@ -1724,6 +1724,8 @@
           }
         }
       ],
+      "comparison": null,
+      "request_layouts": [],
       "raw_checkpoints": {
         "file": "repeated-remote-baseline-2026-10-17/ubuntu-latest-checkpoints.tsv",
         "bytes": 104861,
@@ -1746,7 +1748,129 @@
         0,
         1217
       ],
-      "binary_observations": null,
+      "binary_observations": {
+        "source_revision": "ac95632b8c77cc8c52f35a451f3c7451d0e29b06",
+        "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+        "observations": [
+          {
+            "client": "full",
+            "source": {
+              "bytes": 934904,
+              "sha256": "6d1c5e4ca1d3c8f7022eeae4445e09b01302c040d03425bc470dcfb7aa7739c2"
+            },
+            "binary": {
+              "bytes": 254784,
+              "sha256": "673aad6b6683c4f2e5f9fe13bb40765ad71fcc9002e930f36876ea2daee17041"
+            },
+            "header": "\n/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/full:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000005840\n",
+            "symbols": [
+              "fwp_drop9",
+              "f26",
+              "g_cell_drop",
+              "g_force",
+              "fwp_p_grpc_force",
+              "fwp_apply_owned",
+              "g_stream_drop",
+              "g_stream_reader_release",
+              "g_unlink",
+              "g_sender_peer_finish",
+              "g_conn_dead"
+            ],
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=fwp_drop9,f26,g_cell_drop,g_force,fwp_p_grpc_force,fwp_apply_owned,g_stream_drop,g_stream_reader_release,g_unlink,g_sender_peer_finish,g_conn_dead",
+              "/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/full"
+            ],
+            "assembly": {
+              "file": "full.asm",
+              "bytes": 71679,
+              "sha256": "b895cb09980783d879a379ea9e740f7de66e3d4bc757b0c62d9d00091d5e8ab3"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/full': failed to disassemble missing symbol fwp_p_grpc_force\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/full': failed to disassemble missing symbol g_stream_drop\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/full': failed to disassemble missing symbol g_sender_peer_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/full': failed to disassemble missing symbol g_unlink\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/full': failed to disassemble missing symbol g_stream_reader_release\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/full': failed to disassemble missing symbol g_cell_drop\n"
+          },
+          {
+            "client": "partial",
+            "source": {
+              "bytes": 935631,
+              "sha256": "4e3cc7861b64a38bf4cd5c7906e517005776e749c7494f8e3dd901f4b3c60825"
+            },
+            "binary": {
+              "bytes": 254880,
+              "sha256": "8db1231be7d5918f7df970aee59471d29c23854aeaaf25cf2615e2d94f9eff8d"
+            },
+            "header": "\n/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/partial:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000005840\n",
+            "symbols": [
+              "fwp_drop9",
+              "f26",
+              "g_cell_drop",
+              "g_force",
+              "fwp_p_grpc_force",
+              "fwp_apply_owned",
+              "g_stream_drop",
+              "g_stream_reader_release",
+              "g_unlink",
+              "g_sender_peer_finish",
+              "g_conn_dead"
+            ],
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=fwp_drop9,f26,g_cell_drop,g_force,fwp_p_grpc_force,fwp_apply_owned,g_stream_drop,g_stream_reader_release,g_unlink,g_sender_peer_finish,g_conn_dead",
+              "/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/partial"
+            ],
+            "assembly": {
+              "file": "partial.asm",
+              "bytes": 71682,
+              "sha256": "6ba1b65e4b99e970cd1520a3985eacb0362484e814aed51d5d0f014698565c85"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/partial': failed to disassemble missing symbol fwp_p_grpc_force\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/partial': failed to disassemble missing symbol g_stream_drop\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/partial': failed to disassemble missing symbol g_sender_peer_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/partial': failed to disassemble missing symbol g_unlink\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/partial': failed to disassemble missing symbol g_stream_reader_release\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/partial': failed to disassemble missing symbol g_cell_drop\n"
+          },
+          {
+            "client": "retained",
+            "source": {
+              "bytes": 955588,
+              "sha256": "c43cce4c6d9819f108ce1b8a2856f6404fd30dbe0edfddb2cabf8085295a5820"
+            },
+            "binary": {
+              "bytes": 259704,
+              "sha256": "59b2e0ea50603e40534084e7a106121f97aa8d70301bbf72b9655374fa9a23c4"
+            },
+            "header": "\n/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/retained:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000005840\n",
+            "symbols": [
+              "fwp_drop7",
+              "f26",
+              "g_cell_drop",
+              "g_force",
+              "fwp_p_grpc_force",
+              "fwp_apply_owned",
+              "g_stream_drop",
+              "g_stream_reader_release",
+              "g_unlink",
+              "g_sender_peer_finish",
+              "g_conn_dead"
+            ],
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=fwp_drop7,f26,g_cell_drop,g_force,fwp_p_grpc_force,fwp_apply_owned,g_stream_drop,g_stream_reader_release,g_unlink,g_sender_peer_finish,g_conn_dead",
+              "/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/retained"
+            ],
+            "assembly": {
+              "file": "retained.asm",
+              "bytes": 71687,
+              "sha256": "71b1f4223bba169ef2c33f29cb570ade8a793fa2172afccaf6ef3fe49c2d6280"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/retained': failed to disassemble missing symbol fwp_p_grpc_force\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/retained': failed to disassemble missing symbol g_stream_drop\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/retained': failed to disassemble missing symbol g_sender_peer_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/retained': failed to disassemble missing symbol g_unlink\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/retained': failed to disassemble missing symbol g_stream_reader_release\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-latest/retained': failed to disassemble missing symbol g_cell_drop\n"
+          }
+        ],
+        "limits": "Static inspection only. No downloaded executable ran. Symbols inlined by the compiler can be absent; the typed cache destructor must be present. Disassembly requires human review for loops, frame sizes and register use. No timing claim.",
+        "manual_review": {
+          "client": "full",
+          "cache_cleanup": "fwp_drop9 at 0x10c40 pushes three words (24 bytes), excluding the incoming return address. The continuation path jumps from 0x10e11 to 0x10c47; it does not recursively call itself. The unread-source path frees the cell and tail-jumps to fwp_rc_free_arr for the source, with no request-stream cleanup. Callee frames are additional.",
+          "dynamic_apply": "fwp_apply_owned uses 184 fixed frame bytes (six saved registers and 136 local bytes), excluding the incoming return address, plus dynamically sized argument storage. Generic dispatch and count metadata remain."
+        }
+      },
       "files": {
         "source.txt": {
           "bytes": 41,
@@ -1967,6 +2091,10 @@
         "retained-256-2.log": {
           "bytes": 15371,
           "sha256": "b16dadd4fee766ffc2587b2867559a8bdc3f0a4fcc2e3207df26dff8326fbc30"
+        },
+        "binary-observations.json": {
+          "bytes": 9172,
+          "sha256": "29a620b95e9abb4dbf7dfc39191c97d3aed11cbde9422e3a8b31cec0db1b8b8e"
         }
       }
     },
@@ -3678,6 +3806,8 @@
           }
         }
       ],
+      "comparison": null,
+      "request_layouts": [],
       "raw_checkpoints": {
         "file": "repeated-remote-baseline-2026-10-17/windows-2025-checkpoints.tsv",
         "bytes": 104687,
@@ -5632,6 +5762,8 @@
           }
         }
       ],
+      "comparison": null,
+      "request_layouts": [],
       "raw_checkpoints": {
         "file": "repeated-remote-baseline-2026-10-17/macos-15-checkpoints.tsv",
         "bytes": 104624,
@@ -7586,6 +7718,8 @@
           }
         }
       ],
+      "comparison": null,
+      "request_layouts": [],
       "raw_checkpoints": {
         "file": "repeated-remote-baseline-2026-10-17/macos-15-intel-checkpoints.tsv",
         "bytes": 104624,
@@ -9540,6 +9674,8 @@
           }
         }
       ],
+      "comparison": null,
+      "request_layouts": [],
       "raw_checkpoints": {
         "file": "repeated-remote-baseline-2026-10-17/windows-11-arm-checkpoints.tsv",
         "bytes": 104666,
@@ -11494,6 +11630,8 @@
           }
         }
       ],
+      "comparison": null,
+      "request_layouts": [],
       "raw_checkpoints": {
         "file": "repeated-remote-baseline-2026-10-17/ubuntu-24.04-arm-checkpoints.tsv",
         "bytes": 105278,
@@ -11516,7 +11654,129 @@
         0,
         1217
       ],
-      "binary_observations": null,
+      "binary_observations": {
+        "source_revision": "ac95632b8c77cc8c52f35a451f3c7451d0e29b06",
+        "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+        "observations": [
+          {
+            "client": "full",
+            "source": {
+              "bytes": 934904,
+              "sha256": "6d1c5e4ca1d3c8f7022eeae4445e09b01302c040d03425bc470dcfb7aa7739c2"
+            },
+            "binary": {
+              "bytes": 231872,
+              "sha256": "f2c545abab741acb0623cd5e394c893fc885a29940eb15d736f1a14883fcbedd"
+            },
+            "header": "\n/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/full:\tfile format elf64-littleaarch64\narchitecture: aarch64\nstart address: 0x0000000000004e00\n",
+            "symbols": [
+              "fwp_drop9",
+              "f26",
+              "g_cell_drop",
+              "g_force",
+              "fwp_p_grpc_force",
+              "fwp_apply_owned",
+              "g_stream_drop",
+              "g_stream_reader_release",
+              "g_unlink",
+              "g_sender_peer_finish",
+              "g_conn_dead"
+            ],
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=fwp_drop9,f26,g_cell_drop,g_force,fwp_p_grpc_force,fwp_apply_owned,g_stream_drop,g_stream_reader_release,g_unlink,g_sender_peer_finish,g_conn_dead",
+              "/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/full"
+            ],
+            "assembly": {
+              "file": "full.asm",
+              "bytes": 62517,
+              "sha256": "ea5ea4f8cc5ac2a41e0236cb2def51ba3c22a0efb3f88db60cd927643b8ac392"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/full': failed to disassemble missing symbol fwp_p_grpc_force\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/full': failed to disassemble missing symbol g_stream_drop\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/full': failed to disassemble missing symbol g_sender_peer_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/full': failed to disassemble missing symbol g_unlink\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/full': failed to disassemble missing symbol g_stream_reader_release\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/full': failed to disassemble missing symbol g_cell_drop\n"
+          },
+          {
+            "client": "partial",
+            "source": {
+              "bytes": 935631,
+              "sha256": "4e3cc7861b64a38bf4cd5c7906e517005776e749c7494f8e3dd901f4b3c60825"
+            },
+            "binary": {
+              "bytes": 231968,
+              "sha256": "dbe0be10a881ce1577fce1d153bd90709925fe62faf696a7a1f162b7f9dec9c9"
+            },
+            "header": "\n/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/partial:\tfile format elf64-littleaarch64\narchitecture: aarch64\nstart address: 0x0000000000004e40\n",
+            "symbols": [
+              "fwp_drop9",
+              "f26",
+              "g_cell_drop",
+              "g_force",
+              "fwp_p_grpc_force",
+              "fwp_apply_owned",
+              "g_stream_drop",
+              "g_stream_reader_release",
+              "g_unlink",
+              "g_sender_peer_finish",
+              "g_conn_dead"
+            ],
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=fwp_drop9,f26,g_cell_drop,g_force,fwp_p_grpc_force,fwp_apply_owned,g_stream_drop,g_stream_reader_release,g_unlink,g_sender_peer_finish,g_conn_dead",
+              "/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/partial"
+            ],
+            "assembly": {
+              "file": "partial.asm",
+              "bytes": 62533,
+              "sha256": "3239bb37c590a2727c08bf5bfc66ac0817ad4ad3d76925aaf429e1ff2f797647"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/partial': failed to disassemble missing symbol fwp_p_grpc_force\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/partial': failed to disassemble missing symbol g_stream_drop\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/partial': failed to disassemble missing symbol g_sender_peer_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/partial': failed to disassemble missing symbol g_unlink\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/partial': failed to disassemble missing symbol g_stream_reader_release\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/partial': failed to disassemble missing symbol g_cell_drop\n"
+          },
+          {
+            "client": "retained",
+            "source": {
+              "bytes": 955588,
+              "sha256": "c43cce4c6d9819f108ce1b8a2856f6404fd30dbe0edfddb2cabf8085295a5820"
+            },
+            "binary": {
+              "bytes": 298224,
+              "sha256": "faedcdf4e5c7b2e53c7e8dda39db1921dcfaa90d5d41f48ed4ad7d6d56d3d8fc"
+            },
+            "header": "\n/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/retained:\tfile format elf64-littleaarch64\narchitecture: aarch64\nstart address: 0x0000000000005140\n",
+            "symbols": [
+              "fwp_drop7",
+              "f26",
+              "g_cell_drop",
+              "g_force",
+              "fwp_p_grpc_force",
+              "fwp_apply_owned",
+              "g_stream_drop",
+              "g_stream_reader_release",
+              "g_unlink",
+              "g_sender_peer_finish",
+              "g_conn_dead"
+            ],
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=fwp_drop7,f26,g_cell_drop,g_force,fwp_p_grpc_force,fwp_apply_owned,g_stream_drop,g_stream_reader_release,g_unlink,g_sender_peer_finish,g_conn_dead",
+              "/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/retained"
+            ],
+            "assembly": {
+              "file": "retained.asm",
+              "bytes": 62700,
+              "sha256": "0d368dbcdf6d65b32faed9e89d37614005ffcecd7eb25ff24daf86be3ddb6986"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/retained': failed to disassemble missing symbol fwp_p_grpc_force\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/retained': failed to disassemble missing symbol g_stream_drop\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/retained': failed to disassemble missing symbol g_sender_peer_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/retained': failed to disassemble missing symbol g_unlink\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/retained': failed to disassemble missing symbol g_stream_reader_release\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-repeated-client-evidence/38997585835/repeated-clients-ubuntu-24.04-arm/retained': failed to disassemble missing symbol g_cell_drop\n"
+          }
+        ],
+        "limits": "Static inspection only. No downloaded executable ran. Symbols inlined by the compiler can be absent; the typed cache destructor must be present. Disassembly requires human review for loops, frame sizes and register use. No timing claim.",
+        "manual_review": {
+          "client": "full",
+          "cache_cleanup": "fwp_drop9 at 0xf218 reserves 64 bytes including saved registers and the return address. The continuation path branches from 0xf3b0 to 0xf250. The unread-source path frees the cell then branches to fwp_rc_free_arr for the source after restoring its frame; it has no request-stream cleanup. Callee frames are additional.",
+          "dynamic_apply": "fwp_apply_owned reserves 96 saved-register bytes plus 112 local bytes (208 fixed bytes), plus dynamically sized argument storage. Generic dispatch and count metadata remain."
+        }
+      },
       "files": {
         "source.txt": {
           "bytes": 41,
@@ -11737,6 +11997,10 @@
         "retained-256-2.log": {
           "bytes": 15435,
           "sha256": "81f014a4a2fc46cabbdf769d315d082e5da971bb662beabf371651f56b30fdf7"
+        },
+        "binary-observations.json": {
+          "bytes": 9220,
+          "sha256": "a578f814d2344c45730b35b20b5ba61bc1890e12af161d937c236f5b04d22f48"
         }
       }
     }

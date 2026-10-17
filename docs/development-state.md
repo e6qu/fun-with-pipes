@@ -124,12 +124,22 @@ the remote operation; the active-list owner lasts until completion/reset/death.
 Server streams, connections and retained codec/sender graphs still need tracing.
 Do not admit remote calls to checked ARC yet.
 
-Runtime changes and controls are written but have no native validation yet.
+The first Linux probe `38998638008` at `ad089a73` passed the existing closure,
+receive, request, peer and context controls and the new message-allocation
+failure test. The stream-owner fixture stopped before native compilation because
+its finalizer-removal injection matched an unrelated cleanup site too. The
+marker now includes the request destructor call, so it selects one site.
+Runtime ownership and repeated measurements still need a passing probe.
 Controls cover completion, reset, connection loss, sender completion/cancellation,
 failed sender preparation, reference overflow and deliberately omitted releases.
 An unchecked queued-message allocation now reports the established exit-102
 out-of-memory error; plain and gzip fault-injection tests accompany it.
-Next: publish this preparation, run the focused Linux native checks, fix failures,
+TLS pool-key allocation also now checks for failure, with a targeted exit-102
+control in the existing pool-identity fixture. That fixture now releases its
+client stream through the new owners. Receive tests additionally count final
+request release after retry, malformed responses, decoder traps and cancellation.
+A native layout table records structure size, alignment and field offsets.
+Next: publish these repairs and controls, run the focused Linux native checks, fix failures,
 then measure all six native hosts and inspect actual generated binaries.
 
 Local checks use the unchanged root guard. Baseline source type-checking passed

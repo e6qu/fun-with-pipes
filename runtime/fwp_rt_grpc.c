@@ -1158,6 +1158,7 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
     if (opts) {
         c->tlskey_len = opts->key_len;
         c->tlskey = (char *)malloc(opts->key_len);
+        if (!c->tlskey) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
         memcpy(c->tlskey, opts->key, opts->key_len);
     }
     c->refs = 1; /* temporary startup owner */

@@ -849,7 +849,7 @@ current collector requirement:
 
 | Work | Evidence required |
 |---|---|
-| Measure repeated calls and stream consumption | Keep the complete-client baseline at 64, 1,024 and 16,384 integers, with full consumption, early stop and retained iterators. Add raw connection, stream and message-buffer counts; separate reusable pool storage from per-call growth. |
+| Measure repeated calls and stream consumption | The [repeated-call baseline](benchmarks.md#memory-left-behind-by-repeated-remote-calls) passes on all six native platforms and identifies 240 managed bytes retained per call, plus unread message queues. Preserve its connection, request and message counters while extending ownership. |
 | Preserve cache ownership | The candidate has focused evidence for stable repeated reads, retained aliases, final-owner destruction and partial failure. Keep these controls while extending ownership to connections and callbacks. |
 | Keep connections and requests alive for their users | Sending, receiving and detached tasks remain valid after their creating scope returns. Completion, failure and cancellation release each acquired owner exactly once. |
 | Prevent ownership cycles | Identify which component owns each task, stream and connection. A pointer back to an owner must not silently become another owning reference. Any shared cycle needs an explicit policy and a test that drops every external reference. |
@@ -858,17 +858,23 @@ current collector requirement:
 The existing `g_conn.refs` counter covers connection startup and its reader/writer
 tasks. Its last release closes the socket and releases input/output buffers;
 the collector still owns the connection object and its remaining buffers.
-Removing a stream from `g_conn.streams` only unlinks it. Its queued messages and
-metadata are released later by `g_stream_final`. Replacing tracing must preserve
-the distinction between closing a transport and destroying the values that still
-refer to it.
+In the measured baseline, removing a stream from `g_conn.streams` only unlinks
+it; its queued messages and metadata are released later by the collector. The
+current preparation gives client RPC streams separate references for the active
+connection list, response source and detached sender. Releasing the source
+discards unread input; the list keeps an unfinished remote operation alive until
+it ends or its transport fails. Final release frees metadata and request storage.
+This implementation is awaiting native validation in the [handoff](development-state.md).
+Server/HTTP streams and connection graphs retain their existing collector
+requirement. Closing a transport and destroying values that refer to it remain
+distinct operations.
 
 The next implementation must assign owners to the pool, active calls, receive
 sources and I/O tasks, while keeping scheduler task identities and wait lists
 borrowed. The candidate already moves the source allocation to the next unread
 position and releases cached values through a bounded-stack loop. The source must
-next keep its connection, stream and decoder captures alive through explicit
-owners. Test partial construction and each last-owner case before admitting
+next keep its connection and decoder captures alive through explicit owners,
+and the new client-stream reference needs native acceptance. Test partial construction and each last-owner case before admitting
 remote calls to checked ARC.
 
 The current candidate implements typed cache ownership and consumes a position

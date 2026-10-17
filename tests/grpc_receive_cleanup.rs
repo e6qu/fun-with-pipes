@@ -1,4 +1,4 @@
-//! Dequeued server requests and copied receive statuses have exceptional owners.
+//! Receive buffers and client request streams release on completion and failure.
 use fwp::ir::*;
 use std::process::Command;
 
@@ -198,6 +198,7 @@ fn owned_client_streams_release_after_readers_and_senders_finish() {
 #define _WIN32_WINNT 0x0a00
 #endif
 #include <stdlib.h>
+#include <stddef.h>
 static int probe_stream_finals,probe_message_frees,probe_spawn_fail;
 static void *probe_message,*probe_sender;
 static void observed_message_free(void *);
@@ -209,7 +210,7 @@ static void observed_message_free(void *);
         "    g_stream_drop(s); /* the active-list owner, when this is an owned client stream */";
     let source_release = "    g_stream_reader_release(c, s);";
     let sender_release = "    x->s = 0;\n    g_stream_drop(s);";
-    let finalizer_release = "    fwp_gc_forget_finalizer(s);";
+    let finalizer_release = "    fwp_gc_forget_finalizer(s);\n    g_stream_final(s);";
     for marker in [
         list_release,
         source_release,
@@ -226,7 +227,11 @@ static void observed_message_free(void *);
             211,
         ),
         (code.replace(sender_release, "    x->s = 0;"), "6", 212),
-        (code.replace(finalizer_release, "    (void)s;"), "0", 215),
+        (
+            code.replace(finalizer_release, "    g_stream_final(s);"),
+            "0",
+            215,
+        ),
     ];
     let dir = fwp::cgen::TempDir::new("grpc-client-stream-owners").unwrap();
     for opt in ["-O1", "-O2"] {
@@ -250,6 +255,7 @@ static void observed_message_free(void *);
                 ""
             };
             fwp::cgen::compile_c(&format!("{prefix}{code}"), &binary, opt).unwrap();
+            let mut layout = Vec::new();
             for mode in 0..10 {
                 for stress in [false, true] {
                     let out = Command::new(&binary)
@@ -264,11 +270,19 @@ static void observed_message_free(void *);
                         out.status.success(),
                         "{opt}/{mode}/no-free={no_free}/stress={stress}: {out:?}"
                     );
+                    if mode == 0 && !stress {
+                        layout = out.stdout;
+                    }
                 }
             }
             if let Some(path) = std::env::var_os("FWP_REPEATED_CLIENT_ARTIFACTS") {
                 let path = std::path::PathBuf::from(path).join("stream-owners");
                 std::fs::create_dir_all(&path).unwrap();
+                std::fs::write(
+                    path.join(format!("layout{opt}-no-free-{no_free}.tsv")),
+                    &layout,
+                )
+                .unwrap();
                 std::fs::write(
                     path.join(format!("streams-no-free-{no_free}.c")),
                     format!("{prefix}{code}"),

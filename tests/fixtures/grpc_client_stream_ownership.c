@@ -10,6 +10,9 @@ static double probe_charge(void) {
 }
 static int still_finalized(void *pointer) {
     for (size_t i=0; i<fwp_gc.nfins; i++) if (fwp_gc.fins[i].obj==pointer) return 1;
+    printf("stream_bytes\tstream_alignment\traw_offset\tabandoned_offset\tsource_bytes\tsender_bytes\tconnection_bytes\n%zu\t%zu\t%zu\t%zu\t%zu\t%zu\t%zu\n",
+        sizeof(g_stream),_Alignof(g_stream),offsetof(g_stream,raw),offsetof(g_stream,abandoned),
+        sizeof(g_incoming),sizeof(g_sender),sizeof(g_conn));
     return 0;
 }
 static void end_response(g_conn *c, g_stream *s, int mode) {
@@ -92,5 +95,8 @@ int main(int argc,char **argv) {
     FWP_KEEP_ALIVE(PTR(c));
     fwp_lib_finish();
     if(probe_stream_finals!=1)return 215;
+    printf("stream_bytes\tstream_alignment\traw_offset\tabandoned_offset\tsource_bytes\tsender_bytes\tconnection_bytes\n%zu\t%zu\t%zu\t%zu\t%zu\t%zu\t%zu\n",
+        sizeof(g_stream),_Alignof(g_stream),offsetof(g_stream,raw),offsetof(g_stream,abandoned),
+        sizeof(g_incoming),sizeof(g_sender),sizeof(g_conn));
     return 0;
 }
