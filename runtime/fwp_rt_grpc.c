@@ -1337,8 +1337,8 @@ static g_stream *g_open_tls(const char *addr, const char *path, const char *fp, 
 }
 
 static V g_grpc_error(int code, const char *msg, const fwp_desc *d) {
-    V f[2] = {(V)(int64_t)code, fwp_cstr(msg)};
-    fwp_fail(fwp_record(2, f), d);
+    V f[2] = {(V)(int64_t)code, fwp_rc_fresh(fwp_cstr(msg))};
+    fwp_fail(fwp_rc_fresh(fwp_record(2, f)), d);
     return 0;
 }
 

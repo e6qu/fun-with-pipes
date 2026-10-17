@@ -45,12 +45,17 @@ static int recover(void){return 1;}
 static jmp_buf failed;
 /* The error path writes the handler after setjmp; keep it nonautomatic. */
 static fwp_handler handler;
+static void text_drop(V value){if(fwp_rc_release_last(value))fwp_rc_free_obj(value);}
+static void error_drop(V value){if(fwp_rc_release_last(value)){text_drop(OBJ(value)->f[1]);fwp_rc_free_obj(value);}}
+static double charged(void){return fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);}
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
- static const fwp_desc integer={.kind=K_I64,.name="I64"},string={.kind=K_STR,.name="String"};
- static const fwp_desc *const fields[]={&integer,&string};static const fwp_desc error={.kind=K_RECORD,.name="GrpcError",.n=2,.fields=fields};
+ static const fwp_desc integer={.kind=K_I64,.name="I64"},string={.kind=K_STR,.name="String",.drop=text_drop};
+ static const fwp_desc *const fields[]={&integer,&string};static const fwp_desc error={.kind=K_RECORD,.name="GrpcError",.n=2,.fields=fields,.drop=error_drop};
  fwp_remote remote={0};remote.what="probe";remote.m.grpc_error=&error;
- for(int kind=0;kind<5;kind++){
+ const char *verify=getenv("FWP_REUSE_VERIFY");int poison=verify&&*verify&&strcmp(verify,"0");
+ for(int repeat=0;repeat<100;repeat++)for(int kind=0;kind<5;kind++){
+  double before=charged();
   text_frees=0;const char *message=kind==1?"trap: decoder trap":kind==2||kind==4?"denied":"transport failure";
   int code=kind==1?GRPC_INTERNAL:kind==2||kind==4?7:-1;
   watched_text=strdup(message);if(!watched_text)return 9;
@@ -60,7 +65,9 @@ int main(void){
   if(!setjmp(failed)){
    if(!setjmp(handler.jb)){g_stub_fail(&remote,"local",code,watched_text);return 2;}
    if(kind<3||handler.desc!=&error||(int64_t)OBJ(handler.value)->f[0]!=(code<0?GRPC_UNAVAILABLE:code)||strcmp(STR(OBJ(handler.value)->f[1])->d,message))return 3;
-   FWP_KEEP_ALIVE(handler.value);
+   if(!fwp_rc_last(handler.value)||!fwp_rc_last(OBJ(handler.value)->f[1]))return 10;
+   error_drop(handler.value);handler.value=0;
+   if(!fwp_gc.enabled&&!poison&&charged()!=before)return 11;
   }else{
    if(kind>=3)return 4;
    const char *expected=kind==1?"decoder trap":kind==2?"service call probe (local) failed: gRPC status 7: denied":"service call probe (local) failed: transport failure";
@@ -81,7 +88,15 @@ int main(void){
         "fwp_cleanup_push(&failure_text, no_release, text);",
         1,
     );
+    let unowned = generated.replace(
+        "V f[2] = {(V)(int64_t)code, fwp_rc_fresh(fwp_cstr(msg))};",
+        "V f[2] = {(V)(int64_t)code, fwp_cstr(msg)};",
+    );
+    assert_ne!(unowned, generated);
     for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&format!("{hooks}\n{unowned}\n{fixture}"), &exe, opt).unwrap();
+        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        assert_eq!(out.status.code(), Some(10), "uncounted error text: {out:?}");
         fwp::cgen::compile_c(&format!("{hooks}\n{omitted}\n{fixture}"), &exe, opt).unwrap();
         let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
         assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");
