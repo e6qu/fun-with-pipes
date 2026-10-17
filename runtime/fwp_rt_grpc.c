@@ -117,18 +117,13 @@ typedef struct g_serving {
     int code;                  /* a status for a cancelled call, or -1 */
     char *msg;
     char *peer;                /* the subject of the client's certificate, or 0 */
-    size_t peer_users;          /* serving task plus detached language senders */
+    size_t peer_users;          /* owners of the enclosing job and peer/status text */
     g_stream *s;               /* the call's stream */
 } g_serving;
 
-static void g_serving_peer_release(g_serving *sv) {
-    if (sv && --sv->peer_users == 0) {
-        fwp_tls_subject_free(sv->peer);
-        sv->peer = 0;
-        free(sv->msg);
-        sv->msg = 0;
-    }
-}
+/* Every released serving context is the first member of its allocated g_job.
+ * The serving task and detached senders share that allocation. */
+static void g_serving_peer_release(g_serving *sv);
 
 /* how a client's calls connect over TLS (`grpc.with-tls`, or the
  * FWP_SERVICE_<M>_CA, ... variables): malloc'ed strings ("" for none);
@@ -715,7 +710,8 @@ static void g_reader(void *arg, int cancelled) {
             return;
         }
         c->refs++;
-        fwp_spawn_task(0, g_writer, c, 0, 0);
+        fwp_task *writer = fwp_spawn_task(0, g_writer, c, 0, 0);
+        fwp_task_own_internal(writer, fwp_cur->scope != NULL);
     }
     unsigned char buf[65536];
     for (;;) {
@@ -1541,7 +1537,7 @@ static void g_fail_call(int code, const char *msg) {
     free(sv->msg);
     sv->code = code;
     sv->msg = copy;
-    fwp_cancel_tree(sv->task);
+    if (sv->task) fwp_cancel_tree(sv->task);
     fwp_check_cancel();
     fwp_trap(sv->msg);
 }
@@ -2172,18 +2168,38 @@ struct g_server {
 };
 
 typedef struct {
+    g_serving sv;              /* first: a serving owner owns this whole allocation */
     g_conn *c;
     g_stream *s;
     const g_server *srv;
     const g_route *route;
     char what[300];
-    g_serving sv;
     g_ctx ctx;
 } g_job;
 
-/* The serving context is inherited by children; dispose only after their join. */
+static void g_serving_peer_release(g_serving *sv) {
+    if (!sv) return;
+    if (!sv->peer_users) abort();
+    if (--sv->peer_users) return;
+    fwp_tls_subject_free(sv->peer);
+    sv->peer = 0;
+    free(sv->msg);
+    sv->msg = 0;
+#ifndef FWP_RESOURCE_NO_FREE
+    fwp_mem_free((g_job *)sv);
+#endif
+}
+
+/* Joined children no longer borrow this task. Detached senders retain the job,
+ * but cannot retain a task identity whose scheduler is about to dispose it. */
 static void g_job_peer_finish(void *arg) {
     g_job *j = (g_job *)arg;
+    fwp_task *task = j->sv.task;
+    j->sv.task = 0;
+    if (task) {
+        if (j->s->task == task) j->s->task = 0;
+        if (task->gctx == &j->ctx) task->gctx = 0;
+    }
     g_serving_peer_release(&j->sv);
 }
 
@@ -2244,6 +2260,8 @@ static void g_start_call(g_conn *c, g_stream *s) {
         snprintf(j->what, sizeof j->what, "%s", path[0] == '/' ? path + 1 : path);
     j->sv.headers = &s->headers;
     j->sv.code = -1;
+    j->sv.task = 0;
+    j->sv.msg = 0;
     j->sv.peer = c->ssl ? fwp_tls_peer_subject(c->ssl) : 0;
     j->sv.peer_users = 1;
     fwp_cleanup peer_cleanup;
@@ -2254,6 +2272,7 @@ static void g_start_call(g_conn *c, g_stream *s) {
     s->gzip = enc && strcmp(enc, "gzip") == 0;
     j->ctx.serving = &j->sv;
     s->task = fwp_spawn_task(0, g_handle, j, g_parse_timeout(h2_get(&s->headers, "grpc-timeout")), 0);
+    fwp_task_own_internal(s->task, fwp_cur->scope != NULL);
     j->sv.task = s->task;
     s->task->gctx = &j->ctx;
     s->task->cfinish = g_job_peer_finish;
@@ -2748,7 +2767,8 @@ static void g_accept_loop(fwp_socket_t lfd, const g_server *srv) {
             }
             /* the reader starts the writer (after a TLS handshake) */
             c->refs = 1;
-            fwp_spawn_task(0, g_reader, c, 0, 0);
+            fwp_task *reader = fwp_spawn_task(0, g_reader, c, 0, 0);
+            fwp_task_own_internal(reader, fwp_cur->scope != NULL);
             continue;
         }
         if (fwp_socket_again(errno) || fwp_socket_aborted(errno)) {

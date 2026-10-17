@@ -1078,6 +1078,18 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
     return t;
 }
 
+/* An internal task has no language handle. Its scheduler owns it alone unless
+ * a scope also retains the task identity to await/cancel it after completion. */
+static void fwp_task_own_internal(fwp_task *t, int scope_owner) {
+    if (scope_owner) {
+        t->ownership = FWP_TASK_SHARED;
+        fwp_rc_fresh(PTR(t));
+        fwp_rc_dup(PTR(t)); /* scheduler and scope */
+    } else {
+        t->ownership = FWP_TASK_UNIQUE;
+    }
+}
+
 static fwp_task *fwp_spawn(V thunk, int64_t deadline) { return fwp_spawn_task(thunk, 0, 0, deadline, 0); }
 
 static void fwp_root_cancelled(void) {
