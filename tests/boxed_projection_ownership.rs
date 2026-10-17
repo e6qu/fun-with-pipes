@@ -72,11 +72,13 @@ fn program() -> Program {
             ("0".into(), text.clone()),
             ("1".into(), text),
             ("2".into(), unit),
+            ("3".into(), p.funcs[0].ty.clone()),
         ]),
         body: Body::Expr(Expr::Record(vec![
             Expr::Call(0, vec![value()]),
             Expr::Call(2, vec![value()]),
             Expr::Call(3, vec![Expr::Const(Value::unit())]),
+            Expr::Func(0), // retain typed argument-drop metadata for the alias probe
         ])),
     });
     p.main = Some(4);
