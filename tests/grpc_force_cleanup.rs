@@ -36,9 +36,10 @@ fn forced_cells_release_received_storage_and_decoder_failure_text() {
         "V f[2] = {(V)(int64_t)code, fwp_rc_fresh(observed_copy(text))};",
         1,
     );
-    let end = "if (c->server) { g->kind = G_END; g->code = 0; g->text = strdup(\"\"); return; }";
+    let end =
+        "if (c->server) { g->kind = G_END; g->code = 0; g->text = g_copy_text(\"\"); return; }";
     assert_eq!(generated.matches(end).count(), 1);
-    let generated = generated.replacen(end, "if (c->server) { g->kind = G_END; g->code = 0; g->text = strdup(\"\"); if(stage==11)fwp_trap(\"receive trap\"); return; }", 1);
+    let generated = generated.replacen(end, "if (c->server) { g->kind = G_END; g->code = 0; g->text = g_copy_text(\"\"); if(stage==11)fwp_trap(\"receive trap\"); return; }", 1);
     let hooks = r#"
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0a00

@@ -34,7 +34,8 @@ def main():
         assert iterator, source
         symbols = [drops[0], iterator[1], "g_cell_drop", "g_force", "fwp_p_grpc_force", "fwp_apply_owned",
                    "g_stream_drop", "g_stream_reader_release", "g_unlink",
-                   "g_sender_peer_finish", "g_conn_dead"]
+                   "g_sender_peer_finish", "g_conn_dead", "g_conn_drop", "g_conn_release",
+                   "fwp_free_zombie", "fwp_task_dispose"]
         files = [args.artifacts / client, args.artifacts / f"{client}.exe"]
         files = [path for path in files if path.is_file()]
         assert len(files) == 1, files

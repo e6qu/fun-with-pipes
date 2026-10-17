@@ -83,9 +83,11 @@ int main(void){
  if(!stream||selected!=connected||!reused||error||!g_same_tls(connected,same))return 1;
  fwp_cur->gctx=0;drop_options(same);
  g_unlink(connected,stream);g_stream_reader_release(connected,stream);
- g_conn_dead(connected,"finished");fwp_cancel_tree(reader);fwp_cancel_tree(writer);fwp_await(reader);fwp_await(writer);
+ g_conn_drop(selected);
+ g_conn_dead(connected,"finished");fwp_cancel_tree(reader);fwp_cancel_tree(writer);
+ while(fwp_gc_tasks){fwp_make_ready(fwp_root);fwp_block();fwp_free_zombie();}fwp_free_zombie();
  if(connected->refs||connected->fd!=-1||g_pool)return 2;
- fwp_gc_forget_finalizer(connected);g_conn_final(connected);fwp_p_tcp_stop(listener);
+ g_conn_drop(connected);connected=0;fwp_p_tcp_stop(listener);
  FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(connected));
  fwp_lib_finish();return 0;
 }

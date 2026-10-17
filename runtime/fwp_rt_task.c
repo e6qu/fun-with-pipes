@@ -176,6 +176,8 @@ typedef struct {
 } g_ctx;
 #endif
 
+/* Shared language handles, a sole scheduler owner, or an unproved traced path. */
+enum fwp_task_ownership { FWP_TASK_TRACED, FWP_TASK_SHARED, FWP_TASK_UNIQUE };
 struct fwp_task {
     uint64_t identity; /* Never reused when allocator slots or fibers are reused. */
 #ifdef _WIN32
@@ -195,7 +197,8 @@ struct fwp_task {
     int64_t deadline; /* monotonic ns, 0 = none */
     int64_t wake_at;  /* timer while parked, 0 = none */
     V thunk, result;
-    int owns_thunk, counted;
+    int owns_thunk;
+    enum fwp_task_ownership ownership;
     void (*result_drop)(V);
     jmp_buf base;
     /* saved runtime state */
@@ -280,6 +283,7 @@ static fwp_task *fwp_task_new(void) {
     if (fwp_task_identity == UINT64_MAX) fwp_trap("task identity exhausted");
     fwp_task *task = fwp_mem_alloc(sizeof *task);
     task->identity = ++fwp_task_identity;
+    task->ownership = FWP_TASK_TRACED;
     return task;
 }
 
@@ -522,9 +526,8 @@ static void fwp_cancel_tree(fwp_task *t) {
     for (fwp_task *c = t->first_child; c; c = c->next_sibling) fwp_cancel_tree(c);
 }
 
-/* A scheduler reference survives until its stack and GC links are removed. */
-static void fwp_task_drop(V value) {
-    if (!fwp_rc_release_last(value)) return;
+/* Both owned policies dispose storage after the stack and GC links are removed. */
+static void fwp_task_dispose(V value) {
     fwp_task *t = (fwp_task *)(uintptr_t)value;
     if (!t->done || t->stack) abort();
     V result = t->result;
@@ -533,9 +536,21 @@ static void fwp_task_drop(V value) {
     if (t->result_drop && result) t->result_drop(result);
     fwp_mem_free(t->st);
     t->st = 0;
-    t->counted = 0;
-    /* Task storage is mutable kind 2, not a record/variant header. */
-    fwp_rc_resource_free_arr(value);
+    enum fwp_task_ownership ownership = t->ownership;
+    t->ownership = FWP_TASK_TRACED;
+    /* A sole scheduler owner has no reference count. Counted storage release
+     * deliberately ignores zero-count objects, so unique tasks return their
+     * raw allocation directly. Neither policy uses a record/variant header. */
+    if (ownership == FWP_TASK_UNIQUE) {
+#ifndef FWP_RESOURCE_NO_FREE
+        fwp_mem_free(t);
+#endif
+    } else fwp_rc_resource_free_arr(value);
+}
+
+/* A shared scheduler reference survives alongside language-visible handles. */
+static void fwp_task_drop(V value) {
+    if (fwp_rc_release_last(value)) fwp_task_dispose(value);
 }
 
 /* ----- switching */
@@ -573,7 +588,9 @@ static void fwp_free_zombie(void) {
         fwp_zombie->gc_prev = fwp_zombie->gc_next = 0;
         fwp_task *finished = fwp_zombie;
         fwp_zombie = 0;
-        if (finished->counted) fwp_task_drop(PTR(finished));
+        enum fwp_task_ownership ownership = finished->ownership;
+        if (ownership == FWP_TASK_SHARED) fwp_task_drop(PTR(finished));
+        if (ownership == FWP_TASK_UNIQUE) fwp_task_dispose(PTR(finished));
     }
 }
 
@@ -1116,7 +1133,7 @@ static fwp_task *fwp_spawn_retained(V thunk, int64_t deadline, void (*drop)(V)) 
     fwp_task *t = fwp_spawn(thunk, deadline);
     t->owns_thunk = 1;
     t->result_drop = drop;
-    t->counted = 1;
+    t->ownership = FWP_TASK_SHARED;
     fwp_rc_fresh(PTR(t));
     fwp_rc_dup(PTR(t)); /* caller and scheduler */
     if (fwp_cur->scope) fwp_rc_dup(PTR(t)); /* scope task array */

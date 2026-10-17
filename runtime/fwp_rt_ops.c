@@ -9,7 +9,7 @@ typedef struct { char *d; size_t len, cap; } fwp_buf;
 static void buf_grow(fwp_buf *b, size_t extra) {
     if (b->len == SIZE_MAX || extra > SIZE_MAX - b->len - 1) {
         fprintf(stderr, "fwp: out of memory\n");
-        exit(102);
+        fflush(NULL); _Exit(102);
     }
     size_t needed = b->len + extra + 1;
     if (needed > b->cap) {
@@ -21,7 +21,7 @@ static void buf_grow(fwp_buf *b, size_t extra) {
         char *data = (char *)realloc(b->d, cap);
         if (!data) {
             fprintf(stderr, "fwp: out of memory\n");
-            exit(102);
+            fflush(NULL); _Exit(102);
         }
         b->d = data;
         b->cap = cap;

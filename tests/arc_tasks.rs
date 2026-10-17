@@ -125,7 +125,7 @@ main = [
             if gc == "arc" {
                 for needle in [
                     "if (t->result_drop && result) t->result_drop(result);",
-                    "if (finished->counted) fwp_task_drop(PTR(finished));",
+                    "if (ownership == FWP_TASK_SHARED) fwp_task_drop(PTR(finished));",
                     "c->value_drop(element);",
                 ] {
                     assert_eq!(measured.matches(needle).count(), 1);
