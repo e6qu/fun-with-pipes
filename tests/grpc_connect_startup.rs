@@ -38,7 +38,7 @@ fn grpc_connection_startup_releases_failed_task_reservations() {
 #define _WIN32_WINNT 0x0a00
 #endif
 #include <stdlib.h>
-static int stage,trapped,finalized;
+static int stage,trapped,finalized,wait_probe_active;
 static void *pending,*started_reader,*started_writer;
 static void no_release(void *);
 static void observed_free(void *);
@@ -60,6 +60,7 @@ static void wait_socket(void *arg,int cancelled){
  wait_finished++;
 }
 static void check_wait_lifetimes(void){
+ wait_probe_active=1;
  for(int mode=0;mode<4;mode++){
   V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);
   fwp_socket_t fd=SOCK(listener)->fd;
@@ -143,7 +144,14 @@ int main(void){
         let unlink =
             "    fwp_poll_wait_remove(&wait); /* unlink before fwp_check_cancel can unwind */";
         assert_eq!(generated.matches(unlink).count(), 1);
-        controls.push((generated.replacen(unlink, "", 1), 43));
+        controls.push((
+            generated.replacen(
+                unlink,
+                "    if(!wait_probe_active) fwp_poll_wait_remove(&wait);",
+                1,
+            ),
+            43,
+        ));
     }
     for opt in ["-O1", "-O2"] {
         for (broken, expected) in &controls {

@@ -21,7 +21,11 @@ already marks expired tasks cancelled. The redundant check and cleanup guard
 are removed. The wait record unlinks before the existing exit cancellation
 check can unwind. A negative control omits that unlink and must leave a
 detectable stale wait record (exit 43); a five-second bound still protects
-all lifetime tests from hanging. The original shutdown fix remains necessary.
+all lifetime tests from hanging. The original shutdown fix remains necessary. The next macOS run `39028994457`
+caught an overbroad unlink control: it broke earlier connection shutdown and
+crashed before the intended assertion. Fault injection is now enabled only
+inside the waiter-lifetime cases; the required stale-record exit remains 43.
+Runtime/compiler code is unchanged by this fixture repair.
 
 Known fold/fold-right callbacks borrow their captures and input elements while
 owning the running result. Escaping values acquire owners at their uses. The
