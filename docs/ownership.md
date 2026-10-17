@@ -770,6 +770,17 @@ Temporary decoding bytes also release on client result and served-request traps.
 These checks pass on all six native hosts at the source above. Final production
 acceptance remains separate; see the [handoff](development-state.md).
 
+A service's TLS settings, used for encrypted connections, are read from
+environment variables once per runtime instance. The cache must survive tasks
+and resource finalizers that still use those settings. Library teardown releases
+it after both have finished. The current delivery stores each entry and its name
+in one allocation instead of two, with enough room to look up complete variable
+names. It removes the old 300-byte truncation. A construction guard frees an
+unpublished entry if allocating the TLS settings fails, allowing a later retry.
+Tests inject failure at both allocations and check long names, repeated reads
+and teardown order. This reduces allocation count; allocator rounding and the
+name's temporary suffix space prevent a general claim about bytes saved.
+
 Actual Linux ARM64 instructions copy the 72-byte settings through four 16-byte
 registers and one eight-byte register onto the stack. That wrapper reserves
 144 stack bytes; its separate error handler reserves 464. These are instrumented
@@ -838,13 +849,16 @@ unread message queues for partial readers. One connection is reused throughout.
 This separates finished-request growth from the cost of keeping a connection
 pool available.
 
-The current preparation gives each client request references from its active
+The current delivery gives each client request references from its active
 connection list, response source and detached sender. Dropping the source
 releases unread messages without cancelling the remote operation. Later data
 for that abandoned reader is discarded while maintaining network flow control.
 The list keeps the unfinished request alive until completion, reset or connection
 failure. Final release removes the collector finalizer, frees metadata and
-releases request storage. Infinitely many unfinished operations can still require
+releases request storage. All six focused native jobs verify complete request
+and message release across 1/16/256 batches, with constant final managed storage.
+[The comparison](benchmarks.md#memory-left-behind-by-repeated-remote-calls) records
+the remaining allocations and reduced reference-count traffic. Infinitely many unfinished operations can still require
 unbounded storage. [The handoff](development-state.md) records native validation
 and full delivery acceptance; implemented cleanup alone does not establish them.
 
@@ -852,7 +866,7 @@ The remaining relationships need separate checks:
 
 | Storage | Who currently keeps it alive | Work still needed |
 |---|---|---|
-| Client request | The active connection list, receive source and detached sender hold references in the current preparation. | Accept native completion, failure, cancellation and repeated-call evidence. |
+| Client request | The active connection list, receive source and detached sender hold references. | Six native focused jobs pass; complete final production acceptance. |
 | Connection | Reader/writer tasks count use of the socket; tracing preserves the connection object and remaining metadata. | Give the pool, calls and tasks explicit storage owners without creating a connection/request cycle. Closing a socket alone does not finish every borrow. |
 | Pending sender values | The sender points at the remaining input iterator; tracing preserves its values. | Transfer or retain the iterator with its concrete type, then release it after completion, errors or cancellation. Its request description is static compiler metadata. |
 | Server callbacks and response channels | Serving tasks and retained language values can outlive the creating call scope. | Prove each retained handler and channel context, including failure during construction and cycles after external references disappear. |

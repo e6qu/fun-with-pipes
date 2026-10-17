@@ -86,11 +86,12 @@ The request component passes all six native platforms: every created request and
 message releases, and final managed storage stays constant across measured call
 counts. It adds one retain per call with unchanged allocation requests.
 
-The compiler component passes focused Linux ownership and real-client checks:
-256 full reads use 50,178 retains instead of 66,562, with unchanged allocations
-and final managed storage. The combined six-platform run must also verify shared
-readers, failure cleanup and service-cache construction. Full production acceptance
-remains required. [The benchmark guide](docs/benchmarks.md#memory-left-behind-by-repeated-remote-calls)
+The combined compiler and runtime change passes all six focused native platforms.
+For 256 full reads, compiler transfers reduce retains from 66,562 to 50,178
+relative to request cleanup alone, with unchanged allocation requests and final
+managed storage. Shared readers, failure cleanup and service-cache construction
+also pass. Full production acceptance remains required.
+[The benchmark guide](docs/benchmarks.md#memory-left-behind-by-repeated-remote-calls)
 names the compared revisions, inputs, measurement boundaries and remaining costs.
 
 Next, prove connection/pool/task ownership and release pending sender values and

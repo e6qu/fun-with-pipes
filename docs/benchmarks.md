@@ -1754,3 +1754,46 @@ It requires all six native jobs, matching outputs, complete request/message
 release and constant final managed storage. Binary inspection is static;
 downloaded programs are not executed locally. Full production acceptance is
 recorded separately in the [handoff](development-state.md).
+
+
+### Moving a selected field instead of retaining it again
+
+[The combined report](measurements/remote-projection-moves-2026-10-17.json)
+compares request cleanup at `997b23a9` with `d7a161d1`, preserved by
+`evidence/remote-projection-moves-20261017`. All six native jobs passed in
+[the focused run](https://github.com/e6qu/fun-with-pipes/actions/runs/39001772549).
+The clients, inputs and measurement boundaries are the same as above.
+
+A heap record is a container allocated separately from the current function's
+local variables. When the compiler consumes a record with exactly one field
+needing counted ownership, it now checks whether that record has one owner.
+If so, it transfers the field and frees the empty container. A shared record
+still retains the selected field before giving up its own reference, preserving
+other readers. No new syntax or layout fields are needed.
+
+| After 256 batches, on every measured platform | Request cleanup alone: count increments | With compiler transfer | Reduction |
+|---|---:|---:|---:|
+| Full reads, 256 calls | 66,562 | 50,178 | 24.6% |
+| Partial reads, 256 calls | 41,986 | 33,794 | 19.5% |
+| Retained readers, 512 calls | 116,226 | 99,586 | 14.3% |
+
+Allocation requests, requested bytes and final managed storage are unchanged
+in every case. Every request and queued message releases. Compared with the
+original baseline before either change, full reads fall from 66,306 to 50,178
+count increments: request cleanup adds one increment per call, while compiler
+transfers remove more. There is no elapsed-time or C/Rust comparison.
+
+Actual Linux machine code confirms the transfer on AMD64 and ARM64. The unique
+path frees the container and skips the shared path's field increment and parent
+release. The iterator helper uses a 168-byte AMD64 frame, excluding its incoming
+return address, and a 192-byte ARM64 frame including saved registers. These are
+observed frame sizes, not a measured reduction or whole-program stack bound.
+Callee frames are additional. Count-table lookups, cleanup records, dynamic calls,
+result allocations and an earlier payload increment remain. The report retains
+binary/source fingerprints and reviewed instruction locations; downloaded
+programs were not executed locally.
+
+The combined run also checks construction failure and long names in the service
+TLS-settings cache. Those tests establish cleanup correctness; this client
+workload does not measure a general heap saving from that separate fix. Full
+production acceptance remains recorded in the [handoff](development-state.md).

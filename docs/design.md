@@ -322,9 +322,8 @@ when that field is its only value needing reference-counted storage. A record
 with one owner gives the selected value to its caller and frees its outer storage.
 A shared record retains the selected value before releasing the caller's record
 reference. Other fields must be scalars, with no cleanup to perform. Existing
-stack, resource-scope and storage-reuse rules keep their current paths. Focused
-Linux tests and real clients pass; the [handoff](development-state.md) tracks
-the combined platform checks. Allocations and runtime ownership checks remain.
+stack, resource-scope and storage-reuse rules keep their current paths. Focused tests and real clients pass on all six native platforms; the
+[handoff](development-state.md) tracks final production acceptance. Allocations and runtime ownership checks remain.
 
 A function that only forwards a callback's tuple can keep its existing storage.
 A callback is a function supplied by the caller; its concrete target may be
