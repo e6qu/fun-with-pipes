@@ -1682,17 +1682,24 @@ fn force_cell(
                 ])))
             };
             let v = match got {
-                Got::Msg(m) => match decode_msg(it, &src.dec, &m)? {
-                    Ok(Ok(x)) => {
-                        let next = Rc::new(RefCell::new(StreamCell::Pending(src.clone())));
-                        opt(Some(Value::tuple(vec![
-                            Value::data(0, vec![x]),
-                            wrap(Native::Grpc(Obj::Cell(next))),
-                        ])))
+                Got::Msg(m) => {
+                    let decoded = decode_msg(it, &src.dec, &m);
+                    if matches!(&decoded, Err(Ctl::Cancelled)) {
+                        // Keep the same unread message available to another reader.
+                        src.stream.borrow_mut().msgs.push_front(m);
                     }
-                    Ok(Err(_)) => err(INTERNAL, "unexpected error in a response"),
-                    Err(e) => err(INTERNAL, &format!("bad response from {}: {}", src.what, e)),
-                },
+                    match decoded? {
+                        Ok(Ok(x)) => {
+                            let next = Rc::new(RefCell::new(StreamCell::Pending(src.clone())));
+                            opt(Some(Value::tuple(vec![
+                                Value::data(0, vec![x]),
+                                wrap(Native::Grpc(Obj::Cell(next))),
+                            ])))
+                        }
+                        Ok(Err(_)) => err(INTERNAL, "unexpected error in a response"),
+                        Err(e) => err(INTERNAL, &format!("bad response from {}: {}", src.what, e)),
+                    }
+                }
                 Got::End(st) if st.code == OK => opt(None),
                 Got::End(st) => err(st.code, &st.message),
                 Got::Lost(m, _) => err(UNAVAILABLE, &m),
@@ -1721,37 +1728,44 @@ fn force_cell(
             })
         };
         let v = match got {
-            Got::Msg(m) => match decode_msg(it, &src.dec, &m)? {
-                Ok(Ok(x)) => {
-                    let next = Rc::new(RefCell::new(StreamCell::Pending(src.clone())));
-                    opt(Some(Value::tuple(vec![
-                        x,
-                        wrap(Native::Grpc(Obj::Cell(next))),
-                    ])))
+            Got::Msg(m) => {
+                let decoded = decode_msg(it, &src.dec, &m);
+                if matches!(&decoded, Err(Ctl::Cancelled)) {
+                    // Keep the same unread message available to another reader.
+                    src.stream.borrow_mut().msgs.push_front(m);
                 }
-                Ok(Err((e, t))) => {
-                    if first {
-                        return Err(CellErr::Ctl(Ctl::Fail(e, t)));
+                match decoded? {
+                    Ok(Ok(x)) => {
+                        let next = Rc::new(RefCell::new(StreamCell::Pending(src.clone())));
+                        opt(Some(Value::tuple(vec![
+                            x,
+                            wrap(Native::Grpc(Obj::Cell(next))),
+                        ])))
                     }
-                    let shown = crate::value::display(&e, &t, it.prog, true);
-                    return Err(CellErr::Ctl(Ctl::Trap(format!(
-                        "service call {} failed: error: {}",
-                        src.what, shown
-                    ))));
-                }
-                Err(e) => {
-                    if src.server {
-                        return Err(CellErr::Ctl(fail_call(
-                            it,
-                            Status::new(INVALID_ARGUMENT, e),
-                        )));
+                    Ok(Err((e, t))) => {
+                        if first {
+                            return Err(CellErr::Ctl(Ctl::Fail(e, t)));
+                        }
+                        let shown = crate::value::display(&e, &t, it.prog, true);
+                        return Err(CellErr::Ctl(Ctl::Trap(format!(
+                            "service call {} failed: error: {}",
+                            src.what, shown
+                        ))));
                     }
-                    return Err(CellErr::Ctl(Ctl::Trap(format!(
-                        "bad response from {}: {}",
-                        src.what, e
-                    ))));
+                    Err(e) => {
+                        if src.server {
+                            return Err(CellErr::Ctl(fail_call(
+                                it,
+                                Status::new(INVALID_ARGUMENT, e),
+                            )));
+                        }
+                        return Err(CellErr::Ctl(Ctl::Trap(format!(
+                            "bad response from {}: {}",
+                            src.what, e
+                        ))));
+                    }
                 }
-            },
+            }
             Got::End(st) if st.code == OK => opt(None),
             Got::End(st) => return Err(failed(Failure::Status(st))),
             Got::Lost(m, _) => {
@@ -2987,6 +3001,59 @@ mod stream_source_tests {
             }
         }
     }
+    #[test]
+    fn cancelled_decoders_preserve_the_queued_message() {
+        use crate::ir::{Body, Expr, Func};
+        let bytes = MT::con("std::Bytes");
+        let unit = MT::unit();
+        let program = Program {
+            funcs: vec![
+                Func {
+                    name: "decoder".into(),
+                    arity: 1,
+                    locals: vec![bytes.clone(), unit.clone()],
+                    ty: MT::Fun(Box::new(bytes), Box::new(MT::con("std::String"))),
+                    // An explicit suspension makes decoder preemption deterministic.
+                    body: Body::Expr(Expr::Let(
+                        1,
+                        Box::new(Expr::Call(1, vec![Expr::Const(Value::unit())])),
+                        Box::new(Expr::Const(Value::str("decoded"))),
+                    )),
+                },
+                Func {
+                    name: "yield".into(),
+                    arity: 1,
+                    locals: vec![unit.clone()],
+                    ty: MT::Fun(Box::new(unit.clone()), Box::new(unit)),
+                    body: Body::Prim("task.yield".into()),
+                },
+            ],
+            ..Program::default()
+        };
+        for results in [false, true] {
+            let mut it = Interp::new(&program, Box::new(std::io::sink()));
+            let mut source = queued(&program, 2, results, OK);
+            Rc::get_mut(&mut source).unwrap().dec =
+                Decoder::Fwp(Value::Closure(Rc::new(Closure {
+                    func: 0,
+                    args: vec![],
+                })));
+            let cell = Rc::new(RefCell::new(StreamCell::Pending(source.clone())));
+            // recv takes an already queued message before the decoder notices cancellation.
+            it.task.cancel();
+            assert!(matches!(
+                force_cell(&mut it, &cell, false),
+                Err(CellErr::Ctl(Ctl::Cancelled))
+            ));
+            assert!(matches!(*cell.borrow(), StreamCell::Pending(_)));
+            assert!(source.reader.get().is_null());
+            let stream = source.stream.borrow();
+            assert_eq!(stream.msgs.len(), 2);
+            assert_eq!(stream.msgs[0], vec![10, 1, b'a']);
+            assert_eq!(stream.msgs[1], vec![10, 1, b'b']);
+        }
+    }
+
     #[test]
     fn recursive_and_cancelled_waiters_preserve_the_active_reader() {
         let program = Program::default();

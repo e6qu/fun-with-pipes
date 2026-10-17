@@ -46,6 +46,7 @@ def main():
         "concurrent_reads_share_one_receive_and_cancel_independently",
         "recursive_and_cancelled_waiters_preserve_the_active_reader",
         "stream_aliases_are_consistent_across_tasks",
+        "cancelled_decoders_preserve_the_queued_message",
     ]
     for job in jobs:
         match = re.fullmatch(r"paths \(([^)]+)\)", job["name"])

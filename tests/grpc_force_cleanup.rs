@@ -109,11 +109,11 @@ int main(void){
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-force-cleanup").unwrap();
     let exe = dir.join("probe");
-    let receive = "fwp_cleanup_push(&received_cleanup, g_got_release, &g);";
+    let receive = "fwp_cleanup_push(&received_cleanup, g_received_stream_release, &received);";
     assert_eq!(generated.matches(receive).count(), 1);
     let receive_omitted = generated.replacen(
         receive,
-        "fwp_cleanup_push(&received_cleanup, no_release, &g);",
+        "fwp_cleanup_push(&received_cleanup, no_release, &received);",
         1,
     );
     let reason = "fwp_tls_subject_free(why);";
@@ -370,9 +370,27 @@ int main(void) {
 
 #[test]
 fn concurrent_reads_share_one_receive_and_cancel_independently() {
+    let generated = http2_values::generated();
+    let decoder = "g_decode(&src->dec, g.m->d, g.m->n, &x, &why)";
+    assert_eq!(generated.matches(decoder).count(), 2);
+    let marker = "/* encode a message (with the oneof tag of `value` when `tag`) */";
+    assert_eq!(generated.matches(marker).count(), 1);
+    let hook = r#"
+static int pause_decode, decode_started;
+static int decode_with_pause(const g_codec *codec,const unsigned char *message,size_t size,V *out,char **why) {
+    if(pause_decode) { pause_decode=0; decode_started=1; fwp_preempt(); }
+    return g_decode(codec,message,size,out,why);
+}
+"#;
+    let generated = generated
+        .replace(marker, &format!("{hook}\n{marker}"))
+        .replace(
+            decoder,
+            "decode_with_pause(&src->dec, g.m->d, g.m->n, &x, &why)",
+        );
     let code = format!(
         "{}\n{}",
-        http2_values::generated(),
+        generated,
         include_str!("fixtures/grpc_stream_readers.c")
     );
     let wait = "while (src->reader) {";
@@ -393,10 +411,27 @@ fn concurrent_reads_share_one_receive_and_cancel_independently() {
         Some(43),
         "missing serialization must consume two different values: {control:?}"
     );
+    let restore = "if (got->kind == G_MSG && got->m && fwp_cur->cancelled) {";
+    assert_eq!(code.matches(restore).count(), 1);
+    let lost = dir.join("without-message-restoration.exe");
+    fwp::cgen::compile_c(&code.replace(restore, "if (0) {"), &lost, "-O2").unwrap();
+    let control = Command::new(&lost)
+        .arg("4")
+        .env("FWP_GC", "off")
+        .env("FWP_GC_STRESS", "0")
+        .env("FWP_GC_VERIFY", "0")
+        .env("FWP_REUSE_VERIFY", "0")
+        .output()
+        .unwrap();
+    assert_eq!(
+        control.status.code(),
+        Some(46),
+        "cancelled decoder must not discard the first message: {control:?}"
+    );
     for opt in ["-O1", "-O2"] {
         let binary = dir.join(format!("readers{opt}.exe"));
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-        for mode in 0..4 {
+        for mode in 0..6 {
             for stress in ["0", "1"] {
                 let output = Command::new(&binary)
                     .arg(mode.to_string())

@@ -6,24 +6,16 @@ Remote-stream preparation is in `/private/tmp/fwp-stream-caches`, branch
 
 ## Current delivery
 
-[PR #154](https://github.com/e6qu/fun-with-pipes/pull/154) is the active delivery
-in `/Users/zardoz/projects/fun-with-pipes`, branch `service-iteration-delivery`,
-at `51354d10d5a55e0b4153653f68b670f69712e4d9`. Production run `38977201910`
-still needs Linux ARM64/AMD64 and Intel macOS GC-stress completion; the other six
-production jobs, documentation `38977126983` and dependencies `38977201787` pass.
+PR #154 merged as `11ae0f6350ba697c773fa49cb5700d9790931769` after all nine
+production jobs, docs and both dependency jobs passed at `51354d10`. Duplicate
+production `38984543299` was cancelled; leave Windows dependencies running.
+The verified record is `/private/tmp/fwp154-merge-record.json`. The watcher's final
+output parser stopped after the successful merge; do not retry the merge.
 
-Authorized merge watcher: exec session `96582`, `/private/tmp/fwp-watch-154.py`.
-It stops on failure and requires all nine production jobs, docs and both new
-dependency jobs on that exact head. It supplies the one-line squash subject and
-empty body and verifies tree, parent and message. Inspect its output and
-`/private/tmp/fwp154-merge-record.json` before another merge action. Leave the
-postmerge Windows dependency workflow running; cancel duplicate production CI.
-
-Before delivering this preparation, preserve its measured ancestry with a remote
-evidence tag. Apply only changes after `20f0f5f0` to accepted #154, resolving the
-handoff and retaining #154's final iteration report/docs. A new delivery branch
-with one combined preparation commit avoids replaying intermediate handoff edits.
-Keep one delivery PR at a time and require full checks on the final combined head.
+The next delivery is assembled in `/Users/zardoz/projects/fun-with-pipes`, branch
+`remote-stream-delivery`, now based on accepted #154. Its handoff is current;
+this worktree retains the measured preparation and warm focused-run caches.
+No second PR has been opened yet.
 
 ## Current preparation and next action
 
@@ -39,11 +31,20 @@ interpreter check: recursion traps with the same message and preserves the
 already-active receiver. Run a focused Linux check before starting full delivery
 CI. Final production jobs will cover it on every platform.
 
-Next: publish this final test/report/docs batch, run `stream-storage`, fix any
-failure, finish #154 acceptance, and prepare the combined stream PR. Use the
-plain description `/private/tmp/fwp-stream-pr-body.md`; update its measured table
-and test status before publication. No full compiler or native build belongs on
-this machine.
+A further repair preserves an unread message when its decoder is cancelled.
+Both runtimes had already removed that message from the queue; cancellation could
+free it before cache publication, making another reader skip it. Native unwind
+cleanup now restores it without allocation, before waking the waiting reader.
+The interpreter restores its owned message vector on decoder cancellation.
+
+Next: publish and run this repair with `stream-owners` on all six hosts. New
+interpreter tests cover ordinary/result streams. The native fixture cancels after
+removing the first message, with both an already queued second message and a later
+arrival that checks the restored queue tail. Disabling restoration must reproduce
+the lost-message failure. Earlier six-host passes do not verify this repair.
+Regenerate the compact report and inspect fresh ARM64/AMD64 binaries before the
+combined PR's final full gates. The receive cleanup adds stack state, not per-value
+heap storage; record any resulting frame-size change without claiming speed.
 
 ## Implemented behavior and remaining limits
 

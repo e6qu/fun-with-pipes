@@ -1368,6 +1368,24 @@ static void g_incoming_read_done(void *value) {
     fwp_wake_all(&source->read_waiters);
 }
 
+typedef struct { g_incoming *source; g_got *got; } g_received_stream;
+
+static void g_received_stream_release(void *value) {
+    g_received_stream *received = (g_received_stream *)value;
+    g_got *got = received->got;
+    if (got->kind == G_MSG && got->m && fwp_cur->cancelled) {
+        /* Decoding may suspend. Cancellation before publication must not make
+         * another reader skip this position. Flow credit is issued when DATA
+         * frames arrive, so restoring the queue does not issue it twice. */
+        g_stream *stream = received->source->s;
+        got->m->next = stream->mhead;
+        stream->mhead = got->m;
+        if (!stream->mtail) stream->mtail = got->m;
+        got->m = 0;
+    }
+    g_got_release(got);
+}
+
 static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_desc **err_desc) {
     if (cell->forced) return cell->memo;
     g_incoming *src = cell->src;
@@ -1385,8 +1403,9 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
     fwp_cleanup_push(&reading_cleanup, g_incoming_read_done, src);
     g_got g;
     g_recv(src->c, src->s, src->deadline, &g);
+    g_received_stream received = {src, &g};
     fwp_cleanup received_cleanup;
-    fwp_cleanup_push(&received_cleanup, g_got_release, &g);
+    fwp_cleanup_push(&received_cleanup, g_received_stream_release, &received);
     V r = FWP_NONE;
     if (src->results) {
         /* a failure is an `Err` element, then the end */
