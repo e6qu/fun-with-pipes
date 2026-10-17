@@ -4,39 +4,22 @@ Updated 2026-10-17 UTC. All seven work areas in [PLAN.md](../PLAN.md) remain ope
 
 ## Current delivery
 
-[PR #156](https://github.com/e6qu/fun-with-pipes/pull/156) releases cached stream
-values and moves captures from uniquely owned closures. Root branch
-`release-stream-caches` has exact head `d19ab045d6ce136455d597b49773db7ef9c5721d`,
-based on accepted #155, `45410bea4b59e2e6478632cf253f9c29cbd9863d`.
-Production run `38996879616` is running; documentation `38996879603` passed.
-Seven production jobs have passed; Linux AMD64 and regular Intel Mac remain running. Require all
-nine production jobs and docs on this exact head before merging.
+Branch `own-client-requests` starts at accepted #156 merge
+`29302bae30f6dbfae63166bb9171c7da5b237789`. It combines request cleanup,
+compiler field transfers and service TLS-cache construction fixes. No syntax
+changes. [Draft PR #157](https://github.com/e6qu/fun-with-pipes/pull/157) is published
+at `2844e493`. Make it ready after focused evidence and
+final documentation are complete; require all nine final-head production jobs
+and documentation before authorized squash merge. Use one subject, at most
+80 characters, and an explicitly empty body. Verify the resulting tree/message.
 
-Watcher exec session `37246` runs `/private/tmp/fwp-watch-156.py` and
-`/private/tmp/fwp-merge-156.py`. It verifies the exact base/head and passing gates,
-squash-merges with subject `Release unused stream values and reduce memory bookkeeping`
-and an empty body, then verifies tree, parent and complete message. Its result
-belongs at `/private/tmp/fwp156-merge-record.json`. If it exits on failure, repair
-and restart for the new exact head. Do not infer success from a missing watcher.
-Cancel only superseded/duplicate production runs; preserve Windows dependency jobs.
+#156 passed exact head `d19ab045` in production `38996879616` and docs
+`38996879603`. Its tree, parent and one-line message were verified;
+`/private/tmp/fwp156-merge-record.json` preserves the record. Duplicate production
+`39001824256` is canceled. Acceptance details now belong in the history, not
+another active next-action list.
 
-The root handoff remains a local status change to avoid restarting production
-for documentation-only progress. Keep one active delivery PR. After acceptance,
-start the next delivery from the verified merge and transfer the preparation
-below; preserve its actual measurement revisions. Record acceptance in
-[history](roadmap-history.md) and replace the current delivery in the plan.
-
-PR #156's focused source is `afd7d460`, tag
-`evidence/remote-capture-moves-20261017`, all six native jobs passing in
-`38996238360`. [Its report](measurements/remote-client-capture-moves-2026-10-17.json)
-compares actual clients over 64/1,024/16,384 integers. Remaining managed memory
-is constant across those sizes; moving unique captures reduces retains from the
-cache-only change by about 40%, but still leaves about three times the original
-tracing-dependent count and five allocations per integer. Raw transport storage
-and timing are excluded. Details and earlier acceptance belong in the benchmark
-guide/history, not a second next-action list.
-
-## Next delivery preparation
+## Retained request-cleanup evidence
 
 `own-remote-transport-storage` in `/private/tmp/fwp-repeated-remote-calls`
 contains request cleanup, repeated-call evidence and documentation. All six native
@@ -99,10 +82,36 @@ removing the old 300-byte truncation. Tests add two injected failures, retry,
 missing-cleanup detection and 1,024-character names. They are unvalidated until
 the next native run. Stream suites now include these cache tests.
 
-Next: publish the combined preparation and run all six `stream-repeat` jobs.
+Combined head `d7a161d1328f78c54870688c6dd30cf24fa22aa0` is published.
+Six-platform `stream-repeat` run `39001772549` is queued/running.
+Watcher exec `71043`, `/private/tmp/fwp-watch-projection-moves.py`, verifies the exact six jobs
+and collects the comparison only after success. Next: inspect and fix failures.
 Use the retained `997b23a9` request report as baseline with `--projection-moves`.
-Preserve actual measurement revisions. Then prepare one delivery from #156's
-verified merge and run all production gates. One delivery PR remains active.
+Preserve actual measurement revisions. Then copy the accepted combined report into the root delivery and run all
+production gates. One delivery PR at a time.
+
+## Next independent measurement
+
+Worktree `/private/tmp/fwp-closed-client-connections`, branch
+`measure-closed-client-connections`, starts at `d7a161d1`. The new measurement is written locally but has not run. It closes connections
+and drains detached I/O tasks between calls and before the final sample. Preserve the pooled-client comparison
+as a separate workload. Validate output, connection counts and drained task lists;
+record remaining managed/raw storage before choosing the next ownership change.
+`closed_remote_connection_memory_measurement` shares source/output checks with
+the existing repeated-call harness. Its native-only hook closes the pool, wakes
+and drains only reader/writer tasks, requires one closed socket per connection,
+and records charge, unfinalized connection/request counts and queued bytes at
+each drain. A deliberately omitted drain must exit 213. Retained readers preserve
+cached values across closure. The interpreter/ordinary native outputs use pooling
+and are only functional references; do not claim equivalent transport timing.
+
+Publish this isolated preparation and run `numerics.yml suite=connection-repeat`
+on Linux first; fix failures before freezing or comparing the baseline. The
+new suite retains all request/closure/cache controls. No production runtime
+ownership change belongs in this baseline. After validation, measure connection
+and detached-task storage separately before deciding their ownership fix.
+Formatting passed under the root guard in 1.24s after correcting formatting-only
+failure. Full native builds remain on GitHub.
 
 ## Local verification and remaining work
 

@@ -570,6 +570,17 @@ fn instrument_client_allocations(generated: &str) -> String {
 #[test]
 #[ignore = "runner-only repeated remote call allocation measurement"]
 fn repeated_remote_call_memory_measurement() {
+    measure_repeated_remote_calls(false);
+}
+
+/// Close each connection and drain its detached tasks before reusing the client.
+#[test]
+#[ignore = "native connection measurements run on GitHub runners"]
+fn closed_remote_connection_memory_measurement() {
+    measure_repeated_remote_calls(true);
+}
+
+fn measure_repeated_remote_calls(close_connections: bool) {
     assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
     let artifacts = PathBuf::from(
         std::env::var_os("FWP_REPEATED_CLIENT_ARTIFACTS").expect("measurement artifact directory"),
@@ -577,6 +588,11 @@ fn repeated_remote_call_memory_measurement() {
     std::fs::create_dir_all(&artifacts).unwrap();
     std::fs::copy(dir().join("greeter.fwp"), artifacts.join("greeter.fwp")).unwrap();
     std::fs::write(artifacts.join("scope.txt"), "One native client process makes 1, 16 or 256 batches of remote calls over loopback HTTP/2 to an interpreted greeter. Each response contains integers 1..64. Full batches sum all 64; partial batches sum only the first 32; retained batches sum an initial stream, make and sum a second call while retaining the initial iterator, then reread its first value. Retained batches therefore make twice as many calls. Raw unoptimized interpreter and ordinary native output must agree. Three separate instrumented processes per case count managed allocations/retains/charged bytes, created/finalized connection and stream objects, and requested/freed queued-message bytes including their header and trailing byte. GC is disabled, physical freeing enabled. Counters start after constant initialization. Final counters follow root execution, joining its child tasks and cached-value cleanup, before whole-runtime shutdown. Reusable connections and detached I/O tasks are still live; the sample does not establish their destruction. Checkpoints are immediately before each new stream is allocated, after connection selection and request-header preparation; a checkpoint can deliberately include an earlier retained iterator. Excludes other raw buffers, TLS/OS/allocator metadata, server/whole-process memory and timing. Native builds use ordinary -O2. Source, generated C, executables and raw stderr are retained.\n").unwrap();
+    if close_connections {
+        let scope = artifacts.join("scope.txt");
+        let original = std::fs::read_to_string(&scope).unwrap().replace("Reusable connections and detached I/O tasks are still live; the sample does not establish their destruction.", "Before the final sample, measurement hooks close every pooled connection and drain all detached I/O tasks.");
+        std::fs::write(scope, format!("{original}\nConnection-churn variant: measurement-only native hooks close the pool before each new call and after cached-value cleanup, cancel/wait for the detached connection reader and writer, and require zero live I/O tasks and one closed socket per created connection before sampling. Each call uses a new connection. Ordinary native and interpreter executions still use their usual pooling: their output is the functional reference, not an equivalent transport workload. Compare ownership revisions using these same churn hooks; do not use this experiment as a timing comparison with pooled calls. Retained iterators still keep earlier cached values across connection closure. Drain rows record created/closed connections, live I/O tasks, managed charge, unfinalized connection/request counts and unread message bytes. Scheduler stack pools, other raw buffers and TLS/OS storage remain excluded.\n")).unwrap();
+    }
     let d = scratch("repeated-client-memory");
     std::fs::copy(dir().join("greeter.fwp"), d.join("greeter.fwp")).unwrap();
     let mut command = Command::new(fwp());
@@ -588,6 +604,7 @@ fn repeated_remote_call_memory_measurement() {
     let server = start(command, Duration::from_secs(60));
     let mut rows=String::from("mode\tbatches\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\tconnections_created\tconnections_finalized\tstreams_created\tstreams_finalized\tmessages_created\tmessages_freed\tmessage_requested_bytes\tmessage_freed_bytes\tpeak_message_bytes\n");
     let mut checkpoints=String::from("mode\tbatches\trepetition\tprior_streams\tmanaged_charged_bytes\tmessage_bytes\tlive_connections\tlive_streams\n");
+    let mut drains=String::from("mode\tbatches\trepetition\tconnections_created\tconnections_closed\tlive_io_tasks\tmanaged_charged_bytes\tunfinalized_connections\tunfinalized_streams\tmessage_bytes\n");
     for (mode, consume, per_batch, calls_per_batch) in [
         ("full", "const 64 | greeter.count | iter.fold add 0", 2080, 1),
         ("partial", "const 64 | greeter.count | iter.take 32 | iter.fold add 0", 528, 1),
@@ -599,6 +616,7 @@ fn repeated_remote_call_memory_measurement() {
         build(&[source.to_str().unwrap(),"--service","greeter","--emit-c","-o",split.to_str().unwrap()],&d);
         let generated=std::fs::read_to_string(split.join(format!("{mode}.c"))).unwrap();
         let instrumented=instrument_repeated_client(&generated);
+        let instrumented=if close_connections {instrument_closed_connections(&instrumented)} else {instrumented};
         std::fs::copy(&source,artifacts.join(format!("{mode}.fwp"))).unwrap();
         std::fs::write(artifacts.join(format!("{mode}.c")),&generated).unwrap();
         std::fs::write(artifacts.join(format!("{mode}-measured.c")),&instrumented).unwrap();
@@ -622,7 +640,7 @@ fn repeated_remote_call_memory_measurement() {
                 let stderr=String::from_utf8(output.stderr).unwrap();
                 if !record {assert!(stderr.is_empty(),"{stderr}");continue;}
                 std::fs::write(artifacts.join(format!("{mode}-{batches}-{repetition}.log")),&stderr).unwrap();
-                let mut memory=None;let mut transport=None;let mut count=0;
+                let mut memory=None;let mut transport=None;let mut count=0;let mut closed=0;
                 for line in stderr.lines() {
                     if let Some(fields)=line.strip_prefix("client-memory\t") {assert!(memory.replace(fields).is_none());}
                     else if let Some(fields)=line.strip_prefix("transport-memory\t") {assert!(transport.replace(fields).is_none());}
@@ -630,14 +648,23 @@ fn repeated_remote_call_memory_measurement() {
                         let values:Vec<u64>=fields.split('\t').map(|v|v.parse().unwrap()).collect();
                         assert_eq!(values.len(),5);assert_eq!(values[0],count);
                         checkpoints.push_str(&format!("{mode}\t{batches}\t{repetition}\t{fields}\n"));count+=1;
+                    } else if let Some(fields)=line.strip_prefix("connection-drain\t") {
+                        assert!(close_connections);
+                        let values:Vec<u64>=fields.split('\t').map(|v|v.parse().unwrap()).collect();
+                        assert_eq!(values.len(),7);closed+=1;
+                        assert_eq!(values[0],closed);assert_eq!(values[1],closed);assert_eq!(values[2],0);
+                        assert_eq!(values[5],0);assert_eq!(values[6],0);
+                        drains.push_str(&format!("{mode}\t{batches}\t{repetition}\t{fields}\n"));
                     } else {panic!("unexpected measurement output: {line}");}
                 }
                 assert_eq!(count,batches*calls_per_batch);
+                if close_connections {assert_eq!(closed,count);}
                 let memory=memory.unwrap();let transport=transport.unwrap();
                 let m:Vec<u64>=memory.split('\t').map(|v|v.parse().unwrap()).collect();
                 let t:Vec<u64>=transport.split('\t').map(|v|v.parse().unwrap()).collect();
                 assert_eq!(m.len(),6);assert_eq!(m[5],0,"collection must remain disabled");
                 assert_eq!(t.len(),9);assert!(t[0]>0&&t[0]<=count);assert_eq!(t[2],count);
+                if close_connections {assert_eq!(t[0],count);}
                 assert!(t[1]<=t[0]&&t[3]<=t[2]&&t[5]<=t[4]&&t[7]<=t[6]);
                 assert!(t[8]>=t[6]-t[7]);
                 if mode!="partial" {assert_eq!(t[4],count*64);assert_eq!(t[5],t[4]);assert_eq!(t[7],t[6]);}
@@ -645,6 +672,18 @@ fn repeated_remote_call_memory_measurement() {
             }
         }
         if mode=="full" {
+            if close_connections {
+                let broken=instrumented.replace("client_drain_connections();","client_require_drained();");
+                assert_ne!(broken,instrumented);
+                let path=artifacts.join(format!("missing-connection-drain{}",std::env::consts::EXE_SUFFIX));
+                std::fs::write(artifacts.join("missing-connection-drain.c"),&broken).unwrap();
+                fwp::cgen::compile_c(&broken,&path,"-O2").unwrap();
+                let mut command=Command::new(path);
+                command.arg("1").env("FWP_SERVICE_GREETER",&server.addr).env("FWP_FREE","1").env("FWP_GC","off").env("FWP_GC_STRESS","0").env("FWP_REUSE_VERIFY","0");
+                let output=run(command,120);
+                assert_eq!(output.status.code(),Some(213),"missing connection drain: {}",render(&output));
+                std::fs::write(artifacts.join("missing-connection-drain.log"),render(&output)).unwrap();
+            }
             // Omit real raw-message releases, so the measurement must expose
             // retained message bytes even though language output remains right.
             assert!(instrumented.contains("client_message_free(g->m);"));
@@ -665,7 +704,47 @@ fn repeated_remote_call_memory_measurement() {
     }
     std::fs::write(artifacts.join("memory.tsv"), &rows).unwrap();
     std::fs::write(artifacts.join("checkpoints.tsv"), checkpoints).unwrap();
+    if close_connections {
+        std::fs::write(artifacts.join("drains.tsv"), drains).unwrap();
+    }
     println!("{rows}");
+}
+
+fn instrument_closed_connections(code: &str) -> String {
+    let mut code = code.to_owned();
+    let signature = "static g_stream *g_open_tls(const char *addr";
+    assert_eq!(code.matches(signature).count(), 1);
+    code=code.replacen(signature,&format!("static void client_drain_connections(void);\nstatic void client_require_drained(void);\n{signature}"),1);
+    let begin = code.find(signature).unwrap();
+    let at = begin
+        + code[begin..].find("    fwp_check_cancel();").unwrap()
+        + "    fwp_check_cancel();".len();
+    code.insert_str(at, "\n    client_drain_connections();");
+    let close = "    fwp_socket_close(c->fd);\n    c->fd = FWP_INVALID_SOCKET;";
+    assert_eq!(code.matches(close).count(), 1);
+    code = code.replacen(
+        close,
+        &format!("{close}\n    if(client_active)client_connections_closed++;"),
+        1,
+    );
+    let declaration = "static uint64_t client_connections_created, client_connections_finalized;";
+    assert_eq!(code.matches(declaration).count(), 1);
+    code = code.replacen(
+        declaration,
+        &format!("{declaration}\nstatic uint64_t client_connections_closed;"),
+        1,
+    );
+    let main = code
+        .find("static void *fwp_main_thread(void *arg) {")
+        .unwrap();
+    code.insert_str(main, include_str!("fixtures/grpc_connection_drain.c"));
+    let end = "    client_transport_end();";
+    assert_eq!(code.matches(end).count(), 1);
+    code.replacen(
+        end,
+        &format!("    client_drain_connections();\n    client_require_drained();\n{end}"),
+        1,
+    )
 }
 
 fn instrument_repeated_client(generated: &str) -> String {
