@@ -43,6 +43,7 @@ def main():
         "incoming_stream_descriptions_outlive_their_input_text",
         "forced_cells_release_received_storage_and_decoder_failure_text",
         "streamed_error_rendering_releases_partial_and_complete_scratch",
+        "received_requests_and_statuses_release_on_errors_and_cancelled_waits",
         "every_kind_of_call",
         "concurrent_reads_share_one_receive_and_cancel_independently",
         "recursive_and_cancelled_waiters_preserve_the_active_reader",

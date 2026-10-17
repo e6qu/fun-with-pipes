@@ -1,29 +1,41 @@
 # Session handoff
 
 Updated 2026-10-17 UTC. [PLAN.md](../PLAN.md) retains seven unfinished work areas.
-There is one active delivery: [PR #155](https://github.com/e6qu/fun-with-pipes/pull/155)
-at `31385092e4a3b357243b7c255af0e7d4521901c9`, branch `remote-stream-delivery`
-in `/Users/zardoz/projects/fun-with-pipes`. Production run `38986731253` is still
-running; documentation `38986731302` and the benchmark job pass. Do not change
-that final head or merge before all nine production jobs pass. The authorized
-watcher `/private/tmp/fwp-watch-155.py` verifies head, gates, merge tree, parent
-and one-line message. Its merge record will be `/private/tmp/fwp155-merge-record.json`.
+One delivery is open: [PR #155](https://github.com/e6qu/fun-with-pipes/pull/155),
+branch `remote-stream-delivery` in `/Users/zardoz/projects/fun-with-pipes`.
+Its published head is `31385092e4a3b357243b7c255af0e7d4521901c9`. Production
+`38986731253` failed in `grpc_receive_cleanup`; no merge occurred and the old
+watcher exited. The error was a fault-injection hook expecting one generic
+`free(g->m)` statement after the runtime added two more. It now matches only
+`g_got_release`. Documentation and benchmarks passed; other old jobs were still
+running when the failure was found. Cancellation of this superseded production
+run was requested so the corrected combined run can use those runners. That failed head is not acceptance.
 
-## Next delivery ready for assembly
+## Combined stream and chain delivery
 
-Preparation branch `bounded-chain-destruction`, worktree
-`/private/tmp/fwp-chain-destruction`, starts from PR #155's final head. The
-compiler and expanded tests are verified at `aea7d6df682fc0c067a4533fe019f0bfd0c14b4f`.
-Remaining local changes are the final report/collector, explanatory docs,
-updated handoff and comment corrections. Plain PR body:
-`/private/tmp/fwp-chain-pr-body.md`.
+The verified chain preparation `7ffb4552` has been applied to the existing PR
+branch, together with the receive-test repair, to avoid a second full CI cycle.
+Root changes are still awaiting the focused repair run before publication.
+The same repair is mirrored to preparation branch `bounded-chain-destruction`
+in `/private/tmp/fwp-chain-destruction`, which already contains both batches.
+The focused stream suite and Windows production job now include neighboring
+receive, status, send, encoding, client and server cleanup targets. The stream
+collector explicitly requires the repaired receive test.
 
-Next: commit and preserve this final preparation, wait for PR #155's complete
-acceptance, then assemble it on the accepted merge and publish the next delivery.
-Run all nine production jobs and documentation on its final commit. Fix failures;
-queued CI gates merging, not independent work. Squash subject must be one line,
-at most 80 characters, with an explicitly empty body and no trailers/attribution.
-Cancel duplicate postmerge `ci.yml` only; leave `windows-dependencies.yml` running.
+Next: publish the preparation repair and run `stream-owners` on all six native
+hosts. Fix any failures; refresh its stream report, then commit/push the complete
+combined PR #155 with a description covering both changes. Require all nine
+production jobs plus documentation on that new final head. Create a new merge
+watcher for its new head/run IDs; the prior watcher is finished. Squash with one
+line of at most 80 characters and an explicitly empty body, no trailers or AI
+attribution. Cancel duplicate/superseded production runs only; leave Windows
+dependency jobs running. Failing tests are tasks, and JIT is excluded.
+
+The first stream batch's six-host evidence is `38985903147` at `4c26f21f`, with
+16-byte positions and 81 requested bytes per received 16-character value versus
+24/89 previously; four allocations remain. It fixes shared readers, cancellation
+during decoding and description lifetime. This focused source predates the new
+compiler loop and receive-test repair, so the combined run is required.
 
 ## Verified chain cleanup
 
@@ -96,9 +108,12 @@ The existing connection counter controls transport closure, not complete object
 destruction. [Ownership](ownership.md#what-remains-before-remote-calls-can-use-arc)
 records these distinctions. Remote calls remain excluded from checked ARC. Compiler work must review
 `CGen::drop_body`, lowering of `grpc._force` and RPC result descriptors together.
-Native `g_decode` still uses unowned `fwp_decode`; custom decoder callbacks need
-a reviewed result contract too. Marking the primitive reviewed alone cannot
-safely establish ownership.
+The standard wire decoder `fwp_decode` already returns owned values and cleans
+partial fields (`runtime/fwp_rt_exec.c`). The stream cache must preserve or
+transfer those owners through wrapper construction, publication and failures.
+The custom callback branch of `g_decode` still calls `fwp_apply1`; its result
+contract needs a separate review. Marking `grpc._force` reviewed alone cannot
+establish ownership of the entire graph.
 
 A promising next contract consumes a position: when it has one owner, transfer
 its saved result directly; when shared, return another result owner. Keep type

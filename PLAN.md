@@ -87,7 +87,7 @@ positions shrink from 24 to 16 bytes, and requested bytes per received 16-charac
 value fall from 89 to 81. The allocation count remains four per value. Full
 acceptance of the combined delivery is still required.
 
-The next prepared batch releases long ordinary ownership chains in a loop even
+The same delivery also releases long ordinary ownership chains in a loop even
 when the next node sits inside optional values or tuples. Focused checks pass on
 all six native targets through 16,384 links, including retained aliases, complete
 reclamation and collector/reuse stress. Its full delivery gate remains required.
