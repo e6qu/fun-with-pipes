@@ -176,10 +176,14 @@ fn server_startup_deadline_covers_silent_processes() {
     let d = scratch("silent-startup");
     let source = d.join("silent.fwp");
     std::fs::write(&source, "main = 30s | task.sleep\n").unwrap();
-    let mut command = Command::new(fwp());
-    command.args(["run", "--interp"]).arg(&source);
     let began = Instant::now();
-    let result = std::panic::catch_unwind(|| start(command, Duration::from_millis(100)));
+    let result = std::panic::catch_unwind(|| {
+        // Construct the command inside the unwind boundary: Unix Command can
+        // contain pre-exec callbacks and is not itself UnwindSafe.
+        let mut command = Command::new(fwp());
+        command.args(["run", "--interp"]).arg(&source);
+        start(command, Duration::from_millis(100))
+    });
     let error = match result {
         Err(error) => error,
         Ok(_) => panic!("a silent process must not count as a ready server"),

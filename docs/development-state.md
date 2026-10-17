@@ -26,7 +26,7 @@ now normalizes text line endings; it still checks the exact message, exit 102
 and empty stdout. These fixes change tests, not runtime behavior.
 
 Final production run `38990872293` is queued/running on that exact published
-head; documentation run `38990872208` passed. The superseded focused run
+head; its benchmark job passed. Documentation run `38990872208` passed. The superseded focused run
 `38990255544` was cancelled after diagnosing the Windows assertion; all affected
 targets are included in production CI. Do not repeat the entire six-host focused
 suite solely for that assertion. Both measured component identities remain intact.
@@ -150,7 +150,15 @@ The same preparation fixes an encountered test-harness bug: reading a silent
 server's stderr could block past its nominal startup deadline. A background
 reader and timed receive now bound startup; timeout kills and waits for the child.
 The regression requires a timeout, not any startup failure. Formatting passed
-through the guard; the next focused run must verify both repairs. The ignored runner-only test in `tests/grpc.rs` generates actual native
+through the guard in 1.24s. Repair `91101d2e` is published; focused run
+`38991376833` exposed a Unix compilation error in the new regression: `Command`
+cannot cross a panic-unwind boundary. The regression now constructs it inside
+that boundary, with no unsafe assertion or runtime change. Publish this repair
+and repeat the focused suite; current delivery PR CI is unaffected. The collector
+`scripts/collect-stream-client-measurements.py` is prepared but uncommitted in
+that worktree; guarded Python syntax validation passed in 0.20s. It requires all
+six jobs, both named tests, matching source IDs and 27 rows per host before
+retaining counts, ranges, environment details and binary hashes. The ignored runner-only test in `tests/grpc.rs` generates actual native
 clients for full consumption, the first 32 values, and a retained first position.
 It compares output with raw interpretation, then records three allocation/live
 storage samples at 64/1,024/16,384 values with GC off. The server is interpreted
