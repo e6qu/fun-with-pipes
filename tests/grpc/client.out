@@ -5,6 +5,10 @@ greeter.HelloReply {message = "hello, Ada"}
 10
 ["A", "B"]
 [10, 20, 30]
+2080
+(2080, [1])
+[10, 20, 30]
+["A", "B"]
 Ok (greeter.HelloReply {message = "Bob"})
 Err (GrpcError {code = 5, message = "ghost"})
 carol

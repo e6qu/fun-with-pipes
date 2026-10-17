@@ -175,7 +175,7 @@ fn input_owners_release_after_lookahead_failure_and_sender_cancellation() {
         fwp::cgen::compile_c(&code, &exe, opt).unwrap();
         for gc in ["off", "on"] {
             for poison in ["0", "1"] {
-                for stage in 0..6 {
+                for stage in 0..7 {
                     let out = Command::new(&exe)
                         .arg(stage.to_string())
                         .env("FWP_GC", gc)

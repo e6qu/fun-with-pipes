@@ -61,9 +61,18 @@ input descriptions and drain task lists without reading freed handles.
 New negative controls omit input retains, each node release, sender freeing or
 unique task disposal. Normal cases include retained aliases, continuation and
 encoding traps, pre-entry cancellation and cancellation during encoding.
-This is implemented locally, not yet natively verified.
+Candidate `27208c1ac7b83cc5e07a1dd03201877f41d28008` is published;
+Linux run `39009844155` passed existing cleanup tests but failed a new negative
+control: after detecting the deliberately missing input retain, returning from
+main entered library teardown with the fixture's task still live and obscured
+the intended exit 223. The fixture now uses static descriptor metadata like
+production and exits immediately on a failed invariant. Its normal ownership
+cases and client measurements were not reached; no candidate acceptance yet.
+The next probe also includes failed input-retain acquisition and remote-output
+pipelines, retained upstream readers and chained senders.
 
-Next: publish the candidate and run Linux `sender-repeat`; repair failures.
+Next: publish the fixture repair and added cases, run Linux `sender-repeat`,
+and inspect/repair all failures.
 Keep collecting the frozen six-host baseline independently. Require six native
 candidate jobs, matching outputs, complete input/sender/connection cleanup,
 bounded remaining storage, failure controls and actual ARM64/AMD64 binary review
