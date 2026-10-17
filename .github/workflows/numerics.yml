@@ -101,6 +101,7 @@ jobs:
           if-no-files-found: ignore
       - name: Measure server memory after completed calls
         if: inputs.suite == 'server-repeat'
+        shell: bash
         env:
           FWP_SERVER_MEMORY_ARTIFACTS: server-memory-evidence
         run: |
