@@ -8,8 +8,8 @@ and final production validation; focused passes do not authorize merge.
 ## Next batch preparation: bounded chain destruction
 
 Branch `bounded-chain-destruction` in `/private/tmp/fwp-chain-destruction` starts
-from PR #155's final head. Baseline `38987418673` at `70e36523` passes Linux
-AMD64/ARM64; remaining native hosts are still running or queued. AMD64 O1/O2
+from PR #155's final head. Baseline `38987418673` at `70e36523` passes all six native
+OS/architecture hosts. AMD64 O1/O2
 measure 2,048 bytes of cleanup stack at 64 links and 32,768 at 1,024 links.
 Each link owns a string and an optional next link. The old compiler loops only
 across a direct same-type field, so these two types recursively call each other.
@@ -20,7 +20,13 @@ variants with one nonempty constructor until it returns to the starting type.
 It releases these objects in one loop, stopping at each shared wrapper. Direct
 self-tail behavior and count-only mode remain unchanged. Other branching shapes
 keep their existing typed destruction. There is no runtime work list or new heap
-allocation. This implementation still needs CI; no final support is claimed.
+allocation. First candidate `bdfa7003` in run `38987730204` compiled successfully, but its
+fixture expected a standalone Link destructor that the new loop eliminated.
+The source now hashes the complete chain as well as selecting its first string;
+this requests type descriptions and their independently callable destructors.
+The fixture now also covers Option/tuple paths, tuple aliases, and actual
+hybrid-mode execution under GC/reuse stress with physical freeing both on/off.
+These changes still need CI; no final support is claimed.
 
 Tests compare the actual source program with the raw interpreter and measure
 64/1,024/16,384-link cleanup with no aliases, a root alias, a middle-node alias
