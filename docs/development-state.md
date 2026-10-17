@@ -2,12 +2,15 @@
 
 ## Next action
 
-Next: publish the consolidated CSV repair, regression coverage and completed
-memory evidence, run all six functional jobs with `server_entry_part=checks`,
-and open the next substantial PR from `server-entry-delivery` in the root checkout. No delivery PR is open.
-Keep one current head; fix every discovered failure and audit every completed
-job before a repair push. Require all nine final-head production jobs and docs
-before squash merge.
+Next: complete final verification of [PR #164](https://github.com/e6qu/fun-with-pipes/pull/164)
+on `server-entry-delivery`. The implementation/evidence commit is `7c750b75`;
+this tracking update changes documentation only. Run the six affected functional
+jobs with `server_entry_part=checks` and the full production matrix on the final
+head. Audit all completed results before a repair push. Require all six focused
+jobs, nine production jobs and documentation before the authorized squash merge.
+Use an explicit one-line subject of at most 80 characters and an empty body;
+verify the complete message, parent and tested/merged tree, then cancel duplicate
+postmerge production. Keep one delivery PR and preserve passing heads.
 
 ## Accepted foundation
 
@@ -23,11 +26,11 @@ records its changes, measurements and exact acceptance evidence.
 
 Work in the root checkout on `server-entry-delivery`. Its three transferred
 preparation commits are `5f83174b`, `6f522b00` and `ae79bc6b`, based on the accepted
-#163 squash. Before the pending documentation/CSV expectation changes, its tree
+#163 squash. Before the documentation/CSV expectation changes, its tree
 was verified identical to measured preparation `8dfc014d843903e7e517e4b117cb1856732d07e9`,
 retained by published tag `evidence/server-entries-20261018`.
 The `/private/tmp/fwp-server-entries` worktree and older HTTP worktrees are now
-inactive; the root contains the current handoff and pending repair.
+inactive; the root contains the current handoff and published repair.
 
 Generated REST APIs and MCP tools now use ordinary checked ARC compilation.
 ARC means automatic reference counting; these builds omit tracing collection
@@ -179,4 +182,7 @@ limits, and update this single handoff after meaningful progress.
 Latest guarded lint of the changed Rust tests passes (6.29 s); workflow lint
 passes (1.48 s). Documentation checks pass after removing obsolete pending-work
 claims and recording #163 acceptance. All commit messages remain one line, no
-more than 80 characters, without bodies, trailers or attribution.
+more than 80 characters, without bodies, trailers or attribution. PR #164 was
+created briefly as a draft to record its link before starting the full gate;
+draft skips are not acceptance. The ready-for-review event starts the full gate
+on the final published head.

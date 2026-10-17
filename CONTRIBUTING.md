@@ -67,6 +67,11 @@ production job must pass before merge. Draft skips are never acceptance gates. F
 early native probe in `numerics.yml`, `native_runner` selects one runner instead
 of the suite's matrix. Use `all` for complete evidence; report collectors still
 require every expected native host. This does not change production acceptance.
+For the `server-entries` suite, `server_entry_part=all` runs all four parts on
+each selected host. An explicit `checks` selection reruns functional tests
+without repeating unchanged memory measurements. Retain their original source
+and verify that compiler/runtime/library and measurement behavior still match;
+this selector does not reduce the required production matrix.
 
 Windows dependency setup uses an exact cache key for each architecture and setup
 script. The [dependency-only workflow](.github/workflows/windows-dependencies.yml)
