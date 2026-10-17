@@ -1307,11 +1307,15 @@ typedef struct {
     size_t cap, size, head, len;
     int closed;
     fwp_wl recvq, sendq;
-    /* a channel whose values go to a gRPC stream (a served function's
-     * `Channel[T]` parameter): 0 when the stream is closed */
-    int (*sink)(void *ctx, V x);
+    /* A native sink borrows a value for this send only. Keeping it afterward
+     * requires an independent typed owner. Native and queued channels have
+     * different cleanup needs, sharing these fields without a larger header. */
+    int (*sink)(void *ctx, V value);
     void *sink_ctx;
-    void (*value_drop)(V), (*value_dup)(V);
+    union {
+        struct { void (*drop)(V), (*dup)(V); } queue;
+        void (*sink_drop)(void *ctx);
+    } owner;
 } fwp_chan;
 
 static V fwp_p_channel_make(V capv) {
@@ -1326,8 +1330,8 @@ static V fwp_p_channel_make(V capv) {
 static V fwp_p_channel_make_owned(V cap, void (*drop)(V), void (*dup)(V)) {
     V value = fwp_rc_fresh(fwp_p_channel_make(cap));
     fwp_chan *c = (fwp_chan *)(uintptr_t)value;
-    c->value_drop = drop;
-    c->value_dup = dup;
+    c->owner.queue.drop = drop;
+    c->owner.queue.dup = dup;
     return value;
 }
 
@@ -1335,15 +1339,24 @@ static void fwp_channel_drop(V value) {
     if (!fwp_rc_release_last(value)) return;
     fwp_chan *c = (fwp_chan *)(uintptr_t)value;
     if (c->sendq.head || c->recvq.head) abort();
-    if (c->value_drop) for (size_t i = 0; i < c->len; i++) {
-        size_t at = (c->head + i) % c->size;
-        V element = c->buf[at];
-        c->buf[at] = 0;
-        c->value_drop(element);
+    if (c->sink) {
+        void (*drop)(void *) = c->owner.sink_drop;
+        void *context = c->sink_ctx;
+        c->sink = NULL;
+        c->sink_ctx = NULL;
+        c->owner.sink_drop = NULL;
+        drop(context);
+    } else {
+        if (c->owner.queue.drop) for (size_t i = 0; i < c->len; i++) {
+            size_t at = (c->head + i) % c->size;
+            V element = c->buf[at];
+            c->buf[at] = 0;
+            c->owner.queue.drop(element);
+        }
+        c->len = 0;
+        fwp_mem_free(c->buf);
+        c->buf = 0;
     }
-    c->len = 0;
-    fwp_mem_free(c->buf);
-    c->buf = 0;
     fwp_rc_resource_free_arr(value);
 }
 
@@ -1383,7 +1396,6 @@ static V fwp_p_channel_send_owned(V ch, V x, void (*dup)(V)) {
     fwp_chan *c = (fwp_chan *)(uintptr_t)ch;
     if (c->sink) {
         if (c->closed) return FWP_FALSE;
-        if (dup) fwp_rc_share(x);
         return c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;
     }
     for (;;) {
@@ -1392,7 +1404,7 @@ static V fwp_p_channel_send_owned(V ch, V x, void (*dup)(V)) {
             if (c->len == c->size) fwp_chan_grow(c);
             uint8_t *count = fwp_rc_slot(ch);
             if (count && *count) {
-                if (c->value_dup) c->value_dup(x);
+                if (c->owner.queue.dup) c->owner.queue.dup(x);
             } else if (dup) fwp_rc_share(x);
             c->buf[(c->head + c->len) % c->size] = x;
             c->len++;

@@ -427,3 +427,107 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
         }
     }
 }
+
+#[test]
+fn native_output_channels_borrow_values_and_release_context() {
+    let unit = MT::unit();
+    let program = Program {
+        funcs: vec![
+            Func {
+                name: "available".into(),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: MT::Fun(Box::new(unit.clone()), Box::new(MT::con("std::Bool"))),
+                body: Body::Prim("tls.available".into()),
+            },
+            Func {
+                name: "web".into(),
+                arity: 0,
+                locals: vec![],
+                ty: unit,
+                body: Body::Prim("http2.connect".into()),
+            },
+        ],
+        exports: vec![("available".into(), 0)],
+        ..Program::default()
+    };
+    let (generated, _) = fwp::cgen::generate_library(&program, "output_channels").unwrap();
+    let encode = "g_encode(&k->enc, x, k->tag, &b);";
+    assert_eq!(generated.matches(encode).count(), 1);
+    let declaration = "static void channel_encode(V,h2_buf *);\n";
+    let generated = generated
+        .replacen(
+            "static int g_sink_send(",
+            &format!("{declaration}static int g_sink_send("),
+            1,
+        )
+        .replacen(encode, "channel_encode(x, &b);", 1);
+    let fixture = include_str!("fixtures/grpc_output_channel.c");
+    let controls = [
+        (
+            "        drop(context);",
+            "/* omit native context release */",
+            0,
+            232,
+        ),
+        (
+            "    g_stream_drop(stream);",
+            "    /* omit request owner release */",
+            0,
+            232,
+        ),
+        (
+            "    g_conn_drop(connection);",
+            "    /* omit connection owner release */",
+            0,
+            232,
+        ),
+        (
+            "    fwp_value_protect(&building, &cleanup);",
+            "    /* omit construction cleanup */",
+            5,
+            232,
+        ),
+        (
+            "return c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
+            "fwp_rc_share(x); return c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
+            0,
+            231,
+        ),
+    ];
+    let dir = fwp::cgen::TempDir::new("native-channel-owners").unwrap();
+    let exe = dir.join("probe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&format!("{generated}\n{fixture}"), &exe, opt).unwrap();
+        for stage in 0..7 {
+            for gc in ["off", "on"] {
+                for poison in ["0", "1"] {
+                    let output = Command::new(&exe)
+                        .arg(stage.to_string())
+                        .env("FWP_GC", gc)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    assert!(
+                        output.status.success(),
+                        "{opt}/{stage}/{gc}/{poison}: {output:?}"
+                    );
+                }
+            }
+        }
+        for (before, after, stage, expected) in controls {
+            assert_eq!(generated.matches(before).count(), 1, "{before}");
+            let broken = generated.replacen(before, after, 1);
+            fwp::cgen::compile_c(&format!("{broken}\n{fixture}"), &exe, opt).unwrap();
+            let output = Command::new(&exe)
+                .arg(stage.to_string())
+                .env("FWP_GC", "off")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(expected), "{before}: {output:?}");
+        }
+    }
+}

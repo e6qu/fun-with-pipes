@@ -1742,16 +1742,46 @@ static int g_sink_send(void *ctx, V x) {
     return r;
 }
 
+/* The payload is part of its channel allocation. Only independent transport
+ * owners need release; there is no separately allocated callback record. */
+static void g_sink_drop(void *arg) {
+    g_sink *sink = arg;
+    g_stream *stream = sink->s;
+    g_conn *connection = sink->c;
+    sink->s = NULL;
+    sink->c = NULL;
+    g_stream_drop(stream);
+    g_conn_drop(connection);
+}
+
+_Static_assert(_Alignof(fwp_chan) >= _Alignof(g_sink), "channel payload alignment");
+
 static V g_sink_value(g_conn *c, g_stream *s, g_codec enc, int tag) {
-    V ch = fwp_p_channel_make((V)1);
-    fwp_chan *q = (fwp_chan *)(uintptr_t)ch;
-    g_sink *k = (g_sink *)fwp_mem_alloc(sizeof *k);
-    k->c = c;
-    k->s = s;
+    fwp_tasks_init();
+    fwp_chan *q = (fwp_chan *)fwp_mem_alloc(sizeof *q + sizeof(g_sink));
+    g_sink *k = (g_sink *)(q + 1);
+    q->cap = 1;
+    q->sink = g_sink_send;
+    q->owner.sink_drop = g_sink_drop;
+    q->sink_ctx = k;
     k->enc = enc;
     k->tag = tag;
-    q->sink = g_sink_send;
-    q->sink_ctx = k;
+    V ch = PTR(q);
+#ifdef FWP_RESOURCE_OWNERS
+    fwp_rc_fresh(ch);
+    fwp_value_owner building = {ch, fwp_channel_drop};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&building, &cleanup);
+    fwp_rc_dup(PTR(s));
+#endif
+    k->s = s;
+#ifdef FWP_RESOURCE_OWNERS
+    fwp_rc_dup(PTR(c));
+#endif
+    k->c = c;
+#ifdef FWP_RESOURCE_OWNERS
+    ch = fwp_value_finish(&building, &cleanup); /* transfer the whole channel */
+#endif
     return ch;
 }
 

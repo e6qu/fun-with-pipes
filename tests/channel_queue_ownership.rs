@@ -66,11 +66,7 @@ main = [
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
     );
-    let runtime = if runtime.contains("static void fwp_channel_drop(") {
-        runtime
-    } else {
-        format!("{runtime}\nstatic void fwp_channel_drop(V v){{fwp_rc_drop(v);}}\n")
-    };
+    assert!(runtime.contains("static void fwp_channel_drop("));
     let runtime=runtime.replace("static V fwp_chan_recv_owned(",
         "static int fail_option;\nstatic V channel_option(V x){if(fail_option){fail_option=0;fwp_trap(\"allocation probe\");}return fwp_some(x); }\nstatic V fwp_chan_recv_owned(")
         .replace("fwp_rc_fresh(fwp_some(x))", "fwp_rc_fresh(channel_option(x))");
@@ -78,7 +74,9 @@ main = [
 static jmp_buf recovered;static int recover(void){return 1;}
 static V blocking_ch,blocking_value;static int send_mode,worker_completed;
 static void text_drop(V v);
-static int sink_calls;static int sink(void *arg,V value){(void)arg;(void)value;sink_calls++;return 1;}
+static int sink_calls,sink_drops;
+static int sink(void *arg,V value){if(arg!=&sink_calls||!fwp_rc_last(value))_Exit(38);sink_calls++;return 1;}
+static void sink_drop(void *arg){if(arg!=&sink_calls)_Exit(39);sink_drops++;}
 static void worker(void *arg,int failed){
  (void)arg;if(failed)return;
  fwp_value_owner ch_owner={blocking_ch,fwp_channel_drop},value_owner={blocking_value,text_drop};
@@ -161,16 +159,21 @@ int main(void){
  value=fwp_rc_fresh(fwp_str_new("young",5));fSEND(ch,value);text_drop(value);value=0;
  fwp_gc.major_next=0;size_t minors=fwp_gc.nminor;fwp_gc_collect();FWP_KEEP_ALIVE(ch);
  if(fwp_gc.nminor!=minors+1)return 34;received=fRECV(ch);if(STR(OBJ(received)->f[0])->len!=5)return 34;option_drop(received);fwp_channel_drop(ch);
- // Untyped runtime channels, promoted handles and sink callbacks keep tracing.
+ // Untyped queue channels and promoted handles keep tracing.
  for(int promoted=0;promoted<2;promoted++){
   ch=promoted?fMAKE(1):fwp_p_channel_make(1);if(promoted)fwp_rc_share(ch);
   value=fwp_rc_fresh(fwp_str_new("shared",6));fSEND(ch,value);text_drop(value);
   received=fRECV(ch);if(*fwp_rc_slot(value)||STR(OBJ(received)->f[0])->len!=6)return 35;
   fwp_channel_drop(ch);option_drop(received);
  }
- ch=fwp_p_channel_make(1);((fwp_chan *)(uintptr_t)ch)->sink=sink;
- value=fwp_rc_fresh(fwp_str_new("sink",4));if(fSEND(ch,value)!=FWP_TRUE||*fwp_rc_slot(value)||sink_calls!=1)return 36;
+ // Native sends borrow their values; the last channel alias releases context.
+ ch=fMAKE(1);((fwp_chan *)(uintptr_t)ch)->sink=sink;((fwp_chan *)(uintptr_t)ch)->owner.sink_drop=sink_drop;((fwp_chan *)(uintptr_t)ch)->sink_ctx=&sink_calls;
+ fwp_rc_dup(ch);
+ value=fwp_rc_fresh(fwp_str_new("sink",4));if(fSEND(ch,value)!=FWP_TRUE||*fwp_rc_slot(value)!=1||sink_calls!=1)return 36;
+ text_drop(value);if(!dead(value))return 38;
+ fwp_channel_drop(ch);if(sink_drops||*fwp_rc_slot(ch)!=1)return 39;
  fCLOSE(ch);V rejected=fwp_rc_fresh(fwp_str_new("closed",6));if(fSEND(ch,rejected)!=FWP_FALSE||*fwp_rc_slot(rejected)!=1||sink_calls!=1)return 37;text_drop(rejected);
+ fwp_channel_drop(ch);if(sink_drops!=1)return 40;
  // Overflow acquires no queue owner and preserves the borrowed caller value.
  ch=fMAKE(2);value=fwp_rc_fresh(fwp_str_new("overflow",8));uint8_t *slot=fwp_rc_slot(value);
  *slot=254;fwp_rc_dup(value);(*fwp_rc_wide_link(slot))->count=SIZE_MAX;
@@ -198,11 +201,11 @@ int main(void){
  .replace("CLOSE",&id("channel.close : Channel[String]"))
  .replace("RECV",&id("channel.recv : Channel[String]"));
     let no_queue_retain = runtime.replace(
-        "if (c->value_dup) c->value_dup(x);",
+        "if (c->owner.queue.dup) c->owner.queue.dup(x);",
         "/* omit queue retain */",
     );
     let no_queue_drop = runtime.replace(
-        "c->value_drop(element);",
+        "c->owner.queue.drop(element);",
         "/* omit queued element release */",
     );
     let extra_receive = runtime.replace(
@@ -212,11 +215,21 @@ int main(void){
     let early_remove=runtime.replace(
         "V result = fwp_rc_fresh(channel_option(x));\n            c->buf[c->head] = 0;\n            c->head = (c->head + 1) % c->size;\n            c->len--;",
         "c->buf[c->head] = 0;\n            c->head = (c->head + 1) % c->size;\n            c->len--;\n            V result = fwp_rc_fresh(channel_option(x));");
+    let no_sink_drop = runtime.replace(
+        "        drop(context);",
+        "/* omit native context release */",
+    );
+    let traced_sink_value = runtime.replace(
+        "return c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
+        "fwp_rc_share(x); return c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
+    );
     for control in [
         &no_queue_retain,
         &no_queue_drop,
         &extra_receive,
         &early_remove,
+        &no_sink_drop,
+        &traced_sink_value,
     ] {
         assert_ne!(control, &runtime);
     }
@@ -226,6 +239,8 @@ int main(void){
             (&no_queue_drop, 6),
             (&extra_receive, 4),
             (&early_remove, 26),
+            (&no_sink_drop, 40),
+            (&traced_sink_value, 38),
         ] {
             fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, opt).unwrap();
             let out = Command::new(&exe)
