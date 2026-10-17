@@ -64,3 +64,10 @@ do not implement equality. The tests now match the expected expression shape.
 The separate ownership preparation also fixes Windows API declaration order in
 the existing client startup fixture; that same repair is included here.
 Next: publish and rerun the Linux probe before claiming native results.
+
+The second Linux probe `39027098579` passes all 31 ownership unit tests, the
+borrowed-application test and existing left-fold aliases/reclamation. The new
+string test failed its interpreter expectation: `flip concat "!"` prepends the
+marker, whereas the captured string has it appended. The test now uses
+`concat "!"`; this fixes the workload, without changing the expected result.
+Next: rerun the focused probe; native zero-retain behavior remains unverified.

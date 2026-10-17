@@ -211,7 +211,7 @@ fn known_fold_callbacks_borrow_captures_and_elements_without_retain_traffic() {
 step = curry3 ({body})
 count : String -> List[String] -> I64
 count = step | flip {fold} 0
-main = (read-all () | concat "needle!", ["needle", "skip"] | map (flip concat "!")) | uncurry count | echo
+main = (read-all () | concat "needle!", ["needle", "skip"] | map (concat "!")) | uncurry count | echo
 "#)).unwrap();
         let reference = checked(
             Command::new(fwp)
