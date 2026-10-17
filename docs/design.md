@@ -393,7 +393,9 @@ can outlive their sockets while response readers retain status information;
 the pool, I/O tasks and callers hold separate storage owners. Library teardown
 closes these connections before waiting for their tasks. The
 [ownership guide](ownership.md) and [measured comparison](benchmarks.md#freeing-closed-connections-and-finished-tasks)
-describe the limits; remote checked ARC remains unsupported.
+describe the limits. Checked gRPC client/service builds add iterator scope
+checks and use these owners; [the current acceptance status](development-state.md)
+is separate from implementation. HTTP handlers remain outside that extension.
 
 Accepted input ownership gives remote input iterators concrete destruction
 metadata. Its cursor keeps the current element alive while advancing to the

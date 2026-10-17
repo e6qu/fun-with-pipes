@@ -94,6 +94,8 @@ def main():
         checks.remove('server_measurement::repeated_server_call_memory')
         checks += ['server_measurement::repeated_arc_server_call_memory',
                    'arc_remote_calls_exclude_tracing_and_preserve_behavior',
+                   'client_received_buffers_release_on_retry_errors_and_cancelled_waits',
+                   'client_failure_text_releases_after_traps_and_typed_errors',
                    'arc_scope::tests::remote_input_continuations_use_the_actual_sender_scope',
                    'arc_scope::tests::served_iterators_do_not_extend_method_scopes']
     output_tables = args.output.parent / args.output.stem

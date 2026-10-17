@@ -399,8 +399,9 @@ Supported native entries include `main`, exported function executables and CLI
 commands and native C libraries with copied inputs and pointer-free results.
 Each entry starts without assuming an existing state or derivative scope.
 Synchronous WASI main/function/CLI entries also use these checks. Browser,
-asynchronous WASI host tasks, remote calls and service entry points remain
-outside this mode. Focused checks and final delivery acceptance are distinguished
+asynchronous WASI host tasks, REST and MCP remain outside this mode. The
+[gRPC extension](#checked-grpc-clients-and-services) adds checked client/service
+entries and has separate platform acceptance. Focused checks and final delivery acceptance are distinguished
 in [the handoff](development-state.md).
 
 WASI supplies standard streams and file access to a WebAssembly module. Build a
@@ -810,10 +811,11 @@ acceptance is tracked separately in the handoff.
 The [intermediate stack-copy report](measurements/service-context-stack-2026-10-16.json)
 preserves the earlier representation tradeoff. It predates packed headers and
 owned callback results, and its Windows fixtures failed before later repairs.
-Whole remote calls, service entry points and retained request contexts still
-need ownership work; these scope changes do not remove tracing from a server.
+These earlier scope changes alone did not remove tracing from a server. The
+following sections describe the request, connection and iterator owners, and
+the checked gRPC extension builds on them.
 
-### What remains before remote calls can use ARC
+### Received iterators and remote-call storage
 
 A remote call asks another process to run a function. A streaming response lets
 the caller request values one at a time. fwp saves each received value so two
@@ -1028,11 +1030,41 @@ Scoped failure cleanup and deliberate missing-reset tests enforce that distincti
 
 Keep the cache, shared-reader and decoder failure controls while extending these
 owners. Test partial construction and every last-owner case; retain deliberately
-broken variants to prove that missing cleanup is detected. Before admitting
-remote calls to checked ARC, compare interpreter/native values, errors and
-receive order, inspect actual binaries and measure repeated calls with collection
-disabled. Server/HTTP
-streams and retained handlers still need tracing. HTTP/2 server operations and GPU resource ownership remain separate work.
+broken variants to prove that missing cleanup is detected. HTTP/2 handlers and
+GPU resource ownership remain separate work.
+
+### Checked gRPC clients and services
+
+A split gRPC build can select `--gc arc` for both its client and service entries.
+[The service guide](services.md#building-without-tracing-collection) introduces the
+command and iterator lifetime rules. This extension is implemented in the current
+candidate: Linux AMD64 O1/O2 interpreter comparisons and tracing-free binary
+checks pass; remaining platform and production acceptance is tracked in
+[the handoff](development-state.md). It does not establish complete GC removal.
+
+The compiler follows known iterator continuations, including later steps. A
+single-result remote call consumes its input under the caller's current state
+and differentiation handlers. A bidirectional sender runs in a separate task
+with fresh handlers. Service input iterators start under the service task's
+handlers, and returned iterators are drained after the method's local handlers
+end. A continuation that requires an expired or absent handler is rejected.
+Installing a handler inside the continuation is allowed.
+
+Remote arguments are borrowed while encoded or delivered. Retained input cursors
+acquire their own typed owners. A decoded single reply stays protected until the
+final status arrives; cancellation, extra replies and failed status release it.
+A channel send borrows its decoded value, while an accepting queue acquires an
+owner. Native sinks and closed channels retain no local reply owner. Caught
+status errors own both their record and message. Tests omit these owners
+separately and require a failure, in addition to normal and cancellation checks.
+
+Messages encode data, not managed pointers or callable captures. Data-only
+channel payload rules still exclude tasks, functions and nested channels that
+could create a mutable ownership cycle. Request/connection owners and borrowed
+task links retain their existing contracts. ARC binaries still allocate and
+count shared owners; removing the collector does not make networking a zero-cost
+abstraction. Repeated server measurements compare identical fwp programs across
+memory modes, with no speed or C/Rust-parity claim.
 
 ### Moving values held by a closure
 
