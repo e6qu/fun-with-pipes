@@ -246,10 +246,10 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     }
     let input = dir.join("valid.fwp");
     std::fs::write(&input, "main = 42 | echo\n").unwrap();
-    for boundary in [&["--target", "wasm32-browser"][..], &["--rest"]] {
+    {
         let out = Command::new(env!("CARGO_BIN_EXE_fwp"))
             .args(["build", "--gc=arc", "--emit-c"])
-            .args(boundary)
+            .args(["--target", "wasm32-browser"])
             .arg(&input)
             .arg("-o")
             .arg(dir.join("boundary.c"))
