@@ -1,6 +1,7 @@
 # Session handoff
 
-Current branch: `http-client-delivery`, based on accepted PR #161 (`fd25a10c`).
+Current delivery: [draft PR #162](https://github.com/e6qu/fun-with-pipes/pull/162),
+branch `http-client-delivery`, based on accepted PR #161 (`fd25a10c`).
 The HTTP implementation is integrated as `5ba6e970`; its files match preparation
 `828bf74c8c7484aabcf82962705ff50b103a3107`, retained by immutable tag
 `evidence/http-client-owners-20261017`. This checkout is the current delivery.
@@ -12,35 +13,31 @@ See [history](roadmap-history.md) for the accepted work and failure audit.
 
 ## Next action
 
-Next: publish the combined repairs and repeat the six-native-host HTTP suite,
-including memory measurements. The [first run](https://github.com/e6qu/fun-with-pipes/actions/runs/39051530853)
-(source `828bf74c`) finished every target and real HTTP comparison. All six hosts
-passed interpreted/native cleartext/TLS calls. The complete failure audit found
-one stale gRPC injection target on all hosts, plus two Unix-only probes on Windows.
-Repairs preserve their negative controls and add both probes to Windows production.
-A separate startup review found client/server socket/TLS transfer happened before
-connection allocation; the candidate now transfers only after success, with a deliberate
-premature-transfer control. Final HTTP acceptance is still pending.
+Next: publish the Windows header-order repair and steady-memory assertion; rerun
+`http-clients` on native Windows ARM64 and AMD64. Then finish the evidence report,
+mark #162 ready and require all nine production jobs plus documentation on its
+final commit. Keep one active PR. No HTTP delivery is accepted yet.
 
-Publish the next PR after focused validation; inspect actual binaries and retain
-repeated memory evidence before all final-head production/docs gates. No HTTP
-delivery has been accepted yet.
+The [combined six-host run](https://github.com/e6qu/fun-with-pipes/actions/runs/39052834580)
+at `8770c03ef7eb36e04c1f412c13090270aaf11526` completed all 72 target executions.
+Linux and both macOS hosts passed every step. Both Windows jobs failed only
+`grpc_connect_cleanup`: its API version definition followed a system header.
+The pending repair moves it before every include. Real HTTP comparisons, library
+unload and all 216 memory samples pass on all six hosts. No skipped job counts
+as platform acceptance.
 
 ## Batch scope and acceptance
 
-The current HTTP/2 client starts unowned reader/writer tasks, leaves request
-storage to tracing, and constructs response headers/body without typed temporary
-owners. Address startup failures, pooled connections, cancellation/reset and
-partially constructed responses together. Preserve header/trailer order, status,
-body bytes and transport behavior. Avoid redundant owners and pointer scratch
-arrays when response fields can be constructed directly.
+HTTP client pool/caller/I/O-task owners, request cancellation/reset and typed
+partial-response cleanup are implemented. Complete connection keys avoid the old
+1,200-byte truncation. Client/server entry now transfers socket/TLS ownership only
+after connection allocation succeeds. HTTP server handlers, Browser and async
+WASI remain outside checked ARC; their ownership is separate work.
 
-Require failure controls that detect omitted cleanup; normal and poisoning modes
-at O1/O2; interpreted/native HTTP comparisons including pooled/TLS calls; repeated
-managed/live-memory counts; actual ARM64/AMD64 binaries; all six native hosts and
-all final-head production/documentation gates. Checked ARC admission depends on
-proved ownership; HTTP server handlers, Browser and asynchronous WASI remain
-separate work. Record measured remaining costs without claiming C/Rust parity.
+Require cleanup omission controls, O1/O2 with stress/verification, interpreted/native
+cleartext/TLS comparisons, repeated memory samples, actual binary inspection and
+all final production/docs gates. Preserve header/trailer order, body bytes,
+status and observable failure order. No speed or C/Rust parity claim.
 
 ## Roadmap status
 
@@ -57,65 +54,48 @@ separate work. Record measured remaining costs without claiming C/Rust parity.
 Use guarded serial focused local checks; full builds and suites run on GitHub.
 Implementation is in progress; nothing in this batch is accepted yet.
 
-## Local checks and pending validation
+## Evidence and checks
 
-Preparation checks used the root checkout's `scripts/local-guard.py` from the
-isolated worktree, sharing its target and resource limits. Set
-`FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3` for C/TLS probes; the initial HTTP
-probe could not find headers until the installed prefix was supplied.
+The first [six-host run](https://github.com/e6qu/fun-with-pipes/actions/runs/39051530853)
+at preparation `828bf74c` completed all 66 targets. Every real HTTP comparison
+passed. Audit found a stale gRPC cleanup-injection needle on all hosts and two
+Unix-only probes on Windows. The combined repair scoped the needle to gRPC,
+ported native socket/loader checks and used the runner's OpenSSL executable.
+All omission controls remain; both ported probes are in Windows production.
+The second audit isolates the remaining Windows header-order issue above.
 
-- `cargo test --no-fail-fast --test http2_client_ownership --test grpc_connection_addresses`:
-  three tests pass (26.30s), including O1/O2, partial allocation, reset, real task
-  cancellation, startup reservation failures, long keys and deliberate missing
-  cleanup/truncation. The gRPC copy-failure injection was updated for the new
-  constructor; no assertion was weakened.
-- `cargo test --test web --no-run`: the expanded integration harness compiles
-  (1.18s). Its full cleartext/TLS and interpreted/native combinations run on CI.
-- `fwp build tests/web/arc-client.fwp --gc arc --emit-c -o /private/tmp/fwp-http-client-arc.c`:
-  eligibility/code emission passes (1.11s); it is not executed native support.
-- `fwp fmt --check tests/web/arc-client.fwp`: passes (0.49s).
-- `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-http-client-inventory.json`:
-  passes (1.23s): 350 declarations have contracts; four still need runtime review.
-- `actionlint .github/workflows/numerics.yml .github/workflows/windows.yml`:
-  passes (1.33s). The `http-clients` suite covers six native hosts and preserves
-  generated C, binaries and actual results. Full PR acceptance remains separate.
+All local checks use `python3 scripts/local-guard.py`, serially; C/TLS probes use
+`FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3`. Full gates run on GitHub.
 
-Found and fixed while reviewing callers: HTTP pool keys were truncated in a
-1,200-byte buffer. The common connection constructor now accepts an explicit
-prefix and copies prefix/key into its one existing allocation; all call sites
-and affected test probes use the new internal interface. Keys differing after
-the old limit no longer collide. No compatibility wrapper was added.
+- gRPC request cleanup and O1/O2 omission controls pass (25.93s including build).
+- HTTP response and client startup controls pass (42.08s); expanded client/server
+  startup controls pass (18.53s) after narrowing the server injection needle.
+- `cargo test --no-fail-fast --test grpc_connect_cleanup --test library_resources`:
+  both pass locally (23.92s); Windows execution still requires the header repair.
+- Both HTTP/gRPC integration harnesses compile (1.46s); the memory assertion's
+  harness compiles (1.21s). Repeated source passes ARC emission (1.10s), with an
+  explicit concrete fold signature and `IoError` input errors. Formatting passes.
+- Rust formatting, docs (2.86s), workflow lint (1.02s) and seven test-runner checks
+  (0.99s) pass. Draft documentation `39052865880` passes at `8770c03e`.
 
-Final HTTP control rerun passes both tests (37.83s including build), with explicit
-source-root protection during connection-key copying and transport preparation.
-Final Rust formatting, documentation audit (2.64s) and workflow validation pass.
-Run the whole six-host preparation suite. Retain measurements and
-actual machine-code review before claiming allocation, stack or code-size costs.
+Artifacts are at `/private/tmp/fwp-http-evidence/39052834580`; both complete log
+audits are `/private/tmp/fwp-http-first-audit.json` and
+`/private/tmp/fwp-http-second-audit.json`. All 216 rows cover tracing/ARC,
+cleartext/TLS, 1/16/256 calls and three measured processes. Final managed storage
+is constant within each host: Linux AMD64 6,368 bytes, Linux ARM64 19,424;
+macOS both 2,368; Windows AMD64 3,520 and ARM64 3,136. Counts match between modes
+with tracing disabled and physical freeing enabled. Each additional call costs
+237 managed allocations and 543 retains in this full high-level client workload.
+The final sample includes pooled connections/tasks and excludes raw transport,
+TLS/OS/allocator metadata, process RSS and timing. These are remaining costs.
 
-## Combined repair and measurement checks
+Static inspection of all 48 actual functional/repeated binaries finds tracing
+symbols in the 24 tracing builds and none in the 24 ARC builds. No downloaded
+binary was executed. JSON summaries and disassembly remain beside artifacts;
+finish a tracked report and explain code-size/stack costs before final acceptance.
+Linux HTTP entry frames are 664 bytes on AMD64 and 720 on ARM64 in both modes,
+including saved registers, excluding callees and AMD64's incoming return address.
+ARC executable text is larger; generic entry guards are a concrete review target.
 
-All six original jobs completed ten ownership targets and one real-HTTP target
-(66 target executions). All failures are accounted for above. The HTTP comparison
-passed everywhere; no platform is accepted with its failed ownership step.
-
-- Guarded `cargo test --test grpc_client_requests`: passes (25.93s including build),
-  with the omission scoped to gRPC and all O1/O2 controls retained.
-- Guarded `cargo test --test http2_client_ownership`: both tests pass (42.08s),
-  including socket/TLS preservation when allocation fails and a negative control
-  that deliberately transfers too early.
-- Guarded `cargo test --no-fail-fast --test grpc_connect_cleanup --test library_resources`:
-  both pass (23.92s). Probes use native socket widths, explicit Windows/Unix
-  loader APIs and real loopback peers; no test is skipped for Windows.
-- Added a runner-only repeated HTTP measurement: tracing/checked ARC, cleartext/TLS,
-  1/16/256 calls and three measured processes per case. Counts include managed
-  allocations, retains and charged peak/final storage; raw transport/TLS/OS memory
-  and timing are excluded. It compares current fwp modes, not C/Rust or a prior
-  compiler. Runtime results and actual binary review remain pending.
-
-Final startup rerun after adding the server-side control passes (18.53s); its
-first local attempt exposed an ambiguous injection needle, now scoped to the
-server entry. Both integration harnesses compile (1.46s). The repeated source
-passes ARC code emission (1.10s) after adding its concrete fold signature and
-using `IoError` consistently for input/network errors; source formatting passes.
-Rust formatting, documentation (2.86s) and workflow lint (1.02s) pass. The complete
-first-run log audit is retained locally at `/private/tmp/fwp-http-first-audit.json`.
+The runtime/compiler source remains `8770c03e`; the pending changes affect tests
+and handoff only. Keep this source distinction when reporting measurements.

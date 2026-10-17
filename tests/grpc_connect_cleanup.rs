@@ -52,11 +52,11 @@ fn grpc_connect_and_handshake_release_pending_resources_on_cancellation() {
         &generated[end..]
     );
     let hooks = r#"
-#include <stdlib.h>
-#ifdef _WIN32
-#ifndef _WIN32_WINNT
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0a00
 #endif
+#include <stdlib.h>
+#ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
 static SOCKET watched_fd=INVALID_SOCKET;

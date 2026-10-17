@@ -731,6 +731,7 @@ fn repeated_http_client_memory_measurement() {
         binaries.push((mode, ordinary, measured));
     }
     let mut rows = String::from("mode\ttls\tcalls\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\n");
+    let mut final_storage = std::collections::BTreeMap::new();
     for tls in [false, true] {
         let server = start(Backend::Interp, tls, &[]).unwrap();
         let base = format!("{}://{}", if tls { "https" } else { "http" }, server.addr);
@@ -780,6 +781,11 @@ fn repeated_http_client_memory_measurement() {
                         assert_eq!(values[5], 0, "collections must be disabled");
                         rows.push_str(&format!("{mode}\t{tls}\t{calls}\t{repetition}\t{fields}\n"));
                         std::fs::write(artifacts.join("memory.tsv"), &rows).unwrap();
+                        let first = final_storage.entry((*mode, tls)).or_insert(values[4]);
+                        assert_eq!(
+                            values[4], *first,
+                            "{prefix}: completed calls must not accumulate managed storage"
+                        );
                     }
                 }
             }
