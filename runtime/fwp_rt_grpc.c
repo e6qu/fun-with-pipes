@@ -672,6 +672,7 @@ static void g_process(g_conn *c, const unsigned char *b, size_t n, g_slist *fres
 static void g_conn_dead(g_conn *c, const char *why) {
     if (c->dead) return;
     c->dead = g_copy_text(why);
+    fwp_fd_closing(c->fd); /* wake I/O before shutdown, including polling hosts */
     shutdown(c->fd, SHUT_RDWR);
     g_stream *streams = c->streams;
     c->streams = 0;

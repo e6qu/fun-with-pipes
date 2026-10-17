@@ -1,49 +1,77 @@
-# Fold borrowing preparation
+# Combined server ownership and callback borrowing preparation
 
-Updated 2026-10-17 UTC. This is an independent compiler preparation at
-`/private/tmp/fwp-borrow-fold-captures`, branch `borrow-fold-captures`, based on
-request/connection candidate `72a3cee01c8f5e69376c7cdfc5c11c5952255356`.
-Root `free-server-call-values` owns PR #160 at `1e1773b6`; production
-`39025708821` is running and docs `39025708823` passes. Root watcher session
-82509 handles only that exact head. No new PR until its acceptance.
+Updated 2026-10-17 UTC. Root `free-server-call-values` owns PR #160 at `1e1773b6`;
+production `39025708821` is running and docs `39025708823` passes. Watcher 82509
+requires all nine production jobs and docs before merge. No second PR is open.
+This worktree is `/private/tmp/fwp-borrow-fold-captures`, branch
+`borrow-fold-captures`; it combines the next delivery to avoid separate matrices.
 
-## Measured reason and proposed change
+## Change and acceptance
 
-Actual AMD64/ARM64 channel-output binaries in PR #160 retain their captured
-channel once per send, or 64 times per measured call. The loop's outer callback
-owner keeps that channel alive throughout. A direct fold callback can borrow
-its captures and source element while consuming its running result.
+Request/connection ownership is based on `72a3cee0`, with the shutdown and waiter
+lifetime repairs integrated from `ec0d063d`. Parsed requests move into jobs;
+readers, writers, jobs and retained input/output callbacks have explicit owners.
+Socket closure follows I/O completion; retained users can outlive the socket.
+The new shutdown wake is explicit on polling platforms, using wait records on
+task stacks, without heap allocation or larger task records. Controls cover
+missing cleanup, aliases, partial construction, no-reuse execution, timeout,
+cancellation and simultaneous readers.
 
-This preparation lowers known fold/fold-right callback bodies with explicit
-borrowed parameters. Ordinary function entries keep their existing convention.
-Returning or retaining a borrowed value still acquires an owner at that use.
-The ownership verifier tracks the external lifetime separately from locally
-acquired copies, and unwind cleanup includes only references actually owned.
-Entry preemption protects the owned running result, not borrowed captures.
-Recursive callbacks and resource-close scopes keep their existing compilation;
-callbacks with no counted borrowed inputs gain no extra body.
+Known fold/fold-right callbacks borrow their captures and input elements while
+owning the running result. Escaping values acquire owners at their uses. The
+verifier distinguishes external lifetimes from locally acquired copies; unwind
+and entry cleanup include only owned references. Recursive callbacks and resource
+close scopes retain their existing compilation. No body is added when borrowed
+parameters need no counting. Actual channel-loop binaries in #160 retain a
+channel 64 times per call, motivating this change; the reduction is unverified.
 
-New unit checks reject consuming/dropping a borrowed parameter without acquiring
-an owner, and verify its external lifetime survives consumption of a local copy.
-A native/interpreter comparison uses real heap strings in left/right folds and
-counts retains inside each callback. Deliberately adding one retain must fail.
-Existing alias, error, cancellation and scratch-cleanup controls cover both entry
-forms. No counts, memory or machine-code improvement is verified yet.
+Next: finish Linux borrowing probe **39027507441** at `f7aeb774` and Windows
+shutdown probe **39027501833** at `96fa4e2c`; fix failures. Then publish one frozen
+combined candidate and run all six native hosts, including the added waiter
+lifetime tests. Retain equivalent-workload measurements and actual AMD64/ARM64
+instructions, comparing against root's six-host server-values report. Use the
+older Linux-only request/connection measurement as an intermediate cost reference,
+not a reason to run a separate intermediate six-host matrix. Examine code size,
+registers/stack and count traffic before claiming a benefit.
 
-Next: format/audit, publish this isolated preparation, run Linux server-repeat
-with the ownership unit/fold suites added. Fix failures. Keep the request/connection
-baseline `72a3cee0` and its Linux `39025894808` separate; after that probe passes,
-run its six-host matrix before comparing compiler changes. Retain counts, live
-storage and actual instructions; examine code size and register/stack costs.
-Do not execute downloaded binaries. Full builds and tests run on GitHub.
-All seven roadmap areas remain open, and JIT is excluded.
+Integrate only after #160 merges. Transfer the delta after `855fe3d1`, preserve
+root's final reports, accepted docs and allocation/state-fixture repairs, and
+rewrite the root handoff. Do not replace it with this preparation file.
 
-## Checks
+## Evidence and repaired failures
 
-Root-guarded formatting of the initial compiler changes passed in 1.25s. Worktree
-creation passed in 0.43s. Final formatting passed in 1.23s and docs in 2.79s. Native checks remain
-pending on GitHub. The request/connection baseline Linux probe now passes; its
-unchanged six-host run is `39026702591`.
+Request/connection revision `72a3cee0` passes Linux `39025894808`. Every request
+and connection finalizes, with 544 managed bytes left after 1/16/256 calls in all
+four workloads. Allocation requests match #160. Retains are 3 / 66 / 132 / 68 per
+call plus one per connection. Root's strict collected Linux report is at
+`/private/tmp/fwp-server-owners-linux-report.json`. It includes actual AMD64
+cleanup instructions and the 16-byte reader-frame increase. This predates the
+shutdown fix and does not establish its platform support.
+
+Borrowing probe `39026721148` caught equality assertions on IR without equality;
+shape assertions fixed them. Probe `39027098579` then passed all 31 ownership
+unit tests, borrowed application and existing left-fold alias/reclamation tests.
+The new workload's interpreter check found mismatched prepend/append construction;
+`f7aeb774` uses matching heap strings while preserving the expected count of one.
+Native zero-retain checks and the rest of the suite remain pending.
+
+Windows `39026702591` caught header order before declaring the Windows API
+contract. `4cca1a10` fixed it. `39027091673` then exposed a reader that stayed
+parked after local shutdown; the new explicit wake addresses it. Both matrices
+are cancelled. A Windows control deliberately removes the wake and requires the
+original bounded timeout. Do not raise the deadline or omit the check.
+
+## Checks and limits
+
+Use root `scripts/local-guard.py` for focused local checks. Full builds/tests,
+benchmarks and large regeneration run on GitHub; fixed limits must not rise.
+Prior compiler formatting passed in 1.18s and docs in 2.79s. Waiter lifetime
+formatting passed in 1.36s and its docs audit in 2.83s. Integration applied cleanly;
+combined formatting/docs and native validation are next. Never execute downloaded
+binaries locally. These are fwp revision comparisons, not timing or C/Rust parity.
+
+HTTP graphs, escaped callback cycles, remote checked ARC, complete GC removal,
+numerics, differentiation and larger applications remain open. JIT is excluded.
 
 ## Roadmap status
 
@@ -56,18 +84,3 @@ unchanged six-host run is `39026702591`.
 | 5 | In progress | CPU kernels and GPU resource ownership |
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
-
-## First probe repairs
-
-Linux `39026721148` failed to compile two new assertions because IR expressions
-do not implement equality. The tests now match the expected expression shape.
-The separate ownership preparation also fixes Windows API declaration order in
-the existing client startup fixture; that same repair is included here.
-Next: publish and rerun the Linux probe before claiming native results.
-
-The second Linux probe `39027098579` passes all 31 ownership unit tests, the
-borrowed-application test and existing left-fold aliases/reclamation. The new
-string test failed its interpreter expectation: `flip concat "!"` prepends the
-marker, whereas the captured string has it appended. The test now uses
-`concat "!"`; this fixes the workload, without changing the expected result.
-Next: rerun the focused probe; native zero-retain behavior remains unverified.
