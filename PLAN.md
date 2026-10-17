@@ -73,27 +73,31 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #155](https://github.com/e6qu/fun-with-pipes/pull/155) is accepted after all
-nine production jobs and documentation passed. It fixes shared stream readers,
-shrinks stream positions and releases eligible long linked structures in a loop.
+[PR #156](https://github.com/e6qu/fun-with-pipes/pull/156) is accepted after all
+nine production jobs and documentation passed. Cached stream values release when
+their last owner goes away; uniquely owned closures transfer captured values.
 The [delivery history](docs/roadmap-history.md) preserves its exact acceptance.
+This still leaves allocations and reference counting in ordinary iteration.
 
-The current delivery releases native stream caches when their last owner goes
-away and moves captured values out of uniquely owned closures. Focused checks
-pass on all six native platforms. In the measured one-pass client, remaining
-managed storage stops growing with consumed values. Capture moves reduce the
-new ownership implementation's retains by about 40%, but still leave about
-three times the original tracing-dependent retain count and five allocations
-per integer. [The comparison](docs/benchmarks.md#moving-captured-values-instead-of-retaining-them-again)
-explains both revisions, inputs, scope and limitations. Full production acceptance
-of this combined delivery remains required.
+The current delivery releases finished request storage and unread messages,
+reduces reference counting when selecting a value from a consumed heap record,
+and repairs service-settings construction. No syntax changes are involved.
+The request component passes all six native platforms: every created request and
+message releases, and final managed storage stays constant across measured call
+counts. It adds one retain per call with unchanged allocation requests.
 
-Next, measure repeated calls in one process, including connection, stream and raw
-message storage, then give those objects and retained codec/sender callbacks
-explicit owners. Preserve shared reads, cancellation and error order, and separate
-reusable connection pools from per-call growth. Sources currently own their own
-allocation but still borrow the connection and callback graph. Remote calls
-remain excluded from checked ARC until those lifetimes and cycles are proved.
+The compiler component passes focused Linux ownership and real-client checks:
+256 full reads use 50,178 retains instead of 66,562, with unchanged allocations
+and final managed storage. The combined six-platform run must also verify shared
+readers, failure cleanup and service-cache construction. Full production acceptance
+remains required. [The benchmark guide](docs/benchmarks.md#memory-left-behind-by-repeated-remote-calls)
+names the compared revisions, inputs, measurement boundaries and remaining costs.
+
+Next, prove connection/pool/task ownership and release pending sender values and
+retained server callbacks. Preserve shared reads, cancellation and error order;
+keep scheduler back-pointers borrowed to avoid cycles. Audit unused runtime
+callback fields before adding owners for them. Remote calls remain excluded from
+checked ARC until their complete lifetimes and cycles are proved.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

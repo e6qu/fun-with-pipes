@@ -42,6 +42,9 @@ fn tls_pool_keys_distinguish_complete_options_and_survive_scope_release() {
         generated = generated.replacen(before, after, 1);
     }
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdint.h>
 static void *reader,*writer;
 static void driver(void *,int);
@@ -79,7 +82,7 @@ int main(void){
  g_stream *stream=g_open_tls(target,"/test",0,&selected,&reused,&error,0);
  if(!stream||selected!=connected||!reused||error||!g_same_tls(connected,same))return 1;
  fwp_cur->gctx=0;drop_options(same);
- fwp_gc_forget_finalizer(stream);g_unlink(connected,stream);g_stream_final(stream);
+ g_unlink(connected,stream);g_stream_reader_release(connected,stream);
  g_conn_dead(connected,"finished");fwp_cancel_tree(reader);fwp_cancel_tree(writer);fwp_await(reader);fwp_await(writer);
  if(connected->refs||connected->fd!=-1||g_pool)return 2;
  fwp_gc_forget_finalizer(connected);g_conn_final(connected);fwp_p_tcp_stop(listener);
@@ -92,7 +95,23 @@ int main(void){
     let broken=format!("{}    t->key=next;snprintf(t->key,key_len<1024?key_len:1024,\"%s|%d|%s|%s|%s\",ca,insecure,name,cert,key);t->key_len=strlen(t->key)+1;\n{}",&generated[..start],&generated[end..]);
     let dir = fwp::cgen::TempDir::new("grpc-pool-identity").unwrap();
     let exe = dir.join("probe");
+    let key_allocation = "c->tlskey = (char *)malloc(opts->key_len);";
+    assert_eq!(generated.matches(key_allocation).count(), 1);
+    let failed_allocation = generated.replace(key_allocation, "c->tlskey = NULL;");
     for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(
+            &format!("{hooks}\n{failed_allocation}\n{fixture}"),
+            &exe,
+            opt,
+        )
+        .unwrap();
+        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        assert_eq!(out.status.code(), Some(102), "pool-key allocation: {out:?}");
+        assert!(out.stdout.is_empty());
+        assert_eq!(
+            String::from_utf8(out.stderr).unwrap().replace("\r\n", "\n"),
+            "fwp: out of memory\n"
+        );
         fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
         let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
         assert_eq!(out.status.code(), Some(1), "old identity: {out:?}");

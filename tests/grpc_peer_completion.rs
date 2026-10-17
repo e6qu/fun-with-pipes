@@ -34,7 +34,7 @@ fn serving_peer_owner_survives_children_and_releases_at_completion() {
     }
     let generated = generated
         .replacen(subject, "j->sv.peer = c->ssl ? observed_subject() : 0;", 1)
-        .replacen(handle, "    g_job *j = (g_job *)arg;\n    if(!cancelled){fwp_spawn_task(0,peer_child,0,0,0);if(stage==5||stage==6)g_spawn_sender(j->c,j->s,0,0,0);if(stage==1){fwp_cancel_tree(fwp_cur);fwp_check_cancel();}}\n    int code = -1;", 1)
+        .replacen(handle, "    g_job *j = (g_job *)arg;\n    if(!cancelled){fwp_spawn_task(0,peer_child,0,0,0);if(stage==5||stage==6)g_spawn_sender(j->c,j->s,0,0);if(stage==1){fwp_cancel_tree(fwp_cur);fwp_check_cancel();}}\n    int code = -1;", 1)
         .replacen(spawn, &format!("    if(stage==2)fwp_trap(\"call preparation\");\n{spawn}"), 1);
     let sender_spawn = "    fwp_task *t = fwp_spawn_task(0, g_send_all, x, 0, 1);";
     assert_eq!(generated.matches(sender_spawn).count(), 1);
@@ -113,7 +113,7 @@ int main(void){
  g_serving sv={0};g_ctx context={0};stage=7;peer_frees=0;
  sv.peer=observed_subject();sv.peer_users=SIZE_MAX;context.serving=&sv;
  fwp_cur->gctx=&context;fwp_trap_recover=recover;fwp_trap_jb=&failure;fwp_trap_cleanup=0;
- if(!setjmp(failure)){g_spawn_sender(c,0,0,0,0);return 10;}
+ if(!setjmp(failure)){g_spawn_sender(c,0,0,0);return 10;}
  fwp_trap_recover=0;fwp_trap_jb=0;fwp_cur->gctx=0;
  if(sv.peer_users!=SIZE_MAX||peer_frees||fwp_cleanups)return 11;
  sv.peer_users=1;g_serving_peer_release(&sv);if(sv.peer||peer_frees!=1)return 12;

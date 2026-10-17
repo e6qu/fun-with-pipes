@@ -71,13 +71,19 @@ fn client_received_buffers_release_on_retry_errors_and_cancelled_waits() {
         method = method.replacen(before, after, count);
     }
     let generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
+    let finalizer = "static void g_stream_final(void *p) {";
+    assert_eq!(generated.matches(finalizer).count(), 1);
+    let generated = generated.replace(
+        finalizer,
+        &format!("{finalizer}\n    stream_finalizations++;"),
+    );
     let hooks = r#"
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0a00
 #endif
 #include <stdlib.h>
 #include <stdint.h>
-static int stage,allocations,frees,cancelled,trapped,delivered,opens;
+static int stage,allocations,frees,cancelled,trapped,delivered,opens,stream_finalizations;
 static uintptr_t result;
 static void *owned[32],*connection,*stream,*retry_stream;
 static void remember(void *);
@@ -99,19 +105,30 @@ static void call(void *arg,int stop){if(stop){cancelled++;return;}jmp_buf failed
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1,"local",&srv);connection=c;
+#ifdef PROBE_CLIENT_STREAM_OWNERS
+ c->server=0; /* exercise client cancellation/reset, not server receive rules */
+#endif
  for(stage=0;stage<12;stage++){
-  allocations=frees=cancelled=trapped=delivered=opens=0;result=99;memset(owned,0,sizeof owned);c->out.len=0;
+  stream_finalizations=0;allocations=frees=cancelled=trapped=delivered=opens=0;result=99;memset(owned,0,sizeof owned);c->out.len=0;
   g_stream *s=g_stream_new(c,(uint32_t)(1+4*stage));s->sent_headers=1;s->remote_end=stage!=6&&stage!=11;stream=s;retry_stream=s;
   if(stage!=2&&stage!=3&&stage!=7){s->mhead=s->mtail=message();}
   if(stage==1){s->mhead->next=message();s->mtail=s->mhead->next;}
   if(stage==3)s->bad=strdup("transport failure");
   if(stage==7){s->remote_end=0;s->reset=strdup("reset");s->retry=1;g_stream *next=g_stream_new(c,(uint32_t)(3+4*stage));next->sent_headers=1;next->remote_end=1;next->mhead=next->mtail=message();retry_stream=next;}
+#ifdef PROBE_CLIENT_STREAM_OWNERS
+  h2_hdrs_add(&s->headers,"grpc-status",11,"0",1);
+  fwp_rc_fresh(PTR(s));fwp_rc_dup(PTR(s));
+  if(retry_stream!=stream){g_stream *next=retry_stream;h2_hdrs_add(&next->headers,"grpc-status",11,"0",1);fwp_rc_fresh(PTR(next));fwp_rc_dup(PTR(next));}
+#endif
   fwp_remote remote={0};remote.env="FWP_CLIENT_RECEIVE_PROBE";remote.default_addr="local";remote.what="probe";remote.m.output=stage>=8?2:0;
   fwp_task *t=fwp_spawn_task(0,call,&remote,0,0);
   if(stage==6||stage==11){fwp_p_task_yield();if(t->done||allocations!=1||frees!=1)return 2;fwp_p_task_cancel(PTR(t));}
   fwp_await(t);
   int expected=stage==7?3:stage==0||stage==1||stage==4||stage==8||stage==9?2:1;
   if(!t->done||allocations!=expected||frees!=expected||fwp_cleanups||cancelled!=(stage==6||stage==11)||trapped!=(stage==1||stage==2||stage==3||stage==4||stage==5||stage==9||stage==10))return 1;
+#ifdef PROBE_CLIENT_STREAM_OWNERS
+  if(stream_finalizations!=(stage==7?2:1)||c->streams){fprintf(stderr,"stage %d: %d finalized, listed=%d\n",stage,stream_finalizations,c->streams!=0);return 20;}
+#endif
   if(stage==0||stage==7){if(result!=42)return 3;}
   if(stage>=8&&delivered!=(stage==8||stage==10||stage==11))return 4;
   if(stage==8&&result!=FWP_UNIT)return 5;
@@ -143,17 +160,48 @@ int main(void){
             let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
             assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");
         }
-        fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                let out = Command::new(&exe)
-                    .env("FWP_GC", gc)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison)
-                    .output()
-                    .unwrap();
-                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
+        let call_guard = "fwp_cleanup_push(&call_cleanup, g_call_release, &call);";
+        assert_eq!(generated.matches(call_guard).count(), 1);
+        let missing_call_guard = generated.replace(
+            call_guard,
+            "fwp_cleanup_push(&call_cleanup, no_release, &call);",
+        );
+        fwp::cgen::compile_c(
+            &format!(
+                "#define PROBE_CLIENT_STREAM_OWNERS 1\n{hooks}\n{missing_call_guard}\n{fixture}"
+            ),
+            &exe,
+            opt,
+        )
+        .unwrap();
+        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        assert_eq!(out.status.code(), Some(20), "omitted call owner: {out:?}");
+        for owned in [false, true] {
+            let prefix = if owned {
+                "#define PROBE_CLIENT_STREAM_OWNERS 1\n"
+            } else {
+                ""
+            };
+            fwp::cgen::compile_c(
+                &format!("{prefix}{hooks}\n{generated}\n{fixture}"),
+                &exe,
+                opt,
+            )
+            .unwrap();
+            for gc in ["off", "on"] {
+                for poison in ["0", "1"] {
+                    let out = Command::new(&exe)
+                        .env("FWP_GC", gc)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    assert!(
+                        out.status.success(),
+                        "{opt}/owned={owned}/{gc}/{poison}: {out:?}"
+                    );
+                }
             }
         }
     }
