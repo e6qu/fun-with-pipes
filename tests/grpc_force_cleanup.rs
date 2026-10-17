@@ -484,12 +484,14 @@ static __attribute__((noinline)) void observe_cache_stack(void) {
 "#;
     assert_eq!(generated.matches(declaration).count(), 1);
     generated = generated.replace(declaration, &format!("{declaration}\n{observer}"));
-    let free = "static void fwp_rc_free_obj(V v) {\n    if (!fwp_rc_last(v)) return;";
-    assert_eq!(generated.matches(free).count(), 1);
-    generated = generated.replace(
-        free,
-        &format!("{free}\n    if(cache_observe)cache_releases++;"),
-    );
+    for function in ["fwp_rc_free_obj", "fwp_rc_free_arr"] {
+        let free = format!("static void {function}(V v) {{\n    if (!fwp_rc_last(v)) return;");
+        assert_eq!(generated.matches(&free).count(), 1);
+        generated = generated.replace(
+            &free,
+            &format!("{free}\n    if(cache_observe)cache_releases++;"),
+        );
+    }
     let entry = "static void g_cell_drop(V value, void (*drop_element)(V)) {";
     assert_eq!(generated.matches(entry).count(), 1);
     generated = generated.replace(entry, &format!("{entry}\n    observe_cache_stack();"));
@@ -552,6 +554,50 @@ static __attribute__((noinline)) void observe_cache_stack(void) {
             std::fs::write(path.join("cache-owners.c"), &code).unwrap();
             std::fs::copy(&binary, path.join(format!("cache-owners{opt}.exe"))).unwrap();
             std::fs::write(path.join(format!("cache-owners{opt}.tsv")), &samples).unwrap();
+        }
+    }
+}
+
+#[test]
+fn decoder_callbacks_transfer_values_and_restore_handlers_after_traps() {
+    let code = format!(
+        "{}\n{}",
+        http2_values::generated(),
+        include_str!("fixtures/grpc_decoder_callback.c")
+    );
+    let call = "fwp_apply_borrowed_prefix(k->fn, 1, &bytes, 1)";
+    assert_eq!(code.matches(call).count(), 1);
+    let legacy = code.replace(call, "fwp_apply1(k->fn, bytes)");
+    let release = "        fwp_value_release(&error);";
+    assert_eq!(code.matches(release).count(), 1);
+    let leaked_error = code.replace(release, "        (void)error;");
+    let restore = "    fwp_handlers = ((fwp_handler *)value)->prev;";
+    assert_eq!(code.matches(restore).count(), 1);
+    let stale_handler = code.replace(restore, "    (void)value;");
+    let dir = fwp::cgen::TempDir::new("grpc-decoder-callback").unwrap();
+    let binary = dir.join("decoder.exe");
+    for opt in ["-O1", "-O2"] {
+        for (source, expected) in [(&legacy, 197), (&leaked_error, 194), (&stale_handler, 192)] {
+            fwp::cgen::compile_c(source, &binary, opt).unwrap();
+            let output = Command::new(&binary)
+                .env("FWP_GC", "off")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
+        }
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        for stress in [false, true] {
+            let output = Command::new(&binary)
+                .env("FWP_GC", if stress { "on" } else { "off" })
+                .env("FWP_GC_STRESS", if stress { "1" } else { "0" })
+                .env("FWP_GC_VERIFY", if stress { "1" } else { "0" })
+                .env("FWP_REUSE_VERIFY", if stress { "1" } else { "0" })
+                .output()
+                .unwrap();
+            assert!(output.status.success(), "{opt}/{stress}: {output:?}");
         }
     }
 }

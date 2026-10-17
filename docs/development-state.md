@@ -47,3 +47,26 @@ a 4 KiB sampled stack-address span; omitting source release must fail its count.
 These tests have only been formatted locally (guarded check, 1.16s), not run yet.
 The focused workflow checks the frozen primitive inventory and neighboring
 force/canonical-decoding fixtures before collecting complete-client measurements.
+
+## Probe results and repair
+
+Linux AMD64 run `38993403382` at `3be0c03e` passed the original complete-client
+probe. Unique reads ended at 6,480 charged bytes for all three sizes (64, 1,024,
+16,384), versus the baseline's growth to 1,055,296 bytes. Retained iterators kept
+their history until release, then returned to the same final charge. The three
+repetitions agreed. Allocations still grow by five per integer; counted retains
+rose from approximately one to five per integer. This is preliminary memory
+lifetime evidence, not a timing or zero-cost claim. Download through the root
+guard passed in 2.85s; no downloaded binary ran locally.
+
+The expanded probe `38993688356` at `c203af5a` passed the primitive inventory and
+neighboring decoding, shared-reader and receive-failure tests, but its new cache
+stress test crashed. Generic record poisoning interpreted raw position/source
+words as a record header. The repair uses the existing raw-storage/array release
+path for those allocations and adjusts instrumentation to count both release
+helpers. This repair is awaiting a rerun. The same batch adds custom decoder
+success/error/trap controls; a trap now restores the enclosing error handler,
+while an ordinary language error stays inside the decoder's handler until caught.
+Negative controls require failure for legacy callback entry, leaked errors and
+stale handlers. Guarded formatting passed in 1.14s. No acceptance is inferred
+from the earlier non-stress probe.

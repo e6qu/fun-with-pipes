@@ -1217,22 +1217,32 @@ typedef struct {
 
 enum { G_DEC_OK, G_DEC_ERROR, G_DEC_BAD };
 
+/* A trap can leave the callback before its ordinary error branch runs. Keep
+ * the caller's handler valid when that trap is caught outside this decoder. */
+static void g_decode_handler_restore(void *value) {
+    fwp_handlers = ((fwp_handler *)value)->prev;
+}
+
 /* decode a message: its value, the error it carries, or a failure */
 static int g_decode(const g_codec *k, const unsigned char *msg, size_t n, V *out, char **why) {
     if (k->fn) {
         fwp_handler h;
         h.prev = fwp_handlers;
         h.state_depth = fwp_state_len;
-        h.cleanup = fwp_cleanups;
+        fwp_cleanup handler_cleanup;
+        fwp_cleanup_push(&handler_cleanup, g_decode_handler_restore, &h);
+        h.cleanup = fwp_cleanups; /* errors stay inside; traps unwind this guard */
         fwp_handlers = &h;
         if (setjmp(h.jb) == 0) {
             V bytes = fwp_rc_fresh(fwp_str_new((const char *)msg, n));
             V r = fwp_apply_borrowed_prefix(k->fn, 1, &bytes, 1);
             fwp_handlers = h.prev;
+            fwp_cleanup_pop(&handler_cleanup);
             *out = r;
             return G_DEC_OK;
         }
         fwp_handlers = h.prev;
+        fwp_cleanup_pop(&handler_cleanup);
         fwp_state_restore(h.state_depth);
         fwp_value_owner error = {h.value, h.desc->drop};
         fwp_cleanup error_cleanup;
@@ -1348,7 +1358,9 @@ typedef struct {
  * collector-managed in this batch; freeing this source does not cancel them. */
 static void g_incoming_drop(g_incoming *source) {
 #ifndef FWP_RESOURCE_NO_FREE
-    fwp_rc_free_obj(PTR(source));
+    /* Source and position storage have raw runtime layouts, not record headers.
+     * The array/storage release poisons only the first word under verification. */
+    fwp_rc_free_arr(PTR(source));
 #else
     (void)source;
 #endif
@@ -1372,12 +1384,12 @@ static void g_cell_drop(V value, void (*drop_element)(V)) {
         g_cell *cell = (g_cell *)(uintptr_t)value;
         if (!cell->forced) {
             g_incoming *source = cell->src;
-            fwp_rc_free_obj(value);
+            fwp_rc_free_arr(value);
             g_incoming_drop(source);
             return;
         }
         V result = cell->memo;
-        fwp_rc_free_obj(value);
+        fwp_rc_free_arr(value);
         if (!fwp_rc_release_last(result)) return;
         V pair = OBJ(result)->f[0];
         fwp_rc_free_obj(result);
@@ -1425,9 +1437,9 @@ static V g_err_element(int code, const char *text) {
     g_cell *last = g_cell_new(0);
     last->forced = 1;
     last->memo = FWP_NONE;
-    V tail = PTR(last);
+    fwp_value_owner tail = {PTR(last), fwp_rc_free_arr};
     fwp_cleanup tail_cleanup;
-    fwp_cleanup_push(&tail_cleanup, fwp_rc_cleanup_cell, &tail);
+    fwp_value_protect(&tail, &tail_cleanup);
     V f[2] = {(V)(int64_t)code, fwp_rc_fresh(fwp_cstr(text))};
     V e = fwp_rc_fresh(fwp_record(2, f));
     V error = fwp_rc_fresh(fwp_data(1, 1, &e));
