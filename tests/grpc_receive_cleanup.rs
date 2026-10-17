@@ -337,3 +337,76 @@ static void observed_message_free(void *);
         }
     }
 }
+
+#[test]
+fn fatal_transport_allocations_report_errors_from_task_stacks() {
+    let mut generated = receive_runtime();
+    for (before, after) in [
+        (
+            "realloc(b->d, c)",
+            "(failure_kind == 0 ? NULL : realloc(b->d, c))",
+        ),
+        (
+            "realloc(h->v, cap * sizeof(h2_hdr))",
+            "(failure_kind == 1 ? NULL : realloc(h->v, cap * sizeof(h2_hdr)))",
+        ),
+        (
+            "copy.name = (char *)malloc(nl + 1);",
+            "copy.name = failure_kind == 2 ? NULL : (char *)malloc(nl + 1);",
+        ),
+        (
+            "copy.value = (char *)malloc(vl + 1);",
+            "copy.value = failure_kind == 3 ? NULL : (char *)malloc(vl + 1);",
+        ),
+        (
+            "char *copy = strdup(msg);",
+            "char *copy = failure_kind == 4 ? NULL : strdup(msg);",
+        ),
+    ] {
+        assert_eq!(generated.matches(before).count(), 1, "{before}");
+        generated = generated.replace(before, after);
+    }
+    let fixture = r#"
+static void attempt_transport(void *arg,int cancelled){
+ (void)arg;(void)cancelled;
+ h2_buf buffer={0};h2_hdrs headers={0};
+ if(failure_kind==0)h2b_reserve(&buffer,1);
+ else if(failure_kind<4)h2_hdrs_add(&headers,"name",4,"value",5);
+ else if(failure_kind==4){
+  g_serving serving={0};g_ctx context={0};context.serving=&serving;
+  fwp_cur->gctx=&context;g_fail_call(GRPC_INTERNAL,"failure");
+ }else if(failure_kind==5){buffer.len=SIZE_MAX;h2b_reserve(&buffer,1);}
+ else h2_hdrs_add(&headers,"name",SIZE_MAX,"value",5);
+ _Exit(201);
+}
+int main(int argc,char **argv){
+ if(argc!=2)return 202;failure_kind=atoi(argv[1]);
+ fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fwp_task *task=fwp_spawn_task(0,attempt_transport,0,0,0);fwp_await(task);
+ return 201;
+}
+"#;
+    let dir = fwp::cgen::TempDir::new("grpc-fatal-transport").unwrap();
+    let binary = dir.join("probe");
+    for opt in ["-O1", "-O2"] {
+        let code = format!("static int failure_kind = -1;\n{generated}\n{fixture}");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        for kind in 0..7 {
+            let out = Command::new(&binary)
+                .arg(kind.to_string())
+                .output()
+                .unwrap();
+            assert_eq!(out.status.code(), Some(102), "{opt}/{kind}: {out:?}");
+            assert!(out.stdout.is_empty());
+            let expected = match kind {
+                5 => "fwp: HTTP/2 buffer too large\n",
+                6 => "fwp: HTTP/2 headers too large\n",
+                _ => "fwp: out of memory\n",
+            };
+            assert_eq!(
+                String::from_utf8(out.stderr).unwrap().replace("\r\n", "\n"),
+                expected
+            );
+        }
+    }
+}

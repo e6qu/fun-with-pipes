@@ -70,6 +70,15 @@ All native builds run on GitHub. Root-guard formatting passed in 1.06–1.16s;
 `/Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py`; retain its fixed
 limits. No downloaded executable has run locally.
 
+Second Linux probe `39003964943` at `c4747dc7` exposed a fixture overflow
+setup using the stream pointer for the connection count; that setup is repaired.
+The unique-task probe still reports status 203; its new diagnostic prints the
+iteration, cancellation mode, entry/completion counters and scheduler zombie.
+Investigate that result rather than assuming the first cancellation fix sufficed.
+Transport buffer/header and server-status fatal paths now use `_Exit(102)`;
+seven task-stack injection cases require the exact diagnostic and exit code.
+These changes are written and formatted (1.15s), not yet validated natively.
+
 Next: publish these fixes, run Linux `connection-repeat`, repair any failures,
 then run all six native hosts and compare with the retained baseline. Also prove
 pooled reuse, startup failure and last-owner cleanup before delivery. Rebase or
@@ -79,3 +88,15 @@ Pending sender language values, server callbacks/channels, remaining host and
 numerical ownership, cycle policies and all seven roadmap areas remain open.
 Fatal allocation paths that call `exit` from task stacks also need repair; do not
 weaken library unload validation. JIT is excluded permanently.
+
+## Roadmap status
+
+| Step | Status | Remaining focus |
+|---|---|---|
+| 1 | In progress | Typed stream and external owners; remove tracing |
+| 2 | In progress | Remove intermediate storage and unnecessary reference counts |
+| 3 | In progress | Reduce equivalent-work C/Rust gaps |
+| 4 | In progress | Differentiation precision, speed and memory scaling |
+| 5 | In progress | CPU kernels and GPU resource ownership |
+| 6 | In progress | Repeated, comparable performance measurements |
+| 7 | In progress | Larger representative applications |

@@ -194,7 +194,7 @@ int main(void){
   // Await would read a freed task; only the scheduler's live list is borrowed.
   while(fwp_gc_tasks){fwp_make_ready(fwp_root);fwp_block();fwp_free_zombie();}
   fwp_free_zombie();
-  if(finished!=1||entered!=(mode==1?0:1)||fwp_zombie)return 203;
+  if(finished!=1||entered!=(mode==1?0:1)||fwp_zombie){fprintf(stderr,"unique task iteration=%d mode=%d entered=%d finished=%d zombie=%p\n",i,mode,entered,finished,(void*)fwp_zombie);return 203;}
   if(measured&&(charged()!=start||fwp_gc.ncollect))return 204;
  }
  return 0;

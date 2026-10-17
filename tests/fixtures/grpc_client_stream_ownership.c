@@ -52,7 +52,7 @@ int main(int argc,char **argv) {
     }
     if(mode>=8) {
         uint8_t *slot=fwp_rc_slot(mode==10?PTR(c):PTR(s));
-        if(mode>=9){*slot=254;fwp_rc_dup(PTR(s));(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
+        if(mode>=9){*slot=254;fwp_rc_dup(mode==10?PTR(c):PTR(s));(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
         probe_spawn_fail=mode==8;
         fwp_trap_recover=recover_probe;fwp_trap_jb=&probe_trap;fwp_trap_cleanup=fwp_cleanups;
         if(!setjmp(probe_trap)){g_spawn_sender(c,s,0,0);return 217;}

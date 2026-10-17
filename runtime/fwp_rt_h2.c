@@ -40,14 +40,15 @@
 
 typedef struct { unsigned char *d; size_t len, cap; } h2_buf;
 
+/* Fatal failures may run on task stacks: do not invoke library unload there. */
 static void h2b_reserve(h2_buf *b, size_t n) {
-    if (n > SIZE_MAX - b->len) { fprintf(stderr, "fwp: HTTP/2 buffer too large\n"); exit(102); }
+    if (n > SIZE_MAX - b->len) { fprintf(stderr, "fwp: HTTP/2 buffer too large\n"); _Exit(102); }
     size_t needed = b->len + n;
     if (needed <= b->cap) return;
     size_t c = b->cap ? b->cap : 256;
     while (c < needed) c = c > SIZE_MAX / 2 ? needed : c * 2;
     unsigned char *data = (unsigned char *)realloc(b->d, c);
-    if (!data) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+    if (!data) { fprintf(stderr, "fwp: out of memory\n"); _Exit(102); }
     b->d = data;
     b->cap = c;
 }
@@ -216,7 +217,7 @@ static void h2_hdrs_add(h2_hdrs *h, const char *name, size_t nl, const char *val
     h2_hdr copy = {0};
     size_t limit = SIZE_MAX / sizeof(h2_hdr);
     if (nl == SIZE_MAX || vl == SIZE_MAX || h->n >= limit) {
-        fprintf(stderr, "fwp: HTTP/2 headers too large\n"); exit(102);
+        fprintf(stderr, "fwp: HTTP/2 headers too large\n"); _Exit(102);
     }
     if (h->n == h->cap) {
         size_t cap = h->cap ? (h->cap > limit / 2 ? limit : h->cap * 2) : 8;
@@ -234,7 +235,7 @@ static void h2_hdrs_add(h2_hdrs *h, const char *name, size_t nl, const char *val
     return;
 no_memory:
     free(copy.name); free(copy.value);
-    fprintf(stderr, "fwp: out of memory\n"); exit(102);
+    fprintf(stderr, "fwp: out of memory\n"); _Exit(102);
 }
 
 static void h2_hdrs_free(h2_hdrs *h) {

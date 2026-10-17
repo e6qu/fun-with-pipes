@@ -1515,7 +1515,7 @@ static void g_fail_call(int code, const char *msg) {
     g_serving *sv = g_ctx_of()->serving;
     if (!sv) fwp_trap(msg);
     char *copy = strdup(msg);
-    if (!copy) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+    if (!copy) { fprintf(stderr, "fwp: out of memory\n"); _Exit(102); }
     free(sv->msg);
     sv->code = code;
     sv->msg = copy;
