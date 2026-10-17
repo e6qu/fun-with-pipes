@@ -987,7 +987,7 @@ fn instrument_sender_client(generated: &str) -> String {
     let mut code = instrument_repeated_client(generated);
     code = instrument_closed_connections(&code, include_str!("fixtures/grpc_sender_drain.c"));
     for (before,after) in [
-        ("static int g_input_next(g_input *input, V *value) {", "static uint64_t client_inputs_pulled,client_inputs_encoded,client_senders_created,client_senders_finished;\nstatic int g_input_next(g_input *input, V *value) {"),
+        ("static int g_cursor_next(g_cursor *input, void (*drop)(V), V *value) {", "static uint64_t client_inputs_pulled,client_inputs_encoded,client_senders_created,client_senders_finished;\nstatic int g_cursor_next(g_cursor *input, void (*drop)(V), V *value) {"),
         ("    input->cur = fwp_apply1(OBJ(node)->f[1], FWP_UNIT);\n#endif\n    return 1;", "    input->cur = fwp_apply1(OBJ(node)->f[1], FWP_UNIT);\n#endif\n    if(client_active)client_inputs_pulled++;\n    return 1;"),
         ("static void g_sender_peer_finish(void *arg) {", "static void client_note_sender(g_sender *);\nstatic void client_note_sender_task(fwp_task *);\nstatic void g_sender_peer_finish(void *arg) {\n    if(client_active)client_senders_finished++;"),
         ("    g_sender *x = (g_sender *)fwp_alloc(sizeof *x);", "    g_sender *x = (g_sender *)fwp_alloc(sizeof *x); client_note_sender(x);"),

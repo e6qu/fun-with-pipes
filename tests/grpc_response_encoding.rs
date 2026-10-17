@@ -26,6 +26,8 @@ fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
         ..Program::default()
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "grpc_response").unwrap();
+    let generated = generated.replacen("} fwp_owned_fninfo;",
+        "} fwp_owned_fninfo;\nstatic V probe_method_entry(V *a){(void)a;return 0;}\nstatic const fwp_owned_fninfo probe_method_types={.entry=probe_method_entry};\nstatic void probe_result_drop(V value){(void)value;}", 1);
     let start = generated.find("static int g_run_method(").unwrap();
     let end = start
         + generated[start..]
@@ -33,14 +35,16 @@ fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
             .unwrap();
     let mut method = generated[start..end].to_owned();
     for (before, after) in [
+        ("const fwp_owned_fninfo *types = fwp_fns[m->fn].owned;", "const fwp_owned_fninfo *types = &probe_method_types;"),
+        ("V function = fwp_rc_fresh(fwp_pap((uint32_t)m->fn, 0, 0));", "V function = 0;"),
         ("g_recv_one(j, &code, msg)", "observed_request()"),
         ("pb_decode(m->schema, m->req_node, req->d, req->n, &canon)", "observed_request_decode(&canon)"),
-        ("fwp_decode(&rd, m->req[i], &args[na++])", "observed_argument(&rd, m->req[i], &args[na++])"),
-        ("g_apply_user(fwp_pap((uint32_t)m->fn, 0, 0), (uint32_t)na, args, &v, &err, &ed)", "observed_user(&v,&err,&ed)"),
-        ("g_iter_next(&next, &x)", "observed_next(&next, &x)"),
-        ("fwp_encode(&canon, err, m->error);", "fwp_encode(&canon, err, m->error); watched_canonical=canon.d; if(stage==3)fwp_trap(\"canonical trap\");"),
+        ("fwp_decode(&rd, m->req[i], &args[na])", "observed_argument(&rd, m->req[i], &args[na])"),
+        ("g_apply_user(function, (uint32_t)na, args, &values.result, &values.error, &values.error_type)", "observed_user(&values.result,&values.error,&values.error_type)"),
+        ("g_cursor_next(&output.cursor, output.drop, &x)", "observed_next(&output.cursor.cur, &x)"),
+        ("fwp_encode(&canon, values.error, m->error);", "fwp_encode(&canon, values.error, m->error); watched_canonical=canon.d; if(stage==3)fwp_trap(\"canonical trap\");"),
         ("pb_encode(m->schema, m->resp_node, (const unsigned char *)canon.d, canon.len, &b)", "observed_transcode(canon.d, canon.len, &b)"),
-        ("g_encode(&enc, v, m->error != 0, &b);", "observed_response(&b);"),
+        ("g_encode(&enc, values.result, m->error != 0, &b);", "observed_response(&b);"),
         ("g_encode(&enc, x, m->error != 0, &b);", "observed_response(&b);"),
     ] {
         assert_eq!(method.matches(before).count(), 1, "{before}");
@@ -122,7 +126,7 @@ int main(void){
   watched_response=watched_canonical=watched_wire=0;response_frees=canonical_frees=wire_frees=cancelled=0;result=-2;c->out.len=0;c->conn_window=stage==1?0:65535;
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*(kind*5+stage)));s->sent_headers=1;
   const fwp_desc *request_fields[]={&descriptor};
-  fwp_rpc method={0};method.nreq=stage==4?1:0;method.req=request_fields;method.output=kind==1?1:0;method.resp=&descriptor;method.error=kind==2?&descriptor:0;
+  fwp_rpc method={0};method.result_drop=probe_result_drop;method.nreq=stage==4?1:0;method.req=request_fields;method.output=kind==1?1:0;method.resp=&descriptor;method.error=kind==2?&descriptor:0;
   g_route route={0};route.kind=G_ROUTE_METHOD;route.m=&method;g_job job={0};job.c=c;job.s=s;job.srv=&srv;job.route=&route;strcpy(job.what,"probe");
   fwp_task *t=fwp_spawn_task(0,serve,&job,0,0);
   if(stage==1){fwp_p_task_yield();if(t->done||!watched_response||!watched_wire||response_frees||wire_frees)return 2;fwp_p_task_cancel(PTR(t));}

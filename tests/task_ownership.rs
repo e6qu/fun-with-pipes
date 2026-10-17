@@ -156,9 +156,13 @@ int main(void) {
     for opt in ["-O1", "-O2"] {
         let exe = dir.0.join(opt);
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
+        // This C-hosted probe uses puts and retains Windows text-mode output.
+        let output = checked(Command::new(&exe).env("FWP_GC_VERIFY", "1"));
         assert_eq!(
-            checked(Command::new(&exe).env("FWP_GC_VERIFY", "1")).stdout,
-            b"typed task aliases preserved\n"
+            String::from_utf8(output.stdout)
+                .unwrap()
+                .replace("\r\n", "\n"),
+            "typed task aliases preserved\n"
         );
     }
 }
