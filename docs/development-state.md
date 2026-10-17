@@ -1,78 +1,99 @@
 # Session handoff
 
-Preparation branch: `http-server-owners`, isolated at
-`/private/tmp/fwp-http-server-owners`, based on PR #162 final head `99d70deb`.
-PR #162 is still in production acceptance. The root checkout owns its handoff
-and merge watcher; preserve that head and open no second PR before acceptance.
+Preparation: `http-server-owners` at `/private/tmp/fwp-http-server-owners`, based
+on PR #162 final head `99d70deb`. PR #162 remains the only delivery PR; its root
+checkout owns final CI and merge. Preserve that head and open no second PR until
+it passes all nine production jobs plus docs and is squash merged.
 
 ## Next action
 
-Next: validate HTTP server connection, handler/job, request and writer ownership
-as one lifetime contract, with cleanup on preparation failure, traps, cancellation,
-peer reset, shutdown and loader unload. Prove when handlers run before admitting
-`http2.serve/respond/data` to checked ARC. Keep HTTP/1.1, h2c upgrade, TLS/ALPN,
-compression, streaming and concurrent behavior consistent with the interpreter.
+Next: publish the combined repair and measurement batch, then dispatch
+`http-clients` and `http-server-memory` on all six native hosts and `entry-checks`
+on both Linux architectures. Audit every failed job and completed target before
+any repair push. Collect managed memory, process memory and actual machine code
+before choosing an ownership-check optimization. No server acceptance claim yet.
 
 ## Scope and acceptance
 
-The preparation implements connection/reader/writer owners, active request owners
-and counted H2Stream handles. The handle also serves as the task payload, removing
-a separate per-request job allocation. Jobs borrow the connection-owned handler;
-one retain per connection survives serve unwinding before its children finish.
-Cleanup cannot suspend, so borrowing the caller frame across that failure path
-is invalid. Task links clear after joined children finish; escaped handles retain
-request/connection storage. The #162 socket-transfer allocation fix stays covered.
+HTTP connections, reader/writer tasks, active requests and H2Stream handles have
+explicit owners. A handle also carries its task payload, replacing two allocations
+with one. Jobs borrow the connection-owned handler; its captures survive failure
+before children finish. Escaped handles preserve request/connection storage after
+socket closure. The nonescaping 64 KiB receive buffer now lives on the reader
+stack; actual frame sizes and memory costs still need runner evidence.
 
-Compiler changes count H2Stream values, emit their concrete destructor, preserve
-resource lifetimes and check HTTP handlers under fresh State/AD task scopes.
-Shutdown signal primitives now declare their scalar-only memory contract. Checked
-ARC server admission is implemented but not accepted. The HTTP comparison now
-builds both client and server at O1/O2 in tracing/ARC modes and compares all
-cleartext/TLS pairings with interpreted output. Runner validation remains pending.
+Compiler changes emit concrete handle destruction, preserve resource lifetimes
+and check handlers under fresh State/AD task scopes. Shutdown signals have scalar
+contracts. Checked ARC rejects channels containing HTTP stream handles, including
+nested handles: a captured channel could otherwise keep its handler/connection
+alive through a queued handle. Ordinary handle aliases remain permitted.
 
-Also investigate the measured generic function-entry code growth: in the HTTP
-client, ARC inlines repeated ownership checks into 532 common entries, adding
-204,649 instruction bytes on Linux AMD64. Measure an alternative code arrangement
-and actual call frequency before selecting an optimization. Preserve contract
-failures; do not remove checks without proof or claim speed from code size alone.
+Functional checks build clients and servers in tracing/ARC at O1/O2, compare
+cleartext/TLS with the interpreter and verify graceful shutdown. Probes cover
+startup failures, cancellation, scope-owned tasks, escaped handles and TLS release,
+with deliberate missing-owner controls and GC/reuse verification.
 
-Acceptance needs O1/O2 omission/failure/cancellation controls, stress and reuse
-verification, interpreted/native HTTP comparisons, repeated managed memory plus
-long-running process memory, actual ARM64/AMD64 machine-code review and all six
-native hosts. Final production remains nine jobs plus documentation. Establish
-remaining allocation/count/code/stack costs; this does not finish all seven areas.
+Runner-only server measurements use 1/16/256 calls, three fresh processes per case,
+then five 4096-call batches per persistent server. Both memory modes have collection
+off and freeing enabled. Managed counters and resident-memory samples have separate
+scopes; final managed storage must stay constant and RSS growth after warm-up must
+remain below 8 MiB. Source, raw rows and ordinary/instrumented binaries are retained.
+No measurement results exist yet.
 
-Use the root guard explicitly for all local checks:
+A separate experiment compares ordinary inlining with noinline on the existing
+`fwp_rc_share` helper. Maintained loop/map/pipeline workloads have six alternating
+elapsed samples and separate instrumented check counts; C verifies output only.
+HTTP binaries provide code-size evidence. Instrumentation can prevent elimination,
+so counted logical checks are not ordinary machine-call counts. No runtime
+optimization is selected. General benchmark workflows explicitly select the
+existing C/Rust comparison, leaving this experiment separately dispatched.
+
+Acceptance requires all six native hosts, actual ARM64/AMD64 binary inspection,
+stable memory and nine final production jobs plus documentation. All seven roadmap
+areas remain open; this batch does not remove tracing from every program.
+
+## Complete first-run audit
+
+Preparation `09f9b6eff3ca1c159b651696a27d844082eaf1b6` ran
+[39057316310](https://github.com/e6qu/fun-with-pipes/actions/runs/39057316310).
+All 84 target executions finished (14 per host). Linux/macOS passed all tests but
+artifact upload rejected quoted filenames. Windows also failed one server probe
+because stdint preceded the required Windows API definition; the HTTP comparison
+stopped at its first quoted filename write. Remaining Windows comparisons were
+not exercised. Client memory checks passed everywhere.
+
+The combined repair inserts fixture declarations after the generated value type,
+without prepending headers, and uses plain display labels in filenames. Logs and
+all target results are in `/private/tmp/fwp-http-server-first-audit.json` and
+`/private/tmp/fwp-http-server-first-*.log`. These two causes account for every
+observed failure. Follow-up validation must exercise the complete Windows matrix.
+
+## Local checks
+
+All checks run serially through
 `python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py COMMAND...`.
-It shares the root target and fixed resource limits. Full suites and measurement
-regeneration belong on GitHub. No native-support claim yet.
+C/TLS probes set `FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3`. Full gates, benchmarks
+and large evidence generation run on GitHub with unchanged local limits.
 
-## Focused checks and remaining validation
-
-All commands below use the root guard prefix above.
-- `cargo test --test http2_client_ownership --no-run`: passed, 24.09 s.
-- `env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 cargo test --test http2_server_ownership -- --nocapture`: two probes passed, 36.62 s, with O1/O2, GC stress/verification/reuse and deliberate missing-owner controls. The startup fixture now invokes a generated typed closure with a captured string. An initial invocation lacked the OpenSSL path; a test-only untyped closure was replaced with a generated typed closure/capture.
-- `cargo fmt --all`: passed, 1.30 s.
-- Representative server ARC C emission first rejected missing shutdown signal contracts; those are now explicit. `env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 cargo run --quiet -- build --gc arc --emit-c -o /private/tmp/fwp-http-server-arc.c tests/web/server.fwp`: passed, 19.34 s.
-- `cargo test --lib arc_scope::tests::asynchronous_callbacks_do_not_inherit_dynamic_scopes -- --exact`: passed, 14.30 s.
-- `cargo test --test web --no-run`: expanded harness compiled, 16.75 s.
-- With the OpenSSL environment above, `cargo test --no-fail-fast --test http2_server_ownership --test http2_body_roots --test http2_peer_cleanup -- --nocapture`: all four tests passed, 31.55 s. Server-only rerun after adding scoped-task, post-connection handle and TLS-failure checks passed in 19.06 s.
-- With the same environment, `cargo test --test http2_client_ownership -- --nocapture`: both existing client controls passed, 27.48 s.
-- `python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output /private/tmp/fwp-http-server-inventory.json`: passed, 1.09 s; 378 declarations, 355 contracts, 19 templates, three scalar-only declarations and one runtime-review primitive (`device.gpu-run`). This count does not complete the roadmap.
-- `python3 scripts/check-roadmap.py`: passed, 2.68 s; links, handoff, immutable anchors and commit subjects.
-- `actionlint .github/workflows/numerics.yml .github/workflows/windows.yml`: passed, 1.32 s.
-- `python3 scripts/test-native-test-runner.py`: all seven checks passed, 1.08 s; new server target assigned to regular macOS and native Windows.
-
-Next: complete focused scope/type/cleanup checks and audit all affected HTTP
-fixtures; run actual server comparisons on six native runners, add repeated
-server memory/RSS evidence and inspect binaries. Generic-entry code size work
-has no implementation yet. Do not publish another delivery PR until #162 merges.
+- Server/body/peer probes: all four passed (31.55 s). Expanded server controls
+  passed with stack storage (37.62 s), then parent cancellation (18.78 s).
+- Existing HTTP client controls: two passed (27.48 s).
+- `cargo test --lib arc_scope::tests::asynchronous_callbacks_do_not_inherit_dynamic_scopes -- --exact`: passed (14.30 s).
+- `cargo test --test arc_execution arc_rejects_unproved_runtime_boundaries_and_disabled_counting -- --exact --nocapture`: all cases passed, including direct/nested handle cycles (25.32 s).
+- Representative server `build --gc arc --emit-c` passed after shutdown-route and
+  cycle-policy changes (3.04 s). Web/bench harness compilation passed (1.22 s).
+- Primitive inventory passed (1.09 s): 355 contracts, 19 templates, three scalar
+  declarations and one runtime-review primitive, `device.gpu-run`.
+- Seven native-runner checks passed (1.08 s); server target is assigned to regular
+  macOS and native Windows. After the final repairs, server probes passed
+  (18.64 s), formatting passed (1.20 s), workflow lint passed (1.44 s) and the
+  documentation audit passed.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
-| 1 | In progress | HTTP client owners; remaining host boundaries/cycles; remove tracing |
+| 1 | In progress | HTTP server owners; remaining host boundaries/cycles; remove tracing |
 | 2 | In progress | Remove intermediate storage and unnecessary reference counts |
 | 3 | In progress | Reduce equivalent-work C/Rust gaps and measured code costs |
 | 4 | In progress | Differentiation precision, speed and memory scaling |

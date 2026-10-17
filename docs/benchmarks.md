@@ -704,7 +704,7 @@ slower cases. No local timings were used.
 Full benchmarks run on GitHub runners. The C/Rust comparison command is:
 
 ```sh
-cargo test --release --test bench -- --ignored --nocapture
+cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
 ```
 
 It writes the report to standard output, `target/bench.md` and the `bench` job

@@ -6,7 +6,8 @@ use std::collections::HashSet;
 
 /// A data-only queue cannot publish a reference back to its channel. Functions
 /// and tasks can hide such a reference in captures even when their result type
-/// contains only scalars. Recursive immutable data remains admissible.
+/// contains only scalars. HTTP stream handles keep their connection's handler
+/// captures alive too. Recursive immutable data remains admissible.
 fn channel_data(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> bool {
     if !seen.insert(ty.clone()) {
         return true;
@@ -16,7 +17,10 @@ fn channel_data(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> bool {
         MT::Nat(_) => true,
         MT::Record(fields) => fields.iter().all(|(_, ty)| channel_data(prog, ty, seen)),
         MT::Con(name, args) => {
-            if matches!(name.as_str(), "std::Channel" | "std::Task") {
+            if matches!(
+                name.as_str(),
+                "std::Channel" | "std::Task" | "std::H2Stream"
+            ) {
                 return false;
             }
             args.iter().all(|ty| channel_data(prog, ty, seen))
@@ -59,7 +63,7 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
                         return Ok(());
                     }
                     return Err(format!(
-                        "type `{ty}` has no tracing-free ownership contract: channel payloads cannot contain functions, tasks or channels"
+                        "type `{ty}` has no tracing-free ownership contract: channel payloads cannot contain functions, tasks, HTTP stream handles or channels"
                     ));
                 }
                 "std::Bool" | "std::String" | "std::Bytes" | "std::File" | "std::UdpSocket"

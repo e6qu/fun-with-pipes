@@ -16,7 +16,15 @@ fn http_server_jobs_release_on_completion_cancellation_and_start_failure() {
         assert_eq!(generated.matches(before).count(), 1, "{before}");
         generated = generated.replacen(before, after, 1);
     }
-    let hooks = "#include <stdint.h>\nstatic int fail_start,stream_finals,connection_finals,job_finishes; static void server_handle(uint64_t);";
+    // Keep platform feature definitions before every system header. V is
+    // available here, so the probe does not need to prepend its own headers.
+    let value_type = "typedef uint64_t V;";
+    assert_eq!(generated.matches(value_type).count(), 1);
+    generated = generated.replacen(
+        value_type,
+        "typedef uint64_t V;\nstatic int fail_start,stream_finals,connection_finals,job_finishes; static void server_handle(V);",
+        1,
+    );
     let fixture = include_str!("fixtures/http2_server_ownership.c");
     let finish = "task->cfinish = w_job_finish;";
     assert_eq!(generated.matches(finish).count(), 1);
@@ -32,7 +40,7 @@ fn http_server_jobs_release_on_completion_cancellation_and_start_failure() {
             (&missing_finish, 13),
             (&generated, 0),
         ] {
-            fwp::cgen::compile_c(&format!("{hooks}\n{code}\n{fixture}"), &exe, opt).unwrap();
+            fwp::cgen::compile_c(&format!("{code}\n{fixture}"), &exe, opt).unwrap();
             let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
             assert_eq!(
                 out.status.code(),
@@ -69,7 +77,15 @@ fn http_server_startup_releases_transport_requests_and_handler_captures() {
     let writer = "fwp_task *writer = fwp_spawn_task(0, g_writer, c, 0, 0);";
     let tail = generated[start..].replacen(writer, "if(stage==1)fwp_trap(\"writer startup failure\"); fwp_task *writer = fwp_spawn_task(0, g_writer, c, 0, 0);", 1);
     assert_ne!(tail, generated[start..]);
-    generated.replace_range(start.., &tail);
+    let buffer = "unsigned char buf[65536];";
+    assert_eq!(tail.matches(buffer).count(), 1);
+    generated.replace_range(
+        start..,
+        &tail.replace(
+            buffer,
+            "unsigned char buf[65536]; if(stage==4)fwp_cancel_tree(fwp_cur);",
+        ),
+    );
     let handler = "fwp_closure_drop(w->handler);";
     assert_eq!(generated.matches(handler).count(), 1);
     let missing_handler = generated.replace(handler, "/* deliberately omit handler release */");

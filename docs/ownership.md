@@ -429,6 +429,11 @@ One retained handler per connection keeps captured values alive if serving fails
 before child tasks finish. Individual jobs borrow that handler. Typed calls retain
 only values that need independent owners. HTTP callbacks run in fresh task scopes:
 a parent State or differentiation scope does not extend into a request task.
+Checked ARC rejects channel payloads containing HTTP stream handles, directly or
+inside other data. Otherwise a handler could store its own handle in a channel
+it captures: channel → handle → connection → handler → channel would form a
+reference-count cycle. Ordinary immutable storage and returned aliases remain
+allowed; the restriction concerns publishing a handle through a mutable queue.
 Focused O1/O2 failure, cancellation, escaped-handle and tracing-stress probes pass
 locally; six-platform comparisons, repeated server memory and full acceptance are
 still pending. This does not establish REST/MCP entry support or GPU ownership.
@@ -1059,8 +1064,8 @@ Scoped failure cleanup and deliberate missing-reset tests enforce that distincti
 
 Keep the cache, shared-reader and decoder failure controls while extending these
 owners. Test partial construction and every last-owner case; retain deliberately
-broken variants to prove that missing cleanup is detected. HTTP/2 handlers and
-GPU resource ownership remain separate work.
+broken variants to prove that missing cleanup is detected. HTTP/2 handler
+acceptance and GPU resource ownership remain separate work.
 
 ### Checked gRPC clients and services
 

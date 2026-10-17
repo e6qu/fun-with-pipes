@@ -323,7 +323,7 @@ jobs:
       - name: Language formatting preflight
         run: cargo run --release --bin fwp -- fmt --check lib examples docs/tutorials bench
       - name: benchmarks against C and Rust (docs/benchmarks.md)
-        run: cargo test --release --test bench -- --ignored --nocapture
+        run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
       - name: Preserve readable benchmark comparisons
         uses: actions/upload-artifact@v7
         with:

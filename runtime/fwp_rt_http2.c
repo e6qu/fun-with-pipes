@@ -197,10 +197,9 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
     int was = me->unwinding;
     me->unwinding = 1; /* cancellation is checked below */
     int64_t last = fwp_now_ns();
-    unsigned char *buf = (unsigned char *)malloc(65536);
-    if (!buf) fwp_trap("HTTP receive buffer allocation failed");
-    fwp_cleanup buffer_cleanup;
-    fwp_cleanup_push(&buffer_cleanup, free, buf);
+    /* g_process copies each chunk before the next read. No request or I/O task
+     * retains this buffer; use the reader frame as g_reader already does. */
+    unsigned char buf[65536];
     const char *why = "connection closed";
     char whybuf[600];
     int first = 1;
@@ -228,7 +227,7 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
             }
             if (!idle_now) last = fwp_now_ns();
             int ww;
-            k = g_io_recv(c, buf, 65536, &ww);
+            k = g_io_recv(c, buf, sizeof buf, &ww);
             if (k == 0) break;
             if (k < 0) {
                 if (k == -1 && fwp_socket_again(errno)) {
@@ -259,8 +258,6 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
             break;
         }
     }
-    fwp_cleanup_pop(&buffer_cleanup);
-    free(buf);
     /* send what is left (final responses, a GOAWAY) */
     for (int i = 0; i < 100 && c->out.len && !c->dead; i++) {
         int ww;

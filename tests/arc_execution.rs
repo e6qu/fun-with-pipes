@@ -188,6 +188,8 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
         ("channel","fn-channel : I64 -> Channel[() -> String] ! {Async}\nfn-channel = channel.make\nmain = fn-channel 1 | channel.close\n","channel payloads cannot contain"),
         ("task-channel","tasks : I64 -> Channel[Task[String]] ! {Async}\ntasks = channel.make\nmain = tasks 1 | channel.close\n","channel payloads cannot contain"),
         ("nested-channel","nested : I64 -> Channel[List[Channel[String]]] ! {Async}\nnested = channel.make\nmain = nested 1 | channel.close\n","channel payloads cannot contain"),
+        ("http-stream-channel","streams : I64 -> Channel[H2Stream] ! {Async}\nstreams = channel.make\nmain = streams 1 | channel.close\n","channel payloads cannot contain"),
+        ("wrapped-http-stream-channel","streams : I64 -> Channel[List[H2Stream]] ! {Async}\nstreams = channel.make\nmain = streams 1 | channel.close\n","channel payloads cannot contain"),
         ("cyclic-channel","Link = | Node (Channel[Link])\nlinks : I64 -> Channel[Link] ! {Async}\nlinks = channel.make\nmain = links 1 | channel.close\n","channel payloads cannot contain"),
         ("unscoped-tape","main = 1 | ad.tape | echo\n","tracing-free lifetime policy"),
     ] {
