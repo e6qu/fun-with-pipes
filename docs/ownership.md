@@ -389,8 +389,8 @@ checks up to 16,384 links, retained aliases at each wrapper and complete physica
 reclamation without tracing. Real source programs match the interpreter and
 also pass GC/reuse stress. Full delivery acceptance remains in the handoff.
 Reference-count operations and the chain's allocations still exist. Native remote
-stream caches are opaque runtime objects and still need their own explicit
-ownership before this removes their dependence on tracing.
+stream caches use a separate runtime cleanup loop, described below; their
+connection and callback graph still depends on tracing.
 
 ## Checked ARC delivery
 
@@ -850,7 +850,7 @@ current collector requirement:
 | Work | Evidence required |
 |---|---|
 | Measure repeated calls and stream consumption | Keep the complete-client baseline at 64, 1,024 and 16,384 integers, with full consumption, early stop and retained iterators. Add raw connection, stream and message-buffer counts; separate reusable pool storage from per-call growth. |
-| Own each cached result | Repeated reads return the same value without receiving again. Releasing one iterator preserves other references; releasing the last reference releases its cached value and continuation. Partially constructed results release on failure. |
+| Preserve cache ownership | The candidate has focused evidence for stable repeated reads, retained aliases, final-owner destruction and partial failure. Keep these controls while extending ownership to connections and callbacks. |
 | Keep connections and requests alive for their users | Sending, receiving and detached tasks remain valid after their creating scope returns. Completion, failure and cancellation release each acquired owner exactly once. |
 | Prevent ownership cycles | Identify which component owns each task, stream and connection. A pointer back to an owner must not silently become another owning reference. Any shared cycle needs an explicit policy and a test that drops every external reference. |
 | Admit supported remote calls without tracing | Compare interpreter/native values, errors and receive order; run stress and deliberate missing-cleanup controls; inspect actual binaries and repeat calls with collection disabled. |
@@ -865,12 +865,11 @@ refer to it.
 
 The next implementation must assign owners to the pool, active calls, receive
 sources and I/O tasks, while keeping scheduler task identities and wait lists
-borrowed. A completed cache must own its value and continuation; an unread
-continuation must keep its connection, stream and decoder captures alive. Prefer
-moving that source owner forward to counting it anew for every message. Destruction
-of a long cached sequence must use bounded stack space, including the alternating
-position, optional result and tuple wrappers. Test partial construction and each
-last-owner case before admitting remote calls to checked ARC.
+borrowed. The candidate already moves the source allocation to the next unread
+position and releases cached values through a bounded-stack loop. The source must
+next keep its connection, stream and decoder captures alive through explicit
+owners. Test partial construction and each last-owner case before admitting
+remote calls to checked ARC.
 
 The current candidate implements typed cache ownership and consumes a position
 when reading it. An exclusive position transfers its saved result; a shared one
@@ -892,3 +891,32 @@ required. The [handoff](development-state.md) tracks that delivery and the
 separate effort to reduce the extra reference-count operations.
 
 HTTP/2 server operations and GPU resource ownership also remain separate work.
+
+### Moving values held by a closure
+
+A closure is a function that keeps values for a later call. For example, `add 1`
+keeps the integer `1` until it receives the number to add it to. Captured strings,
+arrays or stream positions can require separate storage and owners.
+
+The candidate runtime transfers captured owners when consuming a closure with
+exactly one owner. It copies their value words into the destination, then clears
+the original closure's capture count so its cleanup cannot release them twice.
+For a partial call, the destination is the new closure; for a complete call, it
+is the callee's argument storage. Shared closures still acquire typed references
+so that existing aliases remain valid. Scalar values are never treated as heap
+references merely because their bits resemble an address.
+
+The destination is ready before this transfer. No allocation, task suspension or
+recoverable trap occurs between moving the owners and assigning responsibility
+for cleanup. The callee owns its arguments on both return and failure, while
+runtime cleanup still frees the consumed closure. This needs no new language
+syntax or closure fields. It removes capture retains on this path, but dynamic
+calls still perform dispatch, ownership checks and argument copying.
+
+Focused controls cover unique/shared closures, partial/complete application,
+normal returns, errors and traps. They require exact reclamation without
+collection and deliberately restore unnecessary duplication or steal shared
+captures to ensure those bugs are detected. All six native jobs pass at `afd7d460`, including native Windows stack-allocation
+failure injection. [The comparison](benchmarks.md#moving-captured-values-instead-of-retaining-them-again)
+records the saved retains and remaining costs. The full delivery gate is tracked
+in the [handoff](development-state.md).

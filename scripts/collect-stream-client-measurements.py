@@ -167,7 +167,9 @@ def main():
             assert len(set(peak)) == 1, (host["host"], "one-pass managed peak grows or varies", peak)
         report["comparison"] = {"baseline_source": baseline["source_revision"],
             "baseline_run": baseline["run_url"], "baseline_report": fingerprint(args.baseline_report),
-            "scope": "Same native fwp clients before and after typed cache ownership, with three separate processes per case. Final managed charge must be constant across the three sizes in each mode; unique one-pass peak must also be constant. Retained histories may grow until released. These checks do not bound raw networking buffers or establish runtime speed.",
+            "scope": ("Same native fwp clients before and after "
+                + ("moving unique closure captures" if args.capture_moves else "typed cache ownership")
+                + ", with three separate processes per case. Final managed charge must be constant across the three sizes in each mode; unique one-pass peak must also be constant. Retained histories may grow until released. These checks do not bound raw networking buffers or establish runtime speed."),
             "samples": comparisons}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n")

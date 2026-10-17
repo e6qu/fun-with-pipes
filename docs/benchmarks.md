@@ -1563,8 +1563,9 @@ process or bounded unread network queues.
 There is a bookkeeping cost: at 16,384 values, the one-pass client's effective
 retains rise from 16,385 to 81,921, about five times as many. Each additional
 integer still allocates five objects requesting about 104 bytes. No timing or
-C/Rust speed comparison is included. Moving unique closure captures and wrapper
-fields is further optimization work; ownership alone is not a zero-cost claim.
+C/Rust speed comparison is included. The capture-transfer comparison below
+reduces these retains; wrapper references and allocations remain optimization
+work. Ownership alone is not a zero-cost claim.
 
 Independent controls release chains through 16,384 positions, preserving aliases
 to positions, optional results and tuples. All counted allocations release after
@@ -1590,3 +1591,60 @@ compiled clients, without executing downloaded programs. A backward branch can
 confirm a cleanup loop; count saved registers and stack adjustments separately
 when reporting a function's frame. Helper calls have their own frames. Samples
 of stack-address variation do not measure total stack storage.
+
+### Moving captured values instead of retaining them again
+
+A closure is a function carrying values for a later call. When a call consumes
+its only owner, those captured values can move into the callee or a new partial
+application. The old closure then releases its own storage without releasing
+the transferred values. Shared closures still need separate references.
+
+[The capture-transfer report](measurements/remote-client-capture-moves-2026-10-17.json)
+at `afd7d460` passes all six native jobs in
+[the focused run](https://github.com/e6qu/fun-with-pipes/actions/runs/38996238360).
+It compares the cache-ownership revision with the
+same native clients, inputs, compiler settings and measurement boundaries above.
+For the one-pass client, every host reports these retain counts; three separate
+processes agree:
+
+| Received integers | Original tracing-dependent cache | Explicit cache ownership | Cache ownership plus capture moves |
+|---|---:|---:|---:|
+| 64 | 65 | 321 | 194 |
+| 1,024 | 1,025 | 5,121 | 3,074 |
+| 16,384 | 16,385 | 81,921 | 49,154 |
+
+At 16,384 integers, moving captures removes about 40% of the new ownership
+implementation's retains. It still performs about three times the original
+tracing-dependent implementation's retains. Moving a continuation's stream
+position also avoids an artificial second owner, allowing that read to move its
+cached result. Remaining wrapper references and five allocations per additional
+integer are still optimization work. No timing or C/Rust comparison is included.
+
+Final charged storage stays at the cache-ownership values in the preceding table,
+constant across sizes and all three modes. One-pass peak drops another 64 bytes
+on every host: 6,768 bytes on Linux AMD64, 19,824 on Linux ARM64, 2,768 on either
+Mac, 3,920 on Windows AMD64 and 3,536 on Windows ARM64. Retained histories still
+keep earlier values alive until the iterator is released. Connections and raw
+message queues remain outside this complete ownership claim.
+
+Independent controls cover unique/shared closures, partial/full calls, normal
+returns, language errors and traps. They require zero capture retains for the
+unique cases and exactly the necessary typed retains for shared ones, with no
+remaining managed storage. Deliberately restoring capture duplication or stealing
+shared captures makes the controls fail. Existing unwind, cancellation, scalar-bit
+and reference-counter overflow tests remain in the native selection.
+
+The actual Linux AMD64 and ARM64 binaries branch on ownership count one, clear
+the consumed closure's capture count and skip the capture-retain callback. Shared
+paths still call it. Dynamic dispatch, argument copying and stack storage remain;
+this is not a claim that dynamic calls use registers alone. Cache cleanup still
+uses a backward branch with fixed frames of 24 bytes on AMD64 (excluding the
+incoming return address) and 64 bytes on ARM64 (including saved registers).
+Helper-call frames are separate.
+
+To collect this comparison, use `--baseline-report` with the cache-ownership
+report and add `--capture-moves`. The collector requires all six native jobs at
+the exact source revision, the capture controls and their 12 cases at both
+optimization levels. The report retains source identities, raw samples, binary
+hashes and reviewed instruction evidence. Full production acceptance is recorded
+separately in the handoff.
