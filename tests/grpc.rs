@@ -237,6 +237,122 @@ fn greeter_servers(native_dir: Option<&Path>) -> Vec<Server> {
 
 // ------------------------------------------------------------------ calls
 
+/// Explicit ARC builds must exclude tracing from both sides of the boundary,
+/// while retaining the existing call, failure, concurrency and alias behavior.
+#[test]
+fn arc_remote_calls_exclude_tracing_and_preserve_behavior() {
+    if !have_cc() {
+        return;
+    }
+    let d = scratch("arc-remote");
+    let artifacts = std::env::var_os("FWP_REMOTE_ARC_ARTIFACTS").map(PathBuf::from);
+    if let Some(path) = &artifacts {
+        std::fs::create_dir_all(path).unwrap();
+    }
+    let cases = ["client", "concurrent", "shared-stream", "input-failure"];
+    for name in cases {
+        let split = d.join(name);
+        build(
+            &[
+                "--gc",
+                "arc",
+                "--service",
+                "greeter",
+                "--emit-c",
+                dir().join(format!("{name}.fwp")).to_str().unwrap(),
+                "-o",
+                split.to_str().unwrap(),
+            ],
+            &dir(),
+        );
+        for member in [name, "greeter"] {
+            let code = std::fs::read_to_string(split.join(format!("{member}.c"))).unwrap();
+            assert!(code.contains("#define FWP_ARC_ONLY 1"), "{name}/{member}");
+            if let Some(path) = &artifacts {
+                if member != "greeter" || name == "client" {
+                    std::fs::write(path.join(format!("{member}.c")), &code).unwrap();
+                }
+            }
+        }
+    }
+    let interpreted = greeter_servers(None);
+    for opt in ["-O1", "-O2"] {
+        let mut executables = Vec::new();
+        for name in cases.into_iter().chain(["greeter"]) {
+            let source = if name == "greeter" {
+                d.join("client/greeter.c")
+            } else {
+                d.join(name).join(format!("{name}.c"))
+            };
+            let binary = d.join(format!("{name}{opt}.exe"));
+            fwp::cgen::compile_c(&std::fs::read_to_string(source).unwrap(), &binary, opt).unwrap();
+            let mut nm = Command::new("nm");
+            nm.arg(&binary);
+            let symbols = run(nm, 30);
+            assert!(symbols.status.success(), "{}", render(&symbols));
+            let symbols = String::from_utf8_lossy(&symbols.stdout);
+            if let Some(path) = &artifacts {
+                std::fs::copy(&binary, path.join(binary.file_name().unwrap())).unwrap();
+                std::fs::write(path.join(format!("{name}{opt}.nm")), symbols.as_bytes()).unwrap();
+            }
+            for tracing in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                assert!(
+                    !symbols.contains(tracing),
+                    "{name} {opt} contains {tracing}"
+                );
+            }
+            executables.push(binary);
+        }
+        let mut native = Command::new(executables.last().unwrap());
+        native
+            .args(["--listen", "127.0.0.1:0"])
+            .env_remove("FWP_GC")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0");
+        let native = start(native, Duration::from_secs(60));
+        for server in [&interpreted[0], &native] {
+            for (index, name) in cases.iter().enumerate() {
+                for use_interpreter in [false, true] {
+                    let mut cmd = if use_interpreter {
+                        let mut cmd = Command::new(fwp());
+                        cmd.args(["run", "--interp", "--service", "greeter"])
+                            .arg(dir().join(format!("{name}.fwp")))
+                            .env("FWP_NO_OPT", "1");
+                        cmd
+                    } else {
+                        Command::new(&executables[index])
+                    };
+                    cmd.env("FWP_SERVICE_GREETER", &server.addr)
+                        .env_remove("FWP_GC")
+                        .env("FWP_GC_STRESS", "0")
+                        .env("FWP_GC_VERIFY", "0")
+                        .env("FWP_REUSE_VERIFY", "0");
+                    let out = run(cmd, 120);
+                    if *name == "input-failure" {
+                        assert_eq!(out.status.code(), Some(101), "{out:?}");
+                        assert!(out.stdout.is_empty(), "{out:?}");
+                        assert!(
+                            String::from_utf8_lossy(&out.stderr).contains("division by zero"),
+                            "{out:?}"
+                        );
+                    } else {
+                        let expected =
+                            std::fs::read_to_string(dir().join(format!("{name}.out"))).unwrap();
+                        assert_eq!(
+                            render(&out),
+                            expected,
+                            "{name} {opt} interpreter={use_interpreter}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+    drop(interpreted);
+    std::fs::remove_dir_all(d).unwrap();
+}
+
 /// Every kind of call of greeter.fwp: interpreted and native servers,
 /// interpreted and native clients.
 #[test]

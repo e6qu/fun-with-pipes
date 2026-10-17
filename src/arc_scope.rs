@@ -60,6 +60,71 @@ fn has_functions(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
 }
 
 impl Proof<'_> {
+    fn consume_iterator(
+        &mut self,
+        id: FuncId,
+        scoped: u8,
+        initial: &Targets,
+    ) -> Result<(), String> {
+        let key = (id, scoped);
+        let mut steps = initial.clone();
+        steps.extend(
+            self.callback_values
+                .get(&key)
+                .into_iter()
+                .flatten()
+                .copied(),
+        );
+        for &(target, supplied) in &steps {
+            let count = self.program.funcs[target].arity as usize - supplied;
+            let next = self.apply(
+                &BTreeSet::from([(target, supplied)]),
+                &vec![Targets::new(); count],
+                scoped,
+            )?;
+            // Later positions can introduce different continuations.
+            self.changed |= join(self.callback_values.entry(key).or_default(), &next);
+        }
+        Ok(())
+    }
+
+    fn service_boundaries(&mut self, entries: &[FuncId]) -> Result<(), String> {
+        let Some(service) = &self.program.service else {
+            return Ok(());
+        };
+        for method in &service.methods {
+            if !entries.contains(&method.func) {
+                continue;
+            }
+            let function = &self.program.funcs[method.func];
+            let shape =
+                crate::rpc::shape(&function.ty, function.arity as usize, method.error.as_ref());
+            if shape.client_streaming() {
+                let iterator = method.iter_fn.ok_or_else(|| {
+                    format!(
+                        "--gc arc: served method `{}` has no received iterator constructor",
+                        method.name
+                    )
+                })?;
+                let input = self.apply(&BTreeSet::from([(iterator, 0)]), &[Targets::new()], 0)?;
+                let mut args = vec![Targets::new(); function.arity as usize];
+                args[0] = input;
+                self.request(method.func, 0, &args);
+            }
+            if matches!(shape.output, crate::rpc::Output::Iter(_)) {
+                let returned = self
+                    .outputs
+                    .get(&(method.func, 0))
+                    .cloned()
+                    .unwrap_or_default();
+                // The runtime drains a result after the method has returned.
+                // A method-local State/AD scope has already ended by then.
+                self.consume_iterator(method.func, 0, &returned)?;
+            }
+        }
+        Ok(())
+    }
+
     fn request(&mut self, id: FuncId, scoped: u8, args: &[Targets]) -> Targets {
         let key = (id, scoped);
         if let std::collections::btree_map::Entry::Vacant(entry) = self.inputs.entry(key) {
@@ -381,26 +446,7 @@ impl Proof<'_> {
                     // bidirectional call uses a detached sender with fresh
                     // State/AD stacks, just like an ordinary child task.
                     let sender_scope = if shape.server_streaming() { 0 } else { scoped };
-                    let key = (id, sender_scope);
-                    let mut steps = args[0].clone();
-                    steps.extend(
-                        self.callback_values
-                            .get(&key)
-                            .into_iter()
-                            .flatten()
-                            .copied(),
-                    );
-                    for &(target, supplied) in &steps {
-                        let count = self.program.funcs[target].arity as usize - supplied;
-                        let next = self.apply(
-                            &BTreeSet::from([(target, supplied)]),
-                            &vec![Targets::new(); count],
-                            sender_scope,
-                        )?;
-                        // Later iterator positions can introduce different
-                        // continuations, which must obey the same scope rule.
-                        self.changed |= join(self.callback_values.entry(key).or_default(), &next);
-                    }
+                    self.consume_iterator(id, sender_scope, &args[0])?;
                 }
                 if let Some(iterator) = remote.iter_fn {
                     // The received iterator's constructor runs in the caller;
@@ -435,6 +481,7 @@ pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String>
     }
     loop {
         proof.changed = false;
+        proof.service_boundaries(entries)?;
         for ((id, scoped), args) in proof.inputs.clone() {
             let mut result = proof.function(id, scoped, &args)?;
             let function = &program.funcs[id];
@@ -452,6 +499,7 @@ pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String>
         }
     }
     proof.validate = true;
+    proof.service_boundaries(entries)?;
     for ((id, scoped), args) in proof.inputs.clone() {
         proof.function(id, scoped, &args)?;
     }
@@ -704,6 +752,136 @@ mod tests {
                     check(&p, &[5]).unwrap();
                 }
             }
+        }
+    }
+
+    #[test]
+    fn served_iterators_do_not_extend_method_scopes() {
+        for delayed_get in [false, true] {
+            let mut p = state_program(true);
+            let unit = MT::unit();
+            let string = MT::con("std::String");
+            let iter = MT::Con("std::Iterator".into(), vec![string.clone()]);
+            let step = arrow(unit.clone(), iter.clone());
+            p.shapes.insert(
+                iter.clone(),
+                TypeShape::Adt(vec![
+                    ("Done".into(), vec![]),
+                    ("Next".into(), vec![string.clone(), step.clone()]),
+                ]),
+            );
+            let local_state = |callback| {
+                Expr::Field(
+                    Box::new(Expr::Call(
+                        2,
+                        vec![
+                            Expr::Const(Value::str("local")),
+                            Expr::Func(callback),
+                            Expr::Const(Value::unit()),
+                        ],
+                    )),
+                    0,
+                )
+            };
+            p.funcs.extend([
+                Func {
+                    name: "return-an-iterator".into(),
+                    arity: 1,
+                    locals: vec![unit.clone()],
+                    ty: step.clone(),
+                    body: Body::Expr(Expr::Construct(
+                        1,
+                        vec![
+                            Expr::Const(Value::str("head")),
+                            Expr::Func(if delayed_get { 6 } else { 4 }),
+                        ],
+                    )),
+                },
+                Func {
+                    name: "iterator-step-using-state".into(),
+                    arity: 1,
+                    locals: vec![unit.clone(), string.clone()],
+                    ty: step.clone(),
+                    body: Body::Expr(Expr::Let(
+                        1,
+                        Box::new(Expr::Call(1, vec![Expr::Local(0)])),
+                        Box::new(Expr::Construct(0, vec![])),
+                    )),
+                },
+                Func {
+                    name: "served-method".into(),
+                    arity: 1,
+                    locals: vec![unit.clone()],
+                    ty: step.clone(),
+                    body: Body::Expr(local_state(3)),
+                },
+                Func {
+                    name: "later-result-step".into(),
+                    arity: 1,
+                    locals: vec![unit.clone()],
+                    ty: step.clone(),
+                    body: Body::Expr(Expr::Construct(
+                        1,
+                        vec![Expr::Const(Value::str("later")), Expr::Func(4)],
+                    )),
+                },
+            ]);
+            let pair = MT::Record(vec![
+                ("0".into(), iter.clone()),
+                ("1".into(), string.clone()),
+            ]);
+            p.funcs[2].locals = vec![string.clone(), step.clone(), unit.clone()];
+            p.funcs[2].ty = arrow(string.clone(), arrow(step, arrow(unit.clone(), pair)));
+            p.funcs[0].ty = iter.clone();
+            p.funcs[0].body = Body::Expr(Expr::Call(5, vec![Expr::Const(Value::unit())]));
+            // Returning the closure alone does not invoke it. Serving this
+            // result adds the runtime's later consumption outside the handler.
+            check(&p, &[5]).unwrap();
+            p.service = Some(crate::ir::ServiceDef {
+                module: "service".into(),
+                default_addr: String::new(),
+                methods: vec![crate::ir::ServedFn {
+                    name: "values".into(),
+                    func: 5,
+                    error: None,
+                    path: "/service/Values".into(),
+                    iter_fn: None,
+                }],
+            });
+            assert!(check(&p, &[5])
+                .unwrap_err()
+                .contains("outside a State scope"));
+            let mut inner = p.funcs[4].clone();
+            inner.name = "step-with-local-state".into();
+            p.funcs.push(inner);
+            p.funcs[4].body = Body::Expr(local_state(7));
+            check(&p, &[5]).unwrap();
+
+            // Received iterator constructors must seed the method's argument
+            // flow too: an identity method forwards the known continuation.
+            p.funcs[5].locals = vec![iter.clone()];
+            p.funcs[5].ty = arrow(iter.clone(), iter.clone());
+            p.funcs[5].body = Body::Expr(Expr::Local(0));
+            let cell = MT::Con("std::GrpcCell".into(), vec![string]);
+            p.funcs.push(Func {
+                name: "received-position".into(),
+                arity: 1,
+                locals: vec![cell.clone()],
+                ty: arrow(cell, iter),
+                body: Body::Expr(Expr::Construct(
+                    1,
+                    vec![Expr::Const(Value::str("received")), Expr::Func(4)],
+                )),
+            });
+            assert!(check(&p, &[5])
+                .unwrap_err()
+                .contains("no received iterator constructor"));
+            p.service.as_mut().unwrap().methods[0].iter_fn = Some(8);
+            check(&p, &[5]).unwrap();
+            p.funcs[4].body = p.funcs[7].body.clone();
+            assert!(check(&p, &[5])
+                .unwrap_err()
+                .contains("outside a State scope"));
         }
     }
 

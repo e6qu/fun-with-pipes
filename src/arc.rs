@@ -67,7 +67,9 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
                 | "std::I64" | "std::I128" | "std::ISize" | "std::U8" | "std::U16" | "std::U32"
                 | "std::U64" | "std::U128" | "std::USize" | "std::F16" | "std::BF16"
                 | "std::F32" | "std::F64" | "std::F128" | "std::TInt" | "std::Trit"
-                | "std::Array" | "std::Map" | "std::Set" | "std::Task" => return Ok(()),
+                | "std::Array" | "std::Map" | "std::Set" | "std::Task" | "std::GrpcCell" => {
+                    return Ok(())
+                }
                 _ => {}
             }
             match prog.shapes.get(ty) {
@@ -126,8 +128,16 @@ pub(crate) fn check(prog: &Program, entries: &[crate::ir::FuncId]) -> Result<(),
                         .into(),
                 ));
             }
-            Body::Remote(_) => {
-                return Err(reject("remote boundaries require tracing".into()));
+            Body::Remote(remote) => {
+                let shape = crate::rpc::shape(&f.ty, f.arity as usize, remote.error.as_ref());
+                // Messages contain encoded data, never managed pointers or
+                // callable captures. Input continuations and returned iterator
+                // scopes were checked above; typed runtime owners cover the
+                // request, connection, cursor and detached sender lifetimes.
+                for ty in shape.wire_types(remote.error.as_ref()) {
+                    crate::protobuf::check_encodable(prog, &ty).map_err(reject)?;
+                }
+                continue;
             }
             Body::Prim(symbol) => symbol.as_str(),
         };

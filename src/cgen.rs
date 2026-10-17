@@ -8686,7 +8686,10 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
 fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let arc = native_options().arc;
     if arc {
-        if !matches!(mode, Mode::Main | Mode::Exec(..) | Mode::Library) {
+        if !matches!(
+            mode,
+            Mode::Main | Mode::Exec(..) | Mode::Library | Mode::Service
+        ) {
             return Err("--gc arc requires a checked executable or C library".into());
         }
         if !reuse_enabled() || !free_enabled() {
@@ -8730,6 +8733,14 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     if arc {
         let entries = match &mode {
             Mode::Exec(commands, _) => commands.iter().map(|c| c.fid).collect(),
+            Mode::Service => prog
+                .service
+                .as_ref()
+                .ok_or("no service to serve")?
+                .methods
+                .iter()
+                .map(|m| m.func)
+                .collect(),
             Mode::Library => {
                 let signatures = export_sigs(prog)?;
                 for (name, _, params, result) in &signatures {

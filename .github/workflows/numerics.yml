@@ -715,7 +715,24 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test --lib arc_scope::tests
+      - name: Check remote ARC binaries and behavior
+        env:
+          CC: clang
+          FWP_REMOTE_ARC_ARTIFACTS: remote-arc-evidence
+        run: |
+          mkdir -p remote-arc-evidence
+          git rev-parse HEAD > remote-arc-evidence/source.txt
+          rustc --version --verbose > remote-arc-evidence/rust.txt
+          clang --version > remote-arc-evidence/c.txt
+          lscpu > remote-arc-evidence/cpu.txt
+          cargo test --test grpc arc_remote_calls_exclude_tracing_and_preserve_behavior -- --exact --nocapture
       - run: cargo test --no-fail-fast --test infix --test fmt --test golden_parse --test golden_check --test numeric_array_fusion --test arc_execution --test loop_unwind_ownership
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: remote-arc-ubuntu-latest
+          path: remote-arc-evidence/
+          if-no-files-found: ignore
   performance:
     if: inputs.suite == 'performance'
     strategy:
