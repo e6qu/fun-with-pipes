@@ -1852,6 +1852,7 @@ static void g_sender_peer_finish(void *arg) {
 static void g_send_all(void *arg, int cancelled) {
     g_sender *x = (g_sender *)arg;
     if (cancelled) return;
+    fwp_check_cancel(); /* cancellation before entry must not force input */
     jmp_buf tj;
     jmp_buf *saved = fwp_cur->trap_jb;
     fwp_cleanup *saved_cleanup = fwp_cur->trap_cleanup;

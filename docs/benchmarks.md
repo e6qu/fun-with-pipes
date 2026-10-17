@@ -1904,3 +1904,70 @@ check; that server-startup path is outside the measured client workload.
 Final production acceptance is tracked in [the handoff](development-state.md).
 Pending sender inputs and server callbacks still need ownership work, so remote
 calls remain excluded from checked ARC.
+
+
+### Memory retained by client inputs after sending finishes
+
+A client can send an iterator, a sequence produced one value at a time, to a
+remote function. A synchronous call finishes sending before waiting for its
+result. A bidirectional call sends and receives concurrently, using a separate
+sender task. Both paths must release the input values after they are no longer
+needed, while preserving any copy the program still holds.
+
+[The sender baseline](measurements/sender-input-baseline-2026-10-17.json)
+uses `f6ebb2e9`, retained by `evidence/sender-input-baseline-20261017`.
+[All six native jobs passed](https://github.com/e6qu/fun-with-pipes/actions/runs/39009268395).
+This is fwp measured before the input-ownership change, with the preceding
+connection and I/O-task cleanup already present. It establishes the remaining
+memory problem; it is not a comparison against C or Rust.
+
+Each process makes 1, 16 or 256 calls, with three processes per case. Four
+programs exercise different input lifetimes:
+
+- Synchronous: send integers 1 through 64 and receive their sum, 2,080.
+- Bidirectional: send `word-1` through `word-64`, receive uppercase strings and
+  sum their lengths, giving 439.
+- Retained input: run the same uppercase call, then read the original input
+  again. Both length totals add to 878; retaining the original must preserve it.
+- Early completion: offer 64 integers, but the server returns only the first
+  three multiplied by ten. Their sum is 60. The actual number of inputs sent
+  varies with scheduling and is recorded, rather than assumed to be three.
+
+Measurement hooks close each connection and wait for its reader, writer and
+sender tasks before the next call. All connections, requests and received
+messages release, yet managed memory still grows. The table gives allocator-
+charged bytes, including size-class rounding, after 256 calls.
+
+| Platform | Synchronous inputs | Bidirectional or retained inputs |
+|---|---:|---:|
+| Linux AMD64 | 1,820,416 | 3,356,416 |
+| Linux ARM64 | 1,824,768 | 4,474,880 |
+| macOS AMD64 and ARM64 | 1,819,264 | 3,060,352 |
+| Windows AMD64 | 1,819,648 | 3,159,040 |
+| Windows ARM64 | 1,819,520 | 3,126,144 |
+
+Each additional synchronous call leaves 7,104 bytes on every host. The other
+complete-input modes leave 11,952–17,456 bytes per additional call, depending
+on the platform. These totals include input storage and finished sender/task
+records; cumulative allocation categories do not prove individual live-object
+identities. Early-completion totals vary with the amount of input produced.
+
+Actual Linux AMD64 and ARM64 binaries show remote entries marking the input
+shared, iterator advancement using an unowned call, and sender cleanup releasing
+the connection and request without freeing its input or sender record. The
+report retains source/binary fingerprints, reviewed instruction locations and
+function-frame sizes. Those frames differ between architectures and include
+neither callee frames nor a whole-program stack bound. No speed claim follows
+from this inspection.
+
+Generated clients use `-O2`. The report records hardware, C/Rust toolchains,
+source, output references, allocation requests/bytes, reference-count increments,
+peak and final managed bytes, input counts and raw checkpoints. Collection is
+disabled and physical freeing enabled. Counters run from after constant setup
+to after cached-value cleanup and task draining, before whole-runtime shutdown.
+Stack pools, other raw buffers, TLS/OS/allocator metadata, server/process memory
+and elapsed time are excluded. Ordinary native and interpreter runs check the
+outputs using normal pooling; their transport work differs from the measured
+clients. A future ownership comparison must use the same closing hooks and
+account for variable input work in early completion. This baseline establishes
+neither checked ARC support nor zero overhead.

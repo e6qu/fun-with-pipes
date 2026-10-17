@@ -55,6 +55,7 @@ def main():
               'unique_closure_captures_move_through_partial_calls_and_failures']
     if baseline:
         checks.append('input_owners_release_after_lookahead_failure_and_sender_cancellation')
+        checks.append('grpc::stream_source_tests::sender_cancelled_before_entry_does_not_force_input')
     output_tables = args.output.parent / args.output.stem
     output_tables.mkdir(parents=True, exist_ok=True)
     hosts = []

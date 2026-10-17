@@ -156,6 +156,12 @@ fn input_owners_release_after_lookahead_failure_and_sender_cancellation() {
                 222,
             ),
             ("    fwp_rc_dup(iter);", "    (void)iter;", "0", 223),
+            (
+                "    fwp_check_cancel(); /* cancellation before entry must not force input */",
+                "    /* omit pre-entry cancellation check */",
+                "5",
+                235,
+            ),
         ] {
             assert_eq!(code.matches(before).count(), 1, "{before}");
             let broken = code.replacen(before, after, 1);

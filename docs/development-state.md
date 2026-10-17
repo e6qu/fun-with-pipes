@@ -88,14 +88,23 @@ deliberately omitted resets. A real input-continuation failure runs with each
 interpreter/native client/server combination. The failure and ownership changes
 await the next runner probe; no native validation is claimed yet.
 
-Next: publish the repaired candidate, inspect its Linux run, then compare memory
+Candidate `f0494e4d33945159977b4d49a8aa2365724da69b` is published; Linux run
+`39011258349` passed request-reset checks but failed pre-entry sender cancellation:
+C task entries start before the scheduler's language-task cancellation check, so
+`g_send_all` could force one input before noticing its cancellation. Both native and interpreter senders
+now check cancellation before evaluating input; a deliberate missing-check case
+requires the old native behavior to fail. An interpreter test compares cancelled
+and uncancelled senders and checks input release. The focused workflow runs the sender fixture
+first, without duplicating or removing any test, to shorten repair feedback.
+These changes await the next probe. Next: inspect it, then compare memory
 and reference-count totals before selecting any further optimization. Require six native
 candidate jobs, matching outputs, complete input/sender/connection cleanup,
 bounded remaining storage, failure controls and actual ARM64/AMD64 binary review
 before preparing the next delivery. PR #158 remains the only active PR.
 
-Local work uses the root guard with unchanged limits. Candidate formatting passed in 1.31s; fixture formatting in 0.01s and documentation
-audit in 3.19s. The local six-host collector passed syntax parsing in 0.20s.
+Local work uses the root guard with unchanged limits. Candidate formatting passed in 1.30s; the new failure fixture formatted in
+0.02s and typechecked with the prebuilt compiler in 0.27s. The documentation
+audit passed in 3.19s before publication. The local six-host collector passed syntax parsing in 0.20s.
 No local builds or native execution ran. All native measurement work belongs on
 GitHub. Private design notes are `/private/tmp/fwp-next-connection-ownership.md`.
 Do not copy this preparation's old plan/history over the active root handoff.
