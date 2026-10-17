@@ -625,8 +625,10 @@ The `--gc arc` mode checks memory ownership and excludes tracing collection.
 Supported entries include native main/CLI/function executables, synchronous WASI
 executables, and C libraries whose inputs are copied and whose results contain
 no managed pointers. The [gRPC extension](services.md#building-without-tracing-collection)
-adds checked split clients and services; its platform acceptance is recorded in
-[the handoff](development-state.md).
+adds checked split clients and services, accepted in
+[PR #161](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161).
+HTTP clients and servers are accepted in PRs #162/#163; their ownership contracts
+are described in the [ownership guide](ownership.md#checked-arc-delivery).
 
 `fwp build --gc arc --staticlib stats.fwp -o libstats.a` can export a
 `String -> I64` function: it copies the input for the call and returns the count

@@ -1926,7 +1926,7 @@ fn forms_requests() -> Vec<FormCase> {
             Some("text/csv"),
             200,
             "text/csv; charset=utf-8",
-            "id,title,price,note\n1,Dune,9.5,\n2,\"Odes, \"\"selected\"\"\",12,used\n",
+            "id,title,price,note\n1,Dune,9.5,\n2,\"Odes, \"\"selected\"\"\",12.0,used\n",
         ),
         (
             "GET",
@@ -2093,7 +2093,7 @@ fn exercise_forms(srv: &Server) {
         );
         assert_eq!(
             curl(&["-H", "accept: text/csv", &format!("{}/books", url)]),
-            "id,title,price,note\n1,Dune,9.5,\n2,\"Odes, \"\"selected\"\"\",12,used\n"
+            "id,title,price,note\n1,Dune,9.5,\n2,\"Odes, \"\"selected\"\"\",12.0,used\n"
         );
         let _ = std::fs::remove_dir_all(dir);
     }

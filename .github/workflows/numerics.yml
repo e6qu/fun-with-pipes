@@ -12,6 +12,11 @@ on:
         type: choice
         options: [all, ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
         default: all
+      server_entry_part:
+        description: Server-entry jobs; all runs functional checks and all memory measurements
+        type: choice
+        options: [all, checks, stdio, http-rest, http-mcp]
+        default: all
       source_revision:
         description: Full source commit for the CI profile comparison
         type: string
@@ -28,7 +33,7 @@ jobs:
       fail-fast: false
       matrix:
         runner: ${{ fromJSON(inputs.native_runner != 'all' && format('["{0}"]', inputs.native_runner) || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
-        part: ${{ fromJSON(inputs.suite == 'server-entries' && '["checks","stdio","http-rest","http-mcp"]' || '["checks"]') }}
+        part: ${{ fromJSON(inputs.suite == 'server-entries' && (inputs.server_entry_part != 'all' && format('["{0}"]', inputs.server_entry_part) || '["checks","stdio","http-rest","http-mcp"]') || '["checks"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:

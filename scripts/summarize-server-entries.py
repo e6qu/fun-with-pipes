@@ -137,7 +137,14 @@ def main():
                 result['measurements'][part] = http(directory, interface)
                 pairs = [(interface, mode, 'true') for mode in ['tracing', 'arc']]
             for name, mode, free in pairs:
-                result['binaries'].append(binary(directory / f'{name}-{mode}-{free}.exe', mode, host, args.llvm_bin))
+                path = directory / f'{name}-{mode}-{free}.exe'
+                inspected = binary(path, mode, host, args.llvm_bin)
+                # MCP uses the same executable names for standard input and
+                # HTTP. Retain the artifact path so each inspected file is clear.
+                inspected['artifact'] = artifact.name
+                inspected['relative_path'] = path.relative_to(artifact).as_posix()
+                inspected['part'] = part
+                result['binaries'].append(inspected)
             result['measurements'][part]['toolchains'] = {name: (artifact / f'{name}.txt').read_text().strip()
                                                         for name in ['c', 'rust', 'cpu', 'platform']}
         print(host, '9 standard-input rows, 54 HTTP rows, 30 RSS samples, 7 inspected binaries', flush=True)

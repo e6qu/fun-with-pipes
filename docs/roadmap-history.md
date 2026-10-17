@@ -48,6 +48,46 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## HTTP server owners and fixed function storage (PR #163)
+
+[PR #163](https://github.com/e6qu/fun-with-pipes/pull/163) merged as
+`0a468c9d0ee3283bd5de6a7cbc05126379ed3ee5` on 2026-10-17 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39073022259)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39073022233)
+passed at `c998ce68b6beff90b0ba1097e92ede7a154f00f3`. The merge and tested head
+share tree `084ea09970b2a7ff7ce9068ad2d9ff8a8707f2b0`; accepted #162 is the sole
+parent. The entire message is
+`Own HTTP server requests and eliminate fixed function allocations`.
+Duplicate postmerge production `39079288609` is confirmed cancelled.
+
+HTTP server connections, requests, handler captures and tasks have explicit
+owners and cleanup on failure/cancellation. A 24-byte request handle replaces
+separate 32-byte handle and job allocations. A nonescaping 64 KiB receive buffer
+uses the stack; actual Linux serve frames are 67,240 bytes on AMD64 and 67,264 on
+ARM64, excluding callees. macOS/Windows socket waits use OS readiness and real
+deadlines, replacing periodic 10 ms sleeps. One copy of the existing ARC ownership
+check reduces Linux HTTP instruction sections about 13%, without removing checks.
+
+The compiler stores eligible fixed function captures in program storage instead
+of rebuilding heap records. [Paired measurements](measurements/fixed-functions-2026-10-18.json)
+record about 899 to 722 managed allocations and 2,318 to 1,901 reference-count
+increments per additional HTTP request. Linux elapsed time falls about 4–6% for
+this workload versus older fwp; this is not C/Rust parity. The report retains
+hardware, inputs, flags, raw samples, startup, code/data size and memory scope.
+All six final memory jobs pass; final managed storage is constant, and the largest
+post-warm-up resident-memory increase is 2 MiB within the 8 MiB bound. All twelve
+ordinary binaries contain 331 aligned function records totaling 7,592 bytes;
+Linux instructions match all 618 startup capture stores. ARC binaries exclude
+tracing. Downloaded binaries were inspected, never executed locally.
+
+The original nine-job audit examined all 960 scheduled targets and 1,240 test
+summaries. gRPC failure injection matched an unrelated HTTP statement; UDP failure
+injection counted scheduler storage as a returned object. Both were repaired,
+including controls that restore the broken behavior. All six focused repair jobs
+then passed. The final production audit again accounts for all 960 targets and
+1,240 summaries: 3,518 passed tests, no failures. Six native compiler jobs, both
+WASI jobs and separate Intel HTTP ownership/comparison checks also pass.
+
 ## HTTP client owners and complete connection keys (PR #162)
 
 [PR #162](https://github.com/e6qu/fun-with-pipes/pull/162) merged as

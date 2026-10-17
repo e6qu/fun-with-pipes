@@ -916,8 +916,8 @@ not reduce derivative peak memory here. Tiny nested timings remain mixed.
 Actual Linux ARM64 disassembly contains vector `fmul` inside the direct product
 loop. Linux AMD64 uses unrolled scalar `mulsd`. Known callbacks inline into that
 loop. The report retains selected generated and machine-code bodies; these are
-not total dynamic instruction counts or evidence about register spills. Full
-platform acceptance is tracked separately in the handoff.
+not total dynamic instruction counts or evidence about register spills. Full platform acceptance is recorded in
+[history](roadmap-history.md).
 
 [A separate repeat](measurements/zip-map-cpu-2026-10-16.json) reuses the verified
 binaries, taking sixteen alternating samples of elapsed and child CPU time
@@ -2147,7 +2147,7 @@ without executing them locally. Full production acceptance is tracked in the
 measures `48ccd3d9` against the storage change above, using the same programs,
 inputs and measurement boundary. [The Linux AMD64 run passes](https://github.com/e6qu/fun-with-pipes/actions/runs/39020484780).
 This intermediate result covers only Linux AMD64. The combined server comparison below extends coverage to all six native hosts;
-production acceptance is recorded separately in the handoff.
+production acceptance is recorded in [history](roadmap-history.md).
 
 Generated cleanup functions now release each argument and result according to
 its concrete type. Stack records protect them during decoding, method execution,
@@ -2237,7 +2237,7 @@ The report retains 18 raw tables, instruction reviews, source/binary fingerprint
 hardware and compiler settings. Counters use the baseline's collection-off,
 physical-freeing-on boundary. Raw network buffers, task stack pools, TLS/OS and
 allocator metadata, whole-process memory and timing remain excluded. Full PR
-acceptance is tracked in [the handoff](development-state.md).
+acceptance is recorded in [history](roadmap-history.md).
 
 ### Freeing server requests and borrowing fold captures
 
@@ -2393,7 +2393,7 @@ records and actual instruction reviews. Separate server/client cleanup jobs,
 real calls, typed iterator-scope checks and deliberate missing-owner controls all
 pass. The split preserves the original 25-minute job limit. The fixture repairs
 exercise a nonblocking accept retry and configure Windows probe output explicitly;
-[the handoff](development-state.md) records full production acceptance separately.
+[history](roadmap-history.md) records full production acceptance.
 
 ### HTTP clients without tracing
 
@@ -2486,8 +2486,8 @@ does not establish zero-cost networking abstractions or complete GC removal.
 by `evidence/http-server-memory-20261017`. This is a memory comparison, not a
 speed measurement against C, Rust or an older fwp implementation. All six native
 [server-memory jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39063863085)
-passed. Functional and final production acceptance are recorded separately in
-[the handoff](development-state.md).
+passed. [PR #163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163)
+records full functional and production acceptance.
 
 The [server](../tests/web/server.fwp) answers sequential HTTP/2 `GET /hello`
 requests from an ordinary native ARC client. The client consumes and releases
@@ -2549,7 +2549,8 @@ compares that arrangement with one shared copy of the **same check**. It adds
 `noinline` to the existing helper; it removes no check and adds no wrapper.
 The source is `e5bc8531`, tag `evidence/http-server-costs-20261017`; both jobs in
 [the experiment](https://github.com/e6qu/fun-with-pipes/actions/runs/39059315375) passed.
-The selected runtime change still needs final production acceptance.
+The runtime change is accepted in
+[PR #163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163).
 
 Both variants use identical checked-ARC generated C, Clang 18.1.3, `-O2` and
 `-ffp-contract=off`. Linux AMD64 uses an AMD EPYC 7763 runner; Linux ARM64 uses
@@ -2592,7 +2593,7 @@ reduction, with correctness and server-memory acceptance tracked separately.
 ## Fixed function values in the HTTP server
 
 A function value can store the operation to call and arguments already supplied.
-Those stored arguments are its captures. The current compiler candidate avoids
+Those stored arguments are its captures. The compiler avoids
 rebuilding such a record when every capture is itself a fixed function with no
 captures. It puts one record in program storage and initializes its addresses at
 startup. Runtime strings, requests and other captured data keep ordinary owners.
@@ -2671,4 +2672,76 @@ stays constant across request counts; the largest post-warm-up RSS increase is
 function-record bytes and alignment in all twelve ordinary server binaries,
 including tracing controls. Linux startup instructions additionally match all
 618 captured addresses. No downloaded binary was executed locally.
-The [handoff](development-state.md) tracks final production acceptance separately.
+[PR #163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163)
+records final production acceptance.
+
+## Generated REST and MCP server memory
+
+REST exposes exported functions as HTTP endpoints; MCP exposes them as tools over
+HTTP or standard input. This [six-host report](measurements/server-entries-2026-10-18.json)
+compares **tracing and checked ARC at the same fwp source**, `8dfc014d`, retained
+by `evidence/server-entries-20261018`. All 18 memory jobs in
+[the runner suite](https://github.com/e6qu/fun-with-pipes/actions/runs/39078070919)
+pass. Functional test repairs and final production acceptance are tracked in
+[the handoff](development-state.md). These measurements contain the exact-number
+JSON repair; the earlier lossy-number baseline is not equivalent work.
+
+The [server fixture](../tests/fixtures/server_entries.fwp) copies records, returns
+two aliases of a record, succeeds or raises a caught error, and supports normal
+shutdown. MCP standard-input cycles produce eight replies covering these cases,
+invalid arguments, malformed JSON and an unknown method; notifications produce
+no reply. Runs use 1, 16 and 128 cycles. Both freeing modes finish with zero
+counted bytes on every host. A deliberately non-freeing tracing control leaves
+58,400, 897,680 and 7,164,304 bytes, proving that this workload detects retention.
+
+HTTP cycles make three pooled HTTP/2 requests: copy a record, return duplicate
+aliases, and raise a caught error. An ordinary native ARC client prints every
+status and body; both ordinary and counted native servers must match a raw
+interpreter's responses. REST runs with and without TLS encryption; MCP uses
+plain HTTP. Each mode/transport/count has three fresh server processes at
+1, 16 and 128 cycles, followed by a normal HTTP/1.1 shutdown request.
+
+Counters cover startup after constant initialization through normal cleanup,
+including background work and the shutdown request. Collection is disabled and
+counted freeing enabled in both compared modes. The table gives the difference
+between the 16- and 128-cycle samples divided by the additional replies/requests;
+HTTP uses median counters. These averages are not isolated primitive costs.
+
+| Workload | Managed allocations per additional reply/request | Reference-count increments |
+|---|---:|---:|
+| MCP standard input, eight-reply mix | 237.375 | 457.625 |
+| REST HTTP/TLS, three-request mix | about 874.3–874.5 | about 2,426–2,427 |
+| MCP HTTP, three-request mix | about 796.3–796.6 | about 1,969–1,970 |
+
+Tracing and ARC have the same count levels, with small differences from background
+work in some HTTP samples. Excluding tracing does not eliminate these allocations
+or reference-count operations. Requested payload bytes, peaks and raw samples
+are retained in the report. Managed counters exclude raw transport/TLS/OS storage,
+allocator metadata and client memory.
+
+Separate ordinary servers handle five batches of 1,024 cycles, or 15,360 requests
+per case. A fresh client handles each batch; the 1,000-request connection limit
+also exercises replacement. After the client exits and 100 ms settling, Linux
+VmRSS, macOS RSS or Windows WorkingSet64 measures resident process memory. The
+first sample warms caches; later samples must stay less than 8 MiB higher.
+These are settled samples, not process-memory peaks.
+
+| Host | Final managed HTTP bytes, both modes | Largest sampled increase after warm-up |
+|---|---:|---:|
+| Linux AMD64 | 1,792 | 2,048 KiB |
+| Linux ARM64 | 6,144 | 80 KiB |
+| macOS ARM64 | 640 | 128 KiB |
+| macOS AMD64 | 640 | 200 KiB |
+| Windows AMD64 | 1,024 | 120 KiB |
+| Windows ARM64 | 896 | 0 KiB |
+
+The report retains hardware and compiler output for every job. Builds use native
+`-O2` with separate floating multiplication/addition rounding: Clang 18.1.3 on
+Linux, Apple Clang 17 on macOS and LLVM-MinGW Clang 23.1.3 on Windows. No elapsed
+time was measured, so this is neither a speedup claim nor a C/Rust overhead comparison.
+
+Inspection reads all 42 saved executable files: native architecture, section sizes
+and tracing symbols. All 18 ARC files exclude tracing; all 24 tracing controls
+retain it. MCP uses the same executable for HTTP and standard input, so separately
+saved copies can be identical. Each file's artifact path and fingerprint are
+recorded. Downloaded binaries were inspected as data and never executed locally.

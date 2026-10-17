@@ -181,6 +181,62 @@ fn assert_precision_replies(output: &Output) {
 }
 
 #[test]
+fn exact_json_and_csv_values_and_traps_match_in_all_memory_modes() {
+    let dir = fwp::cgen::TempDir::new("entry-numeric-codecs").unwrap();
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/run");
+    for name in [
+        "json_exact_numbers",
+        "rest_csv_numbers",
+        "trap_json_number",
+        "trap_json_typed_number",
+        "trap_json_depth",
+    ] {
+        let source = root.join(format!("{name}.fwp"));
+        let expected = std::fs::read_to_string(source.with_extension("out")).unwrap();
+        let compare = |label: &str, output: Output| {
+            let mut actual = String::from_utf8(output.stdout).unwrap();
+            if !output.stderr.is_empty() {
+                actual.push_str("--- stderr\n");
+                actual.push_str(&String::from_utf8(output.stderr).unwrap());
+            }
+            let code = output.status.code().expect("codec process exited normally");
+            if code != 0 {
+                actual.push_str(&format!("--- exit {code}\n"));
+            }
+            assert_eq!(actual, expected, "{name}: {label}");
+        };
+        compare(
+            "raw interpreter",
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .args(["run", "--interp"])
+                .arg(&source)
+                .env("FWP_NO_OPT", "1")
+                .output()
+                .unwrap(),
+        );
+        for (mode, opt) in [("arc", "-O2"), ("tracing", "-O1"), ("tracing", "-O2")] {
+            let exe = dir.join(format!("{name}-{mode}-{opt}.exe"));
+            checked(
+                Command::new(env!("CARGO_BIN_EXE_fwp"))
+                    .args(["build", "--gc", mode, opt, "-o"])
+                    .arg(&exe)
+                    .arg(&source),
+            );
+            let stress = if mode == "tracing" { "1" } else { "0" };
+            compare(
+                &format!("{mode} {opt}"),
+                Command::new(&exe)
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress)
+                    .output()
+                    .unwrap(),
+            );
+        }
+    }
+}
+
+#[test]
 fn mcp_stdio_aliases_errors_and_notifications_match_raw_interpreter() {
     let dir = fwp::cgen::TempDir::new("mcp-entry").unwrap();
     eprintln!("MCP entries: raw interpreter reference");

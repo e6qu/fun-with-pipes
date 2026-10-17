@@ -282,8 +282,8 @@ Other list builders use the same owner records for pending elements and partial
 results. `repeat` and `chunks` keep each duplicated field protected until its
 node exists. `scan` and `iterate` keep earlier states alive while a callback
 borrows the current state. Traps release completed states and temporary buffers.
-These rules preserve callback and retain order; the handoff records acceptance
-of the latest failure-cleanup repairs.
+These rules preserve callback and retain order; [delivery history](roadmap-history.md)
+records acceptance of the failure-cleanup repairs.
 
 ### Hashing borrowed values
 
@@ -291,8 +291,8 @@ of the latest failure-cleanup repairs.
 streams bytes directly into the hash state, preserving widths, little-endian
 order, float bits and container order. It borrows arrays and nested fields without
 allocating an encoded copy or adjusting their reference counts. The interpreter's
-buffered encoder remains an independent reference. The handoff records acceptance;
-allocation removal does not by itself establish a wall-time improvement.
+buffered encoder remains an independent reference. [PR #151](roadmap-history.md#synchronous-wasi-ownership-and-streaming-hashes-pr-151)
+records acceptance; allocation removal alone does not establish a timing improvement.
 
 ## Runtime
 
@@ -417,14 +417,15 @@ Client connection I/O tasks have one scheduler owner. Their records release
 when execution finishes and their stacks and scheduler links have been removed;
 this path needs no task reference-count updates. Language-visible task handles
 retain the shared-owner policy because callers can keep independent aliases.
-Server jobs also have explicit owners; the HTTP extension is under validation. Connection records
+Server jobs also have explicit owners, including the accepted HTTP extension. Connection records
 can outlive their sockets while response readers retain status information;
 the pool, I/O tasks and callers hold separate storage owners. Library teardown
 closes these connections before waiting for their tasks. The
 [ownership guide](ownership.md) and [measured comparison](benchmarks.md#freeing-closed-connections-and-finished-tasks)
 describe the limits. Checked gRPC client/service builds add iterator scope
 checks and use these owners; [PR #161](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161)
-records passing production acceptance. HTTP handler acceptance is separate.
+records passing production acceptance; HTTP handlers are accepted in
+[PR #163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163).
 
 Accepted HTTP client support gives pooled connections, I/O tasks and requests
 explicit owners. Responses are copied into typed fields and lists with cleanup
@@ -437,7 +438,8 @@ survives failure before child tasks finish. The reader's 64 KiB scratch buffer
 stays on its stack because processing copies each chunk before the next read.
 Six-host binary and server-memory evidence, with Linux stack measurements, is in the
 [measurement report](benchmarks.md#http-server-ownership-and-memory);
-[the handoff](development-state.md) tracks acceptance.
+[PR #163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163)
+records acceptance.
 
 The server measurement also exposed periodic socket retry delays on macOS and
 Windows. Their scheduler now queries all parked sockets together with poll or
@@ -539,8 +541,7 @@ main/function/CLI entries use the same ownership checks and free counted storage
 through their existing external count table. Checked gRPC clients and service
 methods additionally prove when sent and received iterator steps run; the
 [service guide](services.md#building-without-tracing-collection) explains the
-command and current validation. HTTP clients are accepted in PR #162; server
-ownership is under validation.
+command and validation. HTTP clients and servers are accepted in PRs #162/#163.
 Generated REST and MCP entries now go through the ordinary ownership checks;
 their native execution and memory acceptance are being established in the
 [handoff](development-state.md). They decode requests, call exported functions

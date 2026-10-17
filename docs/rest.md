@@ -498,6 +498,8 @@ library ([stdlib.md](stdlib.md#json)), with `json.encode-value` and
 F128 precision. Use `json.encode-value` to construct JSON from a typed value and
 `json.decode` to recover the chosen type. `json.as-number` explicitly converts to
 F64 and has F64 rounding. Different number spellings remain distinct JSON values.
+REST CSV responses also retain the typed numeric spelling: an F64 value of twelve
+is written as `12.0`, and large integers are not rounded through F64.
 
 The interpreter and native programs use the same encodings:
 
