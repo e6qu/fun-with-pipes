@@ -73,36 +73,32 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #157](https://github.com/e6qu/fun-with-pipes/pull/157) is accepted after all
-nine production jobs and documentation passed. Finished client requests and
-unread messages release through explicit owners. Selecting a field from a
-uniquely owned heap record avoids retaining it again. Earlier deliveries released
-stream caches and moved closure captures. The [history](docs/roadmap-history.md)
-records exact acceptance; these changes do not complete GC removal.
+[PR #158](https://github.com/e6qu/fun-with-pipes/pull/158) is accepted after all
+nine production jobs and documentation passed. Closed client connections and
+completed I/O tasks now release explicitly; library unload closes idle
+connections before draining their tasks. Earlier deliveries released request
+and stream storage and moved unique fields/closure captures. These changes do
+not complete GC removal; [history](docs/roadmap-history.md) records acceptance.
 
-The current delivery frees closed client connections and finished background
-I/O tasks. It separates the lifetime of a socket from the lifetime of its record,
-which older response readers may still need. The scheduler owns each client
-I/O task exclusively, so disposing it needs no task reference-count updates.
-Library unload closes idle connections before draining tasks, and fatal
-allocation failures preserve their intended errors without entering unload
-from a task stack. No language syntax changes are involved.
+The next delivery frees client input iterators and finished sender records,
+including failure and cancellation. Unique iterator nodes transfer the function
+that produces their next value; shared nodes preserve it for older readers.
+All six focused native hosts pass semantic, cleanup, alias and stress/reuse
+checks, with constant remaining storage across 1/16/256 calls. Complete-input
+allocation counts are unchanged. Count traffic falls relative to the first
+ownership probe, but remains higher than the original tracing-dependent version.
+[The comparison](docs/benchmarks.md#input-owners-and-moves-bounded-memory-with-measured-count-costs)
+explains the remaining costs. Full production acceptance is required before merge.
+This delivery also includes the reproducible server baseline below.
 
-All six focused native jobs verify complete connection/request/message release
-and constant remaining managed storage across 1/16/256 batches, with collection
-disabled and physical freeing enabled. Alias, failure/cancellation and stress/reuse
-checks pass; actual ARM64/AMD64 binaries confirm direct unique-task freeing.
-Allocation requests stay unchanged; connection sharing adds three count
-increments per connection. Full production acceptance still requires all nine jobs and docs.
-[The comparison](docs/benchmarks.md#memory-after-closing-connections-and-finishing-their-io-tasks)
-explains inputs, revisions, allocation costs and excluded memory.
-
-Next, measure pending sender inputs before giving their iterators explicit typed
-owners; cover ordinary, retained and early-completion clients. Preserve the
-existing order of evaluating the next input and encoding the current value.
-Then address retained server callbacks and channels, without turning borrowed
-scheduler back-pointers into owning cycles. Remote calls remain excluded from
-checked ARC until their complete lifetimes and cycles are proved.
+The server-process baseline now passes on all six native hosts. Greeting,
+returned-stream, sent-stream and output-channel workloads retain increasing
+managed storage after calls/tasks finish and connections close. Use these
+measurements to establish owners for decoded arguments, returned values,
+retained incoming iterators, callbacks/channels and serving tasks. Cover failure
+and cancellation as well as success, without turning
+borrowed scheduler back-pointers into owning cycles. Remote calls remain excluded
+from checked ARC until their complete lifetimes and cycles are proved.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

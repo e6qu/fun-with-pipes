@@ -1,0 +1,31 @@
+import greeter
+
+# const 1 ignores the batch number and starts a new sequence at one.
+# take limits it to 64 integers; map turns them into word-1 through word-64.
+make-input : I64 -> Iterator[String]
+make-input =
+    const 1
+    | iter.count-from
+    | iter.take 64
+    | iter.map (show | flip concat "word-")
+
+lengths = iter.map string.length | iter.fold add 0
+
+# both keeps the original iterator while the remote call consumes its view.
+# Reading the original again gives the same lengths: 439 + 439 = 878 per batch.
+consume : I64 -> I64
+consume = make-input | both (greeter.shout | lengths) lengths | uncurry add
+
+step = curry (both .0 (.1 | consume) | uncurry add)
+
+main =
+    ()
+    | args
+    | head
+    | option.and-then parse-int
+    | (match
+        Some _ -> id
+        None -> "expected a numeric batch count" | fail)
+    | flip iter.take (iter.count-from 0)
+    | iter.fold step 0
+    | echo

@@ -4,100 +4,112 @@ Updated 2026-10-17 UTC. All seven work areas in [PLAN.md](../PLAN.md) remain ope
 
 ## Current delivery
 
-Branch `free-closed-connections` starts at accepted #157 merge
-`30668bf83894b9a3739cc24ba8ba63911826da2d`. It frees closed client connections
-and completed I/O task records, closes idle connections during library unload,
-and repairs fatal allocation errors on task stacks. No syntax changes.
-[PR #158](https://github.com/e6qu/fun-with-pipes/pull/158) is open at
-`2e747ce652f97d19e26737b5ac3d271cd66dc3ca` failed production `39008557317`:
-two ARM Mac allocation-failure tests still intercepted `exit`, while the runtime
-now terminates fatal allocation failures with `_Exit`. Both test hooks are
-repaired; runtime behavior is unchanged. Docs `39008557262` passed. The merge
-watch stopped without merging. Publish the repair and require fresh exact-head
-production and documentation gates. Keep one active delivery PR at a time.
+Branch `free-sender-inputs` starts at accepted #158 squash
+`a96871c9e97e06da5a1187d53d198fbdfe6ed970`. #158 passed all nine production jobs
+in `39011071759` and docs in `39011071706` at `30036a15`. Its tested tree,
+parent and complete one-line message were verified. Duplicate postmerge
+production `39016152665` is confirmed cancelled; preserve dependency jobs.
+Private acceptance record: `/private/tmp/fwp158-merge-record.json`.
 
-#157 passed all nine production jobs in `39004098429` and documentation in
-`39004095234` at `57d2a09eee4937ad644721f73e286b9fc94a2c25`.
-The squash tree, parent and complete one-line message were verified; duplicate
-postmerge production `39007997287` was canceled. See [history](roadmap-history.md).
-Private acceptance record: `/private/tmp/fwp157-merge-record.json`.
+This delivery combines input cleanup, failure/cancellation repairs, unique
+continuation moves and the six-platform server baseline. It transfers preparation
+`9a4e2ace` from `/private/tmp/fwp-sender-input-owners` while preserving #158's
+later allocation-test repairs. No server ownership implementation is included.
+Keep one delivery PR at a time. Publication/full production acceptance is next.
+Transfer checks preserved both accepted allocation-test repairs. Root formatting
+passed in 1.29s and documentation audit in 3.34s; `git diff --check` passed.
 
-## Evidence and remaining acceptance
+## Input ownership evidence
 
-The closed-connection baseline `4103b0a09f06cae69721c29151571ba9e9a621b9`
-passes all six native jobs in `39002767125`, retained by
-`evidence/closed-remote-baseline-20261017`. Its report and raw tables are
-[retained here](measurements/closed-remote-baseline-2026-10-17.json).
-It closes every connection and finishes its I/O tasks, but leaves additional
-managed storage per connection: Linux AMD64 3,904 bytes, ARM64 12,608;
-either Mac 1,600; Windows AMD64 2,368, ARM64 2,112.
+The compiler supplies concrete input destruction metadata. Cursors own current
+and pending iterator nodes, keeping elements alive through lookahead and encoding.
+Synchronous cursors stay on the stack; detached senders embed them in their
+existing records. Sender records and scheduler task records have unique owners.
+Unique iterator nodes move their continuations; shared nodes preserve them for
+older readers. Native request reset on input/channel failures now matches the
+interpreter, and both engines check cancellation before a sender evaluates input.
 
-The final focused candidate is `3a773a85bb147ea8e7acb03ffa1eeeba59c2d4d8`,
-run `39007195648`, with all six native jobs passing. The source tag is
-`evidence/closed-remote-ownership-20261017`; the
-[final report](measurements/closed-remote-ownership-2026-10-17.json) retains raw
-checkpoint/drain tables and actual Linux AMD64/ARM64 binary reviews. Collection
-passed in 23.82s. All connections, requests and messages release without GC;
-final managed bytes stay constant across 1/16/256 full, partial and retained
-batches: Linux AMD64 1,792, ARM64 6,144; either Mac 640;
-Windows AMD64 1,024, ARM64 896. Allocation requests/bytes are unchanged.
-Shared connections add three count increments each; unique task cleanup adds none.
-See [the guide](benchmarks.md#freeing-closed-connections-and-finished-tasks) for
-measurement boundaries, baseline values and remaining costs.
+All six native hosts pass run `39013126818` at
+`06f3ac6ff8fbf2ee5616511c6b968388fac4f3f2`, retained under
+`evidence/sender-input-ownership-20261017`. The
+[final report](measurements/sender-input-ownership-2026-10-17.json) includes raw
+tables and actual Linux ARM64/AMD64 instruction reviews. Its
+[baseline](measurements/sender-input-baseline-2026-10-17.json) is `f6ebb2e9`,
+tag `evidence/sender-input-baseline-20261017`, six-host run `39009268395`.
 
-Transferred compiler/runtime/test/workflow files matched the measured candidate.
-Final review then restored the existing recoverable server TLS protocol-list
-allocation path and added its failure regression check. This is outside the
-measured client workload; its validation awaits the full production gate.
-Earlier failing probes exposed and repaired fixture mutations, starvation in a
-drain fixture, unique tasks incorrectly sent through a counted-free helper and
-Windows artifact filenames. Partially passing probes are not acceptance.
+Across 1/16/256 calls, all four modes leave constant final managed bytes:
+Linux AMD64 1,792, Linux ARM64 6,144, either Mac 640, Windows AMD64 1,024,
+Windows ARM64 896. Collection is off and physical freeing on. All connections,
+requests and messages release, and sender/I/O tasks finish. Complete-input
+allocation counts are unchanged; background sender headers request eight more
+bytes each but occupy the same allocator class. At 256 calls, count increments
+are 18,946 synchronous, 184,322 bidirectional and 248,578 with retained input,
+versus baseline 17,922 / 150,274 / 181,762. These exceed the baseline but improve
+on the first ownership probe's 66,818 / 280,578 / 344,834.
 
-Actual binary review confirms last-owner connection cleanup and direct unique-task
-freeing after stack/link removal, without task reference-count updates. Private
-artifacts are under `/private/tmp/fwp-closed-client-evidence/39007195648`;
-downloaded executables have not run locally. No speed or C/Rust parity claim.
+[The guide](benchmarks.md#input-owners-and-moves-bounded-memory-with-measured-count-costs)
+explains outputs, sizes, remaining costs, variable early-completion work and
+excluded memory. There is no timing or C/Rust comparison. Count-one checks still
+read runtime allocation metadata; remote checked ARC remains unsupported.
 
-Next: publish the allocation-failure fixture repairs and inspect the new gates; require all nine production jobs
-plus documentation at the exact head before authorized squash merge. Use the explicit subject
-`Free closed connections and finished I/O tasks` and an empty body; verify the
-resulting tree, parent and complete message. Queued gates merge, not independent
-preparation; fix test failures. Do not push status-only updates during final gates.
+Passing checks cover retained input, chained senders, real failing-input clients
+against both server engines, continuation/encoding traps, blocked writes,
+pre-entry cancellation, retain overflow, GC stress and reuse. Deliberately broken
+variants prove detection of missing releases, mutation of shared nodes and
+omitted cancellation/reset. Earlier failures are repaired; no focused check is
+outstanding. Full production acceptance remains required on the delivery head.
 
-## Local checks and next preparation
+Next: finish transfer checks and publish this one delivery PR with a plain
+explanation of the memory improvement and remaining count costs. Require all
+nine production jobs plus documentation on its final commit before authorized
+squash merge. Use one subject of at most 80 characters, an empty body and no
+trailers or attribution. Fix failing checks; queued CI gates merge, not preparation.
 
-Use the root `scripts/local-guard.py` with fixed limits for serial local checks.
-Native builds, full suites and measurements run on GitHub. Final `cargo fmt --all -- --check` passed under the guard in 1.32s;
-`python3 scripts/check-roadmap.py` passed under the guard in 3.32s. Baseline
-collection passed in 28.43s; static final binary inspection took 0.14–0.16s.
-No local native build or full test suite ran.
+## Server baseline bundled with this delivery
 
-Connection preparation `/private/tmp/fwp-client-connection-owners` preserves the
-measured source. Input preparation `/private/tmp/fwp-sender-input-owners`, branch
-`own-sender-inputs`, starts at #158's exact head and has no PR. Its own handoff
-tracks the detailed work. Linux baseline `39008824856` passes at `ef69079d`:
-remaining managed bytes grow by 7,104 per synchronous call and 13,104 per
-bidirectional/retained call after connection cleanup. Actual AMD64 binaries
-confirm entry sharing and unowned iterator advancement. The baseline source is
-frozen at `f6ebb2e9` under `evidence/sender-input-baseline-20261017`; six-host
-run `39009268395` passes on every host. The preparation report and raw tables
-were collected under the root guard in 24.24s, with actual Linux ARM64/AMD64
-binary reviews; this is baseline evidence, not candidate acceptance.
+The measurement foundation from `/private/tmp/fwp-server-request-baseline` is
+included in this worktree: the ignored server test, fixture, workflow suite,
+strict collector and static-binary inspector. Its report and raw tables are
+[retained here](measurements/server-call-baseline-2026-10-17.json). All six hosts
+pass run `39014733093` at `0643295938a432cefedb4a3d0c1f263aa9482ee2`, tag
+`evidence/server-call-baseline-20261017`. Production server ownership is unchanged.
 
-Candidate `81e2586e0192a8d71bdac002a078122d8c1aa7de` supplies concrete input
-destruction metadata, keeps current/pending nodes alive through lookahead and
-encoding, and uniquely owns completed senders/tasks. Linux run `39010422154` failed because a fixture expected a reset request to
-still have its active-list owner. That expectation is now repaired locally.
-Earlier probe `39009844155` exposed a fixture early-exit defect, also repaired. Tests include retained input aliases, continuation/encoding failure,
-cancellation and deliberately missing release operations. Formatting and docs
-pass under the root guard; no local native builds. Private artifacts/notes are
-`/private/tmp/fwp-sender-input-evidence` and
-`/private/tmp/fwp-next-connection-ownership.md`. Do not copy preparation plans
-or history over the accepted root documents.
+Four workloads measure server memory after 1/16/256 completed calls and client
+connection closure. A measurement-only wake of the existing listener lets the
+scheduler retire its last finished task; this creates no extra task/connection.
+Storage grows on every host. At 256 calls Linux AMD64 retains 721,248 / 2,486,624 /
+1,753,440 / 971,104 bytes for greetings / returned streams / sent streams /
+channel output. Actual ARM64/AMD64 reviews confirm traced task/job retention and
+unowned user-method/response-iterator application. These measurements exclude
+client memory and timing. Collection passed under the root guard in 21.62s.
 
-Pending sender values, server callbacks/channels, host re-entry, remaining
-numerical/network ownership and cycle policies remain open. Remote calls still
-require tracing; this batch does not admit them to checked ARC. JIT is excluded.
+Independent preparation `/private/tmp/fwp-server-call-owners`, branch
+`own-server-call-storage`, starts at input preparation `9a4e2ace`. Candidate
+`ebc1590d` failed Linux probe `39016150516`: the peer-lifetime fixture renamed
+the allocator function definition along with its calls. Ordinary networking
+checks passed; repair the fixture before collecting server measurements. It frees job/task records while
+preserving retained serving contexts and scoped task identities. It has no PR
+and is unverified; do not copy it into this validated input delivery. Its handoff
+tracks candidate controls and remaining server values/connections. Transfer only
+its later delta after input acceptance, preserving current root fixes/history.
+
+Combined sampler probe `39015439403` passes on Linux at `9a4e2ace`, validating
+integration of the server instrumentation with input ownership. Its final table
+comparison with the frozen server baseline is still to collect.
+
+## Checks and artifacts
+
+Use the root `scripts/local-guard.py` with fixed limits. Native builds, full
+suites and measurements run on GitHub; no downloaded executable has run locally.
+Final report collection passed in 13.06s; each architecture's static inspection
+passed in 0.15s. Completed Windows/ARM Mac artifact collection took 11.50s. Formatting passed
+in 1.30s; the combined documentation audit passed in 3.37s. Report-wide
+checks confirmed stable server repetitions and unchanged complete-input allocation
+counts in 0.14s.
+Private artifacts are under `/private/tmp/fwp-sender-input-evidence`.
+
+Server/HTTP lifetimes, host re-entry, numerical ownership, cycle policies and
+the broader work areas remain open. JIT is excluded.
 
 ## Roadmap status
 

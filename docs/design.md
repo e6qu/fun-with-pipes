@@ -395,6 +395,17 @@ closes these connections before waiting for their tasks. The
 [ownership guide](ownership.md) and [measured comparison](benchmarks.md#freeing-closed-connections-and-finished-tasks)
 describe the limits; remote checked ARC remains unsupported.
 
+The input-ownership candidate gives remote input iterators concrete destruction
+metadata. Its cursor keeps the current element alive while advancing to the
+next node and encoding that element. Synchronous cursors live on the stack;
+background senders embed the cursor in their existing record. The candidate
+also resets requests on input-production and response-channel delivery failure,
+matching the interpreter. Unique nodes transfer their continuation to the call;
+shared nodes preserve it for older readers. All six focused native hosts pass
+cleanup and semantic checks. [The comparison](benchmarks.md#input-owners-and-moves-bounded-memory-with-measured-count-costs)
+records bounded memory and remaining count costs; full production acceptance
+is tracked in [the handoff](development-state.md).
+
 When a compiled program has no tasks or services, its runtime primitives omit
 task-slice checks as well as function-entry checks. Programs that can schedule
 tasks retain both. WebAssembly Asyncify's stack-bound checks remain active.

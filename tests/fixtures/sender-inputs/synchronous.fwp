@@ -1,0 +1,20 @@
+import greeter
+
+# Each call sends integers 1 through 64 and receives their sum, 2080.
+# const 1 ignores the batch number; the iterator is constructed for each call.
+consume : I64 -> I64
+consume = const 1 | iter.count-from | iter.take 64 | greeter.total
+
+step = curry (both .0 (.1 | consume) | uncurry add)
+
+main =
+    ()
+    | args
+    | head
+    | option.and-then parse-int
+    | (match
+        Some _ -> id
+        None -> "expected a numeric batch count" | fail)
+    | flip iter.take (iter.count-from 0)
+    | iter.fold step 0
+    | echo

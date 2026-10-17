@@ -16,6 +16,14 @@ main = [
     [1, 2, 3, 4] | iter.from-list | greeter.total | echo,
     ["a", "b"] | iter.from-list | greeter.shout | iter.to-list | echo,
     1 | iter.count-from | greeter.firsts | iter.to-list | echo,
+    # A remote response can become the next call's input on the same connection.
+    # Sum all 64 values, then keep an older reader while another sum runs.
+    64 | greeter.count | greeter.total | echo,
+    64 | greeter.count | both greeter.total (iter.take 1 | iter.to-list) | echo,
+    # Early completion abandons the unused upstream values. Chained shout calls
+    # exercise two background senders while preserving the strings.
+    64 | greeter.count | greeter.firsts | iter.to-list | echo,
+    ["a", "b"] | iter.from-list | greeter.shout | greeter.shout | iter.to-list | echo,
     "Bob" | attempt greeter.lookup | echo,
     "ghost" | attempt greeter.lookup | echo,
     grpc.with-metadata [("X-User", "carol")] greeter.whoami | echo,

@@ -402,6 +402,7 @@ struct RemoteSpec {
     id: FuncId,
     remote: RemoteFn,
     rpc: RpcSpec,
+    input_drop: String,
 }
 
 struct Gen<'p> {
@@ -6973,6 +6974,13 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                     params.iter().all(|(_, ty)| crate::ffi::scoped_argument(ty))
                         && crate::ffi::copied_result(&result)
                 });
+            let borrowed_remote_input = match &f.body {
+                Body::Remote(remote) => {
+                    crate::rpc::shape(&f.ty, f.arity as usize, remote.error.as_ref())
+                        .client_streaming()
+                }
+                _ => false,
+            };
             for i in 0..f.arity {
                 let foreign_borrow = matches!(f.body, Body::ForeignC { .. })
                     && crate::ffi::classify(self.prog, &f.locals[i as usize]).is_ok_and(|ty| {
@@ -6982,6 +6990,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                 if crate::rc::needs_rc(&self.prog.shapes, &f.locals[i as usize])
                     && !crate::rc::prim_reads_only(sym, i as usize)
                     && !foreign_borrow
+                    && !(borrowed_remote_input && i == 0)
                 {
                     let _ = writeln!(out, "    fwp_rc_share(l{});", i);
                 }
@@ -7675,6 +7684,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             Body::Remote(r) => {
                 let remote = (**r).clone();
                 let n = f.arity as usize;
+                let input_type = f.locals.first().cloned();
                 let rpc = self.rpc_spec(
                     &format!("{}.{}", remote.module, remote.method),
                     remote.path.clone(),
@@ -7684,7 +7694,17 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                     &remote.method,
                     remote.iter_fn,
                 )?;
-                self.remotes.push(RemoteSpec { id, remote, rpc });
+                let input_drop = if self.reuse && rpc.input != 0 {
+                    self.value_drop(input_type.as_ref().expect("streamed input argument"))
+                } else {
+                    "NULL".into()
+                };
+                self.remotes.push(RemoteSpec {
+                    id,
+                    remote,
+                    rpc,
+                    input_drop,
+                });
                 let args: Vec<String> = (0..n).map(|i| format!("l{}", i)).collect();
                 let _ = writeln!(
                     out,
@@ -9049,12 +9069,13 @@ static const fwp_exec_spec exec_spec{i} = {{
             let (def, init) = r.rpc.c(&format!("rs{}", r.id), &offs);
             let _ = writeln!(
                 remote_defs,
-                "{def}\nstatic const fwp_remote rs{id} = {{{what}, {env}, {addr}, {init}}};",
+                "{def}\nstatic const fwp_remote rs{id} = {{{what}, {env}, {addr}, {init}, {input_drop}}};",
                 id = r.id,
                 what =
                     c_string_literal(format!("{}.{}", r.remote.module, r.remote.method).as_bytes()),
                 env = c_string_literal(crate::protobuf::env_var(&r.remote.module).as_bytes()),
                 addr = c_string_literal(r.remote.default_addr.as_bytes()),
+                input_drop = r.input_drop,
             );
         }
         if let (Mode::Service, Some(svc)) = (&mode, &prog.service) {
