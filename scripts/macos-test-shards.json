@@ -46,6 +46,7 @@
     "grpc_tls_pool_identity",
     "hash_ownership",
     "http2_body_roots",
+    "http2_client_ownership",
     "io_error_ownership",
     "iteration_consumers",
     "iterator_fusion",

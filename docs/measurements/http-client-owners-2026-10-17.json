@@ -1,0 +1,1547 @@
+{
+  "source_revision": "8770c03ef7eb36e04c1f412c13090270aaf11526",
+  "source_tag": "evidence/http-client-memory-20261017",
+  "run_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/39052834580",
+  "comparison": "Current fwp tracing versus checked ARC; identical full HTTP client workloads. No earlier-compiler, C/Rust or timing comparison.",
+  "status": "All six hosts pass real HTTP comparisons and repeated memory measurements. Four full original jobs pass; the two Windows jobs pass in the linked repair runs after fixing the cancellation-probe header order. Final production acceptance remains separate.",
+  "sampling": "Current fwp tracing and checked ARC clients perform identical sequential pooled HTTP/2 GET /hello calls against an interpreted loopback server. Each response body is consumed/released and its status contributes 200 to the result. Inputs: 1, 16, 256 calls, cleartext and TLS; three separate instrumented processes per case, with raw interpreter and ordinary native output as controls. Native -O2, ordinary compiler optimization, -ffp-contract=off. Managed allocation requests/bytes, effective retains and allocator-charged peak/final storage start after constant initialization and end after entry execution and cached-value cleanup, before whole-runtime shutdown. GC is disabled and physical freeing enabled in both modes. Pooled connections and detached I/O tasks can remain at this sample. Raw network buffers, TLS/allocator/OS metadata, server memory, process RSS and timing are excluded. This compares memory modes at one revision, not before/after speed or C/Rust parity. Source, ordinary and instrumented C/binaries and raw results are retained.",
+  "cost_definition": "Managed allocation requests and effective retains include iterator/fold work, environment reads, request/options construction, URL parsing, connection selection and received response storage. They do not isolate raw HTTP/2 transport. The final sample precedes full runtime shutdown and includes pooled connection/task storage.",
+  "source_sha256": {
+    "tests/web/repeated-client.fwp": "4e05459a7873b088d6d40cde5f60a0f6294d4f8f786e68c72b6ac3af304f7bc2",
+    "tests/web/arc-client.fwp": "b1786ea754f71a44f063edef74e788be94f23a5ccd3fa45b6504c58eb0912877",
+    "tests/support/client_allocations.rs": "b5a5e3a8af0b606c7d60d12a1c03449f902536be4b8d458a3c48653a4a82cc53",
+    "tests/fixtures/grpc_client_memory.c": "e717c1cdf7903757930e4d1c29516f965b691a30cbf5e040b19fa79edc4226d1"
+  },
+  "validation": {
+    "complete_target_executions": 72,
+    "measured_rows": 216,
+    "inspected_binaries": 48,
+    "tracing_positive_controls": 24,
+    "arc_binaries_without_tracing_symbols": 24,
+    "audit": [
+      {
+        "job": 117454733276,
+        "targets": [
+          "grpc_client_receive.rs",
+          "grpc_client_requests.rs",
+          "grpc_connect_cleanup.rs",
+          "grpc_connect_startup.rs",
+          "grpc_connection_addresses.rs",
+          "grpc_tls_pool_identity.rs",
+          "http2_body_roots.rs",
+          "http2_client_ownership.rs",
+          "http2_peer_cleanup.rs",
+          "library_resources.rs",
+          "web.rs",
+          "web.rs"
+        ],
+        "results": [
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok"
+        ],
+        "failed_tests": []
+      },
+      {
+        "job": 117454733384,
+        "targets": [
+          "grpc_client_receive.rs",
+          "grpc_client_requests.rs",
+          "grpc_connect_cleanup.rs",
+          "grpc_connect_startup.rs",
+          "grpc_connection_addresses.rs",
+          "grpc_tls_pool_identity.rs",
+          "http2_body_roots.rs",
+          "http2_client_ownership.rs",
+          "http2_peer_cleanup.rs",
+          "library_resources.rs",
+          "web.rs",
+          "web.rs"
+        ],
+        "results": [
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok"
+        ],
+        "failed_tests": []
+      },
+      {
+        "job": 117454733425,
+        "targets": [
+          "grpc_client_receive.rs",
+          "grpc_client_requests.rs",
+          "grpc_connect_cleanup.rs",
+          "grpc_connect_startup.rs",
+          "grpc_connection_addresses.rs",
+          "grpc_tls_pool_identity.rs",
+          "http2_body_roots.rs",
+          "http2_client_ownership.rs",
+          "http2_peer_cleanup.rs",
+          "library_resources.rs",
+          "web.rs",
+          "web.rs"
+        ],
+        "results": [
+          "ok",
+          "ok",
+          "FAILED",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok"
+        ],
+        "failed_tests": [
+          "grpc_connect_and_handshake_release_pending_resources_on_cancellation"
+        ]
+      },
+      {
+        "job": 117454733443,
+        "targets": [
+          "grpc_client_receive.rs",
+          "grpc_client_requests.rs",
+          "grpc_connect_cleanup.rs",
+          "grpc_connect_startup.rs",
+          "grpc_connection_addresses.rs",
+          "grpc_tls_pool_identity.rs",
+          "http2_body_roots.rs",
+          "http2_client_ownership.rs",
+          "http2_peer_cleanup.rs",
+          "library_resources.rs",
+          "web.rs",
+          "web.rs"
+        ],
+        "results": [
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok"
+        ],
+        "failed_tests": []
+      },
+      {
+        "job": 117454733466,
+        "targets": [
+          "grpc_client_receive.rs",
+          "grpc_client_requests.rs",
+          "grpc_connect_cleanup.rs",
+          "grpc_connect_startup.rs",
+          "grpc_connection_addresses.rs",
+          "grpc_tls_pool_identity.rs",
+          "http2_body_roots.rs",
+          "http2_client_ownership.rs",
+          "http2_peer_cleanup.rs",
+          "library_resources.rs",
+          "web.rs",
+          "web.rs"
+        ],
+        "results": [
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok"
+        ],
+        "failed_tests": []
+      },
+      {
+        "job": 117454733470,
+        "targets": [
+          "grpc_client_receive.rs",
+          "grpc_client_requests.rs",
+          "grpc_connect_cleanup.rs",
+          "grpc_connect_startup.rs",
+          "grpc_connection_addresses.rs",
+          "grpc_tls_pool_identity.rs",
+          "http2_body_roots.rs",
+          "http2_client_ownership.rs",
+          "http2_peer_cleanup.rs",
+          "library_resources.rs",
+          "web.rs",
+          "web.rs"
+        ],
+        "results": [
+          "ok",
+          "ok",
+          "FAILED",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok",
+          "ok"
+        ],
+        "failed_tests": [
+          "grpc_connect_and_handshake_release_pending_resources_on_cancellation"
+        ]
+      }
+    ],
+    "windows_repair_source": "aacecfd54379bd6dab96e5aeef8957f0d0a5e01c",
+    "windows_repair_runs": [
+      "https://github.com/e6qu/fun-with-pipes/actions/runs/39054383589",
+      "https://github.com/e6qu/fun-with-pipes/actions/runs/39054388163"
+    ],
+    "windows_repair_completed_targets": 24,
+    "windows_repair_result": "Both full HTTP ownership, real-call and steady-memory suites pass; runtime/compiler source unchanged from the measurement revision."
+  },
+  "hosts": [
+    {
+      "host": "macos-15",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/39052834580/job/117454733466",
+      "job_conclusion": "success",
+      "http_comparisons": "pass",
+      "memory_measurement": "pass",
+      "raw_rows": "docs/measurements/http-client-owners-2026-10-17/macos-15.tsv",
+      "raw_sha256": "ae4979b6004f77a6f53b05ffbb04d5b3a08ee9360269dd8335bfffcd835a0327",
+      "final_charged_bytes": 2368,
+      "peak_charged_bytes": [
+        5328,
+        5392
+      ],
+      "representative_rows": [
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "1",
+          "repetition": "1",
+          "requests": "272",
+          "requested_bytes": "9396",
+          "retains": "592",
+          "peak_charged_bytes": "5328",
+          "final_charged_bytes": "2368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "16",
+          "repetition": "1",
+          "requests": "3827",
+          "requested_bytes": "105533",
+          "retains": "8737",
+          "peak_charged_bytes": "5392",
+          "final_charged_bytes": "2368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "256",
+          "repetition": "1",
+          "requests": "60707",
+          "requested_bytes": "1643695",
+          "retains": "139057",
+          "peak_charged_bytes": "5392",
+          "final_charged_bytes": "2368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "1",
+          "repetition": "1",
+          "requests": "311",
+          "requested_bytes": "10435",
+          "retains": "692",
+          "peak_charged_bytes": "5328",
+          "final_charged_bytes": "2368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "16",
+          "repetition": "1",
+          "requests": "3866",
+          "requested_bytes": "106662",
+          "retains": "8837",
+          "peak_charged_bytes": "5392",
+          "final_charged_bytes": "2368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "256",
+          "repetition": "1",
+          "requests": "60746",
+          "requested_bytes": "1646264",
+          "retains": "139157",
+          "peak_charged_bytes": "5392",
+          "final_charged_bytes": "2368",
+          "collections": "0"
+        }
+      ],
+      "hardware": {
+        "platform": "macOS-15.7.9-arm64-arm-64bit-Mach-O",
+        "cpu": "machdep.cpu.cores_per_package: 3\nmachdep.cpu.core_count: 3\nmachdep.cpu.logical_per_package: 3\nmachdep.cpu.thread_count: 3\nmachdep.cpu.brand_string: Apple M1 (Virtual)\nhw.memsize: 7516192768\n",
+        "c": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+      },
+      "binaries": [
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "workload": "functional",
+          "file": "tracing-O1.exe",
+          "file_bytes": 1733360,
+          "sha256": "544b643fc1f96af3a583bc2d5d3a792576df5c3793103135042a556b31df0d1a",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "Mach-O 64-bit executable arm64\n",
+          "http_entry": "f330",
+          "code_bytes": 1373436,
+          "source_sha256": "98aeb0c17f7c5549cfb47fd8b9a5018e881a44f4449c03685b876bd954a5f6a9"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "functional",
+          "file": "tracing-O2.exe",
+          "file_bytes": 1650688,
+          "sha256": "e36ab66c3619fbeeee97aca839e27c6c8e4ce9862489a7a8d22bf312ecd8e628",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "Mach-O 64-bit executable arm64\n",
+          "http_entry": "f330",
+          "code_bytes": 1284856,
+          "source_sha256": "98aeb0c17f7c5549cfb47fd8b9a5018e881a44f4449c03685b876bd954a5f6a9"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "workload": "functional",
+          "file": "arc-O1.exe",
+          "file_bytes": 1915224,
+          "sha256": "a67a88030506ddb5f28d9733621596f359dc0587515966632c6297b181683346",
+          "tracing_symbols": [],
+          "format": "Mach-O 64-bit executable arm64\n",
+          "http_entry": "f330",
+          "code_bytes": 1553520,
+          "source_sha256": "a420f8ce3c43ab11610e5ffab85fefa5ce7f531f7bd79a00dc690fb397985469"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "functional",
+          "file": "arc-O2.exe",
+          "file_bytes": 1799464,
+          "sha256": "57e6bae9dce0996487b38fbe09b00e626349b58b2018b5a6b4c0a462874f0556",
+          "tracing_symbols": [],
+          "format": "Mach-O 64-bit executable arm64\n",
+          "http_entry": "f330",
+          "code_bytes": 1442008,
+          "source_sha256": "a420f8ce3c43ab11610e5ffab85fefa5ce7f531f7bd79a00dc690fb397985469"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "repeated",
+          "file": "memory/tracing.exe",
+          "file_bytes": 1512296,
+          "sha256": "8137289f3eb635cc53de0f129aff9e6d46ecedabc7c7052be593f50597044b93",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "Mach-O 64-bit executable arm64\n",
+          "http_entry": "f314",
+          "code_bytes": 1173456,
+          "source_sha256": "448237825050876c9ff2e77105c0ed29ce5d0109b47f5d118d02d009dd4fa9d7"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "repeated-measured",
+          "file": "memory/tracing-measured.exe",
+          "file_bytes": 1595080,
+          "sha256": "75030e91689b5ca9003ed7871297700451da3bc7cc6850ee98ecd9909cf77137",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "Mach-O 64-bit executable arm64\n",
+          "http_entry": "f314",
+          "code_bytes": 1256768,
+          "source_sha256": "5bc998d33841959ad9ca50c23a9d967fe820ba00a382e5b0b40bab6206bb6b85"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "repeated",
+          "file": "memory/arc.exe",
+          "file_bytes": 1661096,
+          "sha256": "d4b5f0d10c2003818844a65284aa1c1f4eeb372b50847045478984480c0ab478",
+          "tracing_symbols": [],
+          "format": "Mach-O 64-bit executable arm64\n",
+          "http_entry": "f314",
+          "code_bytes": 1326064,
+          "source_sha256": "da2b1c98f600b05de3126ab87f5517869a6b28cdcf2946c6b9e9ef78088f68f4"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "repeated-measured",
+          "file": "memory/arc-measured.exe",
+          "file_bytes": 1743872,
+          "sha256": "1656522b0413506f9b5275d37292396436b4a3f03cd980d1fa21ad3213273236",
+          "tracing_symbols": [],
+          "format": "Mach-O 64-bit executable arm64\n",
+          "http_entry": "f314",
+          "code_bytes": 1409056,
+          "source_sha256": "48b4e199934207905f51de0b2d12750e3a126def8052596aff3c9848a57ff461"
+        }
+      ]
+    },
+    {
+      "host": "macos-15-intel",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/39052834580/job/117454733276",
+      "job_conclusion": "success",
+      "http_comparisons": "pass",
+      "memory_measurement": "pass",
+      "raw_rows": "docs/measurements/http-client-owners-2026-10-17/macos-15-intel.tsv",
+      "raw_sha256": "252e4d0b52d5824300399ba92877b18f5c515cb10aea1e8ba7443de0e13b4f3d",
+      "final_charged_bytes": 2368,
+      "peak_charged_bytes": [
+        5328,
+        5392
+      ],
+      "representative_rows": [
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "1",
+          "repetition": "1",
+          "requests": "272",
+          "requested_bytes": "9276",
+          "retains": "592",
+          "peak_charged_bytes": "5328",
+          "final_charged_bytes": "2368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "16",
+          "repetition": "1",
+          "requests": "3827",
+          "requested_bytes": "105413",
+          "retains": "8737",
+          "peak_charged_bytes": "5392",
+          "final_charged_bytes": "2368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "256",
+          "repetition": "1",
+          "requests": "60707",
+          "requested_bytes": "1643575",
+          "retains": "139057",
+          "peak_charged_bytes": "5392",
+          "final_charged_bytes": "2368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "1",
+          "repetition": "1",
+          "requests": "311",
+          "requested_bytes": "10315",
+          "retains": "692",
+          "peak_charged_bytes": "5328",
+          "final_charged_bytes": "2368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "16",
+          "repetition": "1",
+          "requests": "3866",
+          "requested_bytes": "106542",
+          "retains": "8837",
+          "peak_charged_bytes": "5392",
+          "final_charged_bytes": "2368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "256",
+          "repetition": "1",
+          "requests": "60746",
+          "requested_bytes": "1646144",
+          "retains": "139157",
+          "peak_charged_bytes": "5392",
+          "final_charged_bytes": "2368",
+          "collections": "0"
+        }
+      ],
+      "hardware": {
+        "platform": "macOS-15.7.9-x86_64-i386-64bit-Mach-O",
+        "cpu": "machdep.cpu.mwait.linesize_min: 64\nmachdep.cpu.mwait.linesize_max: 64\nmachdep.cpu.mwait.extensions: 3\nmachdep.cpu.mwait.sub_Cstates: 286531872\nmachdep.cpu.thermal.sensor: 0\nmachdep.cpu.thermal.dynamic_acceleration: 0\nmachdep.cpu.thermal.invariant_APIC_timer: 1\nmachdep.cpu.thermal.thresholds: 0\nmachdep.cpu.thermal.ACNT_MCNT: 0\nmachdep.cpu.thermal.core_power_limits: 0\nmachdep.cpu.thermal.fine_grain_clock_mod: 0\nmachdep.cpu.thermal.package_thermal_intr: 0\nmachdep.cpu.thermal.hardware_feedback: 0\nmachdep.cpu.thermal.energy_policy: 0\nmachdep.cpu.xsave.extended_state: 7 832 832 0\nmachdep.cpu.xsave.extended_state1: 1 0 0 0\nmachdep.cpu.arch_perf.version: 0\nmachdep.cpu.arch_perf.number: 0\nmachdep.cpu.arch_perf.width: 0\nmachdep.cpu.arch_perf.events_number: 0\nmachdep.cpu.arch_perf.events: 0\nmachdep.cpu.arch_perf.fixed_number: 0\nmachdep.cpu.arch_perf.fixed_width: 0\nmachdep.cpu.cache.linesize: 64\nmachdep.cpu.cache.L2_associativity: 4\nmachdep.cpu.cache.size: 256\nmachdep.cpu.tlb.inst.large: 8\nmachdep.cpu.tlb.data.small: 64\nmachdep.cpu.tlb.data.small_level1: 64\nmachdep.cpu.address_bits.physical: 39\nmachdep.cpu.address_bits.virtual: 48\nmachdep.cpu.tsc_ccc.numerator: 266\nmachdep.cpu.tsc_ccc.denominator: 2\nmachdep.cpu.max_basic: 22\nmachdep.cpu.max_ext: 2147483656\nmachdep.cpu.vendor: GenuineIntel\nmachdep.cpu.brand_string: Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\nmachdep.cpu.family: 6\nmachdep.cpu.model: 58\nmachdep.cpu.extmodel: 3\nmachdep.cpu.extfamily: 0\nmachdep.cpu.stepping: 10\nmachdep.cpu.feature_bits: 18373132009129901055\nmachdep.cpu.leaf7_feature_bits: 43806655 0\nmachdep.cpu.extfeature_bits: 1241850578944\nmachdep.cpu.signature: 198314\nmachdep.cpu.brand: 0\nmachdep.cpu.features: FPU VME DE PSE TSC MSR PAE MCE CX8 APIC SEP MTRR PGE MCA CMOV PAT PSE36 CLFSH MMX FXSR SSE SSE2 SS HTT PBE SSE3 PCLMULQDQ DTES64 DSCPL VMX SSSE3 FMA CX16 TPR SSE4.1 SSE4.2 x2APIC MOVBE POPCNT AES VMM PCID XSAVE OSXSAVE SEGLIM64 AVX1.0 RDRAND F16C\nmachdep.cpu.leaf7_features: RDWRFSGS TSC_THREAD_OFFSET SGX BMI1 HLE AVX2 SMEP BMI2 ERMS INVPCID RTM FPU_CSDS MPX RDSEED ADX SMAP CLFSOPT IPT\nmachdep.cpu.extfeatures: SYSCALL XD 1GBPAGE EM64T LAHF LZCNT PREFETCHW\nmachdep.cpu.logical_per_package: 4\nmachdep.cpu.cores_per_package: 4\nmachdep.cpu.microcode_version: 0\nmachdep.cpu.processor_flag: 0\nmachdep.cpu.core_count: 4\nmachdep.cpu.thread_count: 4\nhw.memsize: 15032385536\n",
+        "c": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+      },
+      "binaries": [
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "workload": "functional",
+          "file": "tracing-O1.exe",
+          "file_bytes": 1891792,
+          "sha256": "f09ccb476d451a00d536ade693d6b37c6161eaf6a26637494e3a45e3dbd02d6b",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "Mach-O 64-bit executable x86_64\n",
+          "http_entry": "f330",
+          "code_bytes": 1561562,
+          "source_sha256": "98aeb0c17f7c5549cfb47fd8b9a5018e881a44f4449c03685b876bd954a5f6a9"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "functional",
+          "file": "tracing-O2.exe",
+          "file_bytes": 1809720,
+          "sha256": "885efc8473618b903b60a6941e9f0646296f8ec97022dd65c320996420a43eef",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "Mach-O 64-bit executable x86_64\n",
+          "http_entry": "f330",
+          "code_bytes": 1479319,
+          "source_sha256": "98aeb0c17f7c5549cfb47fd8b9a5018e881a44f4449c03685b876bd954a5f6a9"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "workload": "functional",
+          "file": "arc-O1.exe",
+          "file_bytes": 2109104,
+          "sha256": "b2c59c3e72e49038d531472b8db4cd53d3874660d28c18f370247d6b6717ac16",
+          "tracing_symbols": [],
+          "format": "Mach-O 64-bit executable x86_64\n",
+          "http_entry": "f330",
+          "code_bytes": 1776938,
+          "source_sha256": "a420f8ce3c43ab11610e5ffab85fefa5ce7f531f7bd79a00dc690fb397985469"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "functional",
+          "file": "arc-O2.exe",
+          "file_bytes": 2010616,
+          "sha256": "3356e68d2b90fb20fa2aaf3bc5efd033f868ee86c041912ca13bf3c2ab77c62d",
+          "tracing_symbols": [],
+          "format": "Mach-O 64-bit executable x86_64\n",
+          "http_entry": "f330",
+          "code_bytes": 1677687,
+          "source_sha256": "a420f8ce3c43ab11610e5ffab85fefa5ce7f531f7bd79a00dc690fb397985469"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "repeated",
+          "file": "memory/tracing.exe",
+          "file_bytes": 1656000,
+          "sha256": "f6d612e1ec3df3ea6cbefbfd47e5ab51ab0101c7b3a0928a365e55122b9d35a5",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "Mach-O 64-bit executable x86_64\n",
+          "http_entry": "f314",
+          "code_bytes": 1349111,
+          "source_sha256": "448237825050876c9ff2e77105c0ed29ce5d0109b47f5d118d02d009dd4fa9d7"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "repeated-measured",
+          "file": "memory/tracing-measured.exe",
+          "file_bytes": 1697160,
+          "sha256": "230e9689d49929333592e64c75a6c3a3760377b3a4c8a89db470aa987e56060c",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "Mach-O 64-bit executable x86_64\n",
+          "http_entry": "f314",
+          "code_bytes": 1390775,
+          "source_sha256": "5bc998d33841959ad9ca50c23a9d967fe820ba00a382e5b0b40bab6206bb6b85"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "repeated",
+          "file": "memory/arc.exe",
+          "file_bytes": 1848696,
+          "sha256": "f30fe527c44a51938d568c19ac27486a525711d548ddb297fc8913a9c8b88d6a",
+          "tracing_symbols": [],
+          "format": "Mach-O 64-bit executable x86_64\n",
+          "http_entry": "f314",
+          "code_bytes": 1541623,
+          "source_sha256": "da2b1c98f600b05de3126ab87f5517869a6b28cdcf2946c6b9e9ef78088f68f4"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "repeated-measured",
+          "file": "memory/arc-measured.exe",
+          "file_bytes": 1893960,
+          "sha256": "d180eeac02781fe44ff55f7dc8a0902ae64737d96fc0ddc785ea272aea807658",
+          "tracing_symbols": [],
+          "format": "Mach-O 64-bit executable x86_64\n",
+          "http_entry": "f314",
+          "code_bytes": 1583303,
+          "source_sha256": "48b4e199934207905f51de0b2d12750e3a126def8052596aff3c9848a57ff461"
+        }
+      ]
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/39052834580/job/117454733384",
+      "job_conclusion": "success",
+      "http_comparisons": "pass",
+      "memory_measurement": "pass",
+      "raw_rows": "docs/measurements/http-client-owners-2026-10-17/ubuntu-24.04-arm.tsv",
+      "raw_sha256": "85f84efb9ccfa6b8606d9b4182464bd1af85b08a0ce538e68113fb23a8cc7d14",
+      "final_charged_bytes": 19424,
+      "peak_charged_bytes": [
+        22384,
+        22448
+      ],
+      "representative_rows": [
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "1",
+          "repetition": "1",
+          "requests": "274",
+          "requested_bytes": "23972",
+          "retains": "592",
+          "peak_charged_bytes": "22384",
+          "final_charged_bytes": "19424",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "16",
+          "repetition": "1",
+          "requests": "3829",
+          "requested_bytes": "120109",
+          "retains": "8737",
+          "peak_charged_bytes": "22448",
+          "final_charged_bytes": "19424",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "256",
+          "repetition": "1",
+          "requests": "60709",
+          "requested_bytes": "1658271",
+          "retains": "139057",
+          "peak_charged_bytes": "22448",
+          "final_charged_bytes": "19424",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "1",
+          "repetition": "1",
+          "requests": "313",
+          "requested_bytes": "25011",
+          "retains": "692",
+          "peak_charged_bytes": "22384",
+          "final_charged_bytes": "19424",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "16",
+          "repetition": "1",
+          "requests": "3868",
+          "requested_bytes": "121238",
+          "retains": "8837",
+          "peak_charged_bytes": "22448",
+          "final_charged_bytes": "19424",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "256",
+          "repetition": "1",
+          "requests": "60748",
+          "requested_bytes": "1660840",
+          "retains": "139157",
+          "peak_charged_bytes": "22448",
+          "final_charged_bytes": "19424",
+          "collections": "0"
+        }
+      ],
+      "hardware": {
+        "platform": "Linux-6.17.0-1022-azure-aarch64-with-glibc2.39",
+        "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "c": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+      },
+      "binaries": [
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "workload": "functional",
+          "file": "tracing-O1.exe",
+          "file_bytes": 2266456,
+          "sha256": "72abdc7faca1cf3ed898c23ab7a9ee8dcf02a8368714416879480be900eeb8de",
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=07ee0104f38a7223e4c8fe6e46f187c867075db5, for GNU/Linux 3.7.0, not stripped\n",
+          "http_entry": "f330",
+          "code_bytes": 1484892,
+          "source_sha256": "98aeb0c17f7c5549cfb47fd8b9a5018e881a44f4449c03685b876bd954a5f6a9"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "functional",
+          "file": "tracing-O2.exe",
+          "file_bytes": 2135184,
+          "sha256": "a5052e0c07be5bdb9359ac71cb5676c012bf86d5fc3f10f2e343343a67d44aa8",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=184c818aec8c99fdb9a170b85cef641af0285bbb, for GNU/Linux 3.7.0, not stripped\n",
+          "http_entry": "f330",
+          "code_bytes": 1344860,
+          "source_sha256": "98aeb0c17f7c5549cfb47fd8b9a5018e881a44f4449c03685b876bd954a5f6a9"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "workload": "functional",
+          "file": "arc-O1.exe",
+          "file_bytes": 2528240,
+          "sha256": "4d9bb0eba9151fdcfe87a377d9b2d460dbca992957b3a7e54ea5c8d12c1bff7e",
+          "tracing_symbols": [],
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=e66fab060f6ec490749c925c3e0d305f7d5a0890, for GNU/Linux 3.7.0, not stripped\n",
+          "http_entry": "f330",
+          "code_bytes": 1701148,
+          "source_sha256": "a420f8ce3c43ab11610e5ffab85fefa5ce7f531f7bd79a00dc690fb397985469"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "functional",
+          "file": "arc-O2.exe",
+          "file_bytes": 2331408,
+          "sha256": "9654fefcb913c1abb93e3ba05a34d136515bd8bdffe751967e73ad23937e936a",
+          "tracing_symbols": [],
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=df3ece50b920a45769d716a3731f3418447c5b62, for GNU/Linux 3.7.0, not stripped\n",
+          "http_entry": "f330",
+          "code_bytes": 1533372,
+          "source_sha256": "a420f8ce3c43ab11610e5ffab85fefa5ce7f531f7bd79a00dc690fb397985469"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "repeated",
+          "file": "memory/tracing.exe",
+          "file_bytes": 1977760,
+          "sha256": "793667f9ee8ccadd85a6075c3b87e441d93e81537a79d5b607c5fc128f42c6cc",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=e70ffd99fd0656356b21a6e30a48ae7556874d8f, for GNU/Linux 3.7.0, not stripped\n",
+          "http_entry": "f314",
+          "code_bytes": 1238332,
+          "source_sha256": "448237825050876c9ff2e77105c0ed29ce5d0109b47f5d118d02d009dd4fa9d7"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "repeated-measured",
+          "file": "memory/tracing-measured.exe",
+          "file_bytes": 2043504,
+          "sha256": "2829415df5f4cac786f2c0a6efc930329a1bf879eb0ae84292125f9b90d61d0a",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=848ab9965c73fb3dff134c6b8ac321b282c9a7d9, for GNU/Linux 3.7.0, not stripped\n",
+          "http_entry": "f314",
+          "code_bytes": 1320124,
+          "source_sha256": "5bc998d33841959ad9ca50c23a9d967fe820ba00a382e5b0b40bab6206bb6b85"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "repeated",
+          "file": "memory/arc.exe",
+          "file_bytes": 2173976,
+          "sha256": "4326b47766ec927a2a6c914bad6c52e104451e96cf62dcad29e7a1519aa71191",
+          "tracing_symbols": [],
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=38a70cc8578f0a0865d24be033288614984fd41f, for GNU/Linux 3.7.0, not stripped\n",
+          "http_entry": "f314",
+          "code_bytes": 1422556,
+          "source_sha256": "da2b1c98f600b05de3126ab87f5517869a6b28cdcf2946c6b9e9ef78088f68f4"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "repeated-measured",
+          "file": "memory/arc-measured.exe",
+          "file_bytes": 2239760,
+          "sha256": "77238a0850e823c969621a869353df6efbfca38cfed7d57d20d234b6efcda7cc",
+          "tracing_symbols": [],
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=1ffe65986cecaa813ff56386785cf350f28e3996, for GNU/Linux 3.7.0, not stripped\n",
+          "http_entry": "f314",
+          "code_bytes": 1501788,
+          "source_sha256": "48b4e199934207905f51de0b2d12750e3a126def8052596aff3c9848a57ff461"
+        }
+      ]
+    },
+    {
+      "host": "ubuntu-latest",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/39052834580/job/117454733443",
+      "job_conclusion": "success",
+      "http_comparisons": "pass",
+      "memory_measurement": "pass",
+      "raw_rows": "docs/measurements/http-client-owners-2026-10-17/ubuntu-latest.tsv",
+      "raw_sha256": "8fc6627ae08d2721aad007cab14d9274e3f217ae4ae7814a436f356314d9ad59",
+      "final_charged_bytes": 6368,
+      "peak_charged_bytes": [
+        9328,
+        9392
+      ],
+      "representative_rows": [
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "1",
+          "repetition": "1",
+          "requests": "274",
+          "requested_bytes": "12836",
+          "retains": "592",
+          "peak_charged_bytes": "9328",
+          "final_charged_bytes": "6368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "16",
+          "repetition": "1",
+          "requests": "3829",
+          "requested_bytes": "108973",
+          "retains": "8737",
+          "peak_charged_bytes": "9392",
+          "final_charged_bytes": "6368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "256",
+          "repetition": "1",
+          "requests": "60709",
+          "requested_bytes": "1647135",
+          "retains": "139057",
+          "peak_charged_bytes": "9392",
+          "final_charged_bytes": "6368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "1",
+          "repetition": "1",
+          "requests": "313",
+          "requested_bytes": "13875",
+          "retains": "692",
+          "peak_charged_bytes": "9328",
+          "final_charged_bytes": "6368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "16",
+          "repetition": "1",
+          "requests": "3868",
+          "requested_bytes": "110102",
+          "retains": "8837",
+          "peak_charged_bytes": "9392",
+          "final_charged_bytes": "6368",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "256",
+          "repetition": "1",
+          "requests": "60748",
+          "requested_bytes": "1649704",
+          "retains": "139157",
+          "peak_charged_bytes": "9392",
+          "final_charged_bytes": "6368",
+          "collections": "0"
+        }
+      ],
+      "hardware": {
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.29\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "c": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+      },
+      "binaries": [
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "workload": "functional",
+          "file": "tracing-O1.exe",
+          "file_bytes": 2264880,
+          "sha256": "3ad15c9e19c42a51293e35290c0f7b702a943ece9afda23ab38a20e7ebbb5d0a",
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=347a5dbc6829ec2e40f08728f2762105a2e34c24, for GNU/Linux 3.2.0, not stripped\n",
+          "http_entry": "f330",
+          "code_bytes": 1536578,
+          "source_sha256": "98aeb0c17f7c5549cfb47fd8b9a5018e881a44f4449c03685b876bd954a5f6a9"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "functional",
+          "file": "tracing-O2.exe",
+          "file_bytes": 2141672,
+          "sha256": "d755d30c279ff6bc893a180c4c60b6b0e3e140e9a56784cee6f39e9e0dd99b19",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=b656ae2f846fd8307ee4bcb4e5fdb90bf4e781a8, for GNU/Linux 3.2.0, not stripped\n",
+          "http_entry": "f330",
+          "code_bytes": 1412178,
+          "source_sha256": "98aeb0c17f7c5549cfb47fd8b9a5018e881a44f4449c03685b876bd954a5f6a9"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "workload": "functional",
+          "file": "arc-O1.exe",
+          "file_bytes": 2489760,
+          "sha256": "fda307e7c3eddbc233a3be24e096c001ec60042366015bdabc4a78d61c0bd4a1",
+          "tracing_symbols": [],
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=2267b32e16d57deb9ce5c0cea5232e6503fa848f, for GNU/Linux 3.2.0, not stripped\n",
+          "http_entry": "f330",
+          "code_bytes": 1760258,
+          "source_sha256": "a420f8ce3c43ab11610e5ffab85fefa5ce7f531f7bd79a00dc690fb397985469"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "functional",
+          "file": "arc-O2.exe",
+          "file_bytes": 2337880,
+          "sha256": "275541e7b70f2233aa1cf77361ce370dd15f7df640efeb8c61d3247bec75a427",
+          "tracing_symbols": [],
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=4ccaf16e719c80c4e23a7c9c347620a6f1070e56, for GNU/Linux 3.2.0, not stripped\n",
+          "http_entry": "f330",
+          "code_bytes": 1611058,
+          "source_sha256": "a420f8ce3c43ab11610e5ffab85fefa5ce7f531f7bd79a00dc690fb397985469"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "repeated",
+          "file": "memory/tracing.exe",
+          "file_bytes": 1971952,
+          "sha256": "8d87b1e0238888389eed5c97aa69c63d6798897c0cb6f5a6bbeb9b7854b6713b",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=45e83921a6430496c346c0f473b5ec094f33512d, for GNU/Linux 3.2.0, not stripped\n",
+          "http_entry": "f314",
+          "code_bytes": 1293634,
+          "source_sha256": "448237825050876c9ff2e77105c0ed29ce5d0109b47f5d118d02d009dd4fa9d7"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "repeated-measured",
+          "file": "memory/tracing-measured.exe",
+          "file_bytes": 2013152,
+          "sha256": "b9c1d6423e0ed04ab6c67dc423a52c375bb5c854f99d5830bc3a813ed4da0328",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=c9d526b1e96c0804c61eec9a8fbfcd0e82b5bfb0, for GNU/Linux 3.2.0, not stripped\n",
+          "http_entry": "f314",
+          "code_bytes": 1334418,
+          "source_sha256": "5bc998d33841959ad9ca50c23a9d967fe820ba00a382e5b0b40bab6206bb6b85"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "repeated",
+          "file": "memory/arc.exe",
+          "file_bytes": 2164064,
+          "sha256": "dace513f0f53acaf5b425a16ce7df680044d8650c3b6d998014ea0dd4409ce03",
+          "tracing_symbols": [],
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=f57d69ff7fa576a398a018857d6c7ecd49c4047d, for GNU/Linux 3.2.0, not stripped\n",
+          "http_entry": "f314",
+          "code_bytes": 1487762,
+          "source_sha256": "da2b1c98f600b05de3126ab87f5517869a6b28cdcf2946c6b9e9ef78088f68f4"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "repeated-measured",
+          "file": "memory/arc-measured.exe",
+          "file_bytes": 2201208,
+          "sha256": "dd7234d0bc748eb9415fbb01759af6695a37eb8e7e584b2fb4480e75e77b8369",
+          "tracing_symbols": [],
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=5c99b123f12153546116a8a172e0ffebcc95d02a, for GNU/Linux 3.2.0, not stripped\n",
+          "http_entry": "f314",
+          "code_bytes": 1524562,
+          "source_sha256": "48b4e199934207905f51de0b2d12750e3a126def8052596aff3c9848a57ff461"
+        }
+      ]
+    },
+    {
+      "host": "windows-11-arm",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/39052834580/job/117454733470",
+      "job_conclusion": "failure",
+      "http_comparisons": "pass",
+      "memory_measurement": "pass",
+      "raw_rows": "docs/measurements/http-client-owners-2026-10-17/windows-11-arm.tsv",
+      "raw_sha256": "cadfbd632500d46f1560a21bcbbcd131f6b5f6d310a0399603cb987efa3e9ee6",
+      "final_charged_bytes": 3136,
+      "peak_charged_bytes": [
+        6096,
+        6160
+      ],
+      "representative_rows": [
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "1",
+          "repetition": "1",
+          "requests": "272",
+          "requested_bytes": "10060",
+          "retains": "592",
+          "peak_charged_bytes": "6096",
+          "final_charged_bytes": "3136",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "16",
+          "repetition": "1",
+          "requests": "3827",
+          "requested_bytes": "106197",
+          "retains": "8737",
+          "peak_charged_bytes": "6160",
+          "final_charged_bytes": "3136",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "256",
+          "repetition": "1",
+          "requests": "60707",
+          "requested_bytes": "1644359",
+          "retains": "139057",
+          "peak_charged_bytes": "6160",
+          "final_charged_bytes": "3136",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "1",
+          "repetition": "1",
+          "requests": "311",
+          "requested_bytes": "11099",
+          "retains": "692",
+          "peak_charged_bytes": "6096",
+          "final_charged_bytes": "3136",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "16",
+          "repetition": "1",
+          "requests": "3866",
+          "requested_bytes": "107326",
+          "retains": "8837",
+          "peak_charged_bytes": "6160",
+          "final_charged_bytes": "3136",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "256",
+          "repetition": "1",
+          "requests": "60746",
+          "requested_bytes": "1646928",
+          "retains": "139157",
+          "peak_charged_bytes": "6160",
+          "final_charged_bytes": "3136",
+          "collections": "0"
+        }
+      ],
+      "hardware": {
+        "platform": "Windows-11-10.0.26200-SP0",
+        "cpu": "\n\nName                      : Cobalt 100\nArchitecture              : 12\nNumberOfCores             : 4\nNumberOfLogicalProcessors : 4\n\n\n\n",
+        "c": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: aarch64-w64-windows-gnu\nThread model: posix\nInstalledDir: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin\nConfiguration file: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin/aarch64-w64-windows-gnu.cfg\n",
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+      },
+      "binaries": [
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "workload": "functional",
+          "file": "tracing-O1.exe",
+          "file_bytes": 1801728,
+          "sha256": "67e7fc52fe51cfd44cff71155398638aa07ed34787dc71daeb818971b602c998",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "PE32+ executable (console) Aarch64, for MS Windows\n",
+          "http_entry": "f330",
+          "code_bytes": 1348332,
+          "source_sha256": "98aeb0c17f7c5549cfb47fd8b9a5018e881a44f4449c03685b876bd954a5f6a9"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "functional",
+          "file": "tracing-O2.exe",
+          "file_bytes": 1716736,
+          "sha256": "8fccc5216a1c4f1fa5bcd6627ca83e3ad33ef5c6fcc6ce9e3a9fb22e584d46b0",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "PE32+ executable (console) Aarch64, for MS Windows\n",
+          "http_entry": "f330",
+          "code_bytes": 1263656,
+          "source_sha256": "98aeb0c17f7c5549cfb47fd8b9a5018e881a44f4449c03685b876bd954a5f6a9"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "workload": "functional",
+          "file": "arc-O1.exe",
+          "file_bytes": 1972736,
+          "sha256": "6b75064efbe9c09b10c7015c99141a90d27af99aa1865edbcfa0d3f43f9f26a7",
+          "tracing_symbols": [],
+          "format": "PE32+ executable (console) Aarch64, for MS Windows\n",
+          "http_entry": "f330",
+          "code_bytes": 1514352,
+          "source_sha256": "a420f8ce3c43ab11610e5ffab85fefa5ce7f531f7bd79a00dc690fb397985469"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "functional",
+          "file": "arc-O2.exe",
+          "file_bytes": 1862656,
+          "sha256": "1795af4166c85ef561478bd435c99e4537f1eb7dc3938c313a7624cc79ddaca2",
+          "tracing_symbols": [],
+          "format": "PE32+ executable (console) Aarch64, for MS Windows\n",
+          "http_entry": "f330",
+          "code_bytes": 1403692,
+          "source_sha256": "a420f8ce3c43ab11610e5ffab85fefa5ce7f531f7bd79a00dc690fb397985469"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "repeated",
+          "file": "memory/tracing.exe",
+          "file_bytes": 1582080,
+          "sha256": "039894bbaa42bbc970b682215d141ee256a2e3ca720d90697f475a3db223315a",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "PE32+ executable (console) Aarch64, for MS Windows\n",
+          "http_entry": "f314",
+          "code_bytes": 1158572,
+          "source_sha256": "448237825050876c9ff2e77105c0ed29ce5d0109b47f5d118d02d009dd4fa9d7"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "repeated-measured",
+          "file": "memory/tracing-measured.exe",
+          "file_bytes": 1650688,
+          "sha256": "93a0606ee7c1acfdc17277dffb11574da13cc198afe4a814dff2b68eda9da8fd",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "PE32+ executable (console) Aarch64, for MS Windows\n",
+          "http_entry": "f314",
+          "code_bytes": 1226900,
+          "source_sha256": "5bc998d33841959ad9ca50c23a9d967fe820ba00a382e5b0b40bab6206bb6b85"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "repeated",
+          "file": "memory/arc.exe",
+          "file_bytes": 1723904,
+          "sha256": "702f4bc717af63999c76c1367c4aee5b1d475492da39498514383be7b5c03afa",
+          "tracing_symbols": [],
+          "format": "PE32+ executable (console) Aarch64, for MS Windows\n",
+          "http_entry": "f314",
+          "code_bytes": 1294976,
+          "source_sha256": "da2b1c98f600b05de3126ab87f5517869a6b28cdcf2946c6b9e9ef78088f68f4"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "repeated-measured",
+          "file": "memory/arc-measured.exe",
+          "file_bytes": 1790976,
+          "sha256": "f3f43a83936d8e33b083b969cc5ced72da7e98d4994eaabc6f334679fe63fd6c",
+          "tracing_symbols": [],
+          "format": "PE32+ executable (console) Aarch64, for MS Windows\n",
+          "http_entry": "f314",
+          "code_bytes": 1361704,
+          "source_sha256": "48b4e199934207905f51de0b2d12750e3a126def8052596aff3c9848a57ff461"
+        }
+      ]
+    },
+    {
+      "host": "windows-2025",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/39052834580/job/117454733425",
+      "job_conclusion": "failure",
+      "http_comparisons": "pass",
+      "memory_measurement": "pass",
+      "raw_rows": "docs/measurements/http-client-owners-2026-10-17/windows-2025.tsv",
+      "raw_sha256": "ad7fc6f23f6988a708631e840275837f1ae88f09bf90706f4d08f47a0877950f",
+      "final_charged_bytes": 3520,
+      "peak_charged_bytes": [
+        6480,
+        6544
+      ],
+      "representative_rows": [
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "1",
+          "repetition": "1",
+          "requests": "272",
+          "requested_bytes": "10540",
+          "retains": "592",
+          "peak_charged_bytes": "6480",
+          "final_charged_bytes": "3520",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "16",
+          "repetition": "1",
+          "requests": "3827",
+          "requested_bytes": "106677",
+          "retains": "8737",
+          "peak_charged_bytes": "6544",
+          "final_charged_bytes": "3520",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "false",
+          "calls": "256",
+          "repetition": "1",
+          "requests": "60707",
+          "requested_bytes": "1644839",
+          "retains": "139057",
+          "peak_charged_bytes": "6544",
+          "final_charged_bytes": "3520",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "1",
+          "repetition": "1",
+          "requests": "311",
+          "requested_bytes": "11579",
+          "retains": "692",
+          "peak_charged_bytes": "6480",
+          "final_charged_bytes": "3520",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "16",
+          "repetition": "1",
+          "requests": "3866",
+          "requested_bytes": "107806",
+          "retains": "8837",
+          "peak_charged_bytes": "6544",
+          "final_charged_bytes": "3520",
+          "collections": "0"
+        },
+        {
+          "mode": "arc",
+          "tls": "true",
+          "calls": "256",
+          "repetition": "1",
+          "requests": "60746",
+          "requested_bytes": "1647408",
+          "retains": "139157",
+          "peak_charged_bytes": "6544",
+          "final_charged_bytes": "3520",
+          "collections": "0"
+        }
+      ],
+      "hardware": {
+        "platform": "Windows-2025Server-10.0.26100-SP0",
+        "cpu": "\n\nName                      : AMD EPYC 7763 64-Core Processor                \nArchitecture              : 9\nNumberOfCores             : 2\nNumberOfLogicalProcessors : 4\n\n\n\n",
+        "c": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin\nConfiguration file: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin/x86_64-w64-windows-gnu.cfg\n",
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+      },
+      "binaries": [
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "workload": "functional",
+          "file": "tracing-O1.exe",
+          "file_bytes": 2031104,
+          "sha256": "3df3dda9fb76c5cdbc50912ba4e4cc0a925342c6f5335f0704f6cadc4aa75803",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "PE32+ executable (console) x86-64, for MS Windows\n",
+          "http_entry": "f330",
+          "code_bytes": 1549558,
+          "source_sha256": "98aeb0c17f7c5549cfb47fd8b9a5018e881a44f4449c03685b876bd954a5f6a9"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "functional",
+          "file": "tracing-O2.exe",
+          "file_bytes": 1963008,
+          "sha256": "1148156796b8dcf29795059983b708d8354f7c9cba0fcee374ab79e59bfac842",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "PE32+ executable (console) x86-64, for MS Windows\n",
+          "http_entry": "f330",
+          "code_bytes": 1481158,
+          "source_sha256": "98aeb0c17f7c5549cfb47fd8b9a5018e881a44f4449c03685b876bd954a5f6a9"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "workload": "functional",
+          "file": "arc-O1.exe",
+          "file_bytes": 2239488,
+          "sha256": "526b3b46f24308c938219d1088f07410d2b3c5c492d3282051065e7c0256dd2b",
+          "tracing_symbols": [],
+          "format": "PE32+ executable (console) x86-64, for MS Windows\n",
+          "http_entry": "f330",
+          "code_bytes": 1757590,
+          "source_sha256": "a420f8ce3c43ab11610e5ffab85fefa5ce7f531f7bd79a00dc690fb397985469"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "functional",
+          "file": "arc-O2.exe",
+          "file_bytes": 2155008,
+          "sha256": "ef51aa9bf9d029eeee634b7417f30801720e7504bb2f5cac305facc61910df29",
+          "tracing_symbols": [],
+          "format": "PE32+ executable (console) x86-64, for MS Windows\n",
+          "http_entry": "f330",
+          "code_bytes": 1673110,
+          "source_sha256": "a420f8ce3c43ab11610e5ffab85fefa5ce7f531f7bd79a00dc690fb397985469"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "repeated",
+          "file": "memory/tracing.exe",
+          "file_bytes": 1806848,
+          "sha256": "b974cbb13f9b0170b9496206150169cb14a16feba678a3a907f2749a7b080697",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "PE32+ executable (console) x86-64, for MS Windows\n",
+          "http_entry": "f314",
+          "code_bytes": 1357094,
+          "source_sha256": "448237825050876c9ff2e77105c0ed29ce5d0109b47f5d118d02d009dd4fa9d7"
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "workload": "repeated-measured",
+          "file": "memory/tracing-measured.exe",
+          "file_bytes": 1850368,
+          "sha256": "ddf10703cd9344d5d112ab0130167f85a2f97b07409686ce2116df356ea3a825",
+          "tracing_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "format": "PE32+ executable (console) x86-64, for MS Windows\n",
+          "http_entry": "f314",
+          "code_bytes": 1401078,
+          "source_sha256": "5bc998d33841959ad9ca50c23a9d967fe820ba00a382e5b0b40bab6206bb6b85"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "repeated",
+          "file": "memory/arc.exe",
+          "file_bytes": 1994240,
+          "sha256": "a9c2bfff5f67aaea7c7874812bce048a3a29897bec4f7fe372de2ad225ec15a7",
+          "tracing_symbols": [],
+          "format": "PE32+ executable (console) x86-64, for MS Windows\n",
+          "http_entry": "f314",
+          "code_bytes": 1544534,
+          "source_sha256": "da2b1c98f600b05de3126ab87f5517869a6b28cdcf2946c6b9e9ef78088f68f4"
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "workload": "repeated-measured",
+          "file": "memory/arc-measured.exe",
+          "file_bytes": 2035200,
+          "sha256": "2e65cd5a5d18dc134166a3f14f32a120f64c98438ad4d8897420a3296b747893",
+          "tracing_symbols": [],
+          "format": "PE32+ executable (console) x86-64, for MS Windows\n",
+          "http_entry": "f314",
+          "code_bytes": 1584982,
+          "source_sha256": "48b4e199934207905f51de0b2d12750e3a126def8052596aff3c9848a57ff461"
+        }
+      ]
+    }
+  ],
+  "machine_code_review": {
+    "method": "Static file/symbol/section/disassembly inspection using LLVM tools; no downloaded binary executed. scripts/inspect-http-client-binaries.py reproduces the 48-binary inspection. Linux O2 HTTP entry is f330 in retained source and machine code.",
+    "linux_amd64": {
+      "fixed_http_frame_bytes": 664,
+      "frame_instructions": "Six register pushes plus subq $0x268, %rsp, in both modes; excludes incoming return address and callees.",
+      "arc_registers": "Pool key held in R14, incoming transport in R13; request pointer spills to the stack. Request owner uses stack slots at SP+0x20/0x28, with its linked cleanup record at SP+0x8/0x10/0x18. These are ordinary allocation decisions, not fallback behavior.",
+      "entry_size_review": {
+        "common_untyped_entries": 532,
+        "combined_size_change": 204649,
+        "example_e190": {
+          "tracing": 126,
+          "arc": 1057
+        }
+      }
+    },
+    "linux_arm64": {
+      "fixed_http_frame_bytes": 720,
+      "frame_instructions": "96-byte saved-register area plus sub sp,sp,#0x270, in both modes; excludes callees.",
+      "arc_registers": "Pool key held in X21, request in X24 and incoming transport in X19 during startup."
+    },
+    "code_growth": "On Linux AMD64, the 532 common generic function-value entries grow by 204649 instruction bytes in total. For example e190 grows from 126 to 1057 bytes: tracing calls fwp_rc_share, while ARC inlines its counted-owner contract checks repeatedly. Other removed/changed code affects the total. This is measured code size, not a claim about execution time or instruction-cache misses.",
+    "limits": "Symbols alone do not prove every lifetime. Failure, cancellation, stress and interpreter comparisons are separate tests. Managed counters exclude raw transport/TLS/OS memory and process RSS; no speed or C/Rust parity claim.",
+    "inspection_tool_version": "Apple LLVM version 17.0.0\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64\n"
+  }
+}

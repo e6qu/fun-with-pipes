@@ -68,7 +68,7 @@ static void inspect_owner(void){
  if(fwp_gc.ncollect<=before)_Exit(3);if(released)_Exit(1);
 }
 static __attribute__((noinline)) V body(void){
- g_conn *conn=g_conn_new(-1,"local",0);
+ g_conn *conn=g_conn_new(-1, "", "local",0);
  g_stream *stream=g_stream_new(conn,1);
  static const unsigned char bytes[]={0,255,192,128,10};
  h2b_put(&stream->data,bytes,sizeof bytes);stream->remote_end=1;

@@ -74,7 +74,7 @@ static jmp_buf failed;
 static int recover(void){return 1;}
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
- g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1,"local",&srv);
+ g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);
  for(stage=0;stage<12;stage++){
   allocations=frees=0;memset(owned,0,sizeof owned);
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*stage));

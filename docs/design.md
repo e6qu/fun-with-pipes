@@ -399,14 +399,20 @@ Client connection I/O tasks have one scheduler owner. Their records release
 when execution finishes and their stacks and scheduler links have been removed;
 this path needs no task reference-count updates. Language-visible task handles
 retain the shared-owner policy because callers can keep independent aliases.
-Server jobs also have explicit owners; HTTP tasks remain open. Connection records
+Server jobs also have explicit owners; HTTP server tasks remain open. Connection records
 can outlive their sockets while response readers retain status information;
 the pool, I/O tasks and callers hold separate storage owners. Library teardown
 closes these connections before waiting for their tasks. The
 [ownership guide](ownership.md) and [measured comparison](benchmarks.md#freeing-closed-connections-and-finished-tasks)
 describe the limits. Checked gRPC client/service builds add iterator scope
-checks and use these owners; [the current acceptance status](development-state.md)
-is separate from implementation. HTTP handlers remain outside that extension.
+checks and use these owners; [PR #161](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161)
+records passing production acceptance. HTTP handlers remain outside that extension.
+
+The next HTTP client extension gives pooled connections, I/O tasks and requests
+explicit owners. Responses are copied into typed fields and lists with cleanup
+for partially built values. It also stores complete connection keys, including
+TLS options, instead of truncating them in a fixed-size buffer. Platform checks
+are still pending; [the handoff](development-state.md) tracks acceptance.
 
 Accepted input ownership gives remote input iterators concrete destruction
 metadata. Its cursor keeps the current element alive while advancing to the

@@ -1,137 +1,51 @@
 # Session handoff
 
-Updated 2026-10-17 UTC. All seven areas in [PLAN.md](../PLAN.md) remain open.
-Current branch: **checked-remote-arc**. [PR #161](https://github.com/e6qu/fun-with-pipes/pull/161)
-is the one active delivery. It combines checked gRPC ARC, reply/error cleanup,
-unique record-field transfers, bounded native test groups and documentation cleanup.
-Preparation branches are evidence sources, not competing next actions.
+Current delivery: [draft PR #162](https://github.com/e6qu/fun-with-pipes/pull/162),
+branch `http-client-delivery`, based on accepted PR #161 (`fd25a10c`).
+The HTTP implementation is integrated as `5ba6e970`; its files match preparation
+`828bf74c8c7484aabcf82962705ff50b103a3107`, retained by immutable tag
+`evidence/http-client-owners-20261017`. This checkout is the current delivery.
+
+PR #161 passed all nine production jobs (`39044644736`) and documentation
+(`39044644846`) at `0e162dcd`. Its squash has the identical tree and the verified
+one-line message without trailers. Duplicate production `39051585338` is cancelled.
+See [history](roadmap-history.md) for the accepted work and failure audit.
 
 ## Next action
 
-Next: publish the library-input regression repair and require all nine production
-jobs plus documentation on the new final head. Production **39038709892** failed
-at **35953062** in the same `library_input_ownership` assertion on both Linux and
-both regular macOS jobs. Both Windows jobs, both macOS GC jobs and benchmarks
-passed; documentation **39038693710** passed. Watcher **73627** stopped on failure;
-no merge occurred. Replace its pinned head/run IDs after publishing the repair.
-Use `Compile remote calls with ARC and move unique record fields` as the squash
-subject, with an empty body; verify parent/tree/message and cancel duplicate
-postmerge production CI only after acceptance.
+Next: publish the final evidence, mark #162 ready, and require all nine production
+jobs plus documentation on that exact commit before squash merge. Both Windows
+reruns at `aacecfd5` pass: [AMD64](https://github.com/e6qu/fun-with-pipes/actions/runs/39054383589)
+and [ARM64](https://github.com/e6qu/fun-with-pipes/actions/runs/39054388163). All 24
+targets completed, including the header repair and steady-memory assertion.
+Keep one active PR. No HTTP delivery is accepted until final production passes.
 
-Standing policy: very early pre-alpha; backward compatibility is not required,
-including existing binaries. Layouts, calling conventions, APIs and formats may
-change; rebuild consumers with the matching compiler. [AGENTS.md](../AGENTS.md)
-records this, the memory/language goals and validation rules in 81 lines, with
-an explicit under-100-line limit. JIT remains excluded.
+The [combined six-host run](https://github.com/e6qu/fun-with-pipes/actions/runs/39052834580)
+at `8770c03ef7eb36e04c1f412c13090270aaf11526` completed all 72 target executions.
+Linux and both macOS hosts passed every step. Both Windows jobs failed only
+`grpc_connect_cleanup`: its API version definition followed a system header.
+Commit `aacecfd5` moves it before every include. Real HTTP comparisons, library
+unload and all 216 memory samples pass on all six hosts. No skipped job counts
+as platform acceptance.
 
-## Accepted baseline
+## Batch scope and acceptance
 
-PR #160 is accepted as **8ae595dffb006753597c39ca739e620aef8d3b94**. All nine
-production jobs **39030633846** and docs **39030633906** passed at
-**a8fa519d6befc34655d4b9298883ca1c5c69c3b8**. Parent #159, tree and message match;
-`/private/tmp/fwp160-merge-record.json` retains verification. Complete message:
-`Free server call storage and borrow values in fold callbacks`.
-Duplicate postmerge **39036532034** is confirmed cancelled. Watcher 75491 exited
-successfully. [History](roadmap-history.md) preserves acceptance and the repaired
-long-running memory regression. The plan/ownership/design guides now reflect it.
+HTTP client pool/caller/I/O-task owners, request cancellation/reset and typed
+partial-response cleanup are implemented. Complete connection keys avoid the old
+1,200-byte truncation. Client/server entry now transfers socket/TLS ownership only
+after connection allocation succeeds. HTTP server handlers, Browser and async
+WASI remain outside checked ARC; their ownership is separate work.
 
-## Verified focused evidence for #161
-
-All **18 native jobs pass** in **39037037021**, source
-**efaab358e730595f40aa5d46e6df6a8ec0151a5c**, immutable tag
-`evidence/remote-arc-platform-fixes-20261017`. Subsequent compiler/runtime code is unchanged. Documentation, retained
-measurements and the library-input test repair below follow this source.
-The suite runs server cleanup, client cleanup and real calls/measurements as
-three independent jobs per host, retaining every prior check and the 25-minute
-limit. All six native platforms pass O1/O2 interpreter comparisons, typed scope
-proofs, partial failure/cancellation and deliberate missing-owner controls.
-Tracing-free binaries are checked explicitly, not inferred from collection-off runs.
-
-The strict collector passes (25.32s) with `--comparison server-arc-moves
---split-checks`, against the accepted server-borrows report. Retained report:
-[remote-arc-field-moves-2026-10-17.json](measurements/remote-arc-field-moves-2026-10-17.json),
-plus 18 raw tables. Every host has **36 memory rows**, 216 total. The four identical
-server workloads use 1/16/256 calls, three repetitions and 64-element streams.
-Every request/connection finalizes. Allocations, requested bytes, peak managed
-storage and final managed storage match baseline. Final storage stays at 544 bytes
-on Linux and zero on macOS/Windows. Greetings use 2 retains per call instead of 3;
-returned/received streams and output-channel calls remain 66/132/4. Both versions
-also have one retain per connection. These are fwp comparisons, not timing or
-C/Rust-parity claims; raw buffers, stack pools and OS/TLS costs are excluded.
-
-The separate 32,000-call ARC resident-memory test passes its unchanged 8 MiB
-bound. Five samples are [16084, 16084, 16084, 16084, 16084] KiB on AMD64 and
-[8144, 8144, 8144, 8144, 8144] on ARM64. Actual Linux instructions transfer unique
-record fields, retain shared ones and preserve typed cleanup. Greeting frames
-are 184/192 bytes; channel fold frames are 264/320 on AMD64/ARM64. Text grows
-by 7,686/8,430 bytes over tracing baseline; ARC contract checks and uniqueness
-checks still cost code. ARM64 file growth includes 64 KiB segment padding.
-[Benchmarks](benchmarks.md#remote-services-without-tracing-and-with-fewer-field-retains)
-explains scope and costs. Downloaded binaries were inspected, never executed.
-
-Artifacts, job logs and instruction reviews:
-`/private/tmp/fwp-server-memory-evidence/39037037021`.
-The collector enforces matching source/programs, all 18 successful jobs and actual
-ARM64/AMD64 reviews. The intermediate ARC-only Linux binary comparison is pinned
-by source/fingerprint and explicitly does not claim its incomplete six-host run
-passed. `/private/tmp/fwp-review-arc-moves.py` reproduces the static review checks.
-
-## Repairs retained in this delivery
-
-- Iterator scope proofs follow later steps. Detached senders cannot inherit a
-  caller's State/AD handler; returned service iterators cannot use expired local
-  handlers. Valid producers with their own handlers remain accepted.
-- Remote entries borrow arguments; decoded replies and caught status errors own
-  their values through final status/delivery, failure and cancellation. Queue
-  delivery gets an independent owner; the ARC escape guard remains unchanged.
-- Unique plain-data records transfer fields at worker entry. Shared fields and
-  partially prepared arguments remain protected; resource lifetimes are preserved.
-- ARM Mac exposed a test driver counting failed nonblocking accepts as accepted
-  connections. It now forces a readiness retry, verifies the old assumption fails,
-  and reports distinct recovery conditions. All native controls pass.
-- Windows probes used text stdout in replacement C mains. They now select binary
-  stdout like generated programs. All three worker/control targets also run in
-  the regular Windows gate. No ownership assertion was weakened.
-
-The earlier unsplit runs exceeded the Intel Mac job budget or exposed those
-fixture issues. Superseded runs **39035855561** and **39036291837** are confirmed
-cancelled. Preparation history is saved at `/private/tmp/fwp161-preparation-handoff.md`;
-the published body is `/private/tmp/fwp-remote-arc-pr.md`. Old preparation worktrees
-remain available, but root is the integrated delivery and owns the live handoff.
-
-## Full CI regression repair
-
-The library-input probe expected two destructor calls for each field copied from
-a C record: a worker duplicate and the original boxed owner. Unique record fields
-now move, so each string has only one owner to release. The corrected check
-requires exactly one release for each copied string, still checks released
-records/strings and raw pointer/scalar preservation, and retains all partial
-failure controls. A new control forces the old duplicate path and must fail the
-count check. Focused server/field suites and regular Windows CI now include this
-library-input test so preparation runs cover the affected C-library boundary.
-Compiler/runtime code and the retained six-host measurement source are unchanged.
-Failure logs: `/private/tmp/fwp161-production-failures.log`.
-Local `python3 scripts/local-guard.py cargo test --test library_input_ownership`
-passes both tests (38.25s including build), with O1/O2, poison on/off and all five
-negative controls. Guarded `cargo fmt --check` and `actionlint
-.github/workflows/numerics.yml .github/workflows/windows.yml` pass.
-
-## Local validation
-
-Use `python3 scripts/local-guard.py COMMAND...` serially. Full builds, suites,
-benchmarks and large regeneration run on GitHub. Preserve 64 GiB free disk,
-2 GiB maximum target data, 1 GiB sampled workload RSS and the 180s deadline.
-Stop rather than raising limits. Formatting, actionlint and static binary checks
-pass. Final `python3 scripts/local-guard.py python3 scripts/check-roadmap.py`
-passes (3.00s): 52 documentation link sets, 106 immutable preparation pairs,
-seven current roadmap rows and commit subjects. The handoff heading was restored
-to match the audit after streamlining; no check was weakened.
+Require cleanup omission controls, O1/O2 with stress/verification, interpreted/native
+cleartext/TLS comparisons, repeated memory samples, actual binary inspection and
+all final production/docs gates. Preserve header/trailer order, body bytes,
+status and observable failure order. No speed or C/Rust parity claim.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
-| 1 | In progress | Accept checked remote ARC; remaining host boundaries/cycles; remove tracing |
+| 1 | In progress | HTTP client owners; remaining host boundaries/cycles; remove tracing |
 | 2 | In progress | Remove intermediate storage and unnecessary reference counts |
 | 3 | In progress | Reduce equivalent-work C/Rust gaps and measured code costs |
 | 4 | In progress | Differentiation precision, speed and memory scaling |
@@ -139,6 +53,53 @@ to match the audit after streamlining; no check was weakened.
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
 
-Browser/HTTP host entry, REST/MCP and asynchronous WASI remain outside checked
-ARC. Choose the next ownership/optimization batch from the remaining contracts
-and measurements. A completed delivery does not complete these work areas.
+Use guarded serial focused local checks; full builds and suites run on GitHub.
+Implementation is in progress; nothing in this batch is accepted yet.
+
+## Evidence and checks
+
+The first [six-host run](https://github.com/e6qu/fun-with-pipes/actions/runs/39051530853)
+at preparation `828bf74c` completed all 66 targets. Every real HTTP comparison
+passed. Audit found a stale gRPC cleanup-injection needle on all hosts and two
+Unix-only probes on Windows. The combined repair scoped the needle to gRPC,
+ported native socket/loader checks and used the runner's OpenSSL executable.
+All omission controls remain; both ported probes are in Windows production.
+The second audit isolates the remaining Windows header-order issue above.
+
+All local checks use `python3 scripts/local-guard.py`, serially; C/TLS probes use
+`FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3`. Full gates run on GitHub.
+
+- gRPC request cleanup and O1/O2 omission controls pass (25.93s including build).
+- HTTP response and client startup controls pass (42.08s); expanded client/server
+  startup controls pass (18.53s) after narrowing the server injection needle.
+- `cargo test --no-fail-fast --test grpc_connect_cleanup --test library_resources`:
+  both pass locally (23.92s); the repaired probe also passes on both native Windows architectures.
+- Both HTTP/gRPC integration harnesses compile (1.46s); the memory assertion's
+  harness compiles (1.21s). Repeated source passes ARC emission (1.10s), with an
+  explicit concrete fold signature and `IoError` input errors. Formatting passes.
+- Rust formatting, docs (2.86s), workflow lint (1.02s) and seven test-runner checks
+  (0.99s) pass. Draft documentation `39054368844` passes at `aacecfd5`; the final evidence
+  links pass the guarded local audit (3.04s).
+
+Artifacts are at `/private/tmp/fwp-http-evidence/39052834580`; both complete log
+audits are `/private/tmp/fwp-http-first-audit.json` and
+`/private/tmp/fwp-http-second-audit.json`. All 216 rows cover tracing/ARC,
+cleartext/TLS, 1/16/256 calls and three measured processes. Final managed storage
+is constant within each host: Linux AMD64 6,368 bytes, Linux ARM64 19,424;
+macOS both 2,368; Windows AMD64 3,520 and ARM64 3,136. Counts match between modes
+with tracing disabled and physical freeing enabled. Each additional call costs
+237 managed allocations and 543 retains in this full high-level client workload.
+The final sample includes pooled connections/tasks and excludes raw transport,
+TLS/OS/allocator metadata, process RSS and timing. These are remaining costs.
+
+Static inspection of all 48 actual functional/repeated binaries finds tracing
+symbols in the 24 tracing builds and none in the 24 ARC builds. No downloaded
+binary was executed. JSON summaries and disassembly remain beside artifacts;
+the tracked [report](measurements/http-client-owners-2026-10-17.json) and
+[guide](benchmarks.md#http-clients-without-tracing) now explain these costs.
+Linux HTTP entry frames are 664 bytes on AMD64 and 720 on ARM64 in both modes,
+including saved registers, excluding callees and AMD64's incoming return address.
+ARC executable text is larger; generic entry guards are a concrete review target.
+
+The runtime/compiler source remains `8770c03e`; subsequent changes affect tests,
+evidence and docs only. Keep this source distinction when reporting measurements.

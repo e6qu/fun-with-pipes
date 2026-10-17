@@ -44,7 +44,7 @@ static int probe(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
  SSL_CTX *ctx=SSL_CTX_new(TLS_client_method());if(!ctx)return 31;
  SSL *ssl=SSL_new(ctx);SSL_CTX_free(ctx);if(!ssl)return 32;
- g_conn *c=g_conn_new(-1,"local",0);c->ssl=ssl;
+ g_conn *c=g_conn_new(-1, "", "local",0);c->ssl=ssl;
  g_stream *s=g_stream_new(c,1);V call=g_call_value(c,s,1,0);
  for(stage=0;stage<5;stage++){
   buffer=0;buffer_frees=subject_calls=0;

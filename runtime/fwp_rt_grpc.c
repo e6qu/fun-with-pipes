@@ -359,12 +359,14 @@ static void g_set_reset(g_stream *s, const char *why) {
     if (!s->reset) s->reset = g_copy_text(why);
 }
 
-static g_conn *g_conn_new(fwp_socket_t fd, const char *authority, const g_server *server) {
-    size_t n = strlen(authority);
-    if (n > SIZE_MAX - sizeof(g_conn) - 1) fwp_trap("connection address too large");
-    g_conn *c = (g_conn *)fwp_mem_alloc(sizeof *c + n + 1);
+static g_conn *g_conn_new(fwp_socket_t fd, const char *prefix, const char *authority, const g_server *server) {
+    size_t n = strlen(authority), pn = strlen(prefix);
+    if (pn > SIZE_MAX - sizeof(g_conn) - 1 || n > SIZE_MAX - sizeof(g_conn) - 1 - pn)
+        fwp_trap("connection address too large");
+    g_conn *c = (g_conn *)fwp_mem_alloc(sizeof *c + pn + n + 1);
     c->authority = (char *)(c + 1);
-    memcpy(c->authority, authority, n + 1);
+    memcpy(c->authority, prefix, pn);
+    memcpy(c->authority + pn, authority, n + 1);
     fwp_gc_finalizer(c, g_conn_final);
     c->fd = fd;
     c->server = server;
@@ -1228,7 +1230,7 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
             return 0;
         }
     }
-    g_conn *c = g_conn_new(fd, given, 0);
+    g_conn *c = g_conn_new(fd, "", given, 0);
     fwp_rc_fresh(PTR(c)); /* startup storage, transferred to the caller */
     c->ssl = ssl;
     ssl = 0;
@@ -2907,7 +2909,7 @@ static void g_accept_loop(fwp_socket_t lfd, const g_server *srv) {
             setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof one);
             char peer[128];
             fwp_fmt_addr((struct sockaddr *)&ss, peer, sizeof peer);
-            g_conn *c = g_conn_new(fd, peer, srv);
+            g_conn *c = g_conn_new(fd, "", peer, srv);
 #ifdef FWP_RESOURCE_OWNERS
             fwp_rc_fresh(PTR(c));
 #endif

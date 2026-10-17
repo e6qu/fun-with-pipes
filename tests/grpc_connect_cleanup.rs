@@ -34,28 +34,45 @@ fn grpc_connect_and_handshake_release_pending_resources_on_cancellation() {
     let mut method = generated[start..end].to_owned();
     for (before,after) in [
         ("            fwp_wait_fd(fd, 1, 0);","            if(mode==1){phase=1;fwp_park(0,0);fwp_check_cancel();} fwp_wait_fd(fd,1,0);"),
-        ("    g_conn *c = g_conn_new(fd, given, 0);","    if(mode==3){phase=1;fwp_park(0,0);fwp_check_cancel();} g_conn *c = g_conn_new(fd,given,0);"),
+        ("    g_conn *c = g_conn_new(fd, \"\", given, 0);","    if(mode==3){phase=1;fwp_park(0,0);fwp_check_cancel();} g_conn *c = g_conn_new(fd, \"\", given,0);"),
         ("startup.reader = fwp_spawn_task(0, g_reader, c, 0, 1);","backgrounds++; startup.reader=0;"),
         ("startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1);","backgrounds++; startup.writer=0;"),
     ]{assert_eq!(method.matches(before).count(),1);method=method.replacen(before,after,1);}
     method = method
         .replace("startup.reader->ownership = FWP_TASK_UNIQUE;", "")
         .replace("startup.writer->ownership = FWP_TASK_UNIQUE;", "");
-    let generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
+    method = method.replace(
+        "fwp_socket_connect(fd, ai->ai_addr, ai->ai_addrlen)",
+        "observe_connect(fd, ai->ai_addr, ai->ai_addrlen)",
+    );
+    let generated = format!(
+        "{}\nstatic int observe_connect(fwp_socket_t,const struct sockaddr *,socklen_t);\n{}{}",
+        &generated[..start],
+        method,
+        &generated[end..]
+    );
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+static SOCKET watched_fd=INVALID_SOCKET;
+#else
 #include <sys/socket.h>
 #include <netdb.h>
+static int watched_fd=-1;
+#endif
 #include <openssl/ssl.h>
-static int mode,phase,watched_fd=-1,res_freed,ssl_freed,cancelled,backgrounds;
+static int mode,phase,res_freed,ssl_freed,cancelled,backgrounds;
 static struct addrinfo *watched_res;
-static int observe_connect(int,const struct sockaddr *,socklen_t);
 static int observe_resolve(const char *,const char *,const struct addrinfo *,struct addrinfo **);
 static void observe_res_free(struct addrinfo *);
 static void observe_ssl_free(SSL *);
 static int observe_handshake(SSL *);
 static void no_release(void *);
-#define connect(f,a,n) observe_connect(f,a,n)
 #define getaddrinfo(h,p,i,r) observe_resolve(h,p,i,r)
 #define freeaddrinfo(r) observe_res_free(r)
 #define SSL_free(p) observe_ssl_free(p)
@@ -67,7 +84,22 @@ static void no_release(void *);
 #undef freeaddrinfo
 #undef SSL_free
 #undef SSL_do_handshake
-static int observe_connect(int fd,const struct sockaddr *a,socklen_t n){watched_fd=fd;int result=connect(fd,a,n);if(mode==1&&(result==0||errno==EINPROGRESS)){errno=EINPROGRESS;return -1;}return result;}
+static int socket_closed(fwp_socket_t fd){
+ int kind=0;socklen_t n=sizeof kind;
+ if(!getsockopt(fd,SOL_SOCKET,SO_TYPE,(char *)&kind,&n))return 0;
+#ifdef _WIN32
+ return WSAGetLastError()==WSAENOTSOCK;
+#else
+ return errno==EBADF;
+#endif
+}
+static int observe_connect(fwp_socket_t fd,const struct sockaddr *a,socklen_t n){watched_fd=fd;int result=fwp_socket_connect(fd,a,n);if(mode==1&&(result==0||fwp_socket_pending(errno))){
+#ifdef _WIN32
+errno=WSAEWOULDBLOCK;
+#else
+errno=EINPROGRESS;
+#endif
+return -1;}return result;}
 static int observe_resolve(const char *h,const char *p,const struct addrinfo *i,struct addrinfo **r){int result=getaddrinfo(h,p,i,r);if(mode&&!result)watched_res=*r;return result;}
 static void observe_res_free(struct addrinfo *r){if(mode&&r==watched_res){res_freed++;watched_res=0;}freeaddrinfo(r);}
 static void observe_ssl_free(SSL *s){if(mode)ssl_freed++;SSL_free(s);}
@@ -80,24 +112,24 @@ int main(void){
  for(int test=1;test<=3;test++){
   mode=0;V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);V address=fwp_p_local_addr(listener);
   snprintf(target,sizeof target,"%s%s",test==2?"https://":"",STR(address)->d);
-  mode=test;phase=res_freed=ssl_freed=cancelled=backgrounds=0;watched_fd=-1;watched_res=0;result=0;
+  mode=test;phase=res_freed=ssl_freed=cancelled=backgrounds=0;watched_fd=FWP_INVALID_SOCKET;watched_res=0;result=0;
   fwp_task *task=fwp_spawn_task(0,client,0,0,0);
   for(int i=0;i<30&&!phase;i++)fwp_p_task_sleep(tick);
-  if(!phase||task->done||watched_fd<0)return 31;
+  if(!phase||task->done||watched_fd==FWP_INVALID_SOCKET)return 31;
   fwp_p_task_cancel(PTR(task));fwp_await(task);
   if(!task->done||cancelled!=1||result||backgrounds||fwp_cleanups)return 32;
-  if(fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF)return 1;
+  if(!socket_closed(watched_fd))return 1;
   if(res_freed!=1)return 2;if(ssl_freed!=(mode==2?1:0))return 3;
   mode=0;fwp_p_tcp_stop(listener);FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(tick);
  }
  mode=0;V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);V address=fwp_p_local_addr(listener);snprintf(target,sizeof target,"%s",STR(address)->d);
  mode=4;res_freed=ssl_freed=backgrounds=0;watched_res=0;char *error=0;g_conn *c=g_connect(target,0,&error);
- if(!c||error||c->refs!=2||backgrounds!=2||res_freed!=1||ssl_freed||fwp_cleanups||fcntl(c->fd,F_GETFD)==-1)return 4;
- int fd=c->fd;g_conn_release(c);if(c->fd!=fd||fcntl(fd,F_GETFD)==-1)return 5;
- g_conn_release(c);if(c->fd!=-1||fcntl(fd,F_GETFD)!=-1||errno!=EBADF)return 6;
+ if(!c||error||c->refs!=2||backgrounds!=2||res_freed!=1||ssl_freed||fwp_cleanups||socket_closed(c->fd))return 4;
+ fwp_socket_t fd=c->fd;g_conn_release(c);if(c->fd!=fd||socket_closed(fd))return 5;
+ g_conn_release(c);if(c->fd!=FWP_INVALID_SOCKET||!socket_closed(fd))return 6;
  g_conn_dead(c,"finished");g_conn_drop(c);mode=0;fwp_p_tcp_stop(listener);
- mode=4;res_freed=ssl_freed=backgrounds=0;watched_res=0;watched_fd=-1;
- c=g_connect(target,0,&error);if(c||!error||strncmp(error,"cannot connect to ",18)||res_freed!=1||ssl_freed||backgrounds||fwp_cleanups||watched_fd<0||fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF)return 7;free(error);
+ mode=4;res_freed=ssl_freed=backgrounds=0;watched_res=0;watched_fd=FWP_INVALID_SOCKET;
+ c=g_connect(target,0,&error);if(c||!error||strncmp(error,"cannot connect to ",18)||res_freed!=1||ssl_freed||backgrounds||fwp_cleanups||watched_fd==FWP_INVALID_SOCKET||!socket_closed(watched_fd))return 7;free(error);
  mode=0;FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(tick);fwp_lib_finish();return 0;
 }
 "#;

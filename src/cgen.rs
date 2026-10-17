@@ -6327,7 +6327,8 @@ impl<'p> Gen<'p> {
             }
             "http2.send" => {
                 let err = self.desc(&MT::con("std::IoError"));
-                format!("return fwp_p_http2_send(l0, l1, l2, {});", err)
+                let descriptor = self.desc(&result);
+                format!("return fwp_p_http2_send(l0, l1, l2, {err}, {descriptor});")
             }
             "tls._connect" | "tls._listen" | "tls.handshake" => {
                 let err = self.desc(&MT::con("std::IoError"));

@@ -2395,3 +2395,86 @@ real calls, typed iterator-scope checks and deliberate missing-owner controls al
 pass. The split preserves the original 25-minute job limit. The fixture repairs
 exercise a nonblocking accept retry and configure Windows probe output explicitly;
 [the handoff](development-state.md) records full production acceptance separately.
+
+### HTTP clients without tracing
+
+[The six-host report](measurements/http-client-owners-2026-10-17.json) compares
+**current fwp tracing and checked ARC clients**, using the same source at
+`8770c03e`, tag `evidence/http-client-memory-20261017`. It does not compare with C,
+Rust or an earlier compiler. All six hosts passed the HTTP comparisons and memory
+measurement steps in [the focused run](https://github.com/e6qu/fun-with-pipes/actions/runs/39052834580).
+Both Windows jobs separately exposed a cancellation probe's header-order error.
+The repaired full suites pass on [AMD64](https://github.com/e6qu/fun-with-pipes/actions/runs/39054383589)
+and [ARM64](https://github.com/e6qu/fun-with-pipes/actions/runs/39054388163);
+[the handoff](development-state.md) tracks final production acceptance.
+
+The [measurement client](../tests/web/repeated-client.fwp) sends 1, 16 or 256
+sequential HTTP/2 requests to an interpreted loopback server. Each response has
+status 200; the client receives and releases its body, adds the status, and prints
+200 times the request count. It reuses one connection. Both cleartext and TLS
+(encrypted transport) are measured, with three fresh client processes per case.
+Unoptimized interpretation and ordinary native execution check the result before
+counted runs. Native builds use `-O2` and separate floating multiply/add operations.
+
+An allocation request asks for managed storage. A retain increments an owner's
+reference count. The counters include the full high-level client: iteration,
+environment reads, request/options construction, URL parsing, connection selection
+and response storage. They do not isolate transport overhead. Both modes have
+collection disabled and physical freeing enabled; all 216 rows match between
+modes for allocations, requested bytes, retains and peak/final managed storage.
+
+Each additional call costs **237 managed allocations and 543 retains**. Startup
+adds 35 allocations for cleartext or 74 for TLS, with two further allocations on
+Linux; corresponding retain offsets are 49 and 149 on every host. These remain
+substantial costs to reduce. No execution time is measured.
+
+Counters begin after constant initialization and end after entry execution and
+cached-value cleanup, before whole-runtime shutdown. Pooled connections and I/O
+tasks can still be live. Final storage is constant at every request count; the
+peak below is reached by 16 calls and remains unchanged at 256:
+
+| Native host | Final managed bytes | Peak managed bytes |
+|---|---:|---:|
+| Linux AMD64 | 6,368 | 9,392 |
+| Linux ARM64 | 19,424 | 22,448 |
+| macOS AMD64 | 2,368 | 5,392 |
+| macOS ARM64 | 2,368 | 5,392 |
+| Windows AMD64 | 3,520 | 6,544 |
+| Windows ARM64 | 3,136 | 6,160 |
+
+These allocator counters do not identify each live object. They exclude raw
+network buffers, TLS/OS/allocator metadata, server memory and process RSS.
+Constant managed storage does not establish a bound for those excluded categories.
+The final sample differs from earlier server experiments that close every
+connection before sampling; their final-byte counts should not be compared directly.
+
+Static inspection covers 48 actual native binaries: the larger HTTP comparison
+client at O1/O2, and ordinary/instrumented repeated-call clients at O2, in both
+memory modes on six hosts. All 24 ARC binaries omit tracing scan/mark/sweep
+symbols; the 24 tracing builds retain positive controls. No downloaded binary
+was executed locally. [The inspection script](../scripts/inspect-http-client-binaries.py)
+records file hashes, sections and disassembly using explicit LLVM tool paths.
+
+The following code sizes are for the **larger comparison client**, which also
+checks HTTP/1.1, compression, streamed bodies and concurrent calls:
+
+| Linux O2 client | Tracing instruction bytes | ARC instruction bytes | Extra code |
+|---|---:|---:|---:|
+| AMD64 | 1,412,178 | 1,611,058 | 198,880 (14.1%) |
+| ARM64 | 1,344,860 | 1,533,372 | 188,512 (14.0%) |
+
+ARC code sections grow by 11.1–14.1% across all six hosts. Code used to call
+functions through function values repeatedly inlines ARC's ownership checks.
+On Linux AMD64, 532 common entries grow by 204,649 instruction bytes in total;
+one internal entry handling seven prepared values grows from 126 to 1,057 bytes. Other removed/changed code
+also affects the total. The checks remain necessary unless a proof or different
+code arrangement preserves their guarantees. This size result does not measure
+execution time or instruction-cache misses.
+
+The actual Linux HTTP entry keeps its key and transport in registers, with an
+ordinary request-pointer spill on AMD64. Request owners and their cleanup records
+occupy stack slots. Its fixed frame is 664 bytes on AMD64 and 720 on ARM64 in both
+modes, including saved registers, excluding callees and AMD64's incoming return
+address. The report retains instruction details and every binary's file/code size.
+This delivery establishes specific ownership behavior and remaining costs; it
+does not establish zero-cost networking abstractions or complete GC removal.

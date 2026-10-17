@@ -183,7 +183,8 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             &[0],
         ),
         "grpc.set-header" | "grpc.set-trailer" => (&[B, B], R, None, &[]),
-        "http2.body" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
+        "http2.body" | "http2.send" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
+        "http2.pooled" => (&[B], R, None, &[]),
         "http2.request" | "grpc.metadata" | "grpc.peer-subject" => {
             (&[B], ResultOwnership::OwnedTree, None, &[])
         }

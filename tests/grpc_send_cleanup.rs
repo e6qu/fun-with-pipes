@@ -70,7 +70,7 @@ static int check_frames(g_conn *c,int gzip){
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
  for(size_t i=0;i<sizeof payload;i++)payload[i]=(unsigned char)(17*i);
- g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1,"local",&srv);
+ g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);
  for(int gzip=0;gzip<2;gzip++)for(stage=0;stage<6;stage++){
   watched_buffer=0;buffer_frees=cancelled=0;result=-1;c->out.len=0;
   c->conn_window=stage==1||stage==5?0:stage==2?7:65535;
