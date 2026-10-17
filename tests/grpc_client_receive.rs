@@ -110,7 +110,7 @@ int main(void){
 #endif
  for(stage=0;stage<12;stage++){
   stream_finalizations=0;allocations=frees=cancelled=trapped=delivered=opens=0;result=99;memset(owned,0,sizeof owned);c->out.len=0;
-  g_stream *s=g_stream_new(c,(uint32_t)(1+4*stage));s->sent_headers=1;s->remote_end=stage!=6&&stage!=11;stream=s;retry_stream=s;
+  g_stream *s=g_stream_new(c,(uint32_t)(1+4*stage));s->sent_headers=1;s->remote_end=stage!=6&&stage!=10&&stage!=11;stream=s;retry_stream=s;
   if(stage!=2&&stage!=3&&stage!=7){s->mhead=s->mtail=message();}
   if(stage==1){s->mhead->next=message();s->mtail=s->mhead->next;}
   if(stage==3)s->bad=strdup("transport failure");
@@ -128,6 +128,8 @@ int main(void){
   if(!t->done||allocations!=expected||frees!=expected||fwp_cleanups||cancelled!=(stage==6||stage==11)||trapped!=(stage==1||stage==2||stage==3||stage==4||stage==5||stage==9||stage==10))return 1;
 #ifdef PROBE_CLIENT_STREAM_OWNERS
   if(stream_finalizations!=(stage==7?2:1)||c->streams){fprintf(stderr,"stage %d: %d finalized, listed=%d\n",stage,stream_finalizations,c->streams!=0);return 20;}
+#else
+  if(stage==10&&(s->listed||!s->reset))_Exit(21);
 #endif
   if(stage==0||stage==7){if(result!=42)return 3;}
   if(stage>=8&&delivered!=(stage==8||stage==10||stage==11))return 4;
@@ -154,7 +156,20 @@ int main(void){
         generated.replace(receive, "fwp_cleanup_push(&received, no_release, &g);"),
         generated.replace(decode, "fwp_cleanup_push(&decode_text, no_release, why);"),
     ];
+    let abort = "fwp_cleanup_push(&channel_abort, g_call_reset, &call);";
+    assert_eq!(generated.matches(abort).count(), 1);
+    let missing_abort = generated.replace(
+        abort,
+        "fwp_cleanup_push(&channel_abort, no_release, &call);",
+    );
     for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&format!("{hooks}\n{missing_abort}\n{fixture}"), &exe, opt).unwrap();
+        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(21),
+            "omitted channel reset: {out:?}"
+        );
         for broken in &controls {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
             let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();

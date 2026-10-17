@@ -1318,6 +1318,7 @@ fn spawn_sender(it: &mut Interp, c: &ConnRef, s: &StreamRef, iter: Value, enc: E
             let job = job;
             let crate::sched::Baton((c, s, mut cur, enc, failed)) = job;
             let r = (|| -> R<()> {
+                it.check_cancel()?;
                 loop {
                     if s.borrow().remote_end {
                         return Ok(());
@@ -3001,6 +3002,53 @@ mod stream_source_tests {
             }
         }
     }
+    #[test]
+    fn sender_cancelled_before_entry_does_not_force_input() {
+        let program = Program::default();
+        for cancelled in [false, true] {
+            let mut it = Interp::new(&program, Box::new(std::io::sink()));
+            let source = queued(&program, 0, false, OK);
+            source.stream.borrow_mut().remote_end = false;
+            let before = source.conn.borrow().out.clone();
+            // Invalid continuation and encoder must remain untouched after
+            // cancellation. The uncancelled case proves evaluation is detectable.
+            let input = Value::data(1, vec![Value::I64(7), Value::unit()]);
+            let Value::Data(_, fields) = &input else {
+                unreachable!()
+            };
+            let weak = Rc::downgrade(fields);
+            let sender = spawn_sender(
+                &mut it,
+                &source.conn,
+                &source.stream,
+                input,
+                Encoder::Fwp(Value::unit()),
+            );
+            if cancelled {
+                sender.task.cancel();
+            }
+            let deadline = Instant::now() + Duration::from_secs(10);
+            while !sender.task.done() {
+                assert!(Instant::now() < deadline, "sender did not finish");
+                it.world.park(Some(deadline));
+            }
+            assert!(
+                weak.upgrade().is_none(),
+                "finished sender must release input"
+            );
+            let failure = sender.finish(&mut it);
+            if cancelled {
+                assert!(failure.is_none(), "cancelled sender evaluated its input");
+                assert!(source.stream.borrow().reset.is_none());
+                assert_eq!(source.conn.borrow().out, before);
+            } else {
+                assert!(matches!(failure, Some(Ctl::Trap(_))));
+                assert!(source.stream.borrow().reset.is_some());
+                assert!(source.conn.borrow().out.len() > before.len());
+            }
+        }
+    }
+
     #[test]
     fn cancelled_decoders_preserve_the_queued_message() {
         use crate::ir::{Body, Expr, Func};

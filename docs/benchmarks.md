@@ -1540,7 +1540,7 @@ It never executes downloaded binaries.
 The [cache-ownership report](measurements/remote-client-cache-ownership-2026-10-17.json)
 compares that baseline with `886dad3b`, which passes focused ownership checks on
 all six native hosts. Full production acceptance is tracked in the
-[handoff](development-state.md). Both revisions run the same clients and inputs.
+[delivery history](roadmap-history.md). Both revisions run the same clients and inputs.
 The candidate gives a stream position responsibility for its cached values;
 releasing the final owner releases the cache without waiting for collection.
 
@@ -1753,7 +1753,7 @@ the exact run/head, artifact directory, output path and `--baseline-report`.
 It requires all six native jobs, matching outputs, complete request/message
 release and constant final managed storage. Binary inspection is static;
 downloaded programs are not executed locally. Full production acceptance is
-recorded separately in the [handoff](development-state.md).
+recorded separately in the [delivery history](roadmap-history.md).
 
 
 ### Moving a selected field instead of retaining it again
@@ -1796,7 +1796,7 @@ programs were not executed locally.
 The combined run also checks construction failure and long names in the service
 TLS-settings cache. Those tests establish cleanup correctness; this client
 workload does not measure a general heap saving from that separate fix. Full
-production acceptance remains recorded in the [handoff](development-state.md).
+production acceptance remains recorded in the [delivery history](roadmap-history.md).
 
 ### Memory after closing connections and finishing their I/O tasks
 
@@ -1901,6 +1901,193 @@ Eighteen injected fatal-allocation cases verify the error, exit code and prior
 buffered output. The final delivery additionally preserves the existing
 recoverable server TLS protocol-list allocation error and adds its regression
 check; that server-startup path is outside the measured client workload.
-Final production acceptance is tracked in [the handoff](development-state.md).
+Final production acceptance is tracked in [the delivery history](roadmap-history.md).
 Pending sender inputs and server callbacks still need ownership work, so remote
 calls remain excluded from checked ARC.
+
+
+### Memory retained by client inputs after sending finishes
+
+A client can send an iterator, a sequence produced one value at a time, to a
+remote function. A synchronous call finishes sending before waiting for its
+result. A bidirectional call sends and receives concurrently, using a separate
+sender task. Both paths must release the input values after they are no longer
+needed, while preserving any copy the program still holds.
+
+[The sender baseline](measurements/sender-input-baseline-2026-10-17.json)
+uses `f6ebb2e9`, retained by `evidence/sender-input-baseline-20261017`.
+[All six native jobs passed](https://github.com/e6qu/fun-with-pipes/actions/runs/39009268395).
+This is fwp measured before the input-ownership change, with the preceding
+connection and I/O-task cleanup already present. It establishes the remaining
+memory problem; it is not a comparison against C or Rust.
+
+Each process makes 1, 16 or 256 calls, with three processes per case. Four
+programs exercise different input lifetimes:
+
+- Synchronous: send integers 1 through 64 and receive their sum, 2,080.
+- Bidirectional: send `word-1` through `word-64`, receive uppercase strings and
+  sum their lengths, giving 439.
+- Retained input: run the same uppercase call, then read the original input
+  again. Both length totals add to 878; retaining the original must preserve it.
+- Early completion: offer 64 integers, but the server returns only the first
+  three multiplied by ten. Their sum is 60. The actual number of inputs sent
+  varies with scheduling and is recorded, rather than assumed to be three.
+
+Measurement hooks close each connection and wait for its reader, writer and
+sender tasks before the next call. All connections, requests and received
+messages release, yet managed memory still grows. The table gives allocator-
+charged bytes, including size-class rounding, after 256 calls.
+
+| Platform | Synchronous inputs | Bidirectional or retained inputs |
+|---|---:|---:|
+| Linux AMD64 | 1,820,416 | 3,356,416 |
+| Linux ARM64 | 1,824,768 | 4,474,880 |
+| macOS AMD64 and ARM64 | 1,819,264 | 3,060,352 |
+| Windows AMD64 | 1,819,648 | 3,159,040 |
+| Windows ARM64 | 1,819,520 | 3,126,144 |
+
+Each additional synchronous call leaves 7,104 bytes on every host. The other
+complete-input modes leave 11,952–17,456 bytes per additional call, depending
+on the platform. These totals include input storage and finished sender/task
+records; cumulative allocation categories do not prove individual live-object
+identities. Early-completion totals vary with the amount of input produced.
+
+Actual Linux AMD64 and ARM64 binaries show remote entries marking the input
+shared, iterator advancement using an unowned call, and sender cleanup releasing
+the connection and request without freeing its input or sender record. The
+report retains source/binary fingerprints, reviewed instruction locations and
+function-frame sizes. Those frames differ between architectures and include
+neither callee frames nor a whole-program stack bound. No speed claim follows
+from this inspection.
+
+Generated clients use `-O2`. The report records hardware, C/Rust toolchains,
+source, output references, allocation requests/bytes, reference-count increments,
+peak and final managed bytes, input counts and raw checkpoints. Collection is
+disabled and physical freeing enabled. Counters run from after constant setup
+to after cached-value cleanup and task draining, before whole-runtime shutdown.
+Stack pools, other raw buffers, TLS/OS/allocator metadata, server/process memory
+and elapsed time are excluded. Ordinary native and interpreter runs check the
+outputs using normal pooling; their transport work differs from the measured
+clients. A future ownership comparison must use the same closing hooks and
+account for variable input work in early completion. This baseline establishes
+neither checked ARC support nor zero overhead.
+
+
+### Input owners and moves: bounded memory with measured count costs
+
+[The final comparison](measurements/sender-input-ownership-2026-10-17.json)
+uses `06f3ac6f`, tag `evidence/sender-input-ownership-20261017`.
+[All six native jobs pass](https://github.com/e6qu/fun-with-pipes/actions/runs/39013126818).
+It uses the same four clients and closing hooks as the baseline above, at
+1/16/256 calls with three fresh processes per case. Final managed storage is
+constant across every size and mode, including early server completion:
+
+| Platform | Remaining managed bytes |
+|---|---:|
+| Linux AMD64 | 1,792 |
+| Linux ARM64 | 6,144 |
+| macOS ARM64 or AMD64 | 640 |
+| Windows ARM64 | 896 |
+| Windows AMD64 | 1,024 |
+
+These totals match the platform's root-task storage category; allocation
+categories alone do not identify individual live objects. All measured
+connections, requests and queued messages are released, and every sender and
+connection task finishes. Collection stays disabled throughout. The initial
+[Linux ownership probe](measurements/sender-input-ownership-probe-2026-10-17.json)
+already bounded memory, but retained every continuation for its call. A
+continuation is the function producing the next iterator node. The final change
+moves that function from an exclusively owned node; shared nodes preserve it
+for older readers.
+
+The three complete-input modes make the same number of allocation requests as
+the original baseline on every host. A background sender requests 48 instead of
+40 bytes, still occupying the same 48-byte allocator class: at 256 calls this
+adds 2,048 requested bytes without extra allocation requests. Synchronous
+requested bytes are unchanged. Reference-count increments at 256 calls are
+identical across the six final hosts:
+
+| Input mode | Original baseline | First ownership probe (Linux AMD64) | Final owners and moves | Extra versus baseline |
+|---|---:|---:|---:|---:|
+| Synchronous | 17,922 | 66,818 | 18,946 | 1,024 (+5.7%) |
+| Bidirectional | 150,274 | 280,578 | 184,322 | 34,048 (+22.7%) |
+| Retained original input | 181,762 | 344,834 | 248,578 | 66,816 (+36.8%) |
+
+These are operation counts, not elapsed-time overhead. Moving unique
+continuations removes much of the first ownership version's count traffic;
+ownership still costs more count operations than the version that retained
+storage for tracing. Early completion can consume different numbers of inputs,
+so its allocation/count deltas are not equal-work comparisons.
+
+Actual Linux ARM64 and AMD64 binaries show count-one tests, field clearing
+before owned continuation application, and borrowed calls that preserve shared
+nodes. Elements remain in registers across lookahead (`rbx`/`rbp` on AMD64,
+`x20`/`x23` on ARM64); cursor state and cleanup records also use stack storage.
+The synchronous entry reserves 1,144 bytes on AMD64 and 1,168 on ARM64;
+background sender frames use 392 and 560 bytes. AMD64 figures exclude the
+incoming return address; ARM64 includes saved registers. Callee frames add to
+these totals. Count-one tests still read allocation metadata; this is not
+compile-time-only ownership.
+
+The report preserves raw allocation, storage, count and completion tables,
+source/binary/disassembly fingerprints, hardware/toolchains and manual binary
+reviews. Failure, cancellation, retained-alias, GC-stress and reuse controls pass
+in the focused matrix. Full delivery acceptance remains separate in
+[the handoff](development-state.md). Task stack pools, other raw buffers,
+TLS/OS/allocator metadata, server/process memory and timing remain excluded.
+This does not establish checked ARC for remote calls, zero-cost abstractions or
+speed parity with C/Rust.
+
+
+## Server memory after completed remote calls
+
+Client measurements exclude the service process. This
+[server baseline](measurements/server-call-baseline-2026-10-17.json) measures
+that process directly at `06432959`, tag `evidence/server-call-baseline-20261017`,
+with [all six native hosts passing](https://github.com/e6qu/fun-with-pipes/actions/runs/39014733093).
+It precedes server ownership changes. The four clients ask the server to:
+
+- Return a greeting for a 64-character name; the response length is 71.
+- Return integers 1 through 64 as an iterator; the client sums them to 2,080.
+- Sum 64 integers sent by the client, also giving 2,080.
+- Send `tick 1` through `tick 64` through an output channel; the client sums
+  their string lengths to 439. A channel is a queue between tasks.
+
+Each native server receives 1, 16 or 256 calls over one reused connection, with
+three fresh processes per case. Matching client output is checked against both
+an interpreted and an ordinary native server. Collection is off, physical
+freeing is on and native C compilation uses `-O2`. Counters start after listener,
+routing and root-task setup. Per-call samples follow serving-task removal;
+final samples require every call and spawned task to finish and the client
+connection to close. The listener remains open. A measurement-only wake of the
+existing listener lets the scheduler retire the last finished task's stack;
+it adds no task or connection. Future comparisons must use that same boundary.
+
+Despite completed calls and tasks, remaining managed storage grows with call
+count. At 256 calls the baseline retains these bytes in every repetition:
+
+| Platform | Greeting | Returned iterator | Sent iterator | Output channel |
+|---|---:|---:|---:|---:|
+| Linux AMD64 | 721,248 | 2,486,624 | 1,753,440 | 971,104 |
+| Linux ARM64 | 1,844,064 | 3,609,440 | 2,876,256 | 2,093,920 |
+| macOS ARM64 or AMD64 | 423,488 | 2,188,864 | 1,455,680 | 673,344 |
+| Windows AMD64 | 522,560 | 2,287,936 | 1,554,752 | 772,416 |
+| Windows ARM64 | 489,536 | 2,254,912 | 1,521,728 | 739,392 |
+
+On Linux AMD64, each additional call leaves 2,800 / 9,696 / 6,832 / 3,776 bytes
+for these four modes. Connection/request finalizers do not run. Task and job
+allocation categories help locate the cost, but cumulative category counters
+do not identify individual remaining objects. Actual Linux ARM64/AMD64 machine
+code confirms that traced task records skip physical disposal, job cleanup
+releases peer/status text without freeing the job, and method/response-iterator
+application still uses the unowned call path. The report retains instruction
+reviews, source/binary/disassembly fingerprints and compiler/hardware details.
+
+This baseline motivates server lifetime work; it does not prove a fix. Raw
+request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process
+memory and elapsed time are excluded. There is no C/Rust comparison or speed
+claim. Retained callbacks/channels, failures, cancellation and cycles need
+ownership proofs before remote calls can support checked ARC. The
+[fixture guide](../tests/fixtures/server-memory/README.md) explains the workload
+notation and the
+[session handoff](development-state.md) records the next implementation action.

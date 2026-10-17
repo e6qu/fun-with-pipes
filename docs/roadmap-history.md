@@ -48,6 +48,32 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Closed connections and completed I/O tasks (PR #158)
+
+[PR #158](https://github.com/e6qu/fun-with-pipes/pull/158) merged as `a96871c9`
+on 2026-10-17 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39011071759)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39011071706)
+passed at `30036a15`. The tested and merged trees match; its parent is accepted
+#157. Its complete message is `Free closed connections and finished I/O tasks`.
+Duplicate postmerge production `39016152665` is confirmed cancelled.
+
+Closed client connections now release after their last storage owner, separately
+from closing the socket. I/O task records have one scheduler owner and free
+without task reference-count updates after their stacks and links are removed.
+Library unload closes idle connections before draining tasks. Fatal allocation
+errors exit without unsafe library teardown from a task stack; two stale failure
+injection hooks were repaired before acceptance.
+
+[Six-platform evidence](measurements/closed-remote-ownership-2026-10-17.json)
+records constant final managed storage after 1/16/256 closed-call batches, with
+collection disabled and physical freeing enabled. Linux AMD64 leaves 1,792 bytes,
+ARM64 6,144; either Mac 640; Windows AMD64 1,024 and ARM64 896. Allocation
+requests are unchanged; connection sharing adds three count increments per
+connection. Actual Linux ARM64/AMD64 instructions confirm direct unique-task
+freeing. These are bounded workload measurements, not whole-process memory or
+C/Rust timing comparisons. Sender inputs and server lifetime work follow.
+
 ## Freed requests and transferred selected fields (PR #157)
 
 [PR #157](https://github.com/e6qu/fun-with-pipes/pull/157) merged as `30668bf8`

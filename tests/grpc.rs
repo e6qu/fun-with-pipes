@@ -246,6 +246,8 @@ fn every_kind_of_call() {
     let servers = greeter_servers(native.then_some(d.as_path()));
     let client = dir().join("client.fwp");
     let split = d.join("split");
+    let failed_client = dir().join("input-failure.fwp");
+    let failed_split = d.join("input-failure-split");
     if native {
         build(
             &[
@@ -254,6 +256,16 @@ fn every_kind_of_call() {
                 "greeter",
                 "-o",
                 split.to_str().unwrap(),
+            ],
+            &dir(),
+        );
+        build(
+            &[
+                failed_client.to_str().unwrap(),
+                "--service",
+                "greeter",
+                "-o",
+                failed_split.to_str().unwrap(),
             ],
             &dir(),
         );
@@ -269,6 +281,29 @@ fn every_kind_of_call() {
             let mut cmd = Command::new(split.join("client"));
             cmd.env("FWP_SERVICE_GREETER", &s.addr);
             outputs.push(("native client", render(&run(cmd, 120))));
+        }
+        // A failing input continuation must preserve the caller's trap and
+        // produce no response, for each interpreter/native client/server pair.
+        for interpreted in [true, false] {
+            if !interpreted && !native {
+                continue;
+            }
+            let mut cmd = if interpreted {
+                let mut cmd = Command::new(fwp());
+                cmd.args(["run", "--interp", "--service", "greeter"])
+                    .arg(&failed_client);
+                cmd
+            } else {
+                Command::new(failed_split.join("input-failure"))
+            };
+            cmd.env("FWP_SERVICE_GREETER", &s.addr);
+            let out = run(cmd, 120);
+            assert_eq!(out.status.code(), Some(101), "{out:?}");
+            assert!(out.stdout.is_empty(), "{out:?}");
+            assert!(
+                String::from_utf8_lossy(&out.stderr).contains("division by zero"),
+                "{out:?}"
+            );
         }
         // a slow call past its deadline is cancelled on the server
         assert!(
@@ -617,7 +652,7 @@ fn measure_repeated_remote_calls(close_connections: bool) {
         build(&[source.to_str().unwrap(),"--service","greeter","--emit-c","-o",split.to_str().unwrap()],&d);
         let generated=std::fs::read_to_string(split.join(format!("{mode}.c"))).unwrap();
         let instrumented=instrument_repeated_client(&generated);
-        let instrumented=if close_connections {instrument_closed_connections(&instrumented)} else {instrumented};
+        let instrumented=if close_connections {instrument_closed_connections(&instrumented, include_str!("fixtures/grpc_connection_drain.c"))} else {instrumented};
         std::fs::copy(&source,artifacts.join(format!("{mode}.fwp"))).unwrap();
         std::fs::write(artifacts.join(format!("{mode}.c")),&generated).unwrap();
         std::fs::write(artifacts.join(format!("{mode}-measured.c")),&instrumented).unwrap();
@@ -719,7 +754,251 @@ fn measure_repeated_remote_calls(close_connections: bool) {
     println!("{rows}");
 }
 
-fn instrument_closed_connections(code: &str) -> String {
+/// Record input-iterator retention before changing client sender ownership.
+#[test]
+#[ignore = "native sender measurements run on GitHub runners"]
+fn sender_input_memory_measurement() {
+    assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
+    let artifacts = PathBuf::from(
+        std::env::var_os("FWP_REPEATED_CLIENT_ARTIFACTS").expect("measurement artifact directory"),
+    );
+    std::fs::create_dir_all(&artifacts).unwrap();
+    std::fs::copy(dir().join("greeter.fwp"), artifacts.join("greeter.fwp")).unwrap();
+    std::fs::write(
+        artifacts.join("scope.txt"),
+        include_str!("fixtures/sender-inputs/README.md"),
+    )
+    .unwrap();
+    let d = scratch("sender-input-memory");
+    std::fs::copy(dir().join("greeter.fwp"), d.join("greeter.fwp")).unwrap();
+    let mut command = Command::new(fwp());
+    command
+        .args(["serve", "--interp"])
+        .arg(dir().join("client.fwp"))
+        .arg("greeter")
+        .args(["--listen", "127.0.0.1:0"]);
+    let server = start(command, Duration::from_secs(60));
+    let mut rows=String::from("mode\tbatches\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\tconnections_created\tconnections_finalized\tstreams_created\tstreams_finalized\tmessages_created\tmessages_freed\tmessage_requested_bytes\tmessage_freed_bytes\tpeak_message_bytes\n");
+    let mut checkpoints=String::from("mode\tbatches\trepetition\tprior_streams\tmanaged_charged_bytes\tmessage_bytes\tlive_connections\tlive_streams\n");
+    let mut drains=String::from("mode\tbatches\trepetition\tconnections_created\tconnections_closed\tlive_tasks\tmanaged_charged_bytes\tunfinalized_connections\tunfinalized_streams\tmessage_bytes\n");
+    let mut storage=String::from("mode\tbatches\trepetition\tconnection_requested_bytes\tconnection_charged_bytes\tio_task_requested_bytes\tio_task_charged_bytes\tconnection_header_bytes\ttask_bytes\n");
+    let mut senders=String::from("mode\tbatches\trepetition\tsenders_created\tsenders_finished\tinputs_pulled\tinputs_encoded\tsender_requested_bytes\tsender_charged_bytes\tsender_task_requested_bytes\tsender_task_charged_bytes\tsender_bytes\ttask_bytes\n");
+    for (mode, source_text, per_batch, responses, detached) in [
+        (
+            "synchronous",
+            include_str!("fixtures/sender-inputs/synchronous.fwp"),
+            2080,
+            1,
+            false,
+        ),
+        (
+            "bidirectional",
+            include_str!("fixtures/sender-inputs/bidirectional.fwp"),
+            439,
+            64,
+            true,
+        ),
+        (
+            "retained-input",
+            include_str!("fixtures/sender-inputs/retained-input.fwp"),
+            878,
+            64,
+            true,
+        ),
+        (
+            "early-completion",
+            include_str!("fixtures/sender-inputs/early-completion.fwp"),
+            60,
+            3,
+            true,
+        ),
+    ] {
+        let source = d.join(format!("{mode}.fwp"));
+        std::fs::write(&source, source_text).unwrap();
+        let split = d.join(mode);
+        build(
+            &[
+                source.to_str().unwrap(),
+                "--service",
+                "greeter",
+                "--emit-c",
+                "-o",
+                split.to_str().unwrap(),
+            ],
+            &d,
+        );
+        let generated = std::fs::read_to_string(split.join(format!("{mode}.c"))).unwrap();
+        let instrumented = instrument_sender_client(&generated);
+        std::fs::copy(&source, artifacts.join(format!("{mode}.fwp"))).unwrap();
+        std::fs::write(artifacts.join(format!("{mode}.c")), &generated).unwrap();
+        std::fs::write(artifacts.join(format!("{mode}-measured.c")), &instrumented).unwrap();
+        let ordinary = artifacts.join(format!("{mode}{}", std::env::consts::EXE_SUFFIX));
+        let measured = artifacts.join(format!("{mode}-measured{}", std::env::consts::EXE_SUFFIX));
+        fwp::cgen::compile_c(&generated, &ordinary, "-O2").unwrap();
+        fwp::cgen::compile_c(&instrumented, &measured, "-O2").unwrap();
+        for batches in [1, 16, 256] {
+            let expected = format!("{}\n", batches * per_batch);
+            let mut reference = Command::new(fwp());
+            reference
+                .args(["run", "--interp", "--service", "greeter"])
+                .arg(&source)
+                .arg(batches.to_string())
+                .env("FWP_NO_OPT", "1")
+                .env("FWP_SERVICE_GREETER", &server.addr);
+            let output = run(reference, 120);
+            assert!(output.status.success(), "reference: {}", render(&output));
+            assert_eq!(String::from_utf8_lossy(&output.stdout), expected);
+            for (exe, record, repetition) in [
+                (&ordinary, false, 0),
+                (&measured, true, 0),
+                (&measured, true, 1),
+                (&measured, true, 2),
+            ] {
+                let mut command = Command::new(exe);
+                command
+                    .arg(batches.to_string())
+                    .env("FWP_SERVICE_GREETER", &server.addr)
+                    .env("FWP_FREE", "1")
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_REUSE_VERIFY", "0");
+                let output = run(command, 120);
+                assert!(
+                    output.status.success(),
+                    "{mode}/{batches}: {}",
+                    render(&output)
+                );
+                assert_eq!(String::from_utf8_lossy(&output.stdout), expected);
+                let stderr = String::from_utf8(output.stderr).unwrap();
+                if !record {
+                    assert!(stderr.is_empty(), "{stderr}");
+                    continue;
+                }
+                std::fs::write(
+                    artifacts.join(format!("{mode}-{batches}-{repetition}.log")),
+                    &stderr,
+                )
+                .unwrap();
+                let mut unique = std::collections::BTreeMap::new();
+                let mut count = 0;
+                let mut closed = 0;
+                for line in stderr.lines() {
+                    let (label, fields) = line.split_once('\t').expect("measurement prefix");
+                    let values: Vec<u64> = fields.split('\t').map(|v| v.parse().unwrap()).collect();
+                    match label {
+                        "call-memory" => {
+                            assert_eq!(values.len(), 5);
+                            assert_eq!(values[0], count);
+                            count += 1;
+                            checkpoints
+                                .push_str(&format!("{mode}\t{batches}\t{repetition}\t{fields}\n"));
+                        }
+                        "connection-drain" => {
+                            assert_eq!(values.len(), 7);
+                            closed += 1;
+                            assert_eq!(values[0], closed);
+                            assert_eq!(values[1], closed);
+                            assert_eq!(values[2], 0);
+                            assert_eq!(&values[4..], &[0, 0, 0]);
+                            drains
+                                .push_str(&format!("{mode}\t{batches}\t{repetition}\t{fields}\n"));
+                        }
+                        "client-memory" | "transport-memory" | "connection-storage"
+                        | "sender-storage" => {
+                            assert!(unique.insert(label, (fields, values)).is_none());
+                        }
+                        _ => panic!("unexpected measurement output: {line}"),
+                    }
+                }
+                assert_eq!(count, batches);
+                assert_eq!(closed, batches);
+                assert_eq!(unique.len(), 4);
+                let (memory, m) = &unique["client-memory"];
+                assert_eq!(m.len(), 6);
+                assert_eq!(m[5], 0);
+                let (transport, t) = &unique["transport-memory"];
+                assert_eq!(t.len(), 9);
+                assert_eq!(&t[..4], &[batches, batches, batches, batches]);
+                assert_eq!(t[4], batches * responses);
+                assert_eq!(t[4], t[5]);
+                assert_eq!(t[6], t[7]);
+                let (connection, c) = &unique["connection-storage"];
+                assert_eq!(c.len(), 6);
+                assert!(c[1] >= c[0] && c[3] >= c[2]);
+                assert_eq!(c[2], 2 * batches * c[5]);
+                let (sender, s) = &unique["sender-storage"];
+                assert_eq!(s.len(), 10);
+                let expected_senders = if detached { batches } else { 0 };
+                assert_eq!(s[0], expected_senders);
+                assert_eq!(s[1], s[0]);
+                assert_eq!(s[2], s[3]);
+                if mode == "early-completion" {
+                    assert!(s[2] >= 3 * batches && s[2] <= 64 * batches);
+                } else {
+                    assert_eq!(s[2], 64 * batches);
+                }
+                assert_eq!(s[4], s[0] * s[8]);
+                assert_eq!(s[6], s[0] * s[9]);
+                assert!(s[5] >= s[4] && s[7] >= s[6]);
+                rows.push_str(&format!(
+                    "{mode}\t{batches}\t{repetition}\t{memory}\t{transport}\n"
+                ));
+                storage.push_str(&format!("{mode}\t{batches}\t{repetition}\t{connection}\n"));
+                senders.push_str(&format!("{mode}\t{batches}\t{repetition}\t{sender}\n"));
+            }
+        }
+        if mode == "bidirectional" {
+            let broken =
+                instrumented.replace("client_drain_connections();", "client_require_drained();");
+            assert_ne!(broken, instrumented);
+            let path = artifacts.join(format!(
+                "missing-sender-drain{}",
+                std::env::consts::EXE_SUFFIX
+            ));
+            std::fs::write(artifacts.join("missing-sender-drain.c"), &broken).unwrap();
+            fwp::cgen::compile_c(&broken, &path, "-O2").unwrap();
+            let mut command = Command::new(path);
+            command
+                .arg("1")
+                .env("FWP_SERVICE_GREETER", &server.addr)
+                .env("FWP_FREE", "1")
+                .env("FWP_GC", "off")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_REUSE_VERIFY", "0");
+            let output = run(command, 120);
+            assert_eq!(output.status.code(), Some(213), "{}", render(&output));
+            std::fs::write(artifacts.join("missing-sender-drain.log"), render(&output)).unwrap();
+        }
+    }
+    for (name, table) in [
+        ("memory.tsv", rows),
+        ("checkpoints.tsv", checkpoints),
+        ("drains.tsv", drains),
+        ("connection-storage.tsv", storage),
+        ("senders.tsv", senders),
+    ] {
+        std::fs::write(artifacts.join(name), table).unwrap();
+    }
+}
+
+fn instrument_sender_client(generated: &str) -> String {
+    let mut code = instrument_repeated_client(generated);
+    code = instrument_closed_connections(&code, include_str!("fixtures/grpc_sender_drain.c"));
+    for (before,after) in [
+        ("static int g_input_next(g_input *input, V *value) {", "static uint64_t client_inputs_pulled,client_inputs_encoded,client_senders_created,client_senders_finished;\nstatic int g_input_next(g_input *input, V *value) {"),
+        ("    input->cur = fwp_apply1(OBJ(node)->f[1], FWP_UNIT);\n#endif\n    return 1;", "    input->cur = fwp_apply1(OBJ(node)->f[1], FWP_UNIT);\n#endif\n    if(client_active)client_inputs_pulled++;\n    return 1;"),
+        ("static void g_sender_peer_finish(void *arg) {", "static void client_note_sender(g_sender *);\nstatic void client_note_sender_task(fwp_task *);\nstatic void g_sender_peer_finish(void *arg) {\n    if(client_active)client_senders_finished++;"),
+        ("    g_sender *x = (g_sender *)fwp_alloc(sizeof *x);", "    g_sender *x = (g_sender *)fwp_alloc(sizeof *x); client_note_sender(x);"),
+        ("    fwp_task *t = fwp_spawn_task(0, g_send_all, x, 0, 1);", "    fwp_task *t = fwp_spawn_task(0, g_send_all, x, 0, 1); client_note_sender_task(t);"),
+        ("static void g_encode_request(const fwp_remote *r, V *vals, h2_buf *out) {", "static void g_encode_request(const fwp_remote *r, V *vals, h2_buf *out) {\n    if(client_active)client_inputs_encoded++;"),
+        ("    client_connection_storage();", "    client_connection_storage();\n    client_sender_storage();"),
+    ] {assert_eq!(code.matches(before).count(),1,"{before}");code=code.replacen(before,after,1);}
+    code
+}
+
+fn instrument_closed_connections(code: &str, drain_fixture: &str) -> String {
     let mut code = code.to_owned();
     let signature = "static g_stream *g_open_tls(const char *addr";
     assert_eq!(code.matches(signature).count(), 1);
@@ -751,7 +1030,7 @@ fn instrument_closed_connections(code: &str) -> String {
     let main = code
         .find("static void *fwp_main_thread(void *arg) {")
         .unwrap();
-    code.insert_str(main, include_str!("fixtures/grpc_connection_drain.c"));
+    code.insert_str(main, drain_fixture);
     let end = "    client_transport_end();";
     assert_eq!(code.matches(end).count(), 1);
     code.replacen(
@@ -846,3 +1125,6 @@ fn go_client_interoperates() {
         );
     }
 }
+
+#[path = "support/grpc_server_measurement.rs"]
+mod server_measurement;

@@ -1,0 +1,22 @@
+import greeter
+
+# firsts returns the first three inputs multiplied by ten: 10 + 20 + 30 = 60.
+# Scheduling may evaluate additional input elements before the sender stops.
+# Use this for cleanup correctness, not an equal-work allocation comparison.
+consume : I64 -> I64
+consume =
+    const 1 | iter.count-from | iter.take 64 | greeter.firsts | iter.fold add 0
+
+step = curry (both .0 (.1 | consume) | uncurry add)
+
+main =
+    ()
+    | args
+    | head
+    | option.and-then parse-int
+    | (match
+        Some _ -> id
+        None -> "expected a numeric batch count" | fail)
+    | flip iter.take (iter.count-from 0)
+    | iter.fold step 0
+    | echo
