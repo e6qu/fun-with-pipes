@@ -59,6 +59,7 @@ fn failed_calls_reclaim_function_storage_without_collection() {
 static volatile V captured, function_value;
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    double before=fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);
     for (volatile int i = 0; i < 10000; i++) {
         captured = fwp_rc_fresh(fwp_str_new("capture", 7));
         function_value = fwp_rc_fresh(fwp_pap(FUNCTION, 1, (V[]){captured}));
@@ -69,9 +70,10 @@ int main(void) {
         fwp_handlers = h.prev;
         if (fwp_cleanups) return 2;
     }
-    printf("failed call collections: %zu\n", fwp_gc.ncollect);
-    fwp_gc_report();
-    return 0;
+    double remaining=fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget)-before;
+    printf("failed call remaining bytes: %.0f\n", remaining);
+    if(fwp_gc.ncollect)return 172;
+    return remaining==0?0:171;
 }
 "#
     .replace("FUNCTION", id);
@@ -86,34 +88,32 @@ int main(void) {
     let release = "if (function) fwp_closure_drop(function);";
     assert_eq!(owned.matches(release).count(), 1);
     let leaking = owned.replace(release, "(void)function;");
-    let mut freed = Vec::new();
-    for (name, code) in [("leaking", &leaking), ("owned", &owned)] {
+    let mut remaining = Vec::new();
+    for (name, code, expected) in [("leaking", &leaking, 171), ("owned", &owned, 0)] {
         let exe = dir.0.join(name);
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
-        let out = checked(
-            Command::new(&exe)
-                .env("FWP_GC", "off")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_GC_STRESS", "0")
-                .env("FWP_REUSE_VERIFY", "0"),
-        );
-        assert_eq!(out.stdout, b"failed call collections: 0\n");
-        let stats = String::from_utf8_lossy(&out.stderr);
-        freed.push(
-            stats
-                .split(" MiB freed by counts")
-                .next()
+        let out = Command::new(&exe)
+            .env("FWP_GC", "off")
+            .env("FWP_GC_VERIFY", "1")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_REUSE_VERIFY", "0")
+            .output()
+            .unwrap();
+        assert_eq!(out.status.code(), Some(expected), "{name}: {out:?}");
+        let text = String::from_utf8(out.stdout).unwrap();
+        remaining.push(
+            text.trim()
+                .strip_prefix("failed call remaining bytes: ")
                 .unwrap()
-                .rsplit('(')
-                .next()
-                .unwrap()
-                .parse::<f64>()
+                .parse::<u64>()
                 .unwrap(),
         );
     }
-    eprintln!("failed call MiB freed by counts: {freed:?}");
-    // Statistics round to 0.1 MiB; require a difference beyond that precision.
-    assert!(freed[1] > freed[0] + 0.2, "{freed:?}");
+    // A consumed closure must release its own storage even when its captures
+    // have already moved into the failing callee. Check exact retained bytes;
+    // rounded freed-byte statistics cannot distinguish that smaller leak.
+    assert!(remaining[0] >= 10000 * 16, "{remaining:?}");
+    assert_eq!(remaining[1], 0);
 }
 
 #[test]

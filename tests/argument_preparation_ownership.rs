@@ -248,6 +248,14 @@ fn unique_closure_captures_move_through_partial_calls_and_failures() {
     assert_eq!(code.matches(transfer).count(), 2);
     let old = code.replace(transfer, "fi->owned->captures(f, 1);");
     let stolen = code.replace(transfer, "c->n = 0;");
+    let artifacts = std::env::var_os("FWP_STREAM_CLIENT_ARTIFACTS")
+        .map(|path| std::path::PathBuf::from(path).join("capture-moves"));
+    if let Some(path) = &artifacts {
+        std::fs::create_dir_all(path).unwrap();
+        std::fs::write(path.join("captures.c"), &code).unwrap();
+        std::fs::write(path.join("language.c"), &generated).unwrap();
+        std::fs::write(path.join("source.fwp"), SOURCE).unwrap();
+    }
     for opt in ["-O1", "-O2"] {
         for control in [&old, &stolen] {
             fwp::cgen::compile_c(control, &binary, opt).unwrap();
@@ -261,14 +269,23 @@ fn unique_closure_captures_move_through_partial_calls_and_failures() {
             assert_eq!(output.status.code(), Some(201), "{opt}: {output:?}");
         }
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        if let Some(path) = &artifacts {
+            std::fs::copy(&binary, path.join(format!("captures{opt}.exe"))).unwrap();
+        }
         for stress in [false, true] {
-            checked(
+            let output = checked(
                 Command::new(&binary)
                     .env("FWP_GC", if stress { "on" } else { "off" })
                     .env("FWP_GC_STRESS", if stress { "1" } else { "0" })
                     .env("FWP_GC_VERIFY", if stress { "1" } else { "0" })
                     .env("FWP_REUSE_VERIFY", if stress { "1" } else { "0" }),
             );
+            if !stress {
+                if let Some(path) = &artifacts {
+                    std::fs::write(path.join(format!("captures{opt}.tsv")), &output.stdout)
+                        .unwrap();
+                }
+            }
         }
         fwp::cgen::compile_c(&generated, &binary, opt).unwrap();
         let result = checked(

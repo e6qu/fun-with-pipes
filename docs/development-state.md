@@ -55,3 +55,13 @@ on GitHub runners. Bundle with the next delivery only after independent evidence
 | 5 | In progress | CPU kernels and GPU resource ownership |
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
+
+Probe `38994754283` at `3a1ef122` found two test assumptions: the new C fixture
+expected prefix concatenation order even though `concat` is data-last, and the
+existing missing-function-release control expected a rounded freed-byte gap
+that included the formerly duplicated captures. The string expectation now
+matches the language body (`tailsecondfirst`). The existing control now requires
+exact zero retained managed bytes after 10,000 failed calls and detects retained
+closure storage independently of capture movement. All other selected ownership
+and unwind tests passed in that run. The revised controls still need a rerun.
+The cache component's six-host run `38994414068` has passed independently.

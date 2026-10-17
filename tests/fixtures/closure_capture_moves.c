@@ -6,7 +6,7 @@ static int recover_capture(void) { return 1; }
 static V capture_text(const char *text) { return fwp_rc_fresh(fwp_cstr(text)); }
 static V capture_argument(V scalar, V text) { return fwp_rc_fresh(fwp_tuple2(scalar, text)); }
 static void check_capture_result(V result) {
-    if (STR(result)->len != 15 || memcmp(STR(result)->d,"firstsecondtail",15)) _Exit(203);
+    if (STR(result)->len != 15 || memcmp(STR(result)->d,"tailsecondfirst",15)) _Exit(203);
     fwp_rc_free_obj(result);
 }
 int main(void) {
@@ -19,10 +19,12 @@ int main(void) {
         V function=fwp_rc_fresh(fwp_pap(ID,partial?1:2,(V[]){capture_first,capture_second}));
         V alias=0;
         if(shared){alias=function;fwp_rc_dup(alias);}
+        int partial_retains=0;
         if(partial) {
             capture_retains=0;capture_measuring=1;
             function=fwp_apply_owned(function,1,&capture_second);
             capture_measuring=0;
+            partial_retains=capture_retains;
             if(capture_retains!=(shared?1:0))return 201;
         }
         V argument=capture_argument(failure==1?0:scalar,capture_text("tail"));
@@ -52,7 +54,7 @@ int main(void) {
         fwp_rc_free_obj(scalar);
         double after=fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);
         if(!fwp_gc.enabled&&!fwp_reuse_verify&&(before!=after||fwp_gc.ncollect))return 206;
+        printf("%d\t%d\t%d\t%.0f\n", mode, partial_retains, capture_retains, after-before);
     }
-    puts("unique closures move captures; shared closures preserve aliases and cleanup");
     return 0;
 }
