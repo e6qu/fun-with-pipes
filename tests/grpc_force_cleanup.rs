@@ -29,11 +29,11 @@ fn forced_cells_release_received_storage_and_decoder_failure_text() {
     let decode = "g_decode(&src->dec, g->m->d, g->m->n, &x, &why)";
     assert_eq!(generated.matches(decode).count(), 2);
     let generated = generated.replace(decode, "observed_decode(&x, &why)");
-    let copy = "last->memo = FWP_NONE;\n    V f[2] = {(V)(int64_t)code, fwp_cstr(text)};";
+    let copy = "V f[2] = {(V)(int64_t)code, fwp_rc_fresh(fwp_cstr(text))};";
     assert_eq!(generated.matches(copy).count(), 1);
     let generated = generated.replacen(
         copy,
-        "last->memo = FWP_NONE;\n    V f[2] = {(V)(int64_t)code, observed_copy(text)};",
+        "V f[2] = {(V)(int64_t)code, fwp_rc_fresh(observed_copy(text))};",
         1,
     );
     let end = "if (c->server) { g->kind = G_END; g->code = 0; g->text = strdup(\"\"); return; }";
@@ -78,6 +78,7 @@ int main(void){
   allocations=frees=0;memset(owned,0,sizeof owned);
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*stage));
   g_incoming *src=fwp_mem_alloc(sizeof *src);src->c=c;src->s=s;src->what="probe";
+  static const fwp_desc scalar_type={.kind=K_I64};src->dec.ty=&scalar_type;src->dec.error=&scalar_type;
   src->results=stage==2||stage==4||stage==7||stage==10;
   if(stage<3)s->bad=strdup("bad request");else if(stage==3||stage==11)s->remote_end=1;
   else{g_msg *m=malloc(sizeof *m+1);if(!m)return 31;memset(m,0,sizeof *m);m->n=1;m->d[0]=42;remember(m);s->mhead=s->mtail=m;}
@@ -88,7 +89,7 @@ int main(void){
    V r=g_force(cell,stage==0||stage==9,&failure,&error,&desc);
    if(stage==1||stage==2||stage==5||stage==8||stage==10||stage==11)return 2;
    if(stage==0){if(r||cell->forced||cell->src!=src||!failure.text||strcmp(failure.text,"bad request")||frees)return 3;observed_free(failure.text);}
-   else if(stage==9){if(r||cell->forced||cell->src!=src||error!=42||desc)return 4;}
+   else if(stage==9){if(r||cell->forced||cell->src!=src||error!=42||desc!=&scalar_type)return 4;}
    else{
     if(!cell->forced||cell->memo!=r)return 5;
     if(stage==3){if(r!=FWP_NONE)return 6;}

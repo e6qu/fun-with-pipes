@@ -7,6 +7,11 @@ on:
         type: choice
         options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, chain-cleanup, macos-shards, ci-profile]
         default: numerical
+      native_runner:
+        description: Native host for an early probe; all uses the suite's full matrix
+        type: choice
+        options: [all, ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+        default: all
       source_revision:
         description: Full source commit for the CI profile comparison
         type: string
@@ -22,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: ${{ fromJSON((inputs.suite == 'stream-storage' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux') && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows' || inputs.suite == 'tcp-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
+        runner: ${{ fromJSON(inputs.native_runner != 'all' && format('["{0}"]', inputs.native_runner) || (inputs.suite == 'stream-storage' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux') && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows' || inputs.suite == 'tcp-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:

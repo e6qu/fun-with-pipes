@@ -1226,14 +1226,20 @@ static int g_decode(const g_codec *k, const unsigned char *msg, size_t n, V *out
         h.cleanup = fwp_cleanups;
         fwp_handlers = &h;
         if (setjmp(h.jb) == 0) {
-            V r = fwp_apply1(k->fn, fwp_str_new((const char *)msg, n));
+            V bytes = fwp_rc_fresh(fwp_str_new((const char *)msg, n));
+            V r = fwp_apply_borrowed_prefix(k->fn, 1, &bytes, 1);
             fwp_handlers = h.prev;
             *out = r;
             return G_DEC_OK;
         }
         fwp_handlers = h.prev;
         fwp_state_restore(h.state_depth);
+        fwp_value_owner error = {h.value, h.desc->drop};
+        fwp_cleanup error_cleanup;
+        fwp_value_protect(&error, &error_cleanup);
         *why = strdup(STR(OBJ(h.value)->f[1])->d);
+        fwp_cleanup_pop(&error_cleanup);
+        fwp_value_release(&error);
         return G_DEC_BAD;
     }
     /* the details of malformed messages differ between the backends: a
@@ -1304,6 +1310,9 @@ static g_incoming *g_incoming_new(const char *what, size_t length) {
     memcpy(text, what, length);
     text[length] = 0;
     src->what = text;
+#ifdef FWP_RESOURCE_OWNERS
+    fwp_rc_fresh(PTR(src));
+#endif
     return src;
 }
 
@@ -1321,6 +1330,9 @@ static g_incoming *g_incoming_client(const char *method, const char *address) {
     char *text = (char *)(src + 1);
     snprintf(text, length + 1, "%s (%s)", method, address);
     src->what = text;
+#ifdef FWP_RESOURCE_OWNERS
+    fwp_rc_fresh(PTR(src));
+#endif
     return src;
 }
 
@@ -1331,6 +1343,62 @@ typedef struct {
     union { g_incoming *src; V memo; };
     int forced;
 } g_cell;
+
+/* Exactly one unread position owns the source. Connections and streams remain
+ * collector-managed in this batch; freeing this source does not cancel them. */
+static void g_incoming_drop(g_incoming *source) {
+#ifndef FWP_RESOURCE_NO_FREE
+    fwp_rc_free_obj(PTR(source));
+#else
+    (void)source;
+#endif
+}
+
+static g_cell *g_cell_new(g_incoming *source) {
+    g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
+    cell->src = source;
+#ifdef FWP_RESOURCE_OWNERS
+    fwp_rc_fresh(PTR(cell));
+#endif
+    return cell;
+}
+
+/* Typed cache destruction follows the optional/tuple/next-position chain in a
+ * loop. A shared wrapper keeps its children alive. No per-position type pointer
+ * or cleanup work list is needed; generated code supplies the element drop. */
+static void g_cell_drop(V value, void (*drop_element)(V)) {
+    for (;;) {
+        if (!fwp_rc_release_last(value)) return;
+        g_cell *cell = (g_cell *)(uintptr_t)value;
+        if (!cell->forced) {
+            g_incoming *source = cell->src;
+            fwp_rc_free_obj(value);
+            g_incoming_drop(source);
+            return;
+        }
+        V result = cell->memo;
+        fwp_rc_free_obj(value);
+        if (!fwp_rc_release_last(result)) return;
+        V pair = OBJ(result)->f[0];
+        fwp_rc_free_obj(result);
+        if (!fwp_rc_release_last(pair)) return;
+        V next = OBJ(pair)->f[1];
+        if (drop_element) drop_element(OBJ(pair)->f[0]);
+        fwp_rc_free_obj(pair);
+        value = next;
+    }
+}
+
+/* Protect the first client read before transferring its position to grpc._iter.
+ * The compiler already emits the typed argument destructor for that function. */
+typedef struct { V cell; const fwp_owned_fninfo *types; } g_iterator_owner;
+static void g_iterator_release(void *value) {
+    g_iterator_owner *owner = value;
+    if (owner->cell) {
+        V cell = owner->cell; owner->cell = 0;
+        owner->types->drop_arguments(&cell, 0, 1);
+    }
+}
 
 /* fail the call being served with a status: its task is cancelled and
  * answers with it */
@@ -1354,12 +1422,19 @@ typedef struct { int code; char *text; } g_failure;
  * to *f or *err_desc (the cell stays unforced) instead of trapping */
 /* `Some((Err (GrpcError code text), <the end>))` */
 static V g_err_element(int code, const char *text) {
-    g_cell *last = (g_cell *)fwp_mem_alloc(sizeof *last);
+    g_cell *last = g_cell_new(0);
     last->forced = 1;
     last->memo = FWP_NONE;
-    V f[2] = {(V)(int64_t)code, fwp_cstr(text)};
-    V e = fwp_record(2, f);
-    return fwp_some(fwp_tuple2(fwp_data(1, 1, &e), PTR(last)));
+    V tail = PTR(last);
+    fwp_cleanup tail_cleanup;
+    fwp_cleanup_push(&tail_cleanup, fwp_rc_cleanup_cell, &tail);
+    V f[2] = {(V)(int64_t)code, fwp_rc_fresh(fwp_cstr(text))};
+    V e = fwp_rc_fresh(fwp_record(2, f));
+    V error = fwp_rc_fresh(fwp_data(1, 1, &e));
+    V pair = fwp_rc_fresh(fwp_tuple2(error, PTR(last)));
+    V result = fwp_rc_fresh(fwp_some(pair));
+    fwp_cleanup_pop(&tail_cleanup);
+    return result;
 }
 
 static void g_incoming_read_done(void *value) {
@@ -1408,6 +1483,7 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
     g_recv(src->c, src->s, src->deadline, g);
     V r = FWP_NONE;
     if (src->results) {
+        int continues = 0;
         /* a failure is an `Err` element, then the end */
         if (g->kind == G_MSG) {
             V x;
@@ -1418,10 +1494,14 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             fwp_cleanup decode_cleanup;
             fwp_cleanup_push(&decode_cleanup, fwp_tls_subject_free, why);
             if (k == G_DEC_OK) {
-                g_cell *next = (g_cell *)fwp_mem_alloc(sizeof *next);
-                next->src = src;
-                r = fwp_some(fwp_tuple2(fwp_data(0, 1, &x), PTR(next)));
+                g_cell *next = g_cell_new(0);
+                V ok = fwp_rc_fresh(fwp_data(0, 1, &x));
+                V pair = fwp_rc_fresh(fwp_tuple2(ok, PTR(next)));
+                r = fwp_rc_fresh(fwp_some(pair));
+                next->src = src; /* source moves when the result is published below */
+                continues = 1;
             } else {
+                if (k == G_DEC_ERROR && src->dec.error->drop) src->dec.error->drop(x);
                 char *t = k == G_DEC_BAD ? g_strdupf("bad response from %s: %s", src->what, why)
                                          : strdup("unexpected error in a response");
                 fwp_cleanup text_cleanup;
@@ -1442,6 +1522,7 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
         cell->forced = 1;
         fwp_cleanup_pop(&reading_cleanup);
         g_incoming_read_done(src);
+        if (!continues) g_incoming_drop(src);
         return r;
     }
     if (g->kind == G_MSG) {
@@ -1467,15 +1548,19 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
                 g_incoming_read_done(src);
                 return 0;
             }
+            fwp_value_owner decoded_error = {x, src->dec.error->drop};
+            fwp_cleanup decoded_error_cleanup;
+            fwp_value_protect(&decoded_error, &decoded_error_cleanup);
             fwp_buf b = {0};
             fwp_cleanup error_buffer;
             fwp_cleanup_push(&error_buffer, fwp_file_buffer_cleanup, &b);
             fwp_write(&b, x, src->dec.error, 1);
             g_trapf("service call %s failed: error: %.*s", src->what, (int)b.len, b.d ? b.d : "");
         }
-        g_cell *next = (g_cell *)fwp_mem_alloc(sizeof *next);
-        next->src = src;
-        r = fwp_some(fwp_tuple2(x, PTR(next)));
+        g_cell *next = g_cell_new(0);
+        V pair = fwp_rc_fresh(fwp_tuple2(x, PTR(next)));
+        r = fwp_rc_fresh(fwp_some(pair));
+        next->src = src; /* no allocation or yield before publication */
         fwp_cleanup_pop(&decode_cleanup);
         fwp_tls_subject_free(why);
     } else if (g->kind == G_END && g->code == 0) {
@@ -1505,6 +1590,7 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
     cell->forced = 1;
     fwp_cleanup_pop(&reading_cleanup);
     g_incoming_read_done(src);
+    if (r == FWP_NONE) g_incoming_drop(src);
     return r;
 }
 
@@ -1803,8 +1889,14 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     src->dec = dec;
     src->deadline = deadline;
     src->results = r->m.output == 3;
-    g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
-    cell->src = src;
+    g_cell *cell = g_cell_new(src);
+#ifdef FWP_RESOURCE_OWNERS
+    const fwp_owned_fninfo *types = fwp_fns[r->m.iter_fn].owned;
+    if (!types || !types->drop_arguments) fwp_trap("missing stream ownership metadata");
+    g_iterator_owner pending = {PTR(cell), types};
+    fwp_cleanup cell_cleanup;
+    fwp_cleanup_push(&cell_cleanup, g_iterator_release, &pending);
+#endif
     g_failure f = {0, 0};
     V ev = 0;
     const fwp_desc *ed = 0;
@@ -1813,9 +1905,15 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
         if (ed) fwp_fail(ev, ed);
         g_stub_fail(r, addr, f.code, f.text);
     }
+    V function = fwp_rc_fresh(fwp_pap((uint32_t)r->m.iter_fn, 0, 0));
+    V argument = PTR(cell);
+#ifdef FWP_RESOURCE_OWNERS
+    pending.cell = 0;
+    fwp_cleanup_pop(&cell_cleanup);
+#endif
     fwp_cleanup_pop(&first_received);
     g_got_release(&first);
-    return fwp_apply1(fwp_pap((uint32_t)r->m.iter_fn, 0, 0), PTR(cell));
+    return fwp_apply_owned(function, 1, &argument);
 }
 
 /* ----------------------------------------------------------------- servers */
@@ -2111,9 +2209,10 @@ static int g_run_method(g_job *j, char **msg) {
         src->server = 1;
         g_codec d = {0, m->schema, m->req_node, m->req[0], 0};
         src->dec = d;
-        g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
-        cell->src = src;
-        args[na++] = fwp_apply1(fwp_pap((uint32_t)m->iter_fn, 0, 0), PTR(cell));
+        g_cell *cell = g_cell_new(src);
+        V function = fwp_rc_fresh(fwp_pap((uint32_t)m->iter_fn, 0, 0));
+        V argument = PTR(cell);
+        args[na++] = fwp_apply_owned(function, 1, &argument);
     }
     g_codec enc = {0, m->schema, m->resp_node, m->resp, 0};
     if (m->output == 2) args[na++] = g_sink_value(j->c, j->s, enc, m->error != 0);
@@ -2814,11 +2913,27 @@ static V fwp_p_grpc_with_deadline(V d, V f) {
     return g_with_ctx(ctx, f);
 }
 
-static V fwp_p_grpc_force(V cell) {
+static V fwp_p_grpc_force(V value, void (*drop_cell)(V)) {
+#ifdef FWP_RESOURCE_OWNERS
+    fwp_value_owner owner = {value, drop_cell};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
+#else
+    (void)drop_cell;
+#endif
     g_failure f = {0, 0};
     V ev = 0;
     const fwp_desc *ed = 0;
-    return g_force((g_cell *)(uintptr_t)cell, 0, &f, &ev, &ed);
+    g_cell *cell = (g_cell *)(uintptr_t)value;
+    V result = g_force(cell, 0, &f, &ev, &ed);
+#ifdef FWP_RESOURCE_OWNERS
+    /* This call consumes its position. Move its cached owner when exclusive;
+     * only a shared position needs an additional reference to the result. */
+    if (fwp_rc_last(value)) cell->memo = FWP_NONE;
+    else fwp_rc_dup(result);
+    drop_cell(fwp_value_finish(&owner, &cleanup));
+#endif
+    return result;
 }
 
 #endif /* __wasi__ */

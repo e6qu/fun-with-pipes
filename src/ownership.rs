@@ -163,6 +163,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "grpc._force" => (&[C], ResultOwnership::OwnedTree, None, &[]),
         "grpc.with-gzip" => (
             &[B],
             ResultOwnership::OwnedCallback,
