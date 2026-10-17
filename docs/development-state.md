@@ -7,7 +7,8 @@ Updated 2026-10-17 UTC. All seven work areas in [PLAN.md](../PLAN.md) remain ope
 Branch `own-client-requests` starts at accepted #156 merge
 `29302bae30f6dbfae63166bb9171c7da5b237789`. It combines request cleanup,
 compiler field transfers and service TLS-cache construction fixes. No syntax
-changes. Publish one draft PR, then make it ready after focused evidence and
+changes. [Draft PR #157](https://github.com/e6qu/fun-with-pipes/pull/157) is published
+with initial head `2844e493`. Make it ready after focused evidence and
 final documentation are complete; require all nine final-head production jobs
 and documentation before authorized squash merge. Use one subject, at most
 80 characters, and an explicitly empty body. Verify the resulting tree/message.
@@ -92,12 +93,20 @@ production gates. One delivery PR at a time.
 ## Next independent measurement
 
 Worktree `/private/tmp/fwp-closed-client-connections`, branch
-`measure-closed-client-connections`, starts at `d7a161d1`. No changes are published
-yet. Measure actual clients with connection closure and complete I/O-task draining
+`measure-closed-client-connections`, published at `d802e102`, starts at `d7a161d1`.
+Linux `connection-repeat` probe `39002262144` is queued/running. Measure actual clients with connection closure and complete I/O-task draining
 between calls and before the final sample. Preserve the pooled-client comparison
 as a separate workload. Validate output, connection counts and drained task lists;
 record remaining managed/raw storage before choosing the next ownership change.
-The implementation is not written or verified yet.
+The measurement is written and formatted but has not passed native validation.
+See that worktree for its current harness; do not replace the pooled baseline.
+
+## Repaired documentation gate
+
+Draft documentation run `39002073026` failed because the new compiler test was
+missing from the explicit Mac test schedule. It is now assigned to the GC job;
+existing assignments are unchanged. All seven native-runner coverage/failure
+checks passed under the root guard in 0.89s; their build commands are mocked. This is a CI selection fix, not a runtime source change.
 
 ## Local verification and remaining work
 
