@@ -28,6 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         runner: ${{ fromJSON(inputs.native_runner != 'all' && format('["{0}"]', inputs.native_runner) || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
+        part: ${{ fromJSON(inputs.suite == 'server-entries' && '["checks","stdio","http-rest","http-mcp"]' || '["checks"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
@@ -36,6 +37,7 @@ jobs:
       RUST_TEST_THREADS: 2
       FWP_UDP_ARTIFACTS: server-check-evidence/udp
       FWP_SERVER_ENTRY_ARTIFACTS: server-check-evidence/entries
+      FWP_ENTRY_INTERFACE: ${{ matrix.part == 'http-rest' && 'rest' || matrix.part == 'http-mcp' && 'mcp' || '' }}
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -68,28 +70,51 @@ jobs:
         run: |
           mkdir -p server-check-evidence
           git rev-parse HEAD > server-check-evidence/revision.txt
-          clang --version > server-check-evidence/c.txt
           rustc -Vv > server-check-evidence/rust.txt
-          python3 -c "import platform; print(platform.platform()); print(platform.machine()); print(platform.processor())" > server-check-evidence/cpu.txt
           printf '%s\n' '${{ runner.os }} ${{ runner.arch }}' > server-check-evidence/platform.txt
+          printf '%s\n' '${{ github.run_id }}' > server-check-evidence/run.txt
+          python3 - <<'PY'
+          import hashlib, json, os, platform, subprocess
+          from pathlib import Path
+          evidence = Path('server-check-evidence')
+          compiler = os.environ['CC']
+          (evidence / 'c.txt').write_text(compiler + '\n' + subprocess.check_output([compiler, '--version'], text=True))
+          system = platform.system()
+          if system == 'Linux':
+              cpu = Path('/proc/cpuinfo').read_text()
+          elif system == 'Darwin':
+              cpu = subprocess.check_output(['sysctl', 'machdep.cpu.brand_string', 'hw.model', 'hw.ncpu'], text=True)
+          else:
+              assert system == 'Windows', system
+              cpu = subprocess.check_output(['powershell', '-NoProfile', '-Command', 'Get-CimInstance Win32_Processor | Select-Object Name,Manufacturer,NumberOfCores,NumberOfLogicalProcessors | ConvertTo-Json'], text=True)
+          (evidence / 'cpu.txt').write_text(platform.platform() + '\n' + platform.machine() + '\n' + cpu)
+          files = sorted(p for directory in ['src', 'lib', 'runtime'] for p in Path(directory).rglob('*') if p.is_file())
+          files += [Path('tests/server_entry_ownership.rs'), Path('tests/fixtures/server_entries.fwp'), Path('tests/fixtures/server_entry_client.fwp')]
+          Path('server-check-evidence/source-sha256.json').write_text(json.dumps({str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}, indent=2) + '\n')
+          PY
       - run: cargo fmt --all -- --check
+        if: matrix.part == 'checks'
       - run: cargo clippy --all-targets -- -D warnings
+        if: ${{ !cancelled() && matrix.part == 'checks' }}
       - name: Accepted connections, UDP cleanup and readiness failures
         if: ${{ !cancelled() && inputs.suite == 'server-checks' }}
         run: cargo test --no-fail-fast --test grpc_server_connections --test udp_ownership --test native_sockets -- --nocapture
       - name: Generated entry results and ownership restrictions
-        if: ${{ !cancelled() && inputs.suite == 'server-entries' }}
+        if: ${{ !cancelled() && inputs.suite == 'server-entries' && matrix.part == 'checks' }}
         run: cargo test --no-fail-fast --test server_entry_ownership --test arc_execution -- --nocapture
       - name: REST API, authentication and multipart forms with checked ARC
-        if: ${{ !cancelled() && inputs.suite == 'server-entries' }}
+        if: ${{ !cancelled() && inputs.suite == 'server-entries' && matrix.part == 'checks' }}
         run: cargo test --test rest checked_arc_rest_preserves_api_authentication_and_form_results -- --exact --nocapture
       - name: Repeated MCP standard-input requests and non-freeing control
-        if: ${{ !cancelled() && inputs.suite == 'server-entries' }}
+        if: ${{ !cancelled() && inputs.suite == 'server-entries' && matrix.part == 'stdio' }}
         run: cargo test --test server_entry_ownership mcp_stdio_releases_repeated_requests_without_collection -- --ignored --exact --nocapture
+      - name: HTTP entry results, retained storage and process memory
+        if: ${{ !cancelled() && inputs.suite == 'server-entries' && startsWith(matrix.part, 'http-') }}
+        run: cargo test --test server_entry_ownership generated_http_entries_release_requests_and_bound_process_memory -- --ignored --exact --nocapture
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: ${{ inputs.suite }}-${{ matrix.runner }}
+          name: ${{ inputs.suite }}-${{ matrix.runner }}-${{ matrix.part }}
           path: server-check-evidence/
           if-no-files-found: error
   fixed_functions:

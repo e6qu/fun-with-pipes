@@ -142,10 +142,10 @@ Isolated preparation is in `/private/tmp/fwp-server-entries`, branch
 `server-entry-ownership`; do not publish a second delivery PR before #163 merges.
 Both use ordinary fwp server code: a guarded compile-only API probe already
 accepts the full REST API fixture (5.28 s) and a two-tool MCP fixture (3.23 s).
-This is eligibility evidence only, not execution or lifetime acceptance. Keep
-the CLI exclusion until repeated success/error requests, malformed input,
-cancellation, teardown, interpreter agreement and actual no-tracing binaries
-are verified across all six native hosts. Measure allocations and bounded memory
+These initial probes establish eligibility only. Do not claim entry-mode
+acceptance until repeated success/error requests, malformed input, cancellation,
+teardown, interpreter agreement and actual no-tracing binaries are verified
+across all six native hosts. Measure allocations and bounded memory
 for REST HTTP/TLS and MCP standard-input/HTTP modes before claiming support.
 Historical preparation entries are not new tasks.
 
@@ -160,13 +160,31 @@ MCP replies with the raw interpreter, reject channel cycles and reuse the full
 REST API/authentication/form cases. The new integration target is assigned to the
 macOS GC shard and Windows TLS stage; existing targets stay in their original jobs.
 
-The focused `server-entries` runner suite also measures repeated MCP input with
-collection disabled and a deliberately non-freeing control. Runtime/platform
-acceptance is pending. REST/MCP HTTP/TLS memory and cancellation evidence is still
-being implemented; do not publish a delivery PR from this partial preparation.
-Local checks use the root guard and shared target. Lint passes after correcting
-a temporary-directory argument, a fixed-size chunk lint and one caller in the
-REST setup consolidation. Workflow lint and all seven test-runner checks pass.
-The focused MCP test passed its raw-interpreter assertions and emitted tracing C,
-then stopped at the fixed 1 GiB aggregate RSS limit during native compilation.
-That execution moves to CI; no local limit was raised and it is not a passing test.
+The focused `server-entries` suite has four independent parts per native host,
+all with the existing 25-minute limit: functional checks, standard-input memory,
+REST HTTP/TLS memory and MCP HTTP memory. The standard-input check includes a
+deliberately non-freeing control. HTTP checks compare raw-interpreter responses,
+wait for a decoded-input handler marker before disconnecting, and shut down
+normally. Memory jobs retain ordinary/instrumented C and executables, source
+hashes, raw counters and process-memory samples. They compare tracing and ARC
+at one revision; they make no timing or C/Rust parity claim. Six-host execution,
+binary inspection and delivery acceptance remain pending.
+
+The initial Linux probe is run `39073691495` at preparation `aa4da981`; generated
+entry/ownership, complete REST API/authentication/form and MCP memory checks
+pass. The complete log has four passing target summaries and eight executing
+tests. MCP final managed bytes are zero in both freeing modes for 1/16/128 input
+cycles; the deliberately non-freeing control grows from 57,344 to 7,075,680 bytes.
+The expanded six-host HTTP/standard-input suite is the next publication. The CLI help's incorrect claim that every
+server accepts TLS flags is corrected: generated MCP supports plain HTTP and
+standard input; REST and split services accept the documented TLS options.
+
+Local checks use the root guard and shared target. Focused Rust lint passes
+(0.27 s latest), workflow lint passes (1.29 s), and client type checking passes
+(0.76 s). The new client fixture initially needed formatting; it is corrected.
+A serial raw-interpreter HTTP/TLS probe passes in 7.65 s, checking success/error
+statuses, the plaintext disconnect marker and normal shutdown. Full response
+values are asserted by the runner tests. The earlier focused MCP test passed
+its raw-interpreter assertions and emitted tracing C, then stopped at the fixed
+1 GiB aggregate RSS limit during native compilation. That execution moved to
+CI; no local limit was raised and the stopped test is not a passing test.

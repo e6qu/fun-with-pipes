@@ -65,10 +65,10 @@ usage:
                                  the tools of a stateless MCP server, on
                                  stdin and stdout or, with --listen, over
                                  HTTP (see docs/mcp.md)
-                                 (every `fwp serve`, and the servers that
-                                 --rest and --service build, take
+                                 (REST and split-service servers take
                                  --tls-cert file --tls-key file to serve
-                                 over TLS; see docs/tls.md)
+                                 over TLS; see docs/tls.md; generated MCP
+                                 servers use plain HTTP or standard input)
   fwp proto <file.fwp> [--service m]...
                                  print the .proto file of the services
   fwp openapi [--yaml] <file.fwp>

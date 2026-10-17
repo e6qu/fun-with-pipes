@@ -37,6 +37,11 @@ $ fwp serve --mcp converter.fwp                 # the same, without a build step
 | `fwp build file.fwp --mcp [-o out]` | a native executable serving the tools |
 | `fwp serve --mcp file.fwp [--interp] [--listen host:port]` | serve them (compiled and cached, or interpreted) |
 
+`fwp build file.fwp --mcp --gc arc -o server` checks ownership of the generated
+entry and excludes tracing garbage collection. Unsupported lifetimes are compile
+errors. This entry mode is under validation; [the handoff](development-state.md)
+records standard-input and HTTP cleanup checks and native platform evidence.
+
 The server reads one JSON-RPC message per line on standard input and
 writes one response per line on standard output, until its input ends
 (the stdio transport); it logs on stderr only. With `--listen
@@ -105,11 +110,13 @@ list may be cached, in milliseconds.
 
 With `--listen`, the server is a Streamable HTTP endpoint at
 `http://host:port/mcp`:
-
 * each request is a `POST` with one JSON-RPC message, and the response
   is one JSON object (`application/json`);
 * a notification is answered `202 Accepted`;
 * other methods are `405`, other paths `404`.
+
+Generated MCP servers accept plain HTTP; they do not accept `--tls-cert` or
+`--tls-key`. REST and split-service servers have separate TLS options.
 
 The headers `MCP-Protocol-Version`, `Mcp-Method` and, for `tools/call`,
 `Mcp-Name` must match the body's `_meta` version, method and tool name.

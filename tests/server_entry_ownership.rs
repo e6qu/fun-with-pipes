@@ -1,11 +1,18 @@
 //! Generated REST/MCP entries must preserve values and release request owners.
 use fwp::json::Json;
-use std::io::Write;
+use std::io::{BufRead, BufReader, Write};
+use std::net::{Shutdown, TcpStream};
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output, Stdio};
+use std::process::{Child, Command, Output, Stdio};
+use std::sync::mpsc::{self, Receiver};
+use std::thread::JoinHandle;
+use std::time::{Duration, Instant};
 
 #[path = "support/client_allocations.rs"]
 mod client_allocations;
+
+#[path = "support/process_memory.rs"]
+mod process_memory;
 
 fn fixture() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/server_entries.fwp")
@@ -191,6 +198,509 @@ fn generated_entries_reject_unproved_channel_cycles() {
     }
 }
 
+fn headers(interface: &str, name: &str) -> Vec<(String, String)> {
+    let mut headers = vec![("content-type".into(), "application/json".into())];
+    if interface == "mcp" {
+        headers.extend([
+            ("MCP-Protocol-Version".into(), fwp::mcp::VERSION.into()),
+            ("Mcp-Method".into(), "tools/call".into()),
+            ("Mcp-Name".into(), name.into()),
+        ]);
+    }
+    headers
+}
+
+fn http_body(interface: &str, name: &str, argument: &str) -> String {
+    if interface == "mcp" {
+        tool(1, name, argument)
+    } else {
+        argument.into()
+    }
+}
+
+fn path(interface: &str, name: &str) -> String {
+    if interface == "mcp" {
+        "/mcp".into()
+    } else {
+        format!("/{name}")
+    }
+}
+
+fn client_source(interface: &str) -> String {
+    let quote = |s: &str| Json::Str(s.into()).to_string();
+    let mut source = include_str!("fixtures/server_entry_client.fwp").to_owned();
+    source.push_str("\ncases : List[Case]\ncases = [\n");
+    for (name, argument) in [
+        ("copy", r#"{"text":"owned é","values":[1,-2,3]}"#),
+        ("duplicate", r#"{"text":"aliased","values":[4,5]}"#),
+        (
+            "checked",
+            if interface == "mcp" {
+                r#"{"input":0}"#
+            } else {
+                "0"
+            },
+        ),
+    ] {
+        let headers = headers(interface, name)
+            .iter()
+            .map(|(key, value)| format!("({}, {})", quote(key), quote(value)))
+            .collect::<Vec<_>>()
+            .join(", ");
+        source.push_str(&format!(
+            "    Case {{ path = {}, headers = [{headers}], body = {} }},\n",
+            quote(&path(interface, name)),
+            quote(&http_body(interface, name, argument))
+        ));
+    }
+    source.push_str("]\n");
+    source
+}
+
+fn certificate(dir: &Path) {
+    checked(
+        Command::new("openssl")
+            .args([
+                "req",
+                "-x509",
+                "-newkey",
+                "rsa:2048",
+                "-nodes",
+                "-days",
+                "2",
+                "-subj",
+                "/CN=localhost",
+                "-addext",
+                "subjectAltName=DNS:localhost,IP:127.0.0.1",
+                "-keyout",
+                "server.key",
+                "-out",
+                "server.pem",
+            ])
+            .current_dir(dir),
+    );
+}
+
+struct HttpServer {
+    child: Child,
+    addr: String,
+    interface: &'static str,
+    tls: bool,
+    lines: Receiver<String>,
+    log: Option<JoinHandle<String>>,
+}
+
+impl Drop for HttpServer {
+    fn drop(&mut self) {
+        let _ = self.child.kill();
+        let _ = self.child.wait();
+        if let Some(log) = self.log.take() {
+            let _ = log.join();
+        }
+    }
+}
+
+impl HttpServer {
+    fn start(command: &mut Command, interface: &'static str, tls: bool, cert: &Path) -> Self {
+        assert!(!tls || interface == "rest", "MCP exposes plain HTTP only");
+        command.args(["--listen", "127.0.0.1:0"]);
+        if tls {
+            command
+                .arg("--tls-cert")
+                .arg(cert.join("server.pem"))
+                .arg("--tls-key")
+                .arg(cert.join("server.key"));
+        }
+        let mut child = command
+            .stdout(Stdio::null())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let stderr = child.stderr.take().unwrap();
+        let (sender, lines) = mpsc::channel();
+        let log = std::thread::spawn(move || {
+            let mut log = String::new();
+            for line in BufReader::new(stderr).lines() {
+                let line = line.unwrap();
+                log.push_str(&line);
+                log.push('\n');
+                let _ = sender.send(line);
+            }
+            log
+        });
+        let mut server = Self {
+            child,
+            addr: String::new(),
+            interface,
+            tls,
+            lines,
+            log: Some(log),
+        };
+        let announcement = server
+            .lines
+            .recv_timeout(Duration::from_secs(30))
+            .expect("server announcement");
+        let prefix = format!(
+            "fwp: {interface} listening on {}://",
+            if tls { "https" } else { "http" }
+        );
+        let address = announcement
+            .strip_prefix(&prefix)
+            .unwrap_or_else(|| panic!("{announcement}"));
+        server.addr = if interface == "mcp" {
+            address.strip_suffix("/mcp").expect("MCP path").into()
+        } else {
+            address.into()
+        };
+        server
+    }
+
+    fn base(&self) -> String {
+        format!(
+            "{}://{}",
+            if self.tls { "https" } else { "http" },
+            self.addr
+        )
+    }
+
+    fn call(&self, cert: &Path, name: &str, argument: &str) -> (u16, Json) {
+        let mut command =
+            Command::new(std::env::var("FWP_TEST_CURL").unwrap_or_else(|_| "curl".into()));
+        command
+            .args([
+                "--silent",
+                "--show-error",
+                "--max-time",
+                "20",
+                "--http1.1",
+                "--cacert",
+            ])
+            .arg(cert.join("server.pem"));
+        for (name, value) in headers(self.interface, name) {
+            command.args(["--header", &format!("{name}: {value}")]);
+        }
+        let output = checked(
+            command
+                .args([
+                    "--data-binary",
+                    &http_body(self.interface, name, argument),
+                    "--write-out",
+                    "\n%{http_code}",
+                ])
+                .arg(format!("{}{}", self.base(), path(self.interface, name))),
+        );
+        let text = String::from_utf8(output.stdout).unwrap();
+        let (body, status) = text.rsplit_once('\n').unwrap();
+        (status.parse().unwrap(), Json::parse(body).unwrap())
+    }
+
+    fn cancel_handler(&mut self) {
+        assert!(!self.tls);
+        let mut connection = TcpStream::connect(&self.addr).unwrap();
+        connection
+            .set_write_timeout(Some(Duration::from_secs(10)))
+            .unwrap();
+        let body = http_body(
+            self.interface,
+            "slow",
+            r#"{"text":"cancelled alias","values":[1,2,3]}"#,
+        );
+        let headers = headers(self.interface, "slow")
+            .iter()
+            .map(|(key, value)| format!("{key}: {value}\r\n"))
+            .collect::<String>();
+        write!(connection, "POST {} HTTP/1.1\r\nhost: test\r\nconnection: close\r\n{headers}content-length: {}\r\n\r\n{body}",
+            path(self.interface, "slow"), body.len()).unwrap();
+        // The handler announces that it owns the decoded input before waiting.
+        // Disconnect only after this marker, so the case cannot pass without
+        // entering the handler and exercising its live decoded aliases.
+        let marker = self
+            .lines
+            .recv_timeout(Duration::from_secs(30))
+            .expect("handler started");
+        assert_eq!(marker, "entry waiting");
+        connection.shutdown(Shutdown::Both).unwrap();
+    }
+
+    fn stop(mut self, cert: &Path) -> String {
+        let (status, reply) = self.call(cert, "stop", "{}");
+        assert_eq!(status, 200);
+        let result = if self.interface == "mcp" {
+            reply
+                .at(&["result", "structuredContent", "result"])
+                .unwrap()
+        } else {
+            &reply
+        };
+        assert_eq!(result.as_str(), Some("stopping"));
+        let until = Instant::now() + Duration::from_secs(30);
+        loop {
+            if let Some(status) = self.child.try_wait().unwrap() {
+                let log = self.log.take().unwrap().join().unwrap();
+                assert!(status.success(), "{status}: {log}");
+                return log;
+            }
+            assert!(Instant::now() < until, "server failed to finish normally");
+            std::thread::sleep(Duration::from_millis(20));
+        }
+    }
+}
+
+fn exercise_http(server: &HttpServer, cert: &Path) -> Vec<(u16, Json)> {
+    let mut replies = Vec::new();
+    for (name, arguments) in [
+        ("copy", r#"{"text":"owned é","values":[1,-2,3]}"#),
+        ("duplicate", r#"{"text":"aliased","values":[4,5]}"#),
+        (
+            "checked",
+            if server.interface == "mcp" {
+                r#"{"input":0}"#
+            } else {
+                "0"
+            },
+        ),
+    ] {
+        replies.push(server.call(cert, name, arguments));
+    }
+    let payload = Json::parse(r#"{"text":"owned é","values":[1,-2,3]}"#).unwrap();
+    let duplicates =
+        Json::parse(r#"[{"text":"aliased","values":[4,5]},{"text":"aliased","values":[4,5]}]"#)
+            .unwrap();
+    assert_eq!(replies[0].0, 200);
+    assert_eq!(replies[1].0, 200);
+    if server.interface == "rest" {
+        assert_eq!(replies[0].1, payload);
+        assert_eq!(replies[1].1, duplicates);
+        assert_eq!(
+            replies[2],
+            (500, Json::parse(r#"{"error":"zero"}"#).unwrap())
+        );
+    } else {
+        assert_eq!(
+            replies[0].1.at(&["result", "structuredContent"]),
+            Some(&payload)
+        );
+        assert_eq!(
+            replies[1].1.at(&["result", "structuredContent", "result"]),
+            Some(&duplicates)
+        );
+        assert_eq!(replies[2].0, 200);
+        assert_eq!(
+            replies[2].1.at(&["result", "isError"]),
+            Some(&Json::Bool(true))
+        );
+    }
+    replies
+}
+
+#[test]
+fn generated_http_entries_preserve_results_and_disconnected_handler_owners() {
+    let dir = fwp::cgen::TempDir::new("http-entries").unwrap();
+    certificate(dir.path());
+    for interface in ["rest", "mcp"] {
+        let flag = format!("--{interface}");
+        let mut references = Vec::new();
+        for tls in [false, true]
+            .into_iter()
+            .filter(|tls| !tls || interface == "rest")
+        {
+            eprintln!("{interface} HTTP: raw interpreter, TLS={tls}");
+            let mut server = HttpServer::start(
+                Command::new(env!("CARGO_BIN_EXE_fwp"))
+                    .args(["serve", &flag, "--interp"])
+                    .arg(fixture())
+                    .env("FWP_NO_OPT", "1"),
+                interface,
+                tls,
+                dir.path(),
+            );
+            let replies = exercise_http(&server, dir.path());
+            if !tls {
+                server.cancel_handler();
+            }
+            assert_eq!(exercise_http(&server, dir.path()), replies);
+            server.stop(dir.path());
+            references.push((tls, replies));
+        }
+        for mode in ["tracing", "arc"] {
+            eprintln!("{interface} HTTP: building {mode}");
+            let code = generated(dir.path(), &flag, mode, true);
+            let binary = dir.join(format!("{interface}-{mode}.exe"));
+            fwp::cgen::compile_c(&code, &binary, "-O1").unwrap();
+            for (tls, replies) in &references {
+                let mut server = HttpServer::start(
+                    Command::new(&binary)
+                        .env("FWP_GC_STRESS", if mode == "tracing" { "16" } else { "0" })
+                        .env("FWP_GC_VERIFY", if mode == "tracing" { "1" } else { "0" })
+                        .env(
+                            "FWP_REUSE_VERIFY",
+                            if mode == "tracing" { "1" } else { "0" },
+                        ),
+                    interface,
+                    *tls,
+                    dir.path(),
+                );
+                assert_eq!(
+                    &exercise_http(&server, dir.path()),
+                    replies,
+                    "{interface}/{mode}/{tls}"
+                );
+                if !tls {
+                    server.cancel_handler();
+                }
+                assert_eq!(&exercise_http(&server, dir.path()), replies);
+                server.stop(dir.path());
+            }
+        }
+    }
+}
+
+#[test]
+#[ignore = "runner-only REST/MCP HTTP managed-memory and resident-memory measurement"]
+#[cfg(any(target_os = "linux", target_os = "macos", windows))]
+fn generated_http_entries_release_requests_and_bound_process_memory() {
+    assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
+    let interface = match std::env::var("FWP_ENTRY_INTERFACE").as_deref() {
+        Ok("rest") => "rest",
+        Ok("mcp") => "mcp",
+        value => panic!("FWP_ENTRY_INTERFACE must select rest or mcp: {value:?}"),
+    };
+    let artifacts =
+        PathBuf::from(std::env::var_os("FWP_SERVER_ENTRY_ARTIFACTS").expect("entry artifacts"))
+            .join("http");
+    std::fs::create_dir_all(&artifacts).unwrap();
+    certificate(&artifacts);
+    std::fs::copy(fixture(), artifacts.join("server_entries.fwp")).unwrap();
+    std::fs::write(artifacts.join("scope.txt"), "Generated REST (HTTP/TLS) and MCP (HTTP) servers at one revision, tracing versus checked ARC, with collection disabled and counted freeing enabled. An ordinary native ARC client makes three sequential pooled HTTP/2 requests per cycle: a copied record, duplicate aliases of a record, and a caught error. It prints every response status and body. A raw-interpreter server establishes output for each transport, then ordinary and instrumented native servers must match it. Managed counters cover startup after constant initialization through normal entry and cached-value cleanup; include 1/16/128 request cycles and one HTTP/1.1 shutdown request, with three fresh measured processes per case. Raw transport/TLS/OS storage, allocator metadata and client memory are excluded. Separately, ordinary persistent servers process five batches of 1024 cycles (3072 requests per batch), with a fresh client per batch; the 1000-request connection limit exercises replacement. After each client exits and 100 ms settling, Linux VmRSS/macOS ps RSS/Windows WorkingSet64 is sampled. The first batch warms caches; later samples must stay less than 8 MiB above it. These samples are not peak process memory. Native -O2, ordinary fwp optimization and separate floating multiplication/addition rounding. No timing or C/Rust parity claim.\n").unwrap();
+    let mut rows = String::from("interface\tmode\ttls\tcycles\trepetition\trequests\trequested_bytes\tretains\tpeak_bytes\tfinal_bytes\tcollections\n");
+    let mut rss = String::from("interface\tmode\ttls\tbatch\tcumulative_requests\trss_kib\n");
+    let flag = format!("--{interface}");
+    let client_file = artifacts.join(format!("client-{interface}.fwp"));
+    std::fs::write(&client_file, client_source(interface)).unwrap();
+    let client_c = client_file.with_extension("c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--gc", "arc", "--emit-c", "-o"])
+            .arg(&client_c)
+            .arg(&client_file),
+    );
+    let client = client_file.with_extension("exe");
+    fwp::cgen::compile_c(&std::fs::read_to_string(client_c).unwrap(), &client, "-O2").unwrap();
+    let run_client = |server: &HttpServer, cycles: usize| {
+        checked(
+            Command::new(&client)
+                .arg(cycles.to_string())
+                .env("FWP_BASE", server.base())
+                .env("SSL_CERT_FILE", artifacts.join("server.pem"))
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0"),
+        )
+        .stdout
+    };
+    let mut references = Vec::new();
+    for tls in [false, true]
+        .into_iter()
+        .filter(|tls| !tls || interface == "rest")
+    {
+        let server = HttpServer::start(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .args(["serve", &flag, "--interp"])
+                .arg(fixture())
+                .env("FWP_NO_OPT", "1"),
+            interface,
+            tls,
+            &artifacts,
+        );
+        let expected = run_client(&server, 1);
+        assert_eq!(expected.iter().filter(|b| **b == b'\n').count(), 3);
+        server.stop(&artifacts);
+        references.push((tls, expected));
+    }
+    for mode in ["tracing", "arc"] {
+        eprintln!("entry HTTP memory: build {interface}/{mode}");
+        let code = generated(&artifacts, &flag, mode, true);
+        let ordinary = artifacts.join(format!("{interface}-{mode}-true.exe"));
+        fwp::cgen::compile_c(&code, &ordinary, "-O2").unwrap();
+        let counted_code = client_allocations::instrument_client_allocations(&code);
+        let counted = artifacts.join(format!("{interface}-{mode}-measured.exe"));
+        std::fs::write(counted.with_extension("c"), &counted_code).unwrap();
+        fwp::cgen::compile_c(&counted_code, &counted, "-O2").unwrap();
+        for (tls, reference) in &references {
+            let launch = |binary: &Path| {
+                HttpServer::start(
+                    Command::new(binary)
+                        .env("FWP_GC", "off")
+                        .env("FWP_GC_STRESS", "0")
+                        .env("FWP_GC_VERIFY", "0")
+                        .env("FWP_REUSE_VERIFY", "0"),
+                    interface,
+                    *tls,
+                    &artifacts,
+                )
+            };
+            let mut final_bytes = None;
+            for cycles in [1, 16, 128] {
+                let expected = reference.repeat(cycles);
+                let server = launch(&ordinary);
+                assert_eq!(run_client(&server, cycles), expected);
+                server.stop(&artifacts);
+                for repetition in 0..3 {
+                    eprintln!("entry HTTP memory: {interface}/{mode}/TLS={tls}, cycles={cycles}, sample={repetition}");
+                    let server = launch(&counted);
+                    assert_eq!(run_client(&server, cycles), expected);
+                    let stderr = server.stop(&artifacts);
+                    std::fs::write(
+                        artifacts.join(format!(
+                            "{interface}-{mode}-{tls}-{cycles}-{repetition}.stderr"
+                        )),
+                        &stderr,
+                    )
+                    .unwrap();
+                    let reports: Vec<_> = stderr
+                        .lines()
+                        .filter_map(|line| line.strip_prefix("client-memory\t"))
+                        .collect();
+                    assert_eq!(reports.len(), 1);
+                    let counters: Vec<u64> =
+                        reports[0].split('\t').map(|n| n.parse().unwrap()).collect();
+                    assert_eq!(counters.len(), 6);
+                    assert!(counters[0] > 0 && counters[3] >= counters[4]);
+                    assert_eq!(counters[5], 0);
+                    assert_eq!(
+                        *final_bytes.get_or_insert(counters[4]),
+                        counters[4],
+                        "{interface}/{mode}/{tls}/{cycles}"
+                    );
+                    rows.push_str(&format!(
+                        "{interface}\t{mode}\t{tls}\t{cycles}\t{repetition}\t{}\n",
+                        reports[0]
+                    ));
+                    std::fs::write(artifacts.join("memory.tsv"), &rows).unwrap();
+                }
+            }
+            let server = launch(&ordinary);
+            let mut warm = None;
+            for batch in 0..5 {
+                assert_eq!(run_client(&server, 1024), reference.repeat(1024));
+                std::thread::sleep(Duration::from_millis(100));
+                let resident = process_memory::process_rss_kib(server.child.id());
+                assert!(resident > 0);
+                assert!(
+                    resident < *warm.get_or_insert(resident) + 8192,
+                    "{interface}/{mode}/{tls}: RSS {resident}, warm {warm:?}"
+                );
+                rss.push_str(&format!(
+                    "{interface}\t{mode}\t{tls}\t{batch}\t{}\t{resident}\n",
+                    (batch + 1) * 3072
+                ));
+                std::fs::write(artifacts.join("rss.tsv"), &rss).unwrap();
+            }
+            server.stop(&artifacts);
+        }
+    }
+}
+
 #[test]
 #[ignore = "runner-only repeated generated-entry memory measurement"]
 fn mcp_stdio_releases_repeated_requests_without_collection() {
@@ -203,6 +713,7 @@ fn mcp_stdio_releases_repeated_requests_without_collection() {
     let mut rows = String::from("mode\tfree\trepeats\trequests\trequested_bytes\tretains\tpeak_bytes\tfinal_bytes\tcollections\n");
     let mut finals = Vec::new();
     for (mode, free) in [("tracing", true), ("arc", true), ("tracing", false)] {
+        eprintln!("MCP memory: build {mode}, counted freeing={free}");
         let source = generated(&artifacts, "--mcp", mode, free);
         let ordinary = artifacts.join(format!("mcp-{mode}-{free}.exe"));
         fwp::cgen::compile_c(&source, &ordinary, "-O2").unwrap();
@@ -212,6 +723,7 @@ fn mcp_stdio_releases_repeated_requests_without_collection() {
         fwp::cgen::compile_c(&measured, &binary, "-O2").unwrap();
         let mut case_finals = Vec::new();
         for repeats in [1, 16, 128] {
+            eprintln!("MCP memory: {mode}, counted freeing={free}, repetitions={repeats}");
             let run = |path: &Path| {
                 run_input(
                     Command::new(path)
