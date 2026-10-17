@@ -135,7 +135,7 @@ jobs:
         env:
           FWP_STREAM_CLIENT_ARTIFACTS: stream-client-evidence
           FWP_REPEATED_CLIENT_ARTIFACTS: stream-client-evidence
-        run: cargo test --no-fail-fast --test argument_preparation_ownership --test closure_ownership --test retain_unwind_ownership --test runtime_call_ownership --test constructor_type_ownership --test scope_thunk_ownership --test retained_thunk_ownership
+        run: cargo test --no-fail-fast --test boxed_projection_ownership --test argument_preparation_ownership --test closure_ownership --test retain_unwind_ownership --test runtime_call_ownership --test constructor_type_ownership --test scope_thunk_ownership --test retained_thunk_ownership
       - uses: actions/upload-artifact@v7
         if: always() && (inputs.suite == 'stream-clients' || inputs.suite == 'stream-repeat')
         with:
@@ -325,7 +325,7 @@ jobs:
           if-no-files-found: ignore
       - name: Field movement and resource lifetime regressions
         if: inputs.suite == 'fields'
-        run: cargo test --no-fail-fast --test clock_ownership --test directory_report --test working_directory --test arc_execution --test field_moves --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test borrowed_callbacks --test general_record_update_ownership
+        run: cargo test --no-fail-fast --test clock_ownership --test directory_report --test working_directory --test arc_execution --test field_moves --test boxed_projection_ownership --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test borrowed_callbacks --test general_record_update_ownership
       - name: Numeric mapped-array construction and neighboring ownership
         if: inputs.suite == 'mapped-arrays'
         run: cargo test --no-fail-fast --test mapped_array_construction --test numeric_array_fusion --test map_ownership --test array_element_ownership --test arc_execution --test ad_tape_scopes

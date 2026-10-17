@@ -3788,6 +3788,40 @@ impl<'g, 'p> FnGen<'g, 'p> {
                             }
                             return rest;
                         }
+                        // A boxed record with just one counted field can give
+                        // that field to its last owner without a temporary
+                        // retain/drop pair. Scalar siblings have no destructor.
+                        // Keep stack aliases, resource frames and prospective
+                        // storage reuse on their existing paths.
+                        let ty = self.locals[*parent as usize].clone();
+                        if free_enabled()
+                            && !self.stack_children.contains_key(parent)
+                            && !self.vlocals.contains_key(parent)
+                            && !(*parent == 0
+                                && self.in_loop.as_ref().is_some_and(|state| {
+                                    state.record && !state.unpacked_parameters
+                                }))
+                        {
+                            if let Some(types) = record_fields(&self.g.prog.shapes, &ty) {
+                                if types.iter().enumerate().all(|(i, (_, field))| {
+                                    crate::rc::needs_rc(&self.g.prog.shapes, field)
+                                        == (i == *index as usize)
+                                }) && !matches!(&types[*index as usize].1, MT::Con(n, _) if n == "?")
+                                    && !(reuse_enabled() && allocates(rest, types.len()))
+                                {
+                                    self.line(&format!("l{l} = OBJ(l{parent})->f[{index}];"));
+                                    self.line(&format!("if (fwp_rc_last(l{parent})) {{ /* move sole boxed owner */"));
+                                    self.line(&format!("    fwp_rc_free_obj(l{parent});"));
+                                    self.line("} else {");
+                                    self.indent += 1;
+                                    self.count(body, l);
+                                    self.count(after_dup, *parent);
+                                    self.indent -= 1;
+                                    self.line("}");
+                                    return rest;
+                                }
+                            }
+                        }
                     }
                 }
             }

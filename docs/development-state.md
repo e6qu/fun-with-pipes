@@ -36,99 +36,39 @@ tracing-dependent count and five allocations per integer. Raw transport storage
 and timing are excluded. Details and earlier acceptance belong in the benchmark
 guide/history, not a second next-action list.
 
-## Next preparation: release finished request storage
+## Independent compiler preparation
 
-Worktree `/private/tmp/fwp-repeated-remote-calls`, branch
-`own-remote-transport-storage`, published at `c2cfaf1a`.
-Linux probe `38999330000` passed all checks with `numerics.yml`, `suite=stream-repeat`.
-All-six run `38999756987` found Windows fixtures selecting an older API contract
-before generated code. `grpc_connection_addresses` and `grpc_tls_pool_identity`
-now select the required Windows 10 contract before includes and join regular
-Windows production. The new stream-owner controls passed on Windows ARM64; that
-job stopped before repeated-client measurements. Watcher `52202` exits on this
-failure; do not collect or accept this run. Publish the repair and run a fresh
-six-host matrix for its exact head.
-Focused runtime checks now precede closure checks so failures surface sooner.
-No second delivery PR is open.
+Worktree `/private/tmp/fwp-boxed-projections`, branch `move-boxed-projections`,
+starts at request-ownership preparation `997b23a9`. That component's six-host
+run is `39000228402`; its live report/handoff remains in
+`/private/tmp/fwp-repeated-remote-calls`. Do not overwrite that worktree or its
+running evidence collector. Keep one delivery PR; no compiler PR is open.
 
-The untouched baseline is `ac95632b8c77cc8c52f35a451f3c7451d0e29b06`, tag
-`evidence/repeated-remote-baseline-20261017`. All six native jobs passed in
-`38997585835`; branch `measure-repeated-remote-calls` preserves it.
-The next worktree contains the report
-`docs/measurements/repeated-remote-baseline-2026-10-17.json` and raw checkpoint
-TSVs beside it. Inputs are 1/16/256 batches of 64 integers in one client process:
-full sum (2,080), first-32 sum (528), or retaining an iterator across a second call
-and rereading its first value (4,161; two calls per batch). Three measured processes
-per case follow raw interpreter/ordinary native output agreement.
+Actual Linux `c2cfaf1a` client C shows `grpc._iter` retaining a selected
+`GrpcCell[I64]` field, then dropping its tuple parent. The parent has just one
+counted field; its other field is an I64. The new backend path transfers that
+field when the consumed heap tuple has one owner and frees only the tuple.
+Shared tuples retain the selected field before dropping the parent reference.
+Use the existing exceptional owner guard around that retain. Preserve stack
+aliases, virtual loop state, resource frames, disabled freeing and prospective
+allocation reuse on their existing paths. No new runtime wrapper or syntax.
 
-All six hosts retain 240 additional managed bytes per call. One connection is
-reused; no request streams are finalized. Partial readers also leave 609 requested
-message bytes per call in these samples. Collection is disabled; counters end
-after root execution, child-task joins and cached-value cleanup, before
-whole-runtime shutdown. The pool and detached I/O tasks remain live; their
-remaining storage is not evidence of an unreachable connection. Other raw buffers,
-TLS/OS/allocator storage, server/process memory and timings are excluded.
-Queue occupancy may vary with scheduling. This establishes work, not bounded memory.
+`boxed_projection_ownership` compares raw interpretation with native behavior,
+checks unique/shared parents, pointer-like scalar bits, exact live storage,
+traps after selection and deliberately restored retains/stolen shared fields.
+Both O1/O2 and checked ARC/ordinary memory modes are covered; stress checks run
+with tracing. The fixture and implementation are written but unvalidated.
 
-The implementation gives client request streams references from the active
-connection list, receive source and detached sender. Source release discards
-unread input without cancelling the remote operation. The list holds unfinished
-requests until completion/reset/connection death. Last release frees metadata
-and raw request storage and removes the weak collector finalizer. Existing
-allocator count metadata is reused; native layout measurements check the new flag.
-The sender's unused function-encoder field/branch is removed because its sole
-production caller always supplies a static request description.
+Next: publish this preparation and run the focused Linux `fields` suite on CI.
+Fix failures, then measure actual stream clients against `997b23a9` before making
+any retain/allocation/performance claim. The ordinary stream suite must also
+retain the new compiler controls. Full builds stay on GitHub. Local formatting
+passed under the unchanged root guard in 1.05s; run the doc audit before publish.
 
-Server/HTTP streams, connections, pending sender values and retained callback
-contexts still require tracing. Remote calls remain excluded from checked ARC.
-Infinitely many active remote operations are not a bounded-memory claim.
-
-## Failures repaired; validation still required
-
-- `38998638008` at `ad089a73`: new stream-owner injection matched an unrelated
-  finalizer cleanup too. Narrowed it to the request destructor. Other selected
-  runtime/closure tests and queued-message OOM passed.
-- `38999032272` at `4a1823ac`: all stream-owner modes pass, including physical
-  release, GC/reuse stress, no-free controls, sender cancellation, failed sender
-  preparation, count overflow and deliberate missing releases. The expanded
-  receive fixture incorrectly used server cancellation rules; it now uses client
-  status/reset behavior. TLS pool-key OOM printed the right message but aborted
-  because `exit` invoked library unloading from a live task. The two new fatal
-  OOM branches now use `_Exit(102)`; plain/gzip message failures run on task stacks.
-- Review removed duplicate layout output. The latest probe also includes the
-  existing request-encoding failure tests after simplifying the sender.
-
-Next: inspect all-six run `38999756987` and fix any failures. The passing Linux
-probe leaves 6,240 managed bytes at all measured call counts/modes, finalizes
-every created stream/message, and adds one retain per call with unchanged
-allocation requests. Its request header is 232 bytes with 8-byte alignment;
-the new flag uses trailing padding. Sender storage is 40 bytes. These are Linux
-results until the full native matrix verifies them. Use
-`scripts/collect-repeated-client-measurements.py --baseline-report` to require
-all exact-source jobs, output agreement, complete stream/message release and
-constant final managed bytes across measured sizes. Keep both baseline and
-candidate identities. Inspect actual ARM64/AMD64 binaries with
-`scripts/inspect-stream-client-binaries.py`; review layouts and instruction paths.
-The collector fingerprints evidence and copies raw checkpoints; it never executes
-downloaded programs. Full production acceptance of the combined PR is separate.
-
-After this request-storage work, assign connection/pool/task owners and typed
-pending-sender/handler owners, with borrowed scheduler links and explicit cycle
-handling. Review old fatal allocation paths that call `exit` from tasks, and
-unchecked environment-option allocation. These remain concrete follow-up fixes.
-Audit whether retained codec fields have real production callers before adding
-owners for them; do not preserve unused machinery merely to count it.
-
-## Local checks
-
-Full builds and native execution stay on GitHub. Focused local work uses
-`python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py` with unchanged
-limits. Baseline source type-check passed in 0.51s; formatting checks passed in
-1.1–1.4s and doc audits in 2.4–2.7s. Baseline report collection passed in 26.87s;
-updates using retained downloads passed in 1.7s. Static Linux AMD64/ARM64 inspection
-passed in 0.15s per host. Reviewed cache destruction loops have 24-byte AMD64 and
-64-byte ARM64 frames, with callee storage separate; dynamic application retains
-argument storage and dispatch. No downloaded executable ran locally.
+Connection/pool/typed-sender ownership remains open. The live pool and detached
+I/O tasks remain alive at the current client measurement endpoint. Establish
+closed-connection and explicit-drain measurements before treating those bytes
+as leaks. Private design notes are `/private/tmp/fwp-next-connection-ownership.md`.
 
 ## Roadmap status
 
