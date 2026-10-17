@@ -399,20 +399,26 @@ Client connection I/O tasks have one scheduler owner. Their records release
 when execution finishes and their stacks and scheduler links have been removed;
 this path needs no task reference-count updates. Language-visible task handles
 retain the shared-owner policy because callers can keep independent aliases.
-Server jobs also have explicit owners; HTTP server tasks remain open. Connection records
+Server jobs also have explicit owners; the HTTP extension is under validation. Connection records
 can outlive their sockets while response readers retain status information;
 the pool, I/O tasks and callers hold separate storage owners. Library teardown
 closes these connections before waiting for their tasks. The
 [ownership guide](ownership.md) and [measured comparison](benchmarks.md#freeing-closed-connections-and-finished-tasks)
 describe the limits. Checked gRPC client/service builds add iterator scope
 checks and use these owners; [PR #161](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161)
-records passing production acceptance. HTTP handlers remain outside that extension.
+records passing production acceptance. HTTP handler acceptance is separate.
 
 The next HTTP client extension gives pooled connections, I/O tasks and requests
 explicit owners. Responses are copied into typed fields and lists with cleanup
 for partially built values. It also stores complete connection keys, including
-TLS options, instead of truncating them in a fixed-size buffer. Platform checks
-are still pending; [the handoff](development-state.md) tracks acceptance.
+TLS options, instead of truncating them in a fixed-size buffer. The server
+extension owns the connection, request handles and writer tasks. Each handle
+also carries its task payload, replacing two allocations with one. Handler
+captures have one connection owner, borrowed by its request tasks; this owner
+survives failure before child tasks finish. The reader's 64 KiB scratch buffer
+stays on its stack because processing copies each chunk before the next read.
+Platform checks and stack/memory measurements are pending;
+[the handoff](development-state.md) tracks acceptance.
 
 Accepted input ownership gives remote input iterators concrete destruction
 metadata. Its cursor keeps the current element alive while advancing to the
@@ -506,8 +512,11 @@ main/function/CLI entries use the same ownership checks and free counted storage
 through their existing external count table. Checked gRPC clients and service
 methods additionally prove when sent and received iterator steps run; the
 [service guide](services.md#building-without-tracing-collection) explains the
-command and current validation. Browser re-entry, WASI host fibers, HTTP handlers,
-REST and MCP entry points remain excluded. The allocators still use metadata;
+command and current validation. HTTP client/server extensions are under validation.
+Browser re-entry, WASI host fibers, REST and MCP entry points remain excluded.
+HTTP stream handles cannot be queued through a channel in checked ARC: their
+connection retains the handler, whose captures could contain that same channel.
+The allocators still use metadata;
 native allocation may retain reusable pages. See
 [the precise memory contract](ownership.md#checked-arc-delivery).
 
