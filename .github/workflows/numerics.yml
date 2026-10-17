@@ -23,10 +23,12 @@ on:
         type: string
 jobs:
   paths:
+    name: ${{ matrix.part == 'client' && format('client checks ({0})', matrix.runner) || matrix.part == 'server' && format('server checks ({0})', matrix.runner) || format('paths ({0})', matrix.runner) }}
     if: (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc') || inputs.suite == 'chain-cleanup' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat')))) || inputs.suite == 'stream-storage' || inputs.suite == 'context-owners' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
       fail-fast: false
       matrix:
+        part: ${{ fromJSON((inputs.suite == 'server-repeat' || inputs.suite == 'server-arc') && '["server","client","calls"]' || '["all"]') }}
         runner: ${{ fromJSON(inputs.native_runner != 'all' && format('["{0}"]', inputs.native_runner) || (inputs.suite == 'stream-storage' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux') && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows' || inputs.suite == 'tcp-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
@@ -66,6 +68,7 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
+        if: matrix.part == 'all' || matrix.part == 'server'
       - name: Measure wrapped-chain cleanup
         if: inputs.suite == 'chain-cleanup'
         env:
@@ -100,7 +103,7 @@ jobs:
           path: udp-evidence/
           if-no-files-found: ignore
       - name: Check long-running server resident memory
-        if: (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc') && runner.os == 'Linux'
+        if: matrix.part == 'calls' && runner.os == 'Linux'
         run: |
           if [ "${{ inputs.suite }}" = server-arc ]; then
             cargo test --test gc arc_grpc_server_runs_in_bounded_memory -- --exact --nocapture
@@ -108,7 +111,7 @@ jobs:
             cargo test --test gc grpc_server_runs_in_bounded_memory -- --exact --nocapture
           fi
       - name: Prepare server measurements and check compiler ownership
-        if: inputs.suite == 'server-repeat' || inputs.suite == 'server-arc'
+        if: matrix.part == 'calls'
         shell: bash
         run: |
           mkdir -p server-memory-evidence
@@ -127,22 +130,25 @@ jobs:
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output server-memory-evidence/primitive-inventory.json
           cargo test --lib arc_scope::tests
           cargo test --lib rc::tests
+          cargo test --test worker_preparation_ownership --test compiler_call_liveness --test worker_boxing_ownership --test wide_workers
       - name: Check callback and server cleanup
-        if: inputs.suite == 'server-repeat' || inputs.suite == 'server-arc'
+        if: matrix.part == 'server'
         shell: bash
         run: |
           cargo test --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership --test borrowed_callbacks
           cargo test --test grpc_server_connections --test grpc_server_requests --test grpc_connect_startup --test grpc_server_ownership
           cargo test --test grpc_client_receive --test grpc_response_encoding --test channel_queue_ownership --test arc_tasks
           cargo test --test list_applicative_ownership inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries -- --exact
-      - name: Check client cleanup and calls between processes
-        if: inputs.suite == 'server-repeat' || inputs.suite == 'server-arc'
+      - name: Check client cleanup
+        if: matrix.part == 'client'
         shell: bash
         run: |
           cargo test --test grpc_peer_completion --test grpc_status_cleanup --test grpc_receive_cleanup --test grpc_send_cleanup --test grpc_client_failure_text --test task_ownership --test grpc_request_encoding --test grpc_client_requests
-          cargo test --test grpc
+      - name: Check calls between processes
+        if: matrix.part == 'calls'
+        run: cargo test --test grpc
       - name: Measure memory after repeated server calls
-        if: inputs.suite == 'server-repeat' || inputs.suite == 'server-arc'
+        if: matrix.part == 'calls'
         shell: bash
         env:
           FWP_SERVER_MEMORY_ARTIFACTS: server-memory-evidence
@@ -153,7 +159,7 @@ jobs:
             cargo test --test grpc server_measurement::repeated_server_call_memory -- --exact --ignored --nocapture
           fi
       - uses: actions/upload-artifact@v7
-        if: always() && (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc')
+        if: always() && matrix.part == 'calls'
         with:
           name: server-calls-${{ matrix.runner }}
           path: server-memory-evidence/
