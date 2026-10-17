@@ -82,3 +82,9 @@ The baseline preparation's handoff retains deeper lifetime-review notes.
 | 5 | In progress | CPU kernels and GPU resource ownership |
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
+
+Linux probe `39016150516` at `ebc1590d` passed all ordinary networking checks
+but failed compiling the peer-lifetime fixture: its token replacement renamed
+the allocator definition as well as calls. Restore that definition explicitly;
+cleanup callbacks and the observation wrapper must still reach the allocator.
+No server measurements were collected from this failed run. Rerun the probe.
