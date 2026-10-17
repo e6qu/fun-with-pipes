@@ -1,208 +1,130 @@
 # Session handoff
 
-Updated 2026-10-16. [PLAN.md](../PLAN.md) defines seven unfinished work areas.
-[PR #154](https://github.com/e6qu/fun-with-pipes/pull/154) is the current draft
-service-memory, compiler and iteration delivery. PR #153 is accepted.
+Updated 2026-10-17 UTC. [PLAN.md](../PLAN.md) has seven unfinished project areas.
+Current branch: `remote-stream-delivery`, based on accepted #154
+(`11ae0f6350ba697c773fa49cb5700d9790931769`). This batch is ready for publication
+and final production validation; focused passes do not authorize merge.
 
-## Current action
+## Current delivery
 
-Workspace: `/Users/zardoz/projects/fun-with-pipes`, branch `service-iteration-delivery`.
-Base: accepted #153, `9bf203d7`. The original preparation is preserved remotely
-by `evidence/service-context-before-delivery-20261016` at `f366dd2b`; reports
-continue to name their measured sources. Do not apply the preparation again.
+PR #154 passed all nine production jobs (`38977201910`), documentation
+(`38977126983`) and Windows dependencies (`38977201787`) at `51354d10`.
+Its merge tree, parent and one-line message are verified in
+`/private/tmp/fwp154-merge-record.json` and [delivery history](roadmap-history.md).
+Duplicate production run `38984543299` was cancelled. Main-branch Windows
+dependency run `38984543101` also passed; preserve its caches.
 
-Next: publish this final report/documentation update, mark #154 ready, and
-verify all nine production jobs, documentation and both new Windows dependency
-jobs on that final head. Then squash-merge with subject
-`Reduce service memory and remove discarded iteration results` and empty body.
-The helper `/private/tmp/fwp-merge-154.py` verifies exact heads, all required
-results, merge tree/parent/message, and cancels only duplicate `ci.yml` runs. Six-host native run `38973106656` passes
-at `20f0f5f091edf7c9b296dbf548309cf68a779e29`. Actual WebAssembly/browser and
-physical-storage run `38973110352` passes on both Linux architectures at that
-same source. Windows ARM64 initially exhausted the existing 25-minute job limit
-after cold TLS setup; rerunning that job with its saved dependency cache passed.
-The timeout was not increased. Draft-skipped checks are not acceptance.
+This batch fixes shared stream readers consuming different messages, cancelled
+decoders losing the message already received, and receive failures leaking error
+text. Descriptions belong to their source. Completed positions replace the source
+with their saved result in the same word. One cleanup record restores a cancelled
+message, releases receive storage and wakes waiting readers. Waiting-reader
+cancellation leaves the receiver running; client-receiver cancellation can still
+reset the remote call. No new per-value allocation is added.
 
-The [current report](measurements/service-context-iteration-2026-10-16.json)
-retains six-host service/iteration counts, layouts, failure controls, compiler
-versions, binary hashes and repeated Linux timings. At one million elements,
-old/current medians are 56.93/27.30 ms on AMD64 and 66.70/32.80 ms on ARM64.
-Peak process memory is 79,216/37,648 KiB and 77,496/35,632 KiB respectively.
-Each saves one allocation and 32 requested bytes per element. These are fwp-to-fwp
-comparisons including startup, input construction, printing and cleanup; they do
-not establish C/Rust parity. Input storage and state bookkeeping remain.
+Next: publish this delivery with `/private/tmp/fwp-stream-pr-body.md`, require all
+nine production jobs and documentation on its exact final commit, fix any failures,
+then squash-merge with one line of at most 80 characters and an explicitly empty
+body. Record the verified merge and continue the ownership work below. Cancel
+only duplicate postmerge production CI; leave Windows dependency jobs running.
 
-Actual AMD64 and ARM64 binaries contain checked increments without per-element
-callback dispatch in the counting loop. State-owner lookup and conditional
-cleanup remain. Dynamic call counts stay at two for both 32 and 128 elements.
-Guarded binary inspection passed in 0.15s. Artifacts are under
-`/private/tmp/fwp-context-iteration-final/38973106656`.
+## Verified focused evidence
 
-The compiler binds aggregate captures once outside loops and specializes known
-synchronous state/service callbacks. Earlier arguments and resource lifetimes
-constrain movement. The [earlier baseline](measurements/service-context-iteration-baseline-2026-10-16.json)
-retains the initial iteration slowdown that prompted this repair; it is not the
-current result. The service allocation limits remain unchanged.
+Final six-host run [38985903147](https://github.com/e6qu/fun-with-pipes/actions/runs/38985903147)
+passes at `4c26f21fe717c4df35a4439e59c1812a5edb449d`: Linux, macOS and Windows,
+each on ARM64 and AMD64. Runtime, interpreter, fixtures and collector match that
+preparation source. The immutable tag is
+`evidence/remote-stream-cancellation-20261017`; earlier measurements remain in
+`evidence/remote-stream-before-delivery-20261016`. Preparation worktree:
+`/private/tmp/fwp-stream-caches`, branch `measure-remote-stream-storage`.
 
-The runtime obtains complete Linux/macOS thread-stack bounds through pthread
-APIs, matching Windows. A debugger watchpoint showed the old scan missed a live
-callback at `x29+24`, which GC erased during another allocation. All six hosts
-pass the triggering case with stress/reuse checks. Actual ARM64 instructions
-confirm the bound calculation and previously missed slot. ARC and WebAssembly do
-not gain stack scanning. Temporary debugger jobs have been removed.
+Checks include O1/O2, collector stress/verification and reuse, source lifetime,
+concurrent readers, recursive-read traps, cancellation before/during decoding,
+restoring an empty queue before later arrival, and partial-failure cleanup.
+Negative controls deliberately omit restoration, register cleanup too late,
+disable caching/synchronization or restore the larger layout; each must fail.
+The final run also passes the rendering cleanup test whose stale hook caused the
+preceding run to fail. No unresolved focused failure remains.
 
-PR #153 merged as `9bf203d767a928f63f343a3644abc6df019c4179` after all nine
-production jobs (`38958379514`) and documentation (`38955543617`) passed at
-`f6dc9940`. Its tree matches that head, its parent is accepted #152, and its
-message is exactly `Reduce temporary memory and clean up network resources`
-with no body/trailers. Duplicate production run `38971260589` was canceled.
-[Delivery history](roadmap-history.md) retains this acceptance.
+An actual service has two tasks sum 1..1024; both return `Some 524800` across all
+interpreted/native client/server combinations. [The guide](services.md#reading-the-same-stream-in-two-tasks)
+introduces each function and notation before explaining output and memory limits.
 
-The combined branch retains accepted byte-decoder fixes and both focused suites.
-Keep PR #154's plain description current using `/private/tmp/fwp-context-pr-body.md`. Require all nine production jobs and documentation on its final head.
-The new dependency-cache workflow's two Windows jobs must also pass when
-introduced. Leave that workflow running after merge so later branches can reuse
-main's dependencies. Focused checks do not replace full acceptance.
+## Measurements and binary inspection
 
-Every commit/squash message is one line, at most 80 characters, with no body,
-trailers or attribution. JIT is excluded. Preserve the effect rule: only the
-last function arrow may have effects; partial application is pure.
+The [preceding report](measurements/remote-stream-shared-2026-10-16.json), from
+`38981730504` at `00c09cdc`, and [final report](measurements/remote-stream-compact-2026-10-17.json)
+compare queued 16-character values at 1/32/128 elements, repeated reads, partial
+consumption and retained earlier positions. All six hosts agree:
 
-## Verified service and compiler changes
+| Cost | Separate fields | Shared word |
+|---|---:|---:|
+| Bytes per position, alignment 8 | 24 | 16 |
+| Allocations per received value | 4 | 4 |
+| Requested bytes per value | 89 | 81 |
+| Allocator-charged bytes per value | 112 | 96 |
+| Fixed setup charged bytes | 720 | 704 |
+| Charged bytes after 128 values, including setup | 15,056 | 12,992 |
 
-Source `8684127de6efc46a4dd17c5d95ec9cced5c10e00` passes all six native hosts
-in `38958562126`, including actual interpreted/native service calls. The
-[forwarded-result report](measurements/service-context-forwarded-2026-10-16.json)
-retains CPU/compiler versions, layouts, counts, binary formats and actual ARM64
-and AMD64 instructions. The inventory has 347 contract declarations and seven
-remaining primitive reviews; other ownership boundaries remain too.
+These exclude sockets, pooling, raw message/codec buffers, allocator pages,
+process memory and elapsed time. They establish no C/Rust parity. Clearing C
+references still leaves cache storage charged with collection disabled.
 
-Five service helpers keep settings on the stack. Children copy them into their
-existing task records, retaining shared data for independent lifetimes.
-Synchronous calls borrow callback functions and TLS/capture owners. Outgoing
-header pointers and copied text occupy one allocation; empty or ignored header
-lists borrow previous settings. Returned values and copied captured headers
-have owners. Client/server decoding scratch and channel send buffers release
-on failures and cancellation.
+Static inspection of actual AMD64/ARM64 executables confirms the shared word.
+O2 fixture stack frames fall from 360/368 to 344/336 bytes respectively;
+O1 service-client frames fall from 232/272 to 216/240. The
+[benchmark guide](benchmarks.md#storage-for-received-stream-values) explains the
+counting convention and scope. No downloaded executable ran locally.
+Artifacts: `/private/tmp/fwp-stream-before-union/38981730504` and
+`/private/tmp/fwp-stream-final/38985903147`. Reports retain instruction excerpts,
+hashes, layouts, inputs, allocation counts and actual compiler/CPU details.
 
-Tests cover aliases, returned functions, typed errors, parent return/trap/
-cancellation, child cleanup, overflow and allocation failure. Deliberately missing
-inheritance, copying, release and retention must fail. Capture controls exercise
-13/14 allocation-failure positions and inspect ARC binaries for tracing functions.
+Guarded checks: final collection 23.71s; each architecture inspection 0.15s;
+report refresh with binary observations 1.56s; roadmap/docs audit 2.71s
+(50 link sets, 106 immutable anchors and seven roadmap steps pass). Commands used
+`python3 scripts/local-guard.py python3 scripts/collect-stream-measurements.py`
+with run/head/artifacts/baseline/output arguments and
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-inspect-stream-binaries.py`
+with each Linux artifact folder. Full builds and native execution stay on CI.
+Local limits remain 64 GiB free disk, target below 2 GiB, sampled aggregate RSS
+below 1 GiB and 180 seconds; do not increase them.
 
-A compiler forwarding function now keeps its callback's returned tuple instead
-of unpacking and rebuilding it. An actual generated consumer checks tuple release
-and caller aliases; a trapping callback checks unwind cleanup. Deliberately
-reintroducing the extra allocation must fail. The fixture runs before the longer
-measurements and uploads its generated C on failure.
+## Next ownership work
 
-For 1/32/128 calls, compared with plain fwp state updates at O2 and collection
-disabled, all six hosts have these extra costs per call:
+Next give cached results and continuations typed owners and bounded-stack
+last-reference destruction, including partial construction and retained aliases.
+Move a source owner forward when possible. Establish owners for pools, calls,
+connections, streams and decoder captures; scheduler identities remain borrows.
+The existing connection counter controls transport closure, not complete object
+destruction. [Ownership](ownership.md#what-remains-before-remote-calls-can-use-arc)
+records these distinctions. Remote calls remain excluded from checked ARC. Compiler work must review
+`CGen::drop_body`, lowering of `grpc._force` and RPC result descriptors together.
+Native `g_decode` still uses unowned `fwp_decode`; custom decoder callbacks need
+a reviewed result contract too. Marking the primitive reviewed alone cannot
+safely establish ownership.
 
-| Scope | Managed requests | Requested bytes | Retained charged bytes |
-|---|---:|---:|---:|
-| Compression, deadline, empty/ignored headers | 0 | 0 | 0 |
-| One outgoing header | 1 | 40 | 0 |
-| Response-header capture | 1 | 24 | 0 |
+A promising next contract consumes a position: when it has one owner, transfer
+its saved result directly; when shared, return another result owner. Keep type
+information in generated code or existing method descriptors instead of adding
+a destructor pointer to every position. For long chains, release a position,
+its optional-result wrapper and its tuple iteratively while each is uniquely
+owned; stop at a shared wrapper. Decode results and partial construction need
+owners before publication. Runtime calls into `grpc._iter` must use the owned
+application machinery and transfer arguments exactly once. These are proposed
+implementation constraints, not completed work. Measure actual language clients
+as well as C fixtures: retaining an earlier iterator intentionally retains its
+saved sequence, so dropping C roots alone cannot prove bounded consumption.
+Retained host callbacks, GPU resources and all seven project areas remain open.
 
-The [previous owned-scope report](measurements/service-context-owned-2026-10-16.json)
-at `975806e9` had two capture allocations/48 requested bytes per call. The new
-forwarding function returns directly in `x0` on ARM64 and `rax` on AMD64. Its
-stack use falls from 192 to 144 bytes on ARM64 and from 184 to 120 bytes on AMD64
-(excluding the incoming AMD64 return address). These are instrumented binary
-observations, not timing measurements or whole-program stack bounds.
-
-Settings occupy 72 bytes aligned to eight. Linux AMD64 service tasks grow from
-the original 1,512 to 1,584 bytes. Programs without service support omit those
-fields. Fixed scheduler startup remains in raw rows; per-call differences remove
-that fixed cost. Raw TLS/capture buffers, allocator pages and process memory are
-excluded. These are fwp-to-fwp memory comparisons, not C/Rust parity or speed.
-
-Explicit process exit passes seven native status cases and actual WASI execution.
-It preserves earlier output and uses the low eight status bits; it does not
-promise ordinary cleanup before process termination. The six-host baseline also
-verifies reflection buffers: reflection lets tools ask a server which methods it
-provides. Request and response buffers release on success, encoding traps and
-cancelled sends; separate missing-cleanup controls must fail. Whole-service
-ownership is still unfinished.
-
-## Iteration implementation and acceptance
-
-`each = const | flip fold ()` walks the input without building discarded results.
-Unit, written `()`, is the running value of the fold; `const` ignores it and
-selects the supplied callback. No primitive or syntax was added.
-
-`state_sequence_ownership` compares raw/optimized interpretation with O1/O2
-tracing/ARC for shared inputs, ordered output, state updates and errors. Tracing
-also checks collector stress and reuse verification; ARC checks ordinary freeing.
-The allocation comparison runs the old mapping definition and the new fold at
-32/128 elements. Both must print the same count. The fold must eliminate at least
-one allocation per element and its dynamic call count must not grow with input.
-Sources, binaries and `each-storage.tsv` accompany the focused evidence.
-
-## CI work awaiting full acceptance
-
-`scripts/run-native-tests.py` adds explicit `--all` selection for Linux. It keeps
-every Cargo target and stress case, with two executable workers and one harness
-thread each. Missing/duplicate executables fail before tests; failing targets do
-not skip the remainder. Mac assignments stay unchanged. Seven Python checks
-pass, including real Cargo metadata for 233 integration targets. Final production
-CI must verify the Linux scheduling; no total-CI speedup is claimed.
-
-The dependency-only Windows workflow populates the default branch's exact cache
-after setup changes merge. Current main caches lack the new HTTP/2 dependency
-key, and sibling branches cannot share their copies. It uses the pinned TLS
-setup script and native architecture validation without an unnecessary compiler
-installation. It runs on ready PRs changing those files, so both jobs must pass
-when introduced. Keep it running when cancelling duplicate postmerge production
-CI. Guarded workflow lint passes (1.44s); actual new-workflow jobs remain to be verified.
-
-## Evidence and local checks
-
-Passing tuple-forwarding artifacts are under
-`/private/tmp/fwp-context-forwarded-evidence/38958562126/`. The report helper is
-[`scripts/collect-service-measurements.py`](../scripts/collect-service-measurements.py): pass a successful six-host run, its
-exact source, artifact directory, output path, `--each-comparison` and `--capture-requests 1` through
-the local guard. It validates jobs, counters, layouts, inventory and capture
-controls. New source needs new binary observations. Earlier owned-scope artifacts
-are under `/private/tmp/fwp-context-final-evidence/38953639844/`.
-The PR description is maintained with `/private/tmp/fwp-context-pr-body.md`.
-
-Use `python3 scripts/local-guard.py COMMAND...` with unchanged limits. Full builds,
-native compilation and full tests belong on CI. Earlier automatic review refused
-local compiler/standalone C builds; do not bypass or repeat those requests.
-Latest guarded checks: `python3 scripts/collect-service-measurements.py` with
-run `38973106656`, exact head and the artifact/output paths above passed in
-30.12s; `python3 scripts/check-roadmap.py` passed in 2.67s. Actual Linux binary
-inspection passed in 0.15s. Earlier Rust formatting and workflow lint passed.
-No local native build was used.
-
-Independent preparation is `/private/tmp/fwp-stream-caches`, branch
-`measure-remote-stream-storage`, based on `20f0f5f0`; no second PR. The controlled
-receive/cache baseline passes Linux AMD64 in `38973859489` at `deae732b`. It uses
-real queued protobuf messages, repeated reads, early stop, retained positions and
-a deliberate missing-cache control. Four managed allocations/89 requested bytes
-per received value become 112 charged bytes after rounding. Clearing C references
-alone does not release that storage with collection disabled. This excludes
-network latency and connection pooling. Its handoff and retained report preserve
-the exact limits; baseline collection is complete.
-
-Preparation now fixes an incoming stream description: client text was separately
-allocated without release, and server text borrowed its handler's storage. A copy
-inside the existing source allocation gives it the same lifetime as that source.
-Focused tests are pending; remote streams still require collector ownership.
-Next establish owners for cached results, continuations, sources and connections,
-with alias, early-stop, failure and cancellation tests before admitting ARC.
-Retained host callbacks and GPU ownership also remain. The
-[ownership guide](ownership.md#what-remains-before-remote-calls-can-use-arc)
-sets the remaining contracts. All seven project work areas remain open.
+Every commit/squash message is one line, at most 80 characters, with an empty
+body and no trailers or attribution. JIT is excluded. Failed tests are work to fix.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
-| 1 | In progress | Service and external ownership; remove tracing |
-| 2 | In progress | Remove discarded iteration results and remaining counts |
+| 1 | In progress | Typed stream and external owners; remove tracing |
+| 2 | In progress | Remove intermediate storage and unnecessary reference counts |
 | 3 | In progress | Reduce equivalent-work C/Rust gaps |
 | 4 | In progress | Differentiation precision, speed and memory scaling |
 | 5 | In progress | CPU kernels and GPU resource ownership |

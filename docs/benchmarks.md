@@ -1337,6 +1337,61 @@ original order. Setup and output remain outside those loops. The actual C,
 assembly and binary identities are recorded; this is static code inspection,
 not a measurement of cache misses or dynamic register spills.
 
+## Storage for received stream values
+
+A remote iterator saves each received value so another reader of the same
+position gets that value again. An unread position needs a receive source; a
+completed position needs its saved result. The compact representation gives these
+two alternatives the same storage word instead of reserving space for both.
+
+The [preceding fwp representation](measurements/remote-stream-shared-2026-10-16.json)
+at `00c09cdc` and [compact fwp representation](measurements/remote-stream-compact-2026-10-17.json)
+at `4c26f21f` receive queued Protocol Buffer messages containing 16-character
+strings. Both versions already include the shared-reader and description-lifetime
+repairs. Tests consume 1, 32 and 128 values, read every position twice, stop half
+way, or retain the first position while consuming the sequence. Collection is
+disabled for the allocation counts. Separate runs check collector stress,
+verification, cancellation and reuse.
+
+All six native hosts report these storage costs:
+
+| Measurement | Separate source/result fields | Shared storage word |
+|---|---:|---:|
+| Bytes per position, aligned to 8 bytes | 24 | 16 |
+| Managed allocation requests per received value | 4 | 4 |
+| Requested bytes per received value | 89 | 81 |
+| Bytes charged after allocator rounding, per value | 112 | 96 |
+| Fixed setup bytes charged | 720 | 704 |
+| Bytes charged after consuming 128 values, including setup | 15,056 | 12,992 |
+
+The four allocations hold the decoded string, next position and two result
+wrappers. The position itself is one third smaller; requested bytes per received
+value fall by about 9%. Use the two revisions above to compare the same receive
+work with the shared-reader and description-lifetime repairs present in both.
+
+These are fwp-to-fwp memory measurements, not timing or C/Rust comparisons.
+Socket I/O, connection pooling, raw message/codec buffers, allocator pages and
+total process memory are excluded. The reports retain actual compiler and CPU
+details, layouts, counts and binary hashes. Actual AMD64 and ARM64 test and service
+binaries read the completed value from the same word used by an unread source;
+the cached-value load moves from offset 16 to offset 0. Combining receive-storage
+and reader cleanup also reduces the receive function's stack frame: the O2 test
+uses 344 rather than 360 bytes on AMD64 and 336 rather than 368 on ARM64; the O1
+service client uses 216 rather than 232 bytes on AMD64 and 240 rather than 272 on
+ARM64. AMD64 figures include saved registers and exclude the incoming return
+address; ARM64 figures include its saved registers. These are static observations
+of the retained binaries, not timing results. Smaller storage alone does not
+establish faster execution.
+
+Clearing C references still leaves the measured cache storage charged with
+collection disabled. Explicit native last-owner destruction remains unfinished.
+To reproduce, dispatch the `stream-owners` evidence suite, then run
+[`collect-stream-measurements.py`](../scripts/collect-stream-measurements.py)
+through the local guard with `--run`, exact `--head`, `--artifacts`, `--baseline`
+and `--output`. The baseline is the passing preceding-representation report above.
+The collector checks jobs, named tests, artifact revisions and matching inputs
+before recording the differences; it does not execute downloaded binaries.
+
 ## CI compiler build cost
 
 The [CI profile comparison](measurements/ci-compiler-profiles-2026-10-16.json)

@@ -26,13 +26,16 @@ fn streamed_error_rendering_releases_partial_and_complete_scratch() {
         ..Program::default()
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "grpc_render").unwrap();
-    let decode = "g_decode(&src->dec, g.m->d, g.m->n, &x, &why)";
+    let decode = "g_decode(&src->dec, g->m->d, g->m->n, &x, &why)";
     assert_eq!(generated.matches(decode).count(), 2);
     let generated = generated.replace(decode, "observed_decode(&x, &why)");
     let write = "fwp_write(&b, x, src->dec.error, 1);";
     assert_eq!(generated.matches(write).count(), 1);
     let generated = generated.replacen(write, "observed_write(&b, x, src->dec.error);", 1);
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 #include <stdint.h>
 static int stage,buffer_frees;

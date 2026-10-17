@@ -48,6 +48,32 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Service settings and iteration storage (PR #154)
+
+[PR #154](https://github.com/e6qu/fun-with-pipes/pull/154) merged as `11ae0f63`
+on 2026-10-17 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38977201910),
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38977126983)
+and both new [Windows dependency jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38977201787)
+passed at `51354d10`. Its files match that tested head and its parent is accepted
+#153. Its complete message is `Reduce service memory and remove discarded iteration results`.
+
+Service settings use stack storage; child tasks keep independent copies and shared
+owners. The compiler forwards returned tuples directly and turns known state/service
+callbacks into direct calls. List `each` stops building discarded empty results.
+For the measured million-element count, median complete-process time falls from
+56.93 to 27.30 ms on Linux AMD64 and 66.70 to 32.80 ms on ARM64. Each element avoids
+one allocation and 32 requested bytes. These compare two fwp definitions, not
+C/Rust parity. Input storage and state bookkeeping remain.
+
+[The retained report](measurements/service-context-iteration-2026-10-16.json)
+records limits, samples, layouts and actual instructions. Response-header capture
+uses one allocation/24 requested bytes instead of two/48. Service task settings
+still add 72 bytes per task. Complete operating-system thread-stack bounds fix a
+live-root omission exposed on Linux ARM64. Explicit exit, failed/cancelled message
+cleanup, complete Linux test selection and default-branch Windows dependency
+caches also pass. Whole-service ownership and removal of tracing remain unfinished.
+
 ## Owned decoded values and network resources (PR #153)
 
 [PR #153](https://github.com/e6qu/fun-with-pipes/pull/153) merged as `9bf203d7`
