@@ -8,14 +8,15 @@ Preparation branches are evidence sources, not competing next actions.
 
 ## Next action
 
-Next: publish the final report/docs commit, mark #161 ready, and run all nine
-production jobs plus documentation on that exact head. Fix any failure. Squash
-merge only after every required job passes, with explicit one-line subject
-`Compile remote calls with ARC and move unique record fields` and empty body.
-Verify merged parent/tree/message; cancel duplicate postmerge production CI.
-The last draft documentation run **39037418812** passes at **4a2f213f**; skipped
-production **39037418823** does not count as acceptance. No #161 merge watcher
-is running yet. Keep the final tested head stable once the full gate starts.
+Next: publish the library-input regression repair and require all nine production
+jobs plus documentation on the new final head. Production **39038709892** failed
+at **35953062** in the same `library_input_ownership` assertion on both Linux and
+both regular macOS jobs. Both Windows jobs, both macOS GC jobs and benchmarks
+passed; documentation **39038693710** passed. Watcher **73627** stopped on failure;
+no merge occurred. Replace its pinned head/run IDs after publishing the repair.
+Use `Compile remote calls with ARC and move unique record fields` as the squash
+subject, with an empty body; verify parent/tree/message and cancel duplicate
+postmerge production CI only after acceptance.
 
 Standing policy: very early pre-alpha; backward compatibility is not required,
 including existing binaries. Layouts, calling conventions, APIs and formats may
@@ -38,8 +39,8 @@ long-running memory regression. The plan/ownership/design guides now reflect it.
 
 All **18 native jobs pass** in **39037037021**, source
 **efaab358e730595f40aa5d46e6df6a8ec0151a5c**, immutable tag
-`evidence/remote-arc-platform-fixes-20261017`. Subsequent changes are documentation
-and retained measurements; compiler/runtime/test code is unchanged.
+`evidence/remote-arc-platform-fixes-20261017`. Subsequent compiler/runtime code is unchanged. Documentation, retained
+measurements and the library-input test repair below follow this source.
 The suite runs server cleanup, client cleanup and real calls/measurements as
 three independent jobs per host, retaining every prior check and the 25-minute
 limit. All six native platforms pass O1/O2 interpreter comparisons, typed scope
@@ -97,6 +98,23 @@ fixture issues. Superseded runs **39035855561** and **39036291837** are confirme
 cancelled. Preparation history is saved at `/private/tmp/fwp161-preparation-handoff.md`;
 the published body is `/private/tmp/fwp-remote-arc-pr.md`. Old preparation worktrees
 remain available, but root is the integrated delivery and owns the live handoff.
+
+## Full CI regression repair
+
+The library-input probe expected two destructor calls for each field copied from
+a C record: a worker duplicate and the original boxed owner. Unique record fields
+now move, so each string has only one owner to release. The corrected check
+requires exactly one release for each copied string, still checks released
+records/strings and raw pointer/scalar preservation, and retains all partial
+failure controls. A new control forces the old duplicate path and must fail the
+count check. Focused server/field suites and regular Windows CI now include this
+library-input test so preparation runs cover the affected C-library boundary.
+Compiler/runtime code and the retained six-host measurement source are unchanged.
+Failure logs: `/private/tmp/fwp161-production-failures.log`.
+Local `python3 scripts/local-guard.py cargo test --test library_input_ownership`
+passes both tests (38.25s including build), with O1/O2, poison on/off and all five
+negative controls. Guarded `cargo fmt --check` and `actionlint
+.github/workflows/numerics.yml .github/workflows/windows.yml` pass.
 
 ## Local validation
 
