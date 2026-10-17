@@ -7970,18 +7970,46 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
         let _ = writeln!(out, "    return {};\n}}", ret);
         // the function as a value: unpack, call, box
         let params: Vec<String> = (0..f.arity).map(|i| format!("V l{}", i)).collect();
+        let moving_records: Vec<_> = abi
+            .params
+            .iter()
+            .enumerate()
+            .map(|(i, p)| {
+                self.reuse
+                    && free_enabled()
+                    && p.is_some()
+                    && !self.resource_type(&f.locals[i])
+                    && record_fields(&self.prog.shapes, &f.locals[i]).is_some_and(|fields| {
+                        fields
+                            .iter()
+                            .any(|(_, ty)| crate::rc::needs_rc(&self.prog.shapes, ty))
+                    })
+            })
+            .collect();
         let mut args = Vec::new();
+        let mut snapshots = String::new();
         for (i, p) in abi.params.iter().enumerate() {
             match p {
-                Some(n) => args.extend((0..*n).map(|k| format!("OBJ(l{})->f[{}]", i, k))),
+                Some(n) => {
+                    for k in 0..*n {
+                        let field = format!("OBJ(l{i})->f[{k}]");
+                        if moving_records[i] {
+                            let _ = write!(snapshots, "V field{i}_{k} = {field}; ");
+                            args.push(format!("field{i}_{k}"));
+                        } else {
+                            args.push(field);
+                        }
+                    }
+                }
                 None => args.push(format!("l{}", i)),
             }
         }
         let args = abi.args_decode_words(self.prog, id, args);
         let call = format!("w{}({})", id, args.join(", "));
-        // The wrapper keeps boxed arguments, while the worker consumes
-        // duplicated fields and other arguments. Protect originals before
-        // preparation, and each completed duplicate until worker entry.
+        // A unique record transfers its fields; shared records duplicate them.
+        // Keep the original boxes owned through the call, clearing only fields
+        // that moved. Protect each prepared field until worker entry, including
+        // when preparing a later shared argument fails.
         let (mut pre, mut post) = (String::new(), String::new());
         if self.reuse {
             let counted_fields: Vec<_> = abi
@@ -7995,7 +8023,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                         .iter()
                         .enumerate()
                         .filter(|(_, (_, ty))| crate::rc::needs_rc(&self.prog.shapes, ty))
-                        .map(move |(j, (_, ty))| (format!("OBJ(l{i})->f[{j}]"), ty.clone()))
+                        .map(move |(j, (_, ty))| (i, j, ty.clone()))
                 })
                 .collect();
             let has_boxed = abi.params.iter().any(Option::is_some);
@@ -8011,18 +8039,32 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             };
             let protection = self.protect_values(&originals, "owned", "cleanup");
             pre.push_str(&protection);
+            pre.push_str(&snapshots);
             if !protection.is_empty() {
                 post.push_str("fwp_cleanup_pop(&cleanup); ");
             }
             let empty_fields: Vec<_> = counted_fields
                 .iter()
-                .map(|(_, ty)| ("0".into(), ty.clone()))
+                .map(|(_, _, ty)| ("0".into(), ty.clone()))
                 .collect();
             let preparing = self.protect_values(&empty_fields, "prepared", "preparation_cleanup");
             pre.push_str(&preparing);
-            for (j, (value, ty)) in counted_fields.iter().enumerate() {
+            for (i, moving) in moving_records.iter().enumerate() {
+                if *moving {
+                    let _ = write!(pre, "int move{i} = fwp_rc_last(l{i}); ");
+                }
+            }
+            for (j, (parent, field, ty)) in counted_fields.iter().enumerate() {
                 let dup = self.value_dup(ty);
-                let _ = write!(pre, " {dup}({value}); ");
+                let value = if moving_records[*parent] {
+                    let value = format!("field{parent}_{field}");
+                    let _ = write!(pre, "if (move{parent}) {{ OBJ(l{parent})->f[{field}] = 0; }} else {{ {dup}({value}); }} ");
+                    value
+                } else {
+                    let value = format!("OBJ(l{parent})->f[{field}]");
+                    let _ = write!(pre, " {dup}({value}); ");
+                    value
+                };
                 if !preparing.is_empty() {
                     let _ = write!(pre, "prepared.v{j} = {value}; ");
                 }

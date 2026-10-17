@@ -1,4 +1,4 @@
-//! Boxed-to-worker preparation owns originals and completed duplicates.
+//! Worker preparation moves unique fields and protects partial shared copies.
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
@@ -80,11 +80,12 @@ fn wrapper_preparation_failures_and_worker_entry_preserve_exact_owners() {
     let header = format!("static V f{id}(");
     let start = comment + emitted[comment..].find(&header).unwrap();
     let wrapper = emitted[start..].lines().next().unwrap();
-    assert!(wrapper.contains("prepared.v0 = OBJ(l1)->f[0]"));
-    assert!(wrapper.contains("prepared.v1 = OBJ(l1)->f[1]"));
+    assert!(wrapper.contains("prepared.v0 = field1_0"));
+    assert!(wrapper.contains("prepared.v1 = field1_1"));
     assert!(wrapper.contains("owned.v0 = 0"));
-    let preparing=wrapper.replace("fwp_rc_dup(OBJ(l1)->f[0]);", "if (fail_field==0) fwp_trap(\"injected first field duplication failure\"); fwp_rc_dup(OBJ(l1)->f[0]);")
-        .replace("fwp_rc_dup(OBJ(l1)->f[1]);", "if (fail_field==1) fwp_trap(\"injected later field duplication failure\"); fwp_rc_dup(OBJ(l1)->f[1]);");
+    let preparing=wrapper.replace("fwp_rc_dup(field1_0);", "if (fail_field==0) fwp_trap(\"injected first field duplication failure\"); prepared_copies++; fwp_rc_dup(field1_0);")
+        .replace("fwp_rc_dup(field1_1);", "if (fail_field==1) fwp_trap(\"injected later field duplication failure\"); prepared_copies++; fwp_rc_dup(field1_1);")
+        .replace("prepared.v0 = field1_0;", "prepared.v0 = field1_0; if (fail_field==2) fwp_trap(\"injected partial field transfer failure\");");
     assert_ne!(wrapper, preparing);
     let start = comment
         + emitted[comment..]
@@ -94,7 +95,7 @@ fn wrapper_preparation_failures_and_worker_entry_preserve_exact_owners() {
     let worker = &emitted[start..end];
     assert!(worker.contains("FWP_TICK();"));
     let ticking = worker.replace("FWP_TICK();", "cancel_worker_tick(); FWP_TICK();");
-    let runtime=emitted.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int fail_field, cancel_in_worker; static void cancel_worker_tick(void);")
+    let runtime=emitted.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int fail_field, cancel_in_worker, prepared_copies; static void cancel_worker_tick(void);")
         .replace(wrapper,&preparing).replace(worker,&ticking)
         .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
     let probe=r#"
@@ -108,23 +109,24 @@ static void cancel_worker_tick(void) {
 static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len==0 : *fwp_rc_slot(v)==0; }
 int main(void) {
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
-    for (volatile int mode=0;mode<4;mode++) for (volatile int box_alias=0;box_alias<2;box_alias++) for (volatile int leaf_alias=0;leaf_alias<2;leaf_alias++) {
+    for (volatile int mode=0;mode<5;mode++) for (volatile int box_alias=0;box_alias<2;box_alias++) for (volatile int leaf_alias=0;leaf_alias<2;leaf_alias++) {
         first=fwp_rc_fresh(fwp_str_new("first",5));second=fwp_rc_fresh(fwp_str_new("second",6));
         extra=fwp_rc_fresh(fwp_str_new("extra",5));scalar_word=fwp_rc_fresh(fwp_str_new("scalar bits",11));
         if (leaf_alias) { fwp_rc_dup(first);fwp_rc_dup(second);fwp_rc_dup(extra); }
         boxed=fwp_rc_fresh(fwp_record(3,(V[]){first,second,scalar_word}));
         if (box_alias) fwp_rc_dup(boxed);
-        fail_field=mode<2 ? mode : -1;cancel_in_worker=mode==2;
+        prepared_copies=0;fail_field=mode<2 ? mode : mode==4 ? 2 : -1;cancel_in_worker=mode==2;
         fwp_trap_recover=recover_preparation;fwp_trap_jb=&preparation;fwp_trap_cleanup=0;
         memset(&cancelled_worker,0,sizeof cancelled_worker);
         if (mode==2) { fwp_cur=&cancelled_worker;fwp_budget=1000000; }
         if (!setjmp(preparation) && !setjmp(cancelled_worker.base)) {
             V result=fWORK(extra,boxed);
-            if (mode!=3 || STR(result)->len!=16) return 1;
+            if ((mode!=3 && (box_alias || mode>=2)) || STR(result)->len!=16) return 1;
             fwp_dropSTRING(result);
-        } else if (mode==3) return 2;
+        } else if (mode==3 || (mode<2 && !box_alias)) return 2;
         fwp_cur=NULL;fail_field=-1;cancel_in_worker=0;fwp_trap_recover=NULL;fwp_trap_jb=NULL;
         if (fwp_cleanups || (mode==2 && !cancelled_worker.unwinding)) return 3;
+        if (prepared_copies!=(box_alias ? (mode<2 ? mode : mode==4 ? 1 : 2) : 0)) return 15;
         int expected=box_alias+leaf_alias;
         if (expected) {
             if (*fwp_rc_slot(first)!=expected || *fwp_rc_slot(second)!=expected || STR(first)->len!=5 || STR(second)->len!=6) return 4;
@@ -198,8 +200,8 @@ int main(void) {
             .unwrap();
         assert_eq!(
             old.status.code(),
-            Some(5),
-            "missing partial scope must leave an earlier duplicate owned"
+            Some(4),
+            "missing partial scope must leave an earlier shared duplicate owned"
         );
         fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
         for poison in ["0", "1"] {

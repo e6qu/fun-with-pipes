@@ -393,6 +393,9 @@ jobs:
           name: hash-${{ matrix.runner }}
           path: hash-evidence/
           if-no-files-found: ignore
+      - name: Check ownership at unboxed worker entry
+        if: inputs.suite == 'fields'
+        run: cargo test --test worker_preparation_ownership --test compiler_call_liveness --test worker_boxing_ownership --test wide_workers
       - name: Field movement and resource lifetime regressions
         if: inputs.suite == 'fields'
         run: cargo test --no-fail-fast --test clock_ownership --test directory_report --test working_directory --test arc_execution --test field_moves --test boxed_projection_ownership --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test borrowed_callbacks --test general_record_update_ownership
