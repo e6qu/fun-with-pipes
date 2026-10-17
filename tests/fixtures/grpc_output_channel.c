@@ -44,7 +44,7 @@ int main(int argc,char **argv){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  double before=channel_charge();
  g_server server={0};server.module="probe";
- g_conn *c=g_conn_new(FWP_INVALID_SOCKET,"channel-owner",&server);fwp_rc_fresh(PTR(c));
+ g_conn *c=g_conn_new(FWP_INVALID_SOCKET, "", "channel-owner",&server);fwp_rc_fresh(PTR(c));
  g_stream *s=g_stream_new(c,1);fwp_rc_fresh(PTR(s));fwp_rc_dup(PTR(s)); /* caller and active list */
  s->sent_headers=1;s->remote_end=1;c->conn_window=channel_stage==2?0:65535;
  const fwp_desc string_type={.kind=K_STR,.name="String",.drop=channel_text_drop};

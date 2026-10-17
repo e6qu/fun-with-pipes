@@ -133,7 +133,7 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
     struct sockaddr_storage ss;
     socklen_t sl = sizeof ss;
     if (getpeername(fd, (struct sockaddr *)&ss, &sl) == 0) fwp_fmt_addr((struct sockaddr *)&ss, peer, sizeof peer);
-    g_conn *c = g_conn_new(fd, peer, 0);
+    g_conn *c = g_conn_new(fd, "", peer, 0);
     c->out.len = 0;
     h2_our_settings(&c->out);
     unsigned char st[6] = {0, 3, 0, 0, 0, W_MAX_STREAMS};
@@ -242,8 +242,6 @@ static int w_connection_specific(const char *k) {
     return !strcmp(k, "connection") || !strcmp(k, "keep-alive") || !strcmp(k, "proxy-connection") ||
            !strcmp(k, "transfer-encoding") || !strcmp(k, "upgrade");
 }
-
-static V w_pair(const char *k, const char *v) { return fwp_tuple2(fwp_cstr(k), fwp_cstr(v)); }
 
 static V fwp_p_http2_request(V call, const fwp_desc *type) {
     g_call *k = WCALL(call);
@@ -388,17 +386,18 @@ static V fwp_p_http2_data(V d, V end, V call) {
 }
 
 static g_conn *w_pooled(const char *key) {
-    char k[1200];
-    snprintf(k, sizeof k, "http2 %s", key);
     for (g_conn *p = g_pool; p; p = p->next_pool)
-        if (strcmp(p->authority, k) == 0 && !p->tlskey && !p->dead && !p->goaway && p->next_stream < 0x7fff0000u)
+        if (!strncmp(p->authority, "http2 ", 6) && !strcmp(p->authority + 6, key) &&
+            !p->tlskey && !p->dead && !p->goaway && p->next_stream < 0x7fff0000u)
             return p;
     return 0;
 }
 
 static V fwp_p_http2_pooled(V key) { return w_pooled(STR(key)->d) ? FWP_TRUE : FWP_FALSE; }
 
-static V fwp_p_http2_send(V key, V conn, V req, const fwp_desc *err) {
+static void w_buffer_release(void *value) { h2b_free((h2_buf *)value); }
+
+static V fwp_p_http2_send(V key, V conn, V req, const fwp_desc *err, const fwp_desc *type) {
     fwp_tasks_init();
     fwp_check_cancel();
     g_conn *c;
@@ -406,33 +405,60 @@ static V fwp_p_http2_send(V key, V conn, V req, const fwp_desc *err) {
         SSL *ssl;
         fwp_socket_t fd = w_take(OBJ(conn)->f[0], &ssl);
         if (fd == FWP_INVALID_SOCKET) return fwp_io_error("closed", "connection is closed", err);
-        char k[1200];
-        snprintf(k, sizeof k, "http2 %s", STR(key)->d);
-        c = g_conn_new(fd, k, 0);
+        c = g_conn_new(fd, "http2 ", STR(key)->d, 0);
+        FWP_KEEP_ALIVE(key); /* keep the source string through the allocating copy */
+        fwp_rc_fresh(PTR(c)); /* transport_start storage, moved to this call */
         c->ssl = ssl;
-        c->refs = 2;
-        fwp_spawn_task(0, g_reader, c, 0, 1);
-        fwp_spawn_task(0, g_writer, c, 0, 1);
+        c->refs = 1;
+        g_connect_start_owner transport_start = {c, 0, 0};
+        fwp_cleanup transport_start_cleanup, io_owner;
+        fwp_cleanup_push(&transport_start_cleanup, g_connect_start_abort, &transport_start);
+        fwp_rc_dup(PTR(c));
+        c->refs++;
+        fwp_cleanup_push(&io_owner, g_connect_ref_release, c);
+        transport_start.reader = fwp_spawn_task(0, g_reader, c, 0, 1);
+        transport_start.reader->ownership = FWP_TASK_UNIQUE;
+        fwp_cleanup_pop(&io_owner);
+        fwp_rc_dup(PTR(c));
+        c->refs++;
+        fwp_cleanup_push(&io_owner, g_connect_ref_release, c);
+        transport_start.writer = fwp_spawn_task(0, g_writer, c, 0, 1);
+        transport_start.writer->ownership = FWP_TASK_UNIQUE;
+        fwp_cleanup_pop(&io_owner);
+        fwp_rc_dup(PTR(c)); /* pool owner */
         c->next_pool = g_pool;
         g_pool = c;
+        fwp_cleanup_pop(&transport_start_cleanup);
+        c->refs--; /* I/O tasks retain transport; this call keeps storage */
     } else {
         c = w_pooled(STR(key)->d);
         if (!c) return fwp_io_error("http2", "no connection", err);
+        fwp_rc_dup(PTR(c));
     }
+    g_call_owner call = {c, 0};
+    fwp_cleanup request_cleanup;
+    fwp_cleanup_push(&request_cleanup, g_call_release, &call);
     if (c->dead) return fwp_io_error("http2", c->dead, err);
     V *r = OBJ(req)->f;
     size_t bn = STR(r[5])->len;
     uint32_t id = c->next_stream;
     c->next_stream += 2;
     h2_buf blk = {0};
+    fwp_cleanup header_cleanup;
+    fwp_cleanup_push(&header_cleanup, w_buffer_release, &blk);
     h2_hpack_lit(&blk, ":method", STR(r[0])->d);
     h2_hpack_lit(&blk, ":scheme", STR(r[1])->d);
     h2_hpack_lit(&blk, ":authority", STR(r[2])->d);
     h2_hpack_lit(&blk, ":path", STR(r[3])->d);
     w_headers(&blk, r[4], 1);
     h2_header_frames(&c->out, id, &blk, bn == 0, c->peer.max_frame);
-    h2b_free(&blk);
+    fwp_cleanup_pop(&header_cleanup); h2b_free(&blk);
     g_stream *s = g_stream_new(c, id);
+    fwp_rc_fresh(PTR(s)); /* this call's request owner */
+    call.s = s;
+    fwp_cleanup request_abort;
+    fwp_cleanup_push(&request_abort, g_call_reset, &call);
+    fwp_rc_dup(PTR(s)); /* active-list owner */
     s->raw = 1;
     s->local_end = bn == 0;
     fwp_wake_all(&c->writer_wl);
@@ -441,6 +467,7 @@ static V fwp_p_http2_send(V key, V conn, V req, const fwp_desc *err) {
         if (me->cancelled) { g_reset(c, s, 8); fwp_check_cancel(); }
         g_send_data(c, s, (const unsigned char *)STR(r[5])->d, bn, 1);
     }
+    FWP_KEEP_ALIVE(req); /* headers/body have now been copied into transport storage */
     for (;;) {
         if (s->remote_end) {
             const char *st = h2_get(&s->headers, ":status");
@@ -450,17 +477,33 @@ static V fwp_p_http2_send(V key, V conn, V req, const fwp_desc *err) {
                 long long v = strtoll(st, &e, 10);
                 if (e != st && *e == 0) status = v;
             }
-            size_t nh = s->headers.n + s->trailers.n;
-            V *a = (V *)fwp_alloc((nh + 1) * sizeof(V));
-            size_t n = 0;
-            for (int t = 0; t < 2; t++) {
+            fwp_decode_fields result;
+            fwp_decode_fields_begin(&result, 3, type->fields, 3, NULL);
+            result.values[0] = (V)status;
+            const fwp_desc *list_type = type->fields[1];
+            /* Prepend backwards so headers still precede trailers in wire order. */
+            for (int t = 1; t >= 0; t--) {
                 h2_hdrs *h = t ? &s->trailers : &s->headers;
-                for (size_t i = 0; i < h->n; i++)
-                    if (h->v[i].name[0] != ':') a[n++] = w_pair(h->v[i].name, h->v[i].value);
+                for (size_t i = h->n; i > 0; i--) {
+                    h2_hdr *header = &h->v[i - 1];
+                    if (header->name[0] == ':') continue;
+                    fwp_decode_fields fields;
+                    fwp_decode_fields_begin(&fields, 2, list_type->elem->fields, 2, NULL);
+                    fields.values[0] = fwp_rc_fresh(fwp_cstr(header->name));
+                    fields.values[1] = fwp_rc_fresh(fwp_cstr(header->value));
+                    fwp_value_owner pair = {fwp_decode_record(&fields), list_type->elem->drop};
+                    fwp_cleanup pair_cleanup; fwp_value_protect(&pair, &pair_cleanup);
+                    result.values[1] = fwp_rc_fresh(fwp_cons(pair.value, result.values[1]));
+                    fwp_value_finish(&pair, &pair_cleanup);
+                }
             }
-            V f[3] = {(V)status, fwp_list_from(a, n), fwp_str_new((const char *)s->data.d, s->data.len)};
+            result.values[2] = fwp_rc_fresh(fwp_str_new((const char *)s->data.d, s->data.len));
+            V response = fwp_decode_record(&result);
             g_unlink(c, s);
-            return fwp_record(3, f);
+            fwp_cleanup_pop(&request_abort);
+            fwp_cleanup_pop(&request_cleanup);
+            g_call_release(&call);
+            return response;
         }
         if (s->reset) return fwp_io_error("http2", s->reset, err);
         if (g_cancelled()) {
@@ -487,9 +530,6 @@ static uint32_t w_adler32(const unsigned char *d, size_t n) {
     }
     return b << 16 | a;
 }
-
-/* Native compression buffers must survive until copied and be freed on unwind. */
-static void w_buffer_release(void *value) { h2b_free((h2_buf *)value); }
 
 static V w_ok_bytes(h2_buf *b, const fwp_desc *type) {
     fwp_decode_fields result;

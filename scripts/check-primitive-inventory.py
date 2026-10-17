@@ -111,6 +111,8 @@ bundle_contracts['tls.peer-subject'] = (1, 'OwnedTree', [])
 for symbol in ['grpc.set-header', 'grpc.set-trailer']:
     bundle_contracts[symbol] = (2, 'Shared', [])
 bundle_contracts['http2.body'] = (3, 'OwnedTree', [])
+bundle_contracts['http2.send'] = (3, 'OwnedTree', [])
+bundle_contracts['http2.pooled'] = (1, 'Shared', [])
 for symbol in ['http2.request', 'grpc.metadata', 'grpc.peer-subject']:
     bundle_contracts[symbol] = (1, 'OwnedTree', [])
 bundle_contracts['exit'] = (1, 'Never', [])

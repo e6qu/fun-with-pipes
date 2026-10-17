@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     double start = charged();
     measured = 1;
     g_server server = {0}; server.module = "stream-storage";
-    g_conn *connection = g_conn_new(FWP_INVALID_SOCKET, "queued", &server);
+    g_conn *connection = g_conn_new(FWP_INVALID_SOCKET, "", "queued", &server);
     g_stream *stream = g_stream_new(connection, 1);
     stream->remote_end = 1;
     for (size_t i = 0; i < count; i++) {

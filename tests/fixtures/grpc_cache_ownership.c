@@ -32,7 +32,7 @@ static int recover_cache_failure(void) { return 1; }
 static int check_terminal_read(int failure, int shared) {
     fwp_tasks_init();
     g_server server = {0}; server.module = "cache-owners";
-    g_conn *connection = g_conn_new(FWP_INVALID_SOCKET, "queued", &server);
+    g_conn *connection = g_conn_new(FWP_INVALID_SOCKET, "", "queued", &server);
     g_stream *stream = g_stream_new(connection, 1);
     stream->remote_end = 1;
     if (failure) stream->bad = strdup("deliberate receive failure");

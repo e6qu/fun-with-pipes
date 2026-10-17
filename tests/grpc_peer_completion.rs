@@ -117,7 +117,7 @@ int main(void){
  SSL_CTX *tls=SSL_CTX_new(TLS_client_method());if(!tls)_Exit(31);
  SSL *ssl=SSL_new(tls);SSL_CTX_free(tls);if(!ssl)_Exit(32);
  g_server srv={0};srv.module="probe";
- g_conn *c=g_conn_new(-1,"local",&srv);c->ssl=ssl;
+ g_conn *c=g_conn_new(-1, "", "local",&srv);c->ssl=ssl;
  for(stage=0;stage<7;stage++){
   peer_buffer=observed_sender=observed_job=observed_task=0;peer_frees=children=job_frees=task_frees=task_disposals=0;c->ssl=stage==4?0:ssl;
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*stage));s->remote_end=1;

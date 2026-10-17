@@ -19,6 +19,16 @@ pub fn generated() -> String {
     };
     let pair = tuple(vec![string.clone(), string.clone()]);
     let headers = MT::Con("std::List".into(), vec![pair.clone()]);
+    let connection = MT::Con("std::Option".into(), vec![MT::con("std::Conn")]);
+    let outbound = tuple(vec![
+        string.clone(),
+        string.clone(),
+        string.clone(),
+        string.clone(),
+        headers.clone(),
+        bytes.clone(),
+    ]);
+    let response = tuple(vec![int.clone(), headers.clone(), bytes.clone()]);
     let request = tuple(vec![
         string.clone(),
         string.clone(),
@@ -48,8 +58,27 @@ pub fn generated() -> String {
                 ],
                 result.clone(),
             ),
+            primitive(
+                "http2.send",
+                vec![string.clone(), connection.clone(), outbound],
+                response,
+            ),
         ],
         shapes: [
+            (
+                connection,
+                TypeShape::Adt(vec![
+                    ("None".into(), vec![]),
+                    ("Some".into(), vec![MT::con("std::Conn")]),
+                ]),
+            ),
+            (
+                MT::con("std::IoError"),
+                TypeShape::Record(vec![
+                    ("kind".into(), string.clone()),
+                    ("message".into(), string.clone()),
+                ]),
+            ),
             (
                 headers.clone(),
                 TypeShape::Adt(vec![
@@ -68,7 +97,11 @@ pub fn generated() -> String {
         ]
         .into(),
         exports: vec![("available".into(), 0)],
-        named: vec![("request".into(), 1), ("body".into(), 2)],
+        named: vec![
+            ("request".into(), 1),
+            ("body".into(), 2),
+            ("send".into(), 3),
+        ],
         ..Program::default()
     };
     let (code, _) = fwp::cgen::generate_library(&program, "http2_values").unwrap();
@@ -87,8 +120,10 @@ pub fn generated() -> String {
             .unwrap()
             .to_owned()
     };
+    let send = descriptor("return fwp_p_http2_send(l0, l1, l2, ");
+    let (error, response) = send.split_once(", ").unwrap();
     let macros = format!(
-        "\n#define REQUEST_TYPE ({})\n#define BODY_TYPE ({})\n",
+        "\n#define REQUEST_TYPE ({})\n#define BODY_TYPE ({})\n#define ERROR_TYPE ({error})\n#define RESPONSE_TYPE ({response})\n",
         descriptor("return fwp_p_http2_request(l0, "),
         descriptor("return fwp_p_http2_body(l0, l1, l2, ")
     );

@@ -31,7 +31,7 @@ fn accepted_connections_release_after_startup_io_jobs_and_channels() {
         ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) { if(p==seen_connection)connection_finals++;"),
         ("static void g_accept_loop(fwp_socket_t lfd, const g_server *srv) {", "static fwp_socket_t seen_fd;\nstatic fwp_socket_t connection_accept(fwp_socket_t,struct sockaddr *,socklen_t *);\nstatic SSL *connection_tls(SSL_CTX *,fwp_socket_t);\nstatic void connection_reader(void *,int);\nstatic void g_accept_loop(fwp_socket_t lfd, const g_server *srv) {"),
         ("fwp_socket_t fd = fwp_socket_accept(lfd, (struct sockaddr *)&ss, &sl);", "fwp_socket_t fd = connection_accept(lfd, (struct sockaddr *)&ss, &sl);"),
-        ("g_conn *c = g_conn_new(fd, peer, srv);", "g_conn *c = g_conn_new(fd, peer, srv); seen_connection=c;seen_fd=fd;"),
+        ("g_conn *c = g_conn_new(fd, \"\", peer, srv);", "g_conn *c = g_conn_new(fd, \"\", peer, srv); seen_connection=c;seen_fd=fd;"),
         ("fwp_cleanup_push(&accepted_owner, g_connect_ref_release, c);", "fwp_cleanup_push(&accepted_owner, g_connect_ref_release, c); if(connection_stage==0)fwp_trap(\"accepted startup trap\");"),
         ("c->ssl = (SSL *)fwp_tls_accepted(srv->tls, fd);", "c->ssl = connection_tls(srv->tls, fd);"),
         ("fwp_task *reader = fwp_spawn_task(0, g_reader, c, 0, 0);", "fwp_task *reader = fwp_spawn_task(0, connection_reader, c, 0, 0); seen_reader=reader;"),

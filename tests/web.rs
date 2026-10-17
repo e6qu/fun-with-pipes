@@ -601,6 +601,99 @@ fn fwp_client_and_server_over_tls() {
 }
 
 #[test]
+fn checked_arc_http_clients_match_interpreter_with_pooled_and_tls_calls() {
+    assert!(have_cc(), "HTTP ARC checks require a native C compiler");
+    let ca = certs().expect("HTTP ARC checks require OpenSSL for native TLS");
+    let dir = scratch("arc-client");
+    let source = root().join("tests/web/arc-client.fwp");
+    let artifacts = std::env::var_os("FWP_HTTP_CLIENT_ARTIFACTS").map(PathBuf::from);
+    if let Some(path) = &artifacts {
+        std::fs::create_dir_all(path).unwrap();
+    }
+    let mut binaries = Vec::new();
+    for mode in ["tracing", "arc"] {
+        for opt in ["-O1", "-O2"] {
+            let cfile = dir.join(format!("{mode}{opt}.c"));
+            let binary = dir.join(format!("{mode}{opt}.exe"));
+            let out = Command::new(fwp())
+                .args(["build", "--gc", mode, "--emit-c", "-o"])
+                .arg(&cfile)
+                .arg(&source)
+                .output()
+                .unwrap();
+            assert!(out.status.success(), "{mode}: {out:?}");
+            let code = std::fs::read_to_string(&cfile).unwrap();
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            if let Some(path) = &artifacts {
+                std::fs::copy(&cfile, path.join(format!("{mode}{opt}.c"))).unwrap();
+                std::fs::copy(&binary, path.join(format!("{mode}{opt}.exe"))).unwrap();
+            }
+            if mode == "arc" {
+                let symbols = Command::new("nm").arg(&binary).output().unwrap();
+                assert!(symbols.status.success(), "{symbols:?}");
+                let symbols = String::from_utf8_lossy(&symbols.stdout);
+                for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                    assert!(!symbols.contains(name), "ARC client contains {name}");
+                }
+                if let Some(path) = &artifacts {
+                    std::fs::write(path.join(format!("{mode}{opt}.nm")), symbols.as_bytes())
+                        .unwrap();
+                }
+            }
+            binaries.push((mode, opt, binary));
+        }
+    }
+    for tls in [false, true] {
+        for backend in [Backend::Interp, Backend::Native] {
+            let server = start(backend, tls, &[]).unwrap();
+            let base = format!("{}://{}", if tls { "https" } else { "http" }, server.addr);
+            let run = |command: &mut Command| {
+                command
+                    .env("FWP_BASE", &base)
+                    .env("SSL_CERT_FILE", ca.join("ca.pem"))
+                    .output()
+                    .unwrap()
+            };
+            let reference = run(Command::new(fwp()).args(["run", "--interp"]).arg(&source));
+            assert!(
+                reference.status.success(),
+                "{backend:?}/{tls}: {reference:?}"
+            );
+            let expected = expected_client(tls)
+                .split("protocol Some")
+                .next()
+                .unwrap()
+                .to_owned()
+                + "done\n";
+            assert_eq!(String::from_utf8_lossy(&reference.stdout), expected);
+            for (mode, opt, binary) in &binaries {
+                let out = run(Command::new(binary)
+                    .env("FWP_GC_STRESS", if *mode == "tracing" { "1" } else { "0" })
+                    .env("FWP_GC_VERIFY", if *mode == "tracing" { "1" } else { "0" })
+                    .env(
+                        "FWP_REUSE_VERIFY",
+                        if *mode == "tracing" { "1" } else { "0" },
+                    ));
+                assert!(
+                    out.status.success(),
+                    "{mode}/{opt}/{backend:?}/{tls}: {out:?}"
+                );
+                assert_eq!(
+                    out.stdout, reference.stdout,
+                    "{mode}/{opt}/{backend:?}/{tls}"
+                );
+                if let Some(path) = &artifacts {
+                    let prefix = format!("{mode}{opt}-{backend:?}-tls-{tls}");
+                    std::fs::write(path.join(format!("{prefix}.stdout")), &out.stdout).unwrap();
+                    std::fs::write(path.join(format!("{prefix}.stderr")), &out.stderr).unwrap();
+                }
+            }
+        }
+    }
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
 fn native_under_gc_stress() {
     if natives().is_none() {
         return;

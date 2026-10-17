@@ -406,6 +406,17 @@ asynchronous WASI host tasks, REST and MCP remain outside this mode. The
 entries and has separate platform acceptance. Focused checks and final delivery acceptance are distinguished
 in [the handoff](development-state.md).
 
+The HTTP client extension is implemented under platform validation. Client
+connections have independent pool, caller and I/O-task owners; startup cleanup
+releases a reserved owner if a background task cannot start. A request keeps its
+stream alive until the response is copied or the call fails. Failure and
+cancellation notify the peer before releasing request storage. Response strings,
+header pairs and list cells are owned as they are created, so partial copies can
+be released. Completed responses do not borrow the network buffers. Full pool
+keys, including long TLS-option strings, remain distinct without a fixed-size
+temporary buffer. HTTP server handlers are still outside checked ARC; candidate
+implementation is not verified platform support.
+
 WASI supplies standard streams and file access to a WebAssembly module. Build a
 supported program with `fwp build --gc arc --target wasm32-wasi app.fwp -o app.wasm`
 using the [WASI toolchain](reference.md#targets). Its counted values use the

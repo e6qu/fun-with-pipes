@@ -116,7 +116,7 @@ static g_msg *message(void){g_msg *m=calloc(1,sizeof *m+1);if(!m)_Exit(31);m->n=
 static void call(void *arg,int stop){if(stop){cancelled++;return;}jmp_buf failed;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;if(!setjmp(failed)){fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;V args[]={output_channel};result=fwp_remote_call(arg,args);}else trapped++;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;}
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
- g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1,"local",&srv);connection=c;
+ g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);connection=c;
 #ifdef PROBE_CLIENT_STREAM_OWNERS
  c->server=0; /* exercise client cancellation/reset, not server receive rules */
 #endif

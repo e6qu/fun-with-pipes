@@ -90,7 +90,7 @@ int main(int argc,char **argv){
  fwp_rpc method={0};method.fn=stage==5?4:3;method.nreq=2;method.req=fields;method.resp=&string_type;
  method.error=stage==5?&string_type:0;method.result_drop=stage>=9?owned_iterator_drop:owned_string_drop;method.output=stage>=9?1:0;
  g_server server={0};server.module="probe";
- g_conn *c=g_conn_new(FWP_INVALID_SOCKET,"owned-values",&server);c->conn_window=(stage==4||stage==12)?0:65535;
+ g_conn *c=g_conn_new(FWP_INVALID_SOCKET, "", "owned-values",&server);c->conn_window=(stage==4||stage==12)?0:65535;
  g_stream *s=g_stream_new(c,1);s->sent_headers=1;s->remote_end=1;s->local_end=stage==14;
  g_route route={0};route.kind=G_ROUTE_METHOD;route.m=&method;
  g_job job={0};job.c=c;job.s=s;job.srv=&server;job.route=&route;strcpy(job.what,"owned-values");
