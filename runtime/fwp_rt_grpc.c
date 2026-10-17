@@ -1018,22 +1018,33 @@ static g_env_options *g_env_options_known = 0;
 static const g_tls *g_env_tls(const char *var) {
     for (g_env_options *k = g_env_options_known; k; k = k->next)
         if (strcmp(k->var, var) == 0) return k->tls;
+    size_t n = strlen(var);
+    /* Reuse the inline name while looking up suffixes; do not truncate it. */
+    size_t suffix_room = sizeof "_SERVER_NAME";
+    if (n > SIZE_MAX - sizeof(g_env_options) - suffix_room) fwp_trap("service variable name too large");
+    g_env_options *k = (g_env_options *)malloc(sizeof *k + n + suffix_room);
+    if (!k) fwp_trap("cannot allocate service TLS cache entry");
+    fwp_cleanup pending_entry;
+    fwp_cleanup_push(&pending_entry, fwp_tls_subject_free, k);
+    char *name = (char *)(k + 1);
+    memcpy(name, var, n + 1);
+    k->var = name;
     const char *v[5];
     static const char *const sfx[5] = {"CA", "INSECURE", "SERVER_NAME", "CERT", "KEY"};
     for (int i = 0; i < 5; i++) {
-        char name[300];
-        snprintf(name, sizeof name, "%s_%s", var, sfx[i]);
+        name[n] = '_';
+        strcpy(name + n + 1, sfx[i]);
         v[i] = getenv(name);
         if (v[i] && !*v[i]) v[i] = 0;
     }
+    name[n] = 0;
     int insecure = v[1] && strcmp(v[1], "0") != 0 && strcmp(v[1], "false") != 0;
-    g_env_options *k = (g_env_options *)calloc(1, sizeof *k);
-    k->var = strdup(var);
     k->tls = v[0] || insecure || v[2] || v[3] || v[4]
                  ? g_tls_new(v[0] ? v[0] : "", insecure, v[2] ? v[2] : "", v[3] ? v[3] : "", v[4] ? v[4] : "")
                  : 0;
     k->next = g_env_options_known;
     g_env_options_known = k;
+    fwp_cleanup_pop(&pending_entry);
     return k->tls;
 }
 
@@ -1049,7 +1060,6 @@ static void g_environment_finish(void) {
             tls->users = 1;
             g_tls_release(tls);
         }
-        free((void *)k->var);
         free(k);
     }
     g_pool = 0;

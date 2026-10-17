@@ -92,8 +92,16 @@ The repeated-call baseline now passes on all six platforms: each additional
 call leaves 240 managed bytes, while partial readers also leave raw queued
 messages. One connection is reused, separating pool storage from per-call growth.
 The next preparation gives client requests explicit owners and discards unread
-messages after their reader is released. Final-owner, failure and repeated-call
-validation is in progress; see the handoff for actual runs.
+messages after their reader is released. All six native platforms now pass its
+final-owner, failure and repeated-call checks: every created request/message
+releases, and remaining managed storage stays constant across tested call counts.
+It adds one retain per call without reducing allocation requests. Full delivery
+acceptance remains required.
+
+Bundle this with the compiler's transfer of a selected value out of a consumed
+heap record when no other field needs cleanup. Focused Linux ownership checks
+pass; real-client and six-platform measurements must establish its savings before
+claiming an improvement. This preserves shared values and introduces no syntax.
 
 Next, prove connection/pool/task ownership and release pending sender values and
 retained server callbacks. Preserve shared reads, cancellation and error order;

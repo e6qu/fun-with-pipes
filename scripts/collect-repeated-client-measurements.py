@@ -63,7 +63,9 @@ def main():
                    "every_kind_of_call", "stream_aliases_are_consistent_across_tasks",
                    "calls_are_concurrent"]
     if args.projection_moves:
-        checks.append("boxed_projection_transfers_unique_fields_and_preserves_shared_values")
+        checks += ["boxed_projection_transfers_unique_fields_and_preserves_shared_values",
+                   "environment_tls_cache_releases_after_task_and_finalizer_teardown",
+                   "failed_environment_tls_construction_releases_unpublished_storage"]
     output_tables = args.output.parent / args.output.stem
     output_tables.mkdir(parents=True, exist_ok=True)
     results = []

@@ -79,8 +79,10 @@ Callee frames are additional. No downloaded executable ran locally.
 
 `move-boxed-projections` in `/private/tmp/fwp-boxed-projections` starts at `997b23a9`.
 Published head `d1beb206ed4122afa9b575b5cf16989b684fa219` passed Linux `fields`
-run `39000896503`. Real repeated-client probe `39001303292` is running at that
-head. No second PR is open; bundle these related changes after measurement.
+run `39000896503`. Real repeated-client probe `39001303292` passed at that head. For 256 full
+reads, retains fall from 66,562 to 50,178; partial reads from 41,986 to 33,794;
+retained readers from 116,226 to 99,586. Allocation requests and final managed
+storage are unchanged. These are Linux AMD64 results until the native matrix passes. No second PR is open; bundle these related changes after measurement.
 
 When a consumed heap record has only one counted field and one owner, the
 compiler transfers that field and frees the parent without retaining it first.
@@ -88,12 +90,19 @@ Shared records keep their existing field owners. Stack aliases, resource frames,
 virtual loop state, disabled freeing and planned storage reuse retain their
 existing paths. Interpreter/native, unique/shared, scalar-bit, exact reclamation,
 error cleanup and deliberately broken variants pass in the focused Linux suite.
-No six-platform or real-client savings claim yet.
+No six-platform or timing claim yet.
 
-Next: inspect `39001303292` and fix failures. If it passes, run the six-platform
-`stream-repeat` suite; use the request report above as the baseline for the
-collector's new `--projection-moves` option. Keep actual measurement revisions.
-Then prepare one delivery from #156's verified merge and run its complete gates.
+A related service TLS-cache fix now checks construction allocation, keeps the
+entry/name together and releases unpublished entries if TLS construction traps.
+Its temporary name storage also accommodates complete environment-variable names,
+removing the old 300-byte truncation. Tests add two injected failures, retry,
+missing-cleanup detection and 1,024-character names. They are unvalidated until
+the next native run. Stream suites now include these cache tests.
+
+Next: publish the combined preparation and run all six `stream-repeat` jobs.
+Use the retained `997b23a9` request report as baseline with `--projection-moves`.
+Preserve actual measurement revisions. Then prepare one delivery from #156's
+verified merge and run all production gates. One delivery PR remains active.
 
 ## Local verification and remaining work
 
@@ -110,7 +119,8 @@ handlers remain open. Establish closed-connection/explicit-drain measurements
 before attributing live pooled storage to leaks. Private research is
 `/private/tmp/fwp-next-connection-ownership.md`. Audit unused callback fields before
 adding owners. Older fatal allocation paths using `exit` on task stacks and
-unchecked environment-option allocation also remain concrete follow-up work.
+other unchecked allocation paths also remain concrete follow-up work. The
+service environment-cache construction fix above now has written failure tests.
 Remote calls remain excluded from checked ARC; all seven roadmap areas stay open.
 
 ## Roadmap status
