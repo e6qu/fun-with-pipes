@@ -41,6 +41,9 @@ fn request_encoding_buffer_releases_on_encode_trap_and_cancelled_send() {
             1,
         );
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 #include <stdint.h>
 static int stage,request_frees,wire_frees;

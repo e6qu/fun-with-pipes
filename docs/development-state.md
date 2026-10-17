@@ -8,8 +8,7 @@ Its published head is `31385092e4a3b357243b7c255af0e7d4521901c9`. Production
 watcher exited. The error was a fault-injection hook expecting one generic
 `free(g->m)` statement after the runtime added two more. It now matches only
 `g_got_release`. Documentation and benchmarks passed; other old jobs were still
-running when the failure was found. Cancellation of this superseded production
-run was requested so the corrected combined run can use those runners. That failed head is not acceptance.
+running when the failure was found. That superseded production run is cancelled. The failed head is not acceptance.
 
 ## Combined stream and chain delivery
 
@@ -22,14 +21,23 @@ The focused stream suite and Windows production job now include neighboring
 receive, status, send, encoding, client and server cleanup targets. The stream
 collector explicitly requires the repaired receive test.
 
-Next: publish the preparation repair and run `stream-owners` on all six native
-hosts. Fix any failures; refresh its stream report, then commit/push the complete
-combined PR #155 with a description covering both changes. Require all nine
-production jobs plus documentation on that new final head. Create a new merge
-watcher for its new head/run IDs; the prior watcher is finished. Squash with one
-line of at most 80 characters and an explicitly empty body, no trailers or AI
-attribution. Cancel duplicate/superseded production runs only; leave Windows
-dependency jobs running. Failing tests are tasks, and JIT is excluded.
+Focused run `38989714484` at `117f817b` passed on Intel macOS but exposed
+Windows fixture portability failures in the newly added neighboring tests.
+Eight hooks included CRT headers before selecting the required Windows API.
+The server fixture also assumed POSIX socket descriptors and the Unix OpenSSL
+executable layout. These are repaired: early API selection, native-width handles,
+loopback TCP pairs, an OS-level closed-socket check and the configured Windows
+tool location. Formatting through the guard passed in 1.27s. Both worktrees
+contain the repairs; runtime/compiler behavior is unchanged by them.
+
+Next: publish the preparation repair and repeat the six-host focused stream suite.
+Fix any failures; refresh its stream report, then commit/push the complete combined
+PR #155 with a description covering both changes. Require all nine production
+jobs plus documentation on that new final head. Create a new merge watcher for
+its new head/run IDs; the prior watcher is finished. Squash with one line of at
+most 80 characters and an explicitly empty body, no trailers or AI attribution.
+Cancel duplicate/superseded production runs only; leave Windows dependency jobs
+running. Failing tests are tasks, and JIT is excluded.
 
 The first stream batch's six-host evidence is `38985903147` at `4c26f21f`, with
 16-byte positions and 81 requested bytes per received 16-character value versus
@@ -108,12 +116,11 @@ The existing connection counter controls transport closure, not complete object
 destruction. [Ownership](ownership.md#what-remains-before-remote-calls-can-use-arc)
 records these distinctions. Remote calls remain excluded from checked ARC. Compiler work must review
 `CGen::drop_body`, lowering of `grpc._force` and RPC result descriptors together.
-The standard wire decoder `fwp_decode` already returns owned values and cleans
-partial fields (`runtime/fwp_rt_exec.c`). The stream cache must preserve or
-transfer those owners through wrapper construction, publication and failures.
-The custom callback branch of `g_decode` still calls `fwp_apply1`; its result
-contract needs a separate review. Marking `grpc._force` reviewed alone cannot
-establish ownership of the entire graph.
+Standard wire decoding already returns owned values and cleans partial fields
+through `fwp_decode` in `runtime/fwp_rt_exec.c`. The cache must preserve/transfer
+those owners through wrapper construction, publication and failure. The custom
+callback branch still uses `fwp_apply1` and needs a separate result contract;
+marking `grpc._force` reviewed alone cannot establish graph ownership.
 
 A promising next contract consumes a position: when it has one owner, transfer
 its saved result directly; when shared, return another result owner. Keep type

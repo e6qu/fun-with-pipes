@@ -27,6 +27,9 @@ fn received_requests_and_statuses_release_on_errors_and_cancelled_waits() {
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "grpc_receive").unwrap();
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 #include <string.h>
 static int stage,allocations,frees,cancelled;
