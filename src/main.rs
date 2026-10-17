@@ -658,8 +658,8 @@ fn build(args: &[String]) -> ExitCode {
         eprintln!("fwp build: --staticlib/--cdylib require a native target");
         return ExitCode::from(2);
     }
-    if arc && (target == fwp::cgen::Target::Browser || rest || mcp) {
-        eprintln!("fwp build: --gc arc requires a checked executable or C library; browser, REST and MCP boundaries are not yet eligible");
+    if arc && target == fwp::cgen::Target::Browser {
+        eprintln!("fwp build: --gc arc requires a checked executable or C library; browser boundaries are not yet eligible");
         return ExitCode::from(2);
     }
     fwp::cgen::set_native_options(fwp::cgen::NativeOptions {

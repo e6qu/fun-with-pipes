@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, chain-cleanup, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -23,11 +23,11 @@ on:
         type: string
 jobs:
   server_checks:
-    if: inputs.suite == 'server-checks'
+    if: inputs.suite == 'server-checks' || inputs.suite == 'server-entries'
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+        runner: ${{ fromJSON(inputs.native_runner != 'all' && format('["{0}"]', inputs.native_runner) || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
@@ -35,6 +35,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_UDP_ARTIFACTS: server-check-evidence/udp
+      FWP_SERVER_ENTRY_ARTIFACTS: server-check-evidence/entries
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -69,15 +70,26 @@ jobs:
           git rev-parse HEAD > server-check-evidence/revision.txt
           clang --version > server-check-evidence/c.txt
           rustc -Vv > server-check-evidence/rust.txt
+          python3 -c "import platform; print(platform.platform()); print(platform.machine()); print(platform.processor())" > server-check-evidence/cpu.txt
+          printf '%s\n' '${{ runner.os }} ${{ runner.arch }}' > server-check-evidence/platform.txt
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
       - name: Accepted connections, UDP cleanup and readiness failures
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && inputs.suite == 'server-checks' }}
         run: cargo test --no-fail-fast --test grpc_server_connections --test udp_ownership --test native_sockets -- --nocapture
+      - name: Generated entry results and ownership restrictions
+        if: ${{ !cancelled() && inputs.suite == 'server-entries' }}
+        run: cargo test --no-fail-fast --test server_entry_ownership --test arc_execution -- --nocapture
+      - name: REST API, authentication and multipart forms with checked ARC
+        if: ${{ !cancelled() && inputs.suite == 'server-entries' }}
+        run: cargo test --test rest checked_arc_rest_preserves_api_authentication_and_form_results -- --exact --nocapture
+      - name: Repeated MCP standard-input requests and non-freeing control
+        if: ${{ !cancelled() && inputs.suite == 'server-entries' }}
+        run: cargo test --test server_entry_ownership mcp_stdio_releases_repeated_requests_without_collection -- --ignored --exact --nocapture
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: server-checks-${{ matrix.runner }}
+          name: ${{ inputs.suite }}-${{ matrix.runner }}
           path: server-check-evidence/
           if-no-files-found: error
   fixed_functions:

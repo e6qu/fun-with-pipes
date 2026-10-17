@@ -148,3 +148,25 @@ cancellation, teardown, interpreter agreement and actual no-tracing binaries
 are verified across all six native hosts. Measure allocations and bounded memory
 for REST HTTP/TLS and MCP standard-input/HTTP modes before claiming support.
 Historical preparation entries are not new tasks.
+
+
+## Isolated REST/MCP preparation
+
+This preparation branch enables ordinary checked compilation for generated REST
+and MCP entries; the existing ownership/cycle checks still apply. Browser and
+asynchronous WASI boundaries remain excluded. A shared fixture returns aliases,
+raises errors, delays replies and requests normal shutdown. Added checks compare
+MCP replies with the raw interpreter, reject channel cycles and reuse the full
+REST API/authentication/form cases. The new integration target is assigned to the
+macOS GC shard and Windows TLS stage; existing targets stay in their original jobs.
+
+The focused `server-entries` runner suite also measures repeated MCP input with
+collection disabled and a deliberately non-freeing control. Runtime/platform
+acceptance is pending. REST/MCP HTTP/TLS memory and cancellation evidence is still
+being implemented; do not publish a delivery PR from this partial preparation.
+Local checks use the root guard and shared target. Lint passes after correcting
+a temporary-directory argument, a fixed-size chunk lint and one caller in the
+REST setup consolidation. Workflow lint and all seven test-runner checks pass.
+The focused MCP test passed its raw-interpreter assertions and emitted tracing C,
+then stopped at the fixed 1 GiB aggregate RSS limit during native compilation.
+That execution moves to CI; no local limit was raised and it is not a passing test.

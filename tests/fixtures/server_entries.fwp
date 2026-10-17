@@ -1,0 +1,25 @@
+# Values cross generated REST and MCP entries in both directions. The returned
+# aliases must survive decoding cleanup; errors must release their input too.
+# expose: rest, mcp
+
+Payload = { text: String, values: List[I64] }
+
+export copy : Payload -> Payload
+copy = id
+
+export duplicate : Payload -> (Payload, Payload)
+duplicate = dup
+
+export checked : I64 -> String ! {Error[String]}
+checked = if (eq 0) (const "zero" | fail) (format "value {}")
+
+export outcome : I64 -> Result[String, String]
+outcome = if (eq 0) (const (Err "zero")) (format "value {}" | Ok)
+
+export slow : Payload -> Payload ! {Async}
+slow = tap (const 100ms | task.sleep)
+
+# Tests stop HTTP servers through the runtime's normal shutdown path.
+# Standard-input servers still finish when their input ends.
+export stop : () -> String ! {Async}
+stop = signal.request-shutdown | const "stopping"
