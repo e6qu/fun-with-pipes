@@ -933,6 +933,42 @@ All four workloads still grow by 240 managed bytes per call. Six-host and full
 production acceptance are pending. Server requests/connections, escaped graphs
 and HTTP ownership remain open; these changes do not establish remote checked ARC.
 
+### Server request and connection ownership in preparation
+
+A request record stores one remote call's headers, queued messages and status.
+A connection record holds the socket and information shared by calls using it.
+The next preparation gives these records explicit owners; production acceptance
+is pending, as recorded in [the handoff](development-state.md).
+
+While parsing incoming bytes, a temporary list owns each new request. This matters
+when the same input contains both a new call and its cancellation: cancellation
+can remove the request from the connection before a serving task starts. The
+parser list keeps it alive, then moves its owner into the serving job. A parse
+failure releases every request still in the temporary list.
+
+Connection startup moves its owner to the reader task. The writer and each
+serving job acquire separate owners because they can finish at different times.
+An input iterator or output channel retained by language code also keeps its
+request and connection alive. Closing the socket finishes transport activity;
+the record remains available until those retained users release it. Job cleanup
+clears borrowed task pointers before releasing the request and connection, so
+those pointers do not keep finished tasks alive or form an owning cycle.
+
+Native Windows testing exposed a shutdown issue: a locally shut-down socket did
+not wake its parked reader through OS polling. The preparation explicitly wakes
+socket waiters on shutdown and close. On polling platforms, each wait record lives
+on the waiting task's stack and is removed on return or cancellation. This adds
+no heap allocation or task-header field. Timeout, cancellation and two simultaneous
+readers are tested separately from connection ownership.
+
+The earlier Linux preparation finalized every request and connection, leaving
+544 managed bytes after 1, 16 or 256 calls in all four measured workloads. It made
+the same allocation requests as the values/channel candidate, with additional
+reference-count operations for independently live owners. That result predates
+the shutdown repair: cross-platform measurements and binary review must be rerun.
+It does not establish complete ownership for escaped callback cycles, HTTP
+handlers or remote checked ARC.
+
 Accepted input ownership keeps two iterator nodes: the next node to read and
 the node whose element is currently being encoded. This preserves the existing
 order, which evaluates the next step before encoding the current element.

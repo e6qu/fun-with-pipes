@@ -1,87 +1,78 @@
 # Connection ownership preparation
 
-Updated 2026-10-17 UTC. This branch prepares the next delivery; it is not the
-active pull request. Root `free-server-call-values` owns PR #160 at
-`1e1773b6d75fea3b16585c637738bd9fc52e836d`, with new production
-`39025708821` and docs `39025708823` queued after repairing a state-restoration
-fixture that called the old method-dispatch interface. Keep that
-head stable. Merge only after all nine production jobs and docs pass.
+Updated 2026-10-17 UTC. Root `free-server-call-values` owns PR #160 at `1e1773b6`;
+production `39025708821` is running and docs `39025708823` passes. Its watcher
+session 82509 merges only after all nine production jobs and docs pass for that
+head. This worktree prepares the next delivery; no second PR is open.
 
-## Change and acceptance
+## Current change
 
-Base request preparation `4b7ecb8bb16583f48ae8fc9d85f0cda5c623b23e` passes Linux
-`39024071318`; the earlier move revision also passes `39023556994`. Every
-request finalizes in four workloads at 1/16/256 calls. The move version leaves
-864 managed bytes independent of call count and has 2 / 65 / 130 / 66 retains
-per call (greeting / returned stream / sent stream / output channel). Allocation
-counts and requested bytes match #160. Guarded exact comparison passed in 0.20s.
+Worktree `/private/tmp/fwp-server-connection-owners`, branch
+`own-server-connections`, is published at `96fa4e2c` with Windows AMD64 probe
+**39027501833** running. The next local delta adds wait-record lifetime checks
+and the plain explanation in [ownership](ownership.md).
 
-This branch gives accepted gRPC connections explicit owners for startup,
-reader/writer tasks, serving jobs and retained input/output callbacks. Startup
-ownership transfers to the reader; the writer and independently live jobs retain
-storage. Socket closure still follows I/O task completion, allowing callbacks
-to observe a closed connection until their last owner releases its record.
-HTTP handler graphs and remote checked ARC remain outside this proof.
+Parser lists own requests until moving them into serving jobs, including a
+request reset in the same input batch. Connection startup moves into the reader;
+writer tasks, jobs and retained input/output callbacks acquire separate owners.
+Socket closure follows I/O completion; retained users keep the closed record
+alive until their last release. Tests cover partial construction, failure,
+pre-entry cancellation, overflow, retained aliases and explicit no-reuse builds.
+HTTP graphs, escaped callback cycles and remote checked ARC remain unproved.
 
-New tests exercise startup failure, TLS rejection, cancellation before reader
-or writer entry, writer startup failure, job count overflow, a retained serving
-context and a channel surviving connection closure. Deliberately omitted cleanup
-must make the tests fail. Run at O1/O2 with collection on/off, stress verification
-and reuse poisoning. Preserve existing client startup and server tests.
+Native Windows exposed two issues in the newly enabled client startup test.
+`4cca1a10` fixes Windows API declaration order before a standard header. The next
+run `39027091673` compiled, but timed out draining a reader after local shutdown.
+`96fa4e2c` explicitly wakes socket waiters on shutdown/close. Polling wait records
+live on task stacks and unlink on return/cancellation; no heap allocation or
+task-header field is added. A Windows negative control removes the wake and
+requires the original bounded timeout. Additional local checks exercise timeout,
+cancellation and waking two readers on one descriptor.
 
-Linux connection probe `39024793754` at `6acdd93c` passes the new request and
-connection tests, existing startup/listener tests, channels and task reclamation.
-It failed an older output-channel negative control: its source anchor matched
-both job and channel cleanup after this change. The repair names the sink context
-explicitly and still requires the omitted release to fail. The probe did not
-reach end-to-end service tests or measurement, so it is not acceptance.
+Next: finish the Windows probe and fix failures, then publish the added lifetime
+checks and run all six hosts at one frozen revision. Refresh measurements and
+actual ARM64/AMD64 reviews because the runtime changed. Preserve explicit macOS
+GC-shard and Windows assignments, all existing stress/reuse tests, and the state
+fixture repaired in #160. Do not increase test timeouts to hide the failure.
 
-An existing startup fixture used Unix `fcntl` to check an open socket. It now
-uses portable `getsockopt` and the platform's invalid-socket constant. Both new
-targets have explicit macOS GC-shard and Windows production assignments; Windows
-also gains the portable client startup test. The report collector has an explicit
-`server-owners` comparison against the #160 report, requiring every request and
-connection finalized, constant final managed storage and unchanged allocations.
+## Earlier evidence and limits
 
-Further review found a real mode mismatch: accepted connections were counted
-in explicit `FWP_REUSE=0` builds, but output channels in that mode do not acquire
-counted owners. Connection startup now activates counts only with resource
-ownership enabled, matching request/source/channel construction. A separate
-compiler subprocess selects no-reuse mode and tests a channel retained across
-socket closure, plus a deliberately broken unconditional-count control.
+Runtime `72a3cee0` passes Linux `39025894808`: every request and connection
+finalizes; all four workloads leave 544 managed bytes after 1/16/256 calls.
+Allocations/requested bytes match #160. Retains per call are 3 / 66 / 132 / 68,
+plus one per connection, for greetings / returned streams / sent streams / text
+channels. Collection is off and physical freeing on, three fresh processes per
+case. This compares identical fwp workloads, not C/Rust timing.
 
-Superseded six-host `39025166581` at `d3d68598` was cancelled after finding this
-bug; it is not acceptance. The immutable tag `evidence/server-owners-20261017`
-retains that candidate. The corrected source is `7770db9a9c2bebee455d9c02dd748fbd7e54fb11`, frozen as
-`evidence/server-owners-modes-20261017`; all-six run `39025450771` failed the ARM64 no-reuse regression. Its test channel
-had no message schema, so actual encoding dereferenced NULL before sending. The
-fixture now supplies a real one-field integer schema; runtime behavior is unchanged.
-It also includes the direct-dispatch state fixture repair from PR #160 and adds
-that focused test to the server suite/report checks. Cancel the superseded run
-and publish this corrected test candidate under a new immutable tag.
-Next: run the corrected Linux probe, then all six hosts; fix failures, collect
-and compare their measurements, and review
-actual ARM64/AMD64 binaries. Do not move old evidence tags. Retain unchanged-workload memory,
-allocation and count comparisons and inspect actual ARM64/AMD64 instructions.
-Do not execute downloaded artifacts. No full builds locally. Integrate into the
-next substantial PR only after #160 merges; preserve its final evidence/docs.
-All seven work areas in PLAN.md remain open; this does not complete GC removal.
+The root collector validated that Linux report in 2.99s. Its private location is
+`/private/tmp/fwp-server-owners-linux-report.json`; artifacts are under
+`/private/tmp/fwp-server-memory-evidence/39025894808`. Actual AMD64 instructions
+show request/connection cleanup, distinct socket closure and a 16-byte reader
+frame increase. These are earlier-revision results, not validation of the new
+shutdown fix. Never execute downloaded binaries locally.
 
-## Local checks
+Earlier failed candidates exposed an ambiguous negative-control source anchor,
+unconditional connection counting in no-reuse mode, and a missing message schema
+in the no-reuse test. All are repaired without removing their controls. Runs
+`39025166581`, `39025450771` and `39026702591` are cancelled; cancellation was
+requested for superseded `39027091673`. Old evidence tags remain immutable.
 
-Root-guarded `cargo fmt --all` passed in 1.22s. `python3 scripts/check-roadmap.py` passed in 2.84s (52 link sets,
-106 immutable preparation pairs and seven roadmap steps). `git diff --check`
-passes. Native test-runner tests pass (7 tests, guarded 1.16s). Request binary inspection
-passed in 0.15s, without executing artifacts. Broader native checks remain pending
-on GitHub. Final formatting passed in 1.10s, docs in 2.63s; real Cargo
-metadata coverage and report syntax checks passed in 0.14s (all 236 targets
-assigned, including both new ownership targets). No-reuse fix formatting passed
-in 1.28s; the documentation audit failed in 2.51s because the rewrite removed the
-required `Next:` marker. That marker is restored; the rerun passed in 2.66s (52 link sets,
-106 immutable pairs and seven roadmap steps). The earlier recorded pass was
-incorrect; the documentation-only correction did not change the frozen runtime.
-The message-schema/state-fixture revision passes formatting in 1.02s and the
-documentation audit in 2.41s.
+Integration starts from this branch's delta after `855fe3d1`. Preserve root's
+final #160 reports, accepted documentation and allocation/state-fixture repairs;
+do not replace the root handoff with this preparation file. The independent
+compiler borrowing candidate is tracked only in the root handoff.
+
+## Checks and resource limits
+
+Use `python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py COMMAND...`
+for focused local checks. Full builds/tests and measurements run on GitHub.
+Keep the fixed CPU/memory/disk/deadline limits. Shutdown repair formatting passed
+in 1.30s and its documentation audit in 2.79s. Added waiter checks pass formatting
+in 1.36s; native results are pending. The earlier documentation audit failure for
+a missing `Next:` marker was repaired; its premature pass claim was corrected.
+
+All seven roadmap areas remain open. Complete GC removal, lower count costs,
+numerics, differentiation and larger programs remain work. JIT is excluded.
 
 ## Roadmap status
 
@@ -94,24 +85,3 @@ documentation audit in 2.41s.
 | 5 | In progress | CPU kernels and GPU resource ownership |
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
-
-## Windows validation repair
-
-Six-host run `39026702591` failed the newly enabled client startup fixture on
-Windows: its prepended standard header selected an older Windows API contract.
-The fixture now declares the same Windows 10 contract as the generated runtime
-before including headers. Runtime code is unchanged. Next: publish this repair
-and rerun all six focused hosts; no cross-platform acceptance is claimed yet.
-
-## Socket shutdown repair
-
-Replacement run `39027091673` gets past Windows compilation but the client
-startup fixture times out draining its reader after local shutdown. WSAPoll
-can leave it parked. The runtime now explicitly wakes socket waiters on
-shutdown/close. Polling wait records live on task stacks and are removed on
-normal return or cancellation; no heap allocation or task header is added.
-A Windows negative control removes the wake and requires the original bounded
-timeout. Formatting passed in 1.30s after correcting one line wrap.
-Next: validate Windows AMD64 first, then rerun all six hosts and refresh
-measurements/binary review because runtime code now changes. Earlier Linux
-results remain evidence of the earlier revision, not this fix.
