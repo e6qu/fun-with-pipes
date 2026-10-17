@@ -334,7 +334,7 @@ static struct {
 
 static void fwp_gc_oom(void) {
     fprintf(stderr, "fwp: out of memory\n");
-    exit(102);
+    fflush(NULL); _Exit(102);
 }
 
 /* 0 is shared; 1..254 are inline; 255 denotes an exact rare wide count.

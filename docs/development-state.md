@@ -4,7 +4,7 @@ Updated 2026-10-17 UTC. All seven work areas in [PLAN.md](../PLAN.md) remain ope
 
 ## Current delivery and preparation
 
-The root checkout is `own-client-requests`, draft PR #157, based on accepted
+The root checkout is `own-client-requests`, ready PR #157, based on accepted
 #156 merge `29302bae30f6dbfae63166bb9171c7da5b237789`. Its combined request,
 compiler and service-settings candidate `d7a161d1` passed all six focused native
 jobs in `39001772549`, including the Intel Mac artifact-upload retry. The root
@@ -92,15 +92,24 @@ different host task layouts and exclusions. Collector changes require the new
 task, fatal-allocation and POSIX startup checks before accepting a comparison;
 script syntax passed under the root guard in 0.20s.
 
-Next: publish the unique-task storage repair, run Linux `connection-repeat`,
-repair failures, then run all six native hosts and
+The ongoing fatal-error audit extends the same repair to native allocator,
+encoding and differentiation buffer failures. Fatal paths flush buffered output
+before `_Exit(102)` without invoking library unload from a task stack. Fifteen
+injection/size-error cases check the exact error, exit code and preceding output.
+The no-GC/Wasm allocator fatal paths are not changed by this native repair.
+These additional changes await native validation. Guarded formatting of the
+extended tests passed in 1.03s.
+
+Published `7d6ff905e3c82413f5ef0045fe0b8e56c05a149c` runs Linux
+`connection-repeat` in `39004974271`. Next: inspect/fix this probe, then run all
+six native hosts and
 compare with the retained baseline. Also prove
 pooled reuse, startup failure and last-owner cleanup before delivery. Rebase or
 transfer the final patch onto accepted #157 before opening the next single PR.
 
 Pending sender language values, server callbacks/channels, remaining host and
 numerical ownership, cycle policies and all seven roadmap areas remain open.
-The fatal transport allocation repairs still need native validation; do not
+The extended fatal-allocation cases still need native validation; do not
 weaken library unload checks. JIT is excluded permanently.
 
 ## Roadmap status

@@ -458,7 +458,7 @@ static void g_split(g_stream *s) {
         }
         size_t mn = s->data.d[0] != 0 ? plain.len : n;
         g_msg *m = (g_msg *)malloc(sizeof(g_msg) + mn + 1);
-        if (!m) { fprintf(stderr, "fwp: out of memory\n"); _Exit(102); }
+        if (!m) { fprintf(stderr, "fwp: out of memory\n"); fflush(NULL); _Exit(102); }
         m->next = 0;
         m->n = mn;
         if (mn) memcpy(m->d, src, mn);
@@ -1191,7 +1191,7 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
         c->tlskey = (char *)malloc(opts->key_len);
         /* A fatal allocation failure can occur on a task stack. Do not run
          * library unload destructors from inside that live task. */
-        if (!c->tlskey) { fprintf(stderr, "fwp: out of memory\n"); _Exit(102); }
+        if (!c->tlskey) { fprintf(stderr, "fwp: out of memory\n"); fflush(NULL); _Exit(102); }
         memcpy(c->tlskey, opts->key, opts->key_len);
     }
     c->refs = 1; /* temporary startup owner */
@@ -1515,7 +1515,7 @@ static void g_fail_call(int code, const char *msg) {
     g_serving *sv = g_ctx_of()->serving;
     if (!sv) fwp_trap(msg);
     char *copy = strdup(msg);
-    if (!copy) { fprintf(stderr, "fwp: out of memory\n"); _Exit(102); }
+    if (!copy) { fprintf(stderr, "fwp: out of memory\n"); fflush(NULL); _Exit(102); }
     free(sv->msg);
     sv->code = code;
     sv->msg = copy;

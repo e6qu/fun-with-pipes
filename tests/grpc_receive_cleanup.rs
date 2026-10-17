@@ -339,7 +339,7 @@ static void observed_message_free(void *);
 }
 
 #[test]
-fn fatal_transport_allocations_report_errors_from_task_stacks() {
+fn fatal_runtime_allocations_report_errors_from_task_stacks() {
     let mut generated = receive_runtime();
     for (before, after) in [
         (
@@ -366,6 +366,17 @@ fn fatal_transport_allocations_report_errors_from_task_stacks() {
         assert_eq!(generated.matches(before).count(), 1, "{before}");
         generated = generated.replace(before, after);
     }
+    for (before, after) in [
+        ("realloc(b->d, cap)", "(failure_kind == 9 ? NULL : realloc(b->d, cap))"),
+        ("static void *fwp_k_malloc(size_t n) {\n    void *p = malloc(n ? n : 1);", "static void *fwp_k_malloc(size_t n) {\n    void *p = failure_kind == 10 ? NULL : malloc(n ? n : 1);"),
+        ("realloc(fwp_tapes, (size_t)cap * sizeof(fwp_tape))", "(failure_kind == 11 ? NULL : realloc(fwp_tapes, (size_t)cap * sizeof(fwp_tape)))"),
+        ("realloc(t->pa, (size_t)cap * (2 * sizeof(int32_t)))", "(failure_kind == 12 ? NULL : realloc(t->pa, (size_t)cap * (2 * sizeof(int32_t))))"),
+        ("realloc(t->da, (size_t)cap * (2 * sizeof(double)))", "(failure_kind == 13 ? NULL : realloc(t->da, (size_t)cap * (2 * sizeof(double))))"),
+        ("calloc((size_t)capacity, sizeof(double))", "(failure_kind == 14 ? NULL : calloc((size_t)capacity, sizeof(double)))"),
+    ] {
+        assert_eq!(generated.matches(before).count(), 1, "{before}");
+        generated = generated.replace(before, after);
+    }
     let fixture = r#"
 static void attempt_transport(void *arg,int cancelled){
  (void)arg;(void)cancelled;
@@ -376,12 +387,20 @@ static void attempt_transport(void *arg,int cancelled){
   g_serving serving={0};g_ctx context={0};context.serving=&serving;
   fwp_cur->gctx=&context;g_fail_call(GRPC_INTERNAL,"failure");
  }else if(failure_kind==5){buffer.len=SIZE_MAX;h2b_reserve(&buffer,1);}
- else h2_hdrs_add(&headers,"name",SIZE_MAX,"value",5);
+ else if(failure_kind==6)h2_hdrs_add(&headers,"name",SIZE_MAX,"value",5);
+ else if(failure_kind==7)fwp_gc_alloc_big(((size_t)1<<62)+1,2);
+ else if(failure_kind==8){fwp_buf b={0};b.len=SIZE_MAX;buf_grow(&b,1);}
+ else if(failure_kind==9){fwp_buf b={0};buf_grow(&b,1);}
+ else if(failure_kind==10)fwp_k_malloc(1);
+ else if(failure_kind==11)fwp_ad_tape_new(1,NULL);
+ else if(failure_kind==12||failure_kind==13){fwp_tape tape={0};fwp_tape_reserve(&tape,1);}
+ else{V base=fwp_ad_tape_new(1,NULL);V empty=fwp_array_new_packed(0,NULL);fwp_p_ad_backward(base,empty,empty);}
  _Exit(201);
 }
 int main(int argc,char **argv){
  if(argc!=2)return 202;failure_kind=atoi(argv[1]);
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fputs("before fatal allocation\n",stdout);
  fwp_task *task=fwp_spawn_task(0,attempt_transport,0,0,0);fwp_await(task);
  return 201;
 }
@@ -391,13 +410,16 @@ int main(int argc,char **argv){
     for opt in ["-O1", "-O2"] {
         let code = format!("static int failure_kind = -1;\n{generated}\n{fixture}");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-        for kind in 0..7 {
+        for kind in 0..15 {
             let out = Command::new(&binary)
                 .arg(kind.to_string())
                 .output()
                 .unwrap();
             assert_eq!(out.status.code(), Some(102), "{opt}/{kind}: {out:?}");
-            assert!(out.stdout.is_empty());
+            assert_eq!(
+                String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
+                "before fatal allocation\n"
+            );
             let expected = match kind {
                 5 => "fwp: HTTP/2 buffer too large\n",
                 6 => "fwp: HTTP/2 headers too large\n",
