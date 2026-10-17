@@ -541,7 +541,13 @@ methods additionally prove when sent and received iterator steps run; the
 [service guide](services.md#building-without-tracing-collection) explains the
 command and current validation. HTTP clients are accepted in PR #162; server
 ownership is under validation.
-Browser re-entry, WASI host fibers, REST and MCP entry points remain excluded.
+Generated REST and MCP entries now go through the ordinary ownership checks;
+their native execution and memory acceptance are being established in the
+[handoff](development-state.md). They decode requests, call exported functions
+and encode results using ordinary typed fwp code. A returned alias must retain
+its input storage until encoding finishes; a failed call must release decoded
+input. HTTP modes also depend on the connection/task owners described above.
+Browser re-entry and WASI host fibers remain excluded.
 HTTP stream handles cannot be queued through a channel in checked ARC: their
 connection retains the handler, whose captures could contain that same channel.
 The allocators still use metadata;

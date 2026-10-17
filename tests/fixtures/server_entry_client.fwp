@@ -1,0 +1,39 @@
+# The test appends a literal `cases : List[Case]` for REST or MCP. Each batch
+# sends those three requests over pooled HTTP/2 and prints every status/body.
+# Printing the complete body makes it possible to compare all response values.
+
+Case = { path: String, headers: List[(String, String)], body: String }
+
+input-error : String -> a ! {Error[IoError]}
+input-error = make IoError { kind = const "input", message = id } | fail
+
+base : () -> String ! {IO, Error[IoError]}
+base = const "FWP_BASE" | env.get | match
+    Some _ -> id
+    None -> "missing FWP_BASE" | input-error
+
+options : ClientOptions
+options = ClientOptions {
+    tls = tls.options,
+    version = HttpVersion.Http2,
+    compression = False,
+}
+
+send : Case -> () ! {Async, IO, Network, Error[IoError]}
+send = make ClientRequest {
+    method = const "POST",
+    url = .path | fork concat id (const () | base),
+    .headers,
+    body = .body | string.to-bytes,
+} | http.send-using options | both .status .body | echo
+
+main =
+    ()
+    | args
+    | head
+    | option.and-then parse-int
+    | (match
+        Some _ -> id
+        None -> "expected a batch count" | input-error)
+    | flip iter.take (iter.count-from 0)
+    | iter.each (const cases | each send)

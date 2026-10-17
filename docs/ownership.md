@@ -401,8 +401,12 @@ owners are described [below](#received-iterators-and-remote-call-storage).
 Supported native entries include `main`, exported function executables and CLI
 commands and native C libraries with copied inputs and pointer-free results.
 Each entry starts without assuming an existing state or derivative scope.
-Synchronous WASI main/function/CLI entries also use these checks. Browser,
-asynchronous WASI host tasks, REST and MCP remain outside this mode. The
+Synchronous WASI main/function/CLI entries also use these checks. Generated REST
+and MCP entries are being validated with the same checks, including returned
+aliases, caught errors, malformed messages, disconnects and normal shutdown.
+Repeated-request measurements compare tracing and ARC with collection disabled;
+they must demonstrate bounded memory before these entries are accepted.
+Browser and asynchronous WASI host tasks remain outside this mode. The
 [gRPC extension](#checked-grpc-clients-and-services) adds checked client/service
 entries and has separate platform acceptance. Focused checks and final delivery acceptance are distinguished
 in [the handoff](development-state.md).

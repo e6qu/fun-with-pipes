@@ -52,6 +52,12 @@ calls it with `curl` and a generated client.
 | `fwp openapi app.fwp` | the OpenAPI document of the endpoints, as JSON (`--yaml`: as YAML) |
 | `fwp openapi --import spec.json [-o client.fwp]` | an fwp client module of an API (JSON or YAML; OpenAPI 3.0, 3.1 or Swagger 2.0) |
 
+`fwp build app.fwp --rest --gc arc -o server` applies the compiler's ownership
+checks to the generated server and excludes tracing garbage collection. The
+checks reject unsupported lifetimes; they do not silently enable tracing.
+This entry mode is under validation: [the handoff](development-state.md) records
+which execution, cleanup and platform checks have passed.
+
 A server takes `--listen host:port` (default: `FWP_REST_ADDR`, else
 `127.0.0.1:8080`; port 0 picks a free port), `--tls-cert file` and
 `--tls-key file` (default: `FWP_TLS_CERT` and `FWP_TLS_KEY`; with both,
