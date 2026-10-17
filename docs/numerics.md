@@ -298,7 +298,7 @@ its derivative at zero. A NaN is a floating-point non-number result.
 through `tensor.try-realize-on` and traps through `realize-on`. GPU sums evaluate
 elements on the device and add them on the CPU in the defined order.
 
-The current ownership preparation makes CPU elementwise workers write directly
+CPU elementwise workers write directly
 into one result array, avoiding a second full-size native output and copy. Input
 arrays remain borrowed and unchanged. A small pointer table identifies inputs;
 each worker still allocates arithmetic workspace for 256 elements at the maximum
@@ -311,7 +311,8 @@ started, frees pending storage and reports a trap. It does not silently execute
 missing workers on the caller. Counts are validated before conversion to WASI's
 32-bit address size; final reduction blocks use remaining lengths to avoid index
 overflow. Focused native, WASI, allocation-failure and worker-failure checks pass;
-full delivery acceptance remains in the [session handoff](development-state.md).
+full delivery acceptance is recorded in
+[PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
 [Measured storage costs](benchmarks.md#cpu-tensor-output-storage) distinguish the
 removed buffer from remaining allocations. No timing improvement is claimed here.
 

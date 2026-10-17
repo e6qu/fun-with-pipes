@@ -1,77 +1,75 @@
 # Session handoff
 
-Updated 2026-10-17 UTC. The seven work areas in [PLAN.md](../PLAN.md) remain open.
-PR #155 is the current delivery; this branch prepares its successor and has no PR.
-The root worktree holds the live acceptance status for #155. Do not open a second
-PR or merge this preparation without the final production and documentation gates.
+Updated 2026-10-17 UTC. The seven areas in [PLAN.md](../PLAN.md) remain open.
+PR #155 remains the only delivery; the root worktree tracks its final gates.
+This branch, `own-remote-stream-caches` in `/private/tmp/fwp-owned-stream-caches`,
+prepares its successor. Do not open a second delivery before #155 is accepted.
 
-## Stream cache ownership candidate
+## Verified cache component
 
-Branch `own-remote-stream-caches`, worktree `/private/tmp/fwp-owned-stream-caches`.
-The complete-client baseline passed all six native targets in run `38991578784`
-at `456f2dbd381513af855e7e43186190b95b259c19`; its report and interpretation are in
-[benchmarks](benchmarks.md#memory-used-by-complete-remote-stream-clients).
-All three repetitions show 64 additional charged bytes remaining per consumed
-integer after entry cleanup. The report excludes raw networking and process memory.
-The immutable tag is `evidence/remote-client-memory-baseline-20261017`.
+All six native jobs passed in run `38994414068` at
+`886dad3bd4c75c57c5cd53040b20a039be46437b`. The
+[report](measurements/remote-client-cache-ownership-2026-10-17.json) compares actual
+clients against baseline `456f2dbd`, run `38991578784`. It retains source, compiler,
+CPU, generated C, binary fingerprints, repeated counts and cleanup controls.
+The baseline tag is `evidence/remote-client-memory-baseline-20261017`.
 
-The candidate counts stream positions, consumes the position passed to a read,
-moves an exclusive saved result, and retains a shared result. Typed destruction
-releases the position/optional/tuple chain iteratively. The source allocation
-moves to the next unread position and releases at the end, without cancelling the
-connection. Runtime calls into the iterator use owned argument transfer. Custom
-decoder callbacks transfer their byte input and release caught error values.
-Connections, streams and retained decoder captures still require ownership work;
-remote calls remain excluded from checked ARC.
+Native stream positions now have typed owners. Reading consumes one owner,
+moves an exclusive saved result and retains a shared result. Cleanup walks
+position/optional/tuple chains in a loop, stopping at aliases. The source moves
+to the next unread position; releasing it does not cancel the connection.
+Iterator entries transfer arguments through owned calls. Custom decoders consume
+byte inputs, return owned results, release caught errors and restore the enclosing
+handler on traps. Whole connections, streams and decoder captures remain open;
+remote calls still require tracing.
 
-These changes are unverified. Probe `38993403382` at `3be0c03e` runs
-`stream-clients` on Linux AMD64 through
-the evidence workflow's explicit `native_runner` choice; that probe does not
-establish six-host support. Add last-owner, retained-wrapper, bounded-stack,
-partial-failure and deliberate broken-cleanup controls, then run stress and all
-six native targets. Preserve the baseline's actual source identity. Compare final
-and peak charged storage, requests and retains at all three input sizes before
-claiming improvement. Inspect generated C and binary cleanup paths.
+The unique client's final managed charge stays constant at all three sizes:
+6,480 bytes on Linux AMD64; 19,536 on Linux ARM64; 2,480 on both macOS hosts;
+3,632 on Windows AMD64 and 3,248 on Windows ARM64. Retained histories release to
+the same final charge. This removes the baseline's 64-byte-per-integer growth.
+The one-pass peak is constant too. Raw buffers, total process memory and timings
+are excluded. These single-call clients do not establish bounded repeated calls.
+Allocation requests remain five per integer, and effective retains rise from
+about one to five per integer. That bookkeeping remains an optimization target.
 
-The primitive inventory preserves its immutable baseline and explicitly checks
-the new consuming `grpc._force` contract. No whole-graph ARC admission is implied.
-The force fault fixture now supplies the error descriptor required by its fake
-decoder. Local guarded `cargo fmt --all -- --check` passed in 1.03s; no local
-compiler build or native execution ran. Full checks stay on GitHub runners.
+Controls cover 16,384-position chains, aliases at every wrapper, shared/exclusive
+reads, end/failure cleanup, exact release counts, physical reclamation without
+collection and collector/reuse stress. Deliberate recursive cleanup and omitted
+source release fail. Stack-address spans stay at or below 592 bytes across hosts.
+Actual Linux binaries use backward cleanup branches and fixed frames of 24 bytes
+on AMD64 (excluding incoming return address) and 64 on ARM64 (including saved
+registers); helper-call frames are separate.
 
-The next probe also includes explicit cache-owner controls: 64/1,024/16,384
-positions, aliases to positions/optional results/tuples, shared and exclusive
-consuming reads, exact release counts, no-collection physical reclamation and
-small collector/reuse-stress samples. Deliberately recursive cleanup must exceed
-a 4 KiB sampled stack-address span; omitting source release must fail its count.
-These tests have only been formatted locally (guarded check, 1.16s), not run yet.
-The focused workflow checks the frozen primitive inventory and neighboring
-force/canonical-decoding fixtures before collecting complete-client measurements.
+Earlier probe `38993688356` exposed record poisoning on raw position/source
+storage. That is repaired with the existing raw-storage release operation.
+Custom decoder tests also require detection of legacy entry, leaked error values
+and stale handlers. No unresolved failure remains in this cache component's
+focused matrix; full production acceptance is still required.
 
-## Probe results and repair
+## Next component and delivery
 
-Linux AMD64 run `38993403382` at `3be0c03e` passed the original complete-client
-probe. Unique reads ended at 6,480 charged bytes for all three sizes (64, 1,024,
-16,384), versus the baseline's growth to 1,055,296 bytes. Retained iterators kept
-their history until release, then returned to the same final charge. The three
-repetitions agreed. Allocations still grow by five per integer; counted retains
-rose from approximately one to five per integer. This is preliminary memory
-lifetime evidence, not a timing or zero-cost claim. Download through the root
-guard passed in 2.85s; no downloaded binary ran locally.
+Independent preparation `move-unique-closure-captures` in
+`/private/tmp/fwp-closure-capture-moves` is published at `e189c868`; current probe
+`38995160889` is running. It transfers captures from a consumed unique closure,
+preserving typed duplication for shared closures. The preceding probe passed
+existing ownership/unwind controls except two test assumptions: concatenation
+order and a rounded freed-byte comparison. Those tests are repaired; the rerun
+must pass before claiming capture-transfer support. Its own handoff has details.
 
-The expanded probe `38993688356` at `c203af5a` passed the primitive inventory and
-neighboring decoding, shared-reader and receive-failure tests, but its new cache
-stress test crashed. Generic record poisoning interpreted raw position/source
-words as a record header. The repair uses the existing raw-storage/array release
-path for those allocations and adjusts instrumentation to count both release
-helpers. This repair is awaiting a rerun. The same batch adds custom decoder
-success/error/trap controls; a trap now restores the enclosing error handler,
-while an ordinary language error stays inside the decoder's handler until caught.
-Negative controls require failure for legacy callback entry, leaked errors and
-stale handlers. Guarded formatting passed in 1.14s. No acceptance is inferred
-from the earlier non-stress probe.
+Next: finish that probe and broader capture validation, preserve both components'
+measured source identities, then assemble one substantial delivery after #155
+merges. Update PLAN/history from the verified merge record. Never relabel focused
+runs as production acceptance or admit remote calls to ARC prematurely.
 
-Next: finish the repaired focused probe, then validate all six native targets.
+## Local checks and documentation
+
+Use the root local guard for all worktrees. Collection passed in 19.30s after an
+incorrect SHA argument was rejected by the identity check. AMD64/ARM64 downloads
+passed in 2.87s/2.85s; static inspections in 0.15s/0.14s. No artifact executable
+ran locally. Collector syntax passed in 0.20s; docs audits in 2.59s and 2.53s.
+The docs now identify accepted PR #153 decoder/socket/service-copy/numerical work
+instead of stale preparation text. Native builds, full tests and measurements
+remain on GitHub runners. Fixed resource limits are unchanged.
 
 ## Roadmap status
 
@@ -84,16 +82,3 @@ Next: finish the repaired focused probe, then validate all six native targets.
 | 5 | In progress | CPU kernels and GPU resource ownership |
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
-
-The repaired Linux AMD64 probe `38994000736` at `4d31446f` passed, including
-primitive inventory, all cache/decoder controls, startup deadline and complete
-client measurements. Next: validate this implementation on all six native hosts,
-collect the explicit baseline comparison, and inspect their actual binaries.
-The collector now requires cleanup evidence when `--baseline-report` is supplied;
-it asserts flat final managed charge and flat unique-consumer peak across sizes.
-A reusable static inspector retains instructions and hashes without executing
-artifacts. Guarded syntax passed in 0.20s, initial Linux inspection in 0.16s,
-and documentation audit in 2.59s (50 documents, 106 immutable entries, seven
-roadmap rows). The first inspected client used a 24-byte fixed cleanup frame and
-a backward branch; re-inspect repaired binaries before attaching that observation
-to the final candidate.

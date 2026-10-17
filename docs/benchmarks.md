@@ -1537,13 +1537,44 @@ artifact directory and report path through `--run`, `--head`, `--artifacts` and
 the client measurement, matching source identities and every expected sample.
 It never executes downloaded binaries.
 
-The current candidate gives those cache positions typed owners. Its first Linux
-AMD64 probe reduced final managed charge to 6,480 bytes at each input size, but
-later stress checks found an invalid poisoning operation on raw runtime storage.
-That repair and broader acceptance are still in progress; see the
-[handoff](development-state.md). Effective retains rose from about one to five
-per consumed integer, while allocation requests stayed at five. These counts
-expose remaining overhead; they are not an execution-time comparison.
+The [cache-ownership report](measurements/remote-client-cache-ownership-2026-10-17.json)
+compares that baseline with `886dad3b`, which passes focused ownership checks on
+all six native hosts. Full production acceptance is tracked in the
+[handoff](development-state.md). Both revisions run the same clients and inputs.
+The candidate gives a stream position responsibility for its cached values;
+releasing the final owner releases the cache without waiting for collection.
+
+| Native client | Baseline final charge, 16,384 values | Candidate final charge, each tested size | Candidate one-pass peak, each tested size |
+|---|---:|---:|---:|
+| Linux AMD64 | 1,055,296 bytes | 6,480 bytes | 6,832 bytes |
+| Linux ARM64 | 1,068,352 bytes | 19,536 bytes | 19,888 bytes |
+| macOS AMD64 | 1,051,296 bytes | 2,480 bytes | 2,832 bytes |
+| macOS ARM64 | 1,051,296 bytes | 2,480 bytes | 2,832 bytes |
+| Windows AMD64 | 1,052,448 bytes | 3,632 bytes | 3,984 bytes |
+| Windows ARM64 | 1,052,064 bytes | 3,248 bytes | 3,600 bytes |
+
+Final managed charge is constant across 64, 1,024 and 16,384 values in all three
+modes, and all three repetitions agree. The 64-byte-per-value retained growth is
+removed. The one-pass peak is also constant. Keeping an earlier iterator still
+keeps its history until released, so that mode's peak grows with the sequence.
+These are single-call clients, not evidence for unlimited repeated calls in one
+process or bounded unread network queues.
+
+There is a bookkeeping cost: at 16,384 values, the one-pass client's effective
+retains rise from 16,385 to 81,921, about five times as many. Each additional
+integer still allocates five objects requesting about 104 bytes. No timing or
+C/Rust speed comparison is included. Moving unique closure captures and wrapper
+fields is further optimization work; ownership alone is not a zero-cost claim.
+
+Independent controls release chains through 16,384 positions, preserving aliases
+to positions, optional results and tuples. All counted allocations release after
+the final owner, without collection. Deliberately recursive cleanup and omitted
+source release must fail. Collector stress, memory-reuse poisoning and decoder
+success/error/trap controls also pass. Across all hosts, instrumented cleanup
+stack-address span is at most 592 bytes and does not grow with chain length.
+Ordinary Linux client binaries show backward branches and fixed cache-cleanup
+frames: 24 bytes on AMD64, excluding the incoming return address, and 64 bytes on
+ARM64 including saved registers. These figures exclude helper-call frames.
 
 For a candidate ownership comparison, pass the retained baseline report with
 `--baseline-report` to the collector. This also requires passing cache-owner and
