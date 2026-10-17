@@ -4,16 +4,16 @@ Updated 2026-10-17 UTC. All seven work areas in [PLAN.md](../PLAN.md) remain ope
 
 ## Delivery sequence
 
-Root PR #158 at `30036a15` awaits production `39011071759`; documentation passes.
-The root handoff and `/private/tmp/fwp-watch-merge-158.py` own its authorized
-exact-head merge. Do not create a competing PR or alter that final-gate head.
+PR #158 is accepted at `a96871c9` after all nine production jobs and docs.
+Root input delivery [PR #159](https://github.com/e6qu/fun-with-pipes/pull/159)
+is open at `91398527`: production `39016595534`, docs `39016595480` pending.
+Do not create a competing PR or alter its final-gate head without a repair.
 
-Input preparation `/private/tmp/fwp-sender-input-owners` is published at
-`9a4e2ace`. Its six-host ownership evidence passes at `06f3ac6f` in `39013126818`;
-it bundles the six-host server baseline and is the next delivery after #158.
-Combined sampler probe `39015439403` passes on Linux at `9a4e2ace`.
-Root transfer must preserve #158's later allocation-test repairs, which are not
-in the input preparation's earlier ancestry. See that worktree's handoff.
+Input preparation `9a4e2ace` passed six-host evidence at `06f3ac6f` in
+`39013126818`. It bundles the six-host server baseline. Combined sampler probe
+`39015439403` passes on Linux; all 36 final/categorical rows and 3,276 checkpoints
+match the frozen server baseline exactly. Root delivery preserves #158's later
+allocation-test repairs, which are not in this preparation's ancestry.
 
 ## Server call storage preparation
 
@@ -28,8 +28,8 @@ Four workloads retain increasing memory after calls/tasks finish and the
 connection closes. Actual Linux ARM64/AMD64 instructions show traced task/job
 retention. Client memory and timing are excluded; this is not checked ARC.
 
-The first candidate targets the large job and task records before decoded values
-and response iterators. A serving context becomes the first member of its job,
+The candidate targets job/task records and temporary argument slots before
+decoded values and response iterators. A serving context becomes the first member of its job,
 so its existing peer-user count owns the whole allocation. Detached senders keep
 that allocation alive; ordinary joined children borrow it. Last-owner cleanup
 frees peer/status text and the job. No new allocation or reference counter.
@@ -50,14 +50,22 @@ so library teardown cannot mask their diagnostic with a secondary error.
 The server workflow now runs all real gRPC tests plus peer/status/receive/response/
 send/task ownership regressions before measuring repeated calls.
 
-Expected result: no extra allocation requests, released job and serving/I/O task
-records, and lower per-call retained bytes. Remaining arguments, results, incoming
+The job also owns the temporary array of argument slots. Completion frees this
+array after children join, including failure and cancellation. This adds one
+pointer to the job, not an allocation or reference counter. The array never
+escapes as a language value; decoded values keep their existing ownership. The
+response fixture observes actual array disposal on success, decode/encode traps
+and blocked-send cancellation, with an omitted-free negative control.
+
+Expected result: no extra allocation requests, released job/argument-slot/serving/I/O
+records, and lower per-call retained bytes. Remaining decoded arguments, results, incoming
 sources, request/connection records and channels are outside this first change;
 remaining memory is not expected to be constant yet. Do not claim server GC
 removal or lower execution time from a smaller memory total.
 
-Next: review the candidate and fixtures, run guarded formatting/docs checks,
-publish this branch and dispatch a Linux server probe. Fix failures, then measure
+Next: retain the result of repaired Linux probe `39016597763` at `8eab6729`.
+Publish the argument-array cleanup and comparison collector as the next probe.
+Fix failures, then measure
 all six hosts and review actual ARM64/AMD64 instructions. Keep the input delivery
 moving independently; publish only one delivery PR at a time.
 
@@ -66,6 +74,8 @@ moving independently; publish only one delivery PR at a time.
 Use `python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py` with
 fixed limits. Native builds, full suites and measurement run on GitHub.
 Candidate formatting passed in 1.32s and documentation audit in 3.20s;
+argument-array formatting passed in 1.29s. The comparison collector requires
+identical language workloads/sampling text and lower final bytes at every size;
 runtime and tests are not yet verified.
 No local native build or downloaded executable execution occurred.
 Baseline artifacts: `/private/tmp/fwp-server-memory-evidence/39014733093`.
@@ -83,8 +93,10 @@ The baseline preparation's handoff retains deeper lifetime-review notes.
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
 
-Linux probe `39016150516` at `ebc1590d` passed all ordinary networking checks
-but failed compiling the peer-lifetime fixture: its token replacement renamed
-the allocator definition as well as calls. Restore that definition explicitly;
-cleanup callbacks and the observation wrapper must still reach the allocator.
-No server measurements were collected from this failed run. Rerun the probe.
+Linux probes `39016150516` (`ebc1590d`) and `39016597763` (`8eab6729`) passed
+ordinary networking checks but failed in fixture instrumentation. The first
+renamed allocator definitions along with calls; the second assumed one definition,
+but generated C contains two alternatives selected by preprocessing. Restore both
+real definitions explicitly in peer and response fixtures. Neither failed run
+collected server measurements. Formatting passed in 1.18s/1.29s; updated docs
+passed in 3.26s and the comparison collector syntax check in 0.14s.

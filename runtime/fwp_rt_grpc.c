@@ -2174,6 +2174,7 @@ typedef struct {
     const g_server *srv;
     const g_route *route;
     char what[300];
+    V *args;                  /* temporary argument slots, owned by the serving task */
     g_ctx ctx;
 } g_job;
 
@@ -2200,6 +2201,12 @@ static void g_job_peer_finish(void *arg) {
         if (j->s->task == task) j->s->task = 0;
         if (task->gctx == &j->ctx) task->gctx = 0;
     }
+    /* Calls borrow the slots, never the array itself. Joined children have
+     * finished; decoded language values still follow their own ownership rules. */
+#ifndef FWP_RESOURCE_NO_FREE
+    fwp_mem_free(j->args);
+#endif
+    j->args = 0;
     g_serving_peer_release(&j->sv);
 }
 
@@ -2251,6 +2258,7 @@ static void g_start_call(g_conn *c, g_stream *s) {
     j->c = c;
     j->s = s;
     j->srv = c->server;
+    j->args = 0;
     const char *path = h2_get(&s->headers, ":path");
     if (!path) path = "";
     j->route = g_route_of(j->srv, path);
@@ -2430,6 +2438,7 @@ static int g_run_method(g_job *j, char **msg) {
         return GRPC_FAILED_PRECONDITION;
     }
     V *args = (V *)fwp_alloc((size_t)(m->nreq + 2) * sizeof(V));
+    j->args = args;
     int na = 0;
     if (m->input == 0) {
         int code;

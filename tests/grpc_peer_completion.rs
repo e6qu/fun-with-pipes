@@ -67,8 +67,8 @@ fn serving_peer_owner_survives_children_and_releases_at_completion() {
     // The token rewriter also sees function definitions. Keep the real allocator
     // available to cleanup callbacks and to the observation wrapper itself.
     let definition = "static void observed_managed_free(void *p) {";
-    assert_eq!(generated.matches(definition).count(), 1);
-    let generated = generated.replacen(definition, "static void fwp_mem_free(void *p) {", 1);
+    assert_eq!(generated.matches(definition).count(), 2);
+    let generated = generated.replace(definition, "static void fwp_mem_free(void *p) {");
     let hooks = r#"
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0a00
