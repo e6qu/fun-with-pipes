@@ -385,18 +385,6 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
     let exe = dir.join("probe");
     let declaration = "static void owned_no_release(void *);\n";
     for opt in ["-O1", "-O2"] {
-        for (before, after, stage) in controls {
-            assert_eq!(generated.matches(before).count(), 1, "{before}");
-            let broken = generated.replacen(before, after, 1);
-            fwp::cgen::compile_c(&format!("{declaration}{broken}\n{fixture}"), &exe, opt).unwrap();
-            let output = Command::new(&exe)
-                .arg(stage.to_string())
-                .env("FWP_GC", "off")
-                .env("FWP_REUSE_VERIFY", "0")
-                .output()
-                .unwrap();
-            assert_eq!(output.status.code(), Some(246), "{before}: {output:?}");
-        }
         fwp::cgen::compile_c(&format!("{declaration}{generated}\n{fixture}"), &exe, opt).unwrap();
         for stage in [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13] {
             for gc in ["off", "on"] {
@@ -415,6 +403,18 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
                     );
                 }
             }
+        }
+        for (before, after, stage) in controls {
+            assert_eq!(generated.matches(before).count(), 1, "{before}");
+            let broken = generated.replacen(before, after, 1);
+            fwp::cgen::compile_c(&format!("{declaration}{broken}\n{fixture}"), &exe, opt).unwrap();
+            let output = Command::new(&exe)
+                .arg(stage.to_string())
+                .env("FWP_GC", "off")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(246), "{before}: {output:?}");
         }
     }
 }

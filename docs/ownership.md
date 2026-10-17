@@ -903,6 +903,23 @@ metadata. Its unused function-encoder field and branch were removed in PR #157: 
 description. Native fixtures record its size and test request encoding across
 errors and cancellation.
 
+Server job/task storage has a separate candidate with
+[six-platform measurements](benchmarks.md#freeing-finished-server-tasks-and-keeping-argument-slots-on-the-stack).
+The job contains its service context; the existing context-user count owns the
+whole job. Detached senders keep that context alive after the serving task
+finishes. Completion clears borrowed task pointers before releasing the job.
+Server I/O and serving tasks have one scheduler owner unless a scope also keeps
+the task identity. Unscoped tasks release without task reference-count traffic;
+scoped tasks use the existing shared policy. Temporary argument slots live on
+the serving stack. Their values still need their own ownership rules.
+
+All six focused native hosts pass cleanup, cancellation, retained-context and
+scope checks, including deliberately broken cleanup variants. Managed storage
+falls and one allocation per measured call disappears; reference-count increments
+are unchanged. This is not full production acceptance or complete server
+ownership. Decoded values, returned iterators, server connections/requests and
+channel contexts remain separate work.
+
 The input-ownership candidate keeps two iterator nodes: the next node to read and
 the node whose element is currently being encoded. This preserves the existing
 order, which evaluates the next step before encoding the current element.

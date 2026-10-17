@@ -1,6 +1,6 @@
 /* Real owning method entries receive controlled decoded strings. Transport
  * hooks let failures happen at specific boundaries without timing races. */
-static int stage,decoded,encoded,cancelled,trapped,finished;
+static int stage,decoded,encoded,cancelled,trapped,finished,poison;
 static V first,external;
 static double before;
 static double owned_charge(void){return fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);}
@@ -47,7 +47,7 @@ static void owned_finish(void){
   if(!external||!fwp_rc_last(external)||!OBJ(external)->f[1]||strcmp(STR(OBJ(external)->f[0])->d,"alpha"))_Exit(245);
   owned_iterator_drop(external);external=0;
  }
- if(!fwp_gc.enabled&&!fwp_reuse_verify&&owned_charge()!=before)_Exit(246);
+ if(!fwp_gc.enabled&&!poison&&owned_charge()!=before){fprintf(stderr,"stage %d: managed bytes %.0f -> %.0f\n",stage,before,owned_charge());_Exit(246);}
  if(fwp_cleanups)_Exit(247);finished++;
 }
 static void owned_serve(void *arg,int stop){
@@ -71,6 +71,7 @@ static void owned_serve(void *arg,int stop){
 }
 int main(int argc,char **argv){
  if(argc!=2)_Exit(250);stage=atoi(argv[1]);
+ const char *verify=getenv("FWP_REUSE_VERIFY");poison=verify&&*verify&&strcmp(verify,"0");
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  // Real generated methods return the first argument or raise it as an error.
  // Iterator cases replace only the owning entry with a concrete test producer.

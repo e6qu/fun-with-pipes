@@ -67,10 +67,17 @@ of the internal primitive name `prim.div`, so generation rejected it before C
 execution. Correct the fixture and run response cleanup first in the focused
 workflow; coverage is preserved and failures surface sooner.
 
-Next: publish this repair and run the Linux semantic/lifetime/measurement probe.
-Fix failures before all-six measurements and actual binary reviews. Full
-production acceptance remains outstanding. The storage comparison is retained
-at `b80dbdfb` in the sibling worktree; transfer its evidence/docs separately.
+Probe `39019863091` at `092b1e0a` compiled the served-value fixture, but the
+first deliberate leak incorrectly passed: the observation treated the runtime's
+uninitialized reuse-check flag (`-1`) as enabled. Read the requested test mode
+from its environment explicitly, so omitted cleanup cannot skip measurement.
+Run positive cases before mutations, and print before/after bytes on a mismatch.
+This repairs the observation; runtime correctness still needs a passing probe.
+
+Next: rerun the Linux semantic/lifetime/measurement probe. Fix failures before
+all-six measurements and actual binary reviews. The six-platform storage report
+and plain-language documentation are now included from sibling `b80dbdfb`.
+Full production acceptance remains outstanding.
 
 ## Checks
 
