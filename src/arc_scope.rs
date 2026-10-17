@@ -373,7 +373,43 @@ impl Proof<'_> {
                 }
                 Ok(Targets::new())
             }
-            Body::Remote(_) => Ok(Targets::new()),
+            Body::Remote(remote) => {
+                let shape =
+                    crate::rpc::shape(&function.ty, function.arity as usize, remote.error.as_ref());
+                if shape.client_streaming() {
+                    // A single-result call consumes input in its caller. A
+                    // bidirectional call uses a detached sender with fresh
+                    // State/AD stacks, just like an ordinary child task.
+                    let sender_scope = if shape.server_streaming() { 0 } else { scoped };
+                    let key = (id, sender_scope);
+                    let mut steps = args[0].clone();
+                    steps.extend(
+                        self.callback_values
+                            .get(&key)
+                            .into_iter()
+                            .flatten()
+                            .copied(),
+                    );
+                    for &(target, supplied) in &steps {
+                        let count = self.program.funcs[target].arity as usize - supplied;
+                        let next = self.apply(
+                            &BTreeSet::from([(target, supplied)]),
+                            &vec![Targets::new(); count],
+                            sender_scope,
+                        )?;
+                        // Later iterator positions can introduce different
+                        // continuations, which must obey the same scope rule.
+                        self.changed |= join(self.callback_values.entry(key).or_default(), &next);
+                    }
+                }
+                if let Some(iterator) = remote.iter_fn {
+                    // The received iterator's constructor runs in the caller;
+                    // its returned continuations are data until consumed.
+                    self.apply(&BTreeSet::from([(iterator, 0)]), &[Targets::new()], scoped)
+                } else {
+                    Ok(Targets::new())
+                }
+            }
         }
     }
 }
@@ -539,6 +575,135 @@ mod tests {
                     .contains("outside a State scope"),
                 "{symbol}"
             );
+        }
+    }
+
+    #[test]
+    fn remote_input_continuations_use_the_actual_sender_scope() {
+        for bidirectional in [false, true] {
+            for delayed_get in [false, true] {
+                let mut p = state_program(true);
+                let unit = MT::unit();
+                let string = MT::con("std::String");
+                let iter = MT::Con("std::Iterator".into(), vec![string.clone()]);
+                let step = arrow(unit.clone(), iter.clone());
+                p.shapes.insert(
+                    iter.clone(),
+                    TypeShape::Adt(vec![
+                        ("Done".into(), vec![]),
+                        ("Next".into(), vec![string.clone(), step.clone()]),
+                    ]),
+                );
+                let result = if bidirectional {
+                    iter.clone()
+                } else {
+                    string.clone()
+                };
+                let handler = arrow(unit.clone(), result.clone());
+                let pair = MT::Record(vec![
+                    ("0".into(), result.clone()),
+                    ("1".into(), string.clone()),
+                ]);
+                p.funcs.extend([
+                    Func {
+                        name: "input-step-using-state".into(),
+                        arity: 1,
+                        locals: vec![unit.clone(), string.clone()],
+                        ty: step.clone(),
+                        body: Body::Expr(Expr::Let(
+                            1,
+                            Box::new(Expr::Call(1, vec![Expr::Local(0)])),
+                            Box::new(Expr::Construct(0, vec![])),
+                        )),
+                    },
+                    Func {
+                        name: "remote-consumer".into(),
+                        arity: 1,
+                        locals: vec![iter.clone()],
+                        ty: arrow(iter.clone(), result),
+                        body: Body::Remote(Box::new(crate::ir::RemoteFn {
+                            module: "service".into(),
+                            method: "consume".into(),
+                            path: "/service/Consume".into(),
+                            error: None,
+                            default_addr: String::new(),
+                            iter_fn: bidirectional.then_some(6),
+                        })),
+                    },
+                    Func {
+                        name: "call-within-state".into(),
+                        arity: 1,
+                        locals: vec![unit.clone()],
+                        ty: handler.clone(),
+                        body: Body::Expr(Expr::Call(
+                            4,
+                            vec![Expr::Construct(
+                                1,
+                                vec![
+                                    Expr::Const(Value::str("head")),
+                                    Expr::Func(if delayed_get { 7 } else { 3 }),
+                                ],
+                            )],
+                        )),
+                    },
+                    Func {
+                        name: "received-iterator".into(),
+                        arity: 1,
+                        locals: vec![MT::Con("std::GrpcCell".into(), vec![string.clone()])],
+                        ty: arrow(
+                            MT::Con("std::GrpcCell".into(), vec![string.clone()]),
+                            iter.clone(),
+                        ),
+                        body: Body::Expr(Expr::Construct(0, vec![])),
+                    },
+                    Func {
+                        name: "later-input-step".into(),
+                        arity: 1,
+                        locals: vec![unit.clone()],
+                        ty: step,
+                        body: Body::Expr(Expr::Construct(
+                            1,
+                            vec![Expr::Const(Value::str("later")), Expr::Func(3)],
+                        )),
+                    },
+                ]);
+                p.funcs[2].locals = vec![string.clone(), handler.clone(), unit.clone()];
+                p.funcs[2].ty = arrow(string, arrow(handler, arrow(unit, pair.clone())));
+                p.funcs[0].ty = pair;
+                let Body::Expr(Expr::Call(_, args)) = &mut p.funcs[0].body else {
+                    unreachable!()
+                };
+                args[1] = Expr::Func(5);
+                let checked = check(&p, &[0]);
+                if bidirectional {
+                    assert!(checked.unwrap_err().contains("outside a State scope"));
+                } else {
+                    checked.unwrap();
+                }
+                // A synchronous sender outside a handler is unsafe too.
+                assert!(check(&p, &[5])
+                    .unwrap_err()
+                    .contains("outside a State scope"));
+                if bidirectional {
+                    // A detached producer may establish its own handler.
+                    let mut inner = p.funcs[3].clone();
+                    inner.name = "input-step-with-local-state".into();
+                    p.funcs.push(inner);
+                    p.funcs[3].body = Body::Expr(Expr::Field(
+                        Box::new(Expr::Call(
+                            2,
+                            vec![
+                                Expr::Const(Value::str("sender-local")),
+                                Expr::Func(8),
+                                Expr::Const(Value::unit()),
+                            ],
+                        )),
+                        0,
+                    ));
+                    check(&p, &[0]).unwrap();
+                    check(&p, &[5]).unwrap();
+                }
+            }
         }
     }
 
