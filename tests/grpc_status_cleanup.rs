@@ -68,7 +68,7 @@ int main(int argc,char **argv){
  if(argc>1){
   g_serving sv={0};g_ctx ctx={0};ctx.serving=&sv;sv.task=fwp_cur;
   sv.msg=observed_strdup("explicit status");fwp_cur->gctx=&ctx;fail_copy=1;
-  g_fail_call(GRPC_INVALID_ARGUMENT,sv.msg);return 34;
+  g_fail_call(GRPC_INVALID_ARGUMENT,sv.msg);_Exit(34);
  }
  for(stage=0;stage<6;stage++){
   allocations=frees=0;memset(messages,0,sizeof messages);c->out.len=0;
@@ -79,32 +79,33 @@ int main(int argc,char **argv){
   if(stage==3)s->reset=strdup("closed");
   if(stage==5){
    // Actual task cancellation unwinds the first final status then encodes cancellation.
-   g_start_call(c,s);fwp_tasks_finish();if(!s->task->done)return 1;
+   g_start_call(c,s);fwp_tasks_finish();if(s->task)_Exit(1);
   }else g_handle(&job,stage!=0);
   fwp_cur->deadline=0;
   int expected=stage==3?0:stage==5?2:1;
-  if(allocations!=expected||frees!=expected||job.sv.msg||fwp_cleanups)return 2;
+  if(allocations!=expected||frees!=expected||job.sv.msg||fwp_cleanups)_Exit(2);
   if(stage!=3){
    const char *expected_text=stage==0?"unknown method ":stage==1?"explicit status":stage==2?"deadline exceeded":"cancelled";
    size_t n=strlen(expected_text);int found=0;
    for(size_t i=0;i+n<=c->out.len;i++)if(!memcmp(c->out.d+i,expected_text,n)){found=1;break;}
-   if(!found)return 3;
+   if(!found)_Exit(3);
   }
   FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
  }
  // Replacing cancellation status copies before dropping an aliased old message.
  allocations=frees=0;memset(messages,0,sizeof messages);stage=6;
- g_serving sv={0};g_ctx context={0};context.serving=&sv;sv.task=fwp_cur;sv.peer_users=2;
- sv.msg=observed_strdup("explicit status");fwp_cur->gctx=&context;
- for(int i=0;i<2;i++){
+ g_job *held=fwp_mem_alloc(sizeof(*held));g_serving *sv=&held->sv;g_ctx context={0};context.serving=sv;sv->task=fwp_cur;sv->peer_users=2;
+ sv->msg=observed_strdup("explicit status");fwp_cur->gctx=&context;
+ for(int i=0;i<3;i++){
+  if(i==2)sv->task=0; // A retained context can outlive its original serving task.
   fwp_cur->unwinding=1;fwp_trap_recover=recover;fwp_trap_jb=&failure;fwp_trap_cleanup=0;
-  if(!setjmp(failure)){g_fail_call(GRPC_INVALID_ARGUMENT,sv.msg);return 4;}
+  if(!setjmp(failure)){g_fail_call(GRPC_INVALID_ARGUMENT,sv->msg);_Exit(4);}
   fwp_trap_recover=0;fwp_trap_jb=0;fwp_cur->cancelled=0;
-  if(strcmp(sv.msg,"explicit status")||strcmp(fwp_trap_msg,"explicit status")||frees!=i+1)return 5;
+  if(strcmp(sv->msg,"explicit status")||strcmp(fwp_trap_msg,"explicit status")||frees!=i+1)_Exit(5);
  }
  fwp_cur->unwinding=0;fwp_cur->gctx=0;
- g_serving_peer_release(&sv);if(!sv.msg||frees!=2)return 6;
- g_serving_peer_release(&sv);if(sv.msg||frees!=3||allocations!=3)return 7;
+ g_serving_peer_release(sv);if(!sv->msg||frees!=3)_Exit(6);
+ g_serving_peer_release(sv);if(frees!=4||allocations!=4)_Exit(7);
  FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
 }
 "#;

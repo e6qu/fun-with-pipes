@@ -360,6 +360,7 @@ struct RpcSpec {
     iter_fn: Option<FuncId>,
     schema: crate::protobuf::MethodSchema,
     grpc_error: String,
+    result_drop: String,
 }
 
 impl RpcSpec {
@@ -376,7 +377,7 @@ impl RpcSpec {
             }
         );
         let init = format!(
-            "{{{}, {}, {}, {}, {}, {}_p, {}, {}, {}, {}, {}, {}, fwp_pb_schema, {}, {}, {}}}",
+            "{{{}, {}, {}, {}, {}, {}_p, {}, {}, {}, {}, {}, {}, fwp_pb_schema, {}, {}, {}, {}}}",
             c_string_literal(self.name.as_bytes()),
             c_string_literal(self.path.as_bytes()),
             c_string_literal(self.fingerprint.as_bytes()),
@@ -392,6 +393,7 @@ impl RpcSpec {
             offs[self.schema.request],
             offs[self.schema.response],
             self.grpc_error,
+            self.result_drop,
         );
         (def, init)
     }
@@ -6584,6 +6586,7 @@ impl<'p> Gen<'p> {
             iter_fn,
             schema,
             grpc_error,
+            result_drop: "NULL".into(),
         })
     }
 
@@ -9042,6 +9045,14 @@ static const fwp_exec_spec exec_spec{i} = {{
                 m.iter_fn,
             )?;
             spec.fingerprint = svc.fingerprint(prog, m);
+            if g.reuse {
+                let function = &prog.funcs[m.func];
+                let result = function.ty.params(function.arity as usize).1.clone();
+                spec.result_drop = g.value_drop(&result);
+                if function.arity > 0 {
+                    g.used_closures[m.func] = true;
+                }
+            }
             served.push(spec);
         }
     }

@@ -33,16 +33,50 @@ def main():
     parser.add_argument('--head', required=True)
     parser.add_argument('--artifacts', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--baseline-report', type=Path)
+    parser.add_argument('--comparison', choices=['storage', 'method-values', 'server-values'])
+    parser.add_argument('--linux-probe', action='store_true',
+                        help='Retain only a passing Linux AMD64 probe; never claim six-host coverage.')
     args = parser.parse_args()
+    if bool(args.baseline_report) != bool(args.comparison):
+        parser.error('--baseline-report and --comparison must be supplied together')
+    if args.linux_probe and not args.comparison:
+        parser.error('--linux-probe requires an explicit comparison')
+    expected_hosts = {'ubuntu-latest'} if args.linux_probe else HOSTS
+    baseline = json.loads(args.baseline_report.read_text()) if args.baseline_report else None
+    if baseline:
+        assert baseline['source_revision'] != args.head
+        assert expected_hosts <= {h['host'] for h in baseline['hosts']}
+        assert baseline['per_call_results'] == MODES
     run = json.loads(subprocess.check_output([
         'gh', 'run', 'view', args.run, '--repo', REPO,
         '--json', 'headSha,status,conclusion,jobs,url']))
     assert run['headSha'] == args.head
     assert run['status'] == 'completed' and run['conclusion'] == 'success'
     jobs = [job for job in run['jobs'] if job['conclusion'] != 'skipped']
-    assert len(jobs) == 6
-    assert {job['name'] for job in jobs} == {f'paths ({host})' for host in HOSTS}
+    assert len(jobs) == len(expected_hosts)
+    assert {job['name'] for job in jobs} == {f'paths ({host})' for host in expected_hosts}
     checks = ['every_kind_of_call', 'server_measurement::repeated_server_call_memory']
+    if baseline:
+        checks += ['calls_are_concurrent', 'go_client_interoperates',
+                   'stream_aliases_are_consistent_across_tasks',
+                   'serving_peer_owner_survives_children_and_releases_at_completion',
+                   'served_status_messages_release_after_encoding_and_on_cancellation',
+                   'served_buffers_release_on_decode_encode_traps_and_cancelled_send',
+                   'received_requests_and_statuses_release_on_errors_and_cancelled_waits',
+                   'owned_client_streams_release_after_readers_and_senders_finish',
+                   'encoded_messages_release_on_cancel_and_preserve_plain_and_gzip_frames',
+                   'task_values_and_channel_aliases_under_stress',
+                   'deadline_aliases_count_only_owned_types',
+                   'deadline_passthrough_preserves_count_reclamation']
+    if args.comparison in {'method-values', 'server-values'}:
+        checks += ['served_values_release_on_partial_decode_aliases_errors_and_cancellation',
+                   'input_owners_release_after_lookahead_failure_and_sender_cancellation',
+                   'client_request_buffers_release_on_encode_trap_and_cancelled_send']
+    if args.comparison == 'server-values':
+        checks += ['native_output_channels_borrow_values_and_release_context',
+                   'channels_own_queues_and_transfer_received_values',
+                   'tasks_and_data_channels_reclaim_after_join_and_cancellation']
     output_tables = args.output.parent / args.output.stem
     output_tables.mkdir(parents=True, exist_ok=True)
     expected_keys = {(mode, calls, rep) for mode in MODES
@@ -93,6 +127,46 @@ def main():
             raw_log = (folder / f'{mode}-{calls}-{rep}.log').read_text()
             assert raw_log.count('server-final\t') == raw_log.count('server-storage\t') == 1
             assert raw_log.count('server-call\t') == calls
+        comparison = None
+        if baseline:
+            earlier = next(h for h in baseline['hosts'] if h['host'] == host)
+            prior = {key(row): row for row in earlier['rows']}
+            prior_storage = {key(row): row for row in earlier['storage_allocations']}
+            # Freeze the language programs, including the service implementation.
+            # Never compare reduced work or a different measurement boundary.
+            for name in ['greeter.fwp', 'scope.txt'] + [m + '.fwp' for m in MODES]:
+                assert fingerprint(folder / name) == earlier['files'][name], (host, name)
+            for row in rows:
+                before = prior[key(row)]
+                category = next(item for item in storage if key(item) == key(row))
+                assert category['args_requested_bytes'] == category['args_charged_bytes'] == 0
+                calls = row['calls']
+                if args.comparison == 'storage':
+                    allocation_change = -calls
+                    requested_change = -prior_storage[key(row)]['args_requested_bytes']
+                    retain_change = 0
+                else:
+                    # Same four 64-element workloads: direct method dispatch
+                    # removes its closure. Incoming-stream measurements also show
+                    # one fewer 24-byte allocation and 125 fewer retains per call.
+                    request_stream = row['mode'] == 'request-stream'
+                    allocation_change = -(2 if request_stream else 1) * calls
+                    requested_change = -(32 if request_stream else 8) * calls
+                    retain_change = {'unary-strings': 1, 'response-stream': 0,
+                                     'request-stream': -125, 'channel-output': 0}[row['mode']] * calls
+                if args.comparison == 'server-values' and row['mode'] == 'channel-output':
+                    allocation_change = -2 * calls
+                    retain_change = 64 * calls
+                assert row['allocations'] == before['allocations'] + allocation_change, (host, key(row))
+                assert row['requested_bytes'] == before['requested_bytes'] + requested_change, (host, key(row))
+                assert row['retains'] == before['retains'] + retain_change, (host, key(row))
+                assert row['final_charged_bytes'] < before['final_charged_bytes'], (host, key(row))
+            comparison = [{'mode': row['mode'], 'calls': row['calls'],
+                'repetition': row['repetition'],
+                'change_from_baseline': {field: row[field] - prior[key(row)][field]
+                    for field in ['allocations', 'requested_bytes', 'retains',
+                                  'peak_charged_bytes', 'final_charged_bytes']}}
+                for row in rows]
         names = ['source.txt', 'rust.txt', 'c.txt', 'cpu.txt', 'scope.txt',
                  'greeter.fwp', 'primitive-inventory.json', 'job.log']
         raw = {}
@@ -114,9 +188,11 @@ def main():
             review = inspected.get('manual_review', {})
             assert review.get('source_revision') == args.head
             assert review.get('architecture') == ('AMD64' if host == 'ubuntu-latest' else 'ARM64')
-            assert all(review.get(mode, {}).get('observations')
-                       for mode in ['unary-strings', 'request-stream'])
-            assert {'unary-strings', 'request-stream'} <= {
+            reviewed_modes = {'unary-strings', 'request-stream'}
+            if args.comparison == 'server-values':
+                reviewed_modes.add('channel-output')
+            assert all(review.get(mode, {}).get('observations') for mode in reviewed_modes)
+            assert reviewed_modes <= {
                 item['workload'] for item in inspected['observations']}
         if inspected:
             assert inspected['source_revision'] == args.head
@@ -133,17 +209,24 @@ def main():
                 names.append(assembly['file'])
         hosts.append({'host': host, 'job_url': job['url'], 'rows': rows,
             'storage_allocations': storage, 'raw_tables': raw,
+            'comparison': comparison,
             'binary_observations': inspected,
             'scope': (folder / 'scope.txt').read_text(),
             'environment': {name: (folder / (name + '.txt')).read_text() for name in ['rust', 'c', 'cpu']},
             'files': {name: fingerprint(folder / name) for name in names}})
     report = {'source_revision': args.head, 'run_url': run['url'], 'checks': checks,
+        'coverage': 'Linux AMD64 probe only' if args.linux_probe else 'All six native hosts',
+        'comparison_kind': args.comparison,
         'per_call_results': MODES,
         'sampling': 'Native -O2 servers receive 1, 16 or 256 calls over one reused connection, three fresh server processes per case. Counters begin after listener/routing/root setup. Per-call samples follow serving-task removal; final samples require client disconnect and no serving/I/O/other tasks while the listener remains open. A measurement-only wake of the existing listener allows retirement of the final finished task without adding a task or connection.',
-        'limits': 'Tracing is disabled and physical freeing enabled. Native clients check matching outputs against interpreted and ordinary native servers. Managed storage and cumulative allocation categories do not identify individual live objects. Raw request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process memory and timing are excluded. This baseline establishes neither server ownership nor checked ARC, zero-cost abstractions or C/Rust parity.',
+        'limits': 'Tracing is disabled and physical freeing enabled. Native clients check matching outputs against interpreted and ordinary native servers. Managed storage and cumulative allocation categories do not identify individual live objects. Raw request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process memory and timing are excluded. Lower retained storage does not establish complete server ownership, checked ARC, lower execution time, zero-cost abstractions or C/Rust parity.',
         'hosts': hosts}
+    if baseline:
+        report['baseline'] = {'source_revision': baseline['source_revision'],
+            'run_url': baseline['run_url'], 'report': args.baseline_report.name,
+            **fingerprint(args.baseline_report)}
     args.output.write_text(json.dumps(report, indent=2) + '\n')
-    print(f'Retained six native server measurements at {args.head}')
+    print(f'Retained {len(hosts)} native server measurement host(s) at {args.head}')
 
 
 if __name__ == '__main__':

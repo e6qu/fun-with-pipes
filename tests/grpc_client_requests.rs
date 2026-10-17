@@ -44,8 +44,8 @@ fn client_request_buffers_release_on_encode_trap_and_cancelled_send() {
             1,
         ),
         (
-            "while (g_input_next(&input, &x)) {",
-            "while (observed_next(&input.cur, &x)) {",
+            "while (g_cursor_next(&input.cursor, input.drop, &x)) {",
+            "while (observed_next(&input.cursor.cur, &x)) {",
             1,
         ),
         (

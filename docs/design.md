@@ -388,23 +388,32 @@ Client connection I/O tasks have one scheduler owner. Their records release
 when execution finishes and their stacks and scheduler links have been removed;
 this path needs no task reference-count updates. Language-visible task handles
 retain the shared-owner policy because callers can keep independent aliases.
-Server and HTTP tasks still need separate lifetime proofs. Connection records
+The server task candidate adds separate lifetime proofs; HTTP tasks remain open. Connection records
 can outlive their sockets while response readers retain status information;
 the pool, I/O tasks and callers hold separate storage owners. Library teardown
 closes these connections before waiting for their tasks. The
 [ownership guide](ownership.md) and [measured comparison](benchmarks.md#freeing-closed-connections-and-finished-tasks)
 describe the limits; remote checked ARC remains unsupported.
 
-The input-ownership candidate gives remote input iterators concrete destruction
+Accepted input ownership gives remote input iterators concrete destruction
 metadata. Its cursor keeps the current element alive while advancing to the
 next node and encoding that element. Synchronous cursors live on the stack;
-background senders embed the cursor in their existing record. The candidate
+background senders embed the cursor in their existing record. It
 also resets requests on input-production and response-channel delivery failure,
 matching the interpreter. Unique nodes transfer their continuation to the call;
 shared nodes preserve it for older readers. All six focused native hosts pass
 cleanup and semantic checks. [The comparison](benchmarks.md#input-owners-and-moves-bounded-memory-with-measured-count-costs)
-records bounded memory and remaining count costs; full production acceptance
-is tracked in [the handoff](development-state.md).
+records bounded memory and remaining count costs; [history](roadmap-history.md)
+records production acceptance in PR #159.
+
+The server candidate keeps argument and typed-cleanup records on the stack,
+calls each compiled method directly, and releases its arguments, result or error
+through concrete generated destructors. Native output channels borrow sent values
+and embed their callback payload after the channel header. Queue and callback
+cleanup share alternative header fields; sends retain their direct callback
+pointer. Focused evidence and remaining transport ownership are recorded in
+[ownership](ownership.md) and [the handoff](development-state.md). These changes
+are not yet full production acceptance or removal of server tracing.
 
 When a compiled program has no tasks or services, its runtime primitives omit
 task-slice checks as well as function-entry checks. Programs that can schedule

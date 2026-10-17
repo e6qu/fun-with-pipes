@@ -2032,8 +2032,8 @@ compile-time-only ownership.
 The report preserves raw allocation, storage, count and completion tables,
 source/binary/disassembly fingerprints, hardware/toolchains and manual binary
 reviews. Failure, cancellation, retained-alias, GC-stress and reuse controls pass
-in the focused matrix. Full delivery acceptance remains separate in
-[the handoff](development-state.md). Task stack pools, other raw buffers,
+in the focused matrix. [PR #159 acceptance](roadmap-history.md#streamed-input-cleanup-and-continuation-moves-pr-159)
+also includes all nine production jobs and documentation. Task stack pools, other raw buffers,
 TLS/OS/allocator metadata, server/process memory and timing remain excluded.
 This does not establish checked ARC for remote calls, zero-cost abstractions or
 speed parity with C/Rust.
@@ -2051,7 +2051,8 @@ It precedes server ownership changes. The four clients ask the server to:
 - Return integers 1 through 64 as an iterator; the client sums them to 2,080.
 - Sum 64 integers sent by the client, also giving 2,080.
 - Send `tick 1` through `tick 64` through an output channel; the client sums
-  their string lengths to 439. A channel is a queue between tasks.
+  their string lengths to 439. A channel sends values between computations;
+  this service channel writes through the network instead of a local queue.
 
 Each native server receives 1, 16 or 256 calls over one reused connection, with
 three fresh processes per case. Matching client output is checked against both
@@ -2091,3 +2092,94 @@ ownership proofs before remote calls can support checked ARC. The
 [fixture guide](../tests/fixtures/server-memory/README.md) explains the workload
 notation and the
 [session handoff](development-state.md) records the next implementation action.
+
+### Freeing finished server tasks and keeping argument slots on the stack
+
+[The storage comparison](measurements/server-call-storage-2026-10-17.json)
+uses `e6455c0d`, retained as
+`evidence/server-call-storage-windows-20261017`, against the `06432959` baseline
+above. [All six native hosts pass](https://github.com/e6qu/fun-with-pipes/actions/runs/39018276989).
+Both versions run the same four fwp programs, inputs and sampling boundary.
+This compares fwp before and after a memory-management change; it does not compare
+fwp with C or Rust and does not measure elapsed time.
+
+Each call has a job record holding its service context and a task record used by
+the scheduler. The new version frees both when their last users finish, including
+background senders that still need the context. It also frees finished connection
+I/O tasks. Temporary slots used to pass method arguments now live on the serving
+task's stack. This removes one allocation and 24 requested heap bytes per call
+in every measured case, with unchanged reference-count increments. At 256 calls,
+Linux performs 2,310 / 66,566 / 84,230 / 50,950 allocations for the four workloads;
+macOS and Windows perform three fewer. Each total is 256 below its baseline.
+
+Final managed bytes after 256 calls are identical across all three repetitions:
+
+| Platform | Greeting | Returned iterator | Sent iterator | Output channel |
+|---|---:|---:|---:|---:|
+| Linux ARM64 or AMD64 | 119,648 | 1,885,024 | 1,151,840 | 369,504 |
+| macOS or Windows, either architecture | 119,104 | 1,884,480 | 1,151,296 | 368,960 |
+
+All sizes leave less storage than the baseline, but storage still grows with
+calls. Decoded values, returned iterators, connections, requests and channel
+contexts need further ownership work. These numbers do not establish that a
+server can run without tracing collection.
+
+Actual Linux ARM64 and AMD64 instructions confirm the argument slots use the
+stack. For these one-parameter methods, the call helper needs 48 more stack bytes
+than the baseline: 16 more fixed bytes and 32 bytes for the aligned argument
+slots. That is this helper's frame, not peak task stack usage. Instructions also
+confirm that unscoped internal tasks bypass reference-count operations and that
+job cleanup clears borrowed task pointers before freeing the job. Tasks retained
+by a scope have two owners and keep the existing shared policy.
+
+The same exclusions as the baseline apply: raw buffers, stack pools, allocator
+metadata, operating-system/TLS storage, total process memory and timing are not
+measured. The report retains all 18 raw tables, compiler/hardware details and
+source/binary/instruction fingerprints. Downloaded binaries were inspected
+without executing them locally. Full production acceptance is tracked in the
+[session handoff](development-state.md).
+
+
+### Freeing method arguments and results: Linux measurement
+
+[The method-value comparison](measurements/server-method-values-linux-2026-10-17.json)
+measures `48ccd3d9` against the storage change above, using the same programs,
+inputs and measurement boundary. [The Linux AMD64 run passes](https://github.com/e6qu/fun-with-pipes/actions/runs/39020484780).
+This intermediate result covers only Linux AMD64. The next combined server
+change still needs all six native hosts and production acceptance.
+
+Generated cleanup functions now release each argument and result according to
+its concrete type. Stack records protect them during decoding, method execution,
+encoding, errors and cancellation. A returned iterator keeps its current value
+alive while advancing and encoding it. A unique iterator moves its continuation;
+a shared iterator preserves it for another reader. Methods receive their already
+collected arguments directly, removing a temporary function object.
+
+With collection off and physical freeing on, all three repetitions give these
+final managed bytes after 256 calls:
+
+| Workload | Storage change | With argument/result cleanup |
+|---|---:|---:|
+| Greeting | 119,648 | 62,304 |
+| Returned iterator | 1,885,024 | 62,304 |
+| Sent iterator | 1,151,840 | 62,304 |
+| Output channel | 369,504 | 365,408 |
+
+The first three still grow by 240 bytes per call. Channels and transport records
+need further work; this is not a claim that services no longer need collection.
+Every call removes one allocation and eight requested bytes; sent iterators
+remove a second allocation and another 24 bytes. Reference-count increments are
+mixed: greetings add one per call, sent iterators fall from 253 to 128, and the
+other two workloads are unchanged. Necessary shared owners still have a cost.
+
+Actual AMD64 instructions confirm direct method entry and stack-based cleanup
+records. The method-dispatch helper uses 16 fewer fixed stack bytes; its caller
+uses 32 more. These are individual frame sizes, not peak stack consumption.
+Unique-iterator detection still reads runtime metadata. Tests include aliases,
+partial decoding, encoding failures, cancellation and deliberately broken cleanup;
+ordinary interpreted/native behavior also matches with reuse explicitly disabled.
+
+This compares two fwp versions, without elapsed-time or C/Rust measurements.
+The same excluded memory categories as the baseline apply. The report retains
+three raw tables and source, binary and instruction fingerprints. It establishes
+a memory improvement for these workloads, not zero runtime overhead.

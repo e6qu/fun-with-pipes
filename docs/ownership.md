@@ -894,7 +894,7 @@ The remaining relationships need separate checks:
 |---|---|---|
 | Client request | The active connection list, receive source and detached sender hold references. | Accepted in PR #157; preserve completion, failure, cancellation and repeated-call checks. |
 | Connection | The pool, readers/writers and callers hold separate storage owners; the socket has its own reader/writer use count. | Accepted in PR #158; closing a socket alone does not finish every borrow. Preserve the lifecycle checks. |
-| Pending sender values | Each input cursor has a concrete iterator destructor and an independent owner. | All six focused native jobs pass cleanup, retained-alias, failure/cancellation and stress/reuse checks; complete full production acceptance. |
+| Pending sender values | Each input cursor has a concrete iterator destructor and an independent owner. | Accepted in PR #159; preserve cleanup, aliases, failure/cancellation and stress/reuse checks. |
 | Server callbacks and response channels | Serving tasks and retained language values can outlive the creating call scope. | Prove each retained handler and channel context, including failure during construction and cycles after external references disappear. |
 | Task identities and wait lists | The scheduler owns parked tasks; request state borrows their identities. | Preserve this direction when adding owners; do not turn back-pointers into owning cycles. |
 
@@ -903,7 +903,37 @@ metadata. Its unused function-encoder field and branch were removed in PR #157: 
 description. Native fixtures record its size and test request encoding across
 errors and cancellation.
 
-The input-ownership candidate keeps two iterator nodes: the next node to read and
+The current server candidate frees its job and task records and keeps temporary
+argument slots on the serving stack. The job contains the service context; its
+existing context-user count owns the whole allocation. Detached senders keep it
+alive after the serving task finishes. Completion clears borrowed task pointers
+before releasing the job. Unscoped internal tasks have one scheduler owner and
+release without task reference-count traffic; scoped tasks keep the existing
+shared policy. [Six-host storage measurements](benchmarks.md#freeing-finished-server-tasks-and-keeping-argument-slots-on-the-stack)
+show fewer allocations with unchanged count increments.
+
+Concrete generated destructors now release decoded arguments, complete returned
+iterators, ordinary results and errors. Stack cleanup records protect partial
+decoding, method failures, encoding failures and cancellation. A method receives
+its complete argument array through its owning entry, without constructing a
+temporary function object. The ordinary entry remains the explicit no-reuse mode.
+[Linux measurements](benchmarks.md#freeing-method-arguments-and-results-linux-measurement)
+record the memory reduction and mixed count/stack costs.
+
+A native output channel borrows each sent value only until its callback returns.
+A callback that keeps a value must acquire its own typed owner. Its payload lives
+after the unchanged 96-byte channel header in one allocation. Last-channel cleanup
+releases request/connection references and then that allocation; construction
+protects partially acquired references. Queue and callback cleanup use alternative
+fields in the header, without another lookup on the send path.
+
+The combined values/channel candidate passes Linux cleanup, alias, partial
+construction, cancellation, stress/reuse and ordinary/no-reuse service comparisons.
+All four workloads still grow by 240 managed bytes per call. Six-host and full
+production acceptance are pending. Server requests/connections, escaped graphs
+and HTTP ownership remain open; these changes do not establish remote checked ARC.
+
+Accepted input ownership keeps two iterator nodes: the next node to read and
 the node whose element is currently being encoded. This preserves the existing
 order, which evaluates the next step before encoding the current element.
 The current element remains borrowed from its still-owned node. The compiler
@@ -922,8 +952,8 @@ input is borrowed at entry, so the cursor acquires a separate reference and
 retained original iterators remain usable. Input references release on completion,
 continuation/encoding failure and cancellation. All six focused native jobs
 verify these contracts. [The comparison](benchmarks.md#input-owners-and-moves-bounded-memory-with-measured-count-costs)
-records memory/count costs; [the handoff](development-state.md) tracks remaining
-full production acceptance.
+records memory/count costs; [history](roadmap-history.md) records full production
+acceptance in PR #159.
 
 Request failure also differs from dropping an unused response reader. Native
 input production/encoding failure and failed response-channel delivery must
@@ -936,7 +966,7 @@ owners. Test partial construction and every last-owner case; retain deliberately
 broken variants to prove that missing cleanup is detected. Before admitting
 remote calls to checked ARC, compare interpreter/native values, errors and
 receive order, inspect actual binaries and measure repeated calls with collection
-disabled. Sender-input ownership still needs full production acceptance; server/HTTP
+disabled. Server/HTTP
 streams and retained handlers still need tracing. HTTP/2 server operations and GPU resource ownership remain separate work.
 
 ### Moving values held by a closure

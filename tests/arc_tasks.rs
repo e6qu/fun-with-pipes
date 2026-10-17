@@ -126,7 +126,7 @@ main = [
                 for needle in [
                     "if (t->result_drop && result) t->result_drop(result);",
                     "if (ownership == FWP_TASK_SHARED) fwp_task_drop(PTR(finished));",
-                    "c->value_drop(element);",
+                    "c->owner.queue.drop(element);",
                 ] {
                     assert_eq!(measured.matches(needle).count(), 1);
                     let omitted = measured.replace(needle, "/* omitted owner release */");

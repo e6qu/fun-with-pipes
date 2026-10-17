@@ -119,7 +119,9 @@ jobs:
           pathlib.Path("server-memory-evidence/cpu.txt").write_text(subprocess.check_output(commands[os.environ["RUNNER_OS"]], text=True))
           PYENV
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output server-memory-evidence/primitive-inventory.json
-          cargo test --test grpc every_kind_of_call -- --exact
+          cargo test --test grpc_response_encoding --test channel_queue_ownership --test arc_tasks
+          cargo test --test grpc_peer_completion --test grpc_status_cleanup --test grpc_receive_cleanup --test grpc_send_cleanup --test task_ownership --test grpc_request_encoding --test grpc_client_requests
+          cargo test --test grpc
           cargo test --test grpc server_measurement::repeated_server_call_memory -- --exact --ignored --nocapture
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'server-repeat'

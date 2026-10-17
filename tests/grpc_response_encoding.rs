@@ -26,6 +26,8 @@ fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
         ..Program::default()
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "grpc_response").unwrap();
+    let generated = generated.replacen("} fwp_owned_fninfo;",
+        "} fwp_owned_fninfo;\nstatic V probe_method_entry(V *a){(void)a;return 0;}\nstatic const fwp_owned_fninfo probe_method_types={.entry=probe_method_entry};\nstatic void probe_result_drop(V value){(void)value;}", 1);
     let start = generated.find("static int g_run_method(").unwrap();
     let end = start
         + generated[start..]
@@ -33,14 +35,15 @@ fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
             .unwrap();
     let mut method = generated[start..end].to_owned();
     for (before, after) in [
+        ("const fwp_owned_fninfo *types = fwp_fns[m->fn].owned;", "const fwp_owned_fninfo *types = &probe_method_types;"),
         ("g_recv_one(j, &code, msg)", "observed_request()"),
         ("pb_decode(m->schema, m->req_node, req->d, req->n, &canon)", "observed_request_decode(&canon)"),
-        ("fwp_decode(&rd, m->req[i], &args[na++])", "observed_argument(&rd, m->req[i], &args[na++])"),
-        ("g_apply_user(fwp_pap((uint32_t)m->fn, 0, 0), (uint32_t)na, args, &v, &err, &ed)", "observed_user(&v,&err,&ed)"),
-        ("g_iter_next(&next, &x)", "observed_next(&next, &x)"),
-        ("fwp_encode(&canon, err, m->error);", "fwp_encode(&canon, err, m->error); watched_canonical=canon.d; if(stage==3)fwp_trap(\"canonical trap\");"),
+        ("fwp_decode(&rd, m->req[i], &args[na])", "observed_argument(&rd, m->req[i], &args[na])"),
+        ("g_apply_user((uint32_t)m->fn, args, &values.result, &values.error, &values.error_type)", "observed_user(&values.result,&values.error,&values.error_type)"),
+        ("g_cursor_next(&output.cursor, output.drop, &x)", "observed_next(&output.cursor.cur, &x)"),
+        ("fwp_encode(&canon, values.error, m->error);", "fwp_encode(&canon, values.error, m->error); watched_canonical=canon.d; if(stage==3)fwp_trap(\"canonical trap\");"),
         ("pb_encode(m->schema, m->resp_node, (const unsigned char *)canon.d, canon.len, &b)", "observed_transcode(canon.d, canon.len, &b)"),
-        ("g_encode(&enc, v, m->error != 0, &b);", "observed_response(&b);"),
+        ("g_encode(&enc, values.result, m->error != 0, &b);", "observed_response(&b);"),
         ("g_encode(&enc, x, m->error != 0, &b);", "observed_response(&b);"),
     ] {
         assert_eq!(method.matches(before).count(), 1, "{before}");
@@ -122,7 +125,7 @@ int main(void){
   watched_response=watched_canonical=watched_wire=0;response_frees=canonical_frees=wire_frees=cancelled=0;result=-2;c->out.len=0;c->conn_window=stage==1?0:65535;
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*(kind*5+stage)));s->sent_headers=1;
   const fwp_desc *request_fields[]={&descriptor};
-  fwp_rpc method={0};method.nreq=stage==4?1:0;method.req=request_fields;method.output=kind==1?1:0;method.resp=&descriptor;method.error=kind==2?&descriptor:0;
+  fwp_rpc method={0};method.result_drop=probe_result_drop;method.nreq=stage==4?1:0;method.req=request_fields;method.output=kind==1?1:0;method.resp=&descriptor;method.error=kind==2?&descriptor:0;
   g_route route={0};route.kind=G_ROUTE_METHOD;route.m=&method;g_job job={0};job.c=c;job.s=s;job.srv=&srv;job.route=&route;strcpy(job.what,"probe");
   fwp_task *t=fwp_spawn_task(0,serve,&job,0,0);
   if(stage==1){fwp_p_task_yield();if(t->done||!watched_response||!watched_wire||response_frees||wire_frees)return 2;fwp_p_task_cancel(PTR(t));}
@@ -202,6 +205,329 @@ int main(void){
                     .unwrap();
                 assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
             }
+        }
+    }
+}
+
+#[test]
+fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
+    use fwp::value::Value;
+    let unit = MT::unit();
+    let string = MT::con("std::String");
+    let integer = MT::con("std::I64");
+    let method = MT::Fun(
+        Box::new(string.clone()),
+        Box::new(MT::Fun(Box::new(string.clone()), Box::new(string.clone()))),
+    );
+    let continuation = MT::Fun(Box::new(unit.clone()), Box::new(integer.clone()));
+    let program = Program {
+        funcs: vec![
+            Func {
+                name: "available".into(),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: MT::Fun(Box::new(unit.clone()), Box::new(MT::con("std::Bool"))),
+                body: Body::Prim("tls.available".into()),
+            },
+            Func {
+                name: "web".into(),
+                arity: 0,
+                locals: vec![],
+                ty: unit.clone(),
+                body: Body::Prim("http2.connect".into()),
+            },
+            // Keep concrete owning entries for the methods and continuations.
+            Func {
+                name: "method-values".into(),
+                arity: 0,
+                locals: vec![method.clone(), continuation.clone(), continuation.clone()],
+                ty: method.clone(),
+                body: Body::Expr(Expr::Let(
+                    0,
+                    Box::new(Expr::Func(3)),
+                    Box::new(Expr::Let(
+                        1,
+                        Box::new(Expr::Func(6)),
+                        Box::new(Expr::Let(
+                            2,
+                            Box::new(Expr::Func(7)),
+                            Box::new(Expr::Func(4)),
+                        )),
+                    )),
+                )),
+            },
+            Func {
+                name: "first".into(),
+                arity: 2,
+                locals: vec![string.clone(), string.clone()],
+                ty: method.clone(),
+                body: Body::Expr(Expr::Local(0)),
+            },
+            Func {
+                name: "raise".into(),
+                arity: 2,
+                locals: vec![string.clone(), string.clone()],
+                ty: method,
+                body: Body::Expr(Expr::Call(5, vec![Expr::Local(0)])),
+            },
+            Func {
+                name: "fail".into(),
+                arity: 1,
+                locals: vec![string.clone()],
+                ty: MT::Fun(Box::new(string.clone()), Box::new(string)),
+                body: Body::Prim("fail".into()),
+            },
+            Func {
+                name: "end".into(),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: continuation.clone(),
+                body: Body::Expr(Expr::Const(Value::I64(0))),
+            },
+            Func {
+                name: "broken-next".into(),
+                arity: 1,
+                locals: vec![unit],
+                ty: continuation,
+                body: Body::Expr(Expr::Call(
+                    8,
+                    vec![Expr::Const(Value::I64(0)), Expr::Const(Value::I64(1))],
+                )),
+            },
+            Func {
+                name: "div".into(),
+                arity: 2,
+                locals: vec![integer.clone(), integer.clone()],
+                ty: MT::Fun(
+                    Box::new(integer.clone()),
+                    Box::new(MT::Fun(Box::new(integer.clone()), Box::new(integer))),
+                ),
+                body: Body::Prim("prim.div".into()),
+            },
+        ],
+        main: Some(2),
+        exports: vec![("available".into(), 0)],
+        ..Program::default()
+    };
+    let (generated, _) = fwp::cgen::generate_library(&program, "served_values").unwrap();
+    let begin = generated.find("static int g_run_method(").unwrap();
+    let end = begin
+        + generated[begin..]
+            .find("\nstatic void g_put_bytes")
+            .unwrap();
+    let mut method = generated[begin..end].to_owned();
+    for (before, after) in [
+        ("g_recv_one(j, &code, msg)", "owned_request()"),
+        (
+            "pb_decode(m->schema, m->req_node, req->d, req->n, &canon)",
+            "1",
+        ),
+        (
+            "fwp_decode(&rd, m->req[i], &args[na])",
+            "owned_decode(&args[na])",
+        ),
+        (
+            "g_encode(&enc, values.result, m->error != 0, &b);",
+            "owned_response(values.result, &b);",
+        ),
+        (
+            "g_encode(&enc, x, m->error != 0, &b);",
+            "owned_response(x, &b);",
+        ),
+        (
+            "pb_encode(m->schema, m->resp_node, (const unsigned char *)canon.d, canon.len, &b)",
+            "owned_transcode(canon.d, canon.len, &b)",
+        ),
+    ] {
+        assert_eq!(method.matches(before).count(), 1, "{before}");
+        method = method.replacen(before, after, 1);
+    }
+    let declarations = "static g_msg *owned_request(void);\nstatic int owned_decode(V *);\nstatic void owned_response(V,h2_buf *);\nstatic int owned_transcode(const char *,size_t,h2_buf *);\n";
+    let generated = format!(
+        "{}{}{}{}",
+        &generated[..begin],
+        declarations,
+        method,
+        &generated[end..]
+    );
+    let fixture = include_str!("fixtures/grpc_served_values.c");
+    let controls = [
+        (
+            "values->types->drop_arguments(values->args, 0, pending);",
+            "(void)pending;",
+            1,
+            246,
+        ),
+        (
+            "values->method->result_drop(result);",
+            "(void)result;",
+            0,
+            246,
+        ),
+        ("values->error_type->drop(error);", "(void)error;", 5, 246),
+        (
+            "fwp_cleanup_push(&values_cleanup, g_method_values_release, &values);",
+            "fwp_cleanup_push(&values_cleanup, owned_no_release, &values);",
+            2,
+            246,
+        ),
+        (
+            "        g_input_release(&output);",
+            "        /* omitted normal output release */",
+            14,
+            246,
+        ),
+        (
+            "fwp_cleanup_push(&output_cleanup, g_input_release, &output);",
+            "fwp_cleanup_push(&output_cleanup, owned_no_release, &output);",
+            10,
+            246,
+        ),
+        (
+            "fwp_fns[fn].owned->entry(args)",
+            "fwp_fns[fn].entry(args)",
+            0,
+            242, // Unowned dispatch loses the returned value's counted owner.
+        ),
+    ];
+    let dir = fwp::cgen::TempDir::new("served-value-owners").unwrap();
+    let exe = dir.join("probe");
+    let declaration = "static void owned_no_release(void *);\n";
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&format!("{declaration}{generated}\n{fixture}"), &exe, opt).unwrap();
+        for stage in [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14] {
+            for gc in ["off", "on"] {
+                for poison in ["0", "1"] {
+                    let output = Command::new(&exe)
+                        .arg(stage.to_string())
+                        .env("FWP_GC", gc)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    assert!(
+                        output.status.success(),
+                        "{opt}/{stage}/{gc}/{poison}: {output:?}"
+                    );
+                }
+            }
+        }
+        for (before, after, stage, expected) in controls {
+            assert_eq!(generated.matches(before).count(), 1, "{before}");
+            let broken = generated.replacen(before, after, 1);
+            fwp::cgen::compile_c(&format!("{declaration}{broken}\n{fixture}"), &exe, opt).unwrap();
+            let output = Command::new(&exe)
+                .arg(stage.to_string())
+                .env("FWP_GC", "off")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(expected), "{before}: {output:?}");
+        }
+    }
+}
+
+#[test]
+fn native_output_channels_borrow_values_and_release_context() {
+    let unit = MT::unit();
+    let program = Program {
+        funcs: vec![
+            Func {
+                name: "available".into(),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: MT::Fun(Box::new(unit.clone()), Box::new(MT::con("std::Bool"))),
+                body: Body::Prim("tls.available".into()),
+            },
+            Func {
+                name: "web".into(),
+                arity: 0,
+                locals: vec![],
+                ty: unit,
+                body: Body::Prim("http2.connect".into()),
+            },
+        ],
+        exports: vec![("available".into(), 0)],
+        ..Program::default()
+    };
+    let (generated, _) = fwp::cgen::generate_library(&program, "output_channels").unwrap();
+    let encode = "g_encode(&k->enc, x, k->tag, &b);";
+    assert_eq!(generated.matches(encode).count(), 1);
+    let declaration = "static void channel_encode(V,h2_buf *);\n";
+    let generated = generated
+        .replacen(
+            "static int g_sink_send(",
+            &format!("{declaration}static int g_sink_send("),
+            1,
+        )
+        .replacen(encode, "channel_encode(x, &b);", 1);
+    let fixture = include_str!("fixtures/grpc_output_channel.c");
+    let controls = [
+        (
+            "        drop(context);",
+            "/* omit native context release */",
+            0,
+            232,
+        ),
+        (
+            "    g_stream_drop(stream);",
+            "    /* omit request owner release */",
+            0,
+            232,
+        ),
+        (
+            "    g_conn_drop(connection);",
+            "    /* omit connection owner release */",
+            0,
+            232,
+        ),
+        (
+            "    fwp_value_protect(&building, &cleanup);",
+            "    /* omit construction cleanup */",
+            5,
+            232,
+        ),
+        (
+            "return c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
+            "fwp_rc_share(x); return c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
+            0,
+            231,
+        ),
+    ];
+    let dir = fwp::cgen::TempDir::new("native-channel-owners").unwrap();
+    let exe = dir.join("probe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&format!("{generated}\n{fixture}"), &exe, opt).unwrap();
+        for stage in 0..7 {
+            for gc in ["off", "on"] {
+                for poison in ["0", "1"] {
+                    let output = Command::new(&exe)
+                        .arg(stage.to_string())
+                        .env("FWP_GC", gc)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    assert!(
+                        output.status.success(),
+                        "{opt}/{stage}/{gc}/{poison}: {output:?}"
+                    );
+                }
+            }
+        }
+        for (before, after, stage, expected) in controls {
+            assert_eq!(generated.matches(before).count(), 1, "{before}");
+            let broken = generated.replacen(before, after, 1);
+            fwp::cgen::compile_c(&format!("{broken}\n{fixture}"), &exe, opt).unwrap();
+            let output = Command::new(&exe)
+                .arg(stage.to_string())
+                .env("FWP_GC", "off")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(expected), "{before}: {output:?}");
         }
     }
 }

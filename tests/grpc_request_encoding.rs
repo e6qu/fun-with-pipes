@@ -31,8 +31,8 @@ fn request_runtime() -> String {
 #[test]
 fn request_encoding_buffer_releases_on_encode_trap_and_cancelled_send() {
     let generated = request_runtime();
-    let encode = "g_encode_request(x->input.remote, &v, &req);";
-    let next = "if (!g_input_next(&x->input, &v)) {";
+    let encode = "g_encode_request(x->remote, &v, &req);";
+    let next = "if (!g_cursor_next(&x->input, x->remote->input_drop, &v)) {";
     let send = "int r = g_send_data(c, s, b.d, b.len, end);";
     for needle in [encode, next, send] {
         assert_eq!(generated.matches(needle).count(), 1);
@@ -70,7 +70,7 @@ int main(void){
  for(stage=0;stage<3;stage++){
   watched_request=wire_buffer=0;request_frees=wire_frees=0;c->out.len=0;c->conn_window=stage==1?0:65535;
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*stage));s->sent_headers=1;
-  g_sender *x=fwp_alloc(sizeof *x);x->c=c;x->s=s;x->input.remote=&remote;
+  g_sender *x=fwp_alloc(sizeof *x);x->c=c;x->s=s;x->remote=&remote;
   fwp_task *t=fwp_spawn_task(0,g_send_all,x,0,1);
   if(stage==1){fwp_p_task_yield();if(t->done||!watched_request||!wire_buffer||request_frees||wire_frees)return 2;fwp_p_task_cancel(PTR(t));}
   fwp_await(t);
@@ -115,10 +115,10 @@ int main(void){
 fn input_owners_release_after_lookahead_failure_and_sender_cancellation() {
     let mut generated = request_runtime();
     for (before, after) in [
-        ("static int g_input_next(g_input *input, V *value) {", "static V probe_owned_next(V,V);\nstatic V probe_borrowed_next(V);\nstatic void probe_encode(V,h2_buf *);\nstatic int g_input_next(g_input *input, V *value) {"),
+        ("static int g_cursor_next(g_cursor *input, void (*drop)(V), V *value) {", "static V probe_owned_next(V,V);\nstatic V probe_borrowed_next(V);\nstatic void probe_encode(V,h2_buf *);\nstatic int g_cursor_next(g_cursor *input, void (*drop)(V), V *value) {"),
         ("fwp_apply_borrowed(continuation, 1, &unit)", "probe_borrowed_next(node)"),
         ("fwp_apply_owned(continuation, 1, &unit)", "probe_owned_next(node, continuation)"),
-        ("g_encode_request(x->input.remote, &v, &req);", "probe_encode(v, &req);"),
+        ("g_encode_request(x->remote, &v, &req);", "probe_encode(v, &req);"),
         ("    t->cfinish = g_sender_peer_finish;", "    t->cfinish = g_sender_peer_finish; probe_task=t;"),
     ] {
         assert_eq!(generated.matches(before).count(), 1, "{before}");
@@ -132,27 +132,27 @@ fn input_owners_release_after_lookahead_failure_and_sender_cancellation() {
     for opt in ["-O1", "-O2"] {
         for (before, after, stage, expected) in [
             (
-                "    input->remote->input_drop(previous);",
+                "    drop(previous);",
                 "    (void)previous;",
                 "0",
                 221,
             ),
             (
-                "    input->remote->input_drop(pending);",
+                "    drop(pending);",
                 "    (void)pending;",
                 "2",
                 221,
             ),
             (
-                "    input->remote->input_drop(cur);",
+                "    drop(cur);",
                 "    (void)cur;",
                 "3",
                 221,
             ),
             ("    fwp_mem_free(x);", "    (void)x;", "0", 222),
             (
-                "    t->ownership = FWP_TASK_UNIQUE;",
-                "    t->ownership = FWP_TASK_TRACED;",
+                "    t->cfinish = g_sender_peer_finish; probe_task=t;\n    t->ownership = FWP_TASK_UNIQUE;",
+                "    t->cfinish = g_sender_peer_finish; probe_task=t;\n    t->ownership = FWP_TASK_TRACED;",
                 "0",
                 222,
             ),

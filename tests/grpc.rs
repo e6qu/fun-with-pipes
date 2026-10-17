@@ -243,7 +243,7 @@ fn greeter_servers(native_dir: Option<&Path>) -> Vec<Server> {
 fn every_kind_of_call() {
     let native = have_cc();
     let d = scratch("served");
-    let servers = greeter_servers(native.then_some(d.as_path()));
+    let mut servers = greeter_servers(native.then_some(d.as_path()));
     let client = dir().join("client.fwp");
     let split = d.join("split");
     let failed_client = dir().join("input-failure.fwp");
@@ -269,6 +269,25 @@ fn every_kind_of_call() {
             ],
             &dir(),
         );
+        // The tracing comparison is an explicit compiler mode, selected before
+        // generation. It must not accidentally test another owned server.
+        let no_reuse = d.join("no-reuse");
+        let mut compile = Command::new(fwp());
+        compile
+            .args(["build", "--service", "greeter", "--emit-c", "-o"])
+            .arg(&no_reuse)
+            .arg(&client)
+            .current_dir(dir())
+            .env("FWP_REUSE", "0");
+        let generated = run(compile, 300);
+        assert!(generated.status.success(), "{}", render(&generated));
+        let source = std::fs::read_to_string(no_reuse.join("greeter.c")).unwrap();
+        assert!(!source.contains("#define FWP_RESOURCE_OWNERS 1"));
+        let binary = no_reuse.join("greeter");
+        fwp::cgen::compile_c(&source, &binary, "-O1").unwrap();
+        let mut server = Command::new(binary);
+        server.args(["--listen", "127.0.0.1:0"]);
+        servers.push(start(server, Duration::from_secs(60)));
     }
     let mut outputs = Vec::new();
     for s in &servers {
@@ -987,7 +1006,7 @@ fn instrument_sender_client(generated: &str) -> String {
     let mut code = instrument_repeated_client(generated);
     code = instrument_closed_connections(&code, include_str!("fixtures/grpc_sender_drain.c"));
     for (before,after) in [
-        ("static int g_input_next(g_input *input, V *value) {", "static uint64_t client_inputs_pulled,client_inputs_encoded,client_senders_created,client_senders_finished;\nstatic int g_input_next(g_input *input, V *value) {"),
+        ("static int g_cursor_next(g_cursor *input, void (*drop)(V), V *value) {", "static uint64_t client_inputs_pulled,client_inputs_encoded,client_senders_created,client_senders_finished;\nstatic int g_cursor_next(g_cursor *input, void (*drop)(V), V *value) {"),
         ("    input->cur = fwp_apply1(OBJ(node)->f[1], FWP_UNIT);\n#endif\n    return 1;", "    input->cur = fwp_apply1(OBJ(node)->f[1], FWP_UNIT);\n#endif\n    if(client_active)client_inputs_pulled++;\n    return 1;"),
         ("static void g_sender_peer_finish(void *arg) {", "static void client_note_sender(g_sender *);\nstatic void client_note_sender_task(fwp_task *);\nstatic void g_sender_peer_finish(void *arg) {\n    if(client_active)client_senders_finished++;"),
         ("    g_sender *x = (g_sender *)fwp_alloc(sizeof *x);", "    g_sender *x = (g_sender *)fwp_alloc(sizeof *x); client_note_sender(x);"),
