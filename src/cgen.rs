@@ -7077,8 +7077,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
         for i in f.arity..f.nlocals() {
             let _ = writeln!(out, "    V l{} = 0;", i);
         }
-        // a primitive (a C function, a remote call) may keep what it is
-        // given: it is shared
+        // Unproved external primitives may keep arguments. Remote calls borrow
+        // their arguments while encoding/sending; retained input cursors acquire
+        // their own typed owners, and output-channel delivery finishes in-call.
         if self.reuse && !matches!(f.body, Body::Expr(_) | Body::Ctor(_)) {
             let sym = match &f.body {
                 Body::Prim(s) => s.as_str(),
@@ -7089,13 +7090,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                     params.iter().all(|(_, ty)| crate::ffi::scoped_argument(ty))
                         && crate::ffi::copied_result(&result)
                 });
-            let borrowed_remote_input = match &f.body {
-                Body::Remote(remote) => {
-                    crate::rpc::shape(&f.ty, f.arity as usize, remote.error.as_ref())
-                        .client_streaming()
-                }
-                _ => false,
-            };
+            let borrowed_remote = matches!(f.body, Body::Remote(_));
             for i in 0..f.arity {
                 let foreign_borrow = matches!(f.body, Body::ForeignC { .. })
                     && crate::ffi::classify(self.prog, &f.locals[i as usize]).is_ok_and(|ty| {
@@ -7105,7 +7100,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                 if crate::rc::needs_rc(&self.prog.shapes, &f.locals[i as usize])
                     && !crate::rc::prim_reads_only(sym, i as usize)
                     && !foreign_borrow
-                    && !(borrowed_remote_input && i == 0)
+                    && !borrowed_remote
                 {
                     let _ = writeln!(out, "    fwp_rc_share(l{});", i);
                 }
@@ -7975,18 +7970,46 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
         let _ = writeln!(out, "    return {};\n}}", ret);
         // the function as a value: unpack, call, box
         let params: Vec<String> = (0..f.arity).map(|i| format!("V l{}", i)).collect();
+        let moving_records: Vec<_> = abi
+            .params
+            .iter()
+            .enumerate()
+            .map(|(i, p)| {
+                self.reuse
+                    && free_enabled()
+                    && p.is_some()
+                    && !self.resource_type(&f.locals[i])
+                    && record_fields(&self.prog.shapes, &f.locals[i]).is_some_and(|fields| {
+                        fields
+                            .iter()
+                            .any(|(_, ty)| crate::rc::needs_rc(&self.prog.shapes, ty))
+                    })
+            })
+            .collect();
         let mut args = Vec::new();
+        let mut snapshots = String::new();
         for (i, p) in abi.params.iter().enumerate() {
             match p {
-                Some(n) => args.extend((0..*n).map(|k| format!("OBJ(l{})->f[{}]", i, k))),
+                Some(n) => {
+                    for k in 0..*n {
+                        let field = format!("OBJ(l{i})->f[{k}]");
+                        if moving_records[i] {
+                            let _ = write!(snapshots, "V field{i}_{k} = {field}; ");
+                            args.push(format!("field{i}_{k}"));
+                        } else {
+                            args.push(field);
+                        }
+                    }
+                }
                 None => args.push(format!("l{}", i)),
             }
         }
         let args = abi.args_decode_words(self.prog, id, args);
         let call = format!("w{}({})", id, args.join(", "));
-        // The wrapper keeps boxed arguments, while the worker consumes
-        // duplicated fields and other arguments. Protect originals before
-        // preparation, and each completed duplicate until worker entry.
+        // A unique record transfers its fields; shared records duplicate them.
+        // Keep the original boxes owned through the call, clearing only fields
+        // that moved. Protect each prepared field until worker entry, including
+        // when preparing a later shared argument fails.
         let (mut pre, mut post) = (String::new(), String::new());
         if self.reuse {
             let counted_fields: Vec<_> = abi
@@ -8000,7 +8023,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                         .iter()
                         .enumerate()
                         .filter(|(_, (_, ty))| crate::rc::needs_rc(&self.prog.shapes, ty))
-                        .map(move |(j, (_, ty))| (format!("OBJ(l{i})->f[{j}]"), ty.clone()))
+                        .map(move |(j, (_, ty))| (i, j, ty.clone()))
                 })
                 .collect();
             let has_boxed = abi.params.iter().any(Option::is_some);
@@ -8016,18 +8039,32 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             };
             let protection = self.protect_values(&originals, "owned", "cleanup");
             pre.push_str(&protection);
+            pre.push_str(&snapshots);
             if !protection.is_empty() {
                 post.push_str("fwp_cleanup_pop(&cleanup); ");
             }
             let empty_fields: Vec<_> = counted_fields
                 .iter()
-                .map(|(_, ty)| ("0".into(), ty.clone()))
+                .map(|(_, _, ty)| ("0".into(), ty.clone()))
                 .collect();
             let preparing = self.protect_values(&empty_fields, "prepared", "preparation_cleanup");
             pre.push_str(&preparing);
-            for (j, (value, ty)) in counted_fields.iter().enumerate() {
+            for (i, moving) in moving_records.iter().enumerate() {
+                if *moving {
+                    let _ = write!(pre, "int move{i} = fwp_rc_last(l{i}); ");
+                }
+            }
+            for (j, (parent, field, ty)) in counted_fields.iter().enumerate() {
                 let dup = self.value_dup(ty);
-                let _ = write!(pre, " {dup}({value}); ");
+                let value = if moving_records[*parent] {
+                    let value = format!("field{parent}_{field}");
+                    let _ = write!(pre, "if (move{parent}) {{ OBJ(l{parent})->f[{field}] = 0; }} else {{ {dup}({value}); }} ");
+                    value
+                } else {
+                    let value = format!("OBJ(l{parent})->f[{field}]");
+                    let _ = write!(pre, " {dup}({value}); ");
+                    value
+                };
                 if !preparing.is_empty() {
                     let _ = write!(pre, "prepared.v{j} = {value}; ");
                 }
@@ -8686,7 +8723,10 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
 fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let arc = native_options().arc;
     if arc {
-        if !matches!(mode, Mode::Main | Mode::Exec(..) | Mode::Library) {
+        if !matches!(
+            mode,
+            Mode::Main | Mode::Exec(..) | Mode::Library | Mode::Service
+        ) {
             return Err("--gc arc requires a checked executable or C library".into());
         }
         if !reuse_enabled() || !free_enabled() {
@@ -8730,6 +8770,14 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     if arc {
         let entries = match &mode {
             Mode::Exec(commands, _) => commands.iter().map(|c| c.fid).collect(),
+            Mode::Service => prog
+                .service
+                .as_ref()
+                .ok_or("no service to serve")?
+                .methods
+                .iter()
+                .map(|m| m.func)
+                .collect(),
             Mode::Library => {
                 let signatures = export_sigs(prog)?;
                 for (name, _, params, result) in &signatures {

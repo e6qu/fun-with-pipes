@@ -34,7 +34,9 @@ def main():
     parser.add_argument('--artifacts', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--baseline-report', type=Path)
-    parser.add_argument('--comparison', choices=['storage', 'method-values', 'server-values', 'server-owners', 'server-borrows'])
+    parser.add_argument('--comparison', choices=['storage', 'method-values', 'server-values', 'server-owners', 'server-borrows', 'server-arc', 'server-arc-moves'])
+    parser.add_argument('--split-checks', action='store_true',
+                        help='Require separate server/client checks for every measured host.')
     parser.add_argument('--linux-probe', action='store_true',
                         help='Retain only a passing Linux AMD64 probe; never claim six-host coverage.')
     args = parser.parse_args()
@@ -54,8 +56,12 @@ def main():
     assert run['headSha'] == args.head
     assert run['status'] == 'completed' and run['conclusion'] == 'success'
     jobs = [job for job in run['jobs'] if job['conclusion'] != 'skipped']
-    assert len(jobs) == len(expected_hosts)
-    assert {job['name'] for job in jobs} == {f'paths ({host})' for host in expected_hosts}
+    prefixes = ['paths', 'server checks', 'client checks'] if args.split_checks else ['paths']
+    assert len(jobs) == len(expected_hosts) * len(prefixes)
+    assert {job['name'] for job in jobs} == {
+        f'{prefix} ({host})' for host in expected_hosts for prefix in prefixes}
+    assert all(job['status'] == 'completed' and job['conclusion'] == 'success' for job in jobs)
+    measured_jobs = [job for job in jobs if job['name'].startswith('paths (')]
     checks = ['every_kind_of_call', 'server_measurement::repeated_server_call_memory']
     if baseline:
         checks += ['calls_are_concurrent', 'go_client_interoperates',
@@ -69,34 +75,44 @@ def main():
                    'task_values_and_channel_aliases_under_stress',
                    'deadline_aliases_count_only_owned_types',
                    'deadline_passthrough_preserves_count_reclamation']
-    if args.comparison in {'method-values', 'server-values', 'server-owners', 'server-borrows'}:
+    if args.comparison in {'method-values', 'server-values', 'server-owners', 'server-borrows', 'server-arc', 'server-arc-moves'}:
         checks += ['served_values_release_on_partial_decode_aliases_errors_and_cancellation',
                    'input_owners_release_after_lookahead_failure_and_sender_cancellation',
                    'client_request_buffers_release_on_encode_trap_and_cancelled_send']
-    if args.comparison in {'server-values', 'server-owners', 'server-borrows'}:
+    if args.comparison in {'server-values', 'server-owners', 'server-borrows', 'server-arc', 'server-arc-moves'}:
         checks += ['native_output_channels_borrow_values_and_release_context',
                    'channels_own_queues_and_transfer_received_values',
                    'tasks_and_data_channels_reclaim_after_join_and_cancellation']
-    if args.comparison in {'server-owners', 'server-borrows'}:
+    if args.comparison in {'server-owners', 'server-borrows', 'server-arc', 'server-arc-moves'}:
         checks += ['inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries',
                    'served_requests_survive_resets_jobs_and_retained_inputs',
                    'accepted_connections_release_after_startup_io_jobs_and_channels',
                    'grpc_connection_startup_releases_failed_task_reservations',
                    'cancelling_grpc_server_releases_listener_and_preserves_accepted_owners']
-    if args.comparison == 'server-borrows':
+    if args.comparison in {'server-borrows', 'server-arc', 'server-arc-moves'}:
         checks += ['rc::tests::borrowed_parameters_do_not_become_cleanup_owners',
                    'rc::tests::returned_borrowed_parameter_acquires_an_owner',
                    'rc::tests::external_borrow_survives_consumption_of_a_local_copy',
                    'known_fold_callbacks_borrow_captures_and_elements_without_retain_traffic',
                    'right_fold_releases_accumulator_and_scratch_on_failure',
                    'borrowed_application_preserves_aliases_and_typed_argument_slices']
+    if args.comparison in {'server-arc', 'server-arc-moves'}:
+        checks.remove('server_measurement::repeated_server_call_memory')
+        checks += ['server_measurement::repeated_arc_server_call_memory',
+                   'arc_remote_calls_exclude_tracing_and_preserve_behavior',
+                   'client_received_buffers_release_on_retry_errors_and_cancelled_waits',
+                   'client_failure_text_releases_after_traps_and_typed_errors',
+                   'arc_scope::tests::remote_input_continuations_use_the_actual_sender_scope',
+                   'arc_scope::tests::served_iterators_do_not_extend_method_scopes']
+    if args.comparison == 'server-arc-moves':
+        checks += ['wrapper_preparation_failures_and_worker_entry_preserve_exact_owners']
     output_tables = args.output.parent / args.output.stem
     output_tables.mkdir(parents=True, exist_ok=True)
     expected_keys = {(mode, calls, rep) for mode in MODES
                      for calls in [1, 16, 256] for rep in range(3)}
     key = lambda row: (row['mode'], row['calls'], row['repetition'])
     hosts = []
-    for job in jobs:
+    for job in measured_jobs:
         assert job['status'] == 'completed' and job['conclusion'] == 'success'
         host = job['name'][len('paths ('):-1]
         folder = args.artifacts / ('server-calls-' + host)
@@ -109,9 +125,26 @@ def main():
             job_id = job['url'].rsplit('/', 1)[-1]
             log.write_bytes(subprocess.check_output(['gh', 'api', '--allow-escape-sequences',
                 f'repos/{REPO}/actions/jobs/{job_id}/logs']))
-        content = log.read_text()
+        check_logs = ['job.log']
+        check_jobs = []
+        if args.split_checks:
+            for prefix in ['server checks', 'client checks']:
+                check_job = next(item for item in jobs if item['name'] == f'{prefix} ({host})')
+                check_jobs.append(check_job['url'])
+                name = prefix.replace(' ', '-') + '.log'
+                check_logs.append(name)
+                check_log = folder / name
+                if not check_log.exists():
+                    check_id = check_job['url'].rsplit('/', 1)[-1]
+                    check_log.write_bytes(subprocess.check_output(['gh', 'api', '--allow-escape-sequences',
+                        f'repos/{REPO}/actions/jobs/{check_id}/logs']))
+        content = '\n'.join((folder / name).read_text() for name in check_logs)
         for check in checks:
             assert f'test {check} ... ok' in content, (host, check)
+        if args.comparison in {'server-arc', 'server-arc-moves'}:
+            assert (folder / 'memory-mode.txt').read_text().strip() == 'arc'
+            if host.startswith('ubuntu-'):
+                assert 'test arc_grpc_server_runs_in_bounded_memory ... ok' in content
         inventory = json.loads((folder / 'primitive-inventory.json').read_text())
         assert inventory['head'] == args.head
         rows = table(folder / 'memory.tsv')
@@ -128,7 +161,7 @@ def main():
             assert all(row[field] == 0 for field in
                        ['live_call_tasks', 'live_io_tasks', 'live_other_tasks'])
             assert row['peak_charged_bytes'] >= row['final_charged_bytes'] >= 0
-            if args.comparison in {'server-owners', 'server-borrows'}:
+            if args.comparison in {'server-owners', 'server-borrows', 'server-arc', 'server-arc-moves'}:
                 assert row['streams_finalized'] == calls
                 assert row['connections_finalized'] == 1
                 assert row['final_charged_bytes'] == rows[0]['final_charged_bytes'], (host, key(row))
@@ -158,7 +191,10 @@ def main():
                 category = next(item for item in storage if key(item) == key(row))
                 assert category['args_requested_bytes'] == category['args_charged_bytes'] == 0
                 calls = row['calls']
-                if args.comparison in {'server-owners', 'server-borrows'}:
+                if args.comparison in {'server-arc', 'server-arc-moves'}:
+                    allocation_change = requested_change = 0
+                    retain_change = -calls if args.comparison == 'server-arc-moves' and row['mode'] == 'unary-strings' else 0
+                elif args.comparison in {'server-owners', 'server-borrows'}:
                     # Same allocation requests; finalized request/connection
                     # storage replaces growth. One writer retain per connection,
                     # two per call for parser/job owners, and two more for an
@@ -189,7 +225,10 @@ def main():
                 assert row['allocations'] == before['allocations'] + allocation_change, (host, key(row))
                 assert row['requested_bytes'] == before['requested_bytes'] + requested_change, (host, key(row))
                 assert row['retains'] == before['retains'] + retain_change, (host, key(row))
-                assert row['final_charged_bytes'] < before['final_charged_bytes'], (host, key(row))
+                if args.comparison in {'server-arc', 'server-arc-moves'}:
+                    assert row['final_charged_bytes'] == before['final_charged_bytes'], (host, key(row))
+                else:
+                    assert row['final_charged_bytes'] < before['final_charged_bytes'], (host, key(row))
             comparison = [{'mode': row['mode'], 'calls': row['calls'],
                 'repetition': row['repetition'],
                 'change_from_baseline': {field: row[field] - prior[key(row)][field]
@@ -197,7 +236,9 @@ def main():
                                   'peak_charged_bytes', 'final_charged_bytes']}}
                 for row in rows]
         names = ['source.txt', 'rust.txt', 'c.txt', 'cpu.txt', 'scope.txt',
-                 'greeter.fwp', 'primitive-inventory.json', 'job.log']
+                 'greeter.fwp', 'primitive-inventory.json'] + check_logs
+        if args.comparison in {'server-arc', 'server-arc-moves'}:
+            names.append('memory-mode.txt')
         raw = {}
         for name in ['memory.tsv', 'checkpoints.tsv', 'storage.tsv']:
             names.append(name)
@@ -209,6 +250,13 @@ def main():
             names.append(mode + '.fwp')
             for variant in ['client', 'server', 'server-measured']:
                 names += [f'{mode}-{variant}.c', f'{mode}-{variant}{suffix}']
+                if args.comparison in {'server-arc', 'server-arc-moves'}:
+                    assert '#define FWP_ARC_ONLY 1' in (folder / f'{mode}-{variant}.c').read_text()
+                    symbols = folder / f'{mode}-{variant}.nm'
+                    text = symbols.read_text()
+                    assert all(symbol not in text for symbol in [
+                        'fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'])
+                    names.append(symbols.name)
             names += [f'{mode}-{calls}-{rep}.log' for calls in [1, 16, 256] for rep in range(3)]
         observations = folder / 'binary-observations.json'
         inspected = json.loads(observations.read_text()) if observations.exists() else None
@@ -218,7 +266,7 @@ def main():
             assert review.get('source_revision') == args.head
             assert review.get('architecture') == ('AMD64' if host == 'ubuntu-latest' else 'ARM64')
             reviewed_modes = {'unary-strings', 'request-stream'}
-            if args.comparison in {'server-values', 'server-owners', 'server-borrows'}:
+            if args.comparison in {'server-values', 'server-owners', 'server-borrows', 'server-arc', 'server-arc-moves'}:
                 reviewed_modes.add('channel-output')
             assert all(review.get(mode, {}).get('observations') for mode in reviewed_modes)
             assert reviewed_modes <= {
@@ -236,7 +284,7 @@ def main():
                 assert fingerprint(folder / assembly['file']) == {
                     key: assembly[key] for key in ['bytes', 'sha256']}
                 names.append(assembly['file'])
-        hosts.append({'host': host, 'job_url': job['url'], 'rows': rows,
+        hosts.append({'host': host, 'job_url': job['url'], 'check_job_urls': check_jobs, 'rows': rows,
             'storage_allocations': storage, 'raw_tables': raw,
             'comparison': comparison,
             'binary_observations': inspected,
@@ -250,6 +298,10 @@ def main():
         'sampling': 'Native -O2 servers receive 1, 16 or 256 calls over one reused connection, three fresh server processes per case. Counters begin after listener/routing/root setup. Per-call samples follow serving-task removal; final samples require client disconnect and no serving/I/O/other tasks while the listener remains open. A measurement-only wake of the existing listener allows retirement of the final finished task without adding a task or connection.',
         'limits': 'Tracing is disabled and physical freeing enabled. Native clients check matching outputs against interpreted and ordinary native servers. Managed storage and cumulative allocation categories do not identify individual live objects. Raw request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process memory and timing are excluded. Lower retained storage does not establish complete server ownership, checked ARC, lower execution time, zero-cost abstractions or C/Rust parity.',
         'hosts': hosts}
+    if args.comparison in {'server-arc', 'server-arc-moves'}:
+        report['compiled_memory_mode'] = 'arc'
+        report['limits'] = report['limits'].replace('Tracing is disabled',
+            'Tracing code is excluded from compiled clients and servers')
     if baseline:
         report['baseline'] = {'source_revision': baseline['source_revision'],
             'run_url': baseline['run_url'], 'report': args.baseline_report.name,

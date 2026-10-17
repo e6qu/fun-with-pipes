@@ -1902,9 +1902,9 @@ buffered output. The final delivery additionally preserves the existing
 recoverable server TLS protocol-list allocation error and adds its regression
 check; that server-startup path is outside the measured client workload.
 Final production acceptance is tracked in [the delivery history](roadmap-history.md).
-This comparison predates the input-owner work accepted in PR #159, described
-below. Server ownership still needs its own proof; remote calls remain excluded
-from checked ARC.
+This comparison predates the input-owner work accepted in PR #159 and the server
+ownership measurements below. It establishes the client connection rules for
+that revision; later ownership work has its own evidence.
 
 
 ### Memory retained by client inputs after sending finishes
@@ -2310,6 +2310,7 @@ records, source/binary fingerprints and instruction reviews are retained.
 The preceding partial implementation failed the separate Linux ARM64 production
 check: resident memory grew from 17,104 to 49,420 KiB over 32,000 calls. That test
 covers more than the managed counter and keeps its 8 MiB growth limit. The combined
-implementation must pass it and all final production gates before acceptance;
-[the handoff](development-state.md) records the current result. Short bounded
-measurements do not prove complete GC removal, remote checked ARC, or C/Rust parity.
+implementation passes it: the focused ARM64 probe records five samples of
+8,136 KiB, and all final production jobs pass. [History](roadmap-history.md) records
+PR #160 acceptance. Short bounded measurements do not prove complete GC removal,
+remote checked ARC, or C/Rust parity.

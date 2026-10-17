@@ -318,8 +318,9 @@ function types do not describe their captures, so programs using UDP currently
 preserve possible closure-holder frames conservatively. This may prevent some
 optimizations; there is no zero-cost or throughput claim. Tracing programs retain
 weak finalizers for unproved sharing, while checked ARC must prove ownership and
-exclude tracing from its binary. Whole-service ownership, arbitrary retained
-callbacks and mutable cycles remain separate work.
+exclude tracing from its binary. The
+[gRPC extension](#checked-grpc-clients-and-services) covers checked remote calls;
+arbitrary retained host callbacks and mutable cycles remain separate work.
 
 ### TCP and TLS socket owners
 
@@ -399,8 +400,9 @@ Supported native entries include `main`, exported function executables and CLI
 commands and native C libraries with copied inputs and pointer-free results.
 Each entry starts without assuming an existing state or derivative scope.
 Synchronous WASI main/function/CLI entries also use these checks. Browser,
-asynchronous WASI host tasks, remote calls and service entry points remain
-outside this mode. Focused checks and final delivery acceptance are distinguished
+asynchronous WASI host tasks, REST and MCP remain outside this mode. The
+[gRPC extension](#checked-grpc-clients-and-services) adds checked client/service
+entries and has separate platform acceptance. Focused checks and final delivery acceptance are distinguished
 in [the handoff](development-state.md).
 
 WASI supplies standard streams and file access to a WebAssembly module. Build a
@@ -672,9 +674,9 @@ copied fields if construction fails. Metadata preserves the input order and
 duplicate names while omitting protocol headers; it builds directly into the
 result list without a temporary array of pointers.
 
-This does not establish ownership of the service's callbacks, connection,
-stream or retained request context. Those remain separate work; these accepted
-result-copy changes do not establish full service execution without tracing.
+These rules cover copied results. Separate owners keep the service's connection,
+stream and retained request context alive; their lifetimes and the checked ARC
+extension are described [below](#checked-grpc-clients-and-services).
 
 `http2.request` and `http2.body` also return owned results.
 A request copies its method, path, headers, remote address and optional certificate
@@ -810,10 +812,11 @@ acceptance is tracked separately in the handoff.
 The [intermediate stack-copy report](measurements/service-context-stack-2026-10-16.json)
 preserves the earlier representation tradeoff. It predates packed headers and
 owned callback results, and its Windows fixtures failed before later repairs.
-Whole remote calls, service entry points and retained request contexts still
-need ownership work; these scope changes do not remove tracing from a server.
+These earlier scope changes alone did not remove tracing from a server. The
+following sections describe the request, connection and iterator owners, and
+the checked gRPC extension builds on them.
 
-### What remains before remote calls can use ARC
+### Received iterators and remote-call storage
 
 A remote call asks another process to run a function. A streaming response lets
 the caller request values one at a time. fwp saves each received value so two
@@ -876,7 +879,8 @@ The request record does not gain an owning back-pointer to the connection.
 Client I/O task records have only the scheduler, which runs ready tasks, as owner.
 Their storage releases after their stack and scheduler links are removed, without
 task reference-count updates. Language task handles can have independent aliases and retain their
-shared policy. Server and HTTP/2 task graphs still need separate ownership work.
+shared policy. Server task ownership is described below; HTTP/2 task graphs still need separate
+ownership work.
 Library teardown first shuts down connections used by live I/O tasks, then waits
 for those tasks to finish. This includes connections removed from the reuse pool:
 canceling a task alone is insufficient while it defers cancellation to protect
@@ -895,7 +899,7 @@ The remaining relationships need separate checks:
 | Client request | The active connection list, receive source and detached sender hold references. | Accepted in PR #157; preserve completion, failure, cancellation and repeated-call checks. |
 | Connection | The pool, readers/writers and callers hold separate storage owners; the socket has its own reader/writer use count. | Accepted in PR #158; closing a socket alone does not finish every borrow. Preserve the lifecycle checks. |
 | Pending sender values | Each input cursor has a concrete iterator destructor and an independent owner. | Accepted in PR #159; preserve cleanup, aliases, failure/cancellation and stress/reuse checks. |
-| Server callbacks and response channels | Serving tasks and retained language values can outlive the creating call scope. | Prove each retained handler and channel context, including failure during construction and cycles after external references disappear. |
+| Server callbacks and response channels | Serving jobs and retained iterators/channels own their request and connection records. | Accepted in PR #160; preserve partial construction and cancellation controls. Arbitrary escaped callback cycles remain outside the proof. |
 | Task identities and wait lists | The scheduler owns parked tasks; request state borrows their identities. | Preserve this direction when adding owners; do not turn back-pointers into owning cycles. |
 
 A detached sender sends iterator elements as requests described by compiler
@@ -903,7 +907,7 @@ metadata. Its unused function-encoder field and branch were removed in PR #157: 
 description. Native fixtures record its size and test request encoding across
 errors and cancellation.
 
-The current server candidate frees its job and task records and keeps temporary
+The server frees its job and task records and keeps temporary
 argument slots on the serving stack. The job contains the service context; its
 existing context-user count owns the whole allocation. Detached senders keep it
 alive after the serving task finishes. Completion clears borrowed task pointers
@@ -927,20 +931,19 @@ releases request/connection references and then that allocation; construction
 protects partially acquired references. Queue and callback cleanup use alternative
 fields in the header, without another lookup on the send path.
 
-The combined values/channel candidate passes all six native hosts for cleanup,
-aliases, partial construction, cancellation, stress/reuse and ordinary/no-reuse
-service comparisons. [The report](benchmarks.md#freeing-server-values-and-output-channels-on-all-six-hosts)
-retains actual ARM64/AMD64 instruction reviews and count/stack costs. All four
-workloads still grow by 240 managed bytes per call. Full production acceptance
-is pending. Server requests/connections, escaped graphs
-and HTTP ownership remain open; these changes do not establish remote checked ARC.
+The values/channel changes and complete request/connection ownership passed all
+six native hosts, followed by full production acceptance in PR #160. The earlier
+partial values-only stage still grew by 240 managed bytes per call; the complete
+request/connection rules below remove that growth. Its intermediate
+[report](benchmarks.md#freeing-server-values-and-output-channels-on-all-six-hosts)
+remains evidence of that stage, rather than the current memory result.
 
-### Server request and connection ownership under validation
+### Server request and connection ownership
 
 A request record stores one remote call's headers, queued messages and status.
 A connection record holds the socket and information shared by calls using it.
-The combined PR #160 gives these records explicit owners; production acceptance
-is pending, as recorded in [the handoff](development-state.md).
+PR #160 gives these records explicit owners; [history](roadmap-history.md)
+records full production acceptance.
 
 While parsing incoming bytes, a temporary list owns each new request. This matters
 when the same input contains both a new call and its cancellation: cancellation
@@ -968,10 +971,9 @@ finalizes every measured request and connection. All four workloads leave 544
 constant managed bytes on Linux and zero on macOS/Windows after 1, 16 or 256 calls.
 Allocation requests match the preceding values/channel stage; independently live
 owners add counts while callback borrowing removes repeated channel counts.
-The long-running resident-memory check and production gates remain separate
-acceptance requirements, tracked in the handoff.
-These measurements do not establish complete ownership for escaped callback
-cycles, HTTP handlers or remote checked ARC.
+The separate long-running resident-memory regression also passes, with its
+unchanged 8 MiB growth bound. Escaped callback cycles and HTTP handlers remain
+outside these ownership proofs. Checked remote ARC is the next extension below.
 
 ### Borrowing values inside known folds
 
@@ -1028,11 +1030,61 @@ Scoped failure cleanup and deliberate missing-reset tests enforce that distincti
 
 Keep the cache, shared-reader and decoder failure controls while extending these
 owners. Test partial construction and every last-owner case; retain deliberately
-broken variants to prove that missing cleanup is detected. Before admitting
-remote calls to checked ARC, compare interpreter/native values, errors and
-receive order, inspect actual binaries and measure repeated calls with collection
-disabled. Server/HTTP
-streams and retained handlers still need tracing. HTTP/2 server operations and GPU resource ownership remain separate work.
+broken variants to prove that missing cleanup is detected. HTTP/2 handlers and
+GPU resource ownership remain separate work.
+
+### Checked gRPC clients and services
+
+A split gRPC build can select `--gc arc` for both its client and service entries.
+[The service guide](services.md#building-without-tracing-collection) introduces the
+command and iterator lifetime rules. This extension is implemented in the current
+candidate: Linux AMD64 O1/O2 interpreter comparisons and tracing-free binary
+checks pass; remaining platform and production acceptance is tracked in
+[the handoff](development-state.md). It does not establish complete GC removal.
+
+The compiler follows known iterator continuations, including later steps. A
+single-result remote call consumes its input under the caller's current state
+and differentiation handlers. A bidirectional sender runs in a separate task
+without inheriting those handlers. Received-input iterator constructors run in
+the service task before the method body; returned iterators are drained after
+the method's local handlers end. A continuation that requires an expired or absent handler is rejected.
+Installing a handler inside the continuation is allowed.
+
+Remote arguments are borrowed while encoded or delivered. Retained input cursors
+acquire their own typed owners. A decoded single reply stays protected until the
+final status arrives; cancellation, extra replies and failed status release it.
+A channel send borrows its decoded value, while an accepting queue acquires an
+owner. Native sinks and closed channels retain no local reply owner. Caught
+status errors own both their record and message. Tests omit these owners
+separately and require a failure, in addition to normal and cancellation checks.
+
+Messages encode data, not managed pointers or callable captures. Data-only
+channel payload rules still exclude tasks, functions and nested channels that
+could create a mutable ownership cycle. Request/connection owners and borrowed
+task links retain their existing contracts. ARC binaries still allocate and
+count shared owners; removing the collector does not make networking a zero-cost
+abstraction. Repeated server measurements compare identical fwp programs across
+memory modes, with no speed or C/Rust-parity claim.
+
+### Moving record fields into a compiled function
+
+A boxed record stores its fields together in a heap object. Some compiled
+functions instead accept those fields as separate arguments; this avoids
+repacking them inside the function. Calling such a function through a function
+value still needs entry code to unpack the original record.
+
+When that record has one owner, the entry transfers its counted fields and clears
+their original slots. It reads all fields before clearing any slot. A shared
+record keeps its fields and supplies independent owners to the call. Scalar
+bits are never treated as pointers just because they resemble addresses.
+
+Original arguments and partially prepared fields remain protected if preparation
+fails. The compiled body takes responsibility before it can suspend or trap; the
+entry releases the outer record after the call. Resource-containing records keep
+their existing cleanup rules. Tests cover shared parents, shared fields, failure
+after a partial transfer, cancellation on entry and returned values. The current
+validation status is in [the handoff](development-state.md); this change does not
+eliminate the record allocation or every reference count.
 
 ### Moving values held by a closure
 

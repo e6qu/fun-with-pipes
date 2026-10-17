@@ -105,6 +105,9 @@ static jmp_buf boxing;
 static int recover_boxing(void) { return 1; }
 static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len==0 : *fwp_rc_slot(v)==0; }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
+#endif
     fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();
     for (volatile int mode=0;mode<4;mode++) for (volatile int alias=0;alias<2;alias++) {
         first=fwp_rc_fresh(fwp_str_new("first",5));last=fwp_rc_fresh(fwp_str_new("last",4));

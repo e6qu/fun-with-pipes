@@ -73,6 +73,9 @@ static const fwp_fninfo caller_fns[] = {{1, caller_entry, "caller probe", 0}};
 static fwp_clo caller_fn = {0, 0};
 static int released(V v) { return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_rc_slot(v) == 0; }
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = caller_fns;
     input_value = fwp_rc_fresh(fwp_str_new("normal", 6));
     if (HOLD(PTR(&caller_fn), input_value) != input_value || fwp_cleanups ||
@@ -204,6 +207,9 @@ static V argument_entry(V *args) {
 static const fwp_fninfo argument_fns[] = {{1, argument_entry, "argument probe", 0}};
 static fwp_clo argument_fn = {0, 0};
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = argument_fns;
     fwp_handler h;
     h.prev = fwp_handlers; h.state_depth = fwp_state_len; h.cleanup = fwp_cleanups;
@@ -298,6 +304,9 @@ static V worker_entry(V *args) { return GUARD(args[0]); }
 static const fwp_fninfo worker_fns[] = {{1, worker_entry, "worker probe", 0}};
 static fwp_clo worker_fn = {0, 0};
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = worker_fns;
     text_input = fwp_rc_fresh(fwp_str_new("child", 5));
     boxed_input = fwp_rc_fresh(fwp_record(1, (V[]){text_input}));
@@ -388,6 +397,9 @@ static const fwp_fninfo entry_fns[] = {{1, entry_callback, "entry probe", 0}};
 static fwp_clo entry_fn = {0, 0};
 static fwp_task cancelled_task;
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = entry_fns;
     incoming = fwp_rc_fresh(fwp_str_new("incoming", 8));
     cancelled_task.cancelled = 1;
@@ -479,6 +491,9 @@ static V variant_entry(V *args) { return GUARD(args[0]); }
 static const fwp_fninfo variant_fns[] = {{1, variant_entry, "variant probe", 0}};
 static fwp_clo variant_fn = {0, 0};
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 100;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns = variant_fns;
     payload = fwp_rc_fresh(fwp_str_new("payload", 7));
     fwp_handler h;

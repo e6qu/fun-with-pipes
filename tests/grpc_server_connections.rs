@@ -76,7 +76,17 @@ fn accepted_connections_release_after_startup_io_jobs_and_channels() {
     ];
     let dir = fwp::cgen::TempDir::new("grpc-accepted-owners").unwrap();
     let binary = dir.join("connections.exe");
-    for opt in ["-O1", "-O2"] {
+    // The no-reuse mode cannot be combined with ARC. Replay counted transport
+    // ownership controls with tracing excluded as well as with ordinary stress.
+    for (arc, opt) in [(false, "-O1"), (false, "-O2"), (true, "-O2")] {
+        if no_reuse && arc {
+            continue;
+        }
+        let code = if arc {
+            format!("#define FWP_ARC_ONLY 1\n{code}")
+        } else {
+            code.clone()
+        };
         if no_reuse {
             assert!(!code.contains("#define FWP_RESOURCE_OWNERS 1"));
             let counted = "#ifdef FWP_RESOURCE_OWNERS\n            fwp_rc_fresh(PTR(c));\n#endif";
@@ -105,6 +115,22 @@ fn accepted_connections_release_after_startup_io_jobs_and_channels() {
             }
             continue;
         }
+        // Counting an unsuccessful accept as a connection stops the fixture
+        // before it can exercise any ownership. A forced readiness retry must
+        // expose that old test-driver assumption on every host.
+        let early_stop = fixture
+            .replace("if(accept_calls)fwp_trap", "if(accept_calls++)fwp_trap")
+            .replace("if(accepted!=FWP_INVALID_SOCKET)accept_calls++;", "");
+        fwp::cgen::compile_c(&format!("{prefix}{code}\n{early_stop}"), &binary, opt).unwrap();
+        let output = Command::new(&binary)
+            .arg("7")
+            .env("FWP_GC", "off")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0")
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(237), "{opt}: {output:?}");
         for (needle, replacement, stage, expected) in controls {
             assert_eq!(code.matches(needle).count(), 1, "{needle}");
             let broken = code.replace(needle, replacement);
@@ -124,22 +150,30 @@ fn accepted_connections_release_after_startup_io_jobs_and_channels() {
             );
         }
         fwp::cgen::compile_c(&format!("{prefix}{code}\n{fixture}"), &binary, opt).unwrap();
-        for gc in ["off", "on"] {
-            for poison in ["0", "1"] {
-                for stage in 0..9 {
-                    let output = Command::new(&binary)
-                        .arg(stage.to_string())
-                        .env("FWP_GC", gc)
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
-                        .env("FWP_REUSE_VERIFY", poison)
-                        .output()
-                        .unwrap();
-                    assert!(
-                        output.status.success(),
-                        "{opt}/{gc}/{poison}/{stage}: {output:?}"
-                    );
-                }
+        let settings: &[(&str, &str, &str)] = if arc {
+            &[("off", "0", "0")]
+        } else {
+            &[
+                ("off", "1", "0"),
+                ("off", "1", "1"),
+                ("on", "1", "0"),
+                ("on", "1", "1"),
+            ]
+        };
+        for &(gc, verify, poison) in settings {
+            for stage in 0..9 {
+                let output = Command::new(&binary)
+                    .arg(stage.to_string())
+                    .env("FWP_GC", gc)
+                    .env("FWP_GC_STRESS", verify)
+                    .env("FWP_GC_VERIFY", verify)
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
+                assert!(
+                    output.status.success(),
+                    "{opt}/arc={arc}/{gc}/{poison}/{stage}: {output:?}"
+                );
             }
         }
     }

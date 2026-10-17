@@ -1,151 +1,139 @@
 # Session handoff
 
 Updated 2026-10-17 UTC. All seven areas in [PLAN.md](../PLAN.md) remain open.
-The root checkout owns one combined delivery, PR #160. Preparation branches and
-historical measurements are evidence sources, not separate next actions.
+Current delivery branch: **checked-remote-arc**, based on accepted PR #160.
+The root now combines checked remote ARC, typed reply/error cleanup, unique record
+field transfers, bounded native CI groups and documentation cleanup. No new PR
+is open yet. Preparation branches are evidence sources, not separate next actions.
 
-## Accepted baseline and current PR
+## Next action
 
-PR #159 is accepted as `7c4634410f23fa106b8c8dac5ad750b05fab5251`, after all nine
-production jobs **39016595534** and docs **39016595480** passed at `91398527`.
-Parent/tree/message were verified. Duplicate postmerge **39022161689** is cancelled.
-Complete message: `Free streamed inputs after remote calls finish`.
-[History](roadmap-history.md) records acceptance.
+Next: validate the platform-fixture repairs at tag
+`evidence/remote-arc-platform-fixes-20261017`, inspect actual ARM64/AMD64 binaries,
+and collect
+all six hosts with `--comparison server-arc-moves --split-checks` against
+`docs/measurements/server-borrows-2026-10-17.json`. Fix failures; require all 18
+focused jobs. Retain the report and explain measured costs before publishing the
+combined PR. Run all nine production gates plus docs on the final head before
+squash merge. Every commit message is one line, at most 80 characters, with an
+empty body and no trailers or attribution.
 
-[PR #160](https://github.com/e6qu/fun-with-pipes/pull/160), root branch
-`free-server-call-values`, is **not accepted**. Its previous head `1e1773b6` failed
-production **39025708821** on Linux ARM64: `grpc_server_runs_in_bounded_memory`
-grew from 17,104 to 49,420 KiB over 32,000 calls, exceeding the unchanged 8 MiB
-limit. Six other production jobs and docs **39025708823** passed before discovery;
-remaining jobs were cancelled; cancellation is confirmed. The exact-head merge
-watcher **82509 exited without merging**. Do not reuse its old merge command.
-Earlier production **39023664259** exposed a stale state fixture; its repaired
-method signature preserves all cleanup controls and remains in the root.
+## Accepted baseline
 
-To fix the remaining storage growth without another separate delivery cycle,
-the root now includes the combined request/connection ownership and borrowed
-callback preparation, plus the final #160 reports and state/allocation repairs.
-This delivery publishes that integration in the existing PR. No second PR is open.
-The previous plan to merge #160 before transferring that preparation is obsolete.
+PR #160 is accepted as **8ae595dffb006753597c39ca739e620aef8d3b94**. All nine
+production jobs **39030633846** and docs **39030633906** passed at
+**a8fa519d6befc34655d4b9298883ca1c5c69c3b8**. Parent #159, tree and message were
+verified; `/private/tmp/fwp160-merge-record.json` retains the checks. Complete
+message: `Free server call storage and borrow values in fold callbacks`.
+Duplicate postmerge **39036532034** is confirmed cancelled. Watcher 75491 exited
+successfully. [History](roadmap-history.md) preserves the repair and acceptance.
 
-Next: finish the native ARM64 long-running regression probe below and the combined
-PR's production checks, fixing any failure. Read the latest PR head and require
-all nine production jobs and docs for that exact commit. Squash-merge with an
-explicitly supplied one-line subject (at most
-80 characters) and empty body, then verify parent/tree/message and cancel duplicate
-postmerge production. Do not weaken the memory limit or treat short measurements
-as a substitute for the production test.
+The baseline's four repeated server workloads use 1/16/256 calls, three repeats
+and 64-element streams. Every request/connection finalizes; remaining managed
+storage is constant at 544 bytes on Linux and zero on macOS/Windows. Retains per
+call are 3/66/132/4 plus one per connection. Allocation/count/managed-storage
+measurements exclude raw buffers, stack pools, OS/TLS, allocator metadata,
+whole-process RSS and elapsed time. The separate long-running RSS regression also
+passes. Actual binary costs are in the report and benchmark guide.
 
-## Combined implementation and checks
+## Implementation and evidence
 
-The root includes these changes:
+ARC preparation worktree: `/private/tmp/fwp-prove-remote-arc`, branch
+`prove-remote-arc`, source **947981ff**. It derives from #160 head a8fa519d.
+The implementation admits checked gRPC clients/services, proves when iterator
+continuations run, borrows remote arguments, protects decoded replies until final
+status/delivery, and releases caught error records/messages. Data-only channel
+cycle restrictions remain; HTTP/REST/MCP/browser boundaries remain open.
 
-- Server task/job storage, stack argument slots, direct method calls, concrete
-  argument/result/error cleanup and owned native output channels.
-- Parser lists protect newly parsed requests against reset before task startup,
-  then move their owners into serving jobs. Reader/writer tasks, jobs and retained
-  iterators/channels independently own connection storage. Closing a socket is
-  separate from freeing its last storage owner. Borrowed task pointers clear
-  before release; explicit no-reuse mode retains its existing policy.
-- Known fold/fold-right callbacks borrow captures (values kept for later calls)
-  and input elements while owning the running result. Escaping values acquire
-  owners. The verifier distinguishes external borrows from local references;
-  entry/unwind cleanup excludes borrows. Recursive callbacks and resource-close
-  scopes retain their existing compilation. No new language syntax or wrapper.
-- Socket shutdown explicitly wakes polling-platform waiters. Wait records live
-  on task stacks and unlink before cancellation unwinds. Timeout, cancellation,
-  task deadline and multiple-reader tests have bounded completion. Deliberately
-  omitted wake/unlink operations must fail. No added heap object/task fields.
+The first prototype correctly failed the unchanged ARC escape guard because
+remote entries converted borrowed counted arguments to tracing-managed storage.
+The repair removes that conversion, not the guard. Scope tests cover later
+continuations, detached senders and returned iterators with expired local handlers.
+Real calls compare interpreter/ARC clients and servers at O1/O2. Deliberately
+omitted reply cleanup, queue owners and error owners must fail.
 
-The combined runtime/compiler is **`8ed65cc7b29fe356200a00a3de9771666d0bb184`**,
-tag **`evidence/server-borrows-controls-20261017`**. Six-host focused run
-**39029223789 passes on all six native hosts**. All artifacts are downloaded
-under `/private/tmp/fwp-server-memory-evidence/39029223789`. Actual AMD64/ARM64
-binary reviews are retained there; downloaded binaries were never executed.
+Linux probe **39033267465** passes at **c5952f14**. Its 32,000-call RSS samples
+are **[16084, 16084, 16084, 16084, 16084] KiB**. All 108 memory rows match baseline
+allocations, requested bytes and retains, with constant final storage. Its strict
+collector passed (1.48s), report `/private/tmp/fwp-remote-arc-linux-report.json`.
+All-six run **39034262363**, source **e796ea63ef28162367f9bf4a29d94ea1eab5528d**,
+tag `evidence/remote-arc-six-hosts-20261017`, has five passing hosts; Intel Mac hit the unchanged 25-minute job limit
+during real-call tests. The run is cancelled, not accepted as six-host evidence. Runtime/compiler are unchanged from c5952f14. Artifacts are under
+`/private/tmp/fwp-server-memory-evidence/39034262363`; both Linux reviews exist.
+Preserve those partial results, but use the replacement combined run below for
+final evidence. Do not infer six-platform support from the Linux-only probe.
 
-The additional long-running probe is **39030258307**, native Linux ARM64,
-source **`58822d542b096921ccb6158c617d611f6703edd0`**, tag
-**`evidence/server-memory-repair-20261017`**. It runs the original failing check
-before the focused ownership suite. Runtime/compiler code is unchanged from
-`8ed65cc7`; test diagnostics now retain five RSS samples and verify every client's
-output. The same check runs early in future Linux server-repeat probes. The
-worktree `/private/tmp/fwp-borrow-fold-captures` is now on
-`server-memory-repair-probe`. Root has the same test, with its workflow command
-moved into a separate visible step so future runs expose its result promptly.
+Actual ARC binaries exclude scan/mark/sweep routines. AMD64 fold frame is 264
+instead of 280 bytes; ARM64 is 320 instead of 336. Reader frames are unchanged.
+Text grows **261813 -> 269131** bytes on AMD64 and **246445 -> 254547** on ARM64:
+legacy function entries inline ownership-contract checks. ARM64 file growth also
+includes 64 KiB segment alignment padding; the actual ELF load segments and
+explanation are retained in its binary review. Keep these costs explicit; there
+is no measured speed benefit. Downloaded binaries were inspected, never executed.
 
-The strict collector passed in 9.45s with `--comparison server-borrows` against
-the preceding server-values report. The final report is
-`docs/measurements/server-borrows-2026-10-17.json`, with 18 raw tables and actual
-instruction reviews. [Benchmarks](benchmarks.md#freeing-server-requests-and-borrowing-fold-captures)
-explains costs and limits. Next: finish the long-running regression probe and
-the combined PR's production acceptance. Do not run a separate
-intermediate ownership-only six-host matrix.
+Worker-field preparation: `/private/tmp/fwp-move-worker-record-inputs`, branch
+`move-worker-record-inputs`, derives from ARC source 947981ff. Compiler/test source
+**97ee3dc5056df1cba16d1c5bfb89bb18f68fd040**, tag
+`evidence/worker-record-moves-20261017`; later docs commit **6971bc86**. The measured
+greeting entry duplicated a record field before its direct worker call. The change
+snapshots fields, transfers counted fields from unique plain-data records and
+retains shared fields. It protects partial transfers and keeps the original box
+alive through the call. Resource-containing records preserve existing lifetimes.
 
-## Measurement scope and current findings
+Focused Linux **39035085462 passes**: preparation failures, entry cancellation,
+shared parent/field aliases, scalar bits, result boxing, liveness and field/resource
+regressions. The unsplit six-native run **39035855561** is superseded and confirmed cancelled. Replacement **39036291837** runs source
+**273d516b64342356c82dbe48b65da7dee2c7f45d**, tag
+`evidence/remote-arc-moves-split-20261017`. It splits server cleanup, client cleanup
+and real-call measurements into three native jobs per host, retaining every
+previous test command and the 25-minute limit. Worker ownership tests are added
+to the measurement jobs. The collector requires all 18 jobs with `--split-checks`
+and compares with server-borrows using `--comparison server-arc-moves`. Expected
+saving is one retain per greeting and no allocation or final-storage change;
+verify the actual rows before making that claim. Workflow actionlint passes
+(1.10s); command preservation/collector syntax check passes (0.13s). Inspect actual binaries and compare every row;
+require matching work, no extra allocations and bounded remaining storage before
+including the change. All nine final PR gates still need this compiler revision.
 
-These compare identical fwp server programs across revisions, not fwp with C/Rust.
-Each fresh server receives 1, 16 or 256 calls over one connection, three repetitions;
-streams contain 64 elements. Counters start after listener/routing/root setup and
-end after disconnect/task retirement while the listener stays open. Collection is
-off and physical freeing on. Raw buffers, task-stack pools, OS/TLS/allocator
-metadata, whole-process memory and elapsed time are excluded. The failing
-production test measures whole-process resident memory separately.
+The split run exposed two fixture problems. ARM Mac server checks exited 237 at
+`grpc_server_connections` stage 7; log `/private/tmp/fwp-arc-moves-mac-failure.log`.
+The driver counted unsuccessful nonblocking accepts as a connection. It now counts
+successful accepts, forces a readiness retry, and verifies that restoring the old
+assumption fails. Recovery diagnostics distinguish the other causes of code 237;
+this repair still needs native confirmation. Windows AMD64 worker controls passed
+their ownership checks but failed exact output because their replacement C mains
+left stdout in text mode. All seven such probes now select binary stdout like
+ordinary generated programs; the three target suites are added to the normal
+Windows gate. Log `/private/tmp/fwp-arc-moves-windows-failure.log`.
+Cancellation of **39036291837** was requested; confirm it. Its two Linux measurement
+jobs pass, with artifacts under `/private/tmp/fwp-server-memory-evidence/39036291837`.
+They are partial evidence only. The replacement run must pass every platform.
+Formatting passes (1.24s), workflow actionlint (1.22s); these do not verify the
+native repairs. Compiler/runtime code remains identical to 273d516b.
 
-The earlier #160 preparation `855fe3d1` passed all six focused hosts in
-**39022416616**. Its committed [report](measurements/server-values-2026-10-17.json)
-leaves 62,304 managed bytes on Linux and 61,760 on macOS/Windows at 256 calls,
-still growing 240 bytes per call. Retains per call are 1 / 64 / 128 / 64 for
-greeting / returned stream / received stream / output-channel text.
+The PR draft is `/private/tmp/fwp-remote-arc-pr.md`; update its validation before
+publication. The root already includes the combined code and documentation. It
+also records #160 acceptance and removes obsolete candidate/exclusion statements. Historical experiment
+notes are saved in `/private/tmp/fwp160-handoff-before-streamlining.md`.
 
-Intermediate Linux ownership **39025894808** (`72a3cee0`) and borrowing
-**39027507441** (`f7aeb774`) pass. All requests/connections finalize, with 544
-constant final managed bytes and unchanged allocation requests. Ownership costs
-3 / 66 / 132 / 68 retains per call plus one per connection; borrowing reduces
-the channel case to 4. Windows shutdown probe **39027501833** (`96fa4e2c`) passes
-with zero final managed bytes, before combined borrowing. The final six-host report
-at `8ed65cc7` confirms 544 constant bytes on both Linux architectures and zero on
-both macOS/Windows architectures, with the expected count changes and unchanged
-allocation requests in every row.
+## Local checks and limits
 
-Actual final Linux instructions keep the channel in `rbx` (AMD64) or `x19`
-(ARM64), with no per-send channel retain/drop. The caller frame grows from
-200 to 280 bytes on AMD64 (excluding the incoming return address), and from
-240 to 336 on ARM64. It no longer nests the old 184/208-byte callback frame.
-Other callees still need frames. Compared with `855fe3d1`, text grows by 2,536
-bytes on AMD64 and 2,352 on ARM64; data/bss are unchanged. Connection/parser
-ownership adds 16/32 bytes to reader frames. These are not timing or total-stack
-claims. Reviews are in each Linux artifact's `binary-observations.json`.
+Use `python3 scripts/local-guard.py COMMAND...` serially. Full builds, suites,
+benchmarks and large regeneration run on GitHub. Preserve 64 GiB free disk, target
+data below 2 GiB and sampled aggregate workload RSS below 1 GiB; deadline 180s.
+Stop rather than raising limits. The fun-refactor guard is for another repository.
 
-## Resolved probe failures and local validation
-
-Preparation caught and fixed ambiguous test hooks, uncounted no-reuse connection
-handling, a missing fixture schema, Windows API header order and a Windows local
-shutdown hang. Borrowing tests fixed an invalid IR equality assertion and an
-incorrect prepend/append input. An added deadline check was redundant: the scheduler
-already cancels expired tasks. It was removed, with deadline coverage retained.
-The unlink negative control originally affected earlier connection teardown;
-`8ed65cc7` scopes it to its intended waiter tests and still requires exit 43.
-Superseded focused runs **39026702591**, **39027091673**, **39028415848** and
-**39028994457** are confirmed cancelled. Preserve immutable tags.
-
-Consolidated root formatting passed in 1.34s and the documentation audit in 2.75s.
-Probe formatting passed in 1.10s. ARM64/AMD64 static inspection
-passed in 0.15s each; review consistency checks passed in 0.14s each. Use
-`python3 scripts/local-guard.py COMMAND...` for focused local checks. Full builds,
-suites and large regeneration run on GitHub. Preserve 64 GiB free disk, target
-data below 2 GiB, sampled workload RSS below 1 GiB and the 180-second deadline.
-Do not increase limits.
-
-The CI timing investigation found two workers already active; merely reordering
-fixed-duration targets would save about 24 seconds on Linux or four minutes on
-Intel macOS, not a measured speedup. No scheduling/coverage change was made.
-Private timing evidence: `/private/tmp/fwp159-ci-target-times.json`.
+Formatting, collector syntax and bounded static binary inspection pass. New
+worker documentation audit passes in 2.72s; the streamlined root handoff audit
+passes in 2.93s after restoring the required `Next:` marker. These do not replace native CI.
+Every commit is one line, at most 80 characters, with no body/trailers/attribution.
+Squash merge only after all nine production jobs and docs pass at the exact head.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
-| 1 | In progress | Server/external owners, escaped cycles, HTTP and host re-entry; remove tracing |
+| 1 | In progress | Checked remote ARC, remaining host boundaries and cycles; remove tracing |
 | 2 | In progress | Remove intermediate storage and unnecessary reference counts |
 | 3 | In progress | Reduce equivalent-work C/Rust gaps |
 | 4 | In progress | Differentiation precision, speed and memory scaling |
@@ -153,6 +141,5 @@ Private timing evidence: `/private/tmp/fwp159-ci-target-times.json`.
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
 
-Remote checked ARC and complete GC removal remain open. JIT is excluded.
-Choose the next optimization from measurements, rather than assuming every
-remaining reference count is avoidable.
+Complete GC removal remains open. JIT is excluded. Choose optimizations from
+measurements and preserve simple pipes, inference, effects and failure order.
