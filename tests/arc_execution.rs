@@ -228,3 +228,115 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     }
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn wrapped_chain_cleanup_stack_measurement() {
+    let dir = std::env::temp_dir().join(format!("fwp-chain-cleanup-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let input = dir.join("wrapped_chain.fwp");
+    std::fs::write(&input, include_str!("fixtures/wrapped_chain.fwp")).unwrap();
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    assert_eq!(reference.stdout, b"Some \"63\"\n");
+    let cfile = dir.join("chain.c");
+    checked(
+        Command::new(fwp)
+            .env_remove("FWP_NO_OPT")
+            .env("FWP_STACK", "0")
+            .args(["build", "--gc", "arc", "--emit-c"])
+            .arg(&input)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(&cfile).unwrap();
+    let marker = "::Link */\nstatic void ";
+    let start = code.find(marker).expect("typed Link destructor") + marker.len();
+    let drop = code[start..].split('(').next().unwrap();
+    assert!(drop.starts_with("fwp_drop"));
+    // Observe the stack address at each generated destructor entry. The same
+    // instrumentation is used for both chain lengths and both compiler flags.
+    let observe = r#"
+static uintptr_t chain_stack_low, chain_stack_high;
+static __attribute__((noinline)) void chain_observe(void) {
+    volatile unsigned char marker = 0;
+    uintptr_t address = (uintptr_t)&marker;
+    if (address < chain_stack_low) chain_stack_low = address;
+    if (address > chain_stack_high) chain_stack_high = address;
+}
+"#;
+    let first_drop = code.find("static void fwp_drop").unwrap();
+    let mut measured = code[..first_drop].to_string() + observe;
+    for line in code[first_drop..].lines() {
+        measured.push_str(line);
+        measured.push('\n');
+        if line.starts_with("static void fwp_drop") && line.ends_with("(V v) {") {
+            measured.push_str("    chain_observe();\n");
+        }
+    }
+    measured = measured.replace(
+        "int main(int argc, char **argv)",
+        "int language_main(int argc, char **argv)",
+    );
+    let probe = r#"
+int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
+    fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
+    const int sizes[] = {64, 1024};
+    for (int i = 0; i < 2; i++) {
+        intptr_t before = fwp_gc.budget;
+        V root = 0;
+        for (int n = 0; n < sizes[i]; n++) {
+            V text = fwp_rc_fresh(fwp_str_new("value", 5));
+            V next = n ? fwp_rc_fresh(fwp_some(root)) : FWP_NONE;
+            root = fwp_rc_fresh(fwp_record(2, (V[]){text, next}));
+        }
+        chain_stack_low = UINTPTR_MAX; chain_stack_high = 0;
+        DROP(root);
+        if (fwp_gc.budget != before || fwp_gc.enabled || fwp_gc.ncollect) return 171;
+        printf("%d\t%llu\n", sizes[i], (unsigned long long)(chain_stack_high-chain_stack_low));
+    }
+    return 0;
+}
+"#
+    .replace("DROP", drop);
+    measured.push_str(&probe);
+    let artifacts = std::env::var_os("FWP_CHAIN_ARTIFACTS").map(std::path::PathBuf::from);
+    if let Some(folder) = &artifacts {
+        std::fs::create_dir_all(folder).unwrap();
+        std::fs::write(folder.join("chain.c"), &measured).unwrap();
+    }
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join(format!("chain{opt}.exe"));
+        fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
+        let output = checked(
+            Command::new(&binary)
+                .env("FWP_GC", "0")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "1"),
+        );
+        let text = String::from_utf8(output.stdout).unwrap();
+        let spans: Vec<u64> = text
+            .lines()
+            .map(|line| line.split('\t').nth(1).unwrap().parse().unwrap())
+            .collect();
+        assert_eq!(spans.len(), 2);
+        assert!(
+            spans[1] > spans[0] * 4,
+            "baseline should expose growing stack usage: {text}"
+        );
+        println!("{opt}: {text}");
+        if let Some(folder) = &artifacts {
+            std::fs::write(folder.join(format!("stack{opt}.tsv")), text).unwrap();
+            std::fs::copy(&binary, folder.join(format!("chain{opt}.exe"))).unwrap();
+        }
+    }
+    std::fs::remove_dir_all(dir).unwrap();
+}

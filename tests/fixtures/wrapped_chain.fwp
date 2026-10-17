@@ -1,0 +1,8 @@
+# Each link owns a string and an optional next link. The optional value is a
+# separate wrapper, so freeing the chain crosses two types at every position.
+Link = { a: String, b: Option[Link] }
+
+prepend : Option[Link] -> I64 -> Option[Link]
+prepend = curry (make Link { a = .1 | show, b = .0 } | Some)
+
+main = range 0 64 | fold prepend None | option.map .a | echo

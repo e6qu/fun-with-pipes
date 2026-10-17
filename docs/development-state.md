@@ -5,6 +5,19 @@ Current branch: `remote-stream-delivery`, based on accepted #154
 (`11ae0f6350ba697c773fa49cb5700d9790931769`). This batch is ready for publication
 and final production validation; focused passes do not authorize merge.
 
+## Next batch preparation: bounded chain destruction
+
+Preparation branch `bounded-chain-destruction` in `/private/tmp/fwp-chain-destruction`
+starts from PR #155's final head. The current compiler loops when a node directly
+owns another node of exactly the same type; a chain crossing a record and an
+`Option` instead recursively calls two destructors. The proposed workload owns
+one string and one optional next link per position. Before changing code, measure
+stack use at 64 and 1,024 links, verify physical reclamation with collection off,
+and compare its small language example with the interpreter. Run native builds
+on GitHub only. Acceptance requires bounded cleanup stack use, correct retained
+aliases and partial cleanup, no new heap work, and full final-head gates. This
+preparation does not admit native remote calls to checked ARC.
+
 ## Current delivery
 
 PR #154 passed all nine production jobs (`38977201910`), documentation
@@ -22,7 +35,8 @@ message, releases receive storage and wakes waiting readers. Waiting-reader
 cancellation leaves the receiver running; client-receiver cancellation can still
 reset the remote call. No new per-value allocation is added.
 
-Next: publish this delivery with `/private/tmp/fwp-stream-pr-body.md`, require all
+Next: collect the six-platform wrapped-chain baseline before implementing a fix.
+For PR #155, watch production `38986731253` and docs `38986731302`; publish this delivery with `/private/tmp/fwp-stream-pr-body.md`, require all
 nine production jobs and documentation on its exact final commit, fix any failures,
 then squash-merge with one line of at most 80 characters and an explicitly empty
 body. Record the verified merge and continue the ownership work below. Cancel
