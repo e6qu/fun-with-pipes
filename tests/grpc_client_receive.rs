@@ -94,7 +94,7 @@ fn client_received_buffers_release_on_retry_errors_and_cancelled_waits() {
 #include <stdint.h>
 static int stage,allocations,frees,cancelled,trapped,delivered,opens,stream_finalizations;
 static int decoded_live;
-static uintptr_t result;
+static uintptr_t result,output_channel;
 static void *owned[32],*connection,*stream,*retry_stream;
 static void remember(void *);
 static void observed_free(void *);
@@ -103,23 +103,24 @@ static void no_release(void *);
 #define observed_open(output_,reused_) (*(output_)=connection,*(reused_)=stage==7&&opens==0,(g_stream*)(opens++==0?stream:retry_stream))
 #define observed_recv(connection_,stream_,deadline_,got_) do{g_recv(connection_,stream_,deadline_,got_);remember((got_)->m);remember((got_)->text);}while(0)
 #define observed_decode(value_,why_) (stage==5?(fwp_trap("decode trap"),0):stage==4||stage==9?(*(why_)=strdup("malformed message"),remember(*(why_)),G_DEC_BAD):(*(value_)=fwp_rc_fresh(fwp_cstr("reply")),decoded_live++,G_DEC_OK))
-#define observed_channel(channel_,value_) do{if(strcmp(STR(value_)->d,"reply"))_Exit(12);delivered++;if(stage==10)fwp_trap("channel trap");}while(0)
+#define observed_channel(channel_,value_) do{if(strcmp(STR(value_)->d,"reply"))_Exit(12);delivered++;if(stage==10)fwp_trap("channel trap");if(stage>=12)fwp_p_channel_send_owned(channel_,value_,dec.ty->dup);}while(0)
 "#;
     let fixture = r#"
 #undef free
 static void remember(void *p){if(!p)return;if(allocations==32)_Exit(30);owned[allocations++]=p;}
 static void observed_free(void *p){if(p)for(int i=0;i<allocations;i++)if(owned[i]==p){owned[i]=0;frees++;break;}free(p);}
 static void no_release(void *p){(void)p;}
-static void decoded_drop(V value){if(decoded_live!=1||strcmp(STR(value)->d,"reply"))_Exit(22);decoded_live--;fwp_rc_free_obj(value);}
+static void decoded_drop(V value){if(decoded_live<1||strcmp(STR(value)->d,"reply"))_Exit(22);if(fwp_rc_release_last(value)){decoded_live--;fwp_rc_free_obj(value);}}
+static int decoded_sink(void *context,V value){(void)context;if(!fwp_rc_last(value)||strcmp(STR(value)->d,"reply"))_Exit(24);if(stage==15)fwp_trap("channel trap");return 1;}
 static g_msg *message(void){g_msg *m=calloc(1,sizeof *m+1);if(!m)_Exit(31);m->n=1;m->d[0]=42;return m;}
-static void call(void *arg,int stop){if(stop){cancelled++;return;}jmp_buf failed;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;if(!setjmp(failed)){fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;V args[]={0};result=fwp_remote_call(arg,args);}else trapped++;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;}
+static void call(void *arg,int stop){if(stop){cancelled++;return;}jmp_buf failed;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;if(!setjmp(failed)){fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;V args[]={output_channel};result=fwp_remote_call(arg,args);}else trapped++;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;}
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1,"local",&srv);connection=c;
 #ifdef PROBE_CLIENT_STREAM_OWNERS
  c->server=0; /* exercise client cancellation/reset, not server receive rules */
 #endif
- for(stage=0;stage<12;stage++){
+ for(stage=0;stage<17;stage++){
   decoded_live=0;stream_finalizations=0;allocations=frees=cancelled=trapped=delivered=opens=0;result=99;memset(owned,0,sizeof owned);c->out.len=0;
   g_stream *s=g_stream_new(c,(uint32_t)(1+4*stage));s->sent_headers=1;s->remote_end=stage!=6&&stage!=10&&stage!=11;stream=s;retry_stream=s;
   if(stage!=2&&stage!=3&&stage!=7){s->mhead=s->mtail=message();}
@@ -131,23 +132,36 @@ int main(void){
   fwp_rc_fresh(PTR(s));fwp_rc_dup(PTR(s));
   if(retry_stream!=stream){g_stream *next=retry_stream;h2_hdrs_add(&next->headers,"grpc-status",11,"0",1);fwp_rc_fresh(PTR(next));fwp_rc_dup(PTR(next));}
 #endif
-  const fwp_desc response={.drop=decoded_drop};
+  output_channel=0;
+  if(stage>=12){
+   output_channel=fwp_p_channel_make_owned(1,decoded_drop,fwp_rc_dup);
+   if(stage==13)fwp_p_channel_close(output_channel);
+   if(stage==14){V initial=fwp_rc_fresh(fwp_cstr("reply"));decoded_live++;fwp_p_channel_send_owned(output_channel,initial,fwp_rc_dup);decoded_drop(initial);}
+   if(stage>=15){fwp_chan *ch=(void*)(uintptr_t)output_channel;ch->sink=decoded_sink;ch->owner.sink_drop=no_release;}
+  }
+  const fwp_desc response={.dup=fwp_rc_dup,.drop=decoded_drop};
   fwp_remote remote={0};remote.m.resp=&response;remote.env="FWP_CLIENT_RECEIVE_PROBE";remote.default_addr="local";remote.what="probe";remote.m.output=stage>=8?2:0;
   fwp_task *t=fwp_spawn_task(0,call,&remote,0,0);
-  if(stage==6||stage==11){fwp_p_task_yield();if(t->done||allocations!=1||frees!=1)return 2;fwp_p_task_cancel(PTR(t));}
+  if(stage==6||stage==11||stage==14){fwp_p_task_yield();if(t->done||allocations!=1||frees!=1)return 2;fwp_p_task_cancel(PTR(t));}
   fwp_await(t);
-  int expected=stage==7?3:stage==0||stage==1||stage==4||stage==8||stage==9?2:1;
-  if(!t->done||allocations!=expected||frees!=expected||fwp_cleanups||cancelled!=(stage==6||stage==11)||trapped!=(stage==1||stage==2||stage==3||stage==4||stage==5||stage==9||stage==10))return 1;
+  int expected=stage==7?3:stage==0||stage==1||stage==4||stage==8||stage==9||stage==12||stage==13||stage==16?2:1;
+  if(!t->done||allocations!=expected||frees!=expected||fwp_cleanups||cancelled!=(stage==6||stage==11||stage==14)||trapped!=(stage==1||stage==2||stage==3||stage==4||stage==5||stage==9||stage==10||stage==15))return 1;
 #ifdef PROBE_CLIENT_STREAM_OWNERS
   if(stream_finalizations!=(stage==7?2:1)||c->streams){fprintf(stderr,"stage %d: %d finalized, listed=%d\n",stage,stream_finalizations,c->streams!=0);return 20;}
 #else
   if(stage==10&&(s->listed||!s->reset))_Exit(21);
 #endif
   if(stage==0||stage==7){if(strcmp(STR(result)->d,"reply"))return 3;decoded_drop(result);}
+  if(stage==12||stage==14){
+   if(decoded_live!=1)return 23;
+   fwp_chan *ch=(void*)(uintptr_t)output_channel;
+   if(ch->len!=1||!fwp_rc_last(ch->buf[ch->head])||strcmp(STR(ch->buf[ch->head])->d,"reply"))return 24;
+  }
+  if(output_channel)fwp_channel_drop(output_channel);
   if(decoded_live)return 22;
-  if(stage>=8&&delivered!=(stage==8||stage==10||stage==11))return 4;
+  if(stage>=8&&delivered!=(stage==8||stage==10||stage==11||stage>=12))return 4;
   if(stage==8&&result!=FWP_UNIT)return 5;
-  if(trapped){const char *expected_text=stage==1?"bad response from probe (local): more than one response message":stage==2?"bad response from probe (local): missing response message":stage==3?"service call probe (local) failed: transport failure":stage==5?"decode trap":stage==10?"channel trap":"bad response from probe (local): malformed message";if(strcmp(fwp_trap_msg,expected_text))return 6;}
+  if(trapped){const char *expected_text=stage==1?"bad response from probe (local): more than one response message":stage==2?"bad response from probe (local): missing response message":stage==3?"service call probe (local) failed: transport failure":stage==5?"decode trap":stage==10||stage==15?"channel trap":"bad response from probe (local): malformed message";if(strcmp(fwp_trap_msg,expected_text))return 6;}
   FWP_KEEP_ALIVE(PTR(t));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));FWP_KEEP_ALIVE(PTR(retry_stream));
  }
  FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
@@ -176,6 +190,22 @@ int main(void){
         "fwp_cleanup_push(&channel_abort, no_release, &call);",
     );
     for opt in ["-O1", "-O2"] {
+        let missing_queue_owner = generated.replace(
+            "observed_channel(ch,v);",
+            "if(stage>=12){delivered++;fwp_p_channel_send(ch,v);}else{observed_channel(ch,v);}",
+        );
+        fwp::cgen::compile_c(
+            &format!("{hooks}\n{missing_queue_owner}\n{fixture}"),
+            &exe,
+            opt,
+        )
+        .unwrap();
+        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(23),
+            "omitted response queue owner: {out:?}"
+        );
         let missing_value_guard = generated.replace(
             "fwp_value_protect(&decoded, &decoded_cleanup);",
             "fwp_cleanup_push(&decoded_cleanup, no_release, &decoded);",
