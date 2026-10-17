@@ -1,62 +1,45 @@
-# Session handoff
+# Connection ownership preparation
 
-Updated 2026-10-17 UTC. This is request-ownership preparation, not the root delivery.
-All seven work areas in [PLAN.md](../PLAN.md) remain open. JIT is excluded.
+Updated 2026-10-17 UTC. This branch prepares the next delivery; it is not the
+active pull request. Root `free-server-call-values` owns PR #160 at
+`1f1a928738ae32d88bcd2a7ac1fff1e0004e0f3c`, whose final production run
+`39023664259` is running and documentation `39023663596` passes. Keep that
+head stable. Merge only after all nine production jobs and docs pass.
 
-## Current preparation
+## Change and acceptance
 
-Worktree `/private/tmp/fwp-server-request-owners`, branch `own-server-requests`,
-starts at combined server candidate `855fe3d1`. Root branch `free-server-call-values`
-owns draft PR #160; all-six `39022416616` now passes. PR #159 is accepted as
-`7c463441`; its nine production jobs and docs passed, tested/merged tree and exact
-one-line message were verified, and duplicate production `39022161689` cancelled.
-Keep one delivery PR at a time; this preparation has no PR.
+Base request preparation `4b7ecb8bb16583f48ae8fc9d85f0cda5c623b23e` passes Linux
+`39024071318`; the earlier move revision also passes `39023556994`. Every
+request finalizes in four workloads at 1/16/256 calls. The first version left
+864 managed bytes independent of call count. The move version removes one
+request retain per call; collect its exact counters before publishing claims.
 
-The request candidate gives accepted gRPC requests an active-list owner. Pending
-parser lists independently retain each request until a serving job starts, since
-a reset in the same input can unlink it first. The job now receives the pending-list owner by a move, avoiding an extra
-reference-count update, and releases it with its final service-context owner. Incoming
-server sources hold their own request/connection references; disposing server
-input does not apply client response-abandonment semantics. Existing native
-channels already acquire these references. HTTP uses the same pending-list
-container but its records remain traced; no native HTTP ownership claim.
+This branch gives accepted gRPC connections explicit owners for startup,
+reader/writer tasks, serving jobs and retained input/output callbacks. Startup
+ownership transfers to the reader; the writer and independently live jobs retain
+storage. Socket closure still follows I/O task completion, allowing callbacks
+to observe a closed connection until their last owner releases its record.
+HTTP handler graphs and remote checked ARC remain outside this proof.
 
-New tests cover normal calls, reset before dispatch, connection death while
-pending, task cancellation, retained input after completion, early source disposal
-and job-startup failure. An added two-request parser test traps before dispatch
-and proves cleanup of both the transferred owner and still-pending requests. Deliberately omitted fresh/list/job owners,
-incorrect client abandonment, omitted parser cleanup and omitted construction
-cleanup must fail. Existing
-client and peer fixture mutation anchors are updated, without reducing assertions.
-The first candidate `c3c8fd8b` passes Linux `39022894056`, including all real
-service comparisons and measurements. It duplicated a request for its job. The
-ownership move and parser-unwind revision `22e843a4` is running Linux
-`39023556994`. Additional source-construction tests now exercise the actual
-method-building path with request/connection retain overflow and a trap after
-both acquisitions. Omitted source cleanup or request release must fail. These
-last test additions remain unverified.
+New tests exercise startup failure, TLS rejection, cancellation before reader
+or writer entry, writer startup failure, job count overflow, a retained serving
+context and a channel surviving connection closure. Deliberately omitted cleanup
+must make the tests fail. Run at O1/O2 with collection on/off, stress verification
+and reuse poisoning. Preserve existing client startup and server tests.
 
-Next: finish Linux `39023556994`, fix failures, publish the extra construction
-controls and run the complete request candidate on native CI. The first version
-leaves 864 managed bytes independent of call count and finalizes every request;
-the move should remove one retain per call without changing allocations or
-memory. Validate that against the unchanged programs before all-six acceptance.
-Record count costs instead of claiming zero overhead. Full builds/tests run
-on GitHub.
+Next: format and audit locally using the root guard; publish preparation and run
+Linux `server-repeat`. Fix any failures, then freeze the combined request and
+connection candidate for all six native hosts. Retain unchanged-workload memory,
+allocation and count comparisons and inspect actual ARM64/AMD64 instructions.
+Do not execute downloaded artifacts. No full builds locally. Integrate into the
+next substantial PR only after #160 merges; preserve its final evidence/docs.
+All seven work areas in PLAN.md remain open; this does not complete GC removal.
 
-## Remaining work and validation
+## Local checks
 
-Connection ownership, promoted uncounted graphs, HTTP callbacks and cycles still
-need proofs. No remote checked ARC claim. Borrowed scheduler/task pointers must
-not become owning cycles. The independent channel loop still increments its
-reference count once per send; a later compiler borrowing improvement should
-address that measured overhead without changing ordinary inference or syntax.
-
-Local work uses the root `scripts/local-guard.py` with fixed limits. Worktree
-creation passed in 0.31s, formatting in 1.23s and docs in 2.79s. Native
-checks pass for `c3c8fd8b`; the later move/unwind revision is pending. Latest
-construction-test formatting passed in 1.29s.
-Downloaded binaries must only be inspected, never executed locally.
+Root-guarded `cargo fmt --all` passed in 1.22s. `python3 scripts/check-roadmap.py` passed in 2.84s (52 link sets,
+106 immutable preparation pairs and seven roadmap steps). `git diff --check`
+passes. Native checks remain pending on GitHub.
 
 ## Roadmap status
 

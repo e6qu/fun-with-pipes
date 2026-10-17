@@ -1,0 +1,117 @@
+//! Accepted connections release after I/O, callbacks and independently retained users.
+use fwp::ir::*;
+use std::process::Command;
+
+#[test]
+fn accepted_connections_release_after_startup_io_jobs_and_channels() {
+    let unit = MT::unit();
+    let program = Program {
+        funcs: vec![
+            Func {
+                name: "available".into(),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: MT::Fun(Box::new(unit.clone()), Box::new(MT::con("std::Bool"))),
+                body: Body::Prim("tls.available".into()),
+            },
+            Func {
+                name: "web".into(),
+                arity: 0,
+                locals: vec![],
+                ty: unit,
+                body: Body::Prim("http2.connect".into()),
+            },
+        ],
+        exports: vec![("available".into(), 0)],
+        ..Program::default()
+    };
+    let (mut code, _) = fwp::cgen::generate_library(&program, "accepted_owners").unwrap();
+    for (before, after) in [
+        ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) { if(p==seen_connection)connection_finals++;"),
+        ("static void g_accept_loop(fwp_socket_t lfd, const g_server *srv) {", "static fwp_socket_t seen_fd;\nstatic fwp_socket_t connection_accept(fwp_socket_t,struct sockaddr *,socklen_t *);\nstatic SSL *connection_tls(SSL_CTX *,fwp_socket_t);\nstatic void connection_reader(void *,int);\nstatic void g_accept_loop(fwp_socket_t lfd, const g_server *srv) {"),
+        ("fwp_socket_t fd = fwp_socket_accept(lfd, (struct sockaddr *)&ss, &sl);", "fwp_socket_t fd = connection_accept(lfd, (struct sockaddr *)&ss, &sl);"),
+        ("g_conn *c = g_conn_new(fd, peer, srv);", "g_conn *c = g_conn_new(fd, peer, srv); seen_connection=c;seen_fd=fd;"),
+        ("fwp_cleanup_push(&accepted_owner, g_connect_ref_release, c);", "fwp_cleanup_push(&accepted_owner, g_connect_ref_release, c); if(connection_stage==0)fwp_trap(\"accepted startup trap\");"),
+        ("c->ssl = (SSL *)fwp_tls_accepted(srv->tls, fd);", "c->ssl = connection_tls(srv->tls, fd);"),
+        ("fwp_task *reader = fwp_spawn_task(0, g_reader, c, 0, 0);", "fwp_task *reader = fwp_spawn_task(0, connection_reader, c, 0, 0); seen_reader=reader;"),
+        ("fwp_task *writer = fwp_spawn_task(0, g_writer, c, 0, 0);", "if(connection_stage==4)fwp_trap(\"writer startup trap\"); fwp_task *writer = fwp_spawn_task(0, g_writer, c, 0, 0); if(connection_stage==5)fwp_cancel_tree(writer);"),
+    ] {
+        assert_eq!(code.matches(before).count(), 1, "{before}");
+        code = code.replace(before, after);
+    }
+    let prefix = "static int connection_stage,connection_finals;static void *seen_connection,*seen_reader;\n";
+    let fixture = include_str!("fixtures/grpc_server_connections.c");
+    let controls = [
+        (
+            "fwp_cleanup_push(&accepted_owner, g_connect_ref_release, c);",
+            "",
+            0,
+            238,
+        ),
+        (
+            "                    g_conn_release(c);\n                    continue;",
+            "                    continue;",
+            1,
+            238,
+        ),
+        (
+            "        fwp_cleanup_push(&writer_owner, g_connect_ref_release, c);",
+            "",
+            4,
+            252,
+        ),
+        (
+            "    fwp_rc_dup(PTR(c));\n    j->c = c;",
+            "    j->c = c;",
+            6,
+            254,
+        ),
+        (
+            "    g_conn_drop(connection);\n#ifndef FWP_RESOURCE_NO_FREE",
+            "    (void)connection;\n#ifndef FWP_RESOURCE_NO_FREE",
+            7,
+            246,
+        ),
+    ];
+    let dir = fwp::cgen::TempDir::new("grpc-accepted-owners").unwrap();
+    let binary = dir.join("connections.exe");
+    for opt in ["-O1", "-O2"] {
+        for (needle, replacement, stage, expected) in controls {
+            assert_eq!(code.matches(needle).count(), 1, "{needle}");
+            let broken = code.replace(needle, replacement);
+            fwp::cgen::compile_c(&format!("{prefix}{broken}\n{fixture}"), &binary, opt).unwrap();
+            let output = Command::new(&binary)
+                .arg(stage.to_string())
+                .env("FWP_GC", "off")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "{opt}/{stage} omitted {needle}: {output:?}"
+            );
+        }
+        fwp::cgen::compile_c(&format!("{prefix}{code}\n{fixture}"), &binary, opt).unwrap();
+        for gc in ["off", "on"] {
+            for poison in ["0", "1"] {
+                for stage in 0..9 {
+                    let output = Command::new(&binary)
+                        .arg(stage.to_string())
+                        .env("FWP_GC", gc)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    assert!(
+                        output.status.success(),
+                        "{opt}/{gc}/{poison}/{stage}: {output:?}"
+                    );
+                }
+            }
+        }
+    }
+}

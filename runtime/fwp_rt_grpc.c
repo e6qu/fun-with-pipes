@@ -707,6 +707,8 @@ static void g_conn_release(g_conn *c) {
     g_conn_drop(c);
 }
 
+static void g_connect_ref_release(void *arg) { g_conn_release((g_conn *)arg); }
+
 static void g_start_call(g_conn *c, g_stream *s);
 
 static void g_writer(void *arg, int cancelled);
@@ -726,8 +728,12 @@ static void g_reader(void *arg, int cancelled) {
             g_conn_release(c);
             return;
         }
+        fwp_cleanup writer_owner;
+        fwp_rc_dup(PTR(c));
         c->refs++;
+        fwp_cleanup_push(&writer_owner, g_connect_ref_release, c);
         fwp_task *writer = fwp_spawn_task(0, g_writer, c, 0, 0);
+        fwp_cleanup_pop(&writer_owner); /* writer takes the reserved reference */
         fwp_task_own_internal(writer, fwp_cur->scope != NULL);
     }
     unsigned char buf[65536];
@@ -1137,7 +1143,6 @@ static int g_same_tls(const g_conn *c, const g_tls *t) {
 }
 
 typedef struct { g_conn *c; fwp_task *reader, *writer; } g_connect_start_owner;
-static void g_connect_ref_release(void *arg) { g_conn_release((g_conn *)arg); }
 static void g_connect_start_abort(void *arg) {
     g_connect_start_owner *owner = (g_connect_start_owner *)arg;
     owner->c->dead = g_connect_start_failed;
@@ -2244,10 +2249,13 @@ static void g_serving_peer_release(g_serving *sv) {
     sv->msg = 0;
     g_job *job = (g_job *)sv;
     g_stream *request = job->s;
+    g_conn *connection = job->c;
     job->s = NULL;
+    job->c = NULL;
     sv->s = NULL;
     sv->headers = NULL;
     g_stream_drop(request);
+    g_conn_drop(connection);
 #ifndef FWP_RESOURCE_NO_FREE
     fwp_mem_free(job);
 #endif
@@ -2312,7 +2320,6 @@ static int64_t g_parse_timeout(const char *t) {
 /* Consume the pending-list owner; the job keeps it through task completion. */
 static void g_start_call(g_conn *c, g_stream *s) {
     g_job *j = (g_job *)fwp_mem_alloc(sizeof *j);
-    j->c = c;
     j->s = s;
     j->srv = c->server;
     const char *path = h2_get(&s->headers, ":path");
@@ -2330,6 +2337,8 @@ static void g_start_call(g_conn *c, g_stream *s) {
     j->sv.peer_users = 1;
     fwp_cleanup peer_cleanup;
     fwp_cleanup_push(&peer_cleanup, g_job_peer_finish, j);
+    fwp_rc_dup(PTR(c));
+    j->c = c; /* publish only after acquisition succeeds */
     j->sv.s = s;
     /* responses are compressed like the requests */
     const char *enc = h2_get(&s->headers, "grpc-encoding");
@@ -2885,17 +2894,21 @@ static void g_accept_loop(fwp_socket_t lfd, const g_server *srv) {
             char peer[128];
             fwp_fmt_addr((struct sockaddr *)&ss, peer, sizeof peer);
             g_conn *c = g_conn_new(fd, peer, srv);
+            fwp_rc_fresh(PTR(c));
+            c->refs = 1; /* startup storage and transport, moved to the reader */
+            fwp_cleanup accepted_owner;
+            fwp_cleanup_push(&accepted_owner, g_connect_ref_release, c);
             if (srv->tls) {
                 c->ssl = (SSL *)fwp_tls_accepted(srv->tls, fd);
                 if (!c->ssl) {
-                    c->fd = FWP_INVALID_SOCKET;
-                    fwp_socket_close(fd);
+                    fwp_cleanup_pop(&accepted_owner);
+                    g_conn_release(c);
                     continue;
                 }
             }
             /* the reader starts the writer (after a TLS handshake) */
-            c->refs = 1;
             fwp_task *reader = fwp_spawn_task(0, g_reader, c, 0, 0);
+            fwp_cleanup_pop(&accepted_owner); /* move startup ownership */
             fwp_task_own_internal(reader, fwp_cur->scope != NULL);
             continue;
         }
