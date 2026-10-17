@@ -137,16 +137,15 @@ not support for that platform.
 
 ## Value decoders
 
-A decoder turns encoded bytes or text into ordinary language values. The current
-preparation gives balanced-ternary conversions, URL/form decoding and HTTP-head
-parsing explicit owners for their results. Complete and partial results must be
+A decoder turns encoded bytes or text into ordinary language values.
+Balanced-ternary conversions, URL/form decoding and HTTP-head parsing have
+explicit owners for their results. Complete and partial results must be
 released without relying on a later collection.
 
 The decoder subset passes focused checks on all six native hosts at `30399066`
 (`38886033175`). Actual WASI checks cover its available ternary/text helpers at
-`72321a55` (`38884843627`). These focused results precede the combined batch's
-full production acceptance; the [handoff](development-state.md) records current
-validation. [Earlier allocation evidence](measurements/value-decoders-2026-10-16.json)
+`72321a55` (`38884843627`). These focused results precede the combined batch accepted in
+[PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153). [Earlier allocation evidence](measurements/value-decoders-2026-10-16.json)
 retains the six-host ternary/text counts and the neighboring Windows failures
 that were subsequently repaired.
 
@@ -324,8 +323,7 @@ callbacks and mutable cycles remain separate work.
 
 ### TCP and TLS socket owners
 
-The next preparation extends logical socket owners to TCP connections and
-listeners. Copies share a handle; explicit close affects every copy, while the
+TCP connections and listeners have logical socket owners. Copies share a handle; explicit close affects every copy, while the
 last owner closes the socket automatically. Function and task captures preserve
 the original lifetime. Returned optional connections, bytes and certificate text
 keep their partially built values alive and release them on allocation failure.
@@ -620,7 +618,7 @@ pass. General removal of tracing remains unfinished.
 
 ## Process metrics and syntax text
 
-The next ownership batch prepares copied metric snapshots and syntax rendering.
+Metric snapshots and rendered syntax text have explicit value owners.
 A metric registry stores names and numbers for a process or library instance.
 Repeated updates of an existing name reuse that entry; distinct names require
 more native storage. Process shutdown and library teardown free it. A snapshot
@@ -634,12 +632,14 @@ lookup and string sorting. Observation suffixes are compared and copied directly
 without a temporary concatenated name. `syntax.show` borrows its syntax tree and
 returns new text; its native formatting buffer is protected if result allocation
 traps. Managed allocation fault tests, missing-cleanup controls, tracing stress,
-checked ARC and actual WASI checks pass in preparation. Windows and POSIX library
+checked ARC and actual WASI checks pass. Windows and POSIX library
 unload tests verify registry release separately. The
 [retained report](measurements/owned-values-and-kernels-2026-10-16.json) records
-the artifacts and repaired test failures; the handoff tracks full acceptance.
+the artifacts and repaired test failures.
+[PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153)
+records full production acceptance.
 
-### DNS result ownership under validation
+### DNS result ownership
 
 `dns.resolve` borrows its hostname and returns an owned list of copied address
 strings. The native implementation releases the operating system's temporary
@@ -667,18 +667,17 @@ above cover handles.
 
 A served request carries headers (name/value strings) and may identify a peer
 certificate. `grpc.metadata` returns an independent list of incoming headers;
-`grpc.peer-subject` returns copied certificate text when available. The combined
-preparation gives these output values ordinary owners and releases partially
+`grpc.peer-subject` returns copied certificate text when available. These output
+values have ordinary owners, with cleanup for partially
 copied fields if construction fails. Metadata preserves the input order and
 duplicate names while omitting protocol headers; it builds directly into the
 result list without a temporary array of pointers.
 
 This does not establish ownership of the service's callbacks, connection,
-stream or retained request context. Those remain separate work. The preparation
-handoff records focused checks; full service execution without tracing has not
-been established by these result-copy changes.
+stream or retained request context. Those remain separate work; these accepted
+result-copy changes do not establish full service execution without tracing.
 
-The same preparation gives `http2.request` and `http2.body` owned results.
+`http2.request` and `http2.body` also return owned results.
 A request copies its method, path, headers, remote address and optional certificate
 name; a body copies every byte, including zero and non-text bytes. The source
 stream remains live during copying. Header order and duplicates are preserved,
@@ -686,8 +685,8 @@ and an existing `host` header takes precedence over `:authority`. Partial string
 pairs, lists and result wrappers use the existing typed cleanup on failure.
 These changes do not yet own the stream itself or remove tracing from a server.
 These copied results pass focused allocation-failure and lifetime checks on all
-six native hosts at `e715de1a` (`38935341434`). Full delivery acceptance remains
-separate; see the [handoff](development-state.md).
+six native hosts at `e715de1a` (`38935341434`), followed by full acceptance in
+[PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
 
 Outgoing gRPC response headers and trailers also copy their input strings.
 Normalization now happens in the owned copy: names become lowercase, and carriage
@@ -882,10 +881,14 @@ Custom decoder callbacks transfer their input and result owners, release caught
 errors and restore the enclosing handler on traps. This is not ownership of the
 whole connection/stream/callback graph.
 
-The initial Linux AMD64 client probe showed bounded final managed charge, but
-expanded stress checks exposed record poisoning applied to a raw runtime layout.
-The repair uses the existing raw-storage release operation. Full focused and
-production acceptance remains required; the [handoff](development-state.md)
-records the current rerun. Preserve ordinary immutable iterator behavior and
-existing syntax throughout the remaining graph work.
+The [complete-client comparison](benchmarks.md#memory-used-by-complete-remote-stream-clients)
+now passes focused checks on all six native hosts at `886dad3b`. A one-pass
+client's peak and final managed charge stay constant across the tested sizes;
+retained aliases keep their history until released. Cleanup controls verify
+16,384-position chains, exact releases, failures and stress. Expanded stress
+caught invalid record poisoning on a raw runtime layout; that is repaired with
+the existing raw-storage release operation. Full production acceptance remains
+required. The [handoff](development-state.md) tracks that delivery and the
+separate effort to reduce the extra reference-count operations.
+
 HTTP/2 server operations and GPU resource ownership also remain separate work.

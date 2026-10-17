@@ -4,7 +4,7 @@ Updated 2026-10-17 UTC. This is independent preparation on
 `move-unique-closure-captures` in `/private/tmp/fwp-closure-capture-moves`.
 PR #155 remains the only delivery; the root worktree tracks its final gates.
 The preceding cache-ownership preparation is `own-remote-stream-caches` at
-`886dad3b`, with all-six-host run `38994414068` in progress. Its handoff and
+`886dad3b`, with all-six-host run `38994414068` passed. Its handoff and
 baseline report remain authoritative for that component.
 
 ## Move captures from consumed unique closures
@@ -65,3 +65,13 @@ exact zero retained managed bytes after 10,000 failed calls and detects retained
 closure storage independently of capture movement. All other selected ownership
 and unwind tests passed in that run. The revised controls still need a rerun.
 The cache component's six-host run `38994414068` has passed independently.
+
+The verified cache report and accepted-work documentation cleanup are now included
+from `63728741`. See
+[the cache comparison](measurements/remote-client-cache-ownership-2026-10-17.json).
+The immutable measured source is `evidence/remote-cache-owners-20261017` at
+`886dad3b`; full production acceptance remains required. Probe `38995160889` at
+`e189c868` checks the repaired capture-transfer controls. The root delivery #155
+has seven passing production jobs, with Linux AMD64 and Intel macOS GC stress
+still running. Next: finish capture validation, then assemble one delivery after
+#155's verified merge. Do not open a second PR while it remains active.

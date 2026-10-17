@@ -299,9 +299,9 @@ acceptance; [the handoff](development-state.md) records native and WASI checks.
 
 ## Decoded values, metrics, CPU tensors and DNS
 
-These operations now have explicit contracts in the following ownership batch.
-A contract describes implementation; [the handoff](development-state.md) states
-which native/WASI checks have passed and which delivery gates remain. A decoder
+These operations have explicit contracts, accepted in
+[PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
+A decoder
 turns encoded input into ordinary values. A snapshot is an independent copy of
 current state. Neither returns pointers into temporary parsing or registry memory.
 
@@ -327,13 +327,15 @@ The compression/frame helpers are native-only. Process metrics retain registry
 entries until process exit or library teardown; snapshots have ordinary value
 lifetimes. CPU workers retain no language references after the call. Reporting
 worker-start failure joins already started workers before releasing borrowed
-inputs or pending output. These contracts do not extend checked ARC to network
-connections, servers, retained host callbacks or GPU execution.
+inputs or pending output. These contracts do not establish checked ARC for whole remote-service graphs,
+servers, retained host callbacks or GPU execution. Socket handles have separate
+[ownership contracts](ownership.md#tcp-and-tls-socket-owners).
 
 ## Copied service data
 
-These contracts describe the current preparation. [The handoff](development-state.md)
-records actual acceptance; they do not admit entire services into checked ARC.
+These result-copy contracts passed full production acceptance in
+[PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
+They do not admit entire services into checked ARC.
 A request context holds information about the request being served. Returning a
 copy transfers ownership of the new data, not ownership of that context.
 
@@ -349,3 +351,19 @@ Copied values do not borrow the source strings or body buffer. Typed cleanup
 releases partially copied fields if a managed result allocation fails. The source
 stream remains live during copying. The connections, streams, callbacks and
 request contexts themselves still need separate lifetime proofs.
+
+## Remote stream positions
+
+A remote stream position stores either the source of its next message or the
+result already received at that position. `grpc._force` is an internal operation
+that returns an optional pair of the value and the next position. `None` means
+the stream ended. Multiple reads of one position must return its saved result.
+
+The current candidate consumes one position owner. When that owner is exclusive,
+it moves the saved result; otherwise it adds one result owner. Typed cleanup
+releases cached values and continuation wrappers, stopping at a shared wrapper.
+It follows long cache chains in a loop. Positions and receive sources use raw
+runtime layouts, so their release must not interpret them as record headers
+when verifying memory reuse. These contracts do not establish ownership of
+connections, streams or retained decoder captures. Remote calls still require
+tracing; [the handoff](development-state.md) records candidate validation.
