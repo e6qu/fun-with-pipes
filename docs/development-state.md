@@ -31,7 +31,8 @@ runs; retain actual input counts rather than impose equal allocation totals.
 No elapsed-time, whole-process memory or C/Rust comparison is claimed. Retain
 source, emitted C, binaries and raw checkpoints before modifying ownership.
 
-Next: run a Linux `sender-repeat` probe on GitHub, repair failures, then freeze
+Linux probe `39008824856` runs measurement-only source
+`ef69079dccc87fb08ed829fe83467bfc65d7df20`. Next: inspect and repair it, then freeze
 the passing baseline across all six native hosts. Inspect actual ARM64/AMD64
 binaries. Only then implement concrete input-iterator ownership, preserving
 continuation evaluation before current-element encoding, retained aliases,
@@ -39,8 +40,9 @@ early response, cancellation and failed sender publication. Existing remote
 entries can mark input values permanently shared; adding a retain alone does
 not fix that. Keep pending node owners alive through next evaluation and send.
 
-Local work uses the root guard with unchanged limits. Formatting passed in 1.30s;
-no local builds or native execution ran. All native measurement work belongs on
+Local work uses the root guard with unchanged limits. Formatting passed in 1.30s; fixture formatting in 0.01s and documentation
+audit in 3.19s. The local six-host collector passed syntax parsing in 0.20s.
+No local builds or native execution ran. All native measurement work belongs on
 GitHub. Private design notes are `/private/tmp/fwp-next-connection-ownership.md`.
 Do not copy this preparation's old plan/history over the active root handoff.
 
