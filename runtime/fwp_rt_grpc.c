@@ -1,4 +1,4 @@
-/* fwp runtime: gRPC (see docs/grpc.md, and src/grpc.rs for the
+/* fwp runtime: gRPC (see docs/services.md, and src/grpc.rs for the
  * interpreter's side, which this file mirrors).
  *
  * HTTP/2 connections and streams run on the task scheduler

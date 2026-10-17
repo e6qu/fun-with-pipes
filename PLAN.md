@@ -87,9 +87,14 @@ positions shrink from 24 to 16 bytes, and requested bytes per received 16-charac
 value fall from 89 to 81. The allocation count remains four per value. Full
 acceptance of the combined delivery is still required.
 
-Next give cached values and continuations explicit last-owner destruction, including
-long chains and partial failures, then establish connection, stream and decoder
-owners before admitting remote calls to checked ARC. These objects still depend on
+The next prepared batch releases long ordinary ownership chains in a loop even
+when the next node sits inside optional values or tuples. Focused checks pass on
+all six native targets through 16,384 links, including retained aliases, complete
+reclamation and collector/reuse stress. Its full delivery gate remains required.
+
+Then give native cached values and continuations explicit last-owner destruction,
+including long chains and partial failures, and establish connection, stream and
+decoder owners before admitting remote calls to checked ARC. These objects still depend on
 tracing; the storage reduction does not complete GC removal.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and

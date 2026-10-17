@@ -1444,8 +1444,9 @@ impl<'p> Gen<'p> {
     /// The drop function of values of type `mt` (counted, see
     /// `rc::needs_rc`): it gives up one reference; on the last one, it
     /// gives up the references the object holds, by their types, and frees
-    /// it. A field of the same type (a list's tail) is dropped by the
-    /// same loop, so a long list needs no deep recursion. Objects the
+    /// it. Direct self tails and eligible paths through final owned wrapper
+    /// fields return to the same loop, so those chains need no deep recursion.
+    /// Branching recursive graphs can still require calls. Objects the
     /// runtime shares (count 0) and objects off the heap are left alone.
     fn drop_id(&mut self, mt: &MT) -> usize {
         if let Some(i) = self.drops.get(mt) {

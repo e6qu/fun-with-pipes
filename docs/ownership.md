@@ -303,7 +303,7 @@ scope ends. Returning only an address string does not keep the socket alive.
 The UDP implementation preserves those original scopes before optimization,
 uses a separate 64-bit logical owner count for descriptors, and owns both fields of a
 received `(Bytes, String)` pair while constructing it. The socket count is aligned
-in the common header. The following TCP/TLS preparation keeps UDP headers the same
+in the common header. TCP/TLS stream handles keep UDP headers the same
 size while giving stream handles a separate TLS field when needed. Failure releases completed
 fields and receive scratch storage. Closing a Linux descriptor wakes its waiting
 tasks and releases its polling records; synchronization after wake does not
@@ -313,16 +313,16 @@ without taking ownership of host sockets.
 
 All six focused native jobs and both shared-runtime WASI regression jobs pass;
 [the UDP report](measurements/udp-ownership-2026-10-16.json) retains the exact
-results and an ARM64 binary inspection. Full combined production acceptance is
-still required. This does not establish whole-language GC removal. Opaque
+results and an ARM64 binary inspection. [PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153)
+supplies the passing full production acceptance. This does not establish whole-language GC removal. Opaque
 function types do not describe their captures, so programs using UDP currently
 preserve possible closure-holder frames conservatively. This may prevent some
 optimizations; there is no zero-cost or throughput claim. Tracing programs retain
 weak finalizers for unproved sharing, while checked ARC must prove ownership and
-exclude tracing from its binary. TCP/TLS ownership, arbitrary retained callbacks
-and mutable cycles remain separate work.
+exclude tracing from its binary. Whole-service ownership, arbitrary retained
+callbacks and mutable cycles remain separate work.
 
-### TCP and TLS socket preparation
+### TCP and TLS socket owners
 
 The next preparation extends logical socket owners to TCP connections and
 listeners. Copies share a handle; explicit close affects every copy, while the
@@ -359,14 +359,40 @@ header: the count is at byte offset 8, and the TLS pointer is at byte offset 16.
 The plain TCP executable requests 16 bytes. These sizes describe the handle,
 not all memory used by the allocator, operating system or OpenSSL. [The TCP/TLS report](measurements/tcp-tls-ownership-2026-10-16.json) records
 passing focused checks on all six native targets and actual WASI shared-runtime
-regressions. Full combined production acceptance is still required.
+regressions. [PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153)
+records full production acceptance on the final combined revision.
 
 ARC executables omit the finalizer-table lookup during socket release because
 they never register these sockets in that table. Tracing programs and unloadable
 libraries keep the lookup so they cannot later finalize reused storage. This
 removes a specific unnecessary operation; it does not remove all count or
-allocator metadata costs. This is preparation, not accepted TCP/TLS support
-without tracing.
+allocator metadata costs. These socket owners support checked ARC; remote
+service graphs still require separate ownership work.
+
+## Releasing long chains
+
+An owner must release a value's children when its last reference disappears.
+For a long sequence, recursively calling one cleanup function per node can
+exhaust the machine stack even when there is enough heap memory. Ordinary lists
+already use a cleanup loop. The compiler now also follows a final owned field
+through records and variants with one nonempty constructor, such as `Option`,
+when that path returns to the starting type. `Option` represents either no value
+or one present value; a tuple can hold both a payload and the next node.
+
+At every wrapper, a remaining alias stops destruction of its children. Releasing
+the final alias later resumes ordinary typed cleanup. The compiler emits these
+steps directly, without a heap work list. This covers the measured record →
+optional value → next record and record → optional value → tuple → next record
+paths. It does not make every branching recursive graph use constant stack space.
+Existing direct list-tail handling and `FWP_FREE=0` count-only behavior remain.
+
+[The six-platform comparison](benchmarks.md#stack-use-when-releasing-wrapped-chains)
+checks up to 16,384 links, retained aliases at each wrapper and complete physical
+reclamation without tracing. Real source programs match the interpreter and
+also pass GC/reuse stress. Full delivery acceptance remains in the handoff.
+Reference-count operations and the chain's allocations still exist. Native remote
+stream caches are opaque runtime objects and still need their own explicit
+ownership before this removes their dependence on tracing.
 
 ## Checked ARC delivery
 

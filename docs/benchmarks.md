@@ -1228,8 +1228,8 @@ The retained reference-counted (ARC) probe binaries use packed double multiplica
 AMD64, but still load/store arithmetic workspace and copy each completed chunk.
 That is evidence of vector instructions, not register-only execution or C/Rust
 parity. The report retains C, binary and disassembly hashes, failure controls and
-the separate Windows library-test repair. Full delivery acceptance remains in the
-[handoff](development-state.md).
+the separate Windows library-test repair. [PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153)
+records the passing combined production delivery.
 
 ## Fixed-size lane calculations against C and Rust
 
@@ -1391,6 +1391,61 @@ through the local guard with `--run`, exact `--head`, `--artifacts`, `--baseline
 and `--output`. The baseline is the passing preceding-representation report above.
 The collector checks jobs, named tests, artifact revisions and matching inputs
 before recording the differences; it does not execute downloaded binaries.
+
+## Stack use when releasing wrapped chains
+
+Releasing a value means giving up its ownership; its final owner also releases
+its children. A record that contains an optional next record is a simple chain.
+Previously, cleanup called one function for the record and another for the
+optional wrapper at every link. The new compiler follows these links in a loop.
+It stops when another owner still needs a node or wrapper.
+
+The [retained comparison](measurements/wrapped-chain-cleanup-2026-10-17.json)
+compares fwp at `70e36523` with `aea7d6df`. Each record owns a five-byte string and
+an optional next record. Both versions free every measured allocation with
+tracing disabled. This compares two fwp cleanup implementations; it measures
+neither elapsed time nor a speed gap against C or Rust.
+
+A small observer samples a stack address whenever a generated cleanup function
+starts. The difference between its highest and lowest addresses shows stack
+growth. It is not total stack usage: zero means the sampled address stayed the
+same, and instrumentation can change frame sizes. These are the O2 byte spans:
+
+| Native target | Previous span, 64 links | Previous span, 1,024 links | Largest new span, through 16,384 links |
+|---|---:|---:|---:|
+| Linux AMD64 | 2,048 | 32,768 | 16 |
+| Linux ARM64 | 3,072 | 49,152 | 32 |
+| macOS ARM64 | 4,096 | 65,536 | 0 |
+| macOS AMD64 | 3,072 | 49,152 | 0 |
+| Windows AMD64 | 4,096 | 65,536 | 0 |
+| Windows ARM64 | 3,072 | 49,152 | 0 |
+
+O1 results and every sample remain in the report. The candidate also checks a
+chain whose optional value holds a tuple of another string and the next record.
+Each shape runs at 64, 1,024 and 16,384 links, retaining either no alias, the root,
+a middle record or a middle wrapper; the tuple case retains a tuple too. All
+memory must be reclaimed after the final alias is released. Restoring the old
+recursive cleanup bodies must exceed the stack bound.
+
+Actual language programs are compared with the raw interpreter, then checked
+under collector stress, reuse verification and count-only storage mode. Static
+inspection of the uninstrumented Linux binaries shows fixed Link-cleanup frames
+of 24 bytes on AMD64 and 64 on ARM64, with backward branches through the chain.
+The AMD64 figure excludes the caller's return address; ARM64 includes its saved
+registers. Calls into ordinary release helpers still have their own frames.
+
+The reports retain source revisions, C files, binaries, instruction excerpts,
+hashes and candidate CPU/compiler details. The baseline did not separately record
+its CPU/compiler metadata; its CI logs and binaries remain available. Construction
+cost, total process memory and cleanup allocation requests are not separately
+measured. This change leaves the node allocations and reference counts in place.
+It does not establish explicit ownership for native remote-stream caches.
+
+Reproduce with the `chain-cleanup` evidence suite and
+[`collect-chain-measurements.py`](../scripts/collect-chain-measurements.py), supplying
+both runs and exact heads, an artifact directory and an output file. Use the local
+guard for collection; builds and native executions belong on CI. The original
+source is preserved by `evidence/wrapped-chain-baseline-20261017`.
 
 ## CI compiler build cost
 

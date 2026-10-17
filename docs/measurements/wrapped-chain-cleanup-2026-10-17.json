@@ -1,0 +1,4063 @@
+{
+  "workload": "Release a native chain: each record owns a five-byte string and an optional next record.",
+  "comparison": "Original fwp recursive destructors versus fwp destruction loops; no C/Rust timing comparison.",
+  "scope": "Stack-address span sampled at generated destructor entries, O1/O2. Instrumentation can change frames. Zero span means no address variation, not zero stack use. Excludes construction, process memory and timing.",
+  "memory_check": "Every case returns the managed allocation budget to its starting value after the last alias is dropped, with zero tracing collections. Allocation requests during cleanup are not separately counted.",
+  "alias_modes": {
+    "0": "unique chain",
+    "1": "retained root",
+    "2": "retained middle record",
+    "3": "retained middle optional wrapper",
+    "4": "retained middle tuple (tuple case only)"
+  },
+  "limits": [
+    "The baseline did not capture CPU/compiler metadata separately; its CI logs, generated C and binaries are retained. Do not infer timing improvements.",
+    "Only the optional case has a measured preceding-version comparison. The tuple case extends correctness and stack-scaling coverage.",
+    "These are ordinary typed values; native remote stream caches still need explicit ownership."
+  ],
+  "before": {
+    "run": "38987418673",
+    "source": "70e36523aa42926683a3d9944a04ebfba943709f",
+    "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38987418673",
+    "hosts": {
+      "windows-11-arm": {
+        "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38987418673/job/117262019203",
+        "log": {
+          "bytes": 40696,
+          "sha256": "3d347bc2abc065d720423f0b8af980e54c35be515a10b1b3ae9744462aa3a7b8"
+        },
+        "shapes": {
+          "optional": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 2048
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 32768
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 3072
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 49152
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 664334,
+                "sha256": "80101f4767bc113e70ed48b7df6ca936567d7aa52f4f2fa27cef203a0dcffc03"
+              },
+              "chain-O1.exe": {
+                "bytes": 112128,
+                "sha256": "f1c5ca320f1b3ca3c3d17cb797672d0b8cf8edf69425fef1afd5fde73d5d0bac"
+              },
+              "chain-O2.exe": {
+                "bytes": 113664,
+                "sha256": "130bf02b4015af5ea09d5b2c912e4a89648622587101e1f4b89794a47eee464d"
+              },
+              "stack-O1.tsv": {
+                "bytes": 19,
+                "sha256": "b058b4bd172350867147511dfebc30dfc7b9964580ee33a5c78a084dd2eaa65c"
+              },
+              "stack-O2.tsv": {
+                "bytes": 19,
+                "sha256": "4492c082f95342cfbb4e40d10e34d37b41435b7e1657ea1cdfd6ce2b44eefdde"
+              }
+            },
+            "environment": null,
+            "binary_observations": null
+          }
+        }
+      },
+      "ubuntu-latest": {
+        "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38987418673/job/117262019372",
+        "log": {
+          "bytes": 36967,
+          "sha256": "51186bef8f006e17ef3825e92de025c5061cdf8e1c98db6c65e412ece8032351"
+        },
+        "shapes": {
+          "optional": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 2048
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 32768
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 2048
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 32768
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 664334,
+                "sha256": "80101f4767bc113e70ed48b7df6ca936567d7aa52f4f2fa27cef203a0dcffc03"
+              },
+              "chain-O1.exe": {
+                "bytes": 65544,
+                "sha256": "5830a45dbbf66d84681f9d8bbd6379a26fb04a7cb40b0b28a1b96ce005a36237"
+              },
+              "chain-O2.exe": {
+                "bytes": 69600,
+                "sha256": "d37d61a7db3d46ca2bee0d3f94610bdb21e50cdcda9a3af3e8f6e587a085468e"
+              },
+              "stack-O1.tsv": {
+                "bytes": 19,
+                "sha256": "b058b4bd172350867147511dfebc30dfc7b9964580ee33a5c78a084dd2eaa65c"
+              },
+              "stack-O2.tsv": {
+                "bytes": 19,
+                "sha256": "b058b4bd172350867147511dfebc30dfc7b9964580ee33a5c78a084dd2eaa65c"
+              }
+            },
+            "environment": null,
+            "binary_observations": {
+              "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "scope": "Static inspection only. The chain probe is instrumented; language executable is not. No downloaded binary was executed.",
+              "observations": [
+                {
+                  "binary": "chain-O2.exe",
+                  "sha256": "d37d61a7db3d46ca2bee0d3f94610bdb21e50cdcda9a3af3e8f6e587a085468e",
+                  "file_header": "\n/private/tmp/fwp-chain-evidence/38987418673/chain-cleanup-ubuntu-latest/chain-O2.exe:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000002380\n",
+                  "functions": [
+                    {
+                      "type": "Link",
+                      "name": "fwp_drop3"
+                    },
+                    {
+                      "type": "Option[Link]",
+                      "name": "fwp_drop2"
+                    }
+                  ],
+                  "assembly_file": "chain-O2.exe.asm",
+                  "entry_excerpts": {
+                    "Option[Link]": [
+                      "",
+                      "    4520:      \tpushq\t%r14",
+                      "    4522:      \tpushq\t%rbx",
+                      "    4523:      \tpushq\t%rax",
+                      "    4524:      \tmovq\t%rdi, %rbx",
+                      "    4527:      \tcallq\t0x4690 <chain_observe>",
+                      "    452c:      \tmovq\t%rbx, %rax",
+                      "    452f:      \tsubq\t0xac9a(%rip), %rax      # 0xf1d0 <fwp_gc+0x1030>",
+                      "    4536:      \tmovq\t0xacbb(%rip), %rcx      # 0xf1f8 <fwp_gc+0x1058>",
+                      "    453d:      \tshlq\t$0x10, %rcx",
+                      "    4541:      \tcmpq\t%rcx, %rax",
+                      "    4544:      \tjae\t0x4615 <fwp_drop2+0xf5>",
+                      "    454a:      \tmovq\t0xacc7(%rip), %rcx      # 0xf218 <fwp_gc+0x1078>",
+                      "    4551:      \tmovq\t%rax, %rdx",
+                      "    4554:      \tshrq\t$0x10, %rdx",
+                      "    4558:      \timulq\t$0x1228, %rdx, %rdx     # imm = 0x1228"
+                    ]
+                  },
+                  "assembly_sha256": "f33f98188bbc646e33e2468ffee5313544659edd959d1b2161b0b056ca5c94be"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "macos-15": {
+        "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38987418673/job/117262019413",
+        "log": {
+          "bytes": 39016,
+          "sha256": "7f74ff74dc5ba3789d9b198504d618b3bd57305fe6b40bd855e7e4cc58e91a7b"
+        },
+        "shapes": {
+          "optional": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 3072
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 49152
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 4096
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 65536
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 664334,
+                "sha256": "80101f4767bc113e70ed48b7df6ca936567d7aa52f4f2fa27cef203a0dcffc03"
+              },
+              "chain-O1.exe": {
+                "bytes": 72240,
+                "sha256": "a58a9df3dd61ed2729b3bf75c2fb0cfdb4b78e3cec65caad4b8a6c75e4a94200"
+              },
+              "chain-O2.exe": {
+                "bytes": 88752,
+                "sha256": "ce1b94a36c67fa23a7a3772dfe705536356df100f48810d35ca6f86cd3ee7035"
+              },
+              "stack-O1.tsv": {
+                "bytes": 19,
+                "sha256": "4492c082f95342cfbb4e40d10e34d37b41435b7e1657ea1cdfd6ce2b44eefdde"
+              },
+              "stack-O2.tsv": {
+                "bytes": 19,
+                "sha256": "562ad4a8ac923285b9da84346cbc92832ada81f91210f5b1ab1e77a227720fdd"
+              }
+            },
+            "environment": null,
+            "binary_observations": null
+          }
+        }
+      },
+      "macos-15-intel": {
+        "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38987418673/job/117262019452",
+        "log": {
+          "bytes": 44894,
+          "sha256": "dc18cd641999f6ce078178f2ae93d76b003663a3a7c5522cdc3cd7f7ffac0aa3"
+        },
+        "shapes": {
+          "optional": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 2048
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 32768
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 3072
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 49152
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 664334,
+                "sha256": "80101f4767bc113e70ed48b7df6ca936567d7aa52f4f2fa27cef203a0dcffc03"
+              },
+              "chain-O1.exe": {
+                "bytes": 51072,
+                "sha256": "3bfbefceaa0176901f10a667a1be3a5ab92633ba41dfc33939a021aba22ae7e7"
+              },
+              "chain-O2.exe": {
+                "bytes": 59264,
+                "sha256": "66998cd414dd9fe26bae637ed7fa5595684a05d9e2e298d2270b02b8760bb1af"
+              },
+              "stack-O1.tsv": {
+                "bytes": 19,
+                "sha256": "b058b4bd172350867147511dfebc30dfc7b9964580ee33a5c78a084dd2eaa65c"
+              },
+              "stack-O2.tsv": {
+                "bytes": 19,
+                "sha256": "4492c082f95342cfbb4e40d10e34d37b41435b7e1657ea1cdfd6ce2b44eefdde"
+              }
+            },
+            "environment": null,
+            "binary_observations": null
+          }
+        }
+      },
+      "ubuntu-24.04-arm": {
+        "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38987418673/job/117262019457",
+        "log": {
+          "bytes": 37010,
+          "sha256": "7a4b2ee419072c81b7e82f2fd51d04efa2d2b4a74481ed423cdc9da10dd71ec0"
+        },
+        "shapes": {
+          "optional": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 3072
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 49152
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 3072
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 49152
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 664334,
+                "sha256": "80101f4767bc113e70ed48b7df6ca936567d7aa52f4f2fa27cef203a0dcffc03"
+              },
+              "chain-O1.exe": {
+                "bytes": 83576,
+                "sha256": "7ddbf65d1196d0047ad59da545da8b2d8770e6da7c1e79affca4794c39fbd7dc"
+              },
+              "chain-O2.exe": {
+                "bytes": 83568,
+                "sha256": "220fcd73670e50b6c8c8f80b3142bbf47774b3a3401e33647ad1193314e41406"
+              },
+              "stack-O1.tsv": {
+                "bytes": 19,
+                "sha256": "4492c082f95342cfbb4e40d10e34d37b41435b7e1657ea1cdfd6ce2b44eefdde"
+              },
+              "stack-O2.tsv": {
+                "bytes": 19,
+                "sha256": "4492c082f95342cfbb4e40d10e34d37b41435b7e1657ea1cdfd6ce2b44eefdde"
+              }
+            },
+            "environment": null,
+            "binary_observations": {
+              "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "scope": "Static inspection only. The chain probe is instrumented; language executable is not. No downloaded binary was executed.",
+              "observations": [
+                {
+                  "binary": "chain-O2.exe",
+                  "sha256": "220fcd73670e50b6c8c8f80b3142bbf47774b3a3401e33647ad1193314e41406",
+                  "file_header": "\n/private/tmp/fwp-chain-evidence/38987418673/chain-cleanup-ubuntu-24.04-arm/chain-O2.exe:\tfile format elf64-littleaarch64\narchitecture: aarch64\nstart address: 0x0000000000001b80\n",
+                  "functions": [
+                    {
+                      "type": "Link",
+                      "name": "fwp_drop3"
+                    },
+                    {
+                      "type": "Option[Link]",
+                      "name": "fwp_drop2"
+                    }
+                  ],
+                  "assembly_file": "chain-O2.exe.asm",
+                  "entry_excerpts": {
+                    "Option[Link]": [
+                      "",
+                      "    3b88:      \tstp\tx29, x30, [sp, #-0x30]!",
+                      "    3b8c:      \tstp\tx22, x21, [sp, #0x10]",
+                      "    3b90:      \tstp\tx20, x19, [sp, #0x20]",
+                      "    3b94:      \tmov\tx29, sp",
+                      "    3b98:      \tmov\tx19, x0",
+                      "    3b9c:      \tbl\t0x3d0c <chain_observe>",
+                      "    3ba0:      \tadrp\tx21, 0x21000 <fwp_gc+0xe48>",
+                      "    3ba4:      \tadd\tx21, x21, #0x1e8",
+                      "    3ba8:      \tldr\tx8, [x21]",
+                      "    3bac:      \tldr\tx9, [x21, #0x28]",
+                      "    3bb0:      \tsub\tx10, x19, x8",
+                      "    3bb4:      \tcmp\tx10, x9, lsl #16",
+                      "    3bb8:      \tb.hs\t0x3c78 <fwp_drop2+0xf0>",
+                      "    3bbc:      \tlsr\tx8, x10, #16",
+                      "    3bc0:      \tmov\tw9, #0x1228             // =4648"
+                    ]
+                  },
+                  "assembly_sha256": "125174a511ed299fc1dab2579f3f4882e0d9267f639f38e4436ab1aeab2a23d3"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "windows-2025": {
+        "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38987418673/job/117262019513",
+        "log": {
+          "bytes": 39908,
+          "sha256": "db54667b257454060f37cba15b3339c5c9e62b63d2de5f7ad4d663a6e077434b"
+        },
+        "shapes": {
+          "optional": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 4096
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 65536
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 4096
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 65536
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 664334,
+                "sha256": "80101f4767bc113e70ed48b7df6ca936567d7aa52f4f2fa27cef203a0dcffc03"
+              },
+              "chain-O1.exe": {
+                "bytes": 117248,
+                "sha256": "391f10ccf135a57709df7a633933b9f11ef36759a718ccfbd457fc3fecfdad89"
+              },
+              "chain-O2.exe": {
+                "bytes": 122368,
+                "sha256": "f334d5b61a05506d325ff4b5b24994e4b6cece6c0883116d0790e168fc97d19d"
+              },
+              "stack-O1.tsv": {
+                "bytes": 19,
+                "sha256": "562ad4a8ac923285b9da84346cbc92832ada81f91210f5b1ab1e77a227720fdd"
+              },
+              "stack-O2.tsv": {
+                "bytes": 19,
+                "sha256": "562ad4a8ac923285b9da84346cbc92832ada81f91210f5b1ab1e77a227720fdd"
+              }
+            },
+            "environment": null,
+            "binary_observations": null
+          }
+        }
+      }
+    }
+  },
+  "after": {
+    "run": "38988093805",
+    "source": "aea7d6df682fc0c067a4533fe019f0bfd0c14b4f",
+    "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38988093805",
+    "hosts": {
+      "windows-11-arm": {
+        "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38988093805/job/117264147925",
+        "log": {
+          "bytes": 43100,
+          "sha256": "cd4172bc35f5a6384284ee2faa23b4ed6d93d261504f7ce61d6466bd7d007293"
+        },
+        "shapes": {
+          "optional": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 667834,
+                "sha256": "fcc7b78677dbd924af888a38173546a9194aa03e0c7789e07a5e0edc65c94c01"
+              },
+              "chain-O1.exe": {
+                "bytes": 115712,
+                "sha256": "acecec7ade5ddb830fd4c7aa05782aa7ef0475501cd075fbbbf2688e9a5e7d0e"
+              },
+              "chain-O2.exe": {
+                "bytes": 117248,
+                "sha256": "962f3db638480eaa1502f78557e392be260a0f6d0298097436bb7aa9cbffbc30"
+              },
+              "stack-O1.tsv": {
+                "bytes": 116,
+                "sha256": "03abbb53538bf841ac7529023a97b88506a5641c9f647be1b5d94a77432bf24b"
+              },
+              "stack-O2.tsv": {
+                "bytes": 104,
+                "sha256": "b33fad04d5bca73c00fa0b3e94f5265dbe8dfa6e9dbe5678f7992ed7451cb4aa"
+              },
+              "language.c": {
+                "bytes": 665319,
+                "sha256": "4534aa58d6c7083feaa6b8fafaaef3134f6638ca058fb7e006bcf14f9d80b123"
+              },
+              "language-O1.exe": {
+                "bytes": 112640,
+                "sha256": "0c342e908481f5bfd90332715b26270331b3f1e9a85467302f4ef7e7ab872e06"
+              },
+              "language-O2.exe": {
+                "bytes": 113664,
+                "sha256": "bc902c56529d01a7735433fbd8b3b2ce6eb7d944572792ce02cfa56f95fa71f0"
+              },
+              "source.txt": {
+                "bytes": 41,
+                "sha256": "24e645031a8fcfaf9877e93fee58ab7f824003165b3a88cb52c06dc00d66b981"
+              },
+              "rust.txt": {
+                "bytes": 195,
+                "sha256": "0400e842b69023487d35975ececcd0edec4f13d84d2fc9a87a2de331b2df2d2f"
+              },
+              "c.txt": {
+                "bytes": 315,
+                "sha256": "4d3c472e39d3bd6b666c82fca19b9eb9d17435eb08b682982b730be282716674"
+              },
+              "cpu.txt": {
+                "bytes": 144,
+                "sha256": "872708849a31923de2e0cf60aacb612bf4587a64983498b3f47f646bfda554e3"
+              }
+            },
+            "environment": {
+              "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+              "c": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: aarch64-w64-windows-gnu\nThread model: posix\nInstalledDir: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin\nConfiguration file: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin/aarch64-w64-windows-gnu.cfg\n",
+              "cpu": "\n\nName                      : Cobalt 100\nArchitecture              : 12\nNumberOfCores             : 4\nNumberOfLogicalProcessors : 4\n\n\n\n"
+            },
+            "binary_observations": null
+          },
+          "tuple": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 4,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 4,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 4,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 4,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 4,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 4,
+                "stack_span_bytes": 0
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 673193,
+                "sha256": "6c434f5ad766db1b5bb2da5d7f27e32a50526ffafbc1d2331d21d3835869f4f6"
+              },
+              "chain-O1.exe": {
+                "bytes": 123392,
+                "sha256": "ad045e3d9ac04e8d88ddc7bfae8f5f33b8ce16e047954eaabfbb467e33a8693b"
+              },
+              "chain-O2.exe": {
+                "bytes": 126464,
+                "sha256": "687b497a8d84841da199b7da81b56b3b772e978f8cc9dfc3564d391f9cf812a0"
+              },
+              "stack-O1.tsv": {
+                "bytes": 145,
+                "sha256": "ab4ee05b1d3e70a46b5abd84d5b0db3ed955d1440e02c8f37373bef162bc206d"
+              },
+              "stack-O2.tsv": {
+                "bytes": 130,
+                "sha256": "d79717b4ad207ed0e6a2b9323802ac324b7a9ce309a1a1185f3026d8884337d4"
+              },
+              "language.c": {
+                "bytes": 670624,
+                "sha256": "e150dc9ed26e6a4d6a95b34cc4f803920e1ae90c93a78980f30a2e46515fb224"
+              },
+              "language-O1.exe": {
+                "bytes": 121344,
+                "sha256": "b48d761f1459e275d1dd9c37632b934a77dd6fa2be800159be695add871a71e1"
+              },
+              "language-O2.exe": {
+                "bytes": 122880,
+                "sha256": "1a717536017e89c0d2e93ff7c06d7b9f51ed32751685a054c9ec749e31ab8fda"
+              },
+              "source.txt": {
+                "bytes": 41,
+                "sha256": "24e645031a8fcfaf9877e93fee58ab7f824003165b3a88cb52c06dc00d66b981"
+              },
+              "rust.txt": {
+                "bytes": 195,
+                "sha256": "0400e842b69023487d35975ececcd0edec4f13d84d2fc9a87a2de331b2df2d2f"
+              },
+              "c.txt": {
+                "bytes": 315,
+                "sha256": "4d3c472e39d3bd6b666c82fca19b9eb9d17435eb08b682982b730be282716674"
+              },
+              "cpu.txt": {
+                "bytes": 144,
+                "sha256": "872708849a31923de2e0cf60aacb612bf4587a64983498b3f47f646bfda554e3"
+              }
+            },
+            "environment": {
+              "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+              "c": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: aarch64-w64-windows-gnu\nThread model: posix\nInstalledDir: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin\nConfiguration file: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin/aarch64-w64-windows-gnu.cfg\n",
+              "cpu": "\n\nName                      : Cobalt 100\nArchitecture              : 12\nNumberOfCores             : 4\nNumberOfLogicalProcessors : 4\n\n\n\n"
+            },
+            "binary_observations": null
+          }
+        }
+      },
+      "windows-2025": {
+        "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38988093805/job/117264148095",
+        "log": {
+          "bytes": 41941,
+          "sha256": "46c1220158e2774df6264f07d845264af883438195150fff7e8feb137c364a17"
+        },
+        "shapes": {
+          "optional": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 667834,
+                "sha256": "fcc7b78677dbd924af888a38173546a9194aa03e0c7789e07a5e0edc65c94c01"
+              },
+              "chain-O1.exe": {
+                "bytes": 120832,
+                "sha256": "b21e0a13e1423b496f379a13af894ac6eb180b260688e85037614ae13c590ae1"
+              },
+              "chain-O2.exe": {
+                "bytes": 125952,
+                "sha256": "7fdd0792e6c530f2d88a15840dfbba0a4b9dcd72c5e85d8ea28b75a0d78ee69f"
+              },
+              "stack-O1.tsv": {
+                "bytes": 116,
+                "sha256": "cc402f993f54c15ce887533777c202819b99551960c7ad4a8db2f73f61481692"
+              },
+              "stack-O2.tsv": {
+                "bytes": 104,
+                "sha256": "b33fad04d5bca73c00fa0b3e94f5265dbe8dfa6e9dbe5678f7992ed7451cb4aa"
+              },
+              "language.c": {
+                "bytes": 665319,
+                "sha256": "4534aa58d6c7083feaa6b8fafaaef3134f6638ca058fb7e006bcf14f9d80b123"
+              },
+              "language-O1.exe": {
+                "bytes": 117760,
+                "sha256": "0566120a20b5eafe7848af1fb55d0b38fc5d93c16dcd6b820ef56f54380d0494"
+              },
+              "language-O2.exe": {
+                "bytes": 121856,
+                "sha256": "773595cc6bb5e228357d4fd2016c727f7fc398d58db61029cee5887ea18ef3e5"
+              },
+              "source.txt": {
+                "bytes": 41,
+                "sha256": "24e645031a8fcfaf9877e93fee58ab7f824003165b3a88cb52c06dc00d66b981"
+              },
+              "rust.txt": {
+                "bytes": 194,
+                "sha256": "341fed434cf52bd9ba5ab2f3507dbd943a2062212028574e529fc3e7e5ecd7a8"
+              },
+              "c.txt": {
+                "bytes": 311,
+                "sha256": "3ee375988587e64c0e2aef4495da72f8c708b03583a27153b666c33f4d218c3c"
+              },
+              "cpu.txt": {
+                "bytes": 180,
+                "sha256": "b7abddf0593d5c6953701f94f96dc8cf45a10d7fbc3a6cda38c1b3adcb0e759e"
+              }
+            },
+            "environment": {
+              "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+              "c": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin\nConfiguration file: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin/x86_64-w64-windows-gnu.cfg\n",
+              "cpu": "\n\nName                      : AMD EPYC 7763 64-Core Processor                \nArchitecture              : 9\nNumberOfCores             : 2\nNumberOfLogicalProcessors : 4\n\n\n\n"
+            },
+            "binary_observations": null
+          },
+          "tuple": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 4,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 4,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 4,
+                "stack_span_bytes": 48
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 4,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 4,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 4,
+                "stack_span_bytes": 0
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 673193,
+                "sha256": "6c434f5ad766db1b5bb2da5d7f27e32a50526ffafbc1d2331d21d3835869f4f6"
+              },
+              "chain-O1.exe": {
+                "bytes": 130048,
+                "sha256": "fd535ddf71834357b1fb83703ea2bc09f6d97f30aa2d8bf4cf88181fccea54ae"
+              },
+              "chain-O2.exe": {
+                "bytes": 136704,
+                "sha256": "1d8e94222fb67bd746c176296dbf72e0480383855e7ec797c7f3d30152dc6af3"
+              },
+              "stack-O1.tsv": {
+                "bytes": 145,
+                "sha256": "854bc8c802c24e4b9288a0a258b09e5bf4e0feb5b4e3fe3e28993d4e18be908b"
+              },
+              "stack-O2.tsv": {
+                "bytes": 130,
+                "sha256": "d79717b4ad207ed0e6a2b9323802ac324b7a9ce309a1a1185f3026d8884337d4"
+              },
+              "language.c": {
+                "bytes": 670624,
+                "sha256": "e150dc9ed26e6a4d6a95b34cc4f803920e1ae90c93a78980f30a2e46515fb224"
+              },
+              "language-O1.exe": {
+                "bytes": 128000,
+                "sha256": "27d37897547a18654e0bf6d46d82950f235e5aeec72f47a0e106c37456866d01"
+              },
+              "language-O2.exe": {
+                "bytes": 132096,
+                "sha256": "71f8d633a12ff282c9ac59148eca9942592f45b5a4287c7a22f2d64ee3660385"
+              },
+              "source.txt": {
+                "bytes": 41,
+                "sha256": "24e645031a8fcfaf9877e93fee58ab7f824003165b3a88cb52c06dc00d66b981"
+              },
+              "rust.txt": {
+                "bytes": 194,
+                "sha256": "341fed434cf52bd9ba5ab2f3507dbd943a2062212028574e529fc3e7e5ecd7a8"
+              },
+              "c.txt": {
+                "bytes": 311,
+                "sha256": "3ee375988587e64c0e2aef4495da72f8c708b03583a27153b666c33f4d218c3c"
+              },
+              "cpu.txt": {
+                "bytes": 180,
+                "sha256": "b7abddf0593d5c6953701f94f96dc8cf45a10d7fbc3a6cda38c1b3adcb0e759e"
+              }
+            },
+            "environment": {
+              "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+              "c": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin\nConfiguration file: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin/x86_64-w64-windows-gnu.cfg\n",
+              "cpu": "\n\nName                      : AMD EPYC 7763 64-Core Processor                \nArchitecture              : 9\nNumberOfCores             : 2\nNumberOfLogicalProcessors : 4\n\n\n\n"
+            },
+            "binary_observations": null
+          }
+        }
+      },
+      "ubuntu-latest": {
+        "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38988093805/job/117264148107",
+        "log": {
+          "bytes": 38973,
+          "sha256": "3ba69f3d3d55d06ff8ec6772cff84ad26ca163002c7d55367b24539bf6cf40a3"
+        },
+        "shapes": {
+          "optional": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 667834,
+                "sha256": "fcc7b78677dbd924af888a38173546a9194aa03e0c7789e07a5e0edc65c94c01"
+              },
+              "chain-O1.exe": {
+                "bytes": 74536,
+                "sha256": "30f11ec4e5d1102b2a340bb2473118868c864f2a2c7d36a862444e3a4fed8d50"
+              },
+              "chain-O2.exe": {
+                "bytes": 74496,
+                "sha256": "39bcb882b2f7271ae5881691054ea5907f8f6404a7fce97bd4d4e522a1750e2f"
+              },
+              "stack-O1.tsv": {
+                "bytes": 116,
+                "sha256": "03abbb53538bf841ac7529023a97b88506a5641c9f647be1b5d94a77432bf24b"
+              },
+              "stack-O2.tsv": {
+                "bytes": 116,
+                "sha256": "03abbb53538bf841ac7529023a97b88506a5641c9f647be1b5d94a77432bf24b"
+              },
+              "language.c": {
+                "bytes": 665319,
+                "sha256": "4534aa58d6c7083feaa6b8fafaaef3134f6638ca058fb7e006bcf14f9d80b123"
+              },
+              "language-O1.exe": {
+                "bytes": 74320,
+                "sha256": "4e3d3c3100103f4979a5c84c2d75315f68c546e2569a9bd133eb97832944bbc4"
+              },
+              "language-O2.exe": {
+                "bytes": 74280,
+                "sha256": "8e59c57df27d5a5b726e965f03e856e756a2a8430fa09fce006b90134ef795ee"
+              },
+              "source.txt": {
+                "bytes": 41,
+                "sha256": "24e645031a8fcfaf9877e93fee58ab7f824003165b3a88cb52c06dc00d66b981"
+              },
+              "rust.txt": {
+                "bytes": 196,
+                "sha256": "f22d5e4e9ced367e774ce5bc140d9e6b1235c1882fec80d011044851f3ae6369"
+              },
+              "c.txt": {
+                "bytes": 110,
+                "sha256": "3635b8631d4ebcd8ed7586f4e01e7a6b44407de9d38db6e01daca9c242ed7a53"
+              },
+              "cpu.txt": {
+                "bytes": 3339,
+                "sha256": "e2df535c811efa12c233d27957938e328c559882432955ed0a31588554b3338b"
+              }
+            },
+            "environment": {
+              "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+              "c": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+              "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.29\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n"
+            },
+            "binary_observations": {
+              "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "scope": "Static inspection only. The chain probe is instrumented; language executable is not. No downloaded binary was executed.",
+              "observations": [
+                {
+                  "binary": "chain-O2.exe",
+                  "sha256": "39bcb882b2f7271ae5881691054ea5907f8f6404a7fce97bd4d4e522a1750e2f",
+                  "file_header": "\n/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-ubuntu-latest/optional/chain-O2.exe:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000002380\n",
+                  "functions": [
+                    {
+                      "type": "Link",
+                      "name": "fwp_drop7"
+                    },
+                    {
+                      "type": "Option[Link]",
+                      "name": "fwp_drop4"
+                    }
+                  ],
+                  "assembly_file": "chain-O2.exe.asm",
+                  "entry_excerpts": {
+                    "Link": [
+                      "",
+                      "    3310:      \tpushq\t%r14",
+                      "    3312:      \tpushq\t%rbx",
+                      "    3313:      \tpushq\t%rax",
+                      "    3314:      \tmovq\t%rdi, %rbx",
+                      "    3317:      \tcallq\t0x47c0 <chain_observe>",
+                      "    331c:      \tmovq\t%rbx, %rax",
+                      "    331f:      \tsubq\t0xbeaa(%rip), %rax      # 0xf1d0 <fwp_gc+0x1030>",
+                      "    3326:      \tmovq\t0xbecb(%rip), %rcx      # 0xf1f8 <fwp_gc+0x1058>",
+                      "    332d:      \tshlq\t$0x10, %rcx",
+                      "    3331:      \tcmpq\t%rcx, %rax",
+                      "    3334:      \tjae\t0x3455 <fwp_drop7+0x145>",
+                      "    333a:      \tmovq\t0xbed7(%rip), %rcx      # 0xf218 <fwp_gc+0x1078>",
+                      "    3341:      \tmovq\t%rax, %rdx",
+                      "    3344:      \tshrq\t$0x10, %rdx",
+                      "    3348:      \timulq\t$0x1228, %rdx, %rdx     # imm = 0x1228"
+                    ],
+                    "Option[Link]": [
+                      "",
+                      "    3470:      \tpushq\t%r14",
+                      "    3472:      \tpushq\t%rbx",
+                      "    3473:      \tpushq\t%rax",
+                      "    3474:      \tmovq\t%rdi, %rbx",
+                      "    3477:      \tcallq\t0x47c0 <chain_observe>",
+                      "    347c:      \tmovq\t%rbx, %rax",
+                      "    347f:      \tsubq\t0xbd4a(%rip), %rax      # 0xf1d0 <fwp_gc+0x1030>",
+                      "    3486:      \tmovq\t0xbd6b(%rip), %rcx      # 0xf1f8 <fwp_gc+0x1058>",
+                      "    348d:      \tshlq\t$0x10, %rcx",
+                      "    3491:      \tcmpq\t%rcx, %rax",
+                      "    3494:      \tjae\t0x35b9 <fwp_drop4+0x149>",
+                      "    349a:      \tmovq\t0xbd77(%rip), %rcx      # 0xf218 <fwp_gc+0x1078>",
+                      "    34a1:      \tmovq\t%rax, %rdx",
+                      "    34a4:      \tshrq\t$0x10, %rdx",
+                      "    34a8:      \timulq\t$0x1228, %rdx, %rdx     # imm = 0x1228"
+                    ]
+                  },
+                  "assembly_sha256": "ff09af750e4d713f5cae7ef0acc0c6ff9668eb38f41fa987537d2d8624c63021"
+                },
+                {
+                  "binary": "language-O2.exe",
+                  "sha256": "8e59c57df27d5a5b726e965f03e856e756a2a8430fa09fce006b90134ef795ee",
+                  "file_header": "\n/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-ubuntu-latest/optional/language-O2.exe:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000002370\n",
+                  "functions": [
+                    {
+                      "type": "Link",
+                      "name": "fwp_drop7"
+                    },
+                    {
+                      "type": "Option[Link]",
+                      "name": "fwp_drop4"
+                    }
+                  ],
+                  "assembly_file": "language-O2.exe.asm",
+                  "entry_excerpts": {
+                    "Link": [
+                      "",
+                      "    5130:      \tpushq\t%r14",
+                      "    5132:      \tpushq\t%rbx",
+                      "    5133:      \tpushq\t%rax",
+                      "    5134:      \tmovq\t0xa08d(%rip), %rcx      # 0xf1c8 <fwp_gc+0x1030>",
+                      "    513b:      \tmovq\t%rdi, %rax",
+                      "    513e:      \tsubq\t%rcx, %rax",
+                      "    5141:      \tmovq\t0xa0a8(%rip), %rdx      # 0xf1f0 <fwp_gc+0x1058>",
+                      "    5148:      \tmovq\t%rdx, %rsi",
+                      "    514b:      \tshlq\t$0x10, %rsi",
+                      "    514f:      \tcmpq\t%rsi, %rax",
+                      "    5152:      \tjae\t0x5328 <fwp_drop7+0x1f8>",
+                      "    5158:      \tmovq\t0xa0b1(%rip), %rsi      # 0xf210 <fwp_gc+0x1078>",
+                      "    515f:      \tmovq\t%rax, %r8",
+                      "    5162:      \tshrq\t$0x10, %r8",
+                      "    5166:      \timulq\t$0x1228, %r8, %r8       # imm = 0x1228"
+                    ],
+                    "Option[Link]": [
+                      "",
+                      "    4160:      \tpushq\t%r14",
+                      "    4162:      \tpushq\t%rbx",
+                      "    4163:      \tpushq\t%rax",
+                      "    4164:      \tmovq\t%rdi, %rax",
+                      "    4167:      \tsubq\t0xb05a(%rip), %rax      # 0xf1c8 <fwp_gc+0x1030>",
+                      "    416e:      \tmovq\t0xb07b(%rip), %rcx      # 0xf1f0 <fwp_gc+0x1058>",
+                      "    4175:      \tshlq\t$0x10, %rcx",
+                      "    4179:      \tcmpq\t%rcx, %rax",
+                      "    417c:      \tjae\t0x4344 <fwp_drop4+0x1e4>",
+                      "    4182:      \tmovq\t0xb087(%rip), %rcx      # 0xf210 <fwp_gc+0x1078>",
+                      "    4189:      \tmovq\t%rax, %rdx",
+                      "    418c:      \tshrq\t$0x10, %rdx",
+                      "    4190:      \timulq\t$0x1228, %rdx, %rdx     # imm = 0x1228",
+                      "    4197:      \tmovzbl\t(%rcx,%rdx), %esi",
+                      "    419b:      \tandq\t$0xffff, %rax           # imm = 0xFFFF"
+                    ]
+                  },
+                  "assembly_sha256": "20767106995cba92b86c3b5d283ec09c23dfe45c6fc0d9f592aaf751cbd12cee"
+                }
+              ]
+            }
+          },
+          "tuple": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 4,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 4,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 4,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 4,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 4,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 16
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 4,
+                "stack_span_bytes": 16
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 673193,
+                "sha256": "6c434f5ad766db1b5bb2da5d7f27e32a50526ffafbc1d2331d21d3835869f4f6"
+              },
+              "chain-O1.exe": {
+                "bytes": 83776,
+                "sha256": "8b8acfa6a88aec535c814f0c081676d16f4da2b556c58a95d10f02b38cb86aa5"
+              },
+              "chain-O2.exe": {
+                "bytes": 87832,
+                "sha256": "61cd8e6ab287d314ed083274bfb92a6a574caf0c36e2dc22be6b2e6241b1cf93"
+              },
+              "stack-O1.tsv": {
+                "bytes": 145,
+                "sha256": "ab4ee05b1d3e70a46b5abd84d5b0db3ed955d1440e02c8f37373bef162bc206d"
+              },
+              "stack-O2.tsv": {
+                "bytes": 145,
+                "sha256": "ab4ee05b1d3e70a46b5abd84d5b0db3ed955d1440e02c8f37373bef162bc206d"
+              },
+              "language.c": {
+                "bytes": 670624,
+                "sha256": "e150dc9ed26e6a4d6a95b34cc4f803920e1ae90c93a78980f30a2e46515fb224"
+              },
+              "language-O1.exe": {
+                "bytes": 83560,
+                "sha256": "68d9dbb3b7ad6754c08edd0588ac65d657fd352ca3866045879dac7c0956b879"
+              },
+              "language-O2.exe": {
+                "bytes": 87608,
+                "sha256": "24d21d908a9bef405e5d0967408355090bfdd3682d0424f307c9ab30725b2912"
+              },
+              "source.txt": {
+                "bytes": 41,
+                "sha256": "24e645031a8fcfaf9877e93fee58ab7f824003165b3a88cb52c06dc00d66b981"
+              },
+              "rust.txt": {
+                "bytes": 196,
+                "sha256": "f22d5e4e9ced367e774ce5bc140d9e6b1235c1882fec80d011044851f3ae6369"
+              },
+              "c.txt": {
+                "bytes": 110,
+                "sha256": "3635b8631d4ebcd8ed7586f4e01e7a6b44407de9d38db6e01daca9c242ed7a53"
+              },
+              "cpu.txt": {
+                "bytes": 3339,
+                "sha256": "e2df535c811efa12c233d27957938e328c559882432955ed0a31588554b3338b"
+              }
+            },
+            "environment": {
+              "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+              "c": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+              "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.29\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n"
+            },
+            "binary_observations": {
+              "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "scope": "Static inspection only. The chain probe is instrumented; language executable is not. No downloaded binary was executed.",
+              "observations": [
+                {
+                  "binary": "chain-O2.exe",
+                  "sha256": "61cd8e6ab287d314ed083274bfb92a6a574caf0c36e2dc22be6b2e6241b1cf93",
+                  "file_header": "\n/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-ubuntu-latest/tuple/chain-O2.exe:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000003350\n",
+                  "functions": [
+                    {
+                      "type": "Link",
+                      "name": "fwp_drop11"
+                    },
+                    {
+                      "type": "Option[Link]",
+                      "name": "fwp_drop10"
+                    },
+                    {
+                      "type": "Option[(String, Link)]",
+                      "name": "fwp_drop5"
+                    },
+                    {
+                      "type": "(String, Link)",
+                      "name": "fwp_drop12"
+                    }
+                  ],
+                  "assembly_file": "chain-O2.exe.asm",
+                  "entry_excerpts": {
+                    "Link": [
+                      "",
+                      "    43f0:      \tpushq\t%r15",
+                      "    43f2:      \tpushq\t%r14",
+                      "    43f4:      \tpushq\t%rbx",
+                      "    43f5:      \tmovq\t%rdi, %rbx",
+                      "    43f8:      \tcallq\t0x6e50 <chain_observe>",
+                      "    43fd:      \tmovq\t%rbx, %rax",
+                      "    4400:      \tsubq\t0xddc9(%rip), %rax      # 0x121d0 <fwp_gc+0x1030>",
+                      "    4407:      \tmovq\t0xddea(%rip), %rcx      # 0x121f8 <fwp_gc+0x1058>",
+                      "    440e:      \tshlq\t$0x10, %rcx",
+                      "    4412:      \tcmpq\t%rcx, %rax",
+                      "    4415:      \tjae\t0x45d9 <fwp_drop11+0x1e9>",
+                      "    441b:      \tmovq\t0xddf6(%rip), %rcx      # 0x12218 <fwp_gc+0x1078>",
+                      "    4422:      \tmovq\t%rax, %rdx",
+                      "    4425:      \tshrq\t$0x10, %rdx",
+                      "    4429:      \timulq\t$0x1228, %rdx, %rdx     # imm = 0x1228"
+                    ],
+                    "Option[Link]": [
+                      "",
+                      "    8b90:      \tpushq\t%rbx",
+                      "    8b91:      \tmovq\t%rdi, %rbx",
+                      "    8b94:      \tcallq\t0x6e50 <chain_observe>",
+                      "    8b99:      \tmovq\t%rbx, %rax",
+                      "    8b9c:      \tsubq\t0x962d(%rip), %rax      # 0x121d0 <fwp_gc+0x1030>",
+                      "    8ba3:      \tmovq\t0x964e(%rip), %rcx      # 0x121f8 <fwp_gc+0x1058>",
+                      "    8baa:      \tshlq\t$0x10, %rcx",
+                      "    8bae:      \tcmpq\t%rcx, %rax",
+                      "    8bb1:      \tjae\t0x8c31 <fwp_drop10+0xa1>",
+                      "    8bb3:      \tmovq\t0x965e(%rip), %rcx      # 0x12218 <fwp_gc+0x1078>",
+                      "    8bba:      \tmovq\t%rax, %rdx",
+                      "    8bbd:      \tshrq\t$0x10, %rdx",
+                      "    8bc1:      \timulq\t$0x1228, %rdx, %rdx     # imm = 0x1228",
+                      "    8bc8:      \tmovzbl\t(%rcx,%rdx), %esi",
+                      "    8bcc:      \tandq\t$0xffff, %rax           # imm = 0xFFFF"
+                    ],
+                    "Option[(String, Link)]": [
+                      "",
+                      "    47f0:      \tpushq\t%r15",
+                      "    47f2:      \tpushq\t%r14",
+                      "    47f4:      \tpushq\t%rbx",
+                      "    47f5:      \tmovq\t%rdi, %rbx",
+                      "    47f8:      \tcallq\t0x6e50 <chain_observe>",
+                      "    47fd:      \tmovq\t%rbx, %rax",
+                      "    4800:      \tsubq\t0xd9c9(%rip), %rax      # 0x121d0 <fwp_gc+0x1030>",
+                      "    4807:      \tmovq\t0xd9ea(%rip), %rcx      # 0x121f8 <fwp_gc+0x1058>",
+                      "    480e:      \tshlq\t$0x10, %rcx",
+                      "    4812:      \tcmpq\t%rcx, %rax",
+                      "    4815:      \tjae\t0x49d9 <fwp_drop5+0x1e9>",
+                      "    481b:      \tmovq\t0xd9f6(%rip), %rcx      # 0x12218 <fwp_gc+0x1078>",
+                      "    4822:      \tmovq\t%rax, %rdx",
+                      "    4825:      \tshrq\t$0x10, %rdx",
+                      "    4829:      \timulq\t$0x1228, %rdx, %rdx     # imm = 0x1228"
+                    ],
+                    "(String, Link)": [
+                      "",
+                      "    45f0:      \tpushq\t%r15",
+                      "    45f2:      \tpushq\t%r14",
+                      "    45f4:      \tpushq\t%rbx",
+                      "    45f5:      \tmovq\t%rdi, %rbx",
+                      "    45f8:      \tcallq\t0x6e50 <chain_observe>",
+                      "    45fd:      \tmovq\t%rbx, %rax",
+                      "    4600:      \tsubq\t0xdbc9(%rip), %rax      # 0x121d0 <fwp_gc+0x1030>",
+                      "    4607:      \tmovq\t0xdbea(%rip), %rcx      # 0x121f8 <fwp_gc+0x1058>",
+                      "    460e:      \tshlq\t$0x10, %rcx",
+                      "    4612:      \tcmpq\t%rcx, %rax",
+                      "    4615:      \tjae\t0x47d5 <fwp_drop12+0x1e5>",
+                      "    461b:      \tmovq\t0xdbf6(%rip), %rcx      # 0x12218 <fwp_gc+0x1078>",
+                      "    4622:      \tmovq\t%rax, %rdx",
+                      "    4625:      \tshrq\t$0x10, %rdx",
+                      "    4629:      \timulq\t$0x1228, %rdx, %rdx     # imm = 0x1228"
+                    ]
+                  },
+                  "assembly_sha256": "b1436d303f30e6e3e991d10b8272c046221f244907d7fa43ff8efffc96c56c4a"
+                },
+                {
+                  "binary": "language-O2.exe",
+                  "sha256": "24d21d908a9bef405e5d0967408355090bfdd3682d0424f307c9ab30725b2912",
+                  "file_header": "\n/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-ubuntu-latest/tuple/language-O2.exe:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000003340\n",
+                  "functions": [
+                    {
+                      "type": "Link",
+                      "name": "fwp_drop11"
+                    },
+                    {
+                      "type": "Option[Link]",
+                      "name": "fwp_drop10"
+                    },
+                    {
+                      "type": "Option[(String, Link)]",
+                      "name": "fwp_drop5"
+                    },
+                    {
+                      "type": "(String, Link)",
+                      "name": "fwp_drop12"
+                    }
+                  ],
+                  "assembly_file": "language-O2.exe.asm",
+                  "entry_excerpts": {
+                    "Link": [
+                      "",
+                      "    7f90:      \tpushq\t%r14",
+                      "    7f92:      \tpushq\t%rbx",
+                      "    7f93:      \tpushq\t%rax",
+                      "    7f94:      \tmovq\t0xa22d(%rip), %rcx      # 0x121c8 <fwp_gc+0x1030>",
+                      "    7f9b:      \tmovq\t%rdi, %rax",
+                      "    7f9e:      \tsubq\t%rcx, %rax",
+                      "    7fa1:      \tmovq\t0xa248(%rip), %rdx      # 0x121f0 <fwp_gc+0x1058>",
+                      "    7fa8:      \tmovq\t%rdx, %rsi",
+                      "    7fab:      \tshlq\t$0x10, %rsi",
+                      "    7faf:      \tcmpq\t%rsi, %rax",
+                      "    7fb2:      \tjae\t0x82c1 <fwp_drop11+0x331>",
+                      "    7fb8:      \tmovq\t0xa251(%rip), %rsi      # 0x12210 <fwp_gc+0x1078>",
+                      "    7fbf:      \tmovq\t%rax, %r8",
+                      "    7fc2:      \tshrq\t$0x10, %r8",
+                      "    7fc6:      \timulq\t$0x1228, %r8, %r8       # imm = 0x1228"
+                    ],
+                    "Option[Link]": [
+                      "",
+                      "    7ee0:      \tmovq\t%rdi, %rax",
+                      "    7ee3:      \tsubq\t0xa2de(%rip), %rax      # 0x121c8 <fwp_gc+0x1030>",
+                      "    7eea:      \tmovq\t0xa2ff(%rip), %rcx      # 0x121f0 <fwp_gc+0x1058>",
+                      "    7ef1:      \tshlq\t$0x10, %rcx",
+                      "    7ef5:      \tcmpq\t%rcx, %rax",
+                      "    7ef8:      \tjae\t0x7f81 <fwp_drop10+0xa1>",
+                      "    7efe:      \tmovq\t0xa30b(%rip), %rcx      # 0x12210 <fwp_gc+0x1078>",
+                      "    7f05:      \tmovq\t%rax, %rdx",
+                      "    7f08:      \tshrq\t$0x10, %rdx",
+                      "    7f0c:      \timulq\t$0x1228, %rdx, %rdx     # imm = 0x1228",
+                      "    7f13:      \tmovzbl\t(%rcx,%rdx), %esi",
+                      "    7f17:      \tandq\t$0xffff, %rax           # imm = 0xFFFF",
+                      "    7f1d:      \tjne\t0x7f31 <fwp_drop10+0x51>",
+                      "    7f1f:      \tcmpb\t$0x2, %sil",
+                      "    7f23:      \tjne\t0x7f31 <fwp_drop10+0x51>"
+                    ],
+                    "Option[(String, Link)]": [
+                      "",
+                      "    8790:      \tpushq\t%r14",
+                      "    8792:      \tpushq\t%rbx",
+                      "    8793:      \tpushq\t%rax",
+                      "    8794:      \tmovq\t%rdi, %rax",
+                      "    8797:      \tsubq\t0x9a2a(%rip), %rax      # 0x121c8 <fwp_gc+0x1030>",
+                      "    879e:      \tmovq\t0x9a4b(%rip), %rcx      # 0x121f0 <fwp_gc+0x1058>",
+                      "    87a5:      \tshlq\t$0x10, %rcx",
+                      "    87a9:      \tcmpq\t%rcx, %rax",
+                      "    87ac:      \tjae\t0x8a98 <fwp_drop5+0x308>",
+                      "    87b2:      \tmovq\t0x9a57(%rip), %rcx      # 0x12210 <fwp_gc+0x1078>",
+                      "    87b9:      \tmovq\t%rax, %rdx",
+                      "    87bc:      \tshrq\t$0x10, %rdx",
+                      "    87c0:      \timulq\t$0x1228, %rdx, %rdx     # imm = 0x1228",
+                      "    87c7:      \tmovzbl\t(%rcx,%rdx), %esi",
+                      "    87cb:      \tandq\t$0xffff, %rax           # imm = 0xFFFF"
+                    ],
+                    "(String, Link)": [
+                      "",
+                      "    9330:      \tpushq\t%r14",
+                      "    9332:      \tpushq\t%rbx",
+                      "    9333:      \tpushq\t%rax",
+                      "    9334:      \tmovq\t0x8e8d(%rip), %rcx      # 0x121c8 <fwp_gc+0x1030>",
+                      "    933b:      \tmovq\t%rdi, %rax",
+                      "    933e:      \tsubq\t%rcx, %rax",
+                      "    9341:      \tmovq\t0x8ea8(%rip), %rdx      # 0x121f0 <fwp_gc+0x1058>",
+                      "    9348:      \tmovq\t%rdx, %rsi",
+                      "    934b:      \tshlq\t$0x10, %rsi",
+                      "    934f:      \tcmpq\t%rsi, %rax",
+                      "    9352:      \tjae\t0x9660 <fwp_drop12+0x330>",
+                      "    9358:      \tmovq\t0x8eb1(%rip), %rsi      # 0x12210 <fwp_gc+0x1078>",
+                      "    935f:      \tmovq\t%rax, %r8",
+                      "    9362:      \tshrq\t$0x10, %r8",
+                      "    9366:      \timulq\t$0x1228, %r8, %r8       # imm = 0x1228"
+                    ]
+                  },
+                  "assembly_sha256": "4ade40921a9343514cc561c33236d73bab458842e7ded98b92c563ecaca75dbd"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "macos-15": {
+        "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38988093805/job/117264148113",
+        "log": {
+          "bytes": 40990,
+          "sha256": "cb88a1df44399a7fef84b31631fe35bdc64dd705ca0e4a1038699a1c7532e311"
+        },
+        "shapes": {
+          "optional": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 667834,
+                "sha256": "fcc7b78677dbd924af888a38173546a9194aa03e0c7789e07a5e0edc65c94c01"
+              },
+              "chain-O1.exe": {
+                "bytes": 89328,
+                "sha256": "cfcc0155e7c2c6403a13abf106767618c7c96c6afe033a85fc15f1555a0a9654"
+              },
+              "chain-O2.exe": {
+                "bytes": 89328,
+                "sha256": "34dcef7f2979b9bcf893c26d07ac88db78144821d4aae2532690ef32a86251c0"
+              },
+              "stack-O1.tsv": {
+                "bytes": 116,
+                "sha256": "db0bbbcfc03c0f2d362498d71ca4d7e6217f1a300cf9a2e6b6e938601ebdb7f0"
+              },
+              "stack-O2.tsv": {
+                "bytes": 104,
+                "sha256": "b33fad04d5bca73c00fa0b3e94f5265dbe8dfa6e9dbe5678f7992ed7451cb4aa"
+              },
+              "language.c": {
+                "bytes": 665319,
+                "sha256": "4534aa58d6c7083feaa6b8fafaaef3134f6638ca058fb7e006bcf14f9d80b123"
+              },
+              "language-O1.exe": {
+                "bytes": 72576,
+                "sha256": "ac306566119035951d8736e748398fc0e69c2917468d9d7faab83521e1f139b2"
+              },
+              "language-O2.exe": {
+                "bytes": 89088,
+                "sha256": "c2959d5e3bb9091be27644fe883d0ae849460f29062356b28e7f28ae53710f17"
+              },
+              "source.txt": {
+                "bytes": 41,
+                "sha256": "24e645031a8fcfaf9877e93fee58ab7f824003165b3a88cb52c06dc00d66b981"
+              },
+              "rust.txt": {
+                "bytes": 192,
+                "sha256": "e003fd3d385fcd0de16bc6b049124efb20207831dd810fd4ab39ff079bbb12a5"
+              },
+              "c.txt": {
+                "bytes": 206,
+                "sha256": "df12815703ce3452ab4bd51ecbea4cf8155246b94b5b15113a580ff6aec2befd"
+              },
+              "cpu.txt": {
+                "bytes": 190,
+                "sha256": "c8a8ebf53a152d1eb149ef7fe68b192b46e1f65222da0fddeea2b4d3b18e81a0"
+              }
+            },
+            "environment": {
+              "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+              "c": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+              "cpu": "machdep.cpu.cores_per_package: 3\nmachdep.cpu.core_count: 3\nmachdep.cpu.logical_per_package: 3\nmachdep.cpu.thread_count: 3\nmachdep.cpu.brand_string: Apple M1 (Virtual)\nhw.memsize: 7516192768\n"
+            },
+            "binary_observations": {
+              "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "scope": "Static inspection only. The chain probe is instrumented; language executable is not. No downloaded binary was executed.",
+              "observations": [
+                {
+                  "binary": "chain-O2.exe",
+                  "sha256": "34dcef7f2979b9bcf893c26d07ac88db78144821d4aae2532690ef32a86251c0",
+                  "file_header": "Mach header\n      magic cputype cpusubtype  caps    filetype ncmds sizeofcmds      flags\nMH_MAGIC_64   ARM64        ALL  0x00     EXECUTE    19       1656   NOUNDEFS DYLDLINK TWOLEVEL PIE MH_HAS_TLV_DESCRIPTORS\n",
+                  "functions": [
+                    {
+                      "type": "Link",
+                      "name": "fwp_drop7"
+                    },
+                    {
+                      "type": "Option[Link]",
+                      "name": "fwp_drop4"
+                    }
+                  ],
+                  "disassembly": "/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-macos-15/optional/chain-O2.exe:\n(__TEXT,__text) section\n_fwp_drop7:\n1000015f8:\tstp\tx24, x23, [sp, #-0x40]!\n1000015fc:\tstp\tx22, x21, [sp, #0x10]\n100001600:\tstp\tx20, x19, [sp, #0x20]\n100001604:\tstp\tx29, x30, [sp, #0x30]\n100001608:\tadd\tx29, sp, #0x30\n10000160c:\tmov\tx19, x0\n100001610:\tbl\t_chain_observe\n100001614:\tadrp\tx21, 16 ; 0x100011000\n100001618:\tadd\tx21, x21, #0x38\n10000161c:\tldr\tx8, [x21]\n100001620:\tsub\tx8, x19, x8\n100001624:\tldr\tx9, [x21, #0x28]\n100001628:\tcmp\tx8, x9, lsl #16\n10000162c:\tb.hs\t0x1000017ac\n100001630:\tadrp\tx22, 16 ; 0x100011000\n100001634:\tmov\tw23, #0x1228\n100001638:\tldr\tx9, [x22, #0x80]\n10000163c:\tlsr\tx10, x8, #16\n100001640:\tmadd\tx9, x10, x23, x9\n100001644:\tldrb\tw10, [x9]\n100001648:\tands\tx8, x8, #0xffff\n10000164c:\tb.ne\t0x100001668\n100001650:\tcmp\tw10, #0x2\n100001654:\tb.ne\t0x100001668\n100001658:\tadd\tx0, x9, #0x228\n10000165c:\tldrb\tw8, [x0]\n100001660:\tcbnz\tw8, 0x100001688\n100001664:\tb\t0x1000017ac\n100001668:\tcmp\tw10, #0x1\n10000166c:\tb.ne\t0x1000017ac\n100001670:\tldr\tw10, [x9, #0x20]\n100001674:\tumull\tx8, w8, w10\n100001678:\tadd\tx8, x9, x8, lsr #32\n10000167c:\tadd\tx0, x8, #0x228\n100001680:\tldrb\tw8, [x0]\n100001684:\tcbz\tw8, 0x1000017ac\n100001688:\tsubs\tw9, w8, #0x1\n10000168c:\tb.ne\t0x1000017a0\n100001690:\tldr\tx20, [x19, #0x8]\n100001694:\tbl\t_chain_observe\n100001698:\tldr\tx8, [x21]\n10000169c:\tsub\tx9, x20, x8\n1000016a0:\tldr\tx8, [x21, #0x28]\n1000016a4:\tcmp\tx9, x8, lsl #16\n1000016a8:\tb.hs\t0x10000170c\n1000016ac:\tldr\tx8, [x22, #0x80]\n1000016b0:\tlsr\tx10, x9, #16\n1000016b4:\tmadd\tx8, x10, x23, x8\n1000016b8:\tldrb\tw10, [x8]\n1000016bc:\tands\tx9, x9, #0xffff\n1000016c0:\tb.ne\t0x1000016cc\n1000016c4:\tcmp\tw10, #0x2\n1000016c8:\tb.eq\t0x1000016e0\n1000016cc:\tcmp\tw10, #0x1\n1000016d0:\tb.ne\t0x10000170c\n1000016d4:\tldr\tw10, [x8, #0x20]\n1000016d8:\tumull\tx9, w9, w10\n1000016dc:\tadd\tx8, x8, x9, lsr #32\n1000016e0:\tadd\tx0, x8, #0x228\n1000016e4:\tldrb\tw8, [x0]\n1000016e8:\tcbz\tw8, 0x10000170c\n1000016ec:\tsubs\tw9, w8, #0x1\n1000016f0:\tb.ne\t0x100001700\n1000016f4:\tmov\tx0, x20\n1000016f8:\tbl\t_fwp_rc_free_obj\n1000016fc:\tb\t0x10000170c\n100001700:\tcmp\tw8, #0xff\n100001704:\tb.eq\t0x100001798\n100001708:\tstrb\tw9, [x0]\n10000170c:\tldr\tx20, [x19, #0x10]\n100001710:\tmov\tx0, x19\n100001714:\tbl\t_fwp_rc_free_obj\n100001718:\tldr\tx8, [x21]\n10000171c:\tsub\tx9, x20, x8\n100001720:\tldr\tx8, [x21, #0x28]\n100001724:\tcmp\tx9, x8, lsl #16\n100001728:\tb.hs\t0x1000017ac\n10000172c:\tldr\tx8, [x22, #0x80]\n100001730:\tlsr\tx10, x9, #16\n100001734:\tmadd\tx8, x10, x23, x8\n100001738:\tldrb\tw10, [x8]\n10000173c:\tands\tx9, x9, #0xffff\n100001740:\tb.ne\t0x10000174c\n100001744:\tcmp\tw10, #0x2\n100001748:\tb.eq\t0x100001760\n10000174c:\tcmp\tw10, #0x1\n100001750:\tb.ne\t0x1000017ac\n100001754:\tldr\tw10, [x8, #0x20]\n100001758:\tumull\tx9, w9, w10\n10000175c:\tadd\tx8, x8, x9, lsr #32\n100001760:\tadd\tx0, x8, #0x228\n100001764:\tldrb\tw8, [x0]\n100001768:\tcbz\tw8, 0x1000017ac\n10000176c:\tsubs\tw9, w8, #0x1\n100001770:\tb.ne\t0x1000017a0\n100001774:\tldr\tx19, [x20, #0x8]\n100001778:\tmov\tx0, x20\n10000177c:\tbl\t_fwp_rc_free_obj\n100001780:\tldr\tx8, [x21]\n100001784:\tsub\tx8, x19, x8\n100001788:\tldr\tx9, [x21, #0x28]\n10000178c:\tcmp\tx8, x9, lsl #16\n100001790:\tb.lo\t0x100001638\n100001794:\tb\t0x1000017ac\n100001798:\tbl\t_fwp_rc_wide_drop\n10000179c:\tb\t0x10000170c\n1000017a0:\tcmp\tw8, #0xff\n1000017a4:\tb.eq\t0x1000017c0\n1000017a8:\tstrb\tw9, [x0]\n1000017ac:\tldp\tx29, x30, [sp, #0x30]\n1000017b0:\tldp\tx20, x19, [sp, #0x20]\n1000017b4:\tldp\tx22, x21, [sp, #0x10]\n1000017b8:\tldp\tx24, x23, [sp], #0x40\n1000017bc:\tret\n1000017c0:\tldp\tx29, x30, [sp, #0x30]\n1000017c4:\tldp\tx20, x19, [sp, #0x20]\n1000017c8:\tldp\tx22, x21, [sp, #0x10]\n1000017cc:\tldp\tx24, x23, [sp], #0x40\n1000017d0:\tb\t_fwp_rc_wide_drop\n\n/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-macos-15/optional/chain-O2.exe:\n(__TEXT,__text) section\n_fwp_drop4:\n1000017d4:\tstp\tx24, x23, [sp, #-0x40]!\n1000017d8:\tstp\tx22, x21, [sp, #0x10]\n1000017dc:\tstp\tx20, x19, [sp, #0x20]\n1000017e0:\tstp\tx29, x30, [sp, #0x30]\n1000017e4:\tadd\tx29, sp, #0x30\n1000017e8:\tmov\tx20, x0\n1000017ec:\tbl\t_chain_observe\n1000017f0:\tadrp\tx21, 16 ; 0x100011000\n1000017f4:\tadd\tx21, x21, #0x38\n1000017f8:\tldr\tx8, [x21]\n1000017fc:\tsub\tx8, x20, x8\n100001800:\tldr\tx9, [x21, #0x28]\n100001804:\tcmp\tx8, x9, lsl #16\n100001808:\tb.hs\t0x100001988\n10000180c:\tadrp\tx22, 16 ; 0x100011000\n100001810:\tmov\tw23, #0x1228\n100001814:\tldr\tx9, [x22, #0x80]\n100001818:\tlsr\tx10, x8, #16\n10000181c:\tmadd\tx9, x10, x23, x9\n100001820:\tldrb\tw10, [x9]\n100001824:\tands\tx8, x8, #0xffff\n100001828:\tb.ne\t0x100001844\n10000182c:\tcmp\tw10, #0x2\n100001830:\tb.ne\t0x100001844\n100001834:\tadd\tx0, x9, #0x228\n100001838:\tldrb\tw8, [x0]\n10000183c:\tcbnz\tw8, 0x100001864\n100001840:\tb\t0x100001988\n100001844:\tcmp\tw10, #0x1\n100001848:\tb.ne\t0x100001988\n10000184c:\tldr\tw10, [x9, #0x20]\n100001850:\tumull\tx8, w8, w10\n100001854:\tadd\tx8, x9, x8, lsr #32\n100001858:\tadd\tx0, x8, #0x228\n10000185c:\tldrb\tw8, [x0]\n100001860:\tcbz\tw8, 0x100001988\n100001864:\tsubs\tw9, w8, #0x1\n100001868:\tb.ne\t0x10000197c\n10000186c:\tldr\tx19, [x20, #0x8]\n100001870:\tmov\tx0, x20\n100001874:\tbl\t_fwp_rc_free_obj\n100001878:\tldr\tx8, [x21]\n10000187c:\tsub\tx9, x19, x8\n100001880:\tldr\tx8, [x21, #0x28]\n100001884:\tcmp\tx9, x8, lsl #16\n100001888:\tb.hs\t0x100001988\n10000188c:\tldr\tx8, [x22, #0x80]\n100001890:\tlsr\tx10, x9, #16\n100001894:\tmadd\tx8, x10, x23, x8\n100001898:\tldrb\tw10, [x8]\n10000189c:\tands\tx9, x9, #0xffff\n1000018a0:\tb.ne\t0x1000018ac\n1000018a4:\tcmp\tw10, #0x2\n1000018a8:\tb.eq\t0x1000018c0\n1000018ac:\tcmp\tw10, #0x1\n1000018b0:\tb.ne\t0x100001988\n1000018b4:\tldr\tw10, [x8, #0x20]\n1000018b8:\tumull\tx9, w9, w10\n1000018bc:\tadd\tx8, x8, x9, lsr #32\n1000018c0:\tadd\tx0, x8, #0x228\n1000018c4:\tldrb\tw8, [x0]\n1000018c8:\tcbz\tw8, 0x100001988\n1000018cc:\tsubs\tw9, w8, #0x1\n1000018d0:\tb.ne\t0x10000197c\n1000018d4:\tldr\tx20, [x19, #0x8]\n1000018d8:\tbl\t_chain_observe\n1000018dc:\tldr\tx8, [x21]\n1000018e0:\tsub\tx9, x20, x8\n1000018e4:\tldr\tx8, [x21, #0x28]\n1000018e8:\tcmp\tx9, x8, lsl #16\n1000018ec:\tb.hs\t0x100001950\n1000018f0:\tldr\tx8, [x22, #0x80]\n1000018f4:\tlsr\tx10, x9, #16\n1000018f8:\tmadd\tx8, x10, x23, x8\n1000018fc:\tldrb\tw10, [x8]\n100001900:\tands\tx9, x9, #0xffff\n100001904:\tb.ne\t0x100001910\n100001908:\tcmp\tw10, #0x2\n10000190c:\tb.eq\t0x100001924\n100001910:\tcmp\tw10, #0x1\n100001914:\tb.ne\t0x100001950\n100001918:\tldr\tw10, [x8, #0x20]\n10000191c:\tumull\tx9, w9, w10\n100001920:\tadd\tx8, x8, x9, lsr #32\n100001924:\tadd\tx0, x8, #0x228\n100001928:\tldrb\tw8, [x0]\n10000192c:\tcbz\tw8, 0x100001950\n100001930:\tsubs\tw9, w8, #0x1\n100001934:\tb.ne\t0x100001944\n100001938:\tmov\tx0, x20\n10000193c:\tbl\t_fwp_rc_free_obj\n100001940:\tb\t0x100001950\n100001944:\tcmp\tw8, #0xff\n100001948:\tb.eq\t0x100001974\n10000194c:\tstrb\tw9, [x0]\n100001950:\tldr\tx20, [x19, #0x10]\n100001954:\tmov\tx0, x19\n100001958:\tbl\t_fwp_rc_free_obj\n10000195c:\tldr\tx8, [x21]\n100001960:\tsub\tx8, x20, x8\n100001964:\tldr\tx9, [x21, #0x28]\n100001968:\tcmp\tx8, x9, lsl #16\n10000196c:\tb.lo\t0x100001814\n100001970:\tb\t0x100001988\n100001974:\tbl\t_fwp_rc_wide_drop\n100001978:\tb\t0x100001950\n10000197c:\tcmp\tw8, #0xff\n100001980:\tb.eq\t0x10000199c\n100001984:\tstrb\tw9, [x0]\n100001988:\tldp\tx29, x30, [sp, #0x30]\n10000198c:\tldp\tx20, x19, [sp, #0x20]\n100001990:\tldp\tx22, x21, [sp, #0x10]\n100001994:\tldp\tx24, x23, [sp], #0x40\n100001998:\tret\n10000199c:\tldp\tx29, x30, [sp, #0x30]\n1000019a0:\tldp\tx20, x19, [sp, #0x20]\n1000019a4:\tldp\tx22, x21, [sp, #0x10]\n1000019a8:\tldp\tx24, x23, [sp], #0x40\n1000019ac:\tb\t_fwp_rc_wide_drop\n",
+                  "assembly_sha256": "f52e01ed789594f158d43a89b6c974df9f8ca6ed7441ded7f907a5d492e53843"
+                },
+                {
+                  "binary": "language-O2.exe",
+                  "sha256": "c2959d5e3bb9091be27644fe883d0ae849460f29062356b28e7f28ae53710f17",
+                  "file_header": "Mach header\n      magic cputype cpusubtype  caps    filetype ncmds sizeofcmds      flags\nMH_MAGIC_64   ARM64        ALL  0x00     EXECUTE    19       1656   NOUNDEFS DYLDLINK TWOLEVEL PIE MH_HAS_TLV_DESCRIPTORS\n",
+                  "functions": [
+                    {
+                      "type": "Link",
+                      "name": "fwp_drop7"
+                    },
+                    {
+                      "type": "Option[Link]",
+                      "name": "fwp_drop4"
+                    }
+                  ],
+                  "disassembly": "/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-macos-15/optional/language-O2.exe:\n(__TEXT,__text) section\n_fwp_drop7:\n100003044:\tstp\tx24, x23, [sp, #-0x40]!\n100003048:\tstp\tx22, x21, [sp, #0x10]\n10000304c:\tstp\tx20, x19, [sp, #0x20]\n100003050:\tstp\tx29, x30, [sp, #0x30]\n100003054:\tadd\tx29, sp, #0x30\n100003058:\tadrp\tx20, 14 ; 0x100011000\n10000305c:\tadd\tx20, x20, #0x38\n100003060:\tldr\tx9, [x20]\n100003064:\tsub\tx8, x0, x9\n100003068:\tldr\tx10, [x20, #0x28]\n10000306c:\tcmp\tx8, x10, lsl #16\n100003070:\tb.hs\t0x100003200\n100003074:\tadrp\tx21, 14 ; 0x100011000\n100003078:\tmov\tw22, #0x1228\n10000307c:\tldr\tx11, [x21, #0x80]\n100003080:\tlsr\tx12, x8, #16\n100003084:\tmadd\tx12, x12, x22, x11\n100003088:\tldrb\tw13, [x12]\n10000308c:\tands\tx8, x8, #0xffff\n100003090:\tb.ne\t0x1000030ac\n100003094:\tcmp\tw13, #0x2\n100003098:\tb.ne\t0x1000030ac\n10000309c:\tadd\tx8, x12, #0x228\n1000030a0:\tldrb\tw12, [x8]\n1000030a4:\tcbnz\tw12, 0x1000030cc\n1000030a8:\tb\t0x100003200\n1000030ac:\tcmp\tw13, #0x1\n1000030b0:\tb.ne\t0x100003200\n1000030b4:\tldr\tw13, [x12, #0x20]\n1000030b8:\tumull\tx8, w8, w13\n1000030bc:\tadd\tx8, x12, x8, lsr #32\n1000030c0:\tadd\tx8, x8, #0x228\n1000030c4:\tldrb\tw12, [x8]\n1000030c8:\tcbz\tw12, 0x100003200\n1000030cc:\tsubs\tw13, w12, #0x1\n1000030d0:\tb.ne\t0x1000031e4\n1000030d4:\tldr\tx8, [x0, #0x8]\n1000030d8:\tsub\tx12, x8, x9\n1000030dc:\tcmp\tx12, x10, lsl #16\n1000030e0:\tb.hs\t0x100003148\n1000030e4:\tlsr\tx9, x12, #16\n1000030e8:\tmadd\tx9, x9, x22, x11\n1000030ec:\tldrb\tw11, [x9]\n1000030f0:\tands\tx10, x12, #0xffff\n1000030f4:\tb.ne\t0x100003100\n1000030f8:\tcmp\tw11, #0x2\n1000030fc:\tb.eq\t0x100003114\n100003100:\tcmp\tw11, #0x1\n100003104:\tb.ne\t0x100003148\n100003108:\tldr\tw11, [x9, #0x20]\n10000310c:\tumull\tx10, w10, w11\n100003110:\tadd\tx9, x9, x10, lsr #32\n100003114:\tadd\tx9, x9, #0x228\n100003118:\tldrb\tw10, [x9]\n10000311c:\tcbz\tw10, 0x100003148\n100003120:\tsubs\tw11, w10, #0x1\n100003124:\tb.ne\t0x10000313c\n100003128:\tmov\tx19, x0\n10000312c:\tmov\tx0, x8\n100003130:\tbl\t_fwp_rc_free_obj\n100003134:\tmov\tx0, x19\n100003138:\tb\t0x100003148\n10000313c:\tcmp\tw10, #0xff\n100003140:\tb.eq\t0x1000031d4\n100003144:\tstrb\tw11, [x9]\n100003148:\tldr\tx19, [x0, #0x10]\n10000314c:\tbl\t_fwp_rc_free_obj\n100003150:\tldr\tx8, [x20]\n100003154:\tsub\tx9, x19, x8\n100003158:\tldr\tx8, [x20, #0x28]\n10000315c:\tcmp\tx9, x8, lsl #16\n100003160:\tb.hs\t0x100003200\n100003164:\tldr\tx8, [x21, #0x80]\n100003168:\tlsr\tx10, x9, #16\n10000316c:\tmadd\tx8, x10, x22, x8\n100003170:\tldrb\tw10, [x8]\n100003174:\tands\tx9, x9, #0xffff\n100003178:\tb.ne\t0x100003184\n10000317c:\tcmp\tw10, #0x2\n100003180:\tb.eq\t0x100003198\n100003184:\tcmp\tw10, #0x1\n100003188:\tb.ne\t0x100003200\n10000318c:\tldr\tw10, [x8, #0x20]\n100003190:\tumull\tx9, w9, w10\n100003194:\tadd\tx8, x8, x9, lsr #32\n100003198:\tadd\tx0, x8, #0x228\n10000319c:\tldrb\tw8, [x0]\n1000031a0:\tcbz\tw8, 0x100003200\n1000031a4:\tsubs\tw9, w8, #0x1\n1000031a8:\tb.ne\t0x1000031f4\n1000031ac:\tldr\tx23, [x19, #0x8]\n1000031b0:\tmov\tx0, x19\n1000031b4:\tbl\t_fwp_rc_free_obj\n1000031b8:\tmov\tx0, x23\n1000031bc:\tldr\tx9, [x20]\n1000031c0:\tsub\tx8, x23, x9\n1000031c4:\tldr\tx10, [x20, #0x28]\n1000031c8:\tcmp\tx8, x10, lsl #16\n1000031cc:\tb.lo\t0x10000307c\n1000031d0:\tb\t0x100003200\n1000031d4:\tmov\tx19, x0\n1000031d8:\tmov\tx0, x9\n1000031dc:\tbl\t_fwp_rc_wide_drop\n1000031e0:\tb\t0x100003134\n1000031e4:\tcmp\tw12, #0xff\n1000031e8:\tb.eq\t0x100003214\n1000031ec:\tstrb\tw13, [x8]\n1000031f0:\tb\t0x100003200\n1000031f4:\tcmp\tw8, #0xff\n1000031f8:\tb.eq\t0x100003218\n1000031fc:\tstrb\tw9, [x0]\n100003200:\tldp\tx29, x30, [sp, #0x30]\n100003204:\tldp\tx20, x19, [sp, #0x20]\n100003208:\tldp\tx22, x21, [sp, #0x10]\n10000320c:\tldp\tx24, x23, [sp], #0x40\n100003210:\tret\n100003214:\tmov\tx0, x8\n100003218:\tldp\tx29, x30, [sp, #0x30]\n10000321c:\tldp\tx20, x19, [sp, #0x20]\n100003220:\tldp\tx22, x21, [sp, #0x10]\n100003224:\tldp\tx24, x23, [sp], #0x40\n100003228:\tb\t_fwp_rc_wide_drop\n\n/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-macos-15/optional/language-O2.exe:\n(__TEXT,__text) section\n_fwp_drop4:\n100002278:\tstp\tx24, x23, [sp, #-0x40]!\n10000227c:\tstp\tx22, x21, [sp, #0x10]\n100002280:\tstp\tx20, x19, [sp, #0x20]\n100002284:\tstp\tx29, x30, [sp, #0x30]\n100002288:\tadd\tx29, sp, #0x30\n10000228c:\tadrp\tx20, 15 ; 0x100011000\n100002290:\tadd\tx20, x20, #0x38\n100002294:\tldr\tx8, [x20]\n100002298:\tsub\tx8, x0, x8\n10000229c:\tldr\tx9, [x20, #0x28]\n1000022a0:\tcmp\tx8, x9, lsl #16\n1000022a4:\tb.hs\t0x100002428\n1000022a8:\tadrp\tx21, 15 ; 0x100011000\n1000022ac:\tmov\tw22, #0x1228\n1000022b0:\tldr\tx9, [x21, #0x80]\n1000022b4:\tlsr\tx10, x8, #16\n1000022b8:\tmadd\tx9, x10, x22, x9\n1000022bc:\tldrb\tw10, [x9]\n1000022c0:\tands\tx8, x8, #0xffff\n1000022c4:\tb.ne\t0x1000022e0\n1000022c8:\tcmp\tw10, #0x2\n1000022cc:\tb.ne\t0x1000022e0\n1000022d0:\tadd\tx8, x9, #0x228\n1000022d4:\tldrb\tw9, [x8]\n1000022d8:\tcbnz\tw9, 0x100002300\n1000022dc:\tb\t0x100002428\n1000022e0:\tcmp\tw10, #0x1\n1000022e4:\tb.ne\t0x100002428\n1000022e8:\tldr\tw10, [x9, #0x20]\n1000022ec:\tumull\tx8, w8, w10\n1000022f0:\tadd\tx8, x9, x8, lsr #32\n1000022f4:\tadd\tx8, x8, #0x228\n1000022f8:\tldrb\tw9, [x8]\n1000022fc:\tcbz\tw9, 0x100002428\n100002300:\tsubs\tw10, w9, #0x1\n100002304:\tb.ne\t0x10000240c\n100002308:\tldr\tx19, [x0, #0x8]\n10000230c:\tbl\t_fwp_rc_free_obj\n100002310:\tldr\tx8, [x20]\n100002314:\tldr\tx9, [x20, #0x28]\n100002318:\tlsl\tx9, x9, #16\n10000231c:\tsub\tx12, x19, x8\n100002320:\tcmp\tx12, x9\n100002324:\tb.hs\t0x100002428\n100002328:\tldr\tx10, [x21, #0x80]\n10000232c:\tlsr\tx11, x12, #16\n100002330:\tmadd\tx11, x11, x22, x10\n100002334:\tldrb\tw13, [x11]\n100002338:\tands\tx12, x12, #0xffff\n10000233c:\tb.ne\t0x100002348\n100002340:\tcmp\tw13, #0x2\n100002344:\tb.eq\t0x10000235c\n100002348:\tcmp\tw13, #0x1\n10000234c:\tb.ne\t0x100002428\n100002350:\tldr\tw13, [x11, #0x20]\n100002354:\tumull\tx12, w12, w13\n100002358:\tadd\tx11, x11, x12, lsr #32\n10000235c:\tadd\tx0, x11, #0x228\n100002360:\tldrb\tw11, [x0]\n100002364:\tcbz\tw11, 0x100002428\n100002368:\tsubs\tw12, w11, #0x1\n10000236c:\tb.ne\t0x10000241c\n100002370:\tldr\tx0, [x19, #0x8]\n100002374:\tsub\tx11, x0, x8\n100002378:\tcmp\tx11, x9\n10000237c:\tb.hs\t0x1000023d8\n100002380:\tlsr\tx8, x11, #16\n100002384:\tmadd\tx8, x8, x22, x10\n100002388:\tldrb\tw10, [x8]\n10000238c:\tands\tx9, x11, #0xffff\n100002390:\tb.ne\t0x10000239c\n100002394:\tcmp\tw10, #0x2\n100002398:\tb.eq\t0x1000023b0\n10000239c:\tcmp\tw10, #0x1\n1000023a0:\tb.ne\t0x1000023d8\n1000023a4:\tldr\tw10, [x8, #0x20]\n1000023a8:\tumull\tx9, w9, w10\n1000023ac:\tadd\tx8, x8, x9, lsr #32\n1000023b0:\tadd\tx8, x8, #0x228\n1000023b4:\tldrb\tw9, [x8]\n1000023b8:\tcbz\tw9, 0x1000023d8\n1000023bc:\tsubs\tw10, w9, #0x1\n1000023c0:\tb.ne\t0x1000023cc\n1000023c4:\tbl\t_fwp_rc_free_obj\n1000023c8:\tb\t0x1000023d8\n1000023cc:\tcmp\tw9, #0xff\n1000023d0:\tb.eq\t0x100002400\n1000023d4:\tstrb\tw10, [x8]\n1000023d8:\tldr\tx23, [x19, #0x10]\n1000023dc:\tmov\tx0, x19\n1000023e0:\tbl\t_fwp_rc_free_obj\n1000023e4:\tmov\tx0, x23\n1000023e8:\tldr\tx8, [x20]\n1000023ec:\tsub\tx8, x23, x8\n1000023f0:\tldr\tx9, [x20, #0x28]\n1000023f4:\tcmp\tx8, x9, lsl #16\n1000023f8:\tb.lo\t0x1000022b0\n1000023fc:\tb\t0x100002428\n100002400:\tmov\tx0, x8\n100002404:\tbl\t_fwp_rc_wide_drop\n100002408:\tb\t0x1000023d8\n10000240c:\tcmp\tw9, #0xff\n100002410:\tb.eq\t0x10000243c\n100002414:\tstrb\tw10, [x8]\n100002418:\tb\t0x100002428\n10000241c:\tcmp\tw11, #0xff\n100002420:\tb.eq\t0x100002440\n100002424:\tstrb\tw12, [x0]\n100002428:\tldp\tx29, x30, [sp, #0x30]\n10000242c:\tldp\tx20, x19, [sp, #0x20]\n100002430:\tldp\tx22, x21, [sp, #0x10]\n100002434:\tldp\tx24, x23, [sp], #0x40\n100002438:\tret\n10000243c:\tmov\tx0, x8\n100002440:\tldp\tx29, x30, [sp, #0x30]\n100002444:\tldp\tx20, x19, [sp, #0x20]\n100002448:\tldp\tx22, x21, [sp, #0x10]\n10000244c:\tldp\tx24, x23, [sp], #0x40\n100002450:\tb\t_fwp_rc_wide_drop\n",
+                  "assembly_sha256": "bf854f8930289903b7fb988990f4462dcbab0cb069cf778ac4fc6c9cf6477a5b"
+                }
+              ]
+            }
+          },
+          "tuple": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 4,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 4,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 4,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 4,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 4,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 4,
+                "stack_span_bytes": 0
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 673193,
+                "sha256": "6c434f5ad766db1b5bb2da5d7f27e32a50526ffafbc1d2331d21d3835869f4f6"
+              },
+              "chain-O1.exe": {
+                "bytes": 90160,
+                "sha256": "819bf84338e6b4afe9772e79d7878535753e6f55cd2a00e3ad79e4a89dbbf1f8"
+              },
+              "chain-O2.exe": {
+                "bytes": 90160,
+                "sha256": "05c70fcc1ab8a5fb51d2da0da07a613b0abea2bff303a4174775781c4b7c1bb6"
+              },
+              "stack-O1.tsv": {
+                "bytes": 145,
+                "sha256": "d54156b40b823a1e1e46ee19014bb98b04b6977e6ee88ed3d5bf31a354cac5bc"
+              },
+              "stack-O2.tsv": {
+                "bytes": 130,
+                "sha256": "d79717b4ad207ed0e6a2b9323802ac324b7a9ce309a1a1185f3026d8884337d4"
+              },
+              "language.c": {
+                "bytes": 670624,
+                "sha256": "e150dc9ed26e6a4d6a95b34cc4f803920e1ae90c93a78980f30a2e46515fb224"
+              },
+              "language-O1.exe": {
+                "bytes": 89936,
+                "sha256": "070d76677a4c7ce352fd2e62f574ac8ba693bf96f1a3d385df7a14bab7f8cf3f"
+              },
+              "language-O2.exe": {
+                "bytes": 89936,
+                "sha256": "89fa7d1305eff52bf014a2676112f3fa2c84eabd8fc1669aeb29b4d12f3c2fa7"
+              },
+              "source.txt": {
+                "bytes": 41,
+                "sha256": "24e645031a8fcfaf9877e93fee58ab7f824003165b3a88cb52c06dc00d66b981"
+              },
+              "rust.txt": {
+                "bytes": 192,
+                "sha256": "e003fd3d385fcd0de16bc6b049124efb20207831dd810fd4ab39ff079bbb12a5"
+              },
+              "c.txt": {
+                "bytes": 206,
+                "sha256": "df12815703ce3452ab4bd51ecbea4cf8155246b94b5b15113a580ff6aec2befd"
+              },
+              "cpu.txt": {
+                "bytes": 190,
+                "sha256": "c8a8ebf53a152d1eb149ef7fe68b192b46e1f65222da0fddeea2b4d3b18e81a0"
+              }
+            },
+            "environment": {
+              "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+              "c": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+              "cpu": "machdep.cpu.cores_per_package: 3\nmachdep.cpu.core_count: 3\nmachdep.cpu.logical_per_package: 3\nmachdep.cpu.thread_count: 3\nmachdep.cpu.brand_string: Apple M1 (Virtual)\nhw.memsize: 7516192768\n"
+            },
+            "binary_observations": null
+          }
+        }
+      },
+      "macos-15-intel": {
+        "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38988093805/job/117264148130",
+        "log": {
+          "bytes": 46144,
+          "sha256": "2252e6c2179080c9aee94658c2dc8d2c6b76ff4d1a19c61935a229dfa5348185"
+        },
+        "shapes": {
+          "optional": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 667834,
+                "sha256": "fcc7b78677dbd924af888a38173546a9194aa03e0c7789e07a5e0edc65c94c01"
+              },
+              "chain-O1.exe": {
+                "bytes": 55744,
+                "sha256": "5cf7777a9bbf13b3b90fdaaceefa89c5b79603c4404d0fc4b36b861818bdcd95"
+              },
+              "chain-O2.exe": {
+                "bytes": 59840,
+                "sha256": "2d3f07d7d20ebf4ef79c11df8bfbb1c02b1a78748f4541c331828199b87b30c2"
+              },
+              "stack-O1.tsv": {
+                "bytes": 116,
+                "sha256": "db0bbbcfc03c0f2d362498d71ca4d7e6217f1a300cf9a2e6b6e938601ebdb7f0"
+              },
+              "stack-O2.tsv": {
+                "bytes": 104,
+                "sha256": "b33fad04d5bca73c00fa0b3e94f5265dbe8dfa6e9dbe5678f7992ed7451cb4aa"
+              },
+              "language.c": {
+                "bytes": 665319,
+                "sha256": "4534aa58d6c7083feaa6b8fafaaef3134f6638ca058fb7e006bcf14f9d80b123"
+              },
+              "language-O1.exe": {
+                "bytes": 55512,
+                "sha256": "74a73d545f6a9ea958731947bb1a94142eb23b70755318793e2d74a6e3d1b405"
+              },
+              "language-O2.exe": {
+                "bytes": 59608,
+                "sha256": "dfd5e1b3e56afb79df5905f40547d2c09208447b2b98c035695dd85966037009"
+              },
+              "source.txt": {
+                "bytes": 41,
+                "sha256": "24e645031a8fcfaf9877e93fee58ab7f824003165b3a88cb52c06dc00d66b981"
+              },
+              "rust.txt": {
+                "bytes": 191,
+                "sha256": "bf1658636877f9403ad0a32419fc3b0da3d3164f3585a184108063f8499d7434"
+              },
+              "c.txt": {
+                "bytes": 207,
+                "sha256": "2837c5948b45916f519912ef23256ae973af42c72decd6185aec65f45b804d3f"
+              },
+              "cpu.txt": {
+                "bytes": 2357,
+                "sha256": "34906f51eedf2b47df9e91be1563fcdf5a42c7337d9b6ec2da23ba90e96072a6"
+              }
+            },
+            "environment": {
+              "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+              "c": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+              "cpu": "machdep.cpu.mwait.linesize_min: 64\nmachdep.cpu.mwait.linesize_max: 64\nmachdep.cpu.mwait.extensions: 3\nmachdep.cpu.mwait.sub_Cstates: 286531872\nmachdep.cpu.thermal.sensor: 0\nmachdep.cpu.thermal.dynamic_acceleration: 0\nmachdep.cpu.thermal.invariant_APIC_timer: 1\nmachdep.cpu.thermal.thresholds: 0\nmachdep.cpu.thermal.ACNT_MCNT: 0\nmachdep.cpu.thermal.core_power_limits: 0\nmachdep.cpu.thermal.fine_grain_clock_mod: 0\nmachdep.cpu.thermal.package_thermal_intr: 0\nmachdep.cpu.thermal.hardware_feedback: 0\nmachdep.cpu.thermal.energy_policy: 0\nmachdep.cpu.xsave.extended_state: 7 832 832 0\nmachdep.cpu.xsave.extended_state1: 1 0 0 0\nmachdep.cpu.arch_perf.version: 0\nmachdep.cpu.arch_perf.number: 0\nmachdep.cpu.arch_perf.width: 0\nmachdep.cpu.arch_perf.events_number: 0\nmachdep.cpu.arch_perf.events: 0\nmachdep.cpu.arch_perf.fixed_number: 0\nmachdep.cpu.arch_perf.fixed_width: 0\nmachdep.cpu.cache.linesize: 64\nmachdep.cpu.cache.L2_associativity: 4\nmachdep.cpu.cache.size: 256\nmachdep.cpu.tlb.inst.large: 8\nmachdep.cpu.tlb.data.small: 64\nmachdep.cpu.tlb.data.small_level1: 64\nmachdep.cpu.address_bits.physical: 39\nmachdep.cpu.address_bits.virtual: 48\nmachdep.cpu.tsc_ccc.numerator: 266\nmachdep.cpu.tsc_ccc.denominator: 2\nmachdep.cpu.max_basic: 22\nmachdep.cpu.max_ext: 2147483656\nmachdep.cpu.vendor: GenuineIntel\nmachdep.cpu.brand_string: Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\nmachdep.cpu.family: 6\nmachdep.cpu.model: 58\nmachdep.cpu.extmodel: 3\nmachdep.cpu.extfamily: 0\nmachdep.cpu.stepping: 10\nmachdep.cpu.feature_bits: 18373132009129901055\nmachdep.cpu.leaf7_feature_bits: 43806655 0\nmachdep.cpu.extfeature_bits: 1241850578944\nmachdep.cpu.signature: 198314\nmachdep.cpu.brand: 0\nmachdep.cpu.features: FPU VME DE PSE TSC MSR PAE MCE CX8 APIC SEP MTRR PGE MCA CMOV PAT PSE36 CLFSH MMX FXSR SSE SSE2 SS HTT PBE SSE3 PCLMULQDQ DTES64 DSCPL VMX SSSE3 FMA CX16 TPR SSE4.1 SSE4.2 x2APIC MOVBE POPCNT AES VMM PCID XSAVE OSXSAVE SEGLIM64 AVX1.0 RDRAND F16C\nmachdep.cpu.leaf7_features: RDWRFSGS TSC_THREAD_OFFSET SGX BMI1 HLE AVX2 SMEP BMI2 ERMS INVPCID RTM FPU_CSDS MPX RDSEED ADX SMAP CLFSOPT IPT\nmachdep.cpu.extfeatures: SYSCALL XD 1GBPAGE EM64T LAHF LZCNT PREFETCHW\nmachdep.cpu.logical_per_package: 4\nmachdep.cpu.cores_per_package: 4\nmachdep.cpu.microcode_version: 0\nmachdep.cpu.processor_flag: 0\nmachdep.cpu.core_count: 4\nmachdep.cpu.thread_count: 4\nhw.memsize: 15032385536\n"
+            },
+            "binary_observations": null
+          },
+          "tuple": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 4,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 4,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 4,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 4,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 4,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 0
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 4,
+                "stack_span_bytes": 0
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 673193,
+                "sha256": "6c434f5ad766db1b5bb2da5d7f27e32a50526ffafbc1d2331d21d3835869f4f6"
+              },
+              "chain-O1.exe": {
+                "bytes": 64760,
+                "sha256": "66f85572945972a9b71c34b8230efb2f17b071d78a0556f3e4814bcc5e5847ef"
+              },
+              "chain-O2.exe": {
+                "bytes": 68856,
+                "sha256": "e12fc7b0ca0e843cc4eb66fac08901846cd2373a2678a6652a708b45240c12c8"
+              },
+              "stack-O1.tsv": {
+                "bytes": 145,
+                "sha256": "d54156b40b823a1e1e46ee19014bb98b04b6977e6ee88ed3d5bf31a354cac5bc"
+              },
+              "stack-O2.tsv": {
+                "bytes": 130,
+                "sha256": "d79717b4ad207ed0e6a2b9323802ac324b7a9ce309a1a1185f3026d8884337d4"
+              },
+              "language.c": {
+                "bytes": 670624,
+                "sha256": "e150dc9ed26e6a4d6a95b34cc4f803920e1ae90c93a78980f30a2e46515fb224"
+              },
+              "language-O1.exe": {
+                "bytes": 64536,
+                "sha256": "4b672340c4d59cc5b478e1a8ad7ec7a6ca3dd36ea38b8b037b909c26466f1823"
+              },
+              "language-O2.exe": {
+                "bytes": 68632,
+                "sha256": "f0ab6f5bb90c08522eadfb3b6f98df2da387e43dc32aa3512e41422f7dbd9c32"
+              },
+              "source.txt": {
+                "bytes": 41,
+                "sha256": "24e645031a8fcfaf9877e93fee58ab7f824003165b3a88cb52c06dc00d66b981"
+              },
+              "rust.txt": {
+                "bytes": 191,
+                "sha256": "bf1658636877f9403ad0a32419fc3b0da3d3164f3585a184108063f8499d7434"
+              },
+              "c.txt": {
+                "bytes": 207,
+                "sha256": "2837c5948b45916f519912ef23256ae973af42c72decd6185aec65f45b804d3f"
+              },
+              "cpu.txt": {
+                "bytes": 2357,
+                "sha256": "34906f51eedf2b47df9e91be1563fcdf5a42c7337d9b6ec2da23ba90e96072a6"
+              }
+            },
+            "environment": {
+              "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+              "c": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+              "cpu": "machdep.cpu.mwait.linesize_min: 64\nmachdep.cpu.mwait.linesize_max: 64\nmachdep.cpu.mwait.extensions: 3\nmachdep.cpu.mwait.sub_Cstates: 286531872\nmachdep.cpu.thermal.sensor: 0\nmachdep.cpu.thermal.dynamic_acceleration: 0\nmachdep.cpu.thermal.invariant_APIC_timer: 1\nmachdep.cpu.thermal.thresholds: 0\nmachdep.cpu.thermal.ACNT_MCNT: 0\nmachdep.cpu.thermal.core_power_limits: 0\nmachdep.cpu.thermal.fine_grain_clock_mod: 0\nmachdep.cpu.thermal.package_thermal_intr: 0\nmachdep.cpu.thermal.hardware_feedback: 0\nmachdep.cpu.thermal.energy_policy: 0\nmachdep.cpu.xsave.extended_state: 7 832 832 0\nmachdep.cpu.xsave.extended_state1: 1 0 0 0\nmachdep.cpu.arch_perf.version: 0\nmachdep.cpu.arch_perf.number: 0\nmachdep.cpu.arch_perf.width: 0\nmachdep.cpu.arch_perf.events_number: 0\nmachdep.cpu.arch_perf.events: 0\nmachdep.cpu.arch_perf.fixed_number: 0\nmachdep.cpu.arch_perf.fixed_width: 0\nmachdep.cpu.cache.linesize: 64\nmachdep.cpu.cache.L2_associativity: 4\nmachdep.cpu.cache.size: 256\nmachdep.cpu.tlb.inst.large: 8\nmachdep.cpu.tlb.data.small: 64\nmachdep.cpu.tlb.data.small_level1: 64\nmachdep.cpu.address_bits.physical: 39\nmachdep.cpu.address_bits.virtual: 48\nmachdep.cpu.tsc_ccc.numerator: 266\nmachdep.cpu.tsc_ccc.denominator: 2\nmachdep.cpu.max_basic: 22\nmachdep.cpu.max_ext: 2147483656\nmachdep.cpu.vendor: GenuineIntel\nmachdep.cpu.brand_string: Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\nmachdep.cpu.family: 6\nmachdep.cpu.model: 58\nmachdep.cpu.extmodel: 3\nmachdep.cpu.extfamily: 0\nmachdep.cpu.stepping: 10\nmachdep.cpu.feature_bits: 18373132009129901055\nmachdep.cpu.leaf7_feature_bits: 43806655 0\nmachdep.cpu.extfeature_bits: 1241850578944\nmachdep.cpu.signature: 198314\nmachdep.cpu.brand: 0\nmachdep.cpu.features: FPU VME DE PSE TSC MSR PAE MCE CX8 APIC SEP MTRR PGE MCA CMOV PAT PSE36 CLFSH MMX FXSR SSE SSE2 SS HTT PBE SSE3 PCLMULQDQ DTES64 DSCPL VMX SSSE3 FMA CX16 TPR SSE4.1 SSE4.2 x2APIC MOVBE POPCNT AES VMM PCID XSAVE OSXSAVE SEGLIM64 AVX1.0 RDRAND F16C\nmachdep.cpu.leaf7_features: RDWRFSGS TSC_THREAD_OFFSET SGX BMI1 HLE AVX2 SMEP BMI2 ERMS INVPCID RTM FPU_CSDS MPX RDSEED ADX SMAP CLFSOPT IPT\nmachdep.cpu.extfeatures: SYSCALL XD 1GBPAGE EM64T LAHF LZCNT PREFETCHW\nmachdep.cpu.logical_per_package: 4\nmachdep.cpu.cores_per_package: 4\nmachdep.cpu.microcode_version: 0\nmachdep.cpu.processor_flag: 0\nmachdep.cpu.core_count: 4\nmachdep.cpu.thread_count: 4\nhw.memsize: 15032385536\n"
+            },
+            "binary_observations": null
+          }
+        }
+      },
+      "ubuntu-24.04-arm": {
+        "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38988093805/job/117264148227",
+        "log": {
+          "bytes": 39015,
+          "sha256": "12188a9b329a05d148089be3f768f20bb5524ce4d13f981112f88016ffef62c9"
+        },
+        "shapes": {
+          "optional": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 667834,
+                "sha256": "fcc7b78677dbd924af888a38173546a9194aa03e0c7789e07a5e0edc65c94c01"
+              },
+              "chain-O1.exe": {
+                "bytes": 84344,
+                "sha256": "4afd1a21045687836d5384ce2d8db0f0f6bf0cf89fa222e1d3778647f6c859e9"
+              },
+              "chain-O2.exe": {
+                "bytes": 84336,
+                "sha256": "23115eb44c96b369fe5070bb92acceb637861f13e365f06786b05fc42e11cd76"
+              },
+              "stack-O1.tsv": {
+                "bytes": 116,
+                "sha256": "db0bbbcfc03c0f2d362498d71ca4d7e6217f1a300cf9a2e6b6e938601ebdb7f0"
+              },
+              "stack-O2.tsv": {
+                "bytes": 116,
+                "sha256": "db0bbbcfc03c0f2d362498d71ca4d7e6217f1a300cf9a2e6b6e938601ebdb7f0"
+              },
+              "language.c": {
+                "bytes": 665319,
+                "sha256": "4534aa58d6c7083feaa6b8fafaaef3134f6638ca058fb7e006bcf14f9d80b123"
+              },
+              "language-O1.exe": {
+                "bytes": 84128,
+                "sha256": "3ee6582e3249636e653c0ccbc328cb89d432543ed7a47b6ee30d35e81ca60f14"
+              },
+              "language-O2.exe": {
+                "bytes": 84120,
+                "sha256": "df3e50fc9a0d267d8ea0641e364474b658fbf044530f7e61447c8a07a77eb82b"
+              },
+              "source.txt": {
+                "bytes": 41,
+                "sha256": "24e645031a8fcfaf9877e93fee58ab7f824003165b3a88cb52c06dc00d66b981"
+              },
+              "rust.txt": {
+                "bytes": 197,
+                "sha256": "ba203e33fe4a5b8e05147bb6e57fb1ddace26d9f799f357420b666887dd7e2f1"
+              },
+              "c.txt": {
+                "bytes": 116,
+                "sha256": "c0003bf916cbcae3cba03ba1cad136b6d501c1d343f380e58d5ba25cf693aafc"
+              },
+              "cpu.txt": {
+                "bytes": 2355,
+                "sha256": "e5f7302f9882c8b4eca9892fce7bab78f37c49da0f8babcb23d2c2db5ed004bc"
+              }
+            },
+            "environment": {
+              "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+              "c": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+              "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n"
+            },
+            "binary_observations": {
+              "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "scope": "Static inspection only. The chain probe is instrumented; language executable is not. No downloaded binary was executed.",
+              "observations": [
+                {
+                  "binary": "chain-O2.exe",
+                  "sha256": "23115eb44c96b369fe5070bb92acceb637861f13e365f06786b05fc42e11cd76",
+                  "file_header": "\n/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-ubuntu-24.04-arm/optional/chain-O2.exe:\tfile format elf64-littleaarch64\narchitecture: aarch64\nstart address: 0x0000000000002080\n",
+                  "functions": [
+                    {
+                      "type": "Link",
+                      "name": "fwp_drop7"
+                    },
+                    {
+                      "type": "Option[Link]",
+                      "name": "fwp_drop4"
+                    }
+                  ],
+                  "assembly_file": "chain-O2.exe.asm",
+                  "entry_excerpt": [
+                    "",
+                    "/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-ubuntu-24.04-arm/optional/chain-O2.exe:\tfile format elf64-littleaarch64",
+                    "",
+                    "Disassembly of section .text:",
+                    "",
+                    "0000000000002f7c <fwp_drop7>:",
+                    "    2f7c:      \tstp\tx29, x30, [sp, #-0x40]!",
+                    "    2f80:      \tstr\tx23, [sp, #0x10]",
+                    "    2f84:      \tstp\tx22, x21, [sp, #0x20]",
+                    "    2f88:      \tstp\tx20, x19, [sp, #0x30]",
+                    "    2f8c:      \tmov\tx29, sp",
+                    "    2f90:      \tmov\tx19, x0",
+                    "    2f94:      \tbl\t0x43d8 <chain_observe>",
+                    "    2f98:      \tadrp\tx21, 0x21000 <fwp_gc+0xe48>",
+                    "    2f9c:      \tadd\tx21, x21, #0x1e8",
+                    "    2fa0:      \tldr\tx8, [x21]",
+                    "    2fa4:      \tldr\tx9, [x21, #0x28]",
+                    "    2fa8:      \tsub\tx8, x19, x8",
+                    "    2fac:      \tcmp\tx8, x9, lsl #16",
+                    "    2fb0:      \tb.hs\t0x30c8 <fwp_drop7+0x14c>",
+                    "    2fb4:      \tadrp\tx22, 0x21000 <fwp_gc+0xe48>",
+                    "    2fb8:      \tmov\tw23, #0x1228            // =4648",
+                    "    2fbc:      \tlsr\tx9, x8, #16",
+                    "    2fc0:      \tldr\tx10, [x22, #0x230]",
+                    "    2fc4:      \tands\tx8, x8, #0xffff",
+                    "    2fc8:      \tmul\tx11, x9, x23",
+                    "    2fcc:      \tldrb\tw11, [x10, x11]",
+                    "    2fd0:      \tb.ne\t0x2fe4 <fwp_drop7+0x68>",
+                    "    2fd4:      \tcmp\tw11, #0x2",
+                    "    2fd8:      \tb.ne\t0x2fe4 <fwp_drop7+0x68>",
+                    "    2fdc:      \tmadd\tx8, x9, x23, x10",
+                    "    2fe0:      \tb\t0x2ffc <fwp_drop7+0x80>",
+                    "    2fe4:      \tcmp\tw11, #0x1",
+                    "    2fe8:      \tb.ne\t0x30c8 <fwp_drop7+0x14c>",
+                    "    2fec:      \tmadd\tx9, x9, x23, x10",
+                    "    2ff0:      \tldr\tw10, [x9, #0x20]",
+                    "    2ff4:      \tumull\tx8, w8, w10",
+                    "    2ff8:      \tadd\tx8, x9, x8, lsr #32",
+                    "    2ffc:      \tadd\tx0, x8, #0x228",
+                    "    3000:      \tldrb\tw8, [x0]",
+                    "    3004:      \tcbz\tw8, 0x30c8 <fwp_drop7+0x14c>",
+                    "    3008:      \tsubs\tw9, w8, #0x1",
+                    "    300c:      \tb.ne\t0x30b0 <fwp_drop7+0x134>",
+                    "    3010:      \tldr\tx0, [x19, #0x8]",
+                    "    3014:      \tbl\t0x4414 <fwp_drop3>"
+                  ],
+                  "assembly_sha256": "02b9cb6a587159d80f457278f6b95e4ade095f66d4a519264afd32df78cc8ccf"
+                },
+                {
+                  "binary": "language-O2.exe",
+                  "sha256": "df3e50fc9a0d267d8ea0641e364474b658fbf044530f7e61447c8a07a77eb82b",
+                  "file_header": "\n/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-ubuntu-24.04-arm/optional/language-O2.exe:\tfile format elf64-littleaarch64\narchitecture: aarch64\nstart address: 0x0000000000002040\n",
+                  "functions": [
+                    {
+                      "type": "Link",
+                      "name": "fwp_drop7"
+                    },
+                    {
+                      "type": "Option[Link]",
+                      "name": "fwp_drop4"
+                    }
+                  ],
+                  "assembly_file": "language-O2.exe.asm",
+                  "entry_excerpt": [
+                    "",
+                    "/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-ubuntu-24.04-arm/optional/language-O2.exe:\tfile format elf64-littleaarch64",
+                    "",
+                    "Disassembly of section .text:",
+                    "",
+                    "0000000000003d80 <fwp_drop4>:",
+                    "    3d80:      \tstp\tx29, x30, [sp, #-0x40]!",
+                    "    3d84:      \tstr\tx23, [sp, #0x10]",
+                    "    3d88:      \tstp\tx22, x21, [sp, #0x20]",
+                    "    3d8c:      \tstp\tx20, x19, [sp, #0x30]",
+                    "    3d90:      \tmov\tx29, sp",
+                    "    3d94:      \tadrp\tx20, 0x21000 <fwp_gc+0xe50>",
+                    "    3d98:      \tadd\tx20, x20, #0x1e0",
+                    "    3d9c:      \tldr\tx8, [x20]",
+                    "    3da0:      \tldr\tx9, [x20, #0x28]",
+                    "    3da4:      \tsub\tx8, x0, x8",
+                    "    3da8:      \tcmp\tx8, x9, lsl #16",
+                    "    3dac:      \tb.hs\t0x3f44 <fwp_drop4+0x1c4>",
+                    "    3db0:      \tadrp\tx21, 0x21000 <fwp_gc+0xe50>",
+                    "    3db4:      \tmov\tw22, #0x1228            // =4648",
+                    "    3db8:      \tlsr\tx9, x8, #16",
+                    "    3dbc:      \tldr\tx10, [x21, #0x228]",
+                    "    3dc0:      \tands\tx8, x8, #0xffff",
+                    "    3dc4:      \tmul\tx11, x9, x22",
+                    "    3dc8:      \tldrb\tw11, [x10, x11]",
+                    "    3dcc:      \tb.ne\t0x3de0 <fwp_drop4+0x60>",
+                    "    3dd0:      \tcmp\tw11, #0x2",
+                    "    3dd4:      \tb.ne\t0x3de0 <fwp_drop4+0x60>",
+                    "    3dd8:      \tmadd\tx8, x9, x22, x10",
+                    "    3ddc:      \tb\t0x3df8 <fwp_drop4+0x78>",
+                    "    3de0:      \tcmp\tw11, #0x1",
+                    "    3de4:      \tb.ne\t0x3f44 <fwp_drop4+0x1c4>",
+                    "    3de8:      \tmadd\tx9, x9, x22, x10",
+                    "    3dec:      \tldr\tw10, [x9, #0x20]",
+                    "    3df0:      \tumull\tx8, w8, w10",
+                    "    3df4:      \tadd\tx8, x9, x8, lsr #32",
+                    "    3df8:      \tadd\tx8, x8, #0x228",
+                    "    3dfc:      \tldrb\tw9, [x8]",
+                    "    3e00:      \tcbz\tw9, 0x3f44 <fwp_drop4+0x1c4>",
+                    "    3e04:      \tsubs\tw10, w9, #0x1",
+                    "    3e08:      \tb.ne\t0x3f28 <fwp_drop4+0x1a8>",
+                    "    3e0c:      \tldr\tx19, [x0, #0x8]",
+                    "    3e10:      \tbl\t0x3f74 <fwp_rc_free_obj>",
+                    "    3e14:      \tldr\tx8, [x20, #0x28]",
+                    "    3e18:      \tldr\tx9, [x20]"
+                  ],
+                  "assembly_sha256": "71ec6aaba423edaaec388306afec29eb14ea513d3f3ae407e71b6708a2d3d218"
+                }
+              ]
+            }
+          },
+          "tuple": {
+            "rows": [
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 64,
+                "alias_mode": 4,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 1024,
+                "alias_mode": 4,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O1",
+                "links": 16384,
+                "alias_mode": 4,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 64,
+                "alias_mode": 4,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 1024,
+                "alias_mode": 4,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 0,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 1,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 2,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 3,
+                "stack_span_bytes": 32
+              },
+              {
+                "optimization": "-O2",
+                "links": 16384,
+                "alias_mode": 4,
+                "stack_span_bytes": 32
+              }
+            ],
+            "files": {
+              "chain.c": {
+                "bytes": 673193,
+                "sha256": "6c434f5ad766db1b5bb2da5d7f27e32a50526ffafbc1d2331d21d3835869f4f6"
+              },
+              "chain-O1.exe": {
+                "bytes": 85360,
+                "sha256": "be03eaf678f76e3dc790ce4ee6a3a3e14d72e67abb916ca9632461500d64a82e"
+              },
+              "chain-O2.exe": {
+                "bytes": 85352,
+                "sha256": "9ff6e7a3771be1a9cd78bb6a7c7dc23891d2a0bf21d205f9f28ed43a0f04d4da"
+              },
+              "stack-O1.tsv": {
+                "bytes": 145,
+                "sha256": "d54156b40b823a1e1e46ee19014bb98b04b6977e6ee88ed3d5bf31a354cac5bc"
+              },
+              "stack-O2.tsv": {
+                "bytes": 145,
+                "sha256": "d54156b40b823a1e1e46ee19014bb98b04b6977e6ee88ed3d5bf31a354cac5bc"
+              },
+              "language.c": {
+                "bytes": 670624,
+                "sha256": "e150dc9ed26e6a4d6a95b34cc4f803920e1ae90c93a78980f30a2e46515fb224"
+              },
+              "language-O1.exe": {
+                "bytes": 85144,
+                "sha256": "e3a2d05cf6cc265c2ba62ce1feaad046a088536c2f992dd27bb14aedfeec7c9f"
+              },
+              "language-O2.exe": {
+                "bytes": 85136,
+                "sha256": "98d89ed2d4721ee14837a54fd95cbfe49ca626eb5fa612dcf6eceadeff0ea1d5"
+              },
+              "source.txt": {
+                "bytes": 41,
+                "sha256": "24e645031a8fcfaf9877e93fee58ab7f824003165b3a88cb52c06dc00d66b981"
+              },
+              "rust.txt": {
+                "bytes": 197,
+                "sha256": "ba203e33fe4a5b8e05147bb6e57fb1ddace26d9f799f357420b666887dd7e2f1"
+              },
+              "c.txt": {
+                "bytes": 116,
+                "sha256": "c0003bf916cbcae3cba03ba1cad136b6d501c1d343f380e58d5ba25cf693aafc"
+              },
+              "cpu.txt": {
+                "bytes": 2355,
+                "sha256": "e5f7302f9882c8b4eca9892fce7bab78f37c49da0f8babcb23d2c2db5ed004bc"
+              }
+            },
+            "environment": {
+              "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+              "c": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+              "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n"
+            },
+            "binary_observations": {
+              "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "scope": "Static inspection only. The chain probe is instrumented; language executable is not. No downloaded binary was executed.",
+              "observations": [
+                {
+                  "binary": "chain-O2.exe",
+                  "sha256": "9ff6e7a3771be1a9cd78bb6a7c7dc23891d2a0bf21d205f9f28ed43a0f04d4da",
+                  "file_header": "\n/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-ubuntu-24.04-arm/tuple/chain-O2.exe:\tfile format elf64-littleaarch64\narchitecture: aarch64\nstart address: 0x0000000000002340\n",
+                  "functions": [
+                    {
+                      "type": "Link",
+                      "name": "fwp_drop11"
+                    },
+                    {
+                      "type": "Option[Link]",
+                      "name": "fwp_drop10"
+                    },
+                    {
+                      "type": "Option[(String, Link)]",
+                      "name": "fwp_drop5"
+                    },
+                    {
+                      "type": "(String, Link)",
+                      "name": "fwp_drop12"
+                    }
+                  ],
+                  "assembly_file": "chain-O2.exe.asm",
+                  "entry_excerpts": {
+                    "Link": [
+                      "",
+                      "    3360:      \tstp\tx29, x30, [sp, #-0x40]!",
+                      "    3364:      \tstp\tx24, x23, [sp, #0x10]",
+                      "    3368:      \tstp\tx22, x21, [sp, #0x20]",
+                      "    336c:      \tstp\tx20, x19, [sp, #0x30]",
+                      "    3370:      \tmov\tx29, sp",
+                      "    3374:      \tmov\tx19, x0",
+                      "    3378:      \tbl\t0x5c34 <chain_observe>",
+                      "    337c:      \tadrp\tx22, 0x21000 <fwp_gc+0xe48>",
+                      "    3380:      \tadd\tx22, x22, #0x1e8",
+                      "    3384:      \tldr\tx8, [x22]",
+                      "    3388:      \tldr\tx9, [x22, #0x28]",
+                      "    338c:      \tsub\tx8, x19, x8",
+                      "    3390:      \tcmp\tx8, x9, lsl #16",
+                      "    3394:      \tb.hs\t0x3534 <fwp_drop11+0x1d4>",
+                      "    3398:      \tadrp\tx23, 0x21000 <fwp_gc+0xe48>"
+                    ],
+                    "Option[Link]": [
+                      "",
+                      "    7604:      \tstp\tx29, x30, [sp, #-0x20]!",
+                      "    7608:      \tstr\tx19, [sp, #0x10]",
+                      "    760c:      \tmov\tx29, sp",
+                      "    7610:      \tmov\tx19, x0",
+                      "    7614:      \tbl\t0x5c34 <chain_observe>",
+                      "    7618:      \tadrp\tx8, 0x21000 <fwp_gc+0xe48>",
+                      "    761c:      \tadd\tx8, x8, #0x1e8",
+                      "    7620:      \tldr\tx9, [x8]",
+                      "    7624:      \tldr\tx8, [x8, #0x28]",
+                      "    7628:      \tsub\tx10, x19, x9",
+                      "    762c:      \tcmp\tx10, x8, lsl #16",
+                      "    7630:      \tb.hs\t0x76bc <fwp_drop10+0xb8>",
+                      "    7634:      \tlsr\tx8, x10, #16",
+                      "    7638:      \tmov\tw9, #0x1228             // =4648",
+                      "    763c:      \tands\tx10, x10, #0xffff"
+                    ],
+                    "Option[(String, Link)]": [
+                      "",
+                      "    3758:      \tstp\tx29, x30, [sp, #-0x40]!",
+                      "    375c:      \tstp\tx24, x23, [sp, #0x10]",
+                      "    3760:      \tstp\tx22, x21, [sp, #0x20]",
+                      "    3764:      \tstp\tx20, x19, [sp, #0x30]",
+                      "    3768:      \tmov\tx29, sp",
+                      "    376c:      \tmov\tx19, x0",
+                      "    3770:      \tbl\t0x5c34 <chain_observe>",
+                      "    3774:      \tadrp\tx22, 0x21000 <fwp_gc+0xe48>",
+                      "    3778:      \tadd\tx22, x22, #0x1e8",
+                      "    377c:      \tldr\tx8, [x22]",
+                      "    3780:      \tldr\tx9, [x22, #0x28]",
+                      "    3784:      \tsub\tx8, x19, x8",
+                      "    3788:      \tcmp\tx8, x9, lsl #16",
+                      "    378c:      \tb.hs\t0x392c <fwp_drop5+0x1d4>",
+                      "    3790:      \tadrp\tx23, 0x21000 <fwp_gc+0xe48>"
+                    ],
+                    "(String, Link)": [
+                      "",
+                      "    355c:      \tstp\tx29, x30, [sp, #-0x40]!",
+                      "    3560:      \tstp\tx24, x23, [sp, #0x10]",
+                      "    3564:      \tstp\tx22, x21, [sp, #0x20]",
+                      "    3568:      \tstp\tx20, x19, [sp, #0x30]",
+                      "    356c:      \tmov\tx29, sp",
+                      "    3570:      \tmov\tx19, x0",
+                      "    3574:      \tbl\t0x5c34 <chain_observe>",
+                      "    3578:      \tadrp\tx22, 0x21000 <fwp_gc+0xe48>",
+                      "    357c:      \tadd\tx22, x22, #0x1e8",
+                      "    3580:      \tldr\tx8, [x22]",
+                      "    3584:      \tldr\tx9, [x22, #0x28]",
+                      "    3588:      \tsub\tx8, x19, x8",
+                      "    358c:      \tcmp\tx8, x9, lsl #16",
+                      "    3590:      \tb.hs\t0x3730 <fwp_drop12+0x1d4>",
+                      "    3594:      \tadrp\tx23, 0x21000 <fwp_gc+0xe48>"
+                    ]
+                  },
+                  "assembly_sha256": "83406a362ddd46c43eebc935c5e59b389e87c7c60ebd4f129952e8c0f285410f"
+                },
+                {
+                  "binary": "language-O2.exe",
+                  "sha256": "98d89ed2d4721ee14837a54fd95cbfe49ca626eb5fa612dcf6eceadeff0ea1d5",
+                  "file_header": "\n/private/tmp/fwp-chain-evidence/38988093805/chain-cleanup-ubuntu-24.04-arm/tuple/language-O2.exe:\tfile format elf64-littleaarch64\narchitecture: aarch64\nstart address: 0x0000000000002300\n",
+                  "functions": [
+                    {
+                      "type": "Link",
+                      "name": "fwp_drop11"
+                    },
+                    {
+                      "type": "Option[Link]",
+                      "name": "fwp_drop10"
+                    },
+                    {
+                      "type": "Option[(String, Link)]",
+                      "name": "fwp_drop5"
+                    },
+                    {
+                      "type": "(String, Link)",
+                      "name": "fwp_drop12"
+                    }
+                  ],
+                  "assembly_file": "language-O2.exe.asm",
+                  "entry_excerpts": {
+                    "Link": [
+                      "",
+                      "    6a48:      \tstp\tx29, x30, [sp, #-0x40]!",
+                      "    6a4c:      \tstr\tx23, [sp, #0x10]",
+                      "    6a50:      \tstp\tx22, x21, [sp, #0x20]",
+                      "    6a54:      \tstp\tx20, x19, [sp, #0x30]",
+                      "    6a58:      \tmov\tx29, sp",
+                      "    6a5c:      \tadrp\tx21, 0x21000 <fwp_gc+0xe50>",
+                      "    6a60:      \tadd\tx21, x21, #0x1e0",
+                      "    6a64:      \tldr\tx9, [x21]",
+                      "    6a68:      \tldr\tx10, [x21, #0x28]",
+                      "    6a6c:      \tsub\tx8, x0, x9",
+                      "    6a70:      \tcmp\tx8, x10, lsl #16",
+                      "    6a74:      \tb.hs\t0x6d20 <fwp_drop11+0x2d8>",
+                      "    6a78:      \tadrp\tx22, 0x21000 <fwp_gc+0xe50>",
+                      "    6a7c:      \tmov\tw23, #0x1228            // =4648",
+                      "    6a80:      \tlsr\tx12, x8, #16"
+                    ],
+                    "Option[Link]": [
+                      "",
+                      "    6984:      \tadrp\tx8, 0x21000 <fwp_gc+0xe50>",
+                      "    6988:      \tadd\tx8, x8, #0x1e0",
+                      "    698c:      \tldr\tx9, [x8]",
+                      "    6990:      \tldr\tx8, [x8, #0x28]",
+                      "    6994:      \tsub\tx10, x0, x9",
+                      "    6998:      \tcmp\tx10, x8, lsl #16",
+                      "    699c:      \tb.hs\t0x6a3c <fwp_drop10+0xb8>",
+                      "    69a0:      \tlsr\tx8, x10, #16",
+                      "    69a4:      \tmov\tw9, #0x1228             // =4648",
+                      "    69a8:      \tands\tx10, x10, #0xffff",
+                      "    69ac:      \tmul\tx11, x8, x9",
+                      "    69b0:      \tadrp\tx9, 0x21000 <fwp_gc+0xe50>",
+                      "    69b4:      \tldr\tx9, [x9, #0x228]",
+                      "    69b8:      \tldrb\tw11, [x9, x11]",
+                      "    69bc:      \tb.ne\t0x69d4 <fwp_drop10+0x50>"
+                    ],
+                    "Option[(String, Link)]": [
+                      "",
+                      "    7250:      \tstp\tx29, x30, [sp, #-0x40]!",
+                      "    7254:      \tstr\tx23, [sp, #0x10]",
+                      "    7258:      \tstp\tx22, x21, [sp, #0x20]",
+                      "    725c:      \tstp\tx20, x19, [sp, #0x30]",
+                      "    7260:      \tmov\tx29, sp",
+                      "    7264:      \tadrp\tx21, 0x21000 <fwp_gc+0xe50>",
+                      "    7268:      \tadd\tx21, x21, #0x1e0",
+                      "    726c:      \tldr\tx8, [x21]",
+                      "    7270:      \tldr\tx9, [x21, #0x28]",
+                      "    7274:      \tsub\tx8, x0, x8",
+                      "    7278:      \tcmp\tx8, x9, lsl #16",
+                      "    727c:      \tb.hs\t0x7518 <fwp_drop5+0x2c8>",
+                      "    7280:      \tadrp\tx22, 0x21000 <fwp_gc+0xe50>",
+                      "    7284:      \tmov\tw23, #0x1228            // =4648",
+                      "    7288:      \tlsr\tx9, x8, #16"
+                    ],
+                    "(String, Link)": [
+                      "",
+                      "    7cb4:      \tstp\tx29, x30, [sp, #-0x40]!",
+                      "    7cb8:      \tstr\tx23, [sp, #0x10]",
+                      "    7cbc:      \tstp\tx22, x21, [sp, #0x20]",
+                      "    7cc0:      \tstp\tx20, x19, [sp, #0x30]",
+                      "    7cc4:      \tmov\tx29, sp",
+                      "    7cc8:      \tadrp\tx21, 0x21000 <fwp_gc+0xe50>",
+                      "    7ccc:      \tadd\tx21, x21, #0x1e0",
+                      "    7cd0:      \tldr\tx9, [x21]",
+                      "    7cd4:      \tldr\tx10, [x21, #0x28]",
+                      "    7cd8:      \tsub\tx8, x0, x9",
+                      "    7cdc:      \tcmp\tx8, x10, lsl #16",
+                      "    7ce0:      \tb.hs\t0x7f8c <fwp_drop12+0x2d8>",
+                      "    7ce4:      \tadrp\tx22, 0x21000 <fwp_gc+0xe50>",
+                      "    7ce8:      \tmov\tw23, #0x1228            // =4648",
+                      "    7cec:      \tlsr\tx12, x8, #16"
+                    ]
+                  },
+                  "assembly_sha256": "b08c3de02f3752e322c0c66622695f59fca0daaf066d9c3c9bf2c3a981ca2354"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "host": "macos-15",
+      "optimization": "-O1",
+      "links": 64,
+      "before_bytes": 3072,
+      "after_bytes": 32
+    },
+    {
+      "host": "macos-15",
+      "optimization": "-O1",
+      "links": 1024,
+      "before_bytes": 49152,
+      "after_bytes": 32
+    },
+    {
+      "host": "macos-15",
+      "optimization": "-O2",
+      "links": 64,
+      "before_bytes": 4096,
+      "after_bytes": 0
+    },
+    {
+      "host": "macos-15",
+      "optimization": "-O2",
+      "links": 1024,
+      "before_bytes": 65536,
+      "after_bytes": 0
+    },
+    {
+      "host": "macos-15-intel",
+      "optimization": "-O1",
+      "links": 64,
+      "before_bytes": 2048,
+      "after_bytes": 32
+    },
+    {
+      "host": "macos-15-intel",
+      "optimization": "-O1",
+      "links": 1024,
+      "before_bytes": 32768,
+      "after_bytes": 32
+    },
+    {
+      "host": "macos-15-intel",
+      "optimization": "-O2",
+      "links": 64,
+      "before_bytes": 3072,
+      "after_bytes": 0
+    },
+    {
+      "host": "macos-15-intel",
+      "optimization": "-O2",
+      "links": 1024,
+      "before_bytes": 49152,
+      "after_bytes": 0
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "optimization": "-O1",
+      "links": 64,
+      "before_bytes": 3072,
+      "after_bytes": 32
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "optimization": "-O1",
+      "links": 1024,
+      "before_bytes": 49152,
+      "after_bytes": 32
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "optimization": "-O2",
+      "links": 64,
+      "before_bytes": 3072,
+      "after_bytes": 32
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "optimization": "-O2",
+      "links": 1024,
+      "before_bytes": 49152,
+      "after_bytes": 32
+    },
+    {
+      "host": "ubuntu-latest",
+      "optimization": "-O1",
+      "links": 64,
+      "before_bytes": 2048,
+      "after_bytes": 16
+    },
+    {
+      "host": "ubuntu-latest",
+      "optimization": "-O1",
+      "links": 1024,
+      "before_bytes": 32768,
+      "after_bytes": 16
+    },
+    {
+      "host": "ubuntu-latest",
+      "optimization": "-O2",
+      "links": 64,
+      "before_bytes": 2048,
+      "after_bytes": 16
+    },
+    {
+      "host": "ubuntu-latest",
+      "optimization": "-O2",
+      "links": 1024,
+      "before_bytes": 32768,
+      "after_bytes": 16
+    },
+    {
+      "host": "windows-11-arm",
+      "optimization": "-O1",
+      "links": 64,
+      "before_bytes": 2048,
+      "after_bytes": 16
+    },
+    {
+      "host": "windows-11-arm",
+      "optimization": "-O1",
+      "links": 1024,
+      "before_bytes": 32768,
+      "after_bytes": 16
+    },
+    {
+      "host": "windows-11-arm",
+      "optimization": "-O2",
+      "links": 64,
+      "before_bytes": 3072,
+      "after_bytes": 0
+    },
+    {
+      "host": "windows-11-arm",
+      "optimization": "-O2",
+      "links": 1024,
+      "before_bytes": 49152,
+      "after_bytes": 0
+    },
+    {
+      "host": "windows-2025",
+      "optimization": "-O1",
+      "links": 64,
+      "before_bytes": 4096,
+      "after_bytes": 48
+    },
+    {
+      "host": "windows-2025",
+      "optimization": "-O1",
+      "links": 1024,
+      "before_bytes": 65536,
+      "after_bytes": 48
+    },
+    {
+      "host": "windows-2025",
+      "optimization": "-O2",
+      "links": 64,
+      "before_bytes": 4096,
+      "after_bytes": 0
+    },
+    {
+      "host": "windows-2025",
+      "optimization": "-O2",
+      "links": 1024,
+      "before_bytes": 65536,
+      "after_bytes": 0
+    }
+  ]
+}
