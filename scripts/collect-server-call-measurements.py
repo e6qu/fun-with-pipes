@@ -78,7 +78,8 @@ def main():
                    'channels_own_queues_and_transfer_received_values',
                    'tasks_and_data_channels_reclaim_after_join_and_cancellation']
     if args.comparison == 'server-owners':
-        checks += ['served_requests_survive_resets_jobs_and_retained_inputs',
+        checks += ['inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries',
+                   'served_requests_survive_resets_jobs_and_retained_inputs',
                    'accepted_connections_release_after_startup_io_jobs_and_channels',
                    'grpc_connection_startup_releases_failed_task_reservations',
                    'cancelling_grpc_server_releases_listener_and_preserves_accepted_owners']

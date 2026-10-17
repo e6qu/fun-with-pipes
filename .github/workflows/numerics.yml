@@ -121,6 +121,7 @@ jobs:
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output server-memory-evidence/primitive-inventory.json
           cargo test --test grpc_server_connections --test grpc_server_requests --test grpc_connect_startup --test grpc_server_ownership
           cargo test --test grpc_response_encoding --test channel_queue_ownership --test arc_tasks
+          cargo test --test list_applicative_ownership inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries -- --exact
           cargo test --test grpc_peer_completion --test grpc_status_cleanup --test grpc_receive_cleanup --test grpc_send_cleanup --test task_ownership --test grpc_request_encoding --test grpc_client_requests
           cargo test --test grpc
           cargo test --test grpc server_measurement::repeated_server_call_memory -- --exact --ignored --nocapture

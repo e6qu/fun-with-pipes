@@ -2,8 +2,9 @@
 
 Updated 2026-10-17 UTC. This branch prepares the next delivery; it is not the
 active pull request. Root `free-server-call-values` owns PR #160 at
-`1f1a928738ae32d88bcd2a7ac1fff1e0004e0f3c`, whose final production run
-`39023664259` is running and documentation `39023663596` passes. Keep that
+`1e1773b6d75fea3b16585c637738bd9fc52e836d`, with new production
+`39025708821` and docs `39025708823` queued after repairing a state-restoration
+fixture that called the old method-dispatch interface. Keep that
 head stable. Merge only after all nine production jobs and docs pass.
 
 ## Change and acceptance
@@ -52,8 +53,14 @@ socket closure, plus a deliberately broken unconditional-count control.
 Superseded six-host `39025166581` at `d3d68598` was cancelled after finding this
 bug; it is not acceptance. The immutable tag `evidence/server-owners-20261017`
 retains that candidate. The corrected source is `7770db9a9c2bebee455d9c02dd748fbd7e54fb11`, frozen as
-`evidence/server-owners-modes-20261017`; all-six run `39025450771` is running.
-Next: fix any failures, collect and compare the six-host measurements, and review
+`evidence/server-owners-modes-20261017`; all-six run `39025450771` failed the ARM64 no-reuse regression. Its test channel
+had no message schema, so actual encoding dereferenced NULL before sending. The
+fixture now supplies a real one-field integer schema; runtime behavior is unchanged.
+It also includes the direct-dispatch state fixture repair from PR #160 and adds
+that focused test to the server suite/report checks. Cancel the superseded run
+and publish this corrected test candidate under a new immutable tag.
+Next: run the corrected Linux probe, then all six hosts; fix failures, collect
+and compare their measurements, and review
 actual ARM64/AMD64 binaries. Do not move old evidence tags. Retain unchanged-workload memory,
 allocation and count comparisons and inspect actual ARM64/AMD64 instructions.
 Do not execute downloaded artifacts. No full builds locally. Integrate into the
@@ -72,7 +79,9 @@ assigned, including both new ownership targets). No-reuse fix formatting passed
 in 1.28s; the documentation audit failed in 2.51s because the rewrite removed the
 required `Next:` marker. That marker is restored; the rerun passed in 2.66s (52 link sets,
 106 immutable pairs and seven roadmap steps). The earlier recorded pass was
-incorrect; this documentation-only correction does not change the frozen runtime.
+incorrect; the documentation-only correction did not change the frozen runtime.
+The message-schema/state-fixture revision passes formatting in 1.02s and the
+documentation audit in 2.41s.
 
 ## Roadmap status
 

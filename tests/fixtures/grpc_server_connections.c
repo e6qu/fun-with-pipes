@@ -44,7 +44,9 @@ int main(int argc,char **argv){
   if(connection_stage>=6){
    g_stream *s=g_stream_new(c,1);if(connection_stage!=9)fwp_rc_fresh(PTR(s));s->remote_end=1;
    if(connection_stage==8||connection_stage==9){
-    static const fwp_desc integer_type={.kind=K_I64,.name="I64"};g_codec codec={0};codec.ty=&integer_type;
+    static const fwp_desc integer_type={.kind=K_I64,.name="I64"};
+    static const int schema[]={PB_MSG,1,1,4,PB_SINT,8};
+    g_codec codec={0};codec.ty=&integer_type;codec.schema=schema;
     channel=g_sink_value(c,s,codec,0);
    }else{
     fwp_rc_dup(PTR(s)); /* pending owner transferred to g_start_call */
