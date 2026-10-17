@@ -1,0 +1,402 @@
+{
+  "source": "e5bc8531e4d37f16f4471b8954020294a6a85020",
+  "source_tag": "evidence/http-server-costs-20261017",
+  "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/39059315375",
+  "status": "Both focused native experiment jobs passed; production acceptance of the selected change is separate.",
+  "comparison": "Identical checked-ARC generated C with compiler-selected inlining versus a noinline attribute on the existing native fwp_rc_share check. No check is removed.",
+  "inputs": {
+    "loop": "100 million updates of a pair of integers",
+    "pipeline": "multiply/filter/sum one million inputs, 20 times",
+    "map": "500000 sorted pairs and two million lookups",
+    "http-client": "tests/web/arc-client.fwp, compilation only",
+    "http-server": "tests/web/server.fwp, compilation only"
+  },
+  "flags": {
+    "fwp": "build --gc arc --emit-c, ordinary source optimization",
+    "native_c": "clang -O2 -std=gnu11 -ffp-contract=off -w, ordinary runtime and TLS/float links selected by compile_c; no LTO with this Clang",
+    "c_reference": "clang -O2; output validation only"
+  },
+  "timing_scope": "One warmup, six fresh whole-process runs per variant, alternating order. Startup, allocation, computation, printing and shutdown included; compilation excluded. C outputs must match; C/Rust are not timed here.",
+  "memory_scope": "No allocation, live-memory or RSS counters in this arrangement experiment. Separate counted binaries measure logical check entries through cached-value cleanup. Instrumentation can prevent elimination/inlining; counts do not establish ordinary machine-call frequency.",
+  "selection": "Keep one noinline copy of the existing native ARC check to reduce code size. Tracing mode is unchanged. No speedup or zero-cost claim.",
+  "limits": "Two Linux hosts, one batch per host; shared-runner noise limits timing conclusions. HTTP variants are compiled, not executed in this experiment. Separate functional/memory suites and all final-head gates remain required.",
+  "hosts": {
+    "amd64": {
+      "runner": "ubuntu-latest",
+      "compiler": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.84\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "platform": "Linux runnervm8k3b6 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux\n",
+      "raw_tables": {
+        "elapsed": "entry-check-elapsed-amd64-2026-10-17.tsv",
+        "entry-checks": "entry-check-counts-amd64-2026-10-17.tsv",
+        "binary-sizes": "entry-check-binary-sizes-amd64-2026-10-17.tsv"
+      },
+      "binaries": [
+        {
+          "program": "loop",
+          "variant": "ordinary",
+          "file_bytes": 51680,
+          "text_bytes": 18194,
+          "sha256": "bdc7b06b5d001e38b2933faac7ec8a2bca8f71df21924c0808c69afe6a1da9d7",
+          "header": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=a13384a6ced6f0964169f3ff13dd9d0e510268c0, for GNU/Linux 3.2.0, not stripped",
+          "generic_entry_count": 9,
+          "generic_entry_address_span_bytes": 3328,
+          "source_sha256": "3e585caac8ecddfa7b8006bacb1a3e5ddb2c0cffea06d0a4f25ee85edc918b8c"
+        },
+        {
+          "program": "loop",
+          "variant": "noinline",
+          "file_bytes": 51712,
+          "text_bytes": 15938,
+          "sha256": "e87f664a02dcdeffeba76d1cf43708e69ff3653dbf9197067ae32c2ea42e763c",
+          "header": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=b18a11e7da9f33f60dcd9f932e9afe25502c5358, for GNU/Linux 3.2.0, not stripped",
+          "generic_entry_count": 9,
+          "generic_entry_address_span_bytes": 1216,
+          "source_sha256": "4f551fd470621e95b4e00dd53134e75a7edb4e38a16f959b9aed5b47b3bb4af0"
+        },
+        {
+          "program": "pipeline",
+          "variant": "ordinary",
+          "file_bytes": 56192,
+          "text_bytes": 19938,
+          "sha256": "26bc800dac70057f9072649c853eff61ab5aac67c38862285406821a3fcfd549",
+          "header": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=dd8a7c6f85639e8d5b49cdc452d6955afe4fe538, for GNU/Linux 3.2.0, not stripped",
+          "generic_entry_count": 11,
+          "generic_entry_address_span_bytes": 3824,
+          "source_sha256": "f6ce2a384a4fe080cb20d6c7ede690a2761db53848659578afb120885005bc30"
+        },
+        {
+          "program": "pipeline",
+          "variant": "noinline",
+          "file_bytes": 52136,
+          "text_bytes": 17266,
+          "sha256": "eea5ef9f4c5055ac8774accb3404efe2d8e617a80634b894e371b35866771061",
+          "header": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=68572493dbbef661177ba89ba088d378b6a3435e, for GNU/Linux 3.2.0, not stripped",
+          "generic_entry_count": 11,
+          "generic_entry_address_span_bytes": 1296,
+          "source_sha256": "b3a712f925789ecb9e15086f5bcd2a1073d2f82b5605233bfbb54540ebbc5100"
+        },
+        {
+          "program": "map",
+          "variant": "ordinary",
+          "file_bytes": 60872,
+          "text_bytes": 26802,
+          "sha256": "cd1eb7e6ee8e8d8a0e827e527ecf694bfdc11cf239f8c4abaf0e99a5ab774d0b",
+          "header": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=3788c9cc1e58c9e099155708464ea704202bf014, for GNU/Linux 3.2.0, not stripped",
+          "generic_entry_count": 15,
+          "generic_entry_address_span_bytes": 4736,
+          "source_sha256": "a79636daa7435f292b1761d5a0768d1db61ce6459ba84961679a8ae891c6bbfc"
+        },
+        {
+          "program": "map",
+          "variant": "noinline",
+          "file_bytes": 56816,
+          "text_bytes": 22994,
+          "sha256": "141a31dc3e124200be31e337badd64b34c7ea29c85917a3c833eacfa252c5a4b",
+          "header": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=d1ef9c4fd245654219a2425f565d364e66c5eeb5, for GNU/Linux 3.2.0, not stripped",
+          "generic_entry_count": 15,
+          "generic_entry_address_span_bytes": 1360,
+          "source_sha256": "b02ac1ac45601461b3be5e41ce4051a8abb8806c397545af9d115c377e2ee0d0"
+        },
+        {
+          "program": "http-client",
+          "variant": "ordinary",
+          "file_bytes": 2337896,
+          "text_bytes": 1611138,
+          "sha256": "b740cba6006c9323de2e575039a25899f358b219926f4b1a371e40781809626d",
+          "header": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=44c06093541b5e2572f9aa75e496287fe0d5b5e8, for GNU/Linux 3.2.0, not stripped",
+          "generic_entry_count": 532,
+          "generic_entry_address_span_bytes": 239568,
+          "source_sha256": "aaf87bdbf9f6fe7d5168c1b61a56dd0bccb9457ad3390b106b8ac60283160b31"
+        },
+        {
+          "program": "http-client",
+          "variant": "noinline",
+          "file_bytes": 2129040,
+          "text_bytes": 1406258,
+          "sha256": "4c0d1c8e58be776620a7c15b397106da3bf375127104dc78ff20a4cb768ad708",
+          "header": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=7432fee53ba29391b522e6363354f0cd5bff4df6, for GNU/Linux 3.2.0, not stripped",
+          "generic_entry_count": 532,
+          "generic_entry_address_span_bytes": 35536,
+          "source_sha256": "ac1925dee40c5f6b274f1c69edb11a98a037478ce951c9eac02b2f4a604b716f"
+        },
+        {
+          "program": "http-server",
+          "variant": "ordinary",
+          "file_bytes": 8825432,
+          "text_bytes": 6098930,
+          "sha256": "f8befa342ee42c299f5b04045ee677cc90797bd4c6cc594b623a95fc0c4bb359",
+          "header": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=fd70aec6dc41e682477ca00f6c6f2a9f06cf9491, for GNU/Linux 3.2.0, not stripped",
+          "generic_entry_count": 2105,
+          "generic_entry_address_span_bytes": 969104,
+          "source_sha256": "69ebf2627795aa18f183c5abe98007ec7cdea1b286ad329022ff39650ee3f167"
+        },
+        {
+          "program": "http-server",
+          "variant": "noinline",
+          "file_bytes": 7985792,
+          "text_bytes": 5260322,
+          "sha256": "296a95fee4404c90ecfc413ca63157ed202e7eee7a8c45228a672e14eafbafde",
+          "header": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=46b4a467761dd340eef4937654fa3f241c63b0d9, for GNU/Linux 3.2.0, not stripped",
+          "generic_entry_count": 2105,
+          "generic_entry_address_span_bytes": 131664,
+          "source_sha256": "f6aea569e61aa2be2c769d12d757b03d7ed6608039f33222bfa4d9e508da819f"
+        }
+      ],
+      "timing_summary": [
+        {
+          "program": "loop",
+          "medians_ns": {
+            "ordinary": 108245330.0,
+            "noinline": 109990205.0
+          },
+          "noinline_over_ordinary": 1.0161196330594586
+        },
+        {
+          "program": "pipeline",
+          "medians_ns": {
+            "ordinary": 8744918.0,
+            "noinline": 8155194.5
+          },
+          "noinline_over_ordinary": 0.932563861662282
+        },
+        {
+          "program": "map",
+          "medians_ns": {
+            "ordinary": 402822362.5,
+            "noinline": 410986433.0
+          },
+          "noinline_over_ordinary": 1.0202671729775181
+        }
+      ],
+      "check_counts": [
+        {
+          "program": "loop",
+          "variant": "ordinary",
+          "entry_check_calls": "0"
+        },
+        {
+          "program": "loop",
+          "variant": "noinline",
+          "entry_check_calls": "0"
+        },
+        {
+          "program": "pipeline",
+          "variant": "ordinary",
+          "entry_check_calls": "0"
+        },
+        {
+          "program": "pipeline",
+          "variant": "noinline",
+          "entry_check_calls": "0"
+        },
+        {
+          "program": "map",
+          "variant": "ordinary",
+          "entry_check_calls": "0"
+        },
+        {
+          "program": "map",
+          "variant": "noinline",
+          "entry_check_calls": "0"
+        }
+      ]
+    },
+    "arm64": {
+      "runner": "ubuntu-24.04-arm",
+      "compiler": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "platform": "Linux runnervmidgih 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n",
+      "raw_tables": {
+        "elapsed": "entry-check-elapsed-arm64-2026-10-17.tsv",
+        "entry-checks": "entry-check-counts-arm64-2026-10-17.tsv",
+        "binary-sizes": "entry-check-binary-sizes-arm64-2026-10-17.tsv"
+      },
+      "binaries": [
+        {
+          "program": "loop",
+          "variant": "ordinary",
+          "file_bytes": 81920,
+          "text_bytes": 16780,
+          "sha256": "22f6e8299f121544d11f15a7104764caebad522949e1fab738e5d99fd4895cac",
+          "header": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=c242343ea6b7d9c4331a457fc6fcdfd6363db1f0, for GNU/Linux 3.7.0, not stripped",
+          "generic_entry_count": 9,
+          "generic_entry_address_span_bytes": 3124,
+          "source_sha256": "3e585caac8ecddfa7b8006bacb1a3e5ddb2c0cffea06d0a4f25ee85edc918b8c"
+        },
+        {
+          "program": "loop",
+          "variant": "noinline",
+          "file_bytes": 81960,
+          "text_bytes": 14828,
+          "sha256": "ea09bb8d949c6bfa9cdb5b14733437fd123f08fba408ef336210e76ff53d5aec",
+          "header": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=9da84e651e09ee910d430a21519bd2b4043938f1, for GNU/Linux 3.7.0, not stripped",
+          "generic_entry_count": 9,
+          "generic_entry_address_span_bytes": 1256,
+          "source_sha256": "4f551fd470621e95b4e00dd53134e75a7edb4e38a16f959b9aed5b47b3bb4af0"
+        },
+        {
+          "program": "pipeline",
+          "variant": "ordinary",
+          "file_bytes": 82344,
+          "text_bytes": 18700,
+          "sha256": "b3b341cf256e88de4ef602a5e61a3b324d659551c1cb6a1675a959d250a59a86",
+          "header": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=2cd20ac4b77ef85f20d7861d3194c082b6acdea0, for GNU/Linux 3.7.0, not stripped",
+          "generic_entry_count": 11,
+          "generic_entry_address_span_bytes": 3620,
+          "source_sha256": "f6ce2a384a4fe080cb20d6c7ede690a2761db53848659578afb120885005bc30"
+        },
+        {
+          "program": "pipeline",
+          "variant": "noinline",
+          "file_bytes": 82376,
+          "text_bytes": 16348,
+          "sha256": "1dbdcb0a3e6d1c820f52486ec107099d59edee59a67f310c7f703ac0337805d8",
+          "header": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=87b4c8aabfc7e8798bf4a89f3c75b333894bbfdf, for GNU/Linux 3.7.0, not stripped",
+          "generic_entry_count": 11,
+          "generic_entry_address_span_bytes": 1360,
+          "source_sha256": "b3a712f925789ecb9e15086f5bcd2a1073d2f82b5605233bfbb54540ebbc5100"
+        },
+        {
+          "program": "map",
+          "variant": "ordinary",
+          "file_bytes": 82928,
+          "text_bytes": 25068,
+          "sha256": "ef46865ffda21401888ff7e07ce2efee429ae1bfb5ae046279c47cbefc4518e0",
+          "header": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=7da14709da3ace2717edafea9dae667576fd6d85, for GNU/Linux 3.7.0, not stripped",
+          "generic_entry_count": 15,
+          "generic_entry_address_span_bytes": 4608,
+          "source_sha256": "a79636daa7435f292b1761d5a0768d1db61ce6459ba84961679a8ae891c6bbfc"
+        },
+        {
+          "program": "map",
+          "variant": "noinline",
+          "file_bytes": 82960,
+          "text_bytes": 21676,
+          "sha256": "5ac9f7650e9c0ffe256c521937a9dc03cfca984c99a38034ce09ead19e7ee09d",
+          "header": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=29e0d880add1b6301637cd092b3b1336b76c0dbd, for GNU/Linux 3.7.0, not stripped",
+          "generic_entry_count": 15,
+          "generic_entry_address_span_bytes": 1516,
+          "source_sha256": "b02ac1ac45601461b3be5e41ce4051a8abb8806c397545af9d115c377e2ee0d0"
+        },
+        {
+          "program": "http-client",
+          "variant": "ordinary",
+          "file_bytes": 2331416,
+          "text_bytes": 1533404,
+          "sha256": "efbff62199ecc1839b2adfe64d79bb92f4d8fc250740f6d171913216eccc05c9",
+          "header": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=30af2c3de2502efe997bb9e40258b0e75e01bdd4, for GNU/Linux 3.7.0, not stripped",
+          "generic_entry_count": 532,
+          "generic_entry_address_span_bytes": 232352,
+          "source_sha256": "aaf87bdbf9f6fe7d5168c1b61a56dd0bccb9457ad3390b106b8ac60283160b31"
+        },
+        {
+          "program": "http-client",
+          "variant": "noinline",
+          "file_bytes": 2134848,
+          "text_bytes": 1340124,
+          "sha256": "d29c70ac80cc22a53d0a7830f15cad78bf5a057f937245d69d97ee84c05c81a9",
+          "header": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=51c8c5d037b01cb0afee201b06f14e0cc620d433, for GNU/Linux 3.7.0, not stripped",
+          "generic_entry_count": 532,
+          "generic_entry_address_span_bytes": 39844,
+          "source_sha256": "ac1925dee40c5f6b274f1c69edb11a98a037478ce951c9eac02b2f4a604b716f"
+        },
+        {
+          "program": "http-server",
+          "variant": "ordinary",
+          "file_bytes": 8700128,
+          "text_bytes": 5768796,
+          "sha256": "42523e8bae22e4b0aeb9ade1a7df397e1927513043970b3c643d316ab681ca91",
+          "header": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=f4a76fd05452a1e63e489b5d678a2cb48d1efda2, for GNU/Linux 3.7.0, not stripped",
+          "generic_entry_count": 2105,
+          "generic_entry_address_span_bytes": 939020,
+          "source_sha256": "69ebf2627795aa18f183c5abe98007ec7cdea1b286ad329022ff39650ee3f167"
+        },
+        {
+          "program": "http-server",
+          "variant": "noinline",
+          "file_bytes": 7848200,
+          "text_bytes": 4977916,
+          "sha256": "d05f78b262ef610141b6381d1ae0963fdc114f115e619469c64e00ae052e6c60",
+          "header": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=0164593ca0383984afb5974f2d23b351aa77510c, for GNU/Linux 3.7.0, not stripped",
+          "generic_entry_count": 2105,
+          "generic_entry_address_span_bytes": 149192,
+          "source_sha256": "f6aea569e61aa2be2c769d12d757b03d7ed6608039f33222bfa4d9e508da819f"
+        }
+      ],
+      "timing_summary": [
+        {
+          "program": "loop",
+          "medians_ns": {
+            "ordinary": 114142986.5,
+            "noinline": 114139818.5
+          },
+          "noinline_over_ordinary": 0.9999722453380874
+        },
+        {
+          "program": "pipeline",
+          "medians_ns": {
+            "ordinary": 10129007.5,
+            "noinline": 10061992.0
+          },
+          "noinline_over_ordinary": 0.993383803891941
+        },
+        {
+          "program": "map",
+          "medians_ns": {
+            "ordinary": 538834606.5,
+            "noinline": 525107033.5
+          },
+          "noinline_over_ordinary": 0.9745235869515371
+        }
+      ],
+      "check_counts": [
+        {
+          "program": "loop",
+          "variant": "ordinary",
+          "entry_check_calls": "0"
+        },
+        {
+          "program": "loop",
+          "variant": "noinline",
+          "entry_check_calls": "0"
+        },
+        {
+          "program": "pipeline",
+          "variant": "ordinary",
+          "entry_check_calls": "0"
+        },
+        {
+          "program": "pipeline",
+          "variant": "noinline",
+          "entry_check_calls": "0"
+        },
+        {
+          "program": "map",
+          "variant": "ordinary",
+          "entry_check_calls": "0"
+        },
+        {
+          "program": "map",
+          "variant": "noinline",
+          "entry_check_calls": "0"
+        }
+      ]
+    }
+  },
+  "inspection": "scripts/inspect-entry-check-binaries.py ARTIFACT_DIRECTORY --llvm-bin LLVM_DIRECTORY reproduces static section/symbol/disassembly review. No downloaded binary was executed locally. Generic-entry address spans include alignment; .text sizes are complete instruction-section bytes.",
+  "server_layout": {
+    "source_entry": "f1189, the generated HTTP serve entry in the archived C",
+    "amd64_fixed_frame_bytes": 67240,
+    "arm64_fixed_frame_bytes": 67264,
+    "amd64_prologue": "Six 8-byte register pushes and subq $0x10678,%rsp. Excludes incoming return address and callees.",
+    "arm64_prologue": "96 bytes of saved registers plus sub sp,sp,#0x10,lsl #12 and sub sp,sp,#0x660. Excludes callees.",
+    "scratch_bytes": 65536,
+    "arrangement_comparison": "Both ordinary and noinline ARC variants have the same fixed frame size on each architecture.",
+    "handle_payload_bytes": 24,
+    "allocation_evidence": "w_start passes 0x18 to fwp_gc_alloc_slow on both Linux architectures. The handle contains owned connection and request pointers and a borrowed task pointer; w_job_finish clears the pointer at offset 0x10 before dropping the handle.",
+    "limits": "Payload excludes allocator metadata and size-class rounding. The receive buffer is stack storage, not eliminated storage. The frame is part of the configured task stack; no local stack limit was raised. No downloaded binary was executed."
+  }
+}

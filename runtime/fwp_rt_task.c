@@ -485,7 +485,7 @@ static int fwp_fd_sync(int fd) {
     if (rc == 0 || op == EPOLL_CTL_DEL) w->mask = want;
     return rc == 0 || op == EPOLL_CTL_DEL ? 0 : -1;
 }
-#else
+#elif !defined(FWP_FIBERS)
 /* Polling platforms need an explicit shutdown/close notification: WSAPoll
  * need not report a locally shut-down socket as ready. Nodes live on parked
  * task stacks and unlink before the exit check can unwind cancellation. */
@@ -493,12 +493,77 @@ typedef struct fwp_poll_wait {
     struct fwp_poll_wait *next;
     fwp_socket_t fd;
     fwp_task *task;
+    short events;
 } fwp_poll_wait;
 static fwp_poll_wait *fwp_poll_waits = NULL;
+#ifdef _WIN32
+typedef WSAPOLLFD fwp_pollfd;
+#else
+typedef struct pollfd fwp_pollfd;
+#endif
+/* Reuse one contiguous OS event array while tasks are parked. It contains no
+ * managed pointers and is released when the last waiter leaves. Wait records
+ * stay on task stacks; neither descriptor numbers nor task stacks index storage. */
+static fwp_pollfd *fwp_poll_fds;
+static size_t fwp_poll_cap;
 static void fwp_poll_wait_remove(fwp_poll_wait *wait) {
     for (fwp_poll_wait **p = &fwp_poll_waits; *p; p = &(*p)->next)
-        if (*p == wait) { *p = wait->next; return; }
+        if (*p == wait) {
+            *p = wait->next;
+            if (!fwp_poll_waits) {
+                fwp_mem_free(fwp_poll_fds);
+                fwp_poll_fds = NULL;
+                fwp_poll_cap = 0;
+            }
+            return;
+        }
     abort();
+}
+
+/* Reserve before registering a stack-local waiter: allocation failure must not
+ * unwind past a linked record or run from inside the scheduler's idle wait. */
+static void fwp_poll_reserve(size_t n) {
+    if (n > fwp_poll_cap) {
+        size_t cap = fwp_poll_cap ? fwp_poll_cap : 16;
+        while (cap < n) {
+            if (cap > SIZE_MAX / 2) fwp_trap("too many socket waiters");
+            cap *= 2;
+        }
+        if (cap > SIZE_MAX / sizeof(fwp_pollfd) || cap > ULONG_MAX)
+            fwp_trap("too many socket waiters");
+        fwp_pollfd *fds = (fwp_pollfd *)fwp_alloc_leaf(cap * sizeof *fds);
+        fwp_mem_free(fwp_poll_fds);
+        fwp_poll_fds = fds;
+        fwp_poll_cap = cap;
+    }
+}
+
+static void fwp_poll_sockets(int timeout) {
+    size_t n = 0;
+    for (fwp_poll_wait *w = fwp_poll_waits; w; w = w->next)
+        if (!w->task->ready) {
+            if (n == fwp_poll_cap) abort();
+            fwp_poll_fds[n++] = (fwp_pollfd){w->fd, w->events, 0};
+        }
+    if (!n) return; /* WSAPoll requires a nonempty array. */
+#ifdef _WIN32
+    int result = WSAPoll(fwp_poll_fds, (ULONG)n, timeout);
+    if (result < 0 && WSAGetLastError() == WSAEINTR) return;
+#else
+    int result = poll(fwp_poll_fds, (nfds_t)n, timeout);
+    if (result < 0 && errno == EINTR) return;
+#endif
+    /* No task runs between building the array and visiting these same waiters.
+     * An OS poll failure wakes them to obtain the error from their socket call. */
+    size_t i = 0;
+    for (fwp_poll_wait *w = fwp_poll_waits; w; w = w->next) {
+        if (w->task->ready) continue;
+        short events = fwp_poll_fds[i++].revents;
+        if (result < 0 || (events & (w->events | POLLHUP | POLLERR | POLLNVAL))) {
+            w->task->io_ready = 1;
+            fwp_make_ready(w->task);
+        }
+    }
 }
 #endif
 
@@ -529,7 +594,7 @@ static void fwp_fd_closing(fwp_socket_t fd) {
         fwp_fdws = NULL;
         fwp_nfdws = 0;
     }
-#else
+#elif !defined(FWP_FIBERS)
     for (fwp_poll_wait *wait = fwp_poll_waits; wait; wait = wait->next)
         if (wait->fd == fd) {
             wait->task->io_ready = 1;
@@ -676,8 +741,8 @@ static void fwp_poll_events(void) {
 #if defined(FWP_FIBERS)
     if (timeout > 0) fwp_fiber_idle(timeout);
 #elif defined(_WIN32)
-    if (timeout > 0 || fwp_io_waiting)
-        Sleep((DWORD)(fwp_io_waiting && (timeout < 0 || timeout > 10) ? 10 : timeout));
+    if (fwp_io_waiting) fwp_poll_sockets(timeout);
+    else if (timeout > 0) Sleep((DWORD)timeout);
 #elif defined(__linux__)
     if (fwp_io_waiting) {
         struct epoll_event evs[64];
@@ -696,7 +761,8 @@ static void fwp_poll_events(void) {
         nanosleep(&ts, 0);
     }
 #else
-    if (timeout > 0 || fwp_io_waiting) poll(0, 0, fwp_io_waiting && (timeout < 0 || timeout > 10) ? 10 : timeout);
+    if (fwp_io_waiting) fwp_poll_sockets(timeout);
+    else if (timeout > 0) poll(0, 0, timeout);
 #endif
     now = fwp_now_ns();
     fwp_task *t = fwp_timers;
@@ -757,6 +823,8 @@ static void fwp_poll_ready(void) {
             fwp_fd_sync(fd);
         }
     }
+#elif !defined(FWP_FIBERS)
+    if (fwp_io_waiting) fwp_poll_sockets(0);
 #endif
     if (!fwp_timers) return;
     int64_t now = fwp_now_ns();
@@ -1554,29 +1622,21 @@ static int fwp_wait_fd(fwp_socket_t fd, int write, int64_t at) {
     fwp_fd_sync(fd);
     int ready = fwp_cur->io_ready;
 #else
-    /* poll/WSAPoll scheduler: re-check readiness every 10ms. A local
-     * shutdown/close wakes this task even without an OS readiness event. */
-    fwp_poll_wait wait = {fwp_poll_waits, fd, fwp_cur};
+    /* The scheduler waits on all descriptors together, bounded only by the
+     * next real timer. Local shutdown/close also wakes a task explicitly. */
+#ifdef _WIN32
+    short events = write ? POLLWRNORM : POLLRDNORM;
+#else
+    short events = write ? POLLOUT : POLLIN;
+#endif
+    fwp_poll_reserve((size_t)fwp_io_waiting + 1);
+    fwp_poll_wait wait = {fwp_poll_waits, fd, fwp_cur, events};
     fwp_poll_waits = &wait;
     fwp_cur->io_ready = 0;
-    int ready = 0;
-    for (;;) {
-        if (fwp_cur->io_ready) { ready = 1; break; }
-#ifdef _WIN32
-        WSAPOLLFD p = {fd, (short)(write ? POLLWRNORM : POLLRDNORM), 0};
-        int result = WSAPoll(&p, 1, 0);
-#else
-        struct pollfd p = {fd, (short)(write ? POLLOUT : POLLIN), 0};
-        int result = poll(&p, 1, 0);
-#endif
-        if (result != 0) { ready = 1; break; }
-        int64_t slice = fwp_now_ns() + 10000000LL;
-        if (at && at < slice) slice = at;
-        fwp_io_waiting++;
-        fwp_park(0, slice);
-        fwp_io_waiting--;
-        if (fwp_cur->cancelled || (at && fwp_now_ns() >= at)) break;
-    }
+    fwp_io_waiting++;
+    fwp_park(0, at);
+    fwp_io_waiting--;
+    int ready = fwp_cur->io_ready;
     fwp_poll_wait_remove(&wait); /* unlink before fwp_check_cancel can unwind */
 #endif
     fwp_check_cancel();
@@ -2213,6 +2273,7 @@ static void fwp_library_tasks_finish(void) {
     fwp_live_fdws = 0;
 #else
     if (fwp_poll_waits) abort(); /* every parked stack was drained above */
+    if (fwp_poll_fds || fwp_poll_cap) abort();
 #endif
     fwp_io_waiting = 0;
     fwp_cur = fwp_root = fwp_zombie = 0;

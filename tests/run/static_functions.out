@@ -1,0 +1,10 @@
+(7, 7)
+(-7, -7)
+[1, 2, 3]
+before callback
+4
+-5
+kept
+("!kept", "kept")
+Err "zero"
+after caught failure

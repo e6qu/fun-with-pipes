@@ -24,6 +24,9 @@ use std::time::{Duration, Instant};
 #[path = "support/client_allocations.rs"]
 mod client_allocations;
 
+#[path = "support/entry_checks.rs"]
+mod entry_checks;
+
 fn fwp() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_fwp"))
 }
@@ -187,7 +190,10 @@ fn program(b: Backend, name: &str) -> Option<Command> {
 }
 
 fn start(b: Backend, tls: bool, env: &[(&str, &str)]) -> Option<Server> {
-    let mut cmd = program(b, "server")?;
+    start_command(program(b, "server")?, tls, env)
+}
+
+fn start_command(mut cmd: Command, tls: bool, env: &[(&str, &str)]) -> Option<Server> {
     if tls {
         let d = certs()?;
         cmd.env("FWP_TLS_CERT", d.join("server.pem"))
@@ -238,6 +244,77 @@ fn curl(args: &[&str]) -> String {
         .expect("run curl");
     assert!(out.status.success(), "curl {args:?}: {out:?}");
     String::from_utf8_lossy(&out.stdout).into_owned()
+}
+
+fn stop_server(server: &mut Server, base: &str, ca: &Path) -> String {
+    assert_eq!(
+        curl(&[
+            "--http1.1",
+            "--cacert",
+            ca.to_str().unwrap(),
+            &format!("{base}/stop")
+        ]),
+        "stopping"
+    );
+    let until = Instant::now() + Duration::from_secs(30);
+    loop {
+        if let Some(status) = server.child.try_wait().unwrap() {
+            let mut stderr = String::new();
+            server.stderr.read_to_string(&mut stderr).unwrap();
+            assert!(status.success(), "server: {status}: {stderr}");
+            assert!(stderr.lines().any(|line| line == "stopped"), "{stderr}");
+            return stderr;
+        }
+        assert!(Instant::now() < until, "server did not finish shutdown");
+        std::thread::sleep(Duration::from_millis(20));
+    }
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos", windows))]
+fn process_rss_kib(pid: u32) -> u64 {
+    #[cfg(target_os = "linux")]
+    {
+        let status = std::fs::read_to_string(format!("/proc/{pid}/status")).unwrap();
+        status
+            .lines()
+            .find_map(|line| line.strip_prefix("VmRSS:"))
+            .unwrap()
+            .split_whitespace()
+            .next()
+            .unwrap()
+            .parse()
+            .unwrap()
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let out = Command::new("ps")
+            .args(["-o", "rss=", "-p", &pid.to_string()])
+            .output()
+            .unwrap();
+        assert!(out.status.success(), "{out:?}");
+        String::from_utf8(out.stdout)
+            .unwrap()
+            .trim()
+            .parse()
+            .unwrap()
+    }
+    #[cfg(windows)]
+    {
+        let out = Command::new("powershell")
+            .args([
+                "-NoProfile",
+                "-Command",
+                &format!("[math]::Floor((Get-Process -Id {pid}).WorkingSet64 / 1024)"),
+            ])
+            .output()
+            .unwrap();
+        assert!(out.status.success(), "{out:?}");
+        String::from_utf8(out.stdout)
+            .unwrap()
+            .trim()
+            .parse()
+            .unwrap()
+    }
 }
 
 fn backends() -> Vec<Backend> {
@@ -604,7 +681,7 @@ fn fwp_client_and_server_over_tls() {
 }
 
 #[test]
-fn checked_arc_http_clients_match_interpreter_with_pooled_and_tls_calls() {
+fn checked_arc_http_matches_interpreter_with_pooled_and_tls_calls() {
     assert!(have_cc(), "HTTP ARC checks require a native C compiler");
     let ca = certs().expect("HTTP ARC checks require OpenSSL for native TLS");
     let dir = scratch("arc-client");
@@ -614,41 +691,77 @@ fn checked_arc_http_clients_match_interpreter_with_pooled_and_tls_calls() {
         std::fs::create_dir_all(path).unwrap();
     }
     let mut binaries = Vec::new();
-    for mode in ["tracing", "arc"] {
-        for opt in ["-O1", "-O2"] {
-            let cfile = dir.join(format!("{mode}{opt}.c"));
-            let binary = dir.join(format!("{mode}{opt}.exe"));
-            let out = Command::new(fwp())
-                .args(["build", "--gc", mode, "--emit-c", "-o"])
-                .arg(&cfile)
-                .arg(&source)
-                .output()
-                .unwrap();
-            assert!(out.status.success(), "{mode}: {out:?}");
-            let code = std::fs::read_to_string(&cfile).unwrap();
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            if let Some(path) = &artifacts {
-                std::fs::copy(&cfile, path.join(format!("{mode}{opt}.c"))).unwrap();
-                std::fs::copy(&binary, path.join(format!("{mode}{opt}.exe"))).unwrap();
+    let mut servers = Vec::new();
+    for role in ["client", "server"] {
+        let input = root().join(if role == "client" {
+            "tests/web/arc-client.fwp"
+        } else {
+            "tests/web/server.fwp"
+        });
+        let artifact_dir = artifacts.as_ref().map(|path| {
+            if role == "client" {
+                path.clone()
+            } else {
+                path.join("server")
             }
-            if mode == "arc" {
-                let symbols = Command::new("nm").arg(&binary).output().unwrap();
-                assert!(symbols.status.success(), "{symbols:?}");
-                let symbols = String::from_utf8_lossy(&symbols.stdout);
-                for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
-                    assert!(!symbols.contains(name), "ARC client contains {name}");
+        });
+        if let Some(path) = &artifact_dir {
+            std::fs::create_dir_all(path).unwrap();
+        }
+        for mode in ["tracing", "arc"] {
+            for opt in ["-O1", "-O2"] {
+                eprintln!("Building HTTP {role} {mode} {opt}");
+                let cfile = dir.join(format!("{role}-{mode}{opt}.c"));
+                let binary = dir.join(format!("{role}-{mode}{opt}.exe"));
+                let out = Command::new(fwp())
+                    .args(["build", "--gc", mode, "--emit-c", "-o"])
+                    .arg(&cfile)
+                    .arg(&input)
+                    .output()
+                    .unwrap();
+                assert!(out.status.success(), "{mode}: {out:?}");
+                let code = std::fs::read_to_string(&cfile).unwrap();
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                if let Some(path) = &artifact_dir {
+                    std::fs::copy(&cfile, path.join(format!("{mode}{opt}.c"))).unwrap();
+                    std::fs::copy(&binary, path.join(format!("{mode}{opt}.exe"))).unwrap();
                 }
-                if let Some(path) = &artifacts {
-                    std::fs::write(path.join(format!("{mode}{opt}.nm")), symbols.as_bytes())
-                        .unwrap();
+                if mode == "arc" {
+                    let symbols = Command::new("nm").arg(&binary).output().unwrap();
+                    assert!(symbols.status.success(), "{symbols:?}");
+                    let symbols = String::from_utf8_lossy(&symbols.stdout);
+                    for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                        assert!(!symbols.contains(name), "ARC {role} contains {name}");
+                    }
+                    if let Some(path) = &artifact_dir {
+                        std::fs::write(path.join(format!("{mode}{opt}.nm")), symbols.as_bytes())
+                            .unwrap();
+                    }
+                }
+                if role == "client" {
+                    binaries.push((mode, opt, binary));
+                } else {
+                    servers.push((mode, opt, binary));
                 }
             }
-            binaries.push((mode, opt, binary));
         }
     }
     for tls in [false, true] {
-        for backend in [Backend::Interp, Backend::Native] {
-            let server = start(backend, tls, &[]).unwrap();
+        let mut programs = vec![(
+            "interp".to_owned(),
+            program(Backend::Interp, "server").unwrap(),
+        )];
+        for (mode, opt, binary) in &servers {
+            let mut command = Command::new(binary);
+            let stress = if *mode == "tracing" { "1" } else { "0" };
+            command
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress);
+            programs.push((format!("{mode}{opt}"), command));
+        }
+        for (backend, command) in programs {
+            let mut server = start_command(command, tls, &[]).unwrap();
             let base = format!("{}://{}", if tls { "https" } else { "http" }, server.addr);
             let run = |command: &mut Command| {
                 command
@@ -657,6 +770,7 @@ fn checked_arc_http_clients_match_interpreter_with_pooled_and_tls_calls() {
                     .output()
                     .unwrap()
             };
+            eprintln!("Comparing HTTP interpreter client / {backend} server / TLS {tls}");
             let reference = run(Command::new(fwp()).args(["run", "--interp"]).arg(&source));
             assert!(
                 reference.status.success(),
@@ -670,6 +784,7 @@ fn checked_arc_http_clients_match_interpreter_with_pooled_and_tls_calls() {
                 + "done\n";
             assert_eq!(String::from_utf8_lossy(&reference.stdout), expected);
             for (mode, opt, binary) in &binaries {
+                eprintln!("Comparing HTTP {mode} {opt} client / {backend} server / TLS {tls}");
                 let out = run(Command::new(binary)
                     .env("FWP_GC_STRESS", if *mode == "tracing" { "1" } else { "0" })
                     .env("FWP_GC_VERIFY", if *mode == "tracing" { "1" } else { "0" })
@@ -686,10 +801,18 @@ fn checked_arc_http_clients_match_interpreter_with_pooled_and_tls_calls() {
                     "{mode}/{opt}/{backend:?}/{tls}"
                 );
                 if let Some(path) = &artifacts {
-                    let prefix = format!("{mode}{opt}-{backend:?}-tls-{tls}");
+                    let prefix = format!("{mode}{opt}-{backend}-tls-{tls}");
                     std::fs::write(path.join(format!("{prefix}.stdout")), &out.stdout).unwrap();
                     std::fs::write(path.join(format!("{prefix}.stderr")), &out.stderr).unwrap();
                 }
+            }
+            let stderr = stop_server(&mut server, &base, &ca.join("ca.pem"));
+            if let Some(path) = &artifacts {
+                std::fs::write(
+                    path.join(format!("server-{backend}-tls-{tls}.stderr")),
+                    stderr,
+                )
+                .unwrap();
             }
         }
     }
@@ -794,6 +917,202 @@ fn repeated_http_client_memory_measurement() {
     println!("{rows}");
 }
 
+/// Count server allocations through graceful shutdown, then sample live process
+/// memory over repeated connections. Both memory modes run with collection off.
+#[test]
+#[ignore = "runner-only HTTP server managed-memory and process-memory measurement"]
+#[cfg(any(target_os = "linux", target_os = "macos", windows))]
+fn repeated_http_server_memory_measurement() {
+    assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
+    let artifacts = PathBuf::from(
+        std::env::var_os("FWP_HTTP_SERVER_MEMORY_ARTIFACTS")
+            .expect("server measurement artifact directory"),
+    );
+    std::fs::create_dir_all(&artifacts).unwrap();
+    let ca = certs()
+        .expect("server measurement requires OpenSSL")
+        .join("ca.pem");
+    for source in ["server.fwp", "repeated-client.fwp"] {
+        std::fs::copy(
+            root().join("tests/web").join(source),
+            artifacts.join(source),
+        )
+        .unwrap();
+    }
+    std::fs::write(artifacts.join("scope.txt"), "Current fwp tracing and checked ARC servers handle identical sequential HTTP/2 GET /hello requests from an ordinary native ARC client over loopback. Each body is received and released; status 200 is summed. Inputs 1, 16 and 256 calls, cleartext and TLS, three fresh measured server processes per case; an ordinary server is the output control. Every server then handles one HTTP/1.1 /stop request, drains children and exits. Managed counters begin after constant initialization and end after entry execution and cached-value cleanup, before complete runtime shutdown; they include server startup, the requested calls and the fixed shutdown request. Collection is disabled and freeing enabled in both modes. Counters exclude raw transport/TLS buffers, allocator metadata/pages and client memory. Separately, ordinary uninstrumented servers receive five batches of 4096 calls each; each batch starts a fresh client process, and the server's 1000-request connection limit exercises connection replacement within each batch. Current server resident memory is sampled after each client exits and a 100 ms settling interval; the first batch warms caches and the next four must remain within 8 MiB of that first sample. Linux uses /proc VmRSS, macOS ps RSS and Windows process WorkingSet64; these are resident-memory samples, not allocated/live-value counts. Native -O2 with normal compiler optimization and -ffp-contract=off. This compares memory modes at one revision; it makes no speed or C/Rust parity claim. Source, generated C, ordinary/instrumented binaries, raw counter rows, RSS samples and stderr are retained. Separate counters record entries into the generic ownership check through cached-value cleanup. Instrumentation can prevent check elimination/inlining, so these are instrumented executions, not ordinary machine-call counts. The counted client runs against a control server; its work is excluded from measured-server allocation rows.\n").unwrap();
+    let emit = |name: &str, mode: &str, file: &str| {
+        eprintln!("server memory: emitting {name}");
+        let cfile = artifacts.join(format!("{name}.c"));
+        let out = Command::new(fwp())
+            .args(["build", "--gc", mode, "--emit-c", "-o"])
+            .arg(&cfile)
+            .arg(root().join("tests/web").join(file))
+            .output()
+            .unwrap();
+        assert!(out.status.success(), "{name}: {out:?}");
+        std::fs::read_to_string(cfile).unwrap()
+    };
+    let client = artifacts.join("client.exe");
+    let client_code = emit("client", "arc", "repeated-client.fwp");
+    fwp::cgen::compile_c(&client_code, &client, "-O2").unwrap();
+    let client_counted_code = entry_checks::instrument(&client_code, entry_checks::SIGNATURE);
+    let client_counted = artifacts.join("client-counted.exe");
+    std::fs::write(artifacts.join("client-counted.c"), &client_counted_code).unwrap();
+    fwp::cgen::compile_c(&client_counted_code, &client_counted, "-O2").unwrap();
+    let run_client = |base: &str, calls: usize| {
+        let out = Command::new(&client)
+            .arg(calls.to_string())
+            .env("FWP_BASE", base)
+            .env("SSL_CERT_FILE", &ca)
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0")
+            .output()
+            .unwrap();
+        assert!(out.status.success(), "{base}/{calls}: {out:?}");
+        assert_eq!(
+            String::from_utf8_lossy(&out.stdout),
+            format!("{}\n", calls * 200)
+        );
+        out.stdout
+    };
+    let mut rows = String::from("mode\ttls\tcalls\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\n");
+    let mut rss_rows = String::from("mode\ttls\tbatch\tcumulative_calls\trss_kib\n");
+    let mut entry_rows =
+        String::from("role\tserver_mode\ttls\tcalls\trepetition\tentry_check_calls\n");
+    for mode in ["tracing", "arc"] {
+        eprintln!("server memory: building {mode} ordinary and measured servers");
+        let code = emit(&format!("server-{mode}"), mode, "server.fwp");
+        let ordinary = artifacts.join(format!("server-{mode}.exe"));
+        fwp::cgen::compile_c(&code, &ordinary, "-O2").unwrap();
+        let measured = artifacts.join(format!("server-{mode}-measured.exe"));
+        let instrumented = entry_checks::instrument(
+            &client_allocations::instrument_client_allocations(&code),
+            entry_checks::SIGNATURE,
+        )
+        .replace("client-memory\\t", "server-memory\\t");
+        std::fs::write(
+            artifacts.join(format!("server-{mode}-measured.c")),
+            &instrumented,
+        )
+        .unwrap();
+        fwp::cgen::compile_c(&instrumented, &measured, "-O2").unwrap();
+        for tls in [false, true] {
+            let launch = |binary: &Path| {
+                start_command(
+                    Command::new(binary),
+                    tls,
+                    &[
+                        ("FWP_GC", "off"),
+                        ("FWP_FREE", "1"),
+                        ("FWP_GC_STRESS", "0"),
+                        ("FWP_GC_VERIFY", "0"),
+                        ("FWP_GC_STATS", "0"),
+                        ("FWP_REUSE_VERIFY", "0"),
+                    ],
+                )
+                .unwrap()
+            };
+            let address = |server: &Server| {
+                format!("{}://{}", if tls { "https" } else { "http" }, server.addr)
+            };
+            let mut final_charge = None;
+            for calls in [1, 16, 256] {
+                let mut control = launch(&ordinary);
+                let base = address(&control);
+                let expected = run_client(&base, calls);
+                let counted = Command::new(&client_counted)
+                    .arg(calls.to_string())
+                    .env("FWP_BASE", &base)
+                    .env("SSL_CERT_FILE", &ca)
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                assert!(counted.status.success(), "{counted:?}");
+                assert_eq!(counted.stdout, expected);
+                let count_stderr = String::from_utf8(counted.stderr).unwrap();
+                std::fs::write(
+                    artifacts.join(format!("client-{mode}-tls-{tls}-{calls}.stderr")),
+                    &count_stderr,
+                )
+                .unwrap();
+                entry_rows.push_str(&format!(
+                    "client\t{mode}\t{tls}\t{calls}\t0\t{}\n",
+                    entry_checks::count(&count_stderr)
+                ));
+                std::fs::write(artifacts.join("entry-checks.tsv"), &entry_rows).unwrap();
+                stop_server(&mut control, &base, &ca);
+                for repetition in 0..3 {
+                    eprintln!(
+                        "server memory: {mode}, TLS={tls}, {calls} calls, repetition {repetition}"
+                    );
+                    let mut server = launch(&measured);
+                    let base = address(&server);
+                    assert_eq!(run_client(&base, calls), expected);
+                    let stderr = stop_server(&mut server, &base, &ca);
+                    entry_rows.push_str(&format!(
+                        "server\t{mode}\t{tls}\t{calls}\t{repetition}\t{}\n",
+                        entry_checks::count(&stderr)
+                    ));
+                    std::fs::write(artifacts.join("entry-checks.tsv"), &entry_rows).unwrap();
+                    std::fs::write(
+                        artifacts.join(format!("{mode}-tls-{tls}-{calls}-{repetition}.stderr")),
+                        &stderr,
+                    )
+                    .unwrap();
+                    let counter = stderr
+                        .lines()
+                        .find_map(|line| line.strip_prefix("server-memory\t"))
+                        .expect("server counters");
+                    let counts: Vec<i64> = counter
+                        .split('\t')
+                        .map(|value| value.parse().unwrap())
+                        .collect();
+                    assert_eq!(counts.len(), 6, "{stderr}");
+                    rows.push_str(&format!(
+                        "{mode}\t{tls}\t{calls}\t{repetition}\t{counter}\n"
+                    ));
+                    std::fs::write(artifacts.join("server-memory.tsv"), &rows).unwrap();
+                    assert_eq!(counts[5], 0, "unexpected collection: {stderr}");
+                    if let Some(before) = final_charge {
+                        assert_eq!(counts[4], before, "server final managed storage changed with request count: {mode}/{tls}/{calls}");
+                    } else {
+                        final_charge = Some(counts[4]);
+                    }
+                }
+            }
+            let mut server = launch(&ordinary);
+            let base = address(&server);
+            let mut samples = Vec::new();
+            for batch in 0..5 {
+                eprintln!("server RSS: {mode}, TLS={tls}, batch {batch}, 4096 calls");
+                run_client(&base, 4096);
+                std::thread::sleep(Duration::from_millis(100));
+                let rss = process_rss_kib(server.child.id());
+                samples.push(rss);
+                eprintln!("server RSS: {mode}, TLS={tls}, batch {batch}: {rss} KiB");
+                rss_rows.push_str(&format!(
+                    "{mode}\t{tls}\t{batch}\t{}\t{rss}\n",
+                    (batch + 1) * 4096
+                ));
+                std::fs::write(artifacts.join("server-rss.tsv"), &rss_rows).unwrap();
+            }
+            let stderr = stop_server(&mut server, &base, &ca);
+            std::fs::write(
+                artifacts.join(format!("{mode}-tls-{tls}-long-running.stderr")),
+                stderr,
+            )
+            .unwrap();
+            assert!(
+                samples[1..].iter().all(|&rss| rss < samples[0] + 8 * 1024),
+                "{mode}/{tls}: server RSS KiB after each 4096-call batch: {samples:?}"
+            );
+        }
+    }
+}
+
 #[test]
 fn native_under_gc_stress() {
     if natives().is_none() {
@@ -805,6 +1124,142 @@ fn native_under_gc_stress() {
     if certs().is_some() {
         let srv = start(Backend::Native, true, &stress).unwrap();
         run_client(Backend::Native, &srv, true, &stress);
+    }
+}
+
+#[test]
+#[ignore = "runner-only profile of function records with constant function captures"]
+fn http_server_function_capture_allocation_profile() {
+    assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
+    let artifacts = PathBuf::from(
+        std::env::var_os("FWP_HTTP_FUNCTION_PROFILE_ARTIFACTS")
+            .expect("profile artifact directory"),
+    );
+    std::fs::create_dir_all(&artifacts).unwrap();
+    std::fs::write(artifacts.join("scope.txt"), "Profile the existing checked-ARC HTTP server with 1/16/256 sequential GET /hello calls, cleartext/TLS and three fresh measured servers per case. An ordinary native ARC client receives/releases each body and sums status 200. Ordinary native and interpreted servers validate output. Native -O2 with ordinary fwp optimization and -ffp-contract=off. Managed counters start after constant initialization and end after main and cached-value cleanup; include startup, all HTTP/2 calls, one HTTP/1.1 stop request and background timers. Collection is disabled and freeing enabled. Only partial applications supplying literal capture-free function references are classified; saturated calls, runtime captures, nested applications and zero-argument constant evaluation are excluded. Each classified execution allocates one function record, with the recorded native requested payload excluding allocator metadata/rounding. Counter arrays and profile output use static/raw C storage outside managed counters. Profiling can change compiler decisions and scheduling; no timing, process-memory or C/Rust parity claim.\n").unwrap();
+    let ca = certs().expect("profile requires TLS tools").join("ca.pem");
+    let emit = |name: &str, file: &str| {
+        let path = artifacts.join(format!("{name}.c"));
+        std::fs::copy(root().join("tests/web").join(file), artifacts.join(file)).unwrap();
+        let output = Command::new(fwp())
+            .args(["build", "--gc", "arc", "--emit-c", "-o"])
+            .arg(&path)
+            .arg(root().join("tests/web").join(file))
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{name}: {output:?}");
+        std::fs::read_to_string(path).unwrap()
+    };
+    let client = artifacts.join("client.exe");
+    fwp::cgen::compile_c(&emit("client", "repeated-client.fwp"), &client, "-O2").unwrap();
+    let code = emit("server", "server.fwp");
+    let ordinary = artifacts.join("server.exe");
+    fwp::cgen::compile_c(&code, &ordinary, "-O2").unwrap();
+    let counted = artifacts.join("server-counted.c");
+    std::fs::write(
+        &counted,
+        client_allocations::instrument_client_allocations(&code),
+    )
+    .unwrap();
+    let profile_source = artifacts.join("server-profile.c");
+    let instrument = Command::new("python3")
+        .arg(root().join("scripts/instrument-closed-functions.py"))
+        .arg("--input")
+        .arg(&counted)
+        .arg("--output")
+        .arg(&profile_source)
+        .arg("--sites")
+        .arg(artifacts.join("sites.json"))
+        .output()
+        .unwrap();
+    assert!(instrument.status.success(), "{instrument:?}");
+    let profiled = artifacts.join("server-profile.exe");
+    fwp::cgen::compile_c(
+        &std::fs::read_to_string(profile_source).unwrap(),
+        &profiled,
+        "-O2",
+    )
+    .unwrap();
+    let run = |server: &Server, tls: bool, calls: usize| {
+        let base = format!("{}://{}", if tls { "https" } else { "http" }, server.addr);
+        let output = Command::new(&client)
+            .arg(calls.to_string())
+            .env("FWP_BASE", &base)
+            .env("SSL_CERT_FILE", &ca)
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0")
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout),
+            format!("{}\n", calls * 200)
+        );
+        base
+    };
+    let env = [
+        ("FWP_GC", "off"),
+        ("FWP_FREE", "1"),
+        ("FWP_GC_STRESS", "0"),
+        ("FWP_GC_VERIFY", "0"),
+        ("FWP_REUSE_VERIFY", "0"),
+    ];
+    let mut rows = String::from("tls\tcalls\trepetition\tall_requests\tall_requested_bytes\tretains\tclosed_function_requests\tclosed_function_requested_bytes\n");
+    for tls in [false, true] {
+        for calls in [1, 16, 256] {
+            for interpreted in [true, false] {
+                let mut server = if interpreted {
+                    start(Backend::Interp, tls, &env).unwrap()
+                } else {
+                    start_command(Command::new(&ordinary), tls, &env).unwrap()
+                };
+                let base = run(&server, tls, calls);
+                stop_server(&mut server, &base, &ca);
+            }
+            for repetition in 0..3 {
+                eprintln!("function captures: TLS={tls}, calls={calls}, repetition={repetition}");
+                let file = artifacts.join(format!("sites-{tls}-{calls}-{repetition}.tsv"));
+                let mut command = Command::new(&profiled);
+                command.env("FWP_CLOSED_PROFILE", &file);
+                let mut server = start_command(command, tls, &env).unwrap();
+                let base = run(&server, tls, calls);
+                let stderr = stop_server(&mut server, &base, &ca);
+                std::fs::write(
+                    artifacts.join(format!("profile-{tls}-{calls}-{repetition}.stderr")),
+                    &stderr,
+                )
+                .unwrap();
+                let counters: Vec<u64> = stderr
+                    .lines()
+                    .find_map(|line| line.strip_prefix("client-memory\t"))
+                    .expect("managed allocation counters")
+                    .split('\t')
+                    .map(|n| n.parse().unwrap())
+                    .collect();
+                assert_eq!(counters.len(), 6);
+                assert_eq!(counters[5], 0);
+                let profile = std::fs::read_to_string(file).unwrap();
+                let mut allocated = 0;
+                let mut bytes = 0;
+                for (site, line) in profile.lines().skip(1).enumerate() {
+                    let fields: Vec<u64> = line.split('\t').map(|n| n.parse().unwrap()).collect();
+                    assert_eq!(fields.len(), 3);
+                    assert_eq!(fields[0], site as u64);
+                    allocated += fields[1];
+                    bytes += fields[1] * fields[2];
+                }
+                assert!(
+                    allocated <= counters[0] && bytes <= counters[1],
+                    "{profile}\n{stderr}"
+                );
+                rows.push_str(&format!(
+                    "{tls}\t{calls}\t{repetition}\t{}\t{}\t{}\t{allocated}\t{bytes}\n",
+                    counters[0], counters[1], counters[2]
+                ));
+                std::fs::write(artifacts.join("summary.tsv"), &rows).unwrap();
+            }
+        }
     }
 }
 
@@ -1133,4 +1588,92 @@ fn chat_example() {
     assert_eq!(a.recv(), (true, 1, b"hello b".to_vec()));
     let _ = child.kill();
     let _ = child.wait();
+}
+
+/// Compare ordinary servers built from saved baseline C and current C on one
+/// runner. The same current client drives both, so client changes do not bias
+/// the server comparison. Timings include that client's process and network work.
+#[test]
+#[ignore = "runner-only paired HTTP server timing and startup measurement"]
+#[cfg(any(target_os = "linux", target_os = "macos", windows))]
+fn fixed_function_server_timing_comparison() {
+    assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
+    let artifacts = PathBuf::from(
+        std::env::var_os("FWP_HTTP_FUNCTION_PROFILE_ARTIFACTS")
+            .expect("current profile artifact directory"),
+    );
+    let baseline = PathBuf::from(
+        std::env::var_os("FWP_HTTP_FUNCTION_BASELINE")
+            .expect("baseline profile artifact directory"),
+    );
+    for source in ["server.fwp", "repeated-client.fwp"] {
+        assert_eq!(
+            std::fs::read(baseline.join(source)).unwrap(),
+            std::fs::read(artifacts.join(source)).unwrap(),
+            "timing comparison requires identical {source}"
+        );
+    }
+    let baseline_code = std::fs::read_to_string(baseline.join("server.c")).unwrap();
+    let baseline_binary = artifacts.join("server-baseline.exe");
+    std::fs::write(artifacts.join("server-baseline.c"), &baseline_code).unwrap();
+    std::fs::copy(
+        baseline.join("revision.txt"),
+        artifacts.join("baseline-revision.txt"),
+    )
+    .unwrap();
+    fwp::cgen::compile_c(&baseline_code, &baseline_binary, "-O2").unwrap();
+    let current_binary = artifacts.join("server.exe");
+    let client = artifacts.join("client.exe");
+    assert!(current_binary.is_file() && client.is_file());
+    let ca = certs()
+        .expect("timing comparison requires TLS")
+        .join("ca.pem");
+    std::fs::write(artifacts.join("timing-scope.txt"), "Current fwp checked-ARC HTTP server versus the saved baseline fwp checked-ARC server, rebuilt from C on the same host with the same -O2 toolchain and -ffp-contract=off. Both use identical server/request program sources and the same current ordinary native client. No instrumented binaries run here. Six fresh processes per variant and transport, with alternating baseline/current order. Each server receives 1024 warm-up GET /hello requests, then 8192 measured requests; the client consumes/releases bodies and sums status 200. The default 1000-request limit exercises connection replacement. Elapsed time covers the complete measured client subprocess, including its startup, parsing, network/TLS and server work; excludes compilation, server startup, warm-up and shutdown. Startup separately measures spawn through the server's listening announcement, including OS/process and listener initialization, not just constant initialization. RSS samples follow warm-up and the measured batch, not a peak bound. Collection disabled and freeing enabled. No C/Rust comparison or isolated initialization/scheduler speed claim.\n").unwrap();
+    let env = [
+        ("FWP_GC", "off"),
+        ("FWP_FREE", "1"),
+        ("FWP_GC_STRESS", "0"),
+        ("FWP_GC_VERIFY", "0"),
+        ("FWP_REUSE_VERIFY", "0"),
+    ];
+    let run_client = |base: &str, calls: usize| {
+        let output = Command::new(&client)
+            .arg(calls.to_string())
+            .env("FWP_BASE", base)
+            .env("SSL_CERT_FILE", &ca)
+            .envs(env)
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout),
+            format!("{}\n", 200 * calls)
+        );
+    };
+    let mut rows = String::from("tls\trepetition\tposition\tvariant\tcalls\tstartup_ns\telapsed_ns\twarm_rss_kib\tfinal_rss_kib\n");
+    for tls in [false, true] {
+        for repetition in 0..6 {
+            let variants = if repetition % 2 == 0 {
+                [("baseline", &baseline_binary), ("current", &current_binary)]
+            } else {
+                [("current", &current_binary), ("baseline", &baseline_binary)]
+            };
+            for (position, (variant, binary)) in variants.iter().enumerate() {
+                eprintln!("HTTP timing: TLS={tls}, repetition={repetition}, {variant}");
+                let began = Instant::now();
+                let mut server = start_command(Command::new(binary), tls, &env).unwrap();
+                let startup = began.elapsed().as_nanos();
+                let base = format!("{}://{}", if tls { "https" } else { "http" }, server.addr);
+                run_client(&base, 1024);
+                let warm_rss = process_rss_kib(server.child.id());
+                let began = Instant::now();
+                run_client(&base, 8192);
+                let elapsed = began.elapsed().as_nanos();
+                let final_rss = process_rss_kib(server.child.id());
+                stop_server(&mut server, &base, &ca);
+                rows.push_str(&format!("{tls}\t{repetition}\t{position}\t{variant}\t8192\t{startup}\t{elapsed}\t{warm_rss}\t{final_rss}\n"));
+                std::fs::write(artifacts.join("server-timing.tsv"), &rows).unwrap();
+            }
+        }
+    }
 }

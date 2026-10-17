@@ -113,6 +113,10 @@ for symbol in ['grpc.set-header', 'grpc.set-trailer']:
 bundle_contracts['http2.body'] = (3, 'OwnedTree', [])
 bundle_contracts['http2.send'] = (3, 'OwnedTree', [])
 bundle_contracts['http2.pooled'] = (1, 'Shared', [])
+bundle_contracts['http2.respond'] = (5, 'Shared', [])
+bundle_contracts['http2.data'] = (3, 'Shared', [])
+for symbol in ['signal.shutdown-requested', 'signal.request-shutdown']:
+    bundle_contracts[symbol] = (1, 'Shared', [])
 for symbol in ['http2.request', 'grpc.metadata', 'grpc.peer-subject']:
     bundle_contracts[symbol] = (1, 'OwnedTree', [])
 bundle_contracts['exit'] = (1, 'Never', [])
@@ -247,6 +251,13 @@ for row in rows:
         promoted.append(before)
         changed_symbols.add(row['symbol'])
         continue
+    if row['symbol'] == 'http2.serve':
+        assert before['contract'] == 'None' and row['bucket'] == 'contract'
+        assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
+        assert row['contract'] == 'Some(Contract { arguments: [Borrow, Borrow, Borrow, Borrow, Borrow], result: Shared, callback: Some(Retained(3)), aliases: [] })'
+        promoted.append(before)
+        changed_symbols.add(row['symbol'])
+        continue
     if row['symbol'] in bundle_contracts:
         expected_before = ('Some(Contract { arguments: [Borrow], result: FreshTree, callback: None, aliases: [] })'
                            if row['symbol'] == 'lines' else 'None')
@@ -316,7 +327,7 @@ for row in rows:
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | set(service_scopes) | {'grpc._force', 'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
+assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | set(service_scopes) | {'http2.serve', 'grpc._force', 'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
 expected_counts = dict(baseline['counts'])
 expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes)
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22

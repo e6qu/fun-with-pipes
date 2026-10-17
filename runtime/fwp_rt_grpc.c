@@ -271,8 +271,8 @@ static void g_stream_discard_input(g_stream *s) {
     s->mtail = 0;
 }
 
-/* Client RPC streams have explicit owners. Other stream/connection graphs
- * still use these weak collector finalizers until their owners are proved. */
+/* Counted streams release explicitly. Weak collector finalizers also cover
+ * graphs that cross an uncounted boundary in tracing mode. */
 static void g_stream_final(void *p) {
     g_stream *s = (g_stream *)p;
     h2_hdrs_free(&s->headers);
@@ -295,7 +295,7 @@ static void g_stream_drop(g_stream *s) {
  * Discard unread payloads, but keep the active-list owner until completion. */
 static void g_stream_reader_release(g_conn *c, g_stream *s) {
     uint8_t *slot = fwp_rc_slot(PTR(s));
-    if (!slot || !*slot) return; /* server/HTTP streams still have collector ownership */
+    if (!slot || !*slot) return; /* no reader count in an uncounted tracing graph */
     s->abandoned = 1;
     g_stream_discard_input(s);
     if (s->remote_end || s->reset || c->dead) g_unlink(c, s);
@@ -316,6 +316,7 @@ static void g_call_release(void *value) {
 
 /* Nonallocating failure marker: no stream observes an unpublished connection. */
 static char g_connect_start_failed[] = "connection startup failed";
+static void w_server_storage_drop(void *value);
 
 static void g_conn_final(void *p) {
     g_conn *c = (g_conn *)p;
@@ -339,6 +340,7 @@ static void g_conn_drop(void *value) {
     g_conn *c = value;
     if (!fwp_rc_release_last(PTR(c))) return;
     if (c->refs || c->fd != FWP_INVALID_SOCKET || c->streams) abort();
+    if (c->web) { w_server_storage_drop(c->web); c->web = NULL; }
     fwp_gc_forget_finalizer(c);
     g_conn_final(c);
     fwp_rc_resource_free_arr(PTR(c));
@@ -3085,16 +3087,27 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
 typedef struct {
     g_conn *c;
     g_stream *s;
-    int server;
-    int64_t deadline;
+    fwp_task *task; /* borrowed identity, cleared after joined children finish */
 } g_call;
 
-static V g_call_value(g_conn *c, g_stream *s, int server, int64_t deadline) {
+static void g_call_drop(V value) {
+    if (!fwp_rc_release_last(value)) return;
+    g_call *k = (g_call *)(uintptr_t)value;
+    if (k->task) abort();
+    g_stream_drop(k->s);
+    g_conn_drop(k->c);
+    fwp_rc_resource_free_arr(value);
+}
+
+static V g_call_value(g_conn *c, g_stream *s) {
     g_call *k = (g_call *)fwp_mem_alloc(sizeof *k);
+    fwp_value_owner owner = {fwp_rc_fresh(PTR(k)), g_call_drop};
+    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);
+    fwp_rc_dup(PTR(c));
     k->c = c;
+    fwp_rc_dup(PTR(s));
     k->s = s;
-    k->server = server;
-    k->deadline = deadline;
+    fwp_cleanup_pop(&cleanup);
     return PTR(k);
 }
 

@@ -73,7 +73,7 @@ static __attribute__((noinline)) V body(void){
  static const unsigned char bytes[]={0,255,192,128,10};
  h2b_put(&stream->data,bytes,sizeof bytes);stream->remote_end=1;
  watched_body=stream->data.d;
- V call=g_call_value(conn,stream,1,0);copy_active=1;
+ V call=g_call_value(conn,stream);copy_active=1;
  struct {uint32_t tag,n;V f[1];} duration={0,1,{0}};
  return fwp_p_http2_body(64,PTR(&duration),call,BODY_TYPE);
 }
@@ -98,9 +98,9 @@ int main(void){int status=probe();if(status)_Exit(status);return 0;}
                 "static __attribute__((noinline)) V make_call(void){",
             )
             .replace(
-                " V call=g_call_value(conn,stream,1,0);copy_active=1;",
+                " V call=g_call_value(conn,stream);copy_active=1;",
                 r#"
- return g_call_value(conn,stream,1,0);
+ return g_call_value(conn,stream);
 }
 static __attribute__((noinline)) void clear_dead_stack(void){
  volatile uintptr_t scratch[256];for(size_t i=0;i<256;i++)scratch[i]=0;

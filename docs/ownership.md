@@ -69,8 +69,8 @@ traps. Unproved runtime sharing still uses tracing.
 | I128/U128 | Direct wide values in eligible workers; counted 16-byte boxes at generic boundaries | Containers and closures can still box |
 | Arrays, maps and sets | Typed elements, counted storage, selected unique updates | Callback and alias contracts must be proved |
 | Strings and bytes | Counted leaves for proved copies/aliases | Unmodeled result families remain shared |
-| Closures | Owned captured arguments and typed call metadata | Retained unknown callbacks are not checked ARC |
-| Tasks and channels | Counted handles/results/queues; ARC admits channels whose payloads contain no functions, tasks or channels | Mutable cycles are not automatically broken by counting |
+| Closures | Owned captured arguments and typed call metadata; eligible functions with only fixed function captures use static records | Runtime-data captures retain ordinary ownership; retained unknown callbacks are not checked ARC |
+| Tasks and channels | Counted handles/results/queues; ARC admits channels whose payloads contain no functions, tasks, HTTP stream handles or channels | Mutable cycles are not automatically broken by counting |
 | Derivative tapes | Scoped owners and a bounded numeric workspace | Raw unscoped tape calls are not checked ARC |
 | External/network state | Explicit resource teardown where modeled | Freeing a C buffer does not prove the lifetime of every referenced fwp value |
 
@@ -114,9 +114,10 @@ tracing and are rejected by checked ARC.
 
 Checked ARC admits channels carrying data such as numbers, strings, records and
 recursive immutable lists or variants. Their payload type must contain no
-functions, tasks or channel handles, even inside another container. A function
-or task can capture the sending channel and form a cycle without mentioning it
-in its result type; the check therefore examines the complete payload type.
+functions, tasks, HTTP stream handles or channels, even inside another container.
+A function or task can capture the sending channel; an HTTP stream handle can
+reach the channel through its connection-owned handler. These paths can form
+a cycle without mentioning the channel in the result type; the check therefore examines the complete payload type.
 This is a conservative eligibility rule, not a ban on ordinary tracing channels.
 Closing an admitted channel still preserves queued messages for receiving.
 Releasing its last owner destroys the remaining queue and its typed contents;
@@ -406,7 +407,7 @@ asynchronous WASI host tasks, REST and MCP remain outside this mode. The
 entries and has separate platform acceptance. Focused checks and final delivery acceptance are distinguished
 in [the handoff](development-state.md).
 
-The HTTP client extension is implemented under platform validation. Client
+HTTP client ownership is accepted in [PR #162](roadmap-history.md#http-client-owners-and-complete-connection-keys-pr-162). Client
 connections have independent pool, caller and I/O-task owners; startup cleanup
 releases a reserved owner if a background task cannot start. Client and server
 entry transfer the socket/TLS session only after the connection allocation
@@ -416,10 +417,32 @@ cancellation notify the peer before releasing request storage. Response strings,
 header pairs and list cells are owned as they are created, so partial copies can
 be released. Completed responses do not borrow the network buffers. Full pool
 keys, including long TLS-option strings, remain distinct without a fixed-size
-temporary buffer. HTTP server handlers are still outside checked ARC; candidate
-implementation is not final platform acceptance. The [HTTP measurements](benchmarks.md#http-clients-without-tracing)
+temporary buffer. The [HTTP measurements](benchmarks.md#http-clients-without-tracing)
 record constant managed storage, remaining allocation/count traffic and larger
 ARC code sections; raw transport/process memory and timing are excluded.
+
+The HTTP server extension is in preparation. A stream handle owns request and
+connection storage; it can survive completion of its handler task without keeping
+that task identity alive. The same allocation carries the task payload, removing
+a separate job record. Connection startup, the inline reader and the writer have
+explicit cleanup; active requests and pending dispatch lists own their streams.
+One retained handler per connection keeps captured values alive if serving fails
+before child tasks finish. Individual jobs borrow that handler. Typed calls retain
+only values that need independent owners. HTTP callbacks run in fresh task scopes:
+a parent State or differentiation scope does not extend into a request task.
+Checked ARC rejects channel payloads containing HTTP stream handles, directly or
+inside other data. Otherwise a handler could store its own handle in a channel
+it captures: channel → handle → connection → handler → channel would form a
+reference-count cycle. Ordinary immutable storage and returned aliases remain
+allowed; the restriction concerns publishing a handle through a mutable queue.
+Focused O1/O2 failure, cancellation, escaped-handle and tracing-stress probes pass
+locally. All six native server-memory jobs pass, with constant final managed
+storage and bounded sampled process memory; the [report](benchmarks.md#http-server-ownership-and-memory)
+explains the workload and remaining allocation costs. All six platform HTTP suites
+pass. Intel macOS passed separate ownership and comparison jobs after the combined
+job reached its time limit; every case and the same limit were preserved. Full
+production acceptance remains pending in the handoff. This does not establish
+REST/MCP entry support or GPU ownership.
 
 WASI supplies standard streams and file access to a WebAssembly module. Build a
 supported program with `fwp build --gc arc --target wasm32-wasi app.fwp -o app.wasm`
@@ -700,7 +723,8 @@ name; a body copies every byte, including zero and non-text bytes. The source
 stream remains live during copying. Header order and duplicates are preserved,
 and an existing `host` header takes precedence over `:authority`. Partial strings,
 pairs, lists and result wrappers use the existing typed cleanup on failure.
-These changes do not yet own the stream itself or remove tracing from a server.
+Those accepted result-copy changes do not alone establish ownership of the
+stream; the server extension above supplies that separate lifetime contract.
 These copied results pass focused allocation-failure and lifetime checks on all
 six native hosts at `e715de1a` (`38935341434`), followed by full acceptance in
 [PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
@@ -895,8 +919,8 @@ The request record does not gain an owning back-pointer to the connection.
 Client I/O task records have only the scheduler, which runs ready tasks, as owner.
 Their storage releases after their stack and scheduler links are removed, without
 task reference-count updates. Language task handles can have independent aliases and retain their
-shared policy. Server task ownership is described below; HTTP/2 task graphs still need separate
-ownership work.
+shared policy. Server task ownership is described below; the HTTP server
+extension above is under validation.
 Library teardown first shuts down connections used by live I/O tasks, then waits
 for those tasks to finish. This includes connections removed from the reuse pool:
 canceling a task alone is insufficient while it defers cancellation to protect
@@ -1046,8 +1070,8 @@ Scoped failure cleanup and deliberate missing-reset tests enforce that distincti
 
 Keep the cache, shared-reader and decoder failure controls while extending these
 owners. Test partial construction and every last-owner case; retain deliberately
-broken variants to prove that missing cleanup is detected. HTTP/2 handlers and
-GPU resource ownership remain separate work.
+broken variants to prove that missing cleanup is detected. HTTP/2 handler
+acceptance and GPU resource ownership remain separate work.
 
 ### Checked gRPC clients and services
 
@@ -1076,8 +1100,8 @@ status errors own both their record and message. Tests omit these owners
 separately and require a failure, in addition to normal and cancellation checks.
 
 Messages encode data, not managed pointers or callable captures. Data-only
-channel payload rules still exclude tasks, functions and nested channels that
-could create a mutable ownership cycle. Request/connection owners and borrowed
+channel payload rules still exclude tasks, functions, HTTP stream handles and
+nested channels that could create a mutable ownership cycle. Request/connection owners and borrowed
 task links retain their existing contracts. ARC binaries still allocate and
 count shared owners; removing the collector does not make networking a zero-cost
 abstraction. Repeated server measurements compare identical fwp programs across

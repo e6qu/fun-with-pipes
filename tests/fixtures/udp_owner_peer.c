@@ -2,6 +2,19 @@
 static fwp_socket_t udp_descriptors[16];
 static size_t udp_descriptor_count;
 static int udp_buffers, udp_left;
+static int udp_retry_receive, udp_receive_retries;
+static int udp_failure(int line) {
+    fprintf(stderr, "UDP failure probe at line %d, remaining allocation %d, readiness retries %d\n",
+            line, udp_left, udp_receive_retries);
+    return 247;
+}
+static ssize_t udp_recvfrom(fwp_socket_t fd, void *data, size_t size, int flags,
+                            struct sockaddr *address, socklen_t *length) {
+    if (udp_retry_receive) {
+        udp_retry_receive=0; udp_receive_retries++; errno=EAGAIN; return -1;
+    }
+    return fwp_socket_recvfrom(fd,data,size,flags,address,length);
+}
 static void udp_allocation(void) {
     if (udp_left > 0 && !--udp_left) fwp_trap("injected UDP allocation failure");
 }

@@ -35,6 +35,11 @@ count-to-three =
 slow : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 slow = tap (const 300ms | task.sleep) | const "slow" | http.text 200
 
+# Test-only shutdown route. Set the shared shutdown flag, then send a response;
+# the accept loop stops and joins outstanding connection tasks before main exits.
+stop : Request -> Response ! {Async}
+stop = const () | signal.request-shutdown | const "stopping" | http.text 200
+
 # WebSocket: every text and binary message back; "close" closes with 4000
 echo-session : WebSocket -> () ! {Async, IO, Network, FileIO}
 echo-session = loop echo-step
@@ -58,6 +63,7 @@ routes = http.router [
     http.route "GET" "/small" small,
     http.route "GET" "/stream" stream,
     http.route "GET" "/slow" slow,
+    http.route "GET" "/stop" stop,
     http.route "GET" "/ws" (http.websocket-with ws-config echo-session),
 ]
 

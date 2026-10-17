@@ -1,6 +1,7 @@
 # Checked-ARC HTTP client: pooled HTTP/2, HTTP/1.1, compression and concurrent
 # requests against tests/web/server.fwp. FWP_BASE selects the server; HTTPS
-# verification uses SSL_CERT_FILE. The server still uses tracing collection.
+# verification uses SSL_CERT_FILE. Tests compare interpreted, tracing and
+# checked-ARC servers with this same client.
 
 base : () -> String ! {IO}
 base = const "FWP_BASE" | env.get | option.unwrap-or "http://127.0.0.1:8080"

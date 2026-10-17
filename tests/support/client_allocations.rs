@@ -1,4 +1,4 @@
-// Managed client allocation counters shared by remote-call and HTTP measurements.
+// Managed allocation counters shared by remote clients and HTTP clients/servers.
 pub fn instrument_client_allocations(generated: &str) -> String {
     fn wrap(code: &mut String, signature: &str, name: &str, arguments: &str, count: &str) {
         assert_eq!(code.matches(signature).count(), 1);

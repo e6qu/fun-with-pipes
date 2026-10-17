@@ -1,105 +1,150 @@
 # Session handoff
 
-Current delivery: [draft PR #162](https://github.com/e6qu/fun-with-pipes/pull/162),
-branch `http-client-delivery`, based on accepted PR #161 (`fd25a10c`).
-The HTTP implementation is integrated as `5ba6e970`; its files match preparation
-`828bf74c8c7484aabcf82962705ff50b103a3107`, retained by immutable tag
-`evidence/http-client-owners-20261017`. This checkout is the current delivery.
-
-PR #161 passed all nine production jobs (`39044644736`) and documentation
-(`39044644846`) at `0e162dcd`. Its squash has the identical tree and the verified
-one-line message without trailers. Duplicate production `39051585338` is cancelled.
-See [history](roadmap-history.md) for the accepted work and failure audit.
+Active delivery: [PR #163](https://github.com/e6qu/fun-with-pipes/pull/163), branch
+`http-server-delivery` in the root checkout. PR #162 is accepted at `1b542f32`;
+[history](roadmap-history.md) records its passing gates and verified squash.
+The temporary `fwp-http-server-owners` and `fwp-closed-functions` worktrees are
+inactive preparation. Work in the root; keep one delivery PR.
 
 ## Next action
 
-Next: publish the final evidence, mark #162 ready, and require all nine production
-jobs plus documentation on that exact commit before squash merge. Both Windows
-reruns at `aacecfd5` pass: [AMD64](https://github.com/e6qu/fun-with-pipes/actions/runs/39054383589)
-and [ARM64](https://github.com/e6qu/fun-with-pipes/actions/runs/39054388163). All 24
-targets completed, including the header repair and steady-memory assertion.
-Keep one active PR. No HTTP delivery is accepted until final production passes.
+Next: monitor the final [PR checks](https://github.com/e6qu/fun-with-pipes/pull/163/checks)
+for the combined repair, measured compiler change and evidence update. Require
+all nine production jobs plus documentation on that exact head before merging.
+Implementation `6c197fed` first passed focused validation on preparation branch
+`http-server-validation-20261018`; this delivery adds the finished measurements,
+documentation and CI maintenance without changing compiler/runtime/library code.
 
-The [combined six-host run](https://github.com/e6qu/fun-with-pipes/actions/runs/39052834580)
-at `8770c03ef7eb36e04c1f412c13090270aaf11526` completed all 72 target executions.
-Linux and both macOS hosts passed every step. Both Windows jobs failed only
-`grpc_connect_cleanup`: its API version definition followed a system header.
-Commit `aacecfd5` moves it before every include. Real HTTP comparisons, library
-unload and all 216 memory samples pass on all six hosts. No skipped job counts
-as platform acceptance.
+The original [production run](https://github.com/e6qu/fun-with-pipes/actions/runs/39066387403)
+at `b5391748` is complete and fully audited. All 960 targets scheduled by the
+native test runner finished; all 1,240 test summaries across the nine jobs were
+checked. Only two targets failed: gRPC injection on Linux, Windows and macOS
+stress, plus UDP injection in both macOS stress jobs. Both are repaired. Regular
+macOS, benchmarks and documentation passed. No original failure remains unexamined.
 
-## Batch scope and acceptance
+The [combined repair checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39070605233)
+pass on all six native hosts: all three gRPC, UDP and readiness targets, 11 tests
+per host, plus formatting and lint. Complete logs were audited. The workflow now
+includes the existing exact architecture/script Windows dependency cache to
+avoid repeating TLS builds in future runs. Deprecated Node 20 action runtimes
+are replaced by `setup-node@v7` and `cache/restore`/`cache/save@v6` throughout CI.
+Node 24 and exact dependency cache keys remain explicit; automatic npm caching
+is disabled. Workflow lint passes after the updates (1.68 s).
 
-HTTP client pool/caller/I/O-task owners, request cancellation/reset and typed
-partial-response cleanup are implemented. Complete connection keys avoid the old
-1,200-byte truncation. Client/server entry now transfers socket/TLS ownership only
-after connection allocation succeeds. HTTP server handlers, Browser and async
-WASI remain outside checked ARC; their ownership is separate work.
+After publication, require all nine production jobs and documentation for the
+exact final head. Squash with an explicit one-line subject of at most 80 characters
+and empty body; verify tree, parent and whole message, then cancel duplicate
+postmerge production. Keep all coverage and fixed resource/time limits.
 
-Require cleanup omission controls, O1/O2 with stress/verification, interpreted/native
-cleartext/TLS comparisons, repeated memory samples, actual binary inspection and
-all final production/docs gates. Preserve header/trailer order, body bytes,
-status and observable failure order. No speed or C/Rust parity claim.
+## Repairs and their verification
+
+- The gRPC test injected a writer failure by matching a statement that the new
+  HTTP server also emits. Scope injection to the gRPC reader body and require one
+  match there. The original ARM macOS stress and both Windows TLS logs show this
+  failure; every other completed Windows TLS target passes.
+- The UDP failure test counted a scheduler scratch allocation as one of three
+  returned objects. Force real socket-readiness retries, warm up persistent
+  scheduler storage, and inject separately into the socket header and each
+  returned object. Keep all broken-cleanup controls. On non-Linux hosts, restoring
+  the old global ordinal must reproduce the fourth-failure error. Save failure
+  source, executable and output before assertions; production now uploads them.
+- The new golden fixture needed its function-result type formatted consistently;
+  the focused WASI test had one needless borrow. Both are corrected. The binary
+  inspector now handles Mach-O section selection directly and invalidates unknown
+  stack-derived addresses when checking Linux startup stores.
+
+Local commands use `python3 scripts/local-guard.py COMMAND...`, serially:
+`env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 cargo test --test grpc_server_connections -- --nocapture`
+passed in 35.34 s. Its first attempt lacked the documented OpenSSL path and failed
+to compile. `cargo test --test udp_ownership udp_construction_aliases_and_partial_receives_release_every_owner -- --exact --nocapture`
+passed in 28.33 s, then 43.48 s with the integrated compiler and rebuild: all 16
+cleanup cases and the restored-ordinal control. Changed harness/library lint,
+Rust and fwp formatting passed. Latest workflow lint passed in 2.09 s.
+The report validator `python3 scripts/compare-fixed-functions.py` checked both
+Linux comparisons and all six memory artifacts in 0.20 s. An initial sandbox
+attempt could not run the guard's process sampler; the same guarded command
+passed with process access, without changing limits.
+
+## What this delivery changes
+
+HTTP connections, requests, escaped stream handles and tasks have explicit owners.
+Tasks borrow the connection's live handler. A 24-byte request handle replaces
+separate 32-byte handle and job allocations. Typed cleanup and fresh callback
+State/AD scopes preserve failure handling and isolation. ARC rejects channels
+containing stream handles because they can create a handler cycle; other aliases
+remain supported. The nonescaping 64 KiB receive buffer uses the stack; actual
+Linux serve frames are 67,240 bytes on AMD64 and 67,264 on ARM64, excluding callees.
+
+macOS/Windows socket waits use OS readiness and real deadlines, replacing periodic
+10 ms sleeps. Wait records unlink before cancellation; readiness storage is
+allocated before registering them, so allocation failure cannot leave a dangling
+link. Linux epoll is unchanged. Keeping one copy of an existing ARC ownership
+check reduces Linux HTTP instruction sections about 13%, without removing checks;
+the [code-cost report](measurements/entry-check-code-costs-2026-10-17.json) makes
+no speedup claim for that change.
+
+The compiler also shares function records whose captures are all fixed functions
+with no captures of their own. Runtime data and effectful evaluation keep their
+ordinary ownership. No language syntax changes. Compiler, runtime and library
+sources match measured revision `85988056`, retained by immutable tag
+`evidence/http-fixed-functions-20261018`; the fixture-format correction changes
+no compiler behavior. The [design](design.md) explains eligibility and startup.
+
+## Completed evidence
+
+- [Original server memory](measurements/http-server-owners-2026-10-17.json): all
+  six hosts pass. All 60 saved binaries were inspected. Five hosts passed the
+  combined functional job; Intel exceeded its 25-minute scheduling limit.
+  [The split rerun](https://github.com/e6qu/fun-with-pipes/actions/runs/39066088716)
+  passes all 15 ownership targets, 40 native and 10 interpreter comparisons and
+  client-memory checks, preserving every case and the limit.
+- [Compiler focused checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39068683031):
+  all six native hosts, both Linux GCC checks and both WASI jobs pass. Full logs
+  contain 34 successful target summaries, 72 executing tests and no failures.
+- [Final allocation, timing and memory report](measurements/fixed-functions-2026-10-18.json):
+  approximately 899 to 722 allocations and 2,318 to 1,901 count increments per
+  additional HTTP request; 177 fixed-function allocations and 3,808 payload bytes
+  removed. Paired Linux runs show 4–6% less elapsed time for this workload versus
+  the older fwp compiler, not C/Rust parity. The report retains inputs, hardware,
+  flags, raw samples, startup, code/data size and measurement boundaries.
+- All six final memory jobs pass: 36 managed rows, 20 persistent-server RSS rows
+  through 20,480 calls per case, and 48 ownership-check rows per host. Final managed
+  storage stays flat; maximum post-warm-up RSS increase is 2 MiB within the 8 MiB
+  bound. All twelve ordinary binaries contain 331 aligned static records totaling
+  7,592 bytes. Linux instructions match all 618 startup capture stores; deliberately
+  wrong captures are rejected on both architectures. ARC binaries omit tracing;
+  tracing controls retain it. Downloaded binaries were inspected, never executed.
+
+Raw evidence is under `/private/tmp/fwp-server-evidence`,
+`/private/tmp/fwp-function-profile` and `/private/tmp/fwp-static-server-memory`.
+The complete original-job audit is `/private/tmp/fwp163-production-audit.json`.
+Audit logs include `/private/tmp/fwp-audit-*.log`,
+`/private/tmp/fwp-fixed-functions-repaired-all.log` and the original production
+failure logs `/private/tmp/fwp163-*`. These focused results do not replace final
+production acceptance. All newly discovered failures remain work to fix now.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
-| 1 | In progress | HTTP client owners; remaining host boundaries/cycles; remove tracing |
-| 2 | In progress | Remove intermediate storage and unnecessary reference counts |
-| 3 | In progress | Reduce equivalent-work C/Rust gaps and measured code costs |
+| 1 | In progress | Server acceptance, remaining host owners and tracing removal |
+| 2 | In progress | Remove functional intermediates and unnecessary counts |
+| 3 | In progress | C/Rust gaps, register/cache use and code costs |
 | 4 | In progress | Differentiation precision, speed and memory scaling |
 | 5 | In progress | CPU kernels and GPU resource ownership |
-| 6 | In progress | Repeated, comparable performance measurements |
+| 6 | In progress | Dependable repeated performance comparisons |
 | 7 | In progress | Larger representative applications |
 
-Use guarded serial focused local checks; full builds and suites run on GitHub.
-Implementation is in progress; nothing in this batch is accepted yet.
-
-## Evidence and checks
-
-The first [six-host run](https://github.com/e6qu/fun-with-pipes/actions/runs/39051530853)
-at preparation `828bf74c` completed all 66 targets. Every real HTTP comparison
-passed. Audit found a stale gRPC cleanup-injection needle on all hosts and two
-Unix-only probes on Windows. The combined repair scoped the needle to gRPC,
-ported native socket/loader checks and used the runner's OpenSSL executable.
-All omission controls remain; both ported probes are in Windows production.
-The second audit isolates the remaining Windows header-order issue above.
-
-All local checks use `python3 scripts/local-guard.py`, serially; C/TLS probes use
-`FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3`. Full gates run on GitHub.
-
-- gRPC request cleanup and O1/O2 omission controls pass (25.93s including build).
-- HTTP response and client startup controls pass (42.08s); expanded client/server
-  startup controls pass (18.53s) after narrowing the server injection needle.
-- `cargo test --no-fail-fast --test grpc_connect_cleanup --test library_resources`:
-  both pass locally (23.92s); the repaired probe also passes on both native Windows architectures.
-- Both HTTP/gRPC integration harnesses compile (1.46s); the memory assertion's
-  harness compiles (1.21s). Repeated source passes ARC emission (1.10s), with an
-  explicit concrete fold signature and `IoError` input errors. Formatting passes.
-- Rust formatting, docs (2.86s), workflow lint (1.02s) and seven test-runner checks
-  (0.99s) pass. Draft documentation `39054368844` passes at `aacecfd5`; the final evidence
-  links pass the guarded local audit (3.04s).
-
-Artifacts are at `/private/tmp/fwp-http-evidence/39052834580`; both complete log
-audits are `/private/tmp/fwp-http-first-audit.json` and
-`/private/tmp/fwp-http-second-audit.json`. All 216 rows cover tracing/ARC,
-cleartext/TLS, 1/16/256 calls and three measured processes. Final managed storage
-is constant within each host: Linux AMD64 6,368 bytes, Linux ARM64 19,424;
-macOS both 2,368; Windows AMD64 3,520 and ARM64 3,136. Counts match between modes
-with tracing disabled and physical freeing enabled. Each additional call costs
-237 managed allocations and 543 retains in this full high-level client workload.
-The final sample includes pooled connections/tasks and excludes raw transport,
-TLS/OS/allocator metadata, process RSS and timing. These are remaining costs.
-
-Static inspection of all 48 actual functional/repeated binaries finds tracing
-symbols in the 24 tracing builds and none in the 24 ARC builds. No downloaded
-binary was executed. JSON summaries and disassembly remain beside artifacts;
-the tracked [report](measurements/http-client-owners-2026-10-17.json) and
-[guide](benchmarks.md#http-clients-without-tracing) now explain these costs.
-Linux HTTP entry frames are 664 bytes on AMD64 and 720 on ARM64 in both modes,
-including saved registers, excluding callees and AMD64's incoming return address.
-ARC executable text is larger; generic entry guards are a concrete review target.
-
-The runtime/compiler source remains `8770c03e`; subsequent changes affect tests,
-evidence and docs only. Keep this source distinction when reporting measurements.
+All seven [plan](../PLAN.md) areas remain open. Browser, asynchronous WASI,
+REST/MCP entries and retained host callbacks remain ownership work. After this
+delivery's acceptance, extend checked ownership to generated REST/MCP entries.
+Isolated preparation is in `/private/tmp/fwp-server-entries`, branch
+`server-entry-ownership`; do not publish a second delivery PR before #163 merges.
+Both use ordinary fwp server code: a guarded compile-only API probe already
+accepts the full REST API fixture (5.28 s) and a two-tool MCP fixture (3.23 s).
+This is eligibility evidence only, not execution or lifetime acceptance. Keep
+the CLI exclusion until repeated success/error requests, malformed input,
+cancellation, teardown, interpreter agreement and actual no-tracing binaries
+are verified across all six native hosts. Measure allocations and bounded memory
+for REST HTTP/TLS and MCP standard-input/HTTP modes before claiming support.
+Historical preparation entries are not new tasks.

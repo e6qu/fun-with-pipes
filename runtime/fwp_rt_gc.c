@@ -768,7 +768,14 @@ static inline V fwp_rc_fresh(V v) {
     return v;
 }
 
+/* ARC keeps the ownership-contract check, but not a copy in every generic
+ * function entry. Native ARM64/AMD64 measurements show smaller code; this
+ * changes code placement, not which values may cross an uncounted boundary. */
+#ifdef FWP_ARC_ONLY
+static __attribute__((noinline)) void fwp_rc_share(V v);
+#else
 static void fwp_rc_share(V v);
+#endif
 
 static inline void fwp_rc_dup(V v) {
     uint8_t *c = fwp_rc_slot(v);

@@ -55,6 +55,7 @@ pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
                         | "std::Task"
                         | "std::Channel"
                         | "std::GrpcCell"
+                        | "std::H2Stream"
                         | "std::File"
                         | "std::UdpSocket"
                         | "std::Conn"

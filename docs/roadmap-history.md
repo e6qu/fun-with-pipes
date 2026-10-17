@@ -48,6 +48,38 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## HTTP client owners and complete connection keys (PR #162)
+
+[PR #162](https://github.com/e6qu/fun-with-pipes/pull/162) merged as
+`1b542f32f352ecd34553f17fcce2de25b6f0bbb2` on 2026-10-17 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39055466891)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39055442588)
+passed at `99d70deb9c9daa8fc041964f9cbee51e48047c38`. The squash has the same tree,
+`0ff25a71b1b10a177d7f3a5dccc331861efdfa3c`, and accepted #161 as its only parent.
+Its entire message is `Own HTTP client memory and preserve complete connection keys`.
+Duplicate postmerge production `39062147625` is confirmed cancelled.
+
+HTTP client pools, callers, I/O tasks and partial responses have explicit owners.
+Cancellation/reset releases request storage. Complete connection keys preserve
+long TLS options; connection allocation must succeed before socket/TLS ownership
+transfers. Checked HTTP clients pass interpreted/native cleartext/TLS comparisons.
+This delivery does not establish checked HTTP server support.
+
+[Six-host evidence](measurements/http-client-owners-2026-10-17.json) retains 216
+memory rows and inspection of 48 actual binaries. Final managed storage is
+constant with request count; each additional high-level client call still makes
+237 managed allocations and 543 retains. ARC binaries exclude tracing, but have
+larger instruction sections. The [guide](benchmarks.md#http-clients-without-tracing)
+explains counter scope, register/stack use and remaining code costs; no speed or
+C/Rust parity claim follows.
+
+The first six-host audit found a stale gRPC cleanup-injection target and two
+Unix-only probes. The combined repair scopes the injection and uses native
+Windows sockets and library loading. A second full audit completed all 72 target
+executions and isolated one remaining Windows header-order error; both Windows
+full reruns then passed all 24 targets. Final acceptance reran the complete
+production matrix and docs. No failed or skipped run substitutes for those gates.
+
 ## Remote calls without tracing and record-field moves (PR #161)
 
 [PR #161](https://github.com/e6qu/fun-with-pipes/pull/161) merged as `fd25a10c`

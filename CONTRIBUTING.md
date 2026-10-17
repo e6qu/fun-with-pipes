@@ -87,8 +87,8 @@ cargo clippy --target wasm32-wasip1 -- -D warnings
 cargo test --all-targets
 ```
 
-A separate CI job runs the benchmarks
-(`cargo test --release --test bench -- --ignored --nocapture`). It
+A separate CI job runs the C/Rust comparison
+(`cargo test --release --test bench benchmarks -- --ignored --exact --nocapture`). It
 reports times without failing on them, but it does fail when fwp, C and
 Rust print different results.
 
@@ -153,6 +153,12 @@ Inventory agreement
 does not substitute for runtime alias/unwind controls or full CI.
 
 ## Rules the code follows
+
+Generated-C probes must preserve platform setup before system headers. Add
+instrumentation after an existing type or function declaration; do not prepend
+headers ahead of the runtime's Windows API definitions. Use plain stable labels
+for artifact filenames: Rust debug formatting adds quotes to strings, which
+Windows paths and GitHub artifact uploads reject.
 
 - **Leave encountered code healthier.** Fix discovered bugs and issues even
   when they are outside the current roadmap item. Preserve semantic regression

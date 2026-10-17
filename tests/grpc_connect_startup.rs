@@ -52,10 +52,16 @@ static char target[300];static g_conn *result;
 static void client(void *arg,int stop){if(stop)_Exit(30);jmp_buf failed;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;if(!setjmp(failed)){fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;char *error=0;result=g_connect(target,0,&error);if(error)_Exit(31);}else trapped++;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;}
 static int wait_entered,wait_finished,wait_cancelled;
 static int64_t wait_until;
+static void check_current_wait_released(void){
+#ifndef __linux__
+ for(fwp_poll_wait *w=fwp_poll_waits;w;w=w->next)if(w->task==fwp_cur)_Exit(43);
+#endif
+}
 static void wait_socket(void *arg,int cancelled){
- if(cancelled){wait_cancelled++;return;}
+ if(cancelled){check_current_wait_released();wait_cancelled++;return;}
  wait_entered++;
  int ready=fwp_wait_fd(*(fwp_socket_t *)arg,0,wait_until);
+ check_current_wait_released(); /* detect a stale node before its task stack is freed */
  if(ready!=(wait_until==0))_Exit(41);
  wait_finished++;
 }

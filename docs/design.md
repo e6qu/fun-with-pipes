@@ -366,6 +366,24 @@ failure after entry. This adds no language syntax or fields to the closure layou
 [PR #156](roadmap-history.md#released-stream-caches-and-moved-closure-captures-pr-156)
 records full platform acceptance.
 
+A partial application supplies some arguments now and returns a function waiting
+for the rest. Some such functions contain only fixed references to other
+functions. For example, `neg | abs` composes integer negation with absolute value;
+passing that composition around need not allocate a fresh function record.
+The compiler now places eligible records in static program storage and shares
+equal records. Each capture must itself be a fixed function with no captures.
+Runtime data, zero-argument evaluation and fully supplied calls keep their
+existing evaluation and ownership rules. No effect runs early.
+
+These records use the ordinary closure layout. Their capture addresses are filled
+during existing constant initialization, including on 32-bit WebAssembly, where
+a widened pointer cannot use the same C static initializer as a native address.
+They own no runtime data and need no heap allocation or reference count. Generic
+calls and their ownership checks can still have costs; this does not make every
+function call free. Static storage and startup stores also have costs. The
+[handoff](development-state.md) distinguishes the measured candidate from full
+platform acceptance.
+
 Shared top-level computed values have cached owners, released during teardown.
 A type descriptor is runtime metadata used for operations such as equality,
 printing and decoding.
@@ -399,20 +417,35 @@ Client connection I/O tasks have one scheduler owner. Their records release
 when execution finishes and their stacks and scheduler links have been removed;
 this path needs no task reference-count updates. Language-visible task handles
 retain the shared-owner policy because callers can keep independent aliases.
-Server jobs also have explicit owners; HTTP server tasks remain open. Connection records
+Server jobs also have explicit owners; the HTTP extension is under validation. Connection records
 can outlive their sockets while response readers retain status information;
 the pool, I/O tasks and callers hold separate storage owners. Library teardown
 closes these connections before waiting for their tasks. The
 [ownership guide](ownership.md) and [measured comparison](benchmarks.md#freeing-closed-connections-and-finished-tasks)
 describe the limits. Checked gRPC client/service builds add iterator scope
 checks and use these owners; [PR #161](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161)
-records passing production acceptance. HTTP handlers remain outside that extension.
+records passing production acceptance. HTTP handler acceptance is separate.
 
-The next HTTP client extension gives pooled connections, I/O tasks and requests
+Accepted HTTP client support gives pooled connections, I/O tasks and requests
 explicit owners. Responses are copied into typed fields and lists with cleanup
 for partially built values. It also stores complete connection keys, including
-TLS options, instead of truncating them in a fixed-size buffer. Platform checks
-are still pending; [the handoff](development-state.md) tracks acceptance.
+TLS options, instead of truncating them in a fixed-size buffer. The server
+extension owns the connection, request handles and writer tasks. Each handle
+also carries its task payload, replacing two allocations with one. Handler
+captures have one connection owner, borrowed by its request tasks; this owner
+survives failure before child tasks finish. The reader's 64 KiB scratch buffer
+stays on its stack because processing copies each chunk before the next read.
+Six-host binary and server-memory evidence, with Linux stack measurements, is in the
+[measurement report](benchmarks.md#http-server-ownership-and-memory);
+[the handoff](development-state.md) tracks acceptance.
+
+The server measurement also exposed periodic socket retry delays on macOS and
+Windows. Their scheduler now queries all parked sockets together with poll or
+WSAPoll, using the next real deadline as the timeout; preemption checks without
+waiting. Stack-local wait records unlink before cancellation unwinds. A reusable
+leaf array holds only OS descriptors/events and is released when the last waiter
+leaves. Local close still wakes waiters explicitly, including before descriptor
+reuse. This repair needs the same native platform validation as the server owners.
 
 Accepted input ownership gives remote input iterators concrete destruction
 metadata. Its cursor keeps the current element alive while advancing to the
@@ -497,7 +530,7 @@ does not silently switch to tracing.
 
 Admitted programs include ordinary immutable values, scoped files and state,
 proved derivative scopes, selected retained tasks, channels carrying data without
-functions/tasks/channel handles, and scoped C calls. Mutable
+functions, tasks, HTTP stream handles or channels, and scoped C calls. Mutable
 cycles, raw pointers and unproved external callbacks remain excluded.
 Checked ARC supports native main and function executables,
 including CLI commands, and C libraries with copied inputs and pointer-free
@@ -506,8 +539,12 @@ main/function/CLI entries use the same ownership checks and free counted storage
 through their existing external count table. Checked gRPC clients and service
 methods additionally prove when sent and received iterator steps run; the
 [service guide](services.md#building-without-tracing-collection) explains the
-command and current validation. Browser re-entry, WASI host fibers, HTTP handlers,
-REST and MCP entry points remain excluded. The allocators still use metadata;
+command and current validation. HTTP clients are accepted in PR #162; server
+ownership is under validation.
+Browser re-entry, WASI host fibers, REST and MCP entry points remain excluded.
+HTTP stream handles cannot be queued through a channel in checked ARC: their
+connection retains the handler, whose captures could contain that same channel.
+The allocators still use metadata;
 native allocation may retain reusable pages. See
 [the precise memory contract](ownership.md#checked-arc-delivery).
 

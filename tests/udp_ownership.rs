@@ -176,12 +176,12 @@ fn udp_construction_aliases_and_partial_receives_release_every_owner() {
             "typedef uint64_t V;",
             "typedef uint64_t V;\nstatic void udp_allocation(void);",
         );
-        let init = "static inline void *fwp_alloc_init(size_t n) {";
-        let slow = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
-        assert!(code.contains(init) && code.contains(slow));
-        code = code
-            .replace(init, &format!("{init} udp_allocation();"))
-            .replace(slow, &format!("{slow} if(leaf!=0) udp_allocation();"));
+        // Fail the socket header and the three returned-value allocations.
+        // Readiness bookkeeping has separate scheduler failure checks and must
+        // not shift the selected receive allocation when a packet arrives later.
+        let header = "fwp_sock *s = (fwp_sock *)fwp_alloc_leaf(bytes);";
+        assert_eq!(code.matches(header).count(), 1);
+        code = code.replace(header, &format!("udp_allocation(); {header}"));
         let start = code.find("static void fwp_sock_final(").unwrap();
         let replaced = code[start..]
             .replace("fwp_socket_open(", "udp_socket_open(")
@@ -190,13 +190,22 @@ fn udp_construction_aliases_and_partial_receives_release_every_owner() {
         code.insert_str(start, include_str!("fixtures/udp_owner_peer.c"));
         let start = code.find("static V fwp_p_udp_recv_from(").unwrap();
         let end = start + code[start..].find("\n}\n").unwrap() + 3;
-        let receive = code[start..end]
+        let mut receive = code[start..end]
+            .replace("fwp_socket_recvfrom(", "udp_recvfrom(")
             .replace("malloc(", "udp_buffer_alloc(")
             .replace("free(buf)", "udp_buffer_free(buf)")
             .replace(
                 "&buffer_cleanup, free,",
                 "&buffer_cleanup, udp_buffer_free,",
             );
+        for allocation in [
+            "fields.values[0] = fwp_rc_fresh(fwp_str_new(buf, (size_t)k));",
+            "fields.values[1] = fwp_rc_fresh(fwp_cstr(a));",
+            "V r = fwp_decode_record(&fields);",
+        ] {
+            assert_eq!(receive.matches(allocation).count(), 1);
+            receive = receive.replace(allocation, &format!("udp_allocation(); {allocation}"));
+        }
         code.replace_range(start..end, &receive);
         let code = code[..code.find("int main(").unwrap()].to_owned()
             + &descriptors
@@ -215,11 +224,11 @@ fn udp_construction_aliases_and_partial_receives_release_every_owner() {
             assert_ne!(&code, broken);
         }
         for opt in ["-O1", "-O2"] {
-            for (source, expected) in [
-                (&code, 0),
-                (&no_constructor, 248),
-                (&no_fields, 248),
-                (&no_final_close, 248),
+            for (name, source, expected) in [
+                ("owned", &code, 0),
+                ("missing-constructor", &no_constructor, 248),
+                ("missing-fields", &no_fields, 248),
+                ("missing-close", &no_final_close, 248),
             ] {
                 let binary = dir.join("udp-cleanup.exe");
                 fwp::cgen::compile_c(source, &binary, opt).unwrap();
@@ -230,22 +239,57 @@ fn udp_construction_aliases_and_partial_receives_release_every_owner() {
                     .env("FWP_REUSE_VERIFY", "0")
                     .output()
                     .unwrap();
-                assert_eq!(
-                    output.status.code(),
-                    Some(expected),
-                    "{arc}/{opt}: {output:?}"
-                );
-                if expected == 0 && opt == "-O2" {
+                if output.status.code() != Some(expected) || (expected == 0 && opt == "-O2") {
                     if let Some(path) = std::env::var_os("FWP_UDP_ARTIFACTS") {
                         let path = std::path::PathBuf::from(path);
                         std::fs::create_dir_all(&path).unwrap();
-                        let label = if arc { "udp-arc" } else { "udp-tracing" };
+                        let label = format!(
+                            "cleanup-{}-{opt}-{name}",
+                            if arc { "arc" } else { "tracing" }
+                        );
                         std::fs::write(path.join(format!("{label}.c")), source).unwrap();
                         std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
-                        std::fs::write(path.join(format!("{label}.txt")), output.stdout).unwrap();
+                        std::fs::write(path.join(format!("{label}.stdout")), &output.stdout)
+                            .unwrap();
+                        std::fs::write(path.join(format!("{label}.stderr")), &output.stderr)
+                            .unwrap();
+                        std::fs::write(
+                            path.join(format!("{label}.status")),
+                            format!("expected {expected}, actual {:?}\n", output.status.code()),
+                        )
+                        .unwrap();
                     }
                 }
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "{arc}/{opt}/{name}: {output:?}"
+                );
             }
+        }
+        if arc && !cfg!(target_os = "linux") {
+            // The former global ordinal miscounts poll scratch as a receive
+            // result. Forced readiness retries reproduce it deterministically.
+            assert_eq!(code.matches("udp_allocation(); ").count(), 4);
+            let old = code.replace("udp_allocation(); ", "");
+            let old = old
+                .replace("static inline void *fwp_alloc_init(size_t n) {", "static inline void *fwp_alloc_init(size_t n) { udp_allocation();")
+                .replace("static inline void *fwp_gc_alloc(size_t n, int leaf) {", "static inline void *fwp_gc_alloc(size_t n, int leaf) { if(leaf!=0)udp_allocation();");
+            let binary = dir.join("old-global-ordinal.exe");
+            fwp::cgen::compile_c(&old, &binary, "-O2").unwrap();
+            let output = Command::new(binary)
+                .env("FWP_GC", "off")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(247), "{output:?}");
+            assert!(
+                String::from_utf8_lossy(&output.stderr)
+                    .contains("expected 3 receive failures, got 4"),
+                "{output:?}"
+            );
         }
     }
 }
