@@ -16,7 +16,11 @@ stack use at 64 and 1,024 links, verify physical reclamation with collection off
 and compare its small language example with the interpreter. Initial run
 `38987057363` failed in the fixture lookup: generated type comments use `Link`,
 not its module-qualified name. The lookup now matches the existing convention;
-no stack result was collected from that run. Run native builds
+no stack result was collected from that run. The corrected lookup then reached
+the native program in `38987243134`, but the fixture incorrectly enabled retained
+storage poisoning in checked ARC, which explicitly rejects that combination.
+The physical-reclamation measurement now disables poisoning; separate hybrid-mode
+checks will cover it. Neither failed run establishes the baseline. Run native builds
 on GitHub only. Acceptance requires bounded cleanup stack use, correct retained
 aliases and partial cleanup, no new heap work, and full final-head gates. This
 preparation does not admit native remote calls to checked ARC.

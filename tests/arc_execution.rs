@@ -320,7 +320,7 @@ int main(void) {
                 .env("FWP_GC", "0")
                 .env("FWP_GC_STRESS", "0")
                 .env("FWP_GC_VERIFY", "0")
-                .env("FWP_REUSE_VERIFY", "1"),
+                .env("FWP_REUSE_VERIFY", "0"),
         );
         let text = String::from_utf8(output.stdout).unwrap();
         let spans: Vec<u64> = text
