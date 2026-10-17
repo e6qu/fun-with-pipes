@@ -102,3 +102,16 @@ Windows: its prepended standard header selected an older Windows API contract.
 The fixture now declares the same Windows 10 contract as the generated runtime
 before including headers. Runtime code is unchanged. Next: publish this repair
 and rerun all six focused hosts; no cross-platform acceptance is claimed yet.
+
+## Socket shutdown repair
+
+Replacement run `39027091673` gets past Windows compilation but the client
+startup fixture times out draining its reader after local shutdown. WSAPoll
+can leave it parked. The runtime now explicitly wakes socket waiters on
+shutdown/close. Polling wait records live on task stacks and are removed on
+normal return or cancellation; no heap allocation or task header is added.
+A Windows negative control removes the wake and requires the original bounded
+timeout. Formatting passed in 1.30s after correcting one line wrap.
+Next: validate Windows AMD64 first, then rerun all six hosts and refresh
+measurements/binary review because runtime code now changes. Earlier Linux
+results remain evidence of the earlier revision, not this fix.

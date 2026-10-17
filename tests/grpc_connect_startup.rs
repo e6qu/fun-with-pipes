@@ -82,7 +82,7 @@ int main(void){
     assert_eq!(generated.matches(reserve).count(), 2);
     assert_eq!(generated.matches(startup).count(), 1);
     assert_eq!(generated.matches(marker).count(), 1);
-    let controls = [
+    let mut controls = vec![
         (
             generated.replace(reserve, "fwp_cleanup_push(&reserved_ref,no_release,c);"),
             1,
@@ -97,6 +97,13 @@ int main(void){
         ),
         (generated.replacen(marker, "free(c->dead);", 1), 8),
     ];
+    if cfg!(windows) {
+        let wake =
+            "    fwp_fd_closing(c->fd); /* wake I/O before shutdown, including polling hosts */";
+        assert_eq!(generated.matches(wake).count(), 1);
+        // Without the explicit wake, WSAPoll leaves the local reader parked.
+        controls.push((generated.replacen(wake, "", 1), 9));
+    }
     for opt in ["-O1", "-O2"] {
         for (broken, expected) in &controls {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
