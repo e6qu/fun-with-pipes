@@ -8,85 +8,83 @@ Root [PR #158](https://github.com/e6qu/fun-with-pipes/pull/158), branch
 `free-closed-connections`, is at `30036a1576aa537e2b882b7d166502f8bfa892f3`.
 Production `39011071759` is running; docs `39011071706` pass. The root handoff
 and `/private/tmp/fwp-watch-merge-158.py` own its exact-head acceptance and
-already authorized one-line squash merge. Two stale allocation-test hooks from
-the prior run were repaired. Keep one delivery PR at a time; this worktree has
-no PR. #157 is accepted as `30668bf8`; see [history](roadmap-history.md).
+already authorized one-line squash merge. Both stale allocation-failure hooks
+are repaired; the superseded run finished with only those same two failures.
+Keep one delivery PR at a time. This preparation has no PR.
 
-## Sender input preparation
+## Input ownership ready for delivery
 
 Worktree `/private/tmp/fwp-sender-input-owners`, branch `own-sender-inputs`,
-starts at #158's earlier head `2e747ce6`. Transfer only its delta after #158 is
-accepted; preserve the root's later allocation-test fixes and current history.
+starts at #158's earlier head `2e747ce6`. Transfer its delta after #158 is
+accepted, preserving root's later allocation-test fixes and current history.
+
 The compiler supplies concrete input destruction metadata. Cursors own current
-and pending iterator nodes, keeping each element alive through lookahead and
-encoding. Synchronous cursors live on the stack; detached senders embed them in
-their existing record and uniquely own their record/task lifetimes.
+and pending iterator nodes, keeping elements alive through lookahead and encoding.
+Synchronous cursors stay on the stack; detached senders embed them in their
+existing records. Sender records and scheduler task records have unique owners.
+Unique iterator nodes move their continuations; shared nodes preserve them for
+older readers. Native request reset on input/channel failures now matches the
+interpreter, and both engines check cancellation before a sender evaluates input.
 
-The [six-platform baseline](measurements/sender-input-baseline-2026-10-17.json)
-is `f6ebb2e9a8c0c8d5bffbc40f1f46e374e0acbd22`, tag
-`evidence/sender-input-baseline-20261017`, passing run `39009268395`.
-It measures 1/16/256 calls, up to 64 inputs, three processes per case, collection
-off and freeing on. Each measured connection closes and its tasks drain before
-the next call and final sample. Ordinary native/interpreter outputs use normal
-pooling and do different transport work. Early completion can produce variable
-input counts. [The guide](benchmarks.md#memory-retained-by-client-inputs-after-sending-finishes)
-explains outputs and excluded memory; no timing or C/Rust comparison is claimed.
+All six native hosts pass run `39013126818` at
+`06f3ac6ff8fbf2ee5616511c6b968388fac4f3f2`, retained under
+`evidence/sender-input-ownership-20261017`. The
+[final report](measurements/sender-input-ownership-2026-10-17.json) includes raw
+tables and actual Linux ARM64/AMD64 instruction reviews. Its
+[baseline](measurements/sender-input-baseline-2026-10-17.json) is `f6ebb2e9`,
+tag `evidence/sender-input-baseline-20261017`, six-host run `39009268395`.
 
-## Passing Linux probe and next optimization
+Across 1/16/256 calls, all four modes leave constant final managed bytes:
+Linux AMD64 1,792, Linux ARM64 6,144, either Mac 640, Windows AMD64 1,024,
+Windows ARM64 896. Collection is off and physical freeing on. All connections,
+requests and messages release, and sender/I/O tasks finish. Complete-input
+allocation counts are unchanged; background sender headers request eight more
+bytes each but occupy the same allocator class. At 256 calls, count increments
+are 18,946 synchronous, 184,322 bidirectional and 248,578 with retained input,
+versus baseline 17,922 / 150,274 / 181,762. These exceed the baseline but improve
+on the first ownership probe's 66,818 / 280,578 / 344,834.
 
-`274b0a0238b438ce641080f58729cbd0ee176f26` passes Linux AMD64 run
-`39011949370`, retained by `evidence/sender-input-owners-probe-20261017`.
-The [probe report](measurements/sender-input-ownership-probe-2026-10-17.json)
-retains raw tables and actual AMD64 machine-code review. It is one-host evidence,
-not six-platform acceptance. Final managed storage stays at 1,792 bytes in all
-sizes/modes, down from 1,820,416 synchronous or 3,356,416 bidirectional bytes at
-256 calls. Stable full-input modes have unchanged allocation counts. Sender
-records request 48 instead of 40 bytes but occupy the same charged 48-byte class.
-At 256 calls, retains rise from 17,922 to 66,818 synchronous; 150,274 to 280,578
-bidirectional; 181,762 to 344,834 with retained inputs.
+[The guide](benchmarks.md#input-owners-and-moves-bounded-memory-with-measured-count-costs)
+explains outputs, sizes, remaining costs, variable early-completion work and
+excluded memory. There is no timing or C/Rust comparison. Count-one checks still
+read runtime allocation metadata; remote checked ARC remains unsupported.
 
-The actual AMD64 code confirms borrowed continuation calls on every input.
-The next candidate transfers the continuation from an exclusively owned node
-and clears its old field before calling it. Shared nodes still use borrowed
-application. Current elements remain owned until encoding finishes; evaluation
-and failure order are unchanged. Controls detect missing field clearing and
-incorrect mutation of shared nodes, alongside existing release/cancellation
-checks. This optimization is implemented but not yet verified.
-Next: dispatch all six native hosts at the published branch head, inspect and
-repair failures, then collect and compare the final measurements.
+Passing checks cover retained input, chained senders, real failing-input clients
+against both server engines, continuation/encoding traps, blocked writes,
+pre-entry cancellation, retain overflow, GC stress and reuse. Deliberately broken
+variants prove detection of missing releases, mutation of shared nodes and
+omitted cancellation/reset. Earlier failures are repaired; no focused check is
+outstanding. Full production acceptance remains required on the delivery head.
 
-Passing Linux checks also include native request reset on input/encoding and
-response-channel failures, real failing-input clients with interpreter/native
-servers, retained upstream readers and chained senders. Both engines now check
-pre-entry sender cancellation. An interpreter test proves cancelled input is
-released without evaluation; a native missing-check control detects the old
-behavior. Earlier failed runs `39009844155`, `39010422154` and `39011258349`
-exposed fixture teardown/count assumptions and the real pre-entry cancellation
-defect; these were repaired before the passing probe. The focused workflow now
-runs sender regressions first, without removing or repeating coverage.
+Next: after #158 passes and merges, transfer this batch onto its accepted squash
+commit, reconcile PLAN/history/handoff and publish the single next delivery PR.
+Use `/private/tmp/fwp-sender-input-pr-draft.md` as a plain-language starting point;
+fill in final validation and require all nine production jobs plus documentation
+before the authorized squash merge. Preserve one-line messages of at most 80
+characters, with an empty body and no trailers or attribution.
 
-## Checks and next action
+## Independent server measurement
 
-Native builds, full suites and measurements run on GitHub. Local commands use
-`python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py` with fixed
-limits. Latest formatting check passed in 1.30s; documentation audit in 3.22s.
-The failing-input example typechecked with the prebuilt compiler in 0.27s.
-Baseline collection passed in 24.24s; strengthened source/binary/disassembly
-hash checks passed on recollection in 2.04s without rerunning measurements.
-Linux probe download took 4.92s and static disassembly 0.15s. No local native
-builds or downloaded program execution occurred.
+`/private/tmp/fwp-server-request-baseline`, branch
+`measure-server-request-lifetimes`, is frozen at `06432959`, tag
+`evidence/server-call-baseline-20261017`. Six-host run `39014733093` is running.
+The Linux probe passes at `e0baca20` in `39014302981`; server memory grows after
+all calls/tasks finish and the connection closes. This changes no production
+compiler/runtime and has no PR. Its own handoff tracks measurements, sampling
+boundary repair, actual AMD64 review and strict collection. Finish input delivery
+before server ownership changes. Client measurements exclude server memory.
 
-The collector now requires exact-source manual ARM64/AMD64 binary reviews.
-Private artifacts/logs are under `/private/tmp/fwp-sender-input-evidence` and
-`/private/tmp/fwp-input-owner-passing-linux.log`. Require all six candidate jobs,
-matching outputs, complete cleanup, bounded storage, measured remaining count
-costs and both architecture reviews before preparing the next delivery. Root
-#158's full production gates remain independent and must pass before merging.
+## Checks and artifacts
 
-After client input acceptance, measure server-process memory before selecting
-server callback/channel/task ownership changes. Current client counters exclude
-that memory. Host re-entry, numerical ownership, cycle policies and the broader
-seven work areas remain open. Remote checked ARC is unsupported; JIT is excluded.
+Use the root `scripts/local-guard.py` with fixed limits. Native builds, full
+suites and measurements run on GitHub; no downloaded executable has run locally.
+Final report collection passed in 13.06s; each architecture's static inspection
+passed in 0.15s. Completed Windows/ARM Mac artifact collection took 11.50s. Formatting passed
+in 1.30s; the final documentation audit passed in 3.38s.
+Private artifacts are under `/private/tmp/fwp-sender-input-evidence`.
+
+Server/HTTP lifetimes, host re-entry, numerical ownership, cycle policies and
+the broader work areas remain open. JIT is excluded.
 
 ## Roadmap status
 

@@ -1973,31 +1973,67 @@ account for variable input work in early completion. This baseline establishes
 neither checked ARC support nor zero overhead.
 
 
-### First input-ownership probe: memory bounded, count traffic higher
+### Input owners and moves: bounded memory with measured count costs
 
-[The Linux AMD64 probe](measurements/sender-input-ownership-probe-2026-10-17.json)
-uses `274b0a02`, tag `evidence/sender-input-owners-probe-20261017`, with
-[passing checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39011949370).
-It uses the same inputs and closing hooks as the six-platform baseline above.
-Remaining managed storage is 1,792 bytes at every measured size in all four
-modes. That replaces growth with call count, without invoking the collector.
-It does not establish support on the other five hosts.
+[The final comparison](measurements/sender-input-ownership-2026-10-17.json)
+uses `06f3ac6f`, tag `evidence/sender-input-ownership-20261017`.
+[All six native jobs pass](https://github.com/e6qu/fun-with-pipes/actions/runs/39013126818).
+It uses the same four clients and closing hooks as the baseline above, at
+1/16/256 calls with three fresh processes per case. Final managed storage is
+constant across every size and mode, including early server completion:
 
-The three complete-input modes make the same allocation requests as before.
-A sender record requests 48 instead of 40 bytes, but both occupy the same
-48-byte allocator size class on this host. At 256 calls, reference-count
-increments increase as follows:
+| Platform | Remaining managed bytes |
+|---|---:|
+| Linux AMD64 | 1,792 |
+| Linux ARM64 | 6,144 |
+| macOS ARM64 or AMD64 | 640 |
+| Windows ARM64 | 896 |
+| Windows AMD64 | 1,024 |
 
-| Input mode | Baseline | First ownership version |
-|---|---:|---:|
-| Synchronous | 17,922 | 66,818 |
-| Bidirectional | 150,274 | 280,578 |
-| Retained original input | 181,762 | 344,834 |
+These totals match the platform's root-task storage category; allocation
+categories alone do not identify individual live objects. All measured
+connections, requests and queued messages are released, and every sender and
+connection task finishes. Collection stays disabled throughout. The initial
+[Linux ownership probe](measurements/sender-input-ownership-probe-2026-10-17.json)
+already bounded memory, but retained every continuation for its call. A
+continuation is the function producing the next iterator node. The final change
+moves that function from an exclusively owned node; shared nodes preserve it
+for older readers.
 
-Actual machine code confirms that every continuation, the function producing
-the next iterator node, is borrowed and retained for its call. A uniquely owned
-node could instead give that function's owner directly to the call. The next
-candidate measures this change, while preserving shared nodes and cleanup on
-failure. Its result is still pending; the lower memory total alone does not
-establish lower execution cost. The same exclusions and lack of timing/C/Rust
-comparison apply as in the baseline.
+The three complete-input modes make the same number of allocation requests as
+the original baseline on every host. A background sender requests 48 instead of
+40 bytes, still occupying the same 48-byte allocator class: at 256 calls this
+adds 2,048 requested bytes without extra allocation requests. Synchronous
+requested bytes are unchanged. Reference-count increments at 256 calls are
+identical across the six final hosts:
+
+| Input mode | Original baseline | First ownership probe (Linux AMD64) | Final owners and moves | Extra versus baseline |
+|---|---:|---:|---:|---:|
+| Synchronous | 17,922 | 66,818 | 18,946 | 1,024 (+5.7%) |
+| Bidirectional | 150,274 | 280,578 | 184,322 | 34,048 (+22.7%) |
+| Retained original input | 181,762 | 344,834 | 248,578 | 66,816 (+36.8%) |
+
+These are operation counts, not elapsed-time overhead. Moving unique
+continuations removes much of the first ownership version's count traffic;
+ownership still costs more count operations than the version that retained
+storage for tracing. Early completion can consume different numbers of inputs,
+so its allocation/count deltas are not equal-work comparisons.
+
+Actual Linux ARM64 and AMD64 binaries show count-one tests, field clearing
+before owned continuation application, and borrowed calls that preserve shared
+nodes. Elements remain in registers across lookahead (`rbx`/`rbp` on AMD64,
+`x20`/`x23` on ARM64); cursor state and cleanup records also use stack storage.
+The synchronous entry reserves 1,144 bytes on AMD64 and 1,168 on ARM64;
+background sender frames use 392 and 560 bytes. AMD64 figures exclude the
+incoming return address; ARM64 includes saved registers. Callee frames add to
+these totals. Count-one tests still read allocation metadata; this is not
+compile-time-only ownership.
+
+The report preserves raw allocation, storage, count and completion tables,
+source/binary/disassembly fingerprints, hardware/toolchains and manual binary
+reviews. Failure, cancellation, retained-alias, GC-stress and reuse controls pass
+in the focused matrix. Full delivery acceptance remains separate in
+[the handoff](development-state.md). Task stack pools, other raw buffers,
+TLS/OS/allocator metadata, server/process memory and timing remain excluded.
+This does not establish checked ARC for remote calls, zero-cost abstractions or
+speed parity with C/Rust.

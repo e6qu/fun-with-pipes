@@ -894,7 +894,7 @@ The remaining relationships need separate checks:
 |---|---|---|
 | Client request | The active connection list, receive source and detached sender hold references. | Accepted in PR #157; preserve completion, failure, cancellation and repeated-call checks. |
 | Connection | The pool, readers/writers and callers hold separate storage owners; the socket has its own reader/writer use count. | Six focused native jobs pass; complete production acceptance; closing a socket alone does not finish every borrow. |
-| Pending sender values | The candidate gives each input cursor a concrete iterator destructor and an independent owner. | Verify complete cleanup on all platforms, including retained aliases, continuation/encoding errors and cancellation; the six-platform baseline is retained. |
+| Pending sender values | Each input cursor has a concrete iterator destructor and an independent owner. | All six focused native jobs pass cleanup, retained-alias, failure/cancellation and stress/reuse checks; complete full production acceptance. |
 | Server callbacks and response channels | Serving tasks and retained language values can outlive the creating call scope. | Prove each retained handler and channel context, including failure during construction and cycles after external references disappear. |
 | Task identities and wait lists | The scheduler owns parked tasks; request state borrows their identities. | Preserve this direction when adding owners; do not turn back-pointers into owning cycles. |
 
@@ -910,19 +910,20 @@ The current element remains borrowed from its still-owned node. The compiler
 supplies the iterator's concrete destruction function in static request metadata;
 there is no extra input heap object. Synchronous calls keep this cursor on their
 stack; background senders embed it in their existing record.
-When the node has one owner, the next candidate moves its continuation into the
+When the node has one owner, the implementation moves its continuation into the
 call and clears the old field. A shared node keeps its continuation and lends it
-to the call instead. This aims to reduce the increased count traffic measured in
-the first Linux ownership probe; final native evidence is still pending.
+to the call instead. All six native hosts verify bounded remaining storage and
+reduced count traffic compared with the first ownership probe; count operations
+remain higher than the original version that retained storage for tracing.
 
 A sender owns its cursor and record exclusively. The scheduler exclusively owns
 its task record and releases it after stack and task-list removal. The caller's
 input is borrowed at entry, so the cursor acquires a separate reference and
 retained original iterators remain usable. Input references release on completion,
-continuation/encoding failure and cancellation. These are candidate contracts:
-[the handoff](development-state.md) records unresolved checks. The
-[six-platform baseline](benchmarks.md#memory-retained-by-client-inputs-after-sending-finishes)
-measures the pre-change storage growth.
+continuation/encoding failure and cancellation. All six focused native jobs
+verify these contracts. [The comparison](benchmarks.md#input-owners-and-moves-bounded-memory-with-measured-count-costs)
+records memory/count costs; [the handoff](development-state.md) tracks remaining
+full production acceptance.
 
 Request failure also differs from dropping an unused response reader. Native
 input production/encoding failure and failed response-channel delivery must
@@ -935,7 +936,7 @@ owners. Test partial construction and every last-owner case; retain deliberately
 broken variants to prove that missing cleanup is detected. Before admitting
 remote calls to checked ARC, compare interpreter/native values, errors and
 receive order, inspect actual binaries and measure repeated calls with collection
-disabled. Sender-input ownership still needs native acceptance; server/HTTP
+disabled. Sender-input ownership still needs full production acceptance; server/HTTP
 streams and retained handlers still need tracing. HTTP/2 server operations and GPU resource ownership remain separate work.
 
 ### Moving values held by a closure

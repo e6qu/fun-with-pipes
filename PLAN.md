@@ -98,9 +98,11 @@ increments per connection. Full production acceptance still requires all nine jo
 explains inputs, revisions, allocation costs and excluded memory.
 
 The sender-input baseline now passes on all six native hosts. The candidate
-owns input iterators and finished sender records; failure and cancellation checks
-are still being repaired and verified. Compare its final memory and reference-
-count totals with that frozen baseline before choosing another optimization.
+owns input iterators and finished sender records. All six focused native hosts
+pass failure/cancellation, alias and stress/reuse checks, with bounded remaining
+storage. Moving unique continuations reduces count traffic from the first
+ownership probe; counts remain higher than the original tracing-dependent
+version. Complete full production acceptance before merging.
 Preserve the existing order of evaluating the next input and encoding the
 current value, and keep retained original iterators usable.
 

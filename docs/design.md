@@ -400,10 +400,11 @@ metadata. Its cursor keeps the current element alive while advancing to the
 next node and encoding that element. Synchronous cursors live on the stack;
 background senders embed the cursor in their existing record. The candidate
 also resets requests on input-production and response-channel delivery failure,
-matching the interpreter. These contracts still await the native checks recorded
-in [the handoff](development-state.md); the
-[baseline](benchmarks.md#memory-retained-by-client-inputs-after-sending-finishes)
-records memory retained before this change.
+matching the interpreter. Unique nodes transfer their continuation to the call;
+shared nodes preserve it for older readers. All six focused native hosts pass
+cleanup and semantic checks. [The comparison](benchmarks.md#input-owners-and-moves-bounded-memory-with-measured-count-costs)
+records bounded memory and remaining count costs; full production acceptance
+is tracked in [the handoff](development-state.md).
 
 When a compiled program has no tasks or services, its runtime primitives omit
 task-slice checks as well as function-entry checks. Programs that can schedule
