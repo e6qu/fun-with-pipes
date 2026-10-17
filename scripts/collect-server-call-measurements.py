@@ -115,13 +115,19 @@ def main():
         if baseline:
             earlier = next(h for h in baseline['hosts'] if h['host'] == host)
             prior = {key(row): row for row in earlier['rows']}
+            prior_storage = {key(row): row for row in earlier['storage_allocations']}
             # Freeze the language programs, including the service implementation.
             # Never compare reduced work or a different measurement boundary.
             for name in ['greeter.fwp', 'scope.txt'] + [m + '.fwp' for m in MODES]:
                 assert fingerprint(folder / name) == earlier['files'][name], (host, name)
             for row in rows:
                 before = prior[key(row)]
-                assert row['allocations'] == before['allocations'], (host, key(row))
+                assert row['allocations'] == before['allocations'] - row['calls'], (host, key(row))
+                assert row['retains'] == before['retains'], (host, key(row))
+                category = next(item for item in storage if key(item) == key(row))
+                assert category['args_requested_bytes'] == category['args_charged_bytes'] == 0
+                assert row['requested_bytes'] == (before['requested_bytes'] -
+                    prior_storage[key(row)]['args_requested_bytes']), (host, key(row))
                 assert row['final_charged_bytes'] < before['final_charged_bytes'], (host, key(row))
             comparison = [{'mode': row['mode'], 'calls': row['calls'],
                 'repetition': row['repetition'],

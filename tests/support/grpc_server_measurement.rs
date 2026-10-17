@@ -39,7 +39,6 @@ static size_t server_storage_charge(const void *);
         ("static void g_start_call(g_conn *c, g_stream *s) {", "static void g_start_call(g_conn *c, g_stream *s) {\n    if(server_active)server_calls_started++;"),
         ("    g_job *j = (g_job *)fwp_mem_alloc(sizeof *j);", "    g_job *j = (g_job *)fwp_mem_alloc(sizeof *j);\n    if(server_active){server_job_requested+=sizeof(*j);server_job_charged+=server_storage_charge(j);}"),
         ("    j->sv.task = s->task;", "    j->sv.task = s->task;\n    if(server_active){server_task_requested+=sizeof(*s->task);server_task_charged+=server_storage_charge(s->task);}"),
-        ("    V *args = (V *)fwp_alloc((size_t)(m->nreq + 2) * sizeof(V));", "    V *args = (V *)fwp_alloc((size_t)(m->nreq + 2) * sizeof(V));\n    if(server_active){server_args_requested+=(size_t)(m->nreq+2)*sizeof(V);server_args_charged+=server_storage_charge(args);}"),
         ("    fwp_gc_finalizer(c, g_conn_final);", "    fwp_gc_finalizer(c, g_conn_final);\n    if(server_active)server_connections_created++;"),
         ("        fwp_socket_close(c->fd);\n        c->fd = FWP_INVALID_SOCKET;", "        fwp_socket_close(c->fd);\n        c->fd = FWP_INVALID_SOCKET;\n        if(server_active)server_connections_closed++;"),
         ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) {\n    if(server_active)server_connections_finalized++;"),

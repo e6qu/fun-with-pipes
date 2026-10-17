@@ -1,8 +1,6 @@
 //! Served responses and channel sends release buffers on failure and cancellation.
 use fwp::ir::*;
 use std::process::Command;
-#[path = "support/c_instrument.rs"]
-mod c_instrument;
 
 #[test]
 fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
@@ -84,16 +82,6 @@ fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
         "watched_wire=b.d; int r = g_send_data(c, s, b.d, b.len, end);",
         1,
     );
-    assert_eq!(generated.matches("    j->args = args;").count(), 1);
-    let generated = generated.replacen(
-        "    j->args = args;",
-        "    j->args = args; watched_args=args;",
-        1,
-    );
-    let generated = c_instrument::calls(&generated, &[("fwp_mem_free", "observed_managed_free")]);
-    let definition = "static void observed_managed_free(void *p) {";
-    assert_eq!(generated.matches(definition).count(), 2);
-    let generated = generated.replace(definition, "static void fwp_mem_free(void *p) {");
     let hooks = r#"
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0a00
@@ -101,9 +89,6 @@ fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
 #include <stdlib.h>
 #include <stdint.h>
 static int stage,kind,response_frees,canonical_frees,wire_frees,cancelled,result,request_frees,reflection_reads;
-static int args_frees;
-static void *watched_args;
-static void observed_managed_free(void *);
 static void *watched_response,*watched_canonical,*watched_wire,*watched_request;
 static void observed_free(void *);
 static void no_release(void *);
@@ -119,7 +104,6 @@ static int observed_next(uintptr_t *,uintptr_t *);
 "#;
     let fixture = r#"
 #undef free
-static void observed_managed_free(void *p){if(p&&p==watched_args){args_frees++;watched_args=0;}fwp_mem_free(p);}
 static void observed_free(void *p){if(p&&p==watched_request){request_frees++;watched_request=0;}if(p&&p==watched_response){response_frees++;watched_response=0;}if(p&&p==watched_canonical){canonical_frees++;watched_canonical=0;}if(p&&p==watched_wire){wire_frees++;watched_wire=0;}free(p);}
 static void no_release(void *p){(void)p;}
 static int observed_next(uintptr_t *cur,uintptr_t *value){if(*cur)return 0;*cur=1;*value=42;return 1;}
@@ -134,16 +118,15 @@ int main(void){
  for(kind=0;kind<5;kind++)for(stage=0;stage<5;stage++){
   if(stage==3&&kind!=2)continue;
   if(kind>=3&&stage>=3)continue;
-  watched_request=watched_args=0;request_frees=args_frees=0;reflection_reads=0;
+  watched_request=0;request_frees=0;reflection_reads=0;
   watched_response=watched_canonical=watched_wire=0;response_frees=canonical_frees=wire_frees=cancelled=0;result=-2;c->out.len=0;c->conn_window=stage==1?0:65535;
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*(kind*5+stage)));s->sent_headers=1;
   const fwp_desc *request_fields[]={&descriptor};
   fwp_rpc method={0};method.nreq=stage==4?1:0;method.req=request_fields;method.output=kind==1?1:0;method.resp=&descriptor;method.error=kind==2?&descriptor:0;
-  g_route route={0};route.kind=G_ROUTE_METHOD;route.m=&method;g_job *job=fwp_mem_alloc(sizeof *job);job->c=c;job->s=s;job->srv=&srv;job->route=&route;strcpy(job->what,"probe");job->sv.peer_users=1;
-  fwp_task *t=fwp_spawn_task(0,serve,job,0,0);job->sv.task=t;s->task=t;t->cfinish=g_job_peer_finish;
+  g_route route={0};route.kind=G_ROUTE_METHOD;route.m=&method;g_job job={0};job.c=c;job.s=s;job.srv=&srv;job.route=&route;strcpy(job.what,"probe");
+  fwp_task *t=fwp_spawn_task(0,serve,&job,0,0);
   if(stage==1){fwp_p_task_yield();if(t->done||!watched_response||!watched_wire||response_frees||wire_frees)return 2;fwp_p_task_cancel(PTR(t));}
   fwp_await(t);
-  if(watched_args||args_frees!=(kind<3?1:0))_Exit(9);
   if(!t->done||response_frees!=(stage>=3?0:1)||canonical_frees!=(kind==2&&stage!=4?1:0)||wire_frees!=(stage<2?1:0)||watched_response||watched_canonical||watched_wire||cancelled!=(stage==1)||fwp_cleanups||watched_request||request_frees!=(stage==4||kind==4?1:0))return 1;
   if(stage==0){if(result!=(kind==3?1:-1))return 3;int found=0;const unsigned char errorbytes[]={1,42,0,0,0,0,0,0,0};const void *expected=kind==2?(const void*)errorbytes:(const void*)"response";size_t n=kind==2?9:8;for(size_t i=0;i+n<=c->out.len;i++)if(!memcmp(c->out.d+i,expected,n))found=1;if(!found)return 4;}
   if(stage==2&&strcmp(fwp_trap_msg,"response trap"))return 5;
@@ -194,9 +177,6 @@ int main(void){
         "fwp_cleanup_push(&reflection_request, no_release, &g);",
         1,
     );
-    let args_release = "    observed_managed_free(j->args);";
-    assert_eq!(generated.matches(args_release).count(), 1);
-    let args_omitted = generated.replacen(args_release, "", 1);
     for opt in ["-O1", "-O2"] {
         for broken in [
             &omitted,
@@ -210,13 +190,6 @@ int main(void){
             let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
             assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");
         }
-        fwp::cgen::compile_c(&format!("{hooks}\n{args_omitted}\n{fixture}"), &exe, opt).unwrap();
-        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
-        assert_eq!(
-            out.status.code(),
-            Some(9),
-            "omitted argument storage: {out:?}"
-        );
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
         for gc in ["off", "on"] {
             for poison in ["0", "1"] {

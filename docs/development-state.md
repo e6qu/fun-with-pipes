@@ -28,8 +28,8 @@ Four workloads retain increasing memory after calls/tasks finish and the
 connection closes. Actual Linux ARM64/AMD64 instructions show traced task/job
 retention. Client memory and timing are excluded; this is not checked ARC.
 
-The candidate targets job/task records and temporary argument slots before
-decoded values and response iterators. A serving context becomes the first member of its job,
+The candidate targets job/task records and keeps temporary argument slots on
+the serving task stack, before decoded values and response iterators. A serving context becomes the first member of its job,
 so its existing peer-user count owns the whole allocation. Detached senders keep
 that allocation alive; ordinary joined children borrow it. Last-owner cleanup
 frees peer/status text and the job. No new allocation or reference counter.
@@ -50,20 +50,24 @@ so library teardown cannot mask their diagnostic with a secondary error.
 The server workflow now runs all real gRPC tests plus peer/status/receive/response/
 send/task ownership regressions before measuring repeated calls.
 
-The job also owns the temporary array of argument slots. Completion frees this
-array after children join, including failure and cancellation. This adds one
-pointer to the job, not an allocation or reference counter. The array never
-escapes as a language value; decoded values keep their existing ownership. The
-response fixture observes actual array disposal on success, decode/encode traps
-and blocked-send cancellation, with an omitted-free negative control.
+The runtime already uses stack arrays sized by a function's arity during ordinary
+application. Server argument slots can use the same approach: their bound comes
+from the compiled method signature, and application copies values, never the
+array. Keep the zeroed slots on the serving task stack. No job field or explicit
+array cleanup is needed; the slot storage ends on return, failure or cancellation.
+Decoded values keep their existing ownership. Existing response regressions cover
+these exit paths; repeated-call comparisons must show one fewer allocation per
+call and no new count operations. Review stack use in actual ARM64/AMD64 code.
+This refinement replaces the intermediate heap-array cleanup probe.
 
-Expected result: no extra allocation requests, released job/argument-slot/serving/I/O
-records, and lower per-call retained bytes. Remaining decoded arguments, results, incoming
-sources, request/connection records and channels are outside this first change;
-remaining memory is not expected to be constant yet. Do not claim server GC
-removal or lower execution time from a smaller memory total.
+Expected result: one fewer allocation per call, released job and serving/I/O
+records, unchanged retain counts, and lower retained bytes. Remaining decoded
+arguments, results, incoming sources, request/connection records and channels
+are outside this change; memory is not expected to be constant yet. Do not claim
+server GC removal or lower execution time from a smaller memory total.
 
-Next: publish the reuse-verification fixture correction and rerun Linux.
+Next: retain the result of heap-slot probe `39017350539` at `d5adce34`;
+publish the stack-slot refinement and run the final Linux probe.
 The focused lifetime fixtures now precede ordinary networking tests so fixture
 failures are reported earlier without removing coverage.
 Fix failures, then measure
