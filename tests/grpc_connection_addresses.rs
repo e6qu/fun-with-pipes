@@ -33,8 +33,8 @@ fn connection_addresses_preserve_long_pool_keys_in_one_allocation() {
         .replace("struct g_conn {", "struct legacy_g_conn {")
         .replace("char *authority;", "char authority[256];");
     let mut generated = generated.replace(
-        "fwp_mem_alloc(sizeof *c + n + 1)",
-        "observe_connection_alloc(sizeof *c + n + 1)",
+        "fwp_mem_alloc(sizeof *c + pn + n + 1)",
+        "observe_connection_alloc(sizeof *c + pn + n + 1)",
     );
     for (before, after) in [
         (
@@ -103,12 +103,12 @@ int main(void){
  if(connected->refs||connected->fd!=-1||g_pool)return 2;
  g_conn_drop(connected);connected=0;fwp_p_tcp_stop(listener);
  FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(connected));
- char short_name[]="short";g_conn *short_conn=g_conn_new(-1,short_name,0);short_name[0]='x';
+ char short_name[]="short";g_conn *short_conn=g_conn_new(-1, "", short_name,0);short_name[0]='x';
  if(strcmp(short_conn->authority,"short")||connection_allocations!=2||connection_bytes!=sizeof(g_conn)+6||connection_bytes>=sizeof(struct legacy_g_conn))return 1;
  fwp_lib_finish();return 0;
 }
 "#;
-    let copied = "memcpy(c->authority, authority, n + 1);";
+    let copied = "memcpy(c->authority + pn, authority, n + 1);";
     assert_eq!(generated.matches(copied).count(), 1);
     let broken = generated.replacen(copied, "snprintf(c->authority, 256, \"%s\", authority);", 1);
     let dir = fwp::cgen::TempDir::new("grpc-connection-addresses").unwrap();

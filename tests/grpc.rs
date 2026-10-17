@@ -1158,7 +1158,7 @@ fn instrument_closed_connections(code: &str, drain_fixture: &str) -> String {
         1,
     );
     for (before,after) in [
-        ("g_conn *c = g_conn_new(fd, given, 0);", "g_conn *c = g_conn_new(fd, given, 0); client_note_connection(c);"),
+        ("g_conn *c = g_conn_new(fd, \"\", given, 0);", "g_conn *c = g_conn_new(fd, \"\", given, 0); client_note_connection(c);"),
         ("startup.reader = fwp_spawn_task(0, g_reader, c, 0, 1);", "startup.reader = fwp_spawn_task(0, g_reader, c, 0, 1); client_note_io_task(startup.reader);"),
         ("startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1);", "startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1); client_note_io_task(startup.writer);"),
     ] {assert_eq!(code.matches(before).count(),1);code=code.replacen(before,after,1);}

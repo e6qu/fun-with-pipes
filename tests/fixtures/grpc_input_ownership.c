@@ -60,7 +60,7 @@ int main(int argc,char **argv) {
     fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
     fwp_trap_recover=g_trap_recover;
     double before=input_charge();
-    g_conn *c=g_conn_new(FWP_INVALID_SOCKET,"input-owner-test",0);fwp_rc_fresh(PTR(c));
+    g_conn *c=g_conn_new(FWP_INVALID_SOCKET, "", "input-owner-test",0);fwp_rc_fresh(PTR(c));
     g_stream *s=g_stream_new(c,1);fwp_rc_fresh(PTR(s));fwp_rc_dup(PTR(s));s->sent_headers=1;
     static const fwp_remote remote={.input_drop=input_drop};
     V original=input_node("first");

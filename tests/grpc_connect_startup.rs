@@ -29,7 +29,7 @@ fn grpc_connection_startup_releases_failed_task_reservations() {
     let mut generated = generated;
     for (before,after) in [
         ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) { if(p==pending)finalized++;"),
-        ("g_conn *c = g_conn_new(fd, given, 0);","g_conn *c = g_conn_new(fd, given, 0);pending=c;"),
+        ("g_conn *c = g_conn_new(fd, \"\", given, 0);","g_conn *c = g_conn_new(fd, \"\", given, 0);pending=c;"),
         ("startup.reader = fwp_spawn_task(0, g_reader, c, 0, 1);","if(stage==0)fwp_trap(\"reader spawn trap\"); startup.reader=fwp_spawn_task(0,g_reader,c,0,1);started_reader=startup.reader;"),
         ("startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1);","if(stage==1)fwp_trap(\"writer spawn trap\"); startup.writer=fwp_spawn_task(0,g_writer,c,0,1);started_writer=startup.writer;"),
     ]{assert_eq!(generated.matches(before).count(),1);generated=generated.replacen(before,after,1);}

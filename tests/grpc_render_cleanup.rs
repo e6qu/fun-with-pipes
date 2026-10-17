@@ -55,7 +55,7 @@ static int recover(void){return 1;}
 static jmp_buf failed;
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
- g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1,"local",&srv);
+ g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);
  const fwp_desc descriptor={.kind=K_I64,.name="I64"};
  for(stage=0;stage<2;stage++){
   rendered=0;buffer_frees=0;

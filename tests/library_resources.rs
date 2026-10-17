@@ -70,7 +70,7 @@ void setup(int *fds,int *observations,const char *path,const char *cert,const ch
   int pair[2];if(socketpair(AF_UNIX,SOCK_STREAM,0,pair))abort();fds[i]=pair[0];fds[i+3]=pair[1];
   V sock=fwp_sock_new(pair[0],1);
   if(i<=2){STREAM(sock)->tls=SSL_new(client_ctx);SSL_set_fd(STREAM(sock)->tls,pair[0]);}
-  if(i==2){void *ssl=0;int fd=w_take(sock,&ssl);g_conn *c=g_conn_new(fd,"localhost",0);c->ssl=ssl;}
+  if(i==2){void *ssl=0;int fd=w_take(sock,&ssl);g_conn *c=g_conn_new(fd, "", "localhost",0);c->ssl=ssl;}
  }
  for(int i=0;i<2;i++){
   unsigned char *wire=malloc(4);memcpy(wire,"\x02h2",4);wires[i]=wire;

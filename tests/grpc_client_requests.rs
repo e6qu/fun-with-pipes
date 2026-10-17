@@ -87,7 +87,7 @@ static int observed_next(uintptr_t *cur,uintptr_t *value){if(stage==3)fwp_trap("
 static void call(void *arg,int stop){if(stop){cancelled++;return;}jmp_buf failed;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;if(!setjmp(failed)){fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;V args[]={0};fwp_remote_call(arg,args);_Exit(7);}else trapped++;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;}
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
- g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1,"local",&srv);connection=c;
+ g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);connection=c;
  for(int kind=0;kind<2;kind++)for(stage=0;stage<4;stage++){
   if(!kind&&stage==3)continue;
   watched_request=watched_wire=0;request_frees=wire_frees=cancelled=trapped=0;c->out.len=0;c->conn_window=stage==1?0:65535;

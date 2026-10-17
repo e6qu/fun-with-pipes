@@ -37,7 +37,7 @@ int main(int argc,char **argv) {
     int mode=atoi(argv[1]);if(mode<0||mode>10)return 200;
     fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
     double before_connection=probe_charge();
-    g_conn *c=g_conn_new(FWP_INVALID_SOCKET,"local",0);
+    g_conn *c=g_conn_new(FWP_INVALID_SOCKET, "", "local",0);
     fwp_rc_fresh(PTR(c));fwp_rc_dup(PTR(c)); /* fixture and incoming source */
     double before=probe_charge();
     g_stream *s=g_stream_new(c,1);

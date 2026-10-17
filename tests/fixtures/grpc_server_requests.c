@@ -17,7 +17,7 @@ int main(int argc,char **argv){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  double before=request_charge();
  g_server server={0};server.module="probe";
- g_conn *c=g_conn_new(FWP_INVALID_SOCKET,"request-owner",&server);c->preface=1;
+ g_conn *c=g_conn_new(FWP_INVALID_SOCKET, "", "request-owner",&server);c->preface=1;
  h2_buf headers={0},wire={0};
  h2_hpack_lit(&headers,":method","POST");h2_hpack_lit(&headers,":path","/probe.unknown");
  h2_hpack_lit(&headers,":scheme","http");h2_hpack_lit(&headers,":authority","probe");

@@ -64,7 +64,7 @@ static int recover(void){return 1;}
 int main(int argc,char **argv){
  (void)argv;
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
- g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1,"local",&srv);
+ g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1, "", "local",&srv);
  if(argc>1){
   g_serving sv={0};g_ctx ctx={0};ctx.serving=&sv;sv.task=fwp_cur;
   sv.msg=observed_strdup("explicit status");fwp_cur->gctx=&ctx;fail_copy=1;

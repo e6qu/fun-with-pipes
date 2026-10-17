@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     fwp_lib_init(); fwp_gc_start(__builtin_frame_address(0)); fwp_tasks_init();
     fwp_cur->deadline=fwp_now_ns()+10000000000LL; /* bound a broken wakeup */
     g_server server={0}; server.module="readers";
-    g_conn *connection=g_conn_new(FWP_INVALID_SOCKET,"queued",&server);
+    g_conn *connection=g_conn_new(FWP_INVALID_SOCKET, "", "queued",&server);
     g_stream *stream=g_stream_new(connection,1);
     const int schema[]={PB_MSG,1,1,4,PB_STR};
     const fwp_desc string_type={.kind=K_STR,.name="String",.drop=fwp_rc_free_obj};
