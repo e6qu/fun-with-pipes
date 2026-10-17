@@ -97,14 +97,19 @@ records their current status.
 
 The long-running checks exposed unnecessary 10 ms socket polling delays on macOS
 and Windows. The same batch replaces those sleeps with OS readiness waits and
-checks ready sockets during preemption. All six hosts pass the unchanged memory workload. The Intel macOS functional
-check is rerunning in separate ownership/comparison jobs after its combined job
-reached the time limit. Preserve every test and the fixed limits.
+checks ready sockets during preemption. All six hosts pass the unchanged memory
+workload. Intel macOS also passes the separated ownership/comparison jobs after
+the combined job reached its time limit. Every case and fixed limit is preserved.
+Final production acceptance remains pending in the handoff.
 
 The repeated server workload still makes approximately 899 managed allocation
-requests and 2,318 retains per additional request, including background work. Profile those
-sites before choosing the next heap/count optimization. Preserve bounded memory,
-traps, cancellation and interpreter agreement while reducing that work.
+requests and 2,318 retains per additional request, including background work.
+Profiling identified 177 allocations containing only fixed function references.
+The compiler optimization in this batch removes those heap records; both Linux profiles
+measure about 722 allocations and 1,901 retains afterward. All six native focused jobs and both WASI jobs pass.
+Six-host memory and paired timing checks are running. Static storage and startup
+stores also cost memory and time; record them before making performance claims.
+Preserve bounded memory, traps, cancellation and interpreter agreement.
 
 Browser, asynchronous WASI, REST/MCP entry, retained host callbacks, remaining
 numerical/networking ownership, derivative scaling and broader applications all

@@ -366,6 +366,24 @@ failure after entry. This adds no language syntax or fields to the closure layou
 [PR #156](roadmap-history.md#released-stream-caches-and-moved-closure-captures-pr-156)
 records full platform acceptance.
 
+A partial application supplies some arguments now and returns a function waiting
+for the rest. Some such functions contain only fixed references to other
+functions. For example, `neg | abs` composes integer negation with absolute value;
+passing that composition around need not allocate a fresh function record.
+The compiler now places eligible records in static program storage and shares
+equal records. Each capture must itself be a fixed function with no captures.
+Runtime data, zero-argument evaluation and fully supplied calls keep their
+existing evaluation and ownership rules. No effect runs early.
+
+These records use the ordinary closure layout. Their capture addresses are filled
+during existing constant initialization, including on 32-bit WebAssembly, where
+a widened pointer cannot use the same C static initializer as a native address.
+They own no runtime data and need no heap allocation or reference count. Generic
+calls and their ownership checks can still have costs; this does not make every
+function call free. Static storage and startup stores also have costs. The
+[handoff](development-state.md) distinguishes the measured candidate from full
+platform acceptance.
+
 Shared top-level computed values have cached owners, released during teardown.
 A type descriptor is runtime metadata used for operations such as equality,
 printing and decoding.
@@ -512,7 +530,7 @@ does not silently switch to tracing.
 
 Admitted programs include ordinary immutable values, scoped files and state,
 proved derivative scopes, selected retained tasks, channels carrying data without
-functions/tasks/channel handles, and scoped C calls. Mutable
+functions, tasks, HTTP stream handles or channels, and scoped C calls. Mutable
 cycles, raw pointers and unproved external callbacks remain excluded.
 Checked ARC supports native main and function executables,
 including CLI commands, and C libraries with copied inputs and pointer-free

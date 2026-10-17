@@ -127,8 +127,8 @@ boundary; it does not establish tracing-free eligibility.
 
 Channel close preserves queued values. Explicit drain breaks the tested counted
 cycle, while unreachable shared cycles still need tracing. Checked ARC now admits
-data-only channel payloads: no functions, tasks or channel handles at any nested
-position. The queue owns each retained message and the last channel owner releases
+data-only channel payloads: no functions, tasks, HTTP stream handles or channels
+at any nested position. The queue owns each retained message and the last channel owner releases
 remaining messages; the type restriction prevents a queue from owning a path
 back to its channel. Preserve callback, trap and task ordering when extending
 contracts. These contracts describe the current runtime. Checked ARC additionally

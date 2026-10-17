@@ -1,0 +1,28 @@
+# Function values can escape and have multiple aliases. Capturing fixed
+# functions must not change their application order or run their effects early.
+choose : Bool -> I64 -> I64
+choose = if id (const (compose neg abs)) (const (compose abs neg))
+
+values : (I64 -> I64) -> (I64, I64)
+values = both (apply 7) (apply -7)
+
+observe : I64 -> I64 ! {IO}
+observe = tap echo | add 1
+
+# This captures input data, so it still needs an ordinary owned function value.
+capture : String -> (String -> String, String) ! {IO}
+capture = tap echo | both concat id
+
+checked : I64 -> I64 ! {Error[String]}
+checked = if (eq 0) (const "zero" | fail) neg
+
+main = [
+    values (choose True) | echo,
+    values (choose False) | echo,
+    [1, -2, 3] | map (compose neg abs) | echo,
+    echo "before callback",
+    4 | compose observe neg | echo,
+    "kept" | capture | both (.0 | apply "!") .1 | echo,
+    0 | attempt (compose checked abs) | echo,
+    echo "after caught failure",
+] | ignore

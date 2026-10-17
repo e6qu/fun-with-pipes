@@ -44,8 +44,9 @@ implementation of currently supported external protocols.
 ## Delivery and acceptance
 
 - Work on a branch. Bundle coherent changes into substantial PRs, one active PR
-  at a time. Fix discovered bugs, including unrelated ones; failing tests are work
-  to fix. Queued CI gates merging, not independent progress.
+  at a time. Fix every encountered issue immediately, including unrelated or
+  pre-existing issues, regardless of who caused them. Do not hide or defer fixes;
+  record the repair and verification. Queued CI gates merging, not independent work.
 - Before pushing a CI repair, audit every failed job and completed test target,
   fix underlying causes and check affected callers. Batch all known fixes into
   one push; preserve passing final heads while their remaining gates run.

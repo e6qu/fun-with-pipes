@@ -69,8 +69,8 @@ traps. Unproved runtime sharing still uses tracing.
 | I128/U128 | Direct wide values in eligible workers; counted 16-byte boxes at generic boundaries | Containers and closures can still box |
 | Arrays, maps and sets | Typed elements, counted storage, selected unique updates | Callback and alias contracts must be proved |
 | Strings and bytes | Counted leaves for proved copies/aliases | Unmodeled result families remain shared |
-| Closures | Owned captured arguments and typed call metadata | Retained unknown callbacks are not checked ARC |
-| Tasks and channels | Counted handles/results/queues; ARC admits channels whose payloads contain no functions, tasks or channels | Mutable cycles are not automatically broken by counting |
+| Closures | Owned captured arguments and typed call metadata; eligible functions with only fixed function captures use static records | Runtime-data captures retain ordinary ownership; retained unknown callbacks are not checked ARC |
+| Tasks and channels | Counted handles/results/queues; ARC admits channels whose payloads contain no functions, tasks, HTTP stream handles or channels | Mutable cycles are not automatically broken by counting |
 | Derivative tapes | Scoped owners and a bounded numeric workspace | Raw unscoped tape calls are not checked ARC |
 | External/network state | Explicit resource teardown where modeled | Freeing a C buffer does not prove the lifetime of every referenced fwp value |
 
@@ -114,9 +114,10 @@ tracing and are rejected by checked ARC.
 
 Checked ARC admits channels carrying data such as numbers, strings, records and
 recursive immutable lists or variants. Their payload type must contain no
-functions, tasks or channel handles, even inside another container. A function
-or task can capture the sending channel and form a cycle without mentioning it
-in its result type; the check therefore examines the complete payload type.
+functions, tasks, HTTP stream handles or channels, even inside another container.
+A function or task can capture the sending channel; an HTTP stream handle can
+reach the channel through its connection-owned handler. These paths can form
+a cycle without mentioning the channel in the result type; the check therefore examines the complete payload type.
 This is a conservative eligibility rule, not a ban on ordinary tracing channels.
 Closing an admitted channel still preserves queued messages for receiving.
 Releasing its last owner destroys the remaining queue and its typed contents;
@@ -1097,8 +1098,8 @@ status errors own both their record and message. Tests omit these owners
 separately and require a failure, in addition to normal and cancellation checks.
 
 Messages encode data, not managed pointers or callable captures. Data-only
-channel payload rules still exclude tasks, functions and nested channels that
-could create a mutable ownership cycle. Request/connection owners and borrowed
+channel payload rules still exclude tasks, functions, HTTP stream handles and
+nested channels that could create a mutable ownership cycle. Request/connection owners and borrowed
 task links retain their existing contracts. ARC binaries still allocate and
 count shared owners; removing the collector does not make networking a zero-cost
 abstraction. Repeated server measurements compare identical fwp programs across

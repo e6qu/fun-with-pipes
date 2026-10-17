@@ -635,7 +635,8 @@ returns a pointer with no host release operation. Records follow these rules
 field by field. Host calls must be serialized and finish before library unload.
 The mode rejects unproved ownership or cycles, browser execution, asynchronous
 WASI host tasks, REST and MCP boundaries.
-Channels are eligible when their payload contains no functions, tasks or channels:
+Channels are eligible when their payload contains no functions, tasks, HTTP stream
+handles or channels:
 `Channel[String]` is eligible; `Channel[Task[String]]` is not, since the task
 could capture that channel. The check also examines record and container fields.
 It requires normal counted

@@ -2589,3 +2589,52 @@ parity with C/Rust. Instrumentation can also prevent elimination or inlining;
 these counts are not ordinary machine-call profiles. This experiment records no
 allocation, live-memory or RSS counters. The selection is a measured code-size
 reduction, with correctness and server-memory acceptance tracked separately.
+
+## Fixed function values in the HTTP server
+
+A function value can store the operation to call and arguments already supplied.
+Those stored arguments are its captures. The current compiler candidate avoids
+rebuilding such a record when every capture is itself a fixed function with no
+captures. It puts one record in program storage and initializes its addresses at
+startup. Runtime strings, requests and other captured data keep ordinary owners.
+
+This experiment compares **the same fwp HTTP server before and after that compiler
+change**, using checked ARC and an ordinary native client. It does not compare
+fwp with C or Rust. The [baseline profile](https://github.com/e6qu/fun-with-pipes/actions/runs/39066197415)
+at `a141efd4` and [candidate profile](https://github.com/e6qu/fun-with-pipes/actions/runs/39067651911)
+at `01ae40da` both pass on Linux AMD64 and ARM64. Each transport, cleartext and
+TLS, uses three fresh processes at each of 1, 16 and 256 sequential `GET /hello`
+requests. The client consumes and releases every response body and sums status
+200; ordinary native and interpreted servers verify the same outputs.
+
+Counters start after constant initialization and end after the main program and
+cached-value cleanup. They include the stop request, timers and other background
+work. The figures below subtract the 16-request median from the 256-request
+median and divide by 240. Small fractional differences from background work are
+rounded here; the saved artifacts keep every sample. Payload bytes exclude
+allocator overhead, sockets, TLS internals and OS storage.
+
+| Per additional HTTP request | Baseline | Candidate | Change |
+|---|---:|---:|---:|
+| Managed allocation requests | About 899 | About 722 | About 19.7% fewer |
+| Actual reference-count increments | About 2,318 | About 1,901 | About 18.0% fewer |
+| Allocations for classified fixed function records | 177 | 0 | 177 removed |
+| Payload bytes for those records | 3,808 | 0 | 3,808 removed |
+
+These results agree on both architectures and transports. Remaining calls may
+still check whether a value has a count, even when no count is incremented.
+Final measured managed storage stays constant across request counts: 1,792 bytes
+on AMD64 and 6,144 on ARM64, in both revisions. This interval excludes constant
+initialization and whole-runtime disposal; the totals are not process memory.
+
+Static inspection of the ordinary saved ELF binaries found 331 function records,
+each aligned to eight bytes, totaling 7,592 bytes on either architecture. Their
+generated initialization contains 618 address stores. The net `.data` section
+increase is 5,240 bytes because other emitted data also changes. The `.text`
+instruction section falls from 5,260,322 to 5,171,106 bytes on AMD64 (1.7%), and
+from 4,977,916 to 4,909,500 on ARM64 (1.4%). These are section sizes, not cache-miss
+or elapsed-time measurements. Binaries were inspected as data, not run locally.
+
+Paired timing, startup and six-host long-running memory checks are in progress;
+[the handoff](development-state.md) records their runs and final acceptance.
+No timing improvement or C/Rust parity is established by the counts above.
