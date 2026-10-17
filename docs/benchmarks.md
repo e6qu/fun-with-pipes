@@ -2145,8 +2145,8 @@ without executing them locally. Full production acceptance is tracked in the
 [The method-value comparison](measurements/server-method-values-linux-2026-10-17.json)
 measures `48ccd3d9` against the storage change above, using the same programs,
 inputs and measurement boundary. [The Linux AMD64 run passes](https://github.com/e6qu/fun-with-pipes/actions/runs/39020484780).
-This intermediate result covers only Linux AMD64. The next combined server
-change still needs all six native hosts and production acceptance.
+This intermediate result covers only Linux AMD64. The combined server comparison below extends coverage to all six native hosts;
+production acceptance is recorded separately in the handoff.
 
 Generated cleanup functions now release each argument and result according to
 its concrete type. Stack records protect them during decoding, method execution,
@@ -2183,3 +2183,56 @@ This compares two fwp versions, without elapsed-time or C/Rust measurements.
 The same excluded memory categories as the baseline apply. The report retains
 three raw tables and source, binary and instruction fingerprints. It establishes
 a memory improvement for these workloads, not zero runtime overhead.
+
+
+### Freeing server values and output channels on all six hosts
+
+[The combined report](measurements/server-values-2026-10-17.json) uses
+`855fe3d1`, tag `evidence/server-values-combined-20261017`.
+[All six native hosts pass](https://github.com/e6qu/fun-with-pipes/actions/runs/39022416616),
+including cleanup, aliases, cancellation, collection stress, reuse checks and
+ordinary interpreter/native comparisons with reuse explicitly enabled or disabled.
+The report compares identical programs and inputs with storage revision `e6455c0d`;
+the original baseline `06432959` shows the total change being delivered in PR #160.
+These are fwp version comparisons, without elapsed-time or C/Rust measurements.
+
+Typed cleanup now frees method arguments, results and errors. Returned iterators
+keep each value alive while advancing and encoding it. Native output channels
+borrow sent values; their callback payload shares one allocation with the channel,
+whose header remains 96 bytes. Partial construction, errors and cancellation
+release acquired owners. Methods receive their arguments directly without a
+new function object for each call.
+
+After 256 calls, every workload leaves 62,304 managed bytes on either Linux host
+and 61,760 on macOS/Windows, in all repetitions. For example, Linux AMD64 changes
+from the original server baseline as follows:
+
+| Workload | Before this delivery | Combined change |
+|---|---:|---:|
+| Greeting | 721,248 bytes | 62,304 bytes |
+| Returned iterator | 2,486,624 bytes | 62,304 bytes |
+| Sent iterator | 1,753,440 bytes | 62,304 bytes |
+| Output channel | 971,104 bytes | 62,304 bytes |
+
+Every workload still grows by **240 bytes per call** on every host. Requests and
+connections remain to be owned completely. This does not establish bounded
+long-running server memory or remote checked ARC support.
+
+The complete delivery removes two allocations per greeting/returned-iterator call
+and three per sent-iterator/output-channel call. Requested bytes fall by 32, 32,
+56 and 32 per call respectively. Reference-count increments per call change from
+0 / 64 / 253 / 0 to **1 / 64 / 128 / 64**. Those are count costs, not time ratios.
+
+Actual ARM64 and AMD64 instructions confirm direct method entry, stack argument
+slots and borrowed native sends. The channel loop still duplicates its channel
+reference once per send, identifying a further compiler borrowing improvement.
+Compared with the storage change, the method-dispatch helper uses 16 fewer fixed
+stack bytes on both architectures; its caller uses 16 more on AMD64 and 64 more
+on ARM64. Both callers still need 32 dynamic argument bytes for these methods.
+These frame sizes exclude callees and are not peak task-stack measurements.
+
+The report retains 18 raw tables, instruction reviews, source/binary fingerprints,
+hardware and compiler settings. Counters use the baseline's collection-off,
+physical-freeing-on boundary. Raw network buffers, task stack pools, TLS/OS and
+allocator metadata, whole-process memory and timing remain excluded. Full PR
+acceptance is tracked in [the handoff](development-state.md).

@@ -927,10 +927,12 @@ releases request/connection references and then that allocation; construction
 protects partially acquired references. Queue and callback cleanup use alternative
 fields in the header, without another lookup on the send path.
 
-The combined values/channel candidate passes Linux cleanup, alias, partial
-construction, cancellation, stress/reuse and ordinary/no-reuse service comparisons.
-All four workloads still grow by 240 managed bytes per call. Six-host and full
-production acceptance are pending. Server requests/connections, escaped graphs
+The combined values/channel candidate passes all six native hosts for cleanup,
+aliases, partial construction, cancellation, stress/reuse and ordinary/no-reuse
+service comparisons. [The report](benchmarks.md#freeing-server-values-and-output-channels-on-all-six-hosts)
+retains actual ARM64/AMD64 instruction reviews and count/stack costs. All four
+workloads still grow by 240 managed bytes per call. Full production acceptance
+is pending. Server requests/connections, escaped graphs
 and HTTP ownership remain open; these changes do not establish remote checked ARC.
 
 Accepted input ownership keeps two iterator nodes: the next node to read and

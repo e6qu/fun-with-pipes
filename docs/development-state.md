@@ -27,16 +27,20 @@ Root branch `free-server-call-values` starts at accepted #159. It combines:
 
 The implementation was transferred from the channel preparation after `9a4e2ace`,
 without replacing root's #158 allocation-test repairs, accepted history or handoff.
-No server PR exists yet. Only this root branch owns current delivery work.
+Draft [PR #160](https://github.com/e6qu/fun-with-pipes/pull/160) is open.
+Only this root branch owns current delivery work. Draft production skips are
+not acceptance; ready-for-review must start all nine gates after final evidence.
 Preparation worktrees `/private/tmp/fwp-server-call-owners`,
 `/private/tmp/fwp-server-value-owners` and `/private/tmp/fwp-server-channel-owners`
 are evidence sources, not competing next tasks.
 
-Next: freeze/publish the combined candidate and dispatch six-host `server-repeat`.
-Collect actual ARM64/AMD64 binary reviews and the final report against the frozen
-storage comparison. Fix failures. Then open one substantial server PR, with a
-plain description of behavior, memory improvements, remaining count costs and
-limits. Require all nine production jobs plus documentation on its final head
+Combined candidate `855fe3d18a16fd771dac322cdabcf9ebcfbe8493` is published as
+`evidence/server-values-combined-20261017`; all-six `server-repeat` run
+`39022416616` passes all six native hosts.
+[The final report](measurements/server-values-2026-10-17.json) retains 18 raw
+tables and actual ARM64/AMD64 reviews, against frozen storage `e6455c0d`.
+Next: publish the final evidence and mark PR #160 ready for its final-head gates. Its description must state memory improvements, count/stack costs and remaining
+request/connection work in plain language. Require all nine production jobs plus documentation on its final head
 before authorized squash merge: one subject at most 80 characters, empty body,
 no trailers or attribution. CI gates merging, not independent work.
 
@@ -72,7 +76,16 @@ These compare fwp versions, not C/Rust performance.
   growing by 240/call. Channel output removes one further allocation/call and
   adds 64 retains/call. Other three modes match typed-value measurements.
   A stale queue-drop mutation in `arc_tasks` was then repaired; the combined
-  six-host workflow includes that target. Its repair is not yet native-verified.
+  six-host workflow includes that target; it passes all six native hosts.
+
+The final combined run gives 62,304 bytes at 256 calls on Linux and 61,760 on
+macOS/Windows for every workload. Every case/repetition has the same 240-byte
+per-call growth. Relative to the original server baseline, the delivery removes
+2 / 2 / 3 / 3 allocations and 32 / 32 / 56 / 32 requested bytes per call; retains
+change from 0 / 64 / 253 / 0 to 1 / 64 / 128 / 64. These are not timing ratios.
+Method dispatch uses 16 fewer fixed stack bytes on both Linux architectures,
+while its caller uses 16 more on AMD64 and 64 more on ARM64 than the storage
+candidate. Channel-loop code confirms one remaining retain per send.
 
 The collector requires explicit comparison kinds. Use `--comparison server-values`
 with the storage report for the final six-host report. `--linux-probe` explicitly
@@ -92,6 +105,19 @@ semantics. Account for promoted uncounted graphs and preserve borrowed task/cont
 back-pointers without owning cycles. HTTP/2 has a separate handler graph.
 The private audit is `/private/tmp/fwp-server-next-lifetimes.md`.
 
+Independent request preparation `/private/tmp/fwp-server-request-owners`, branch
+`own-server-requests`, is published at `c3c8fd8b75dad76f7c08520cfdcdb8b88a7fc1a7`.
+Linux `39022894056` passes all focused checks and measurements. It owns parser-pending and served request records,
+protects acquisition, and distinguishes server-input disposal from client response
+abandonment. New tests cover reset-before-dispatch, pending connection death,
+cancellation, retained/early input sources and count overflow, with omitted-owner
+controls; the move revision replaces the unnecessary job retain with transfer and
+checks task-startup failure instead. A later revision `22e843a464327b83f59fadf425b4b6099ac56f98` moves the pending
+owner into its job and adds a two-request parser-unwind test. Linux `39023556994`
+is running. Neither request revision is included in the root delivery.
+Its local formatting passed in 1.23s and docs in 2.79s. Keep the final root head
+stable once its production gates start; transfer later request deltas separately.
+
 Keep all existing failure, cancellation, stress/reuse and negative controls.
 Neither disabled collection nor these selected memory reductions establish
 complete service ownership, remote checked ARC, zero-cost abstractions or speed
@@ -103,9 +129,14 @@ removal and the remaining seven work areas stay open. JIT is excluded.
 Use `python3 scripts/local-guard.py COMMAND...` with fixed limits. Full builds,
 suites and measurements run on GitHub. Channel-preparation formatting passed in
 1.23s and documentation audit in 2.97s. Passing channel artifact download took
-3.30s; guarded comparison took 0.14s. Root integration preserved both accepted
-allocation-test repairs and `git diff --check` passed. Root formatting passed in 1.42s and the documentation audit passed in 2.89s
-before publication.
+3.30s; guarded comparison took 0.14s. Combined ARM64 artifacts downloaded in
+3.47s and AMD64/ARM Mac in 4.88s; each actual-binary inspection and the retained
+review check passed in 0.14s. Both Linux reviews identify the per-send channel
+retain and direct method entry, including stack-frame costs. Root integration preserved both accepted
+allocation-test repairs and `git diff --check` passed. Initial root formatting passed in 1.42s and docs in 2.89s. Final six-host
+report collection passed in 12.05s; a report-wide slope check passed in 0.14s.
+Final publication formatting passed in 1.34s and docs in 2.84s. Windows artifact collection
+passed in 5.25s. Request-move formatting passed in 1.28s and docs in 2.77s.
 
 ## Roadmap status
 

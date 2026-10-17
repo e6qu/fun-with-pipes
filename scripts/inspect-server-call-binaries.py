@@ -18,13 +18,15 @@ def main():
     parser.add_argument('--objdump', required=True)
     parser.add_argument('--workloads', nargs='+', required=True,
                         choices=['unary-strings', 'response-stream', 'request-stream', 'channel-output'])
+    parser.add_argument('--symbols', nargs='*', default=[],
+                        help='Additional generated symbols identified in the retained C source.')
     args = parser.parse_args()
     symbols = ['g_handle', 'g_start_call', 'g_job_peer_finish', 'g_run_method',
                'g_reader', 'g_accept_loop', 'g_serving_peer_release', 'fwp_task_own_internal',
                'g_apply_user', 'g_method_values_release', 'g_cursor_next', 'g_cursor_release',
                'g_recv_one', 'g_finish', 'g_sink_value', 'g_sink_send', 'g_sink_drop',
                'fwp_channel_drop', 'fwp_p_channel_send_owned',
-               'fwp_free_zombie', 'fwp_task_dispose', 'fwp_apply', 'fwp_apply_owned']
+               'fwp_free_zombie', 'fwp_task_dispose', 'fwp_apply', 'fwp_apply_owned'] + args.symbols
     observations = []
     for mode in args.workloads:
         source = args.artifacts / (mode + '-server.c')

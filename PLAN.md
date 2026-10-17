@@ -84,10 +84,11 @@ The current delivery combines server task/job cleanup, stack argument slots,
 direct method calls, typed argument/result cleanup and native output-channel
 ownership. Keep the ordinary language behavior, including aliases, failure order
 and cancellation. Use the same four server programs and 1/16/256-call boundary as
-the baseline, recording memory, allocation and count costs separately. Storage
-cleanup passes all six focused native hosts; typed values and channel cleanup
-have passing Linux probes. The combined change still requires all six native
-hosts, actual ARM64/AMD64 binary inspection and all production gates before merge.
+the baseline, recording memory, allocation and count costs separately. The
+combined change passes all six focused native hosts and has actual ARM64/AMD64
+binary reviews. All four workloads retain much less memory, but still grow by
+240 bytes per call; reference-count costs are mixed. PR #160 needs all production
+gates before merge.
 
 Next, establish complete server request/connection ownership, including retained
 incoming iterators and callbacks. A newly parsed request can be reset in the same
