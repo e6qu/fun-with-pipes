@@ -32,7 +32,7 @@ def main():
         assert len(drops) == 1, (source, drops)
         iterator = re.search(r"/\* grpc\._iter :[^\n]*\*/\nstatic V (f\d+)\(", code)
         assert iterator, source
-        symbols = [drops[0], iterator[1], "g_cell_drop", "g_force", "fwp_p_grpc_force"]
+        symbols = [drops[0], iterator[1], "g_cell_drop", "g_force", "fwp_p_grpc_force", "fwp_apply_owned"]
         files = [args.artifacts / client, args.artifacts / f"{client}.exe"]
         files = [path for path in files if path.is_file()]
         assert len(files) == 1, files

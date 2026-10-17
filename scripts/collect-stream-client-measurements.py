@@ -29,7 +29,9 @@ def main():
     parser.add_argument("--artifacts", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--baseline-report", type=Path, help="Compare owned-cache results with a retained six-host baseline report")
+    parser.add_argument("--capture-moves", action="store_true", help="Require capture-transfer controls and retain their per-case counts")
     args = parser.parse_args()
+    assert not args.capture_moves or args.baseline_report, "capture comparison requires its measured baseline"
     run = json.loads(subprocess.check_output([
         "gh", "run", "view", args.run, "--repo", REPO,
         "--json", "headSha,status,conclusion,jobs,url"]))
@@ -46,6 +48,12 @@ def main():
                   "concurrent_reads_share_one_receive_and_cancel_independently",
                   "canonical_encoding_scratch_releases_on_partial_and_transcoder_failure",
                   "canonical_decoding_scratch_releases_on_malformed_values_and_allocation_traps"]
+    if args.capture_moves:
+        tests += ["unique_closure_captures_move_through_partial_calls_and_failures",
+                  "partial_duplicate_failures_preserve_aliases_and_pending_owned_arguments",
+                  "failed_calls_reclaim_function_storage_without_collection",
+                  "closure_aliases_and_captures_under_stress",
+                  "overapplication_releases_pending_arguments_without_counting_scalars"]
     results = []
     for job in jobs:
         assert job["status"] == "completed" and job["conclusion"] == "success"
@@ -103,6 +111,24 @@ def main():
                 cleanup.extend({"optimization": opt, "positions": n, "alias_mode": mode,
                                 "releases": freed, "stack_span_bytes": span}
                                for n, mode, freed, span in parsed)
+        captures = None
+        if args.capture_moves:
+            names += ["capture-moves/captures.c", "capture-moves/language.c", "capture-moves/source.fwp"]
+            captures = []
+            for opt in ["-O1", "-O2"]:
+                names += [f"capture-moves/captures{opt}.exe", f"capture-moves/captures{opt}.tsv"]
+                parsed = [[int(field) for field in line.split("\t")]
+                          for line in (folder / f"capture-moves/captures{opt}.tsv").read_text().splitlines()]
+                assert len(parsed) == 12 and {r[0] for r in parsed} == set(range(12))
+                for mode, partial_retains, entry_retains, remaining in parsed:
+                    shared, partial, failure = mode % 2, (mode % 4) // 2, mode // 4
+                    assert partial_retains == (1 if partial and shared else 0)
+                    assert entry_retains == (2 if not partial and shared else 0)
+                    assert remaining == 0
+                    captures.append({"optimization": opt, "mode": mode, "shared": bool(shared),
+                        "partial_application": bool(partial), "exit": ["return", "error", "trap"][failure],
+                        "partial_capture_retains": partial_retains, "entry_capture_retains": entry_retains,
+                        "remaining_managed_bytes": remaining})
         observations = folder / "binary-observations.json"
         if observations.exists():
             names.append(observations.name)
@@ -110,6 +136,7 @@ def main():
                         "environment": {name: (folder / f"{name}.txt").read_text() for name in ["rust", "c", "cpu"]},
                         "scope": (folder / "scope.txt").read_text(),
                         "cache_cleanup": cleanup,
+                        "capture_transfers": captures,
                         "binary_observations": json.loads(observations.read_text()) if observations.exists() else None,
                         "files": {name: fingerprint(folder / name) for name in names}})
     report = {

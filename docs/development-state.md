@@ -1,48 +1,65 @@
 # Session handoff
 
-Updated 2026-10-17 UTC. This is independent preparation on
-`move-unique-closure-captures` in `/private/tmp/fwp-closure-capture-moves`.
-PR #155 remains the only delivery; the root worktree tracks its final gates.
-The preceding cache-ownership preparation is `own-remote-stream-caches` at
-`886dad3b`, with all-six-host run `38994414068` passed. Its handoff and
-baseline report remain authoritative for that component.
+Updated 2026-10-17 UTC. This preparation is `move-unique-closure-captures`,
+worktree `/private/tmp/fwp-closure-capture-moves`. PR #155 remains the only delivery;
+the root worktree tracks its final gates. Preserve the seven open roadmap areas.
+
+## Verified cache component
+
+The cache component passed all six native hosts in `38994414068` at
+`886dad3bd4c75c57c5cd53040b20a039be46437b`, tagged
+`evidence/remote-cache-owners-20261017`. Report/docs commit `63728741` is included.
+See [the comparison](measurements/remote-client-cache-ownership-2026-10-17.json).
+It removes the original baseline's 64-byte-per-integer retained growth. Whole
+connections, streams, decoder captures and repeated-call storage remain open;
+remote calls still require tracing. Focused evidence is not full production
+acceptance.
 
 ## Move captures from consumed unique closures
 
-A closure stores values for a later function call. Current dynamic application
-duplicates those values, then releases the closure, even when no other owner can
-use it. Move them when the closure has one owner; preserve typed duplication for
-shared or uncounted closures. This applies both when adding arguments to a partial
-application and when supplying enough arguments to enter its function. Clear the
-consumed closure's capture count only after copying those values into the result
-or callee argument slots. No allocation, suspension or trapping operation may
-separate that transfer from its new ownership responsibility.
+Probe `38995160889` at `e189c868` passed on Linux AMD64. It includes existing
+closure, constructor, runtime-call, partial-argument and thunk ownership tests,
+wide-counter failure controls, new exact capture-transfer cases, cache controls,
+primitive audit and complete-client measurements. The next step is all six hosts.
 
-The current stream client has about five retains per consumed integer. A capture
-move should remove the continuation's redundant retain without changing its
-five allocation requests or its bounded final managed storage. Measure rather
-than assume that effect. Other wrapper-field retains remain separate work.
+A closure stores values for a later function call. The candidate transfers those
+owners when consuming an exclusive closure, both for partial application and
+callee entry. Shared closures still duplicate by type. It clears the consumed
+closure's capture count after copying to the destination. There is no allocation,
+suspension or trapping operation between transfer and the destination taking
+responsibility. Callee ownership covers errors/traps after entry; runtime cleanup
+still releases the empty consumed closure. No new syntax or closure fields.
 
-Acceptance: unique/shared closures, partial and complete calls, overapplication,
-scalar words resembling pointers, preserved aliases, error/trap cleanup and
-collector/reuse stress; raw interpreter/native agreement; exact counts and
-deliberately restored duplication/incorrect transfer controls; all six native
-measurements and final production gates. Existing argument-preparation tests
-already keep shared closures when injecting retain failures. No JIT, new syntax,
-new closure fields or new fallback path is needed.
+The one-pass client at 16,384 integers now performs 49,154 effective retains,
+down from the cache component's 81,921 (about 40% fewer). At 64/1,024/16,384,
+counts are 194/3,074/49,154: roughly three per integer instead of five. Moving a
+continuation's captures also avoids an artificial second owner of its position,
+allowing the next read to move its saved result. Final charge remains 6,480 bytes;
+peak falls from 6,832 to 6,768. All three repetitions agree. Allocations remain
+five per integer; no timing or C/Rust parity claim. Retained histories still need
+sharing; remaining wrapper retains and allocations are separate work.
 
-The candidate clears an exclusively consumed closure's capture count after
-copying those captures to its destination. Shared closures still retain by type.
-New controls measure effective captured-string retains before callee entry,
-exercise partial and full applications with shared/unique closures, preserve
-scalar words resembling pointers, and check success, language errors and traps.
-Restored unconditional duplication and stealing shared captures must fail.
-Physical reclamation and collector/reuse stress are both required. A diagnostic
-assertion in the neighboring test now normalizes Windows line endings.
+New controls require zero capture retains for unique partial/full calls, typed
+retains for shared calls, preserved aliases and pointer-looking scalar values,
+normal/error/trap cleanup and no remaining managed storage. Deliberately restored
+duplication and stealing shared captures fail. Generated language output agrees
+with raw interpretation; collector/reuse stress passes. Earlier probe `38994754283`
+found two test assumptions: concatenation order and rounded freed-byte statistics.
+Both are repaired. Failed-call reclamation now checks exact zero retained bytes
+after 10,000 failures rather than a rounded gap that included copied captures.
 
-Next: run the single-host probe, fix failures, then validate broadly. The
-implementation is unverified. Guarded formatting passed in 1.17s. Keep local checks under the root guard; native builds and execution stay
-on GitHub runners. Bundle with the next delivery only after independent evidence.
+The collector's explicit `--capture-moves` option requires these controls and
+retains per-case counts and binaries. Its `--baseline-report` should name the
+verified cache report for the next comparison. The binary inspector also saves
+dynamic application instructions. Full builds and executions remain on GitHub;
+local checks use the root guard with unchanged limits. Guarded formatting passed
+in 1.14s, evidence-tool syntax in 0.20s and the passing-probe download in 3.26s.
+No downloaded executable ran locally.
+
+Next: validate all six native hosts, collect the comparison against the cache
+component and inspect actual binaries. After #155's verified merge, assemble one
+substantial delivery from accepted main, update PLAN/history/handoff and require
+all final production gates. Do not open a second PR while #155 is active.
 
 ## Roadmap status
 
@@ -55,23 +72,3 @@ on GitHub runners. Bundle with the next delivery only after independent evidence
 | 5 | In progress | CPU kernels and GPU resource ownership |
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
-
-Probe `38994754283` at `3a1ef122` found two test assumptions: the new C fixture
-expected prefix concatenation order even though `concat` is data-last, and the
-existing missing-function-release control expected a rounded freed-byte gap
-that included the formerly duplicated captures. The string expectation now
-matches the language body (`tailsecondfirst`). The existing control now requires
-exact zero retained managed bytes after 10,000 failed calls and detects retained
-closure storage independently of capture movement. All other selected ownership
-and unwind tests passed in that run. The revised controls still need a rerun.
-The cache component's six-host run `38994414068` has passed independently.
-
-The verified cache report and accepted-work documentation cleanup are now included
-from `63728741`. See
-[the cache comparison](measurements/remote-client-cache-ownership-2026-10-17.json).
-The immutable measured source is `evidence/remote-cache-owners-20261017` at
-`886dad3b`; full production acceptance remains required. Probe `38995160889` at
-`e189c868` checks the repaired capture-transfer controls. The root delivery #155
-has seven passing production jobs, with Linux AMD64 and Intel macOS GC stress
-still running. Next: finish capture validation, then assemble one delivery after
-#155's verified merge. Do not open a second PR while it remains active.
