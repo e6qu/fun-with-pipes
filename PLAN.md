@@ -97,12 +97,20 @@ increments per connection. Full production acceptance still requires all nine jo
 [The comparison](docs/benchmarks.md#memory-after-closing-connections-and-finishing-their-io-tasks)
 explains inputs, revisions, allocation costs and excluded memory.
 
-Next, measure pending sender inputs before giving their iterators explicit typed
-owners; cover ordinary, retained and early-completion clients. Preserve the
-existing order of evaluating the next input and encoding the current value.
-Then address retained server callbacks and channels, without turning borrowed
-scheduler back-pointers into owning cycles. Remote calls remain excluded from
-checked ARC until their complete lifetimes and cycles are proved.
+The sender-input baseline now passes on all six native hosts. The candidate
+owns input iterators and finished sender records; failure and cancellation checks
+are still being repaired and verified. Compare its final memory and reference-
+count totals with that frozen baseline before choosing another optimization.
+Preserve the existing order of evaluating the next input and encoding the
+current value, and keep retained original iterators usable.
+
+Before changing server ownership, measure repeated calls in the server process:
+client measurements exclude its memory. Cover decoded arguments, returned
+values, retained incoming iterators, output channels and completed serving tasks.
+Record what remains after each call and after connection closure, including
+failure and cancellation. Then establish the required owners without turning
+borrowed scheduler back-pointers into owning cycles. Remote calls remain excluded
+from checked ARC until their complete lifetimes and cycles are proved.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

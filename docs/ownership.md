@@ -910,6 +910,10 @@ The current element remains borrowed from its still-owned node. The compiler
 supplies the iterator's concrete destruction function in static request metadata;
 there is no extra input heap object. Synchronous calls keep this cursor on their
 stack; background senders embed it in their existing record.
+When the node has one owner, the next candidate moves its continuation into the
+call and clears the old field. A shared node keeps its continuation and lends it
+to the call instead. This aims to reduce the increased count traffic measured in
+the first Linux ownership probe; final native evidence is still pending.
 
 A sender owns its cursor and record exclusively. The scheduler exclusively owns
 its task record and releases it after stack and task-list removal. The caller's

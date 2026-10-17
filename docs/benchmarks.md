@@ -1971,3 +1971,33 @@ outputs using normal pooling; their transport work differs from the measured
 clients. A future ownership comparison must use the same closing hooks and
 account for variable input work in early completion. This baseline establishes
 neither checked ARC support nor zero overhead.
+
+
+### First input-ownership probe: memory bounded, count traffic higher
+
+[The Linux AMD64 probe](measurements/sender-input-ownership-probe-2026-10-17.json)
+uses `274b0a02`, tag `evidence/sender-input-owners-probe-20261017`, with
+[passing checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39011949370).
+It uses the same inputs and closing hooks as the six-platform baseline above.
+Remaining managed storage is 1,792 bytes at every measured size in all four
+modes. That replaces growth with call count, without invoking the collector.
+It does not establish support on the other five hosts.
+
+The three complete-input modes make the same allocation requests as before.
+A sender record requests 48 instead of 40 bytes, but both occupy the same
+48-byte allocator size class on this host. At 256 calls, reference-count
+increments increase as follows:
+
+| Input mode | Baseline | First ownership version |
+|---|---:|---:|
+| Synchronous | 17,922 | 66,818 |
+| Bidirectional | 150,274 | 280,578 |
+| Retained original input | 181,762 | 344,834 |
+
+Actual machine code confirms that every continuation, the function producing
+the next iterator node, is borrowed and retained for its call. A uniquely owned
+node could instead give that function's owner directly to the call. The next
+candidate measures this change, while preserving shared nodes and cleanup on
+failure. Its result is still pending; the lower memory total alone does not
+establish lower execution cost. The same exclusions and lack of timing/C/Rust
+comparison apply as in the baseline.

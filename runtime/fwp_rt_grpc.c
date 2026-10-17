@@ -1805,11 +1805,16 @@ static int g_input_next(g_input *input, V *value) {
     input->cur = 0;
     input->pending = node;
     *value = OBJ(node)->f[0];
-    /* Preserve the established order: evaluate the next iterator before
-     * encoding this element. The pending node owns both fields throughout. */
+    /* Preserve lookahead-before-encoding. The pending node keeps the element
+     * alive; an exclusive node can transfer its continuation to the call. */
 #ifdef FWP_RESOURCE_OWNERS
-    V unit = FWP_UNIT;
-    input->cur = fwp_apply_borrowed(OBJ(node)->f[1], 1, &unit);
+    V unit = FWP_UNIT, continuation = OBJ(node)->f[1];
+    if (fwp_rc_last(node)) {
+        OBJ(node)->f[1] = 0; /* application owns the continuation, including traps */
+        input->cur = fwp_apply_owned(continuation, 1, &unit);
+    } else {
+        input->cur = fwp_apply_borrowed(continuation, 1, &unit);
+    }
 #else
     input->cur = fwp_apply1(OBJ(node)->f[1], FWP_UNIT);
 #endif

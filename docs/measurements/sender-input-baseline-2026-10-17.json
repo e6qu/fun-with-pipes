@@ -4693,6 +4693,14 @@
         "binary-observations.json": {
           "bytes": 8053,
           "sha256": "93ad3adc6558ed53f96dc5c43c540746a6919ab0979ed2677e296e8b8b36fd62"
+        },
+        "synchronous.asm": {
+          "bytes": 120751,
+          "sha256": "a664d56d13cad93fc53223d7ca76056f961167a0d348518accae0986399f6b7d"
+        },
+        "bidirectional.asm": {
+          "bytes": 137469,
+          "sha256": "a85b646f0f237103e8e62f4468c8f688f98ab3301d27958ab04d7b01c3a9a910"
         }
       }
     },
@@ -9367,6 +9375,14 @@
         "binary-observations.json": {
           "bytes": 8120,
           "sha256": "f78331d3cea725b8b4b1f32b3f4250767f56a7a5506ced2a1fc6b1fa2e0409bb"
+        },
+        "synchronous.asm": {
+          "bytes": 106662,
+          "sha256": "8fc095ff7cb8ddbc2d11474536843957d617d5be10ffe93f2c3a03db85cc57f6"
+        },
+        "bidirectional.asm": {
+          "bytes": 121735,
+          "sha256": "efb13a871a3ab5a21e27c79200703f5792d3467bcbff25f7923b83c78d075d4f"
         }
       }
     },

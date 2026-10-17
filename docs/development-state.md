@@ -2,116 +2,90 @@
 
 Updated 2026-10-17 UTC. All seven work areas in [PLAN.md](../PLAN.md) remain open.
 
-## Current delivery and next preparation
+## Current delivery
 
-Root branch `free-closed-connections` has [PR #158](https://github.com/e6qu/fun-with-pipes/pull/158)
-at `30036a1576aa537e2b882b7d166502f8bfa892f3`. Production `39011071759`
-and documentation `39011071706` gate its authorized squash merge after repairing
-two stale allocation-failure test hooks exposed by the prior Mac stress run. The root
-handoff and `/private/tmp/fwp-watch-merge-158.py` own that acceptance. Do not
-open a second PR. #157 is accepted as `30668bf8`; see [history](roadmap-history.md).
+Root [PR #158](https://github.com/e6qu/fun-with-pipes/pull/158), branch
+`free-closed-connections`, is at `30036a1576aa537e2b882b7d166502f8bfa892f3`.
+Production `39011071759` is running; docs `39011071706` pass. The root handoff
+and `/private/tmp/fwp-watch-merge-158.py` own its exact-head acceptance and
+already authorized one-line squash merge. Two stale allocation-test hooks from
+the prior run were repaired. Keep one delivery PR at a time; this worktree has
+no PR. #157 is accepted as `30668bf8`; see [history](roadmap-history.md).
 
-This worktree `/private/tmp/fwp-sender-input-owners`, branch `own-sender-inputs`,
-prepares pending input ownership after #158. Its frozen baseline has the production runtime/compiler unchanged from #158.
-The candidate adds typed input ownership and request failure cleanup. It measures
-synchronous integer sending, bidirectional strings, retained original input
-aliases and early server completion. The [fixture guide](../tests/fixtures/sender-inputs/README.md)
-explains notation, outputs and scope. Do not infer lifetime safety from typechecking.
+## Sender input preparation
 
-The baseline uses 1/16/256 calls of up to 64 inputs and three measured processes
-per case, with collection disabled and physical freeing enabled. Native hooks
-close connections and drain I/O/sender tasks before the next call and final
-sample. Ordinary native/raw interpreter outputs provide functional references;
-their pooling performs different transport work. A separate input-client drain
-fixture admits sender tasks without weakening the response-only fixture.
+Worktree `/private/tmp/fwp-sender-input-owners`, branch `own-sender-inputs`,
+starts at #158's earlier head `2e747ce6`. Transfer only its delta after #158 is
+accepted; preserve the root's later allocation-test fixes and current history.
+The compiler supplies concrete input destruction metadata. Cursors own current
+and pending iterator nodes, keeping each element alive through lookahead and
+encoding. Synchronous cursors live on the stack; detached senders embed them in
+their existing record and uniquely own their record/task lifetimes.
 
-Counters record allocation requests/charged bytes, retains, connection/request/
-message cleanup, sender task completion, input values pulled/encoded and sender/
-task allocation categories. Early completion can perform different work between
-runs; retain actual input counts rather than impose equal allocation totals.
-No elapsed-time, whole-process memory or C/Rust comparison is claimed. Retain
-source, emitted C, binaries and raw checkpoints before modifying ownership.
+The [six-platform baseline](measurements/sender-input-baseline-2026-10-17.json)
+is `f6ebb2e9a8c0c8d5bffbc40f1f46e374e0acbd22`, tag
+`evidence/sender-input-baseline-20261017`, passing run `39009268395`.
+It measures 1/16/256 calls, up to 64 inputs, three processes per case, collection
+off and freeing on. Each measured connection closes and its tasks drain before
+the next call and final sample. Ordinary native/interpreter outputs use normal
+pooling and do different transport work. Early completion can produce variable
+input counts. [The guide](benchmarks.md#memory-retained-by-client-inputs-after-sending-finishes)
+explains outputs and excluded memory; no timing or C/Rust comparison is claimed.
 
-Linux probe `39008824856` passed at `ef69079d`. On Linux AMD64, remaining
-managed storage grows by 7,104 bytes per synchronous call and 13,104 per
-bidirectional/retained-input call despite complete connection/request/message
-release and finished sender tasks. At 256 calls that leaves 1,820,416 and
-3,356,416 bytes respectively. Early completion performs variable input work.
-Static actual-binary review confirms entry sharing and unowned iterator advance;
-review and artifacts are under `/private/tmp/fwp-sender-input-evidence/39008824856`.
-These are probe results, not six-platform acceptance or a speed comparison.
+## Passing Linux probe and next optimization
 
-The frozen baseline tag `evidence/sender-input-baseline-20261017` points at
-`f6ebb2e9a8c0c8d5bffbc40f1f46e374e0acbd22`; six-host run `39009268395`
-passes on all six hosts. Its runtime, compiler and workloads match the Linux
-probe. The [report](measurements/sender-input-baseline-2026-10-17.json) and raw
-tables were collected through the root guard in 24.24s. Actual Linux ARM64 and
-AMD64 binaries were inspected; no downloaded executable ran locally.
-The baseline source is fixed while independent candidate work proceeds.
+`274b0a0238b438ce641080f58729cbd0ee176f26` passes Linux AMD64 run
+`39011949370`, retained by `evidence/sender-input-owners-probe-20261017`.
+The [probe report](measurements/sender-input-ownership-probe-2026-10-17.json)
+retains raw tables and actual AMD64 machine-code review. It is one-host evidence,
+not six-platform acceptance. Final managed storage stays at 1,792 bytes in all
+sizes/modes, down from 1,820,416 synchronous or 3,356,416 bidirectional bytes at
+256 calls. Stable full-input modes have unchanged allocation counts. Sender
+records request 48 instead of 40 bytes but occupy the same charged 48-byte class.
+At 256 calls, retains rise from 17,922 to 66,818 synchronous; 150,274 to 280,578
+bidirectional; 181,762 to 344,834 with retained inputs.
 
-## Input ownership candidate
+The actual AMD64 code confirms borrowed continuation calls on every input.
+The next candidate transfers the continuation from an exclusively owned node
+and clears its old field before calling it. Shared nodes still use borrowed
+application. Current elements remain owned until encoding finishes; evaluation
+and failure order are unchanged. Controls detect missing field clearing and
+incorrect mutation of shared nodes, alongside existing release/cancellation
+checks. This optimization is implemented locally but not yet verified. Publish
+it with the report/collector/docs changes and dispatch all six native hosts.
 
-The local compiler supplies each streamed remote call's concrete iterator drop
-function, including direct-only calls, and stops marking that input permanently
-shared. Arguments remain borrowed at entry; the cursor acquires an independent
-owner. It keeps current and pending nodes separately so the current element
-survives next-step evaluation and encoding. A static client descriptor supplies
-the type information; no additional input heap object is introduced.
+Passing Linux checks also include native request reset on input/encoding and
+response-channel failures, real failing-input clients with interpreter/native
+servers, retained upstream readers and chained senders. Both engines now check
+pre-entry sender cancellation. An interpreter test proves cancelled input is
+released without evaluation; a native missing-check control detects the old
+behavior. Earlier failed runs `39009844155`, `39010422154` and `39011258349`
+exposed fixture teardown/count assumptions and the real pre-entry cancellation
+defect; these were repaired before the passing probe. The focused workflow now
+runs sender regressions first, without removing or repeating coverage.
 
-Synchronous cursors live on the stack. Detached senders hold the same state,
-release it and their raw record on completion/failure/cancellation, and use the
-existing unique scheduler-task policy. Existing fixtures now use explicit empty
-input descriptions and drain task lists without reading freed handles.
-New negative controls omit input retains, each node release, sender freeing or
-unique task disposal. Normal cases include retained aliases, continuation and
-encoding traps, pre-entry cancellation and cancellation during encoding.
-Candidate `27208c1ac7b83cc5e07a1dd03201877f41d28008` is published;
-Linux run `39009844155` passed existing cleanup tests but failed a new negative
-control: after detecting the deliberately missing input retain, returning from
-main entered library teardown with the fixture's task still live and obscured
-the intended exit 223. The fixture now uses static descriptor metadata like
-production and exits immediately on a failed invariant. Its normal ownership
-cases and client measurements were not reached; no candidate acceptance yet.
-The next probe also includes failed input-retain acquisition and remote-output
-pipelines, retained upstream readers and chained senders.
+## Checks and next action
 
-Repaired candidate `81e2586e0192a8d71bdac002a078122d8c1aa7de` runs in
-Linux probe `39010422154` failed because the fixture expected a reset request
-to retain its already-released active-list owner. The assertion now accounts for
-whether the request is still listed. This is not candidate acceptance.
+Native builds, full suites and measurements run on GitHub. Local commands use
+`python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py` with fixed
+limits. Latest formatting check passed in 1.30s; documentation audit in 3.22s.
+The failing-input example typechecked with the prebuilt compiler in 0.27s.
+Baseline collection passed in 24.24s; strengthened source/binary/disassembly
+hash checks passed on recollection in 2.04s without rerunning measurements.
+Linux probe download took 4.92s and static disassembly 0.15s. No local native
+builds or downloaded program execution occurred.
 
-Review also found that native synchronous input failures and failed response
-channel deliveries did not reset the request, unlike the interpreter. Scoped
-reset cleanup now runs before dropping the caller's request owner. Tests cover
-encoding/continuation traps, blocked sends and channel delivery, including
-deliberately omitted resets. A real input-continuation failure runs with each
-interpreter/native client/server combination. The failure and ownership changes
-await the next runner probe; no native validation is claimed yet.
+The collector now requires exact-source manual ARM64/AMD64 binary reviews.
+Private artifacts/logs are under `/private/tmp/fwp-sender-input-evidence` and
+`/private/tmp/fwp-input-owner-passing-linux.log`. Require all six candidate jobs,
+matching outputs, complete cleanup, bounded storage, measured remaining count
+costs and both architecture reviews before preparing the next delivery. Root
+#158's full production gates remain independent and must pass before merging.
 
-Candidate `f0494e4d33945159977b4d49a8aa2365724da69b` is published; Linux run
-`39011258349` passed request-reset checks but failed pre-entry sender cancellation:
-C task entries start before the scheduler's language-task cancellation check, so
-`g_send_all` could force one input before noticing its cancellation. Both native and interpreter senders
-now check cancellation before evaluating input; a deliberate missing-check case
-requires the old native behavior to fail. An interpreter test compares cancelled
-and uncancelled senders and checks input release. The focused workflow runs the sender fixture
-first, without duplicating or removing any test, to shorten repair feedback.
-These changes await the next probe. Next: inspect it, then compare memory
-and reference-count totals before selecting any further optimization. Require six native
-candidate jobs, matching outputs, complete input/sender/connection cleanup,
-bounded remaining storage, failure controls and actual ARM64/AMD64 binary review
-before preparing the next delivery. PR #158 remains the only active PR.
-
-Local work uses the root guard with unchanged limits. Candidate formatting passed in 1.30s; the new failure fixture formatted in
-0.02s and typechecked with the prebuilt compiler in 0.27s. The documentation
-audit passed in 3.19s before publication. The local six-host collector passed syntax parsing in 0.20s.
-No local builds or native execution ran. All native measurement work belongs on
-GitHub. Private design notes are `/private/tmp/fwp-next-connection-ownership.md`.
-Do not copy this preparation's old plan/history over the active root handoff.
-
-Pending sender values, retained server callbacks/channels, host re-entry,
-numerical ownership and cycle policies remain open. Remote checked ARC remains
-unsupported. All seven project work areas remain open; JIT is excluded.
+After client input acceptance, measure server-process memory before selecting
+server callback/channel/task ownership changes. Current client counters exclude
+that memory. Host re-entry, numerical ownership, cycle policies and the broader
+seven work areas remain open. Remote checked ARC is unsupported; JIT is excluded.
 
 ## Roadmap status
 

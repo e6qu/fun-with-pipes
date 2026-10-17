@@ -150,13 +150,33 @@ def main():
             names += [mode + ext for ext in ['.fwp', '.c', '-measured.c', suffix, '-measured' + suffix]]
             names += [f'{mode}-{n}-{rep}.log' for n in [1, 16, 256] for rep in range(3)]
         observations = folder / 'binary-observations.json'
-        if observations.exists():
+        inspected = json.loads(observations.read_text()) if observations.exists() else None
+        if host in {'ubuntu-latest', 'ubuntu-24.04-arm'}:
+            assert inspected is not None, (host, 'missing actual-binary inspection')
+            review = inspected.get('manual_review', {})
+            assert review.get('source_revision') == args.head, (host, 'missing exact-source review')
+            architecture = 'AMD64' if host == 'ubuntu-latest' else 'ARM64'
+            assert review.get('architecture') == architecture
+            assert all(review.get(mode, {}).get('observations') for mode in ['synchronous', 'bidirectional'])
+            assert {'synchronous', 'bidirectional'} <= {item['client'] for item in inspected['observations']}
+        if inspected:
+            assert inspected['source_revision'] == args.head, (host, 'stale binary inspection')
             names.append(observations.name)
+            for item in inspected['observations']:
+                mode = item['client']
+                assert mode in MODES
+                assert fingerprint(folder / (mode + '.c')) == item['source']
+                assert fingerprint(folder / (mode + suffix)) == item['binary']
+                assembly = item['assembly']
+                assert assembly['file'] == mode + '.asm'
+                assert fingerprint(folder / assembly['file']) == {
+                    key: assembly[key] for key in ['bytes', 'sha256']}
+                names.append(assembly['file'])
         hosts.append({'host': host, 'job_url': job['url'], 'rows': rows, 'inputs': inputs,
             'connection_storage_allocations': storage, 'summaries': summaries, 'comparison': comparison,
             'raw_tables': raw, 'scope': (folder / 'scope.txt').read_text(),
             'environment': {name: (folder / (name + '.txt')).read_text() for name in ['rust', 'c', 'cpu']},
-            'binary_observations': json.loads(observations.read_text()) if observations.exists() else None,
+            'binary_observations': inspected,
             'files': {name: fingerprint(folder / name) for name in names}})
     report = {'source_revision': args.head, 'run_url': run['url'], 'checks': checks, 'modes': MODES,
         'sampling': '1, 16 and 256 calls, up to 64 input values, three independent measured processes per case. Instrumented native clients close each connection and drain reader/writer/sender tasks before the next call and final sample. Counters start after constant initialization and end before whole-runtime shutdown, after root execution and cached-value cleanup.',

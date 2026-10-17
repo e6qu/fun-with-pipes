@@ -115,8 +115,9 @@ int main(void){
 fn input_owners_release_after_lookahead_failure_and_sender_cancellation() {
     let mut generated = request_runtime();
     for (before, after) in [
-        ("static int g_input_next(g_input *input, V *value) {", "static V probe_next(V);\nstatic void probe_encode(V,h2_buf *);\nstatic int g_input_next(g_input *input, V *value) {"),
-        ("fwp_apply_borrowed(OBJ(node)->f[1], 1, &unit)", "probe_next(node)"),
+        ("static int g_input_next(g_input *input, V *value) {", "static V probe_owned_next(V,V);\nstatic V probe_borrowed_next(V);\nstatic void probe_encode(V,h2_buf *);\nstatic int g_input_next(g_input *input, V *value) {"),
+        ("fwp_apply_borrowed(continuation, 1, &unit)", "probe_borrowed_next(node)"),
+        ("fwp_apply_owned(continuation, 1, &unit)", "probe_owned_next(node, continuation)"),
         ("g_encode_request(x->input.remote, &v, &req);", "probe_encode(v, &req);"),
         ("    t->cfinish = g_sender_peer_finish;", "    t->cfinish = g_sender_peer_finish; probe_task=t;"),
     ] {
@@ -156,6 +157,13 @@ fn input_owners_release_after_lookahead_failure_and_sender_cancellation() {
                 222,
             ),
             ("    fwp_rc_dup(iter);", "    (void)iter;", "0", 223),
+            (
+                "        OBJ(node)->f[1] = 0; /* application owns the continuation, including traps */",
+                "        /* omit clearing the transferred continuation */",
+                "0",
+                241,
+            ),
+            ("    if (fwp_rc_last(node)) {", "    if (1) {", "1", 242),
             (
                 "    fwp_check_cancel(); /* cancellation before entry must not force input */",
                 "    /* omit pre-entry cancellation check */",
