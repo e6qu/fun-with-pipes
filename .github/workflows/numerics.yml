@@ -119,6 +119,9 @@ jobs:
           pathlib.Path("server-memory-evidence/cpu.txt").write_text(subprocess.check_output(commands[os.environ["RUNNER_OS"]], text=True))
           PYENV
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output server-memory-evidence/primitive-inventory.json
+          if [ "$RUNNER_OS" = Linux ]; then
+            cargo test --test gc grpc_server_runs_in_bounded_memory -- --exact --nocapture
+          fi
           cargo test --lib rc::tests
           cargo test --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership --test borrowed_callbacks
           cargo test --test grpc_server_connections --test grpc_server_requests --test grpc_connect_startup --test grpc_server_ownership
