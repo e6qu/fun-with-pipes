@@ -20,6 +20,7 @@ def main():
                         choices=['unary-strings', 'response-stream', 'request-stream', 'channel-output'])
     args = parser.parse_args()
     symbols = ['g_handle', 'g_start_call', 'g_job_peer_finish', 'g_run_method',
+               'g_reader', 'g_accept_loop', 'g_serving_peer_release', 'fwp_task_own_internal',
                'g_apply_user', 'g_iter_next', 'g_recv_one', 'g_finish',
                'fwp_free_zombie', 'fwp_task_dispose', 'fwp_apply', 'fwp_apply_owned']
     observations = []
