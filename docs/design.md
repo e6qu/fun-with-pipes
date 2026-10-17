@@ -321,11 +321,11 @@ A function that only forwards a callback's tuple can keep its existing storage.
 A callback is a function supplied by the caller; its concrete target may be
 unknown during compilation. Such calls return a boxed tuple. Unpacking that
 tuple into separate C fields and immediately boxing it again adds an allocation
-without changing the value. The prepared compiler change avoids this conversion
+without changing the value. The compiler avoids this conversion
 when every return path forwards a callback result, including through local names
 or branches. Functions that build records or make known direct calls retain their
-existing choices. Alias, failure-cleanup and allocation checks must pass before
-acceptance; the [handoff](development-state.md) records current evidence.
+existing choices. Alias, failure-cleanup and allocation checks passed with
+[PR #154](roadmap-history.md#service-settings-and-iteration-storage-pr-154).
 
 List `each` runs a callback from first to last and returns unit, written `()`.
 Its definition, `const | flip fold ()`, uses unit as the running value

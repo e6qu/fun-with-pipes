@@ -39,7 +39,10 @@ def main():
     parser.add_argument("--artifacts", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--baseline-report", type=Path, help="Compare owned client streams with the untouched repeated-call baseline")
+    parser.add_argument("--projection-moves", action="store_true", help="Compare compiler field transfers with the owned-request baseline")
     args = parser.parse_args()
+    if args.projection_moves:
+        assert args.baseline_report, "projection comparison requires a retained baseline report"
     baseline = json.loads(args.baseline_report.read_text()) if args.baseline_report else None
     if baseline:
         assert baseline["source_revision"] != args.head
@@ -59,6 +62,8 @@ def main():
                    "queued_message_allocation_failure_reports_out_of_memory",
                    "every_kind_of_call", "stream_aliases_are_consistent_across_tasks",
                    "calls_are_concurrent"]
+    if args.projection_moves:
+        checks.append("boxed_projection_transfers_unique_fields_and_preserves_shared_values")
     output_tables = args.output.parent / args.output.stem
     output_tables.mkdir(parents=True, exist_ok=True)
     results = []
@@ -127,7 +132,14 @@ def main():
                 final = {row["final_charged_bytes"] for row in measured}
                 assert len(final) == 1, (host, mode, final)
                 old_final = [before[(mode, 256, rep)]["final_charged_bytes"] for rep in range(3)]
-                assert all(value > next(iter(final)) for value in old_final)
+                if args.projection_moves:
+                    assert all(value >= next(iter(final)) for value in old_final)
+                    for row in measured:
+                        prior = before[(mode, row["batches"], row["repetition"])]
+                        assert row["retains"] < prior["retains"], (host, mode, row, prior)
+                        assert row["requests"] <= prior["requests"], (host, mode, row, prior)
+                else:
+                    assert all(value > next(iter(final)) for value in old_final)
                 comparison.append({"mode": mode, "remaining_managed_bytes": next(iter(final)),
                     "baseline_remaining_after_256_batches": old_final,
                     "rows": [{"batches": row["batches"], "repetition": row["repetition"],
@@ -185,6 +197,9 @@ def main():
                               "source_revision": baseline["source_revision"],
                               "run_url": baseline["run_url"], **fingerprint(args.baseline_report)}
         report["limits"] = ("Collection disabled, physical freeing enabled. Compared with the retained repeated-call baseline using the same source programs, input sizes and output checks. Managed allocation/count totals and explicit request/message releases are measured before whole-runtime shutdown. Constant final managed charge is required in every measured mode and size, as is release of all created streams and queued messages. Reusable connections and detached I/O tasks remain live at the final sampling point; their remaining storage is not a demonstrated leak. Partial readers can avoid constructing later messages once abandoned, so message-construction work can differ. Other raw buffers, allocator/TLS/OS storage, server/process memory and timing are excluded. Connections and retained callback graphs still require tracing; these cases do not establish unlimited-call bounds, checked ARC, zero-cost abstractions or C/Rust parity.")
+    if args.projection_moves:
+        report["comparison_kind"] = "compiler transfer of the only counted field from a consumed boxed record"
+        report["limits"] += " This compiler comparison requires fewer retains in every measured case without extra allocation requests or higher final managed storage; shared records keep their existing owners. Dynamic dispatch, record allocations and ownership tests remain."
     args.output.write_text(json.dumps(report, indent=2) + "\n")
     print(f"Retained six native repeated-call measurements at {args.head}")
 
