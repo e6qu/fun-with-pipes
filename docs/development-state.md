@@ -129,7 +129,14 @@ receive, request, peer and context controls and the new message-allocation
 failure test. The stream-owner fixture stopped before native compilation because
 its finalizer-removal injection matched an unrelated cleanup site too. The
 marker now includes the request destructor call, so it selects one site.
-Runtime ownership and repeated measurements still need a passing probe.
+Probe `38999032272` at `4a1823ac` passes all new stream owner/control modes,
+including stress, sender cancellation and overflow. Two added controls fail:
+the receive fixture used server cancellation rules for an owned client request,
+and TLS-key OOM called `exit` on a task stack, where the library unload destructor
+aborts. The fixture now uses client status/reset rules; the two new fatal OOM
+branches use `_Exit(102)` and both message encodings are tested on a task stack.
+The second probe also exposed duplicated layout output in fixture review; it is
+now emitted once. Repeated client measurements still need a passing probe.
 Controls cover completion, reset, connection loss, sender completion/cancellation,
 failed sender preparation, reference overflow and deliberately omitted releases.
 An unchecked queued-message allocation now reports the established exit-102
@@ -139,6 +146,10 @@ control in the existing pool-identity fixture. That fixture now releases its
 client stream through the new owners. Receive tests additionally count final
 request release after retry, malformed responses, decoder traps and cancellation.
 A native layout table records structure size, alignment and field offsets.
+The unused detached-sender encoder field/branch is removed: its only production
+caller always supplies a static request description. Existing request-encoding
+and exceptional-buffer tests join the probe. Other older fatal allocation paths
+still use `exit`; audit their task-stack behavior in the connection-lifetime work.
 Next: publish these repairs and controls, run the focused Linux native checks, fix failures,
 then measure all six native hosts and inspect actual generated binaries.
 

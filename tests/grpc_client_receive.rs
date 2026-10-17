@@ -105,6 +105,9 @@ static void call(void *arg,int stop){if(stop){cancelled++;return;}jmp_buf failed
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1,"local",&srv);connection=c;
+#ifdef PROBE_CLIENT_STREAM_OWNERS
+ c->server=0; /* exercise client cancellation/reset, not server receive rules */
+#endif
  for(stage=0;stage<12;stage++){
   stream_finalizations=0;allocations=frees=cancelled=trapped=delivered=opens=0;result=99;memset(owned,0,sizeof owned);c->out.len=0;
   g_stream *s=g_stream_new(c,(uint32_t)(1+4*stage));s->sent_headers=1;s->remote_end=stage!=6&&stage!=11;stream=s;retry_stream=s;
@@ -113,8 +116,9 @@ int main(void){
   if(stage==3)s->bad=strdup("transport failure");
   if(stage==7){s->remote_end=0;s->reset=strdup("reset");s->retry=1;g_stream *next=g_stream_new(c,(uint32_t)(3+4*stage));next->sent_headers=1;next->remote_end=1;next->mhead=next->mtail=message();retry_stream=next;}
 #ifdef PROBE_CLIENT_STREAM_OWNERS
+  h2_hdrs_add(&s->headers,"grpc-status",11,"0",1);
   fwp_rc_fresh(PTR(s));fwp_rc_dup(PTR(s));
-  if(retry_stream!=stream){fwp_rc_fresh(PTR(retry_stream));fwp_rc_dup(PTR(retry_stream));}
+  if(retry_stream!=stream){g_stream *next=retry_stream;h2_hdrs_add(&next->headers,"grpc-status",11,"0",1);fwp_rc_fresh(PTR(next));fwp_rc_dup(PTR(next));}
 #endif
   fwp_remote remote={0};remote.env="FWP_CLIENT_RECEIVE_PROBE";remote.default_addr="local";remote.what="probe";remote.m.output=stage>=8?2:0;
   fwp_task *t=fwp_spawn_task(0,call,&remote,0,0);
@@ -123,7 +127,7 @@ int main(void){
   int expected=stage==7?3:stage==0||stage==1||stage==4||stage==8||stage==9?2:1;
   if(!t->done||allocations!=expected||frees!=expected||fwp_cleanups||cancelled!=(stage==6||stage==11)||trapped!=(stage==1||stage==2||stage==3||stage==4||stage==5||stage==9||stage==10))return 1;
 #ifdef PROBE_CLIENT_STREAM_OWNERS
-  if(stream_finalizations!=(stage==7?2:1)||c->streams)return 20;
+  if(stream_finalizations!=(stage==7?2:1)||c->streams){fprintf(stderr,"stage %d: %d finalized, listed=%d\n",stage,stream_finalizations,c->streams!=0);return 20;}
 #endif
   if(stage==0||stage==7){if(result!=42)return 3;}
   if(stage>=8&&delivered!=(stage==8||stage==10||stage==11))return 4;

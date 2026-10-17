@@ -143,11 +143,12 @@ fn queued_message_allocation_failure_reports_out_of_memory() {
     );
     let hooks = "#include <stddef.h>\nstatic void *failed_message_allocation(size_t n) { (void)n; return NULL; }\n";
     let fixture = r#"
-int main(int argc, char **argv) {
-    (void)argv;
+static int compress_test;
+static void attempt(void *arg, int cancelled) {
+    (void)arg; (void)cancelled;
     g_stream stream = {0};
     h2_buf payload = {0};
-    int compressed = argc > 1;
+    int compressed = compress_test;
     if (compressed) {
         h2_hdrs_add(&stream.headers, "grpc-encoding", 13, "gzip", 4);
         h2_gzip((const unsigned char *)"message", 7, &payload);
@@ -158,7 +159,13 @@ int main(int argc, char **argv) {
     h2b_put(&stream.data, header, sizeof header);
     h2b_put(&stream.data, payload.d, payload.len);
     g_split(&stream);
-    return 201; /* the injected failure must terminate before queue publication */
+    _Exit(201); /* injected failure must terminate before queue publication */
+}
+int main(int argc, char **argv) {
+    (void)argv; compress_test=argc>1;
+    fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+    fwp_task *task=fwp_spawn_task(0,attempt,0,0,0);fwp_await(task);
+    return 201;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-message-allocation").unwrap();

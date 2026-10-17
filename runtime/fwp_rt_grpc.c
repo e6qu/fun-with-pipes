@@ -443,7 +443,7 @@ static void g_split(g_stream *s) {
         }
         size_t mn = s->data.d[0] != 0 ? plain.len : n;
         g_msg *m = (g_msg *)malloc(sizeof(g_msg) + mn + 1);
-        if (!m) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+        if (!m) { fprintf(stderr, "fwp: out of memory\n"); _Exit(102); }
         m->next = 0;
         m->n = mn;
         if (mn) memcpy(m->d, src, mn);
@@ -1158,7 +1158,9 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
     if (opts) {
         c->tlskey_len = opts->key_len;
         c->tlskey = (char *)malloc(opts->key_len);
-        if (!c->tlskey) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+        /* A fatal allocation failure can occur on a task stack. Do not run
+         * library unload destructors from inside that live task. */
+        if (!c->tlskey) { fprintf(stderr, "fwp: out of memory\n"); _Exit(102); }
         memcpy(c->tlskey, opts->key, opts->key_len);
     }
     c->refs = 1; /* temporary startup owner */
@@ -1708,15 +1710,15 @@ static int g_iter_next(V *cur, V *x) {
 static void g_encode_request(const fwp_remote *r, V *vals, h2_buf *out);
 
 /* a task that sends the requests of a bidirectional call while its caller
- * receives the responses: the elements of an iterator, encoded by `enc`
- * (an fwp function) or as requests of `r`, then the end of the stream. It
+ * receives the responses: the elements of an iterator, encoded as requests
+ * of `r`, then the end of the stream. It
  * stops when the call is over; a trap resets the stream with the reason
  * `trap: ...`, which the caller raises. Allocated in the fwp heap: it holds
  * values. */
 typedef struct {
     g_conn *c;
     g_stream *s;
-    V cur, enc;
+    V cur;
     const fwp_remote *r;
     g_serving *serving;
 } g_sender;
@@ -1758,19 +1760,13 @@ static void g_send_all(void *arg, int cancelled) {
             break;
         }
         x->cur = cur;
-        int ok;
-        if (x->r) {
-            h2_buf req = {0};
-            fwp_cleanup request_buffer;
-            fwp_cleanup_push(&request_buffer, g_h2_buffer_release, &req);
-            g_encode_request(x->r, &v, &req);
-            ok = g_send_msg(x->c, x->s, req.d, req.len, 0);
-            fwp_cleanup_pop(&request_buffer);
-            h2b_free(&req);
-        } else {
-            V b = fwp_apply1(x->enc, v);
-            ok = g_send_msg(x->c, x->s, (const unsigned char *)STR(b)->d, STR(b)->len, 0);
-        }
+        h2_buf req = {0};
+        fwp_cleanup request_buffer;
+        fwp_cleanup_push(&request_buffer, g_h2_buffer_release, &req);
+        g_encode_request(x->r, &v, &req);
+        int ok = g_send_msg(x->c, x->s, req.d, req.len, 0);
+        fwp_cleanup_pop(&request_buffer);
+        h2b_free(&req);
         if (!ok) break;
         /* let the connection's reader see the end of the call (an
          * iterator may be infinite, and the windows may stay open) */
@@ -1781,12 +1777,11 @@ static void g_send_all(void *arg, int cancelled) {
     fwp_cur->trap_cleanup = saved_cleanup;
 }
 
-static void g_spawn_sender(g_conn *c, g_stream *s, V iter, V enc, const fwp_remote *r) {
+static void g_spawn_sender(g_conn *c, g_stream *s, V iter, const fwp_remote *r) {
     g_sender *x = (g_sender *)fwp_alloc(sizeof *x);
     x->c = c;
     x->s = 0; /* assigned only after the reference is acquired */
     x->cur = iter;
-    x->enc = enc;
     x->r = r;
     x->serving = g_ctx_of()->serving;
     if (x->serving) {
@@ -1866,7 +1861,7 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
             h2b_free(&req);
         } else if (r->m.output != 0) {
             /* requests are sent as responses arrive */
-            g_spawn_sender(c, s, args[0], 0, r);
+            g_spawn_sender(c, s, args[0], r);
         } else {
             V cur = args[0], x;
             while (g_iter_next(&cur, &x)) {

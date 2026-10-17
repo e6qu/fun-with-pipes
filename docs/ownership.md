@@ -869,6 +869,22 @@ Server/HTTP streams and connection graphs retain their existing collector
 requirement. Closing a transport and destroying values that refer to it remain
 distinct operations.
 
+The remaining relationships need separate checks:
+
+| Storage | Who currently keeps it alive | Work still needed |
+|---|---|---|
+| Client request | The active connection list, receive source and detached sender hold references in the current preparation. | Accept native completion, failure, cancellation and repeated-call evidence. |
+| Connection | Reader/writer tasks count use of the socket; tracing preserves the connection object and remaining metadata. | Give the pool, calls and tasks explicit storage owners without creating a connection/request cycle. Closing a socket alone does not finish every borrow. |
+| Pending sender values | The sender points at the remaining input iterator; tracing preserves its values. | Transfer or retain the iterator with its concrete type, then release it after completion, errors or cancellation. Its request description is static compiler metadata. |
+| Server callbacks and response channels | Serving tasks and retained language values can outlive the creating call scope. | Prove each retained handler and channel context, including failure during construction and cycles after external references disappear. |
+| Task identities and wait lists | The scheduler owns parked tasks; request state borrows their identities. | Preserve this direction when adding owners; do not turn back-pointers into owning cycles. |
+
+A detached sender sends iterator elements as requests described by compiler
+metadata. Its unused function-encoder field and branch have been removed from
+the preparation: the sole production caller always supplies that request
+description. The native layout fixture records its resulting size; ordinary
+request encoding and error/cancellation checks still cover the active path.
+
 The next implementation must assign owners to the pool, active calls, receive
 sources and I/O tasks, while keeping scheduler task identities and wait lists
 borrowed. The candidate already moves the source allocation to the next unread

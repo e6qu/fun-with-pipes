@@ -10,9 +10,6 @@ static double probe_charge(void) {
 }
 static int still_finalized(void *pointer) {
     for (size_t i=0; i<fwp_gc.nfins; i++) if (fwp_gc.fins[i].obj==pointer) return 1;
-    printf("stream_bytes\tstream_alignment\traw_offset\tabandoned_offset\tsource_bytes\tsender_bytes\tconnection_bytes\n%zu\t%zu\t%zu\t%zu\t%zu\t%zu\t%zu\n",
-        sizeof(g_stream),_Alignof(g_stream),offsetof(g_stream,raw),offsetof(g_stream,abandoned),
-        sizeof(g_incoming),sizeof(g_sender),sizeof(g_conn));
     return 0;
 }
 static void end_response(g_conn *c, g_stream *s, int mode) {
@@ -48,7 +45,7 @@ int main(int argc,char **argv) {
     h2b_put(&s->data,"partial",7);
     if(mode==5)fwp_rc_dup(PTR(s)); /* a sender-like independent alias */
     if(mode==6||mode==7) {
-        g_spawn_sender(c,s,0,0,0);
+        g_spawn_sender(c,s,0,0);
         if(!probe_sender||*fwp_rc_slot(PTR(s))!=3)return 216;
     }
     if(mode==8||mode==9) {
@@ -56,7 +53,7 @@ int main(int argc,char **argv) {
         if(mode==9){*slot=254;fwp_rc_dup(PTR(s));(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
         probe_spawn_fail=mode==8;
         fwp_trap_recover=recover_probe;fwp_trap_jb=&probe_trap;fwp_trap_cleanup=fwp_cleanups;
-        if(!setjmp(probe_trap)){g_spawn_sender(c,s,0,0,0);return 217;}
+        if(!setjmp(probe_trap)){g_spawn_sender(c,s,0,0);return 217;}
         fwp_trap_recover=0;fwp_trap_jb=0;fwp_trap_cleanup=0;probe_spawn_fail=0;
         if(fwp_cleanups||probe_sender||probe_stream_finals)return 217;
         if(mode==9){
