@@ -88,12 +88,18 @@ per integer. [The comparison](docs/benchmarks.md#moving-captured-values-instead-
 explains both revisions, inputs, scope and limitations. Full production acceptance
 of this combined delivery remains required.
 
-Next, measure repeated calls in one process, including connection, stream and raw
-message storage, then give those objects and retained codec/sender callbacks
-explicit owners. Preserve shared reads, cancellation and error order, and separate
-reusable connection pools from per-call growth. Sources currently own their own
-allocation but still borrow the connection and callback graph. Remote calls
-remain excluded from checked ARC until those lifetimes and cycles are proved.
+The repeated-call baseline now passes on all six platforms: each additional
+call leaves 240 managed bytes, while partial readers also leave raw queued
+messages. One connection is reused, separating pool storage from per-call growth.
+The next preparation gives client requests explicit owners and discards unread
+messages after their reader is released. Final-owner, failure and repeated-call
+validation is in progress; see the handoff for actual runs.
+
+Next, prove connection/pool/task ownership and release pending sender values and
+retained server callbacks. Preserve shared reads, cancellation and error order;
+keep scheduler back-pointers borrowed to avoid cycles. Audit unused runtime
+callback fields before adding owners for them. Remote calls remain excluded from
+checked ARC until their complete lifetimes and cycles are proved.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

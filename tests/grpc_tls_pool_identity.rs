@@ -42,6 +42,9 @@ fn tls_pool_keys_distinguish_complete_options_and_survive_scope_release() {
         generated = generated.replacen(before, after, 1);
     }
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdint.h>
 static void *reader,*writer;
 static void driver(void *,int);

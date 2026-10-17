@@ -13,7 +13,7 @@
     "partial": "One call per batch, sum first 32 of 64 (528)",
     "retained": "Two calls per batch; sum both 1..64 streams and reread the first value of the initial retained iterator (4161)"
   },
-  "sampling": "1, 16 or 256 batches in one process; three separate measured processes per case, after raw interpreter and uninstrumented native output agreement. Checkpoints precede each new request-stream allocation. Final counters follow entry/task cleanup, before whole-runtime shutdown.",
+  "sampling": "1, 16 or 256 batches in one process; three separate measured processes per case, after raw interpreter and uninstrumented native output agreement. Checkpoints precede each new request-stream allocation. Counters start after constant initialization. Final counters follow root execution, joining its child tasks and cached-value cleanup, before whole-runtime shutdown. Reusable connections and detached I/O tasks are still live at this point.",
   "limits": "Collection disabled, physical freeing enabled. Managed allocations and counted retains plus connection/stream object and queued-message counts. Message requested bytes include the header and trailing byte. Other raw buffers, allocator/TLS/OS storage, server/process memory and timing excluded. Partial-read queue occupancy can vary with network/task scheduling. This is an ownership baseline, not a bounded-memory, zero-cost or C/Rust parity claim.",
   "hosts": [
     {

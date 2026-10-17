@@ -4,159 +4,131 @@ Updated 2026-10-17 UTC. All seven work areas in [PLAN.md](../PLAN.md) remain ope
 
 ## Current delivery
 
-PR #155 is accepted as `45410bea4b59e2e6478632cf253f9c29cbd9863d`, with all nine
-production jobs `38990872293` and docs `38990872208` passing at `e71a2295`.
-The verified merge has the tested tree, parent `11ae0f63`, and exactly the subject
-`Fix shared stream reads and bound cleanup stack use`, with no body or trailers.
-The watcher completed and saved `/private/tmp/fwp155-merge-record.json`.
-Duplicate production `38996775271` was canceled; Windows dependency jobs remain.
+[PR #156](https://github.com/e6qu/fun-with-pipes/pull/156) releases cached stream
+values and moves captures from uniquely owned closures. Root branch
+`release-stream-caches` has exact head `d19ab045d6ce136455d597b49773db7ef9c5721d`,
+based on accepted #155, `45410bea4b59e2e6478632cf253f9c29cbd9863d`.
+Production run `38996879616` is running; documentation `38996879603` passed.
+Both ARM Mac jobs, Windows AMD64 and benchmarks have passed so far. Require all
+nine production jobs and docs on this exact head before merging.
 
-[PR #156](https://github.com/e6qu/fun-with-pipes/pull/156), root branch
-`release-stream-caches`, starts at that accepted merge and adds cache ownership,
-unique closure capture transfers, Windows portability fixes, reports and clearer
-docs. Exact head: `d19ab045d6ce136455d597b49773db7ef9c5721d`. Production
-`38996879616` and documentation `38996879603` are running. Require all nine jobs
-plus docs on this exact head. Do not treat focused evidence as production acceptance.
-The watcher in exec session `37246` runs `/private/tmp/fwp-watch-156.py`, which
-checks the exact base/head and gates, squash-merges with the one-line subject
-`Release unused stream values and reduce memory bookkeeping` and empty body,
-then verifies the tree, parent and message. Its record is
-`/private/tmp/fwp156-merge-record.json`. If it ends on failure, fix and restart
-with the new exact head. This local handoff update intentionally remains
-uncommitted to avoid restarting the full matrix for status-only changes.
+Watcher exec session `37246` runs `/private/tmp/fwp-watch-156.py` and
+`/private/tmp/fwp-merge-156.py`. It verifies the exact base/head and passing gates,
+squash-merges with subject `Release unused stream values and reduce memory bookkeeping`
+and an empty body, then verifies tree, parent and complete message. Its result
+belongs at `/private/tmp/fwp156-merge-record.json`. If it exits on failure, repair
+and restart for the new exact head. Do not infer success from a missing watcher.
+Cancel only superseded/duplicate production runs; preserve Windows dependency jobs.
 
-The combined preparation is published at `a49ffe3e` on
-`move-unique-closure-captures`, worktree `/private/tmp/fwp-closure-capture-moves`.
-Its final measured source is `afd7d460fcbc5a897ee4b4b960a3735830fe52a1`, preserved
-as `evidence/remote-capture-moves-20261017`. All six native jobs pass in
-`38996238360`. [The report](measurements/remote-client-capture-moves-2026-10-17.json)
-retains that measured source; report/doc changes do not relabel it.
+The root handoff remains a local status change to avoid restarting production
+for documentation-only progress. Keep one active delivery PR. After acceptance,
+start the next delivery from the verified merge and transfer the preparation
+below; preserve its actual measurement revisions. Record acceptance in
+[history](roadmap-history.md) and replace the current delivery in the plan.
 
-The comparison uses the same real loopback clients at 64/1,024/16,384 integers,
-three processes per case, including one-pass, retained-history and first-32-only
-reads. Raw unoptimized interpretation and ordinary compiled output agree.
-Managed counters run with collection disabled, from constant initialization to
-entry cleanup before whole-runtime shutdown. Raw buffers, server/whole-process
-memory and timing are excluded. The earlier baseline is `456f2dbd`, run
-`38991578784`; the cache-only component is `886dad3b`, run `38994414068`.
-Both pass all six native hosts and have retained evidence tags/reports.
+PR #156's focused source is `afd7d460`, tag
+`evidence/remote-capture-moves-20261017`, all six native jobs passing in
+`38996238360`. [Its report](measurements/remote-client-capture-moves-2026-10-17.json)
+compares actual clients over 64/1,024/16,384 integers. Remaining managed memory
+is constant across those sizes; moving unique captures reduces retains from the
+cache-only change by about 40%, but still leaves about three times the original
+tracing-dependent count and five allocations per integer. Raw transport storage
+and timing are excluded. Details and earlier acceptance belong in the benchmark
+guide/history, not a second next-action list.
 
-Typed cache ownership removes the baseline's 64-byte-per-consumed-integer
-remaining growth. Final managed charge is constant in each tested mode and size:
-Linux AMD64 6,480 bytes, Linux ARM64 19,536, either Mac 2,480, Windows AMD64 3,632
-and Windows ARM64 3,248. Keeping an earlier iterator intentionally keeps its
-history until released. These single-call clients do not prove bounded repeated
-calls or unread network queues. Five allocations per integer remain.
+## Next preparation: release finished request storage
 
-Moving captured values from consumed unique closures reduces one-pass retains
-from 81,921 in the cache-only component to 49,154 at 16,384 integers on every
-host. This remains above the original tracing-dependent baseline's 16,385.
-Unique captures move through partial/full calls; shared captures still acquire
-typed references. The destination is ready before transfer, with no intervening
-allocation, suspension or recoverable trap. Error/trap cleanup remains owned.
-One-pass peak drops another 64 bytes per host; Linux AMD64 is now 6,768 bytes.
-No timing, zero-cost or C/Rust parity claim.
+Worktree `/private/tmp/fwp-repeated-remote-calls`, branch
+`own-remote-transport-storage`, published at `c2cfaf1a`.
+Linux probe `38999330000` passed all checks with `numerics.yml`, `suite=stream-repeat`.
+All-six run `38999756987` found Windows fixtures selecting an older API contract
+before generated code. `grpc_connection_addresses` and `grpc_tls_pool_identity`
+now select the required Windows 10 contract before includes and join regular
+Windows production. The new stream-owner controls passed on Windows ARM64; that
+job stopped before repeated-client measurements. Watcher `52202` exits on this
+failure; do not collect or accept this run. Publish the repair and run a fresh
+six-host matrix for its exact head.
+Focused runtime checks now precede closure checks so failures surface sooner.
+No second delivery PR is open.
 
-Controls cover 16,384-position chains and aliases to positions/wrappers, physical
-reclamation without collection, collector/reuse stress, decoder errors/traps,
-12 capture-sharing/application/failure combinations at O1/O2, scalar bits that
-resemble pointers, cancellation and reference-counter overflow. Deliberately
-omitted cleanup, recursive destruction, restored duplicate captures and stolen
-shared captures must fail. Actual Linux AMD64/ARM64 binaries show capture-count
-one branches bypassing duplicate callbacks and looped cache cleanup. Cleanup
-frames are 24 bytes on AMD64 excluding the incoming return address and 64 bytes
-on ARM64 including saved registers; helper frames are separate. Dynamic dispatch,
-argument copying and stack storage remain.
+The untouched baseline is `ac95632b8c77cc8c52f35a451f3c7451d0e29b06`, tag
+`evidence/repeated-remote-baseline-20261017`. All six native jobs passed in
+`38997585835`; branch `measure-repeated-remote-calls` preserves it.
+The next worktree contains the report
+`docs/measurements/repeated-remote-baseline-2026-10-17.json` and raw checkpoint
+TSVs beside it. Inputs are 1/16/256 batches of 64 integers in one client process:
+full sum (2,080), first-32 sum (528), or retaining an iterator across a second call
+and rereading its first value (4,161; two calls per batch). Three measured processes
+per case follow raw interpreter/ordinary native output agreement.
 
-## Repaired failures and local checks
+All six hosts retain 240 additional managed bytes per call. One connection is
+reused; no request streams are finalized. Partial readers also leave 609 requested
+message bytes per call in these samples. Collection is disabled; counters end
+after root execution, child-task joins and cached-value cleanup, before
+whole-runtime shutdown. The pool and detached I/O tasks remain live; their
+remaining storage is not evidence of an unreachable connection. Other raw buffers,
+TLS/OS/allocator storage, server/process memory and timings are excluded.
+Queue occupancy may vary with scheduling. This establishes work, not bounded memory.
 
-Earlier probe `38994754283` exposed two test assumptions: reversed expected
-concatenation and rounded freed-byte statistics. The failure-loop test now
-requires exact zero remaining managed bytes after 10,000 failures and detects a
-missing closure release. Six-host run `38995678897` then passed Linux/macOS but
-found Windows CRLF diagnostics and Unix-only stack failure injection. Repairs
-normalize only fixture diagnostics and inject native `CreateFiberEx` failures on
-Windows. All seven closure/unwind test targets now join Windows production.
-Those repairs pass `38996238360`; no focused failure remains unresolved.
+The implementation gives client request streams references from the active
+connection list, receive source and detached sender. Source release discards
+unread input without cancelling the remote operation. The list holds unfinished
+requests until completion/reset/connection death. Last release frees metadata
+and raw request storage and removes the weak collector finalizer. Existing
+allocator count metadata is reused; native layout measurements check the new flag.
+The sender's unused function-encoder field/branch is removed because its sole
+production caller always supplies a static request description.
 
-Full builds and native execution stay on GitHub. Every local check uses
+Server/HTTP streams, connections, pending sender values and retained callback
+contexts still require tracing. Remote calls remain excluded from checked ARC.
+Infinitely many active remote operations are not a bounded-memory claim.
+
+## Failures repaired; validation still required
+
+- `38998638008` at `ad089a73`: new stream-owner injection matched an unrelated
+  finalizer cleanup too. Narrowed it to the request destructor. Other selected
+  runtime/closure tests and queued-message OOM passed.
+- `38999032272` at `4a1823ac`: all stream-owner modes pass, including physical
+  release, GC/reuse stress, no-free controls, sender cancellation, failed sender
+  preparation, count overflow and deliberate missing releases. The expanded
+  receive fixture incorrectly used server cancellation rules; it now uses client
+  status/reset behavior. TLS pool-key OOM printed the right message but aborted
+  because `exit` invoked library unloading from a live task. The two new fatal
+  OOM branches now use `_Exit(102)`; plain/gzip message failures run on task stacks.
+- Review removed duplicate layout output. The latest probe also includes the
+  existing request-encoding failure tests after simplifying the sender.
+
+Next: inspect all-six run `38999756987` and fix any failures. The passing Linux
+probe leaves 6,240 managed bytes at all measured call counts/modes, finalizes
+every created stream/message, and adds one retain per call with unchanged
+allocation requests. Its request header is 232 bytes with 8-byte alignment;
+the new flag uses trailing padding. Sender storage is 40 bytes. These are Linux
+results until the full native matrix verifies them. Use
+`scripts/collect-repeated-client-measurements.py --baseline-report` to require
+all exact-source jobs, output agreement, complete stream/message release and
+constant final managed bytes across measured sizes. Keep both baseline and
+candidate identities. Inspect actual ARM64/AMD64 binaries with
+`scripts/inspect-stream-client-binaries.py`; review layouts and instruction paths.
+The collector fingerprints evidence and copies raw checkpoints; it never executes
+downloaded programs. Full production acceptance of the combined PR is separate.
+
+After this request-storage work, assign connection/pool/task owners and typed
+pending-sender/handler owners, with borrowed scheduler links and explicit cycle
+handling. Review old fatal allocation paths that call `exit` from tasks, and
+unchecked environment-option allocation. These remain concrete follow-up fixes.
+Audit whether retained codec fields have real production callers before adding
+owners for them; do not preserve unused machinery merely to count it.
+
+## Local checks
+
+Full builds and native execution stay on GitHub. Focused local work uses
 `python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py` with unchanged
-limits. Formatting passed in 1.05s, docs in 2.53s, collector syntax in 0.19s;
-final report collection passed in 21.59s. Linux AMD64/ARM64 downloads passed in
-2.90s/2.95s and static inspection in 0.15s/0.14s. No downloaded executable ran.
-
-## Next action
-
-Next: monitor #156, fix every discovered failure and wait for complete final-head
-acceptance.
-Squash-merge with the explicit one-line subject and empty body, then verify the
-merge tree, parent and message. Preserve Windows dependency jobs; cancel only
-superseded or duplicate production runs. Keep one active delivery PR.
-
-While #156 validates, prepare `own-remote-transport-storage` in
-`/private/tmp/fwp-repeated-remote-calls`. Keep one delivery PR open.
-
-## Repeated-call baseline and next implementation
-
-The untouched baseline is `ac95632b8c77cc8c52f35a451f3c7451d0e29b06` on
-`measure-repeated-remote-calls`. All six native jobs passed in `38997585835`.
-It records 1/16/256 batches of fixed 64-value responses: full sum, first-32 sum,
-and retaining an initial iterator across a second call before rereading it
-(two calls per retained batch). Raw interpreter and ordinary native output agree.
-Counters separate managed storage, connection/stream construction/finalization
-and raw queued message bytes. Checkpoints precede each new request stream.
-A deliberately missing raw-message release is detected. Collection is disabled;
-whole-runtime shutdown, other raw buffers, TLS/OS memory and timing are excluded.
-
-All six baseline hosts (and the earlier Linux probe `38997237145`) find 240 extra managed bytes
-per call, one reused connection and no finalized streams. Full reads release all
-queued messages; partial reads leave 609 requested message bytes per call in
-these samples. Queue occupancy can vary with scheduling. The six-host report is preserved at
-`docs/measurements/repeated-remote-baseline-2026-10-17.json`, with raw checkpoints
-beside it and source tag `evidence/repeated-remote-baseline-20261017`.
-Guarded collection passed in 26.87s.
-These measurements establish remaining work, not bounded memory or checked ARC.
-
-The preparation adds explicit owners for client request streams: the active
-connection list, the response source and a detached sender each keep their own
-reference. Losing the response reader discards unread messages without cancelling
-the remote operation; the active-list owner lasts until completion/reset/death.
-Server streams, connections and retained codec/sender graphs still need tracing.
-Do not admit remote calls to checked ARC yet.
-
-The first Linux probe `38998638008` at `ad089a73` passed the existing closure,
-receive, request, peer and context controls and the new message-allocation
-failure test. The stream-owner fixture stopped before native compilation because
-its finalizer-removal injection matched an unrelated cleanup site too. The
-marker now includes the request destructor call, so it selects one site.
-Probe `38999032272` at `4a1823ac` passes all new stream owner/control modes,
-including stress, sender cancellation and overflow. Two added controls fail:
-the receive fixture used server cancellation rules for an owned client request,
-and TLS-key OOM called `exit` on a task stack, where the library unload destructor
-aborts. The fixture now uses client status/reset rules; the two new fatal OOM
-branches use `_Exit(102)` and both message encodings are tested on a task stack.
-The second probe also exposed duplicated layout output in fixture review; it is
-now emitted once. Repeated client measurements still need a passing probe.
-Controls cover completion, reset, connection loss, sender completion/cancellation,
-failed sender preparation, reference overflow and deliberately omitted releases.
-An unchecked queued-message allocation now reports the established exit-102
-out-of-memory error; plain and gzip fault-injection tests accompany it.
-TLS pool-key allocation also now checks for failure, with a targeted exit-102
-control in the existing pool-identity fixture. That fixture now releases its
-client stream through the new owners. Receive tests additionally count final
-request release after retry, malformed responses, decoder traps and cancellation.
-A native layout table records structure size, alignment and field offsets.
-The unused detached-sender encoder field/branch is removed: its only production
-caller always supplies a static request description. Existing request-encoding
-and exceptional-buffer tests join the probe. Other older fatal allocation paths
-still use `exit`; audit their task-stack behavior in the connection-lifetime work.
-Next: publish these repairs and controls, run the focused Linux native checks, fix failures,
-then measure all six native hosts and inspect actual generated binaries.
-
-Local checks use the unchanged root guard. Baseline source type-checking passed
-in 0.51s, formatting in 1.36s, docs in 2.54s, collector syntax in 0.20s.
-The current ownership preparation formatting check passed in 1.12s.
-No native build or downloaded executable ran locally.
+limits. Baseline source type-check passed in 0.51s; formatting checks passed in
+1.1–1.4s and doc audits in 2.4–2.7s. Baseline report collection passed in 26.87s;
+updates using retained downloads passed in 1.7s. Static Linux AMD64/ARM64 inspection
+passed in 0.15s per host. Reviewed cache destruction loops have 24-byte AMD64 and
+64-byte ARM64 frames, with callee storage separate; dynamic application retains
+argument storage and dispatch. No downloaded executable ran locally.
 
 ## Roadmap status
 

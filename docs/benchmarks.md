@@ -1687,7 +1687,10 @@ occupancy; these raw bytes are separate from the managed totals below.
 | Windows AMD64 | 3,632 | 64,832 |
 | Windows ARM64 | 3,248 | 64,448 |
 
-Final counters follow entry/task cleanup, before whole-runtime shutdown.
+Counters start after constant initialization and end after root execution,
+joining its child tasks and releasing cached values, before whole-runtime
+shutdown. Reusable connections and detached I/O tasks are still live at this
+point; their remaining storage is not a demonstrated leak.
 Other raw buffers, allocator pages, TLS/operating-system storage and server or
 whole-process memory are excluded. This baseline identifies the next ownership
 work: release finished request objects and discard unread messages when their
