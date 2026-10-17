@@ -1,0 +1,7 @@
+# The typed encoder validates numeric text even when Json is nested in a record.
+# Discarding the result must preserve this trap and the preceding output.
+main = [
+    "before" | print,
+    { nested = [Json.Num "NaN"] } | json.write | ignore,
+    "after" | print,
+] | ignore

@@ -4,7 +4,9 @@ Active delivery: [PR #163](https://github.com/e6qu/fun-with-pipes/pull/163), bra
 `http-server-delivery` in the root checkout. PR #162 is accepted at `1b542f32`;
 [history](roadmap-history.md) records its passing gates and verified squash.
 The temporary `fwp-http-server-owners` and `fwp-closed-functions` worktrees are
-inactive preparation. Work in the root; keep one delivery PR.
+inactive preparation. Keep the delivery head stable in the root while its CI
+finishes. Independent next-batch work is in `/private/tmp/fwp-server-entries`,
+branch `server-entry-ownership`; it is not a second delivery PR.
 
 ## Next action
 
@@ -175,7 +177,14 @@ entry/ownership, complete REST API/authentication/form and MCP memory checks
 pass. The complete log has four passing target summaries and eight executing
 tests. MCP final managed bytes are zero in both freeing modes for 1/16/128 input
 cycles; the deliberately non-freeing control grows from 57,344 to 7,075,680 bytes.
-The expanded six-host HTTP/standard-input suite is the next publication. The CLI help's incorrect claim that every
+The expanded six-host HTTP/standard-input suite at `d2222bf8` passes all 24 jobs:
+[run 39075061445](https://github.com/e6qu/fun-with-pipes/actions/runs/39075061445).
+The complete log audit records 36 passing summaries, 66 executing tests and no
+failures. The 12 ignored measurement entries in functional jobs execute in their
+separate memory jobs. The audit is `/private/tmp/fwp-entry-baseline-audit.json`;
+all 24 logs are `/private/tmp/fwp-entry-baseline-JOB.log`. This is baseline
+evidence before the numeric repair below, not final acceptance.
+The CLI help's incorrect claim that every
 server accepts TLS flags is corrected: generated MCP supports plain HTTP and
 standard input; REST and split services accept the documented TLS options.
 
@@ -188,3 +197,77 @@ values are asserted by the runner tests. The earlier focused MCP test passed
 its raw-interpreter assertions and emitted tracing C, then stopped at the fixed
 1 GiB aggregate RSS limit during native compilation. That execution moved to
 CI; no local limit was raised and the stopped test is not a passing test.
+
+The initial artifact was downloaded to `/private/tmp/fwp-entry-initial-artifact`.
+The new collector validated all nine raw rows and inspected all three Linux AMD64
+executables in 0.27 s: ARC excludes tracing symbols and both tracing controls
+retain them. Downloaded binaries were read as data, never executed. The initial
+workload averages 233.125 allocations and 457.625 actual retains per additional
+reply in both freeing modes; this includes malformed inputs and notifications
+in each eight-reply cycle. It is a preliminary one-host cost, not the finished
+six-host report.
+
+### Exact JSON number repair
+
+A guarded raw-interpreter MCP `copy` call sent `9007199254740993` in an I64
+list and returned `9007199254740992.0` (2.13 s reproduction). Both incoming
+arguments and outgoing results passed through `Json.Num F64`; typed F128 values
+could lose precision for the same reason. The repair stores number text in
+`Json.Num String` until an explicit
+numeric conversion, shares one exact Rust JSON representation between typed
+and untyped parsing, and updates constructors and examples. Invalid manually
+built numeric text traps consistently. YAML normalization and OpenAPI bounds
+also avoid F64 conversions; request IDs retain their original numeric spelling.
+`json.encode-value` now traps at the existing 512-level parser limit instead of
+silently returning Null. The documentation generator has refreshed the library
+reference from its comments. Rerun memory measurements after this representation
+change. The complete baseline audit above finished before publishing this repair.
+Next for this batch: dispatch all 24 `server-entries` jobs on the repaired head,
+inspect all results and saved binaries, then prepare the single next delivery
+after PR #163 merges. Require fresh measurements for the new number storage and
+updated workload; do not compare its counts with the lossy baseline as equivalent
+work.
+
+Focused verification: two Rust JSON tests and all nine YAML tests pass (latest
+YAML check 0.20 s). YAML preserves decimal spelling without rounding and reports
+non-finite values or hexadecimal/octal integers beyond U128 as explicit errors.
+Quoted strings remain strings. Guarded raw interpretation validates nested signed and
+unsigned 64/128-bit values, F128 values at 2^53+1 and 1+2^-100, both invalid-number
+encoders, and MCP success/error payloads and large numeric IDs against independent
+Python integer/Decimal checks (4.40 s). The ordinary typed-JSON golden changes
+only the displayed Num payload from a float to quoted text; that exact diff was
+checked before updating it (1.56 s). Eight focused JSON library tests pass.
+Native ARC O1 and O2 and tracing O1/O2 with GC/reuse stress passed the first
+exact-number fixture. The strengthened near-one case passes ARC O2 and tracing
+O1/O2, including the existing malformed-number cases (10.12 s).
+Both malformed-number native encoders passed in ARC O2 and stressed tracing O1.
+The embedded-library rebuild passes (16.34 s), and the depth-limit interpreter
+exits 101 with the intended message. Native ARC O2 depth execution matches
+(0.26 s). The largest balanced-integer OpenAPI bounds are exact (0.62 s); the
+existing API document is unchanged (0.89 s). The MCP tutorial was checked with
+its actual jq command, and now shows the retained F64 spelling `212.0` (2.19 s).
+Five OpenAPI checks pass, including all existing document goldens and exact
+balanced-integer bounds (25.81 s including the Rust rebuild). The language-server
+integration test passes (4.86 s). Changed fwp examples/fixtures pass formatting
+(0.01 s), and workflow lint passes (1.64 s).
+The generated library reference check passes (1.35 s), document-import errors
+pass (0.38 s), and all six documented HTTP tutorial responses match raw
+interpretation (1.33 s). Metadata now records measurement-helper and workflow
+hashes as well as compiler, runtime, library and fixture sources.
+All server/native builds that exceeded the local guard remain on CI.
+
+Commands are guarded from the root: `cargo test --lib json::tests`,
+`cargo test --lib yaml::tests`, `cargo clippy --lib --bin fwp --test server_entry_ownership --test rest --test lsp --test arc_extensions -- -D warnings`
+(latest 6.20 s), `fwp test --interp lib/json.fwp`, and the independent checks
+`python3 /private/tmp/fwp-json-exact-check.py` and
+`python3 /private/tmp/fwp-check-json-native.py`. `fwp` in these commands is the
+root `target/debug/fwp`, rebuilt from this preparation worktree. The JSON tests
+initially found an outdated YAML scalar assertion; the corrected expectation is
+explained above. Temporary harness-edit/type errors were fixed before rerunning.
+
+Both invalid-number fixtures now discard the encoded result between visible
+`before` and `after` outputs. Raw interpretation, ARC O2 and stressed tracing
+O1/O2 print only `before` and then trap (8.87 s), proving that optimization keeps
+the call and its order. The temporary harness first enabled tracing-only reuse
+verification in ARC; that unsupported setting was corrected before the passing
+run. No compiler workaround or resource limit change was needed.

@@ -1613,10 +1613,15 @@ a value or error. `Json.Null` is an explicit constructor, not a hidden missing
 value. See the REST guide for record/variant and special-number encodings.
 
 ```fwp
+# Json.Num stores the original numeric text, not a rounded floating value.
+# For example, Json.Num "9007199254740993" keeps that exact integer.
+# Use json.encode-value to convert a typed number into JSON, and json.decode
+# to read it back at a chosen numeric type. Json equality compares stored text,
+# so numeric comparison requires decoding: "1" and "1.0" have different spellings.
 Json =
     | Json.Null
     | Json.Bool Bool
-    | Json.Num F64
+    | Json.Num String
     | Json.Str String
     | Json.Arr List[Json]
     | Json.Obj List[(String, Json)]
@@ -1624,7 +1629,8 @@ Json =
 # parse JSON text; errors name the byte offset
 json.parse : String -> Result[Json, String]
 
-# compact JSON text; integral numbers below 1e15 have no fraction
+# Compact JSON text; number spelling is preserved. A manually constructed
+# Json.Num must contain one valid JSON number; encoding invalid text traps.
 json.encode : Json -> String
 
 # The JSON text of any value whose type can be encoded: records are
@@ -1639,7 +1645,9 @@ json.write : a -> String where Encode[a]
 # Integers, floats and `Bool` may also be strings (`"42"`).
 json.read : String -> Result[a, String] where Decode[a]
 
-# `json.write` as a `Json` value (numbers become `F64`)
+# `json.write` as a `Json` value, preserving every digit of its numbers.
+# The parser's nesting limit still applies; exceeding it traps instead of
+# silently replacing the value with Json.Null.
 json.encode-value : a -> Json where Encode[a]
 
 # a typed value from a `Json` value (see `json.read`)
@@ -1654,6 +1662,8 @@ json.get : String -> Json -> Option[Json]
 # element of an array
 json.at : I64 -> Json -> Option[Json]
 json.as-string : Json -> Option[String]
+
+# Convert numeric text explicitly to F64, with F64 rounding/range limits.
 json.as-number : Json -> Option[F64]
 json.as-bool : Json -> Option[Bool]
 json.as-array : Json -> Option[List[Json]]

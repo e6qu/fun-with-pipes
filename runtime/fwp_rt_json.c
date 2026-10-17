@@ -288,15 +288,6 @@ static int fwp_jparse_raw(V text, fwp_jp *j, fwp_jr *out) {
     return 1;
 }
 
-static double fwp_jnum_f64(const fwp_jr *r) {
-    char *t = (char *)malloc(r->len + 1);
-    memcpy(t, r->s, r->len);
-    t[r->len] = 0;
-    double x = strtod(t, 0);
-    free(t);
-    return x;
-}
-
 /* Reconstruct Json with the generated descriptors, including recursive lists. */
 static V fwp_jr_to_json(const fwp_jr *r, const fwp_desc *d) {
     if (!r->t) return 0;
@@ -305,8 +296,7 @@ static V fwp_jr_to_json(const fwp_jr *r, const fwp_desc *d) {
     fwp_decode_fields_begin(&variant, 1, d->vfields[r->t], 1, NULL);
     switch (r->t) {
     case 1: variant.values[0] = r->b ? FWP_TRUE : FWP_FALSE; break;
-    case 2: variant.values[0] = fwp_from_f64(fwp_jnum_f64(r)); break;
-    case 3: variant.values[0] = fwp_rc_fresh(fwp_str_new(r->s, r->len)); break;
+    case 2: case 3: variant.values[0] = fwp_rc_fresh(fwp_str_new(r->s, r->len)); break;
     default: {
         fwp_decode_fields items;
         fwp_decode_fields_begin(&items, r->n, NULL, 0, payload->elem);
@@ -367,22 +357,19 @@ static void fwp_jescape_n(fwp_buf *b, const char *s, size_t n) {
 
 static void fwp_jescape(fwp_buf *b, V s) { fwp_jescape_n(b, STR(s)->d, STR(s)->len); }
 
-static void fwp_jnum(fwp_buf *b, double x) {
-    char t[64];
-    if (!isfinite(x)) { buf_puts(b, "null"); return; }
-    if (x == trunc(x) && fabs(x) < 1e15) {
-        snprintf(t, sizeof t, "%lld", (long long)x);
-    } else {
-        fwp_fmt_f64(t, x);
-    }
-    buf_puts(b, t);
-}
-
 static void fwp_jencode(fwp_buf *b, V v) {
     uint32_t tag = fwp_tag(v);
     switch (tag) {
     case 1: buf_puts(b, OBJ(v)->f[0] == FWP_TRUE ? "true" : "false"); return;
-    case 2: fwp_jnum(b, fwp_f64(OBJ(v)->f[0])); return;
+    case 2: {
+        V text = OBJ(v)->f[0];
+        fwp_jp parser = { .s = (const unsigned char *)STR(text)->d, .n = STR(text)->len };
+        fwp_jr number;
+        if (!parser.n || !fwp_jnumber(&parser, &number) || parser.p != parser.n)
+            fwp_trap("invalid JSON number");
+        buf_put(b, STR(text)->d, STR(text)->len);
+        return;
+    }
     case 3: fwp_jescape(b, OBJ(v)->f[0]); return;
     case 4: case 5: {
         buf_putc(b, tag == 4 ? '[' : '{');

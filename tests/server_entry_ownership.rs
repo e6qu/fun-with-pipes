@@ -55,14 +55,14 @@ fn run_input(command: &mut Command, input: String) -> Output {
     output
 }
 
-fn request(id: usize, method: &str, parameters: &str) -> String {
+fn request(id: u64, method: &str, parameters: &str) -> String {
     format!(
         "{{\"jsonrpc\":\"2.0\",\"id\":{id},\"method\":\"{method}\",\"params\":{{\"_meta\":{{\"io.modelcontextprotocol/protocolVersion\":\"{}\"}},{parameters}}}}}\n",
         fwp::mcp::VERSION
     )
 }
 
-fn tool(id: usize, name: &str, arguments: &str) -> String {
+fn tool(id: u64, name: &str, arguments: &str) -> String {
     request(
         id,
         "tools/call",
@@ -73,8 +73,12 @@ fn tool(id: usize, name: &str, arguments: &str) -> String {
 fn input(repeats: usize) -> String {
     let mut input = String::new();
     for repetition in 0..repeats {
-        let id = repetition * 8;
-        input.push_str(&tool(id, "copy", r#"{"text":"owned é","values":[1,-2,3]}"#));
+        let id = repetition as u64 * 8;
+        input.push_str(&tool(
+            id,
+            "copy",
+            r#"{"text":"owned é","values":[1,-2,9007199254740993]}"#,
+        ));
         input.push_str(&tool(
             id + 1,
             "duplicate",
@@ -103,13 +107,13 @@ fn assert_replies(output: &Output, repeats: usize) {
             let expected = if index == 6 {
                 Json::Null
             } else {
-                Json::Num((repetition * 8 + index) as f64)
+                Json::Num((repetition * 8 + index).to_string())
             };
             assert_eq!(reply.get("id"), Some(&expected), "{reply:?}");
         }
         assert_eq!(
             replies[0].at(&["result", "structuredContent"]),
-            Some(&Json::parse(r#"{"text":"owned é","values":[1,-2,3]}"#).unwrap())
+            Some(&Json::parse(r#"{"text":"owned é","values":[1,-2,9007199254740993]}"#).unwrap())
         );
         assert_eq!(
             replies[1].at(&["result", "structuredContent", "result"]),
@@ -135,13 +139,45 @@ fn assert_replies(output: &Output, repeats: usize) {
         }
         assert_eq!(
             replies[6].at(&["error", "code"]),
-            Some(&Json::Num(-32700.0))
+            Some(&Json::Num("-32700".into()))
         );
         assert_eq!(
             replies[7].at(&["error", "code"]),
-            Some(&Json::Num(-32601.0))
+            Some(&Json::Num("-32601".into()))
         );
     }
+}
+
+fn precision_input() -> String {
+    let arguments = r#"{"unsigned":18446744073709551615,"wide":-170141183460469231731687303715884105728,"u-wide":340282366920938463463374607431768211455,"precise":9.007199254740993e15,"precise-near-one":1.0000000000000000000000000000007889}"#;
+    tool(9007199254740993, "exact", arguments) + &tool(9007199254740994, "exact-failure", arguments)
+}
+
+fn assert_precision_replies(output: &Output) {
+    let text = String::from_utf8_lossy(&output.stdout);
+    let replies: Vec<_> = text
+        .lines()
+        .map(|line| Json::parse(line).unwrap())
+        .collect();
+    assert_eq!(replies.len(), 2, "{text}");
+    for (reply, id) in replies.iter().zip(["9007199254740993", "9007199254740994"]) {
+        assert_eq!(reply.get("id"), Some(&Json::Num(id.into())));
+    }
+    let expected = Json::parse(r#"{"unsigned":18446744073709551615,"wide":"-170141183460469231731687303715884105728","u-wide":"340282366920938463463374607431768211455","precise":9.007199254740993e15,"precise-near-one":1.0000000000000000000000000000007889}"#).unwrap();
+    assert_eq!(
+        replies[0].at(&["result", "structuredContent"]),
+        Some(&expected)
+    );
+    assert_eq!(
+        replies[1].at(&["result", "isError"]),
+        Some(&Json::Bool(true))
+    );
+    let content = replies[1]
+        .at(&["result", "content"])
+        .and_then(Json::as_array)
+        .unwrap();
+    let error = content[0].get("text").and_then(Json::as_str).unwrap();
+    assert_eq!(Json::parse(error).unwrap(), expected);
 }
 
 #[test]
@@ -156,6 +192,14 @@ fn mcp_stdio_aliases_errors_and_notifications_match_raw_interpreter() {
         input(2),
     );
     assert_replies(&reference, 2);
+    let precise = run_input(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["serve", "--mcp", "--interp"])
+            .arg(fixture())
+            .env("FWP_NO_OPT", "1"),
+        precision_input(),
+    );
+    assert_precision_replies(&precise);
     for mode in ["tracing", "arc"] {
         eprintln!("MCP entries: {mode} native result and alias checks");
         let source = generated(dir.path(), "--mcp", mode, true);
@@ -174,6 +218,18 @@ fn mcp_stdio_aliases_errors_and_notifications_match_raw_interpreter() {
         );
         assert_eq!(result.stdout, reference.stdout, "{mode}");
         assert!(result.stderr.is_empty(), "{mode}: {result:?}");
+        let result = run_input(
+            Command::new(&binary)
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", if mode == "tracing" { "1" } else { "0" })
+                .env(
+                    "FWP_REUSE_VERIFY",
+                    if mode == "tracing" { "1" } else { "0" },
+                ),
+            precision_input(),
+        );
+        assert_eq!(result.stdout, precise.stdout, "{mode} precision");
+        assert_precision_replies(&result);
     }
 }
 
@@ -231,7 +287,10 @@ fn client_source(interface: &str) -> String {
     let mut source = include_str!("fixtures/server_entry_client.fwp").to_owned();
     source.push_str("\ncases : List[Case]\ncases = [\n");
     for (name, argument) in [
-        ("copy", r#"{"text":"owned é","values":[1,-2,3]}"#),
+        (
+            "copy",
+            r#"{"text":"owned é","values":[1,-2,9007199254740993]}"#,
+        ),
         ("duplicate", r#"{"text":"aliased","values":[4,5]}"#),
         (
             "checked",
@@ -449,7 +508,10 @@ impl HttpServer {
 fn exercise_http(server: &HttpServer, cert: &Path) -> Vec<(u16, Json)> {
     let mut replies = Vec::new();
     for (name, arguments) in [
-        ("copy", r#"{"text":"owned é","values":[1,-2,3]}"#),
+        (
+            "copy",
+            r#"{"text":"owned é","values":[1,-2,9007199254740993]}"#,
+        ),
         ("duplicate", r#"{"text":"aliased","values":[4,5]}"#),
         (
             "checked",
@@ -462,7 +524,7 @@ fn exercise_http(server: &HttpServer, cert: &Path) -> Vec<(u16, Json)> {
     ] {
         replies.push(server.call(cert, name, arguments));
     }
-    let payload = Json::parse(r#"{"text":"owned é","values":[1,-2,3]}"#).unwrap();
+    let payload = Json::parse(r#"{"text":"owned é","values":[1,-2,9007199254740993]}"#).unwrap();
     let duplicates =
         Json::parse(r#"[{"text":"aliased","values":[4,5]},{"text":"aliased","values":[4,5]}]"#)
             .unwrap();

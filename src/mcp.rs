@@ -233,7 +233,7 @@ pub fn tools_list(tools: &[Tool]) -> Json {
             "tools",
             Json::Arr(tools.iter().map(|t| t.definition.clone()).collect()),
         ),
-        ("ttlMs", Json::Num(3_600_000.0)),
+        ("ttlMs", Json::Num("3600000".into())),
         ("cacheScope", Json::str("public")),
         ("resultType", Json::str("complete")),
     ])

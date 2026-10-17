@@ -118,7 +118,11 @@ def main():
             artifact = args.artifacts / f'server-entries-{host}-{part}'
             current_revision = (artifact / 'revision.txt').read_text().strip()
             current_run = (artifact / 'run.txt').read_text().strip()
-            current_hashes = json.loads((artifact / 'source-sha256.json').read_text())
+            # Windows paths use backslashes; compare the same repository paths
+            # independently of the host separator, without changing file bytes.
+            raw_hashes = json.loads((artifact / 'source-sha256.json').read_text())
+            current_hashes = {name.replace('\\', '/'): digest for name, digest in raw_hashes.items()}
+            assert len(current_hashes) == len(raw_hashes)
             assert len(current_revision) == 40 and current_hashes and current_run.isdigit()
             if revision is None:
                 revision, hashes, run = current_revision, current_hashes, current_run

@@ -23,3 +23,18 @@ slow = tap (const "entry waiting" | eprint) | tap (const 100ms | task.sleep)
 # Standard-input servers still finish when their input ends.
 export stop : () -> String ! {Async}
 stop = signal.request-shutdown | const "stopping"
+
+# Each numeric type must cross the generated entry without a conversion to F64.
+ExactNumbers = {
+    unsigned: U64,
+    wide: I128,
+    u-wide: U128,
+    precise: F128,
+    precise-near-one: F128,
+}
+
+export exact : ExactNumbers -> ExactNumbers
+exact = id
+
+export exact-failure : ExactNumbers -> () ! {Error[ExactNumbers]}
+exact-failure = fail

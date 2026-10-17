@@ -1,0 +1,8 @@
+# A public constructor can receive arbitrary text, but encoding must reject
+# invalid number syntax instead of allowing extra JSON values to be injected.
+# Discarding the result must preserve this trap and the preceding output.
+main = [
+    "before" | print,
+    Json.Arr [Json.Num "1,2"] | json.encode | ignore,
+    "after" | print,
+] | ignore

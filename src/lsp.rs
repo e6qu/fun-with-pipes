@@ -82,7 +82,7 @@ fn error_response(id: Json, code: i64, message: &str) -> Json {
         (
             "error",
             Json::obj(vec![
-                ("code", Json::Num(code as f64)),
+                ("code", Json::Num(code.to_string())),
                 ("message", Json::str(message)),
             ]),
         ),
@@ -107,7 +107,7 @@ struct Server<W: Write> {
 }
 
 fn num(n: u32) -> Json {
-    Json::Num(n as f64)
+    Json::Num(n.to_string())
 }
 
 impl<W: Write> Server<W> {
@@ -342,7 +342,7 @@ fn capabilities() -> Json {
         (
             "capabilities",
             Json::obj(vec![
-                ("textDocumentSync", Json::Num(1.0)),
+                ("textDocumentSync", Json::Num("1".into())),
                 ("hoverProvider", Json::Bool(true)),
                 ("definitionProvider", Json::Bool(true)),
                 ("referencesProvider", Json::Bool(true)),
@@ -363,7 +363,7 @@ fn capabilities() -> Json {
 }
 
 fn completion_item(name: &str, ty: &str) -> Json {
-    let mut fields = vec![("label", Json::str(name)), ("kind", Json::Num(3.0))];
+    let mut fields = vec![("label", Json::str(name)), ("kind", Json::Num("3".into()))];
     if !ty.is_empty() {
         fields.push(("detail", Json::str(ty)));
     }
@@ -420,7 +420,7 @@ fn to_lsp(text: &str, line: u32, col: u32) -> Json {
         .sum();
     Json::obj(vec![
         ("line", num(line.saturating_sub(1))),
-        ("character", Json::Num(units as f64)),
+        ("character", Json::Num(units.to_string())),
     ])
 }
 
@@ -447,7 +447,7 @@ fn diagnostic(text: &str, d: &Diagnostic, code: Option<&str>) -> Json {
         ("range", range(text, d.span)),
         (
             "severity",
-            Json::Num(if d.level == Level::Error { 1.0 } else { 2.0 }),
+            Json::Num(if d.level == Level::Error { "1" } else { "2" }.into()),
         ),
         ("source", Json::str("fwp")),
         ("message", Json::str(message)),
@@ -812,7 +812,7 @@ fn symbols(doc: &Doc) -> Json {
         ]);
         out.push(Json::obj(vec![
             ("name", Json::str(name)),
-            ("kind", Json::Num(kind as f64)),
+            ("kind", Json::Num(kind.to_string())),
             ("range", full),
             ("selectionRange", range(&doc.text, sel)),
         ]));
