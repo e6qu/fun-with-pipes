@@ -15,7 +15,11 @@ Socket closure follows I/O completion; retained users can outlive the socket.
 The new shutdown wake is explicit on polling platforms, using wait records on
 task stacks, without heap allocation or larger task records. Controls cover
 missing cleanup, aliases, partial construction, no-reuse execution, timeout,
-cancellation and simultaneous readers.
+cancellation, task deadlines and simultaneous readers. Review found polling
+waits did not check task deadlines after timer wakeup; the combined preparation
+now checks cancellation there, with the stack wait record protected during
+unwind. A negative control omits that unlink and must leave a detectable stale
+wait record.
 
 Known fold/fold-right callbacks borrow their captures and input elements while
 owning the running result. Escaping values acquire owners at their uses. The

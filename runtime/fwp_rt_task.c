@@ -1578,6 +1578,7 @@ static int fwp_wait_fd(fwp_socket_t fd, int write, int64_t at) {
         fwp_io_waiting++;
         fwp_park(0, slice);
         fwp_io_waiting--;
+        fwp_check_cancel(); /* task deadlines can precede the I/O deadline */
         if (fwp_cur->cancelled || (at && fwp_now_ns() >= at)) break;
     }
     fwp_cleanup_pop(&waiting);

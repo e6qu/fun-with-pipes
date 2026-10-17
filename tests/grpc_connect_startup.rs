@@ -60,18 +60,25 @@ static void wait_socket(void *arg,int cancelled){
  wait_finished++;
 }
 static void check_wait_lifetimes(void){
- for(int mode=0;mode<3;mode++){
+ for(int mode=0;mode<4;mode++){
   V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);
   fwp_socket_t fd=SOCK(listener)->fd;
   wait_entered=wait_finished=wait_cancelled=0;
   wait_until=mode==0?fwp_now_ns()+100000000LL:0;
-  fwp_task *first=fwp_spawn_task(0,wait_socket,&fd,0,0);
-  fwp_task *second=fwp_spawn_task(0,wait_socket,&fd,0,0);
+  int64_t deadline=mode==3?fwp_now_ns()+100000000LL:0;
+  fwp_task *first=fwp_spawn_task(0,wait_socket,&fd,deadline,0);
+  fwp_task *second=fwp_spawn_task(0,wait_socket,&fd,deadline,0);
   while(wait_entered!=2)fwp_p_task_yield();
   if(mode==1){fwp_cancel_tree(first);fwp_cancel_tree(second);}
   if(mode==2)fwp_fd_closing(fd); /* both parked readers must wake */
+  int64_t drain=fwp_now_ns()+5000000000LL;
+  while(!first->done||!second->done){
+   if(fwp_now_ns()>=drain)_Exit(44);
+   fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();
+  }
   fwp_await(first);fwp_await(second);fwp_free_zombie();
-  if(wait_finished!=(mode==1?0:2)||wait_cancelled!=(mode==1?2:0)||fwp_cleanups)_Exit(42);
+  int cancelled=mode==1||mode==3;
+  if(wait_finished!=(cancelled?0:2)||wait_cancelled!=(cancelled?2:0)||fwp_cleanups)_Exit(42);
 #ifndef __linux__
   if(fwp_poll_waits)_Exit(43);
 #endif
@@ -131,6 +138,18 @@ int main(void){
         assert_eq!(generated.matches(wake).count(), 1);
         // Without the explicit wake, WSAPoll leaves the local reader parked.
         controls.push((generated.replacen(wake, "", 1), 9));
+    }
+    if !cfg!(target_os = "linux") {
+        let unlink = "fwp_cleanup_push(&waiting, fwp_poll_wait_remove, &wait);";
+        assert_eq!(generated.matches(unlink).count(), 1);
+        controls.push((
+            generated.replacen(unlink, "fwp_cleanup_push(&waiting,no_release,&wait);", 1),
+            43,
+        ));
+        let deadline =
+            "        fwp_check_cancel(); /* task deadlines can precede the I/O deadline */";
+        assert_eq!(generated.matches(deadline).count(), 1);
+        controls.push((generated.replacen(deadline, "", 1), 44));
     }
     for opt in ["-O1", "-O2"] {
         for (broken, expected) in &controls {
