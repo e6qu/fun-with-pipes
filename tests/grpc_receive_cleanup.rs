@@ -2,8 +2,7 @@
 use fwp::ir::*;
 use std::process::Command;
 
-#[test]
-fn received_requests_and_statuses_release_on_errors_and_cancelled_waits() {
+fn receive_runtime() -> String {
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -26,6 +25,12 @@ fn received_requests_and_statuses_release_on_errors_and_cancelled_waits() {
         ..Program::default()
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "grpc_receive").unwrap();
+    generated
+}
+
+#[test]
+fn received_requests_and_statuses_release_on_errors_and_cancelled_waits() {
+    let generated = receive_runtime();
     let hooks = r#"
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0a00
@@ -61,6 +66,7 @@ static void receive(void *arg,int stop){
   observed_free(text);
  }
 }
+
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1,"local",&srv);
@@ -121,6 +127,158 @@ int main(void){
                     .output()
                     .unwrap();
                 assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
+            }
+        }
+    }
+}
+
+#[test]
+fn queued_message_allocation_failure_reports_out_of_memory() {
+    let generated = receive_runtime();
+    let allocation = "g_msg *m = (g_msg *)malloc(sizeof(g_msg) + mn + 1);";
+    assert_eq!(generated.matches(allocation).count(), 1);
+    let generated = generated.replace(
+        allocation,
+        "g_msg *m = (g_msg *)failed_message_allocation(sizeof(g_msg) + mn + 1);",
+    );
+    let hooks = "#include <stddef.h>\nstatic void *failed_message_allocation(size_t n) { (void)n; return NULL; }\n";
+    let fixture = r#"
+int main(int argc, char **argv) {
+    (void)argv;
+    g_stream stream = {0};
+    h2_buf payload = {0};
+    int compressed = argc > 1;
+    if (compressed) {
+        h2_hdrs_add(&stream.headers, "grpc-encoding", 13, "gzip", 4);
+        h2_gzip((const unsigned char *)"message", 7, &payload);
+    } else h2b_put(&payload, "message", 7);
+    unsigned char header[5] = {(unsigned char)compressed,
+        (unsigned char)(payload.len >> 24), (unsigned char)(payload.len >> 16),
+        (unsigned char)(payload.len >> 8), (unsigned char)payload.len};
+    h2b_put(&stream.data, header, sizeof header);
+    h2b_put(&stream.data, payload.d, payload.len);
+    g_split(&stream);
+    return 201; /* the injected failure must terminate before queue publication */
+}
+"#;
+    let dir = fwp::cgen::TempDir::new("grpc-message-allocation").unwrap();
+    let exe = dir.join("probe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
+        for compressed in [false, true] {
+            let mut command = Command::new(&exe);
+            if compressed {
+                command.arg("gzip");
+            }
+            let out = command.output().unwrap();
+            assert_eq!(out.status.code(), Some(102), "{out:?}");
+            assert!(out.stdout.is_empty());
+            assert_eq!(
+                String::from_utf8(out.stderr).unwrap().replace("\r\n", "\n"),
+                "fwp: out of memory\n"
+            );
+        }
+    }
+}
+
+#[test]
+fn owned_client_streams_release_after_readers_and_senders_finish() {
+    let mut generated = receive_runtime();
+    let finalizer = "static void g_stream_final(void *p) {";
+    assert_eq!(generated.matches(finalizer).count(), 1);
+    generated = generated.replace(
+        finalizer,
+        &format!("{finalizer}\n    probe_stream_finals++;"),
+    );
+    let spawn = "    fwp_task *t = fwp_spawn_task(0, g_send_all, x, 0, 1);";
+    assert_eq!(generated.matches(spawn).count(), 1);
+    generated = generated.replace(spawn, &format!("    if(probe_spawn_fail) fwp_trap(\"test spawn preparation\");\n{spawn}\n    probe_sender=t;"));
+    let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
+#include <stdlib.h>
+static int probe_stream_finals,probe_message_frees,probe_spawn_fail;
+static void *probe_message,*probe_sender;
+static void observed_message_free(void *);
+#define free(p) observed_message_free(p)
+"#;
+    let fixture = include_str!("fixtures/grpc_client_stream_ownership.c");
+    let code = format!("{hooks}\n{generated}\n{fixture}");
+    let list_release =
+        "    g_stream_drop(s); /* the active-list owner, when this is an owned client stream */";
+    let source_release = "    g_stream_reader_release(c, s);";
+    let sender_release = "    x->s = 0;\n    g_stream_drop(s);";
+    let finalizer_release = "    fwp_gc_forget_finalizer(s);";
+    for marker in [
+        list_release,
+        source_release,
+        sender_release,
+        finalizer_release,
+    ] {
+        assert_eq!(code.matches(marker).count(), 1, "{marker}");
+    }
+    let controls = [
+        (code.replace(list_release, "    (void)s;"), "0", 212),
+        (
+            code.replace(source_release, "    (void)c; (void)s;"),
+            "0",
+            211,
+        ),
+        (code.replace(sender_release, "    x->s = 0;"), "6", 212),
+        (code.replace(finalizer_release, "    (void)s;"), "0", 215),
+    ];
+    let dir = fwp::cgen::TempDir::new("grpc-client-stream-owners").unwrap();
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join("streams.exe");
+        for (broken, mode, expected) in &controls {
+            fwp::cgen::compile_c(broken, &binary, opt).unwrap();
+            let out = Command::new(&binary)
+                .arg(mode)
+                .env("FWP_GC", "off")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(out.status.code(), Some(*expected), "{opt}/{mode}: {out:?}");
+        }
+        for no_free in [false, true] {
+            let prefix = if no_free {
+                "#define FWP_RESOURCE_NO_FREE 1\n"
+            } else {
+                ""
+            };
+            fwp::cgen::compile_c(&format!("{prefix}{code}"), &binary, opt).unwrap();
+            for mode in 0..10 {
+                for stress in [false, true] {
+                    let out = Command::new(&binary)
+                        .arg(mode.to_string())
+                        .env("FWP_GC", if stress { "on" } else { "off" })
+                        .env("FWP_GC_STRESS", if stress { "1" } else { "0" })
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", if stress { "1" } else { "0" })
+                        .output()
+                        .unwrap();
+                    assert!(
+                        out.status.success(),
+                        "{opt}/{mode}/no-free={no_free}/stress={stress}: {out:?}"
+                    );
+                }
+            }
+            if let Some(path) = std::env::var_os("FWP_REPEATED_CLIENT_ARTIFACTS") {
+                let path = std::path::PathBuf::from(path).join("stream-owners");
+                std::fs::create_dir_all(&path).unwrap();
+                std::fs::write(
+                    path.join(format!("streams-no-free-{no_free}.c")),
+                    format!("{prefix}{code}"),
+                )
+                .unwrap();
+                std::fs::copy(
+                    &binary,
+                    path.join(format!("streams{opt}-no-free-{no_free}.exe")),
+                )
+                .unwrap();
             }
         }
     }

@@ -22,7 +22,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--artifacts", type=Path, required=True)
     parser.add_argument("--objdump", required=True, help="LLVM objdump executable")
-    parser.add_argument("--clients", nargs="+", choices=["unique", "retained", "partial"], required=True)
+    parser.add_argument("--clients", nargs="+", choices=["unique", "full", "retained", "partial"], required=True)
     args = parser.parse_args()
     observations = []
     for client in args.clients:

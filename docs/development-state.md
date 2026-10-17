@@ -93,45 +93,49 @@ Squash-merge with the explicit one-line subject and empty body, then verify the
 merge tree, parent and message. Preserve Windows dependency jobs; cancel only
 superseded or duplicate production runs. Keep one active delivery PR.
 
-While #156 validates, prepare `measure-repeated-remote-calls` in
-`/private/tmp/fwp-repeated-remote-calls` from `d19ab045`. Measure repeated calls in one client process
-before changing connection lifetimes. Use fixed 64-value responses and 1/16/256
-calls, full/partial reads and retained earlier iterators. Add created/destroyed
-connection and stream counts and raw message bytes, separate reusable pool
-storage from per-call growth, and compare raw interpreter/native output. Then
-assign owners to connections, streams, retained codecs and sender callbacks,
-with borrowed scheduler links and explicit cycle handling. Whole remote calls
-remain excluded from checked ARC; this cache change does not remove tracing.
+While #156 validates, prepare `own-remote-transport-storage` in
+`/private/tmp/fwp-repeated-remote-calls`. Keep one delivery PR open.
 
-## Repeated-call preparation
+## Repeated-call baseline and next implementation
 
-Branch `measure-repeated-remote-calls`, worktree `/private/tmp/fwp-repeated-remote-calls`,
-starts at #156's tested candidate `d19ab045`. No second delivery PR is open.
-The new ignored measurement requests fixed 64-value responses in 1/16/256 batches.
-Full and partial batches make one call; retained batches sum an initial stream,
-make and sum another call while keeping the first iterator, then reread its first
-value. Their expected per-batch outputs are 2,080, 528 and 4,161 respectively;
-retained batches make two calls. Counts distinguish actual requests from batches.
+The untouched baseline is `ac95632b8c77cc8c52f35a451f3c7451d0e29b06` on
+`measure-repeated-remote-calls`. All six native jobs passed in `38997585835`.
+It records 1/16/256 batches of fixed 64-value responses: full sum, first-32 sum,
+and retaining an initial iterator across a second call before rereading it
+(two calls per retained batch). Raw interpreter and ordinary native output agree.
+Counters separate managed storage, connection/stream construction/finalization
+and raw queued message bytes. Checkpoints precede each new request stream.
+A deliberately missing raw-message release is detected. Collection is disabled;
+whole-runtime shutdown, other raw buffers, TLS/OS memory and timing are excluded.
 
-Instrumentation records managed requests/retains/charge, connection and stream
-creation/finalization, and allocated/freed message bytes (headers and payloads).
-It samples immediately before each request stream allocation and after entry/task
-cleanup, before whole-runtime shutdown. Other raw buffers, TLS/OS/allocator pages,
-server/process memory and timing are excluded. A deliberately omitted message
-release must leave measured message bytes even when output is still correct.
-Do not assert bounded memory or ARC support from this baseline.
+All six baseline hosts (and the earlier Linux probe `38997237145`) find 240 extra managed bytes
+per call, one reused connection and no finalized streams. Full reads release all
+queued messages; partial reads leave 609 requested message bytes per call in
+these samples. Queue occupancy can vary with scheduling. The six-host report is preserved at
+`docs/measurements/repeated-remote-baseline-2026-10-17.json`, with raw checkpoints
+beside it and source tag `evidence/repeated-remote-baseline-20261017`.
+Guarded collection passed in 26.87s.
+These measurements establish remaining work, not bounded memory or checked ARC.
 
-Linux AMD64 probe `38997237145` checks `b2cc0915` with `suite=stream-repeat`.
-Next preparation action: inspect its result, repair any failures, then validate
-all six native hosts before choosing the next runtime ownership change. The
-collector requires all six jobs and copies raw checkpoint tables beside the
-report; guarded Python syntax passed in 0.20s. Runtime review found unchecked
-raw message allocation in `g_split`; preserve the baseline, then add an injected
-failure test and the established exit-102 out-of-memory handling. Full builds and
-execution remain on runners. Exact measurement sources type-check locally with
-the prebuilt compiler under the guard (0.51s). An earlier handwritten check used
-unsupported semicolon match syntax; checking the exact generated source fixed
-that test-only error. Guarded Rust formatting passed in 1.27s.
+The preparation adds explicit owners for client request streams: the active
+connection list, the response source and a detached sender each keep their own
+reference. Losing the response reader discards unread messages without cancelling
+the remote operation; the active-list owner lasts until completion/reset/death.
+Server streams, connections and retained codec/sender graphs still need tracing.
+Do not admit remote calls to checked ARC yet.
+
+Runtime changes and controls are written but have no native validation yet.
+Controls cover completion, reset, connection loss, sender completion/cancellation,
+failed sender preparation, reference overflow and deliberately omitted releases.
+An unchecked queued-message allocation now reports the established exit-102
+out-of-memory error; plain and gzip fault-injection tests accompany it.
+Next: publish this preparation, run the focused Linux native checks, fix failures,
+then measure all six native hosts and inspect actual generated binaries.
+
+Local checks use the unchanged root guard. Baseline source type-checking passed
+in 0.51s, formatting in 1.36s, docs in 2.54s, collector syntax in 0.20s.
+The current ownership preparation formatting check passed in 1.12s.
+No native build or downloaded executable ran locally.
 
 ## Roadmap status
 

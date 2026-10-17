@@ -1648,3 +1648,48 @@ the exact source revision, the capture controls and their 12 cases at both
 optimization levels. The report retains source identities, raw samples, binary
 hashes and reviewed instruction evidence. Full production acceptance is recorded
 separately in the handoff.
+
+## Memory left behind by repeated remote calls
+
+A remote call asks another process to run a function. Several calls can share
+one network connection, but each call needs its own request state and queued
+response messages. To distinguish a reusable connection pool from per-call
+growth, this measurement repeats calls in one client process with collection
+disabled and ordinary physical freeing enabled.
+
+The baseline is fwp `ac95632b` (tag
+`evidence/repeated-remote-baseline-20261017`), before explicit client-stream
+ownership. [The report](measurements/repeated-remote-baseline-2026-10-17.json)
+preserves all six passing native jobs, hardware/compiler descriptions and raw
+per-call checkpoints. It compares different call counts in this same fwp
+implementation; there is no C/Rust comparison or elapsed-time claim.
+
+Each call returns integers 1 through 64 from an interpreted loopback server.
+A full reader sums them to 2,080; a partial reader sums the first 32 to 528.
+The retained-reader case sums two calls while keeping the first iterator alive,
+then rereads its first value, giving 4,161 per batch. It makes two calls per
+batch; the other cases make one. Each process runs 1, 16 or 256 batches, with
+three measured processes per case. Raw unoptimized interpretation and ordinary
+compiled output agree before instrumented execution.
+
+On all six platforms, one connection is reused and remaining managed storage
+grows by 240 bytes for every additional call. No stream object is finalized.
+Full and retained readers free every queued message. Partial readers leave 609
+requested message bytes per call in these samples, including message headers and
+the trailing byte, for 155,904 bytes after 256 calls. Scheduling can change queue
+occupancy; these raw bytes are separate from the managed totals below.
+
+| Platform | Managed bytes after 1 full call | After 256 full calls |
+|---|---:|---:|
+| Linux AMD64 | 6,480 | 67,680 |
+| Linux ARM64 | 19,536 | 80,736 |
+| macOS AMD64 and ARM64 | 2,480 | 63,680 |
+| Windows AMD64 | 3,632 | 64,832 |
+| Windows ARM64 | 3,248 | 64,448 |
+
+Final counters follow entry/task cleanup, before whole-runtime shutdown.
+Other raw buffers, allocator pages, TLS/operating-system storage and server or
+whole-process memory are excluded. This baseline identifies the next ownership
+work: release finished request objects and discard unread messages when their
+reader is released. It does not establish bounded memory or collector-free
+remote execution. Connection and retained callback ownership remain open.
