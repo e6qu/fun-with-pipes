@@ -27,6 +27,9 @@ fn received_requests_and_statuses_release_on_errors_and_cancelled_waits() {
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "grpc_receive").unwrap();
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 #include <string.h>
 static int stage,allocations,frees,cancelled;
@@ -88,9 +91,16 @@ int main(void){
         "fwp_cleanup_push(&first_cleanup, no_release, &g);",
         1,
     );
-    let release = "    free(g->m);";
+    // Limit the fault injection to the receive owner's destructor. Other
+    // message paths also free g->m after decoding and must remain intact.
+    let release =
+        "static void g_got_release(void *arg) {\n    g_got *g = (g_got *)arg;\n    free(g->m);";
     assert_eq!(generated.matches(release).count(), 1);
-    let request_omitted = generated.replacen(release, "    no_release(g->m);", 1);
+    let request_omitted = generated.replacen(
+        release,
+        &release.replace("free(g->m);", "no_release(g->m);"),
+        1,
+    );
     let reflection = "if (g.kind == G_END) { free(g.text); return -1; }";
     assert_eq!(generated.matches(reflection).count(), 1);
     let reflection_omitted = generated.replacen(reflection, "if (g.kind == G_END) return -1;", 1);

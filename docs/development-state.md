@@ -1,95 +1,110 @@
 # Session handoff
 
-Updated 2026-10-17 UTC. [PLAN.md](../PLAN.md) has seven unfinished project areas.
-Current branch: `remote-stream-delivery`, based on accepted #154
-(`11ae0f6350ba697c773fa49cb5700d9790931769`). This batch is ready for publication
-and final production validation; focused passes do not authorize merge.
+Updated 2026-10-17 UTC. [PLAN.md](../PLAN.md) retains seven unfinished work areas.
+One delivery is open: [PR #155](https://github.com/e6qu/fun-with-pipes/pull/155),
+branch `remote-stream-delivery` in `/Users/zardoz/projects/fun-with-pipes`.
+The combined revision includes stream correctness/storage work, bounded-stack
+chain cleanup and portable neighboring service tests. Final production acceptance
+is still required; no merge has occurred.
 
-## Current delivery
+## Current delivery and acceptance
 
-PR #154 passed all nine production jobs (`38977201910`), documentation
-(`38977126983`) and Windows dependencies (`38977201787`) at `51354d10`.
-Its merge tree, parent and one-line message are verified in
-`/private/tmp/fwp154-merge-record.json` and [delivery history](roadmap-history.md).
-Duplicate production run `38984543299` was cancelled. Main-branch Windows
-dependency run `38984543101` also passed; preserve its caches.
+The stream component report remains the passing six-host measurement at
+`4c26f21fe717c4df35a4439e59c1812a5edb449d`, run `38985903147`. The chain component
+report remains the passing six-host measurement at `aea7d6df`, run `38988093805`.
+Preserve these measured source identities instead of relabeling them as the
+combined revision. Their runtime/compiler changes are now bundled in PR #155.
 
-This batch fixes shared stream readers consuming different messages, cancelled
-decoders losing the message already received, and receive failures leaking error
-text. Descriptions belong to their source. Completed positions replace the source
-with their saved result in the same word. One cleanup record restores a cancelled
-message, releases receive storage and wakes waiting readers. Waiting-reader
-cancellation leaves the receiver running; client-receiver cancellation can still
-reset the remote call. No new per-value allocation is added.
+The first production attempt (`38986731253`, head `31385092`) found a fragile
+receive-test fault injection: a generic `free(g->m)` match was no longer unique.
+The repair targets only `g_got_release`. Expanded focused checks then exposed
+Windows-only fixture assumptions: late API-version selection, POSIX-only socket
+handles/pairs and a Unix OpenSSL path. Those are repaired. Run `38990255544` at
+`6ac13de7` passed Linux AMD64; Windows AMD64 passed every neighboring fixture
+except a diagnostic assertion expecting LF instead of Windows CRLF. That assertion
+now normalizes text line endings; it still checks the exact message, exit 102
+and empty stdout. These fixes change tests, not runtime behavior.
 
-Next: publish this delivery with `/private/tmp/fwp-stream-pr-body.md`, require all
-nine production jobs and documentation on its exact final commit, fix any failures,
-then squash-merge with one line of at most 80 characters and an explicitly empty
-body. Record the verified merge and continue the ownership work below. Cancel
-only duplicate postmerge production CI; leave Windows dependency jobs running.
+Next: publish the combined revision and run the full production matrix once.
+Do not repeat the entire six-host focused suite solely for the line-ending fix:
+all affected targets are included in final production CI. Require all nine
+production jobs plus documentation on the exact combined commit. Create a new
+merge watcher with the new head/run IDs; the old watcher exited after the failed
+head and cannot merge the new one. Squash with one line of at most 80 characters
+and an explicitly empty body, without trailers or AI attribution. Cancel the
+superseded focused run to free runners; leave Windows dependency jobs running.
+Fix any final-head failures. Queued CI does not block independent preparation.
 
-## Verified focused evidence
+Static inspection of the combined Linux AMD64 binaries from passing job
+`117270859226` confirms unchanged stream receive frames: 344 bytes in the O2
+fixture and 216 bytes in the O1 service client, including saved registers and
+excluding the incoming return address. Download took 2.67s and inspection 0.15s
+through the local guard; no downloaded executable ran locally. Artifacts are in
+`/private/tmp/fwp-stream-combined/38990255544/stream-storage-ubuntu-latest`.
+The retained report still identifies its original measured binaries.
 
-Final six-host run [38985903147](https://github.com/e6qu/fun-with-pipes/actions/runs/38985903147)
-passes at `4c26f21fe717c4df35a4439e59c1812a5edb449d`: Linux, macOS and Windows,
-each on ARM64 and AMD64. Runtime, interpreter, fixtures and collector match that
-preparation source. The immutable tag is
-`evidence/remote-stream-cancellation-20261017`; earlier measurements remain in
-`evidence/remote-stream-before-delivery-20261016`. Preparation worktree:
-`/private/tmp/fwp-stream-caches`, branch `measure-remote-stream-storage`.
+## Verified chain cleanup
 
-Checks include O1/O2, collector stress/verification and reuse, source lifetime,
-concurrent readers, recursive-read traps, cancellation before/during decoding,
-restoring an empty queue before later arrival, and partial-failure cleanup.
-Negative controls deliberately omit restoration, register cleanup too late,
-disable caching/synchronization or restore the larger layout; each must fail.
-The final run also passes the rendering cleanup test whose stale hook caused the
-preceding run to fail. No unresolved focused failure remains.
+Baseline [38987418673](https://github.com/e6qu/fun-with-pipes/actions/runs/38987418673)
+at `70e36523aa42926683a3d9944a04ebfba943709f` and candidate
+[38988093805](https://github.com/e6qu/fun-with-pipes/actions/runs/38988093805)
+at `aea7d6df` pass on all six native OS/architecture targets. The baseline tag is
+`evidence/wrapped-chain-baseline-20261017`. Earlier fixture lookup/poisoning
+failures are repaired and superseded; they establish no acceptance.
 
-An actual service has two tasks sum 1..1024; both return `Some 524800` across all
-interpreted/native client/server combinations. [The guide](services.md#reading-the-same-stream-in-two-tasks)
-introduces each function and notation before explaining output and memory limits.
+The compiler follows a final counted field through records and variants with
+one nonempty constructor when that path returns to the original type. These
+wrappers release in a loop; a remaining owner stops child destruction. Existing
+direct self-tail handling and count-only mode stay unchanged. Other branching
+recursive graphs can still need calls. There is no runtime work list.
 
-## Measurements and binary inspection
+Checks cover optional and optional/tuple chains at 64, 1,024 and 16,384 links,
+root/node/optional/tuple aliases, physical reclamation with zero collections,
+O1/O2 interpreter/native agreement, and hybrid collector/reuse stress with
+physical freeing enabled and disabled. Restoring recursive destructors must
+exceed the stack bound. The source examples hash their whole small chain to
+retain independently callable type-specific cleanup functions.
 
-The [preceding report](measurements/remote-stream-shared-2026-10-16.json), from
-`38981730504` at `00c09cdc`, and [final report](measurements/remote-stream-compact-2026-10-17.json)
-compare queued 16-character values at 1/32/128 elements, repeated reads, partial
-consumption and retained earlier positions. All six hosts agree:
+The [report](measurements/wrapped-chain-cleanup-2026-10-17.json) compares O1/O2
+stack-address variation, not total stack size or timing. Linux AMD64's preceding
+O2 span grows from 2,048 bytes at 64 links to 32,768 at 1,024; ARM64 grows from
+3,072 to 49,152. Candidate spans stay at 16 and 32 bytes respectively through
+16,384 links. Across all hosts/flags/aliases, candidate spans are at most 48 bytes.
+A zero span means the sampled address stayed the same, not zero stack storage.
 
-| Cost | Separate fields | Shared word |
-|---|---:|---:|
-| Bytes per position, alignment 8 | 24 | 16 |
-| Allocations per received value | 4 | 4 |
-| Requested bytes per value | 89 | 81 |
-| Allocator-charged bytes per value | 112 | 96 |
-| Fixed setup charged bytes | 720 | 704 |
-| Charged bytes after 128 values, including setup | 15,056 | 12,992 |
+Static inspection of actual Linux O2 binaries confirms backward branches and
+fixed Link-cleanup frames: AMD64 24 bytes excluding the incoming return address;
+ARM64 64 bytes including saved registers. Apple Silicon also reserves 64 bytes.
+The report retains excerpts/hashes; ordinary release helpers have their own
+frames. Node allocations and reference counts remain. Baseline CPU/compiler
+metadata was not recorded separately, so its logs/binaries are retained without
+a timing claim. Native remote caches still need explicit ownership.
 
-These exclude sockets, pooling, raw message/codec buffers, allocator pages,
-process memory and elapsed time. They establish no C/Rust parity. Clearing C
-references still leaves cache storage charged with collection disabled.
+## Reproduction and local checks
 
-Static inspection of actual AMD64/ARM64 executables confirms the shared word.
-O2 fixture stack frames fall from 360/368 to 344/336 bytes respectively;
-O1 service-client frames fall from 232/272 to 216/240. The
-[benchmark guide](benchmarks.md#storage-for-received-stream-values) explains the
-counting convention and scope. No downloaded executable ran locally.
-Artifacts: `/private/tmp/fwp-stream-before-union/38981730504` and
-`/private/tmp/fwp-stream-final/38985903147`. Reports retain instruction excerpts,
-hashes, layouts, inputs, allocation counts and actual compiler/CPU details.
+Artifacts: `/private/tmp/fwp-chain-evidence/`, grouped by run and native host.
+Use `scripts/collect-chain-measurements.py` with both run IDs/full heads,
+`--artifacts` and `--output`, through
+`python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py`.
+Collection passed in 27.83s; refresh after binary inspection passed in 2.89s.
+Static inspections used `/private/tmp/fwp-inspect-chain-binaries.py` with each
+artifact folder through the same guard and passed in 0.14–0.15s. Mach-O uses its
+format-specific objdump mode. No downloaded executable ran locally.
 
-Guarded checks: final collection 23.71s; each architecture inspection 0.15s;
-report refresh with binary observations 1.56s; roadmap/docs audit 2.71s
-(50 link sets, 106 immutable anchors and seven roadmap steps pass). Commands used
-`python3 scripts/local-guard.py python3 scripts/collect-stream-measurements.py`
-with run/head/artifacts/baseline/output arguments and
-`python3 scripts/local-guard.py python3 /private/tmp/fwp-inspect-stream-binaries.py`
-with each Linux artifact folder. Full builds and native execution stay on CI.
-Local limits remain 64 GiB free disk, target below 2 GiB, sampled aggregate RSS
-below 1 GiB and 180 seconds; do not increase them.
+Formatting passed in 1.14s; the tuple example's prebuilt-compiler type check in
+0.26s; collector syntax in 0.14s; docs audit in 2.70s. The guard remains serial/low priority with 64 GiB free disk,
+target below 2 GiB, sampled aggregate RSS below 1 GiB and a 180-second deadline.
+Full builds, tests and native execution stay on GitHub runners.
 
-## Next ownership work
+## Documentation cleanup
+
+Ownership and TLS guides now point to PR #153's accepted UDP/TCP/TLS delivery;
+they no longer describe it as unaccepted preparation. A stale runtime reference
+to `docs/grpc.md` now points to `docs/services.md`. The benchmark guide explains
+stack-address span, instrumentation overhead and what the measurements exclude.
+The seven project areas remain open, and JIT is excluded.
+
+## Subsequent ownership work
 
 Next give cached results and continuations typed owners and bounded-stack
 last-reference destruction, including partial construction and retained aliases.
@@ -99,9 +114,11 @@ The existing connection counter controls transport closure, not complete object
 destruction. [Ownership](ownership.md#what-remains-before-remote-calls-can-use-arc)
 records these distinctions. Remote calls remain excluded from checked ARC. Compiler work must review
 `CGen::drop_body`, lowering of `grpc._force` and RPC result descriptors together.
-Native `g_decode` still uses unowned `fwp_decode`; custom decoder callbacks need
-a reviewed result contract too. Marking the primitive reviewed alone cannot
-safely establish ownership.
+Standard wire decoding already returns owned values and cleans partial fields
+through `fwp_decode` in `runtime/fwp_rt_exec.c`. The cache must preserve/transfer
+those owners through wrapper construction, publication and failure. The custom
+callback branch still uses `fwp_apply1` and needs a separate result contract;
+marking `grpc._force` reviewed alone cannot establish graph ownership.
 
 A promising next contract consumes a position: when it has one owner, transfer
 its saved result directly; when shared, return another result owner. Keep type
@@ -114,10 +131,18 @@ application machinery and transfer arguments exactly once. These are proposed
 implementation constraints, not completed work. Measure actual language clients
 as well as C fixtures: retaining an earlier iterator intentionally retains its
 saved sequence, so dropping C roots alone cannot prove bounded consumption.
-Retained host callbacks, GPU resources and all seven project areas remain open.
-
-Every commit/squash message is one line, at most 80 characters, with an empty
-body and no trailers or attribution. JIT is excluded. Failed tests are work to fix.
+The next measurement is published as `9e07096b` on `measure-remote-stream-clients` in
+`/private/tmp/fwp-stream-clients`, based on `6ac13de7`; it has no PR and has not
+run yet. The ignored runner-only test in `tests/grpc.rs` generates actual native
+clients for full consumption, the first 32 values, and a retained first position.
+It compares output with raw interpretation, then records three allocation/live
+storage samples at 64/1,024/16,384 values with GC off. The server is interpreted
+and excluded from the counters; raw buffers/process memory and timings are also
+excluded. The new `stream-clients` focused suite records compiler/CPU/source and
+binaries. Local guarded formatting passed in 1.11s; runner verification remains
+required. After publishing the current PR, validate this
+preparation while production runs. Retained host callbacks, GPU resources and
+all seven project areas remain open.
 
 ## Roadmap status
 

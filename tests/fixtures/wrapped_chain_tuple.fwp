@@ -1,0 +1,14 @@
+# Each link has a string in a and an optional pair in b. The pair owns another
+# string and the next link, so cleanup crosses a record, Option and a tuple.
+Link = { a: String, b: Option[(String, Link)] }
+
+prepend : Option[Link] -> I64 -> Option[Link]
+prepend = curry (make Link {
+    a = .1 | show,
+    b = .0 | option.map (both (const "wrapper") id),
+} | Some)
+
+# Print the last prepended string and a structural hash of the complete chain.
+# Hashing requests runtime type descriptions for every wrapper; their cleanup
+# functions remain available even when ordinary calls are inlined.
+main = range 0 64 | fold prepend None | both (option.map .a) hash | echo

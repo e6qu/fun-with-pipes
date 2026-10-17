@@ -27,6 +27,9 @@ fn client_failure_text_releases_after_traps_and_typed_errors() {
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "grpc_client_failure").unwrap();
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 static void *watched_text;
 static int text_frees;

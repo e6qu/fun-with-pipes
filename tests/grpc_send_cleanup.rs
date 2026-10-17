@@ -34,6 +34,9 @@ fn encoded_messages_release_on_cancel_and_preserve_plain_and_gzip_frames() {
         1,
     );
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 static int stage,buffer_frees,cancelled,result;
 static void *watched_buffer;
