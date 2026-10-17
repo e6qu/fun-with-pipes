@@ -150,6 +150,13 @@ int main(void) {
         let entry = format!("static V fwp_owned_entry{id}(V *a) {{");
         assert_eq!(runtime.matches(&entry).count(), 1);
         runtime = runtime.replace(&entry,&format!("{entry}\n    if (STR(a[{element}])->len == 4) observed_accumulator = a[{accumulator}];"));
+        let marker = format!("/* borrowed fold callback for f{id}:");
+        if let Some((_, helper)) = emitted.split_once(&marker) {
+            let entry = helper.lines().nth(1).unwrap();
+            assert!(entry.starts_with("static V fwp_borrowed_fold"));
+            assert_eq!(runtime.matches(entry).count(), 1);
+            runtime = runtime.replace(entry, &format!("{entry}\n    if (STR(args[{element}])->len == 4) observed_accumulator = args[{accumulator}];"));
+        }
     }
     let allocation = "    V *a = (V *)fwp_mem_alloc((*n + 1) * sizeof(V));";
     assert_eq!(runtime.matches(allocation).count(), 1);
