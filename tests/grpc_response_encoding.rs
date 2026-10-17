@@ -477,8 +477,8 @@ fn native_output_channels_borrow_values_and_release_context() {
             232,
         ),
         (
-            "    g_conn_drop(connection);",
-            "    /* omit connection owner release */",
+            "    sink->c = NULL;\n    g_stream_drop(stream);\n    g_conn_drop(connection);",
+            "    sink->c = NULL;\n    g_stream_drop(stream);\n    /* omit connection owner release */",
             0,
             232,
         ),

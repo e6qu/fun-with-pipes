@@ -34,7 +34,7 @@ def main():
     parser.add_argument('--artifacts', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--baseline-report', type=Path)
-    parser.add_argument('--comparison', choices=['storage', 'method-values', 'server-values'])
+    parser.add_argument('--comparison', choices=['storage', 'method-values', 'server-values', 'server-owners'])
     parser.add_argument('--linux-probe', action='store_true',
                         help='Retain only a passing Linux AMD64 probe; never claim six-host coverage.')
     args = parser.parse_args()
@@ -69,14 +69,19 @@ def main():
                    'task_values_and_channel_aliases_under_stress',
                    'deadline_aliases_count_only_owned_types',
                    'deadline_passthrough_preserves_count_reclamation']
-    if args.comparison in {'method-values', 'server-values'}:
+    if args.comparison in {'method-values', 'server-values', 'server-owners'}:
         checks += ['served_values_release_on_partial_decode_aliases_errors_and_cancellation',
                    'input_owners_release_after_lookahead_failure_and_sender_cancellation',
                    'client_request_buffers_release_on_encode_trap_and_cancelled_send']
-    if args.comparison == 'server-values':
+    if args.comparison in {'server-values', 'server-owners'}:
         checks += ['native_output_channels_borrow_values_and_release_context',
                    'channels_own_queues_and_transfer_received_values',
                    'tasks_and_data_channels_reclaim_after_join_and_cancellation']
+    if args.comparison == 'server-owners':
+        checks += ['served_requests_survive_resets_jobs_and_retained_inputs',
+                   'accepted_connections_release_after_startup_io_jobs_and_channels',
+                   'grpc_connection_startup_releases_failed_task_reservations',
+                   'cancelling_grpc_server_releases_listener_and_preserves_accepted_owners']
     output_tables = args.output.parent / args.output.stem
     output_tables.mkdir(parents=True, exist_ok=True)
     expected_keys = {(mode, calls, rep) for mode in MODES
@@ -115,6 +120,10 @@ def main():
             assert all(row[field] == 0 for field in
                        ['live_call_tasks', 'live_io_tasks', 'live_other_tasks'])
             assert row['peak_charged_bytes'] >= row['final_charged_bytes'] >= 0
+            if args.comparison == 'server-owners':
+                assert row['streams_finalized'] == calls
+                assert row['connections_finalized'] == 1
+                assert row['final_charged_bytes'] == rows[0]['final_charged_bytes'], (host, key(row))
             category = next(item for item in storage if key(item) == key(row))
             assert category['job_requested_bytes'] == calls * category['job_header_bytes']
             assert category['task_requested_bytes'] == calls * category['task_header_bytes']
@@ -141,7 +150,15 @@ def main():
                 category = next(item for item in storage if key(item) == key(row))
                 assert category['args_requested_bytes'] == category['args_charged_bytes'] == 0
                 calls = row['calls']
-                if args.comparison == 'storage':
+                if args.comparison == 'server-owners':
+                    # Same allocation requests; finalized request/connection
+                    # storage replaces growth. One writer retain per connection,
+                    # two per call for parser/job owners, and two more for an
+                    # independently retained input source or output channel.
+                    allocation_change = requested_change = 0
+                    retain_change = 1 + calls * (4 if row['mode'] in {
+                        'request-stream', 'channel-output'} else 2)
+                elif args.comparison == 'storage':
                     allocation_change = -calls
                     requested_change = -prior_storage[key(row)]['args_requested_bytes']
                     retain_change = 0
@@ -189,7 +206,7 @@ def main():
             assert review.get('source_revision') == args.head
             assert review.get('architecture') == ('AMD64' if host == 'ubuntu-latest' else 'ARM64')
             reviewed_modes = {'unary-strings', 'request-stream'}
-            if args.comparison == 'server-values':
+            if args.comparison in {'server-values', 'server-owners'}:
                 reviewed_modes.add('channel-output')
             assert all(review.get(mode, {}).get('observations') for mode in reviewed_modes)
             assert reviewed_modes <= {
