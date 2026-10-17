@@ -565,6 +565,162 @@ fn instrument_client_allocations(generated: &str) -> String {
     code
 }
 
+/// Baseline for multiple calls in one process. No tracing-free claim: record
+/// connection/stream objects and queued message storage independently.
+#[test]
+#[ignore = "runner-only repeated remote call allocation measurement"]
+fn repeated_remote_call_memory_measurement() {
+    assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
+    let artifacts = PathBuf::from(
+        std::env::var_os("FWP_REPEATED_CLIENT_ARTIFACTS").expect("measurement artifact directory"),
+    );
+    std::fs::create_dir_all(&artifacts).unwrap();
+    std::fs::copy(dir().join("greeter.fwp"), artifacts.join("greeter.fwp")).unwrap();
+    std::fs::write(artifacts.join("scope.txt"), "One native client process makes 1, 16 or 256 batches of remote calls over loopback HTTP/2 to an interpreted greeter. Each response contains integers 1..64. Full batches sum all 64; partial batches sum only the first 32; retained batches sum an initial stream, make and sum a second call while retaining the initial iterator, then reread its first value. Retained batches therefore make twice as many calls. Raw unoptimized interpreter and ordinary native output must agree. Three separate instrumented processes per case count managed allocations/retains/charged bytes, created/finalized connection and stream objects, and requested/freed queued-message bytes including their header and trailing byte. GC is disabled, physical freeing enabled. Final counters follow entry/task/cached-value cleanup and precede whole-runtime shutdown. Checkpoints are immediately before each new stream is allocated, after connection selection and request-header preparation; a checkpoint can deliberately include an earlier retained iterator. Excludes other raw buffers, TLS/OS/allocator metadata, server/whole-process memory and timing. Native builds use ordinary -O2. Source, generated C, executables and raw stderr are retained.\n").unwrap();
+    let d = scratch("repeated-client-memory");
+    std::fs::copy(dir().join("greeter.fwp"), d.join("greeter.fwp")).unwrap();
+    let mut command = Command::new(fwp());
+    command
+        .args(["serve", "--interp"])
+        .arg(dir().join("client.fwp"))
+        .arg("greeter")
+        .args(["--listen", "127.0.0.1:0"]);
+    let server = start(command, Duration::from_secs(60));
+    let mut rows=String::from("mode\tbatches\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\tconnections_created\tconnections_finalized\tstreams_created\tstreams_finalized\tmessages_created\tmessages_freed\tmessage_requested_bytes\tmessage_freed_bytes\tpeak_message_bytes\n");
+    let mut checkpoints=String::from("mode\tbatches\trepetition\tprior_streams\tmanaged_charged_bytes\tmessage_bytes\tlive_connections\tlive_streams\n");
+    for (mode, consume, per_batch, calls_per_batch) in [
+        ("full", "const 64 | greeter.count | iter.fold add 0", 2080, 1),
+        ("partial", "const 64 | greeter.count | iter.take 32 | iter.fold add 0", 528, 1),
+        ("retained", "const 64 | greeter.count | both (iter.fold add 0) (both (const 64 | greeter.count | iter.fold add 0) (iter.take 1 | iter.to-list | sum) | uncurry add) | uncurry add", 4161, 2),
+    ] {
+        let source=d.join(format!("{mode}.fwp"));
+        std::fs::write(&source,format!("import greeter\n\nconsume : I64 -> I64\nconsume = {consume}\nstep = curry (both .0 (.1 | consume) | uncurry add)\n\nmain =\n    () | args | head | option.and-then parse-int\n    | (match\n        Some _ -> id\n        None -> \"expected a numeric batch count\" | fail)\n    | flip iter.take (iter.count-from 0)\n    | iter.fold step 0\n    | echo\n")).unwrap();
+        let split=d.join(mode);
+        build(&[source.to_str().unwrap(),"--service","greeter","--emit-c","-o",split.to_str().unwrap()],&d);
+        let generated=std::fs::read_to_string(split.join(format!("{mode}.c"))).unwrap();
+        let instrumented=instrument_repeated_client(&generated);
+        std::fs::copy(&source,artifacts.join(format!("{mode}.fwp"))).unwrap();
+        std::fs::write(artifacts.join(format!("{mode}.c")),&generated).unwrap();
+        std::fs::write(artifacts.join(format!("{mode}-measured.c")),&instrumented).unwrap();
+        let ordinary=artifacts.join(format!("{mode}{}",std::env::consts::EXE_SUFFIX));
+        let measured=artifacts.join(format!("{mode}-measured{}",std::env::consts::EXE_SUFFIX));
+        fwp::cgen::compile_c(&generated,&ordinary,"-O2").unwrap();
+        fwp::cgen::compile_c(&instrumented,&measured,"-O2").unwrap();
+        for batches in [1,16,256] {
+            let expected=format!("{}\n",batches*per_batch);
+            let mut reference=Command::new(fwp());
+            reference.args(["run","--interp","--service","greeter"]).arg(&source).arg(batches.to_string()).env("FWP_NO_OPT","1").env("FWP_SERVICE_GREETER",&server.addr);
+            let output=run(reference,120);
+            assert!(output.status.success(),"reference: {}",render(&output));
+            assert_eq!(String::from_utf8_lossy(&output.stdout),expected);
+            for (exe,record,repetition) in [(&ordinary,false,0),(&measured,true,0),(&measured,true,1),(&measured,true,2)] {
+                let mut command=Command::new(exe);
+                command.arg(batches.to_string()).env("FWP_SERVICE_GREETER",&server.addr).env("FWP_FREE","1").env("FWP_GC","off").env("FWP_GC_STRESS","0").env("FWP_GC_VERIFY","0").env("FWP_GC_STATS","0").env("FWP_REUSE_VERIFY","0");
+                let output=run(command,120);
+                assert!(output.status.success(),"{mode}/{batches}: {}",render(&output));
+                assert_eq!(String::from_utf8_lossy(&output.stdout),expected);
+                let stderr=String::from_utf8(output.stderr).unwrap();
+                if !record {assert!(stderr.is_empty(),"{stderr}");continue;}
+                std::fs::write(artifacts.join(format!("{mode}-{batches}-{repetition}.log")),&stderr).unwrap();
+                let mut memory=None;let mut transport=None;let mut count=0;
+                for line in stderr.lines() {
+                    if let Some(fields)=line.strip_prefix("client-memory\t") {assert!(memory.replace(fields).is_none());}
+                    else if let Some(fields)=line.strip_prefix("transport-memory\t") {assert!(transport.replace(fields).is_none());}
+                    else if let Some(fields)=line.strip_prefix("call-memory\t") {
+                        let values:Vec<u64>=fields.split('\t').map(|v|v.parse().unwrap()).collect();
+                        assert_eq!(values.len(),5);assert_eq!(values[0],count);
+                        checkpoints.push_str(&format!("{mode}\t{batches}\t{repetition}\t{fields}\n"));count+=1;
+                    } else {panic!("unexpected measurement output: {line}");}
+                }
+                assert_eq!(count,batches*calls_per_batch);
+                let memory=memory.unwrap();let transport=transport.unwrap();
+                let m:Vec<u64>=memory.split('\t').map(|v|v.parse().unwrap()).collect();
+                let t:Vec<u64>=transport.split('\t').map(|v|v.parse().unwrap()).collect();
+                assert_eq!(m.len(),6);assert_eq!(m[5],0,"collection must remain disabled");
+                assert_eq!(t.len(),9);assert!(t[0]>0&&t[0]<=count);assert_eq!(t[2],count);
+                assert!(t[1]<=t[0]&&t[3]<=t[2]&&t[5]<=t[4]&&t[7]<=t[6]);
+                assert!(t[8]>=t[6]-t[7]);
+                if mode!="partial" {assert_eq!(t[4],count*64);assert_eq!(t[5],t[4]);assert_eq!(t[7],t[6]);}
+                rows.push_str(&format!("{mode}\t{batches}\t{repetition}\t{memory}\t{transport}\n"));
+            }
+        }
+        if mode=="full" {
+            // Omit real raw-message releases, so the measurement must expose
+            // retained message bytes even though language output remains right.
+            assert!(instrumented.contains("client_message_free(g->m);"));
+            let broken=instrumented.replace("client_message_free(g->m);","(void)g->m;");
+            let path=artifacts.join(format!("missing-message-release{}",std::env::consts::EXE_SUFFIX));
+            std::fs::write(artifacts.join("missing-message-release.c"),&broken).unwrap();
+            fwp::cgen::compile_c(&broken,&path,"-O2").unwrap();
+            let mut command=Command::new(path);
+            command.arg("1").env("FWP_SERVICE_GREETER",&server.addr).env("FWP_FREE","1").env("FWP_GC","off").env("FWP_GC_STRESS","0").env("FWP_REUSE_VERIFY","0");
+            let output=run(command,120);assert!(output.status.success(),"{}",render(&output));
+            assert_eq!(output.stdout,b"2080\n");
+            let stderr=String::from_utf8(output.stderr).unwrap();
+            let fields=stderr.lines().find_map(|line|line.strip_prefix("transport-memory\t")).unwrap();
+            let t:Vec<u64>=fields.split('\t').map(|v|v.parse().unwrap()).collect();
+            assert!(t[4]>t[5]&&t[6]>t[7],"omitted message release was not detected: {fields}");
+            std::fs::write(artifacts.join("missing-message-release.log"),stderr).unwrap();
+        }
+    }
+    std::fs::write(artifacts.join("memory.tsv"), &rows).unwrap();
+    std::fs::write(artifacts.join("checkpoints.tsv"), checkpoints).unwrap();
+    println!("{rows}");
+}
+
+fn instrument_repeated_client(generated: &str) -> String {
+    let mut code = instrument_client_allocations(generated);
+    let original = include_str!("../runtime/fwp_rt_grpc.c");
+    assert_eq!(
+        code.matches(original).count(),
+        1,
+        "instrument only the gRPC runtime, not unrelated free calls"
+    );
+    let mut runtime = original.to_string();
+    let marker = "typedef struct g_msg { struct g_msg *next; size_t n; unsigned char d[]; } g_msg;";
+    assert_eq!(runtime.matches(marker).count(), 1);
+    runtime = runtime.replacen(
+        marker,
+        &format!(
+            "{marker}\n{}",
+            include_str!("fixtures/grpc_repeated_memory.c")
+        ),
+        1,
+    );
+    for (before,after) in [
+        ("static g_stream *g_stream_new(g_conn *c, uint32_t id) {", "static g_stream *g_stream_new(g_conn *c, uint32_t id) {\n    if(client_active){client_call_checkpoint();client_streams_created++;}"),
+        ("static void g_stream_final(void *p) {", "static void g_stream_final(void *p) {\n    if(client_active)client_streams_finalized++;"),
+        ("    fwp_gc_finalizer(c, g_conn_final);", "    fwp_gc_finalizer(c, g_conn_final);\n    if(client_active)client_connections_created++;"),
+        ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) {\n    if(client_active)client_connections_finalized++;"),
+        ("        m->n = mn;", "        m->n = mn;\n        if(client_active){client_messages_created++;client_message_requested+=sizeof(*m)+mn+1;uint64_t live=client_message_requested-client_message_freed;if(live>client_message_peak)client_message_peak=live;}"),
+    ] {assert_eq!(runtime.matches(before).count(),1,"{before}");runtime=runtime.replacen(before,after,1);}
+    for (argument, count) in [
+        ("m", 1),
+        ("g->m", 3),
+        ("first.m", 1),
+        ("g.m", 2),
+        ("req", 3),
+    ] {
+        let before = format!("free({argument});");
+        // The counting helper contains one additional free(m).
+        let expected = if argument == "m" { count + 1 } else { count };
+        assert_eq!(runtime.matches(&before).count(), expected, "{argument}");
+        if argument == "m" {
+            runtime = runtime.replace("        free(m);", "        client_message_free(m);");
+        } else {
+            runtime = runtime.replace(&before, &format!("client_message_free({argument});"));
+        }
+    }
+    code = code.replacen(original, &runtime, 1);
+    let end = "    client_measure_end();";
+    assert_eq!(code.matches(end).count(), 1);
+    code.replacen(
+        end,
+        "    client_transport_end();\n    client_measure_end();",
+        1,
+    )
+}
+
 // ------------------------------------------------------------ interoperability
 
 /// Go's HTTP/2 client (the standard library only) calls both servers.

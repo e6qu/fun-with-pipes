@@ -11,12 +11,19 @@ The verified merge has the tested tree, parent `11ae0f63`, and exactly the subje
 The watcher completed and saved `/private/tmp/fwp155-merge-record.json`.
 Duplicate production `38996775271` was canceled; Windows dependency jobs remain.
 
-The root branch `release-stream-caches` starts at that accepted merge and adds
-cache ownership, unique closure capture transfers, Windows portability fixes,
-reports and clearer docs. Publish this single delivery and require all nine
-production jobs plus documentation on its final commit before squash merge.
-Suggested subject: `Release unused stream values and reduce memory bookkeeping`.
-Do not treat the focused evidence as final production acceptance.
+[PR #156](https://github.com/e6qu/fun-with-pipes/pull/156), root branch
+`release-stream-caches`, starts at that accepted merge and adds cache ownership,
+unique closure capture transfers, Windows portability fixes, reports and clearer
+docs. Exact head: `d19ab045d6ce136455d597b49773db7ef9c5721d`. Production
+`38996879616` and documentation `38996879603` are running. Require all nine jobs
+plus docs on this exact head. Do not treat focused evidence as production acceptance.
+The watcher in exec session `37246` runs `/private/tmp/fwp-watch-156.py`, which
+checks the exact base/head and gates, squash-merges with the one-line subject
+`Release unused stream values and reduce memory bookkeeping` and empty body,
+then verifies the tree, parent and message. Its record is
+`/private/tmp/fwp156-merge-record.json`. If it ends on failure, fix and restart
+with the new exact head. This local handoff update intentionally remains
+uncommitted to avoid restarting the full matrix for status-only changes.
 
 The combined preparation is published at `a49ffe3e` on
 `move-unique-closure-captures`, worktree `/private/tmp/fwp-closure-capture-moves`.
@@ -80,13 +87,14 @@ final report collection passed in 21.59s. Linux AMD64/ARM64 downloads passed in
 
 ## Next action
 
-Next: publish `release-stream-caches`, record its PR/head/run identities here,
-fix every discovered failure and wait for its complete final-head acceptance.
+Next: monitor #156, fix every discovered failure and wait for complete final-head
+acceptance.
 Squash-merge with the explicit one-line subject and empty body, then verify the
 merge tree, parent and message. Preserve Windows dependency jobs; cancel only
 superseded or duplicate production runs. Keep one active delivery PR.
 
-While that next delivery validates, measure repeated calls in one client process
+While #156 validates, prepare `measure-repeated-remote-calls` in
+`/private/tmp/fwp-repeated-remote-calls` from `d19ab045`. Measure repeated calls in one client process
 before changing connection lifetimes. Use fixed 64-value responses and 1/16/256
 calls, full/partial reads and retained earlier iterators. Add created/destroyed
 connection and stream counts and raw message bytes, separate reusable pool
@@ -94,6 +102,32 @@ storage from per-call growth, and compare raw interpreter/native output. Then
 assign owners to connections, streams, retained codecs and sender callbacks,
 with borrowed scheduler links and explicit cycle handling. Whole remote calls
 remain excluded from checked ARC; this cache change does not remove tracing.
+
+## Repeated-call preparation
+
+Branch `measure-repeated-remote-calls`, worktree `/private/tmp/fwp-repeated-remote-calls`,
+starts at #156's tested candidate `d19ab045`. No second delivery PR is open.
+The new ignored measurement requests fixed 64-value responses in 1/16/256 batches.
+Full and partial batches make one call; retained batches sum an initial stream,
+make and sum another call while keeping the first iterator, then reread its first
+value. Their expected per-batch outputs are 2,080, 528 and 4,161 respectively;
+retained batches make two calls. Counts distinguish actual requests from batches.
+
+Instrumentation records managed requests/retains/charge, connection and stream
+creation/finalization, and allocated/freed message bytes (headers and payloads).
+It samples immediately before each request stream allocation and after entry/task
+cleanup, before whole-runtime shutdown. Other raw buffers, TLS/OS/allocator pages,
+server/process memory and timing are excluded. A deliberately omitted message
+release must leave measured message bytes even when output is still correct.
+Do not assert bounded memory or ARC support from this baseline.
+
+Next preparation action: dispatch `numerics.yml` with `suite=stream-repeat` first
+on Linux AMD64; repair any failures, inspect measurements, then validate all six
+native hosts before choosing the next runtime ownership change. Full builds and
+execution remain on runners. Exact measurement sources type-check locally with
+the prebuilt compiler under the guard (0.51s). An earlier handwritten check used
+unsupported semicolon match syntax; checking the exact generated source fixed
+that test-only error. Guarded Rust formatting passed in 1.27s.
 
 ## Roadmap status
 
