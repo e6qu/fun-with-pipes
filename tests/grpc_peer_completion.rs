@@ -63,6 +63,10 @@ fn serving_peer_owner_survives_children_and_releases_at_completion() {
             "    j->sv.task = s->task;\n    observed_task=s->task;",
             1,
         );
+    let disposal = "static void fwp_task_dispose(V value) {";
+    assert_eq!(generated.matches(disposal).count(), 1);
+    let generated = generated.replacen(disposal,
+        "static void fwp_task_dispose(V value) { if((void *)(uintptr_t)value==observed_task)task_disposals++;", 1);
     let generated = c_instrument::calls(&generated, &[("fwp_mem_free", "observed_managed_free")]);
     // The token rewriter also sees function definitions. Keep the real allocator
     // available to cleanup callbacks and to the observation wrapper itself.
@@ -75,7 +79,7 @@ fn serving_peer_owner_survives_children_and_releases_at_completion() {
 #endif
 #include <stdint.h>
 #include <stdlib.h>
-static int stage,peer_frees,children,job_frees,task_frees;
+static int stage,peer_frees,children,job_frees,task_frees,task_disposals;
 static void *peer_buffer,*observed_sender,*observed_job,*observed_task;
 static void observed_managed_free(void *);
 static char *observed_subject(void);
@@ -115,7 +119,7 @@ int main(void){
  g_server srv={0};srv.module="probe";
  g_conn *c=g_conn_new(-1,"local",&srv);c->ssl=ssl;
  for(stage=0;stage<7;stage++){
-  peer_buffer=observed_sender=observed_job=observed_task=0;peer_frees=children=job_frees=task_frees=0;c->ssl=stage==4?0:ssl;
+  peer_buffer=observed_sender=observed_job=observed_task=0;peer_frees=children=job_frees=task_frees=task_disposals=0;c->ssl=stage==4?0:ssl;
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*stage));s->remote_end=1;
   if(stage==2){
    fwp_trap_recover=recover;fwp_trap_jb=&failure;fwp_trap_cleanup=0;
@@ -139,7 +143,7 @@ int main(void){
   FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
  }
  // Overflow fails before acquiring a sender owner or publishing a task.
- stage=7;peer_frees=job_frees=task_frees=0;observed_sender=observed_task=0;
+ stage=7;peer_frees=job_frees=task_frees=task_disposals=0;observed_sender=observed_task=0;
  g_job *pending=fwp_mem_alloc(sizeof(*pending));observed_job=pending;
  g_serving *sv=&pending->sv;g_ctx context={0};
  sv->peer=observed_subject();sv->peer_users=SIZE_MAX;context.serving=sv;
@@ -149,7 +153,7 @@ int main(void){
  if(sv->peer_users!=SIZE_MAX||peer_frees||job_frees||fwp_cleanups)_Exit(11);
  sv->peer_users=1;g_serving_peer_release(sv);if(peer_frees!=1||job_frees!=1)_Exit(12);
  // A scope is a second owner of the task identity, but not of the finished job.
- stage=8;peer_frees=job_frees=task_frees=children=0;observed_sender=observed_job=observed_task=0;
+ stage=8;peer_frees=job_frees=task_frees=task_disposals=children=0;observed_sender=observed_job=observed_task=0;
  g_stream *scoped_stream=g_stream_new(c,17);scoped_stream->remote_end=1;
  fwp_scope scope={0};fwp_cur->scope=&scope;
  g_start_call(c,scoped_stream);fwp_task *scoped_task=scoped_stream->task;
@@ -157,7 +161,10 @@ int main(void){
  if(task_frees||job_frees!=1||scoped_stream->task||children!=1||peer_frees!=1)_Exit(40);
  if(scope.n!=1||scope.tasks[0]!=scoped_task||!scoped_task->done||scoped_task->gctx)_Exit(41);
  fwp_scope_owner scope_owner={fwp_cur,&scope,fwp_handlers};
- fwp_scope_release(&scope_owner);if(task_frees!=1||fwp_cur->scope)_Exit(42);
+ fwp_scope_release(&scope_owner);
+ // Reuse verification deliberately poisons counted storage without freeing it.
+ if(task_disposals!=1||task_frees!=(fwp_reuse_verify?0:1)||fwp_cur->scope)_Exit(42);
+ if(fwp_reuse_verify&&*(uint64_t *)scoped_task)_Exit(43);
  c->ssl=ssl;FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
 }
 "#;

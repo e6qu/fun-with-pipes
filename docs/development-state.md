@@ -63,11 +63,29 @@ sources, request/connection records and channels are outside this first change;
 remaining memory is not expected to be constant yet. Do not claim server GC
 removal or lower execution time from a smaller memory total.
 
-Next: retain the result of repaired Linux probe `39016597763` at `8eab6729`.
-Publish the argument-array cleanup and comparison collector as the next probe.
+Next: publish the reuse-verification fixture correction and rerun Linux.
+The focused lifetime fixtures now precede ordinary networking tests so fixture
+failures are reported earlier without removing coverage.
 Fix failures, then measure
 all six hosts and review actual ARM64/AMD64 instructions. Keep the input delivery
 moving independently; publish only one delivery PR at a time.
+
+## Next value-lifetime work after this storage probe
+
+The baseline's generated service entry `e0` explicitly marks its argument/result
+as traced. Served functions are reachable but are not marked in `used_closures`,
+so their function table has no typed owning entry. Internal iterator helpers do
+have one. The next change should supply typed service entries and transfer decoded
+arguments into them, with cleanup for partially decoded argument lists and owned
+results/errors through encoding. Preserve trap order and children joining before
+response cleanup. This is investigated, not implemented or tested.
+
+Incoming iterator nodes already have typed owners, but their server request and
+connection remain traced. Output channels currently contain a separate sink
+record without its own disposal hook. These must be accounted for before
+claiming complete server ownership; merely switching to `fwp_apply_owned` would
+leave these boundaries and response iterators unresolved. Reuse the same four
+workloads and compare counter changes, not only final memory.
 
 ## Checks and artifacts
 
@@ -100,3 +118,10 @@ but generated C contains two alternatives selected by preprocessing. Restore bot
 real definitions explicitly in peer and response fixtures. Neither failed run
 collected server measurements. Formatting passed in 1.18s/1.29s; updated docs
 passed in 3.26s and the comparison collector syntax check in 0.14s.
+
+Probe `39016938682` at `62a63f50` passed ordinary networking and peer-lifetime
+negative controls, then failed the scoped-task assertion with reuse verification
+on. That mode deliberately poisons counted storage instead of physically freeing
+it. Observe logical disposal separately and require physical freeing only with
+poisoning off; with poisoning on, require the retained first word to be cleared.
+This is a fixture correction; no runtime failure was identified by that result.

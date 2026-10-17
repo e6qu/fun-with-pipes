@@ -52,7 +52,15 @@ def main():
     if baseline:
         checks += ['calls_are_concurrent', 'go_client_interoperates',
                    'stream_aliases_are_consistent_across_tasks',
-                   'serving_peer_owner_survives_children_and_releases_at_completion']
+                   'serving_peer_owner_survives_children_and_releases_at_completion',
+                   'served_status_messages_release_after_encoding_and_on_cancellation',
+                   'served_buffers_release_on_decode_encode_traps_and_cancelled_send',
+                   'received_requests_and_statuses_release_on_errors_and_cancelled_waits',
+                   'owned_client_streams_release_after_readers_and_senders_finish',
+                   'encoded_messages_release_on_cancel_and_preserve_plain_and_gzip_frames',
+                   'task_values_and_channel_aliases_under_stress',
+                   'deadline_aliases_count_only_owned_types',
+                   'deadline_passthrough_preserves_count_reclamation']
     output_tables = args.output.parent / args.output.stem
     output_tables.mkdir(parents=True, exist_ok=True)
     expected_keys = {(mode, calls, rep) for mode in MODES
