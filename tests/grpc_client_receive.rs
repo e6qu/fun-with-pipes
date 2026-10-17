@@ -145,7 +145,7 @@ int main(void){
   if(stage==6||stage==11||stage==14){fwp_p_task_yield();if(t->done||allocations!=1||frees!=1)return 2;fwp_p_task_cancel(PTR(t));}
   fwp_await(t);
   int expected=stage==7?3:stage==0||stage==1||stage==4||stage==8||stage==9||stage==12||stage==13||stage==16?2:1;
-  if(!t->done||allocations!=expected||frees!=expected||fwp_cleanups||cancelled!=(stage==6||stage==11||stage==14)||trapped!=(stage==1||stage==2||stage==3||stage==4||stage==5||stage==9||stage==10||stage==15))return 1;
+  if(!t->done||allocations!=expected||frees!=expected||fwp_cleanups||cancelled!=(stage==6||stage==11||stage==14)||trapped!=(stage==1||stage==2||stage==3||stage==4||stage==5||stage==9||stage==10||stage==15)){fprintf(stderr,"receive stage %d: done=%d allocations=%d frees=%d expected=%d cancelled=%d trapped=%d live=%d cleanups=%d\n",stage,t->done,allocations,frees,expected,cancelled,trapped,decoded_live,fwp_cleanups!=0);return 1;}
 #ifdef PROBE_CLIENT_STREAM_OWNERS
   if(stream_finalizations!=(stage==7?2:1)||c->streams){fprintf(stderr,"stage %d: %d finalized, listed=%d\n",stage,stream_finalizations,c->streams!=0);return 20;}
 #else
