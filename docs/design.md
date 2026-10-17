@@ -317,6 +317,17 @@ its existing child-owner rules. The accepted tests include aliases, pointer-like
 scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
 count operations; they do not prove every record or call allocation-free.
 
+A function used as a value may receive a boxed record even when its compiled
+body accepts separate fields. The entry code reads those fields before calling
+that body. For a uniquely owned plain-data record, it transfers counted fields
+and clears their old slots instead of acquiring duplicate owners. Shared records
+still duplicate their counted fields. Cleanup protects the original arguments
+and each prepared field until the body takes responsibility, including failure
+partway through preparation. The outer record stays alive until the call ends.
+Records containing resources retain their existing lifetime treatment. This
+removes redundant count operations at eligible calls; the outer allocation and
+runtime uniqueness check remain. Validation is tracked in the handoff.
+
 The compiler also handles selecting a field from a consumed heap record
 when that field is its only value needing reference-counted storage. A record
 with one owner gives the selected value to its caller and frees its outer storage.

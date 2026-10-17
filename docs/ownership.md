@@ -1066,6 +1066,26 @@ count shared owners; removing the collector does not make networking a zero-cost
 abstraction. Repeated server measurements compare identical fwp programs across
 memory modes, with no speed or C/Rust-parity claim.
 
+### Moving record fields into a compiled function
+
+A boxed record stores its fields together in a heap object. Some compiled
+functions instead accept those fields as separate arguments; this avoids
+repacking them inside the function. Calling such a function through a function
+value still needs entry code to unpack the original record.
+
+When that record has one owner, the entry transfers its counted fields and clears
+their original slots. It reads all fields before clearing any slot. A shared
+record keeps its fields and supplies independent owners to the call. Scalar
+bits are never treated as pointers just because they resemble addresses.
+
+Original arguments and partially prepared fields remain protected if preparation
+fails. The compiled body takes responsibility before it can suspend or trap; the
+entry releases the outer record after the call. Resource-containing records keep
+their existing cleanup rules. Tests cover shared parents, shared fields, failure
+after a partial transfer, cancellation on entry and returned values. The current
+validation status is in [the handoff](development-state.md); this change does not
+eliminate the record allocation or every reference count.
+
 ### Moving values held by a closure
 
 A closure is a function that keeps values for a later call. For example, `add 1`
