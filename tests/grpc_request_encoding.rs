@@ -151,8 +151,8 @@ fn input_owners_release_after_lookahead_failure_and_sender_cancellation() {
             ),
             ("    fwp_mem_free(x);", "    (void)x;", "0", 222),
             (
-                "    t->ownership = FWP_TASK_UNIQUE;",
-                "    t->ownership = FWP_TASK_TRACED;",
+                "    t->cfinish = g_sender_peer_finish; probe_task=t;\n    t->ownership = FWP_TASK_UNIQUE;",
+                "    t->cfinish = g_sender_peer_finish; probe_task=t;\n    t->ownership = FWP_TASK_TRACED;",
                 "0",
                 222,
             ),

@@ -2091,3 +2091,49 @@ ownership proofs before remote calls can support checked ARC. The
 [fixture guide](../tests/fixtures/server-memory/README.md) explains the workload
 notation and the
 [session handoff](development-state.md) records the next implementation action.
+
+### Freeing finished server tasks and keeping argument slots on the stack
+
+[The storage comparison](measurements/server-call-storage-2026-10-17.json)
+uses `e6455c0d`, retained as
+`evidence/server-call-storage-windows-20261017`, against the `06432959` baseline
+above. [All six native hosts pass](https://github.com/e6qu/fun-with-pipes/actions/runs/39018276989).
+Both versions run the same four fwp programs, inputs and sampling boundary.
+This compares fwp before and after a memory-management change; it does not compare
+fwp with C or Rust and does not measure elapsed time.
+
+Each call has a job record holding its service context and a task record used by
+the scheduler. The new version frees both when their last users finish, including
+background senders that still need the context. It also frees finished connection
+I/O tasks. Temporary slots used to pass method arguments now live on the serving
+task's stack. This removes one allocation and 24 requested heap bytes per call
+in every measured case, with unchanged reference-count increments. At 256 calls,
+Linux performs 2,310 / 66,566 / 84,230 / 50,950 allocations for the four workloads;
+macOS and Windows perform three fewer. Each total is 256 below its baseline.
+
+Final managed bytes after 256 calls are identical across all three repetitions:
+
+| Platform | Greeting | Returned iterator | Sent iterator | Output channel |
+|---|---:|---:|---:|---:|
+| Linux ARM64 or AMD64 | 119,648 | 1,885,024 | 1,151,840 | 369,504 |
+| macOS or Windows, either architecture | 119,104 | 1,884,480 | 1,151,296 | 368,960 |
+
+All sizes leave less storage than the baseline, but storage still grows with
+calls. Decoded values, returned iterators, connections, requests and channel
+contexts need further ownership work. These numbers do not establish that a
+server can run without tracing collection.
+
+Actual Linux ARM64 and AMD64 instructions confirm the argument slots use the
+stack. For these one-parameter methods, the call helper needs 48 more stack bytes
+than the baseline: 16 more fixed bytes and 32 bytes for the aligned argument
+slots. That is this helper's frame, not peak task stack usage. Instructions also
+confirm that unscoped internal tasks bypass reference-count operations and that
+job cleanup clears borrowed task pointers before freeing the job. Tasks retained
+by a scope have two owners and keep the existing shared policy.
+
+The same exclusions as the baseline apply: raw buffers, stack pools, allocator
+metadata, operating-system/TLS storage, total process memory and timing are not
+measured. The report retains all 18 raw tables, compiler/hardware details and
+source/binary/instruction fingerprints. Downloaded binaries were inspected
+without executing them locally. Full production acceptance is tracked in the
+[session handoff](development-state.md).
