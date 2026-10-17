@@ -1652,6 +1652,42 @@ impl<'p> Gen<'p> {
         k
     }
 
+    /// Follow the final counted field through records and variants with one
+    /// nonempty constructor. Returning to `root` closes a destruction loop,
+    /// e.g. Link -> Option[Link] -> Link, without runtime stack/work storage.
+    fn wrapped_drop_path(&self, root: &MT, first: &MT) -> Option<Vec<Vec<MT>>> {
+        let mut current = first.clone();
+        let mut seen = Vec::new();
+        let mut path = Vec::new();
+        while &current != root {
+            if seen.contains(&current) {
+                return None;
+            }
+            seen.push(current.clone());
+            let fields = if let Some(fs) = record_fields(&self.prog.shapes, &current) {
+                fs.iter().map(|(_, ty)| ty.clone()).collect::<Vec<_>>()
+            } else if let Some(TypeShape::Adt(variants)) = self.prog.shapes.get(&current) {
+                let mut populated = variants.iter().filter(|(_, fields)| !fields.is_empty());
+                let fields = populated.next()?.1.clone();
+                if populated.next().is_some() {
+                    return None;
+                }
+                fields
+            } else {
+                return None;
+            };
+            current = fields
+                .iter()
+                .rfind(|ty| {
+                    crate::rc::needs_rc(&self.prog.shapes, ty)
+                        && !matches!(ty, MT::Con(name, _) if name == "?")
+                })?
+                .clone();
+            path.push(fields);
+        }
+        Some(path)
+    }
+
     fn drop_body(&mut self, mt: &MT, id: usize) -> String {
         // A resource parent still releases its children with freeing disabled;
         // ordinary children keep the same count-only storage policy.
@@ -1748,8 +1784,18 @@ impl<'p> Gen<'p> {
             if !one {
                 let _ = writeln!(body, "        case {}: {{", tag);
             }
-            // the last field of the same type is followed by the loop
-            let tail = fs.iter().rposition(|t| t == mt);
+            // Preserve the existing direct self-tail choice. Otherwise a final
+            // counted field can return through ordinary wrappers to this type.
+            let direct = fs.iter().rposition(|t| t == mt);
+            let wrapped = if direct.is_none() && free_enabled() {
+                fs.iter().rposition(counted).and_then(|index| {
+                    self.wrapped_drop_path(mt, &fs[index])
+                        .map(|path| (index, path))
+                })
+            } else {
+                None
+            };
+            let tail = direct.or_else(|| wrapped.as_ref().map(|(index, _)| *index));
             for (k, t) in fs.iter().enumerate() {
                 if Some(k) == tail || !counted(t) {
                     continue;
@@ -1762,6 +1808,26 @@ impl<'p> Gen<'p> {
                     let _ = writeln!(body, "{}    V next = OBJ(v)->f[{}];", ind, k);
                     let _ = writeln!(body, "{}    fwp_rc_free_obj(v);", ind);
                     let _ = writeln!(body, "{}    v = next;", ind);
+                    if let Some((_, path)) = &wrapped {
+                        for (step, fields) in path.iter().enumerate() {
+                            // A shared wrapper owns the rest of this path. Stop
+                            // before reading or releasing its children.
+                            let _ = writeln!(body, "{ind}    if (!fwp_rc_release_last(v)) return;");
+                            let last = fields.iter().rposition(counted).unwrap();
+                            for (field, ty) in fields.iter().enumerate() {
+                                if field != last && counted(ty) {
+                                    let child = self.drop_id(ty);
+                                    let _ = writeln!(
+                                        body,
+                                        "{ind}    fwp_drop{child}(OBJ(v)->f[{field}]);"
+                                    );
+                                }
+                            }
+                            let _ = writeln!(body, "{ind}    V next{step} = OBJ(v)->f[{last}];");
+                            let _ = writeln!(body, "{ind}    fwp_rc_free_obj(v);");
+                            let _ = writeln!(body, "{ind}    v = next{step};");
+                        }
+                    }
                     let _ = writeln!(body, "{}    continue;", ind);
                 }
                 None => {

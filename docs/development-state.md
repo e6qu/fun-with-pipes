@@ -7,23 +7,33 @@ and final production validation; focused passes do not authorize merge.
 
 ## Next batch preparation: bounded chain destruction
 
-Preparation branch `bounded-chain-destruction` in `/private/tmp/fwp-chain-destruction`
-starts from PR #155's final head. The current compiler loops when a node directly
-owns another node of exactly the same type; a chain crossing a record and an
-`Option` instead recursively calls two destructors. The proposed workload owns
-one string and one optional next link per position. Before changing code, measure
-stack use at 64 and 1,024 links, verify physical reclamation with collection off,
-and compare its small language example with the interpreter. Initial run
-`38987057363` failed in the fixture lookup: generated type comments use `Link`,
-not its module-qualified name. The lookup now matches the existing convention;
-no stack result was collected from that run. The corrected lookup then reached
-the native program in `38987243134`, but the fixture incorrectly enabled retained
-storage poisoning in checked ARC, which explicitly rejects that combination.
-The physical-reclamation measurement now disables poisoning; separate hybrid-mode
-checks will cover it. Neither failed run establishes the baseline. Run native builds
-on GitHub only. Acceptance requires bounded cleanup stack use, correct retained
-aliases and partial cleanup, no new heap work, and full final-head gates. This
+Branch `bounded-chain-destruction` in `/private/tmp/fwp-chain-destruction` starts
+from PR #155's final head. Baseline `38987418673` at `70e36523` passes Linux
+AMD64/ARM64; remaining native hosts are still running or queued. AMD64 O1/O2
+measure 2,048 bytes of cleanup stack at 64 links and 32,768 at 1,024 links.
+Each link owns a string and an optional next link. The old compiler loops only
+across a direct same-type field, so these two types recursively call each other.
+The baseline confirms physical reclamation with collection disabled.
+
+The prepared compiler follows the final counted field through records and
+variants with one nonempty constructor until it returns to the starting type.
+It releases these objects in one loop, stopping at each shared wrapper. Direct
+self-tail behavior and count-only mode remain unchanged. Other branching shapes
+keep their existing typed destruction. There is no runtime work list or new heap
+allocation. This implementation still needs CI; no final support is claimed.
+
+Tests compare the actual source program with the raw interpreter and measure
+64/1,024/16,384-link cleanup with no aliases, a root alias, a middle-node alias
+and a middle optional-wrapper alias. All storage must be reclaimed after the
+last alias is released. Restoring both old recursive destructor bodies must
+exceed the stack bound. Final acceptance needs six native hosts, hybrid GC
+stress/reuse checks, broader wrapper shapes, and all production gates. This
 preparation does not admit native remote calls to checked ARC.
+
+The two earlier baseline runs failed in the fixture: first a module-qualified
+name lookup, then poisoning enabled in checked ARC. Both are corrected in the
+current baseline and do not establish measurements. Guarded formatting passed
+in 1.18s; earlier docs audit 2.54s. No native build ran locally.
 
 ## Current delivery
 
@@ -42,9 +52,10 @@ message, releases receive storage and wakes waiting readers. Waiting-reader
 cancellation leaves the receiver running; client-receiver cancellation can still
 reset the remote call. No new per-value allocation is added.
 
-Next: collect the six-platform wrapped-chain baseline before implementing a fix.
-For PR #155, watch production `38986731253` and docs `38986731302`; publish this delivery with `/private/tmp/fwp-stream-pr-body.md`, require all
-nine production jobs and documentation on its exact final commit, fix any failures,
+Next: run the prepared destruction loop and alias controls on all six hosts,
+complete the remaining acceptance cases above, and keep PR #155 on its final
+head while production `38986731253` finishes. Its documentation `38986731302`
+and benchmark job already pass. Require every production job before merge;
 then squash-merge with one line of at most 80 characters and an explicitly empty
 body. Record the verified merge and continue the ownership work below. Cancel
 only duplicate postmerge production CI; leave Windows dependency jobs running.

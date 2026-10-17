@@ -258,6 +258,12 @@ fn wrapped_chain_cleanup_stack_measurement() {
     let start = code.find(marker).expect("typed Link destructor") + marker.len();
     let drop = code[start..].split('(').next().unwrap();
     assert!(drop.starts_with("fwp_drop"));
+    let option_marker = "/* Option[Link] */\nstatic void ";
+    let option_start = code.find(option_marker).unwrap() + option_marker.len();
+    let option_drop = code[option_start..].split('(').next().unwrap();
+    let string_marker = "/* String */\nstatic void ";
+    let string_start = code.find(string_marker).unwrap() + string_marker.len();
+    let string_drop = code[string_start..].split('(').next().unwrap();
     // Observe the stack address at each generated destructor entry. The same
     // instrumentation is used for both chain lengths and both compiler flags.
     let observe = r#"
@@ -288,31 +294,71 @@ int main(void) {
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
-    const int sizes[] = {64, 1024};
-    for (int i = 0; i < 2; i++) {
+    const int sizes[] = {64, 1024, 16384};
+    for (int i = 0; i < 3; i++) for (int mode = 0; mode < 4; mode++) {
         intptr_t before = fwp_gc.budget;
-        V root = 0;
+        V root = 0, alias = 0;
         for (int n = 0; n < sizes[i]; n++) {
             V text = fwp_rc_fresh(fwp_str_new("value", 5));
             V next = n ? fwp_rc_fresh(fwp_some(root)) : FWP_NONE;
             root = fwp_rc_fresh(fwp_record(2, (V[]){text, next}));
+            if (n == sizes[i]/2 && mode >= 2) {
+                alias = mode == 2 ? root : next;
+                fwp_rc_dup(alias);
+            }
         }
+        if (mode == 1) { alias = root; fwp_rc_dup(alias); }
         chain_stack_low = UINTPTR_MAX; chain_stack_high = 0;
         DROP(root);
+        if (alias) {
+            V kept = mode == 3 ? OBJ(alias)->f[0] : alias;
+            V text = OBJ(kept)->f[0];
+            if (STR(text)->len != 5 || memcmp(STR(text)->d, "value", 5)) return 173;
+            if (fwp_gc.budget >= before) return 174;
+            if (mode == 3) OPTION_DROP(alias); else DROP(alias);
+        }
+        if (chain_stack_high-chain_stack_low > 4096) return 175;
         if (fwp_gc.budget != before || fwp_gc.enabled || fwp_gc.ncollect) return 171;
-        printf("%d\t%llu\n", sizes[i], (unsigned long long)(chain_stack_high-chain_stack_low));
+        printf("%d\t%d\t%llu\n", sizes[i], mode, (unsigned long long)(chain_stack_high-chain_stack_low));
     }
     return 0;
 }
 "#
-    .replace("DROP", drop);
+    .replace("OPTION_DROP", option_drop).replace("DROP", drop);
     measured.push_str(&probe);
     let artifacts = std::env::var_os("FWP_CHAIN_ARTIFACTS").map(std::path::PathBuf::from);
     if let Some(folder) = &artifacts {
         std::fs::create_dir_all(folder).unwrap();
         std::fs::write(folder.join("chain.c"), &measured).unwrap();
+        std::fs::write(folder.join("language.c"), &code).unwrap();
+        std::fs::write(
+            folder.join("source.txt"),
+            checked(Command::new("git").args(["rev-parse", "HEAD"])).stdout,
+        )
+        .unwrap();
+        std::fs::write(
+            folder.join("rust.txt"),
+            checked(Command::new("rustc").args(["--version", "--verbose"])).stdout,
+        )
+        .unwrap();
+        let compiler = std::env::var("CC").expect("artifact collection requires the actual CC");
+        std::fs::write(
+            folder.join("c.txt"),
+            checked(Command::new(compiler).arg("--version")).stdout,
+        )
+        .unwrap();
     }
     for opt in ["-O1", "-O2"] {
+        let language = dir.join(format!("language{opt}.exe"));
+        fwp::cgen::compile_c(&code, &language, opt).unwrap();
+        let actual = checked(
+            Command::new(&language)
+                .env("FWP_GC", "0")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0"),
+        );
+        assert_eq!(actual.stdout, reference.stdout);
         let binary = dir.join(format!("chain{opt}.exe"));
         fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
         let output = checked(
@@ -325,18 +371,49 @@ int main(void) {
         let text = String::from_utf8(output.stdout).unwrap();
         let spans: Vec<u64> = text
             .lines()
-            .map(|line| line.split('\t').nth(1).unwrap().parse().unwrap())
+            .map(|line| line.split('\t').nth(2).unwrap().parse().unwrap())
             .collect();
-        assert_eq!(spans.len(), 2);
+        assert_eq!(spans.len(), 12);
         assert!(
-            spans[1] > spans[0] * 4,
-            "baseline should expose growing stack usage: {text}"
+            spans.iter().all(|span| *span <= 4096),
+            "cleanup stack grew: {text}"
         );
         println!("{opt}: {text}");
         if let Some(folder) = &artifacts {
             std::fs::write(folder.join(format!("stack{opt}.tsv")), text).unwrap();
             std::fs::copy(&binary, folder.join(format!("chain{opt}.exe"))).unwrap();
+            std::fs::copy(&language, folder.join(format!("language{opt}.exe"))).unwrap();
         }
     }
+
+    // Restore the old recursive structure for these two generated types. The
+    // same bound must then fail, proving this probe detects growing stack use.
+    let mut recursive = measured.clone();
+    for (name, body) in [
+        (
+            drop,
+            format!("{string_drop}(OBJ(v)->f[0]); {option_drop}(OBJ(v)->f[1]);"),
+        ),
+        (option_drop, format!("{drop}(OBJ(v)->f[0]);")),
+    ] {
+        let marker = format!("static void {name}(V v) {{\n");
+        let begin = recursive.find(&marker).unwrap();
+        let end = begin + recursive[begin..].find("\n}\n").unwrap() + 3;
+        recursive.replace_range(begin..end, &format!("{marker}chain_observe();\nif (!fwp_rc_release_last(v)) return;\n{body}\nfwp_rc_free_obj(v);\n}}\n"));
+    }
+    let binary = dir.join("recursive-control.exe");
+    fwp::cgen::compile_c(&recursive, &binary, "-O2").unwrap();
+    let failed = Command::new(&binary)
+        .env("FWP_GC", "0")
+        .env("FWP_GC_STRESS", "0")
+        .env("FWP_GC_VERIFY", "0")
+        .env("FWP_REUSE_VERIFY", "0")
+        .output()
+        .unwrap();
+    assert_eq!(
+        failed.status.code(),
+        Some(175),
+        "recursive control: {failed:?}"
+    );
     std::fs::remove_dir_all(dir).unwrap();
 }
