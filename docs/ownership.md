@@ -1045,9 +1045,9 @@ checks pass; remaining platform and production acceptance is tracked in
 The compiler follows known iterator continuations, including later steps. A
 single-result remote call consumes its input under the caller's current state
 and differentiation handlers. A bidirectional sender runs in a separate task
-with fresh handlers. Service input iterators start under the service task's
-handlers, and returned iterators are drained after the method's local handlers
-end. A continuation that requires an expired or absent handler is rejected.
+without inheriting those handlers. Received-input iterator constructors run in
+the service task before the method body; returned iterators are drained after
+the method's local handlers end. A continuation that requires an expired or absent handler is rejected.
 Installing a handler inside the continuation is allowed.
 
 Remote arguments are borrowed while encoded or delivered. Retained input cursors

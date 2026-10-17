@@ -135,13 +135,13 @@ This extension is under platform validation; [the handoff](development-state.md)
 separates passing checks from final production acceptance.
 
 An iterator computes later elements on demand. That makes **when** its next step
-runs part of the ownership check. A call that sends an iterator and receives one
-result consumes its input in the calling task. A call that streams in both
-directions uses a background sender with its own state and differentiation
-scopes. Its producer cannot depend on a temporary handler in the caller. It can
-install a handler inside its own step. Similarly, the server drains a returned
-iterator after the method returns; that iterator cannot use a method-local
-handler that has already ended.
+runs part of the ownership check. A **handler** supplies a temporary state store
+or derivative-recording context to a calculation. A call that sends an iterator
+and receives one result consumes its input in the calling task. A call that
+streams in both directions uses a background sender that does not inherit the
+caller's handlers. Its producer can install a handler inside its own step.
+Similarly, the server drains a returned iterator after the method returns; that
+iterator cannot use a method-local handler that has already ended.
 
 Received values belong to the caller or its response iterator. Sending a reply
 into a channel borrows it during delivery; a queue keeps an independent owner.
