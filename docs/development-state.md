@@ -24,7 +24,8 @@ decoder callbacks transfer their byte input and release caught error values.
 Connections, streams and retained decoder captures still require ownership work;
 remote calls remain excluded from checked ARC.
 
-These changes are unverified. First run `stream-clients` on Linux AMD64 through
+These changes are unverified. Probe `38993403382` at `3be0c03e` runs
+`stream-clients` on Linux AMD64 through
 the evidence workflow's explicit `native_runner` choice; that probe does not
 establish six-host support. Add last-owner, retained-wrapper, bounded-stack,
 partial-failure and deliberate broken-cleanup controls, then run stress and all
@@ -37,3 +38,12 @@ the new consuming `grpc._force` contract. No whole-graph ARC admission is implie
 The force fault fixture now supplies the error descriptor required by its fake
 decoder. Local guarded `cargo fmt --all -- --check` passed in 1.03s; no local
 compiler build or native execution ran. Full checks stay on GitHub runners.
+
+The next probe also includes explicit cache-owner controls: 64/1,024/16,384
+positions, aliases to positions/optional results/tuples, shared and exclusive
+consuming reads, exact release counts, no-collection physical reclamation and
+small collector/reuse-stress samples. Deliberately recursive cleanup must exceed
+a 4 KiB sampled stack-address span; omitting source release must fail its count.
+These tests have only been formatted locally (guarded check, 1.16s), not run yet.
+The focused workflow checks the frozen primitive inventory and neighboring
+force/canonical-decoding fixtures before collecting complete-client measurements.

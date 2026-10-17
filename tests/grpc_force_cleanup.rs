@@ -464,3 +464,94 @@ static int decode_with_pause(const g_codec *codec,const unsigned char *message,s
         }
     }
 }
+
+#[test]
+fn cache_owners_release_aliases_and_long_chains_without_collection() {
+    let mut generated = http2_values::generated();
+    let declaration = "typedef uint64_t V;";
+    let observer = r#"
+static int cache_observe;
+static size_t cache_releases;
+static uintptr_t cache_stack_low, cache_stack_high;
+static __attribute__((noinline)) void observe_cache_stack(void) {
+    if (!cache_observe) return;
+    volatile unsigned char marker = 0;
+    uintptr_t address = (uintptr_t)&marker;
+    if (address < cache_stack_low) cache_stack_low = address;
+    if (address > cache_stack_high) cache_stack_high = address;
+    if (cache_stack_high-cache_stack_low > 4096) _Exit(175);
+}
+"#;
+    assert_eq!(generated.matches(declaration).count(), 1);
+    generated = generated.replace(declaration, &format!("{declaration}\n{observer}"));
+    let free = "static void fwp_rc_free_obj(V v) {\n    if (!fwp_rc_last(v)) return;";
+    assert_eq!(generated.matches(free).count(), 1);
+    generated = generated.replace(
+        free,
+        &format!("{free}\n    if(cache_observe)cache_releases++;"),
+    );
+    let entry = "static void g_cell_drop(V value, void (*drop_element)(V)) {";
+    assert_eq!(generated.matches(entry).count(), 1);
+    generated = generated.replace(entry, &format!("{entry}\n    observe_cache_stack();"));
+    let code = format!(
+        "{generated}\n{}",
+        include_str!("fixtures/grpc_cache_ownership.c")
+    );
+    let tail = "        value = next;\n    }\n}\n\n/* Protect the first client read";
+    assert_eq!(code.matches(tail).count(), 1);
+    let recursive = code.replace(tail, "        g_cell_drop(next, drop_element);\n        observe_cache_stack();\n        return;\n    }\n}\n\n/* Protect the first client read");
+    let release = "            g_incoming_drop(source);";
+    assert_eq!(code.matches(release).count(), 1);
+    let missing_source = code.replace(release, "            (void)source;");
+    let dir = fwp::cgen::TempDir::new("grpc-cache-owners").unwrap();
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join("cache.exe");
+        for (broken, expected) in [(&recursive, 175), (&missing_source, 171)] {
+            fwp::cgen::compile_c(broken, &binary, opt).unwrap();
+            let output = Command::new(&binary)
+                .args(["16384", "0"])
+                .env("FWP_GC", "off")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
+        }
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        let mut samples = Vec::new();
+        for count in [64, 1024, 16384] {
+            for mode in 0..11 {
+                for stress in [false, true] {
+                    // Small repeated samples exercise collector and poison checks;
+                    // the large no-collection cases establish bounded destruction.
+                    if (stress || mode >= 7) && count != 64 {
+                        continue;
+                    }
+                    let output = Command::new(&binary)
+                        .args([count.to_string(), mode.to_string()])
+                        .env("FWP_GC", if stress { "on" } else { "off" })
+                        .env("FWP_GC_STRESS", if stress { "1" } else { "0" })
+                        .env("FWP_GC_VERIFY", if stress { "1" } else { "0" })
+                        .env("FWP_REUSE_VERIFY", if stress { "1" } else { "0" })
+                        .output()
+                        .unwrap();
+                    assert!(
+                        output.status.success(),
+                        "{opt}/{count}/{mode}/{stress}: {output:?}"
+                    );
+                    if !stress {
+                        samples.extend_from_slice(&output.stdout);
+                    }
+                }
+            }
+        }
+        if let Some(path) = std::env::var_os("FWP_STREAM_CLIENT_ARTIFACTS") {
+            let path = std::path::PathBuf::from(path);
+            std::fs::create_dir_all(&path).unwrap();
+            std::fs::write(path.join("cache-owners.c"), &code).unwrap();
+            std::fs::copy(&binary, path.join(format!("cache-owners{opt}.exe"))).unwrap();
+            std::fs::write(path.join(format!("cache-owners{opt}.tsv")), &samples).unwrap();
+        }
+    }
+}
