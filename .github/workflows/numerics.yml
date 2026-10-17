@@ -40,12 +40,25 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - name: Native Windows toolchain and TLS
+      - name: Native Windows toolchain
         if: runner.os == 'Windows'
         shell: pwsh
-        run: |
-          ./scripts/setup-windows.ps1
-          ./scripts/setup-windows-tls.ps1
+        run: ./scripts/setup-windows.ps1
+      - uses: actions/cache/restore@v6
+        id: server_tls_cache
+        if: runner.os == 'Windows'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native Windows TLS dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v6
+        if: ${{ !cancelled() && runner.os == 'Windows' && env.FWP_WINDOWS_DEPS_READY == '1' && steps.server_tls_cache.outputs.cache-hit != 'true' }}
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
       - name: OpenSSL on macOS
         if: runner.os == 'macOS'
         run: echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
@@ -114,9 +127,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
+          package-manager-cache: false
       - name: WASI toolchain
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: Static capture initialization and checked WASI ownership
@@ -235,7 +249,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./scripts/setup-windows.ps1
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         id: decoder_tls_cache
         if: runner.os == 'Windows' && (inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc')))))))
         with:
@@ -245,7 +259,7 @@ jobs:
         if: runner.os == 'Windows' && (inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc')))))))
         shell: pwsh
         run: ./scripts/setup-windows-tls.ps1
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         if: runner.os == 'Windows' && (inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc'))))))) && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
@@ -684,9 +698,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
+          package-manager-cache: false
       - name: WASI toolchain
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: Positive 64-bit counts on the actual 32-bit target
@@ -1208,10 +1223,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: runner.os == 'Linux'
         with:
           node-version: 24
+          package-manager-cache: false
       - name: WebAssembly toolchain
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
@@ -1300,10 +1316,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: inputs.suite == 'bundle' && runner.os == 'Linux'
         with:
           node-version: 24
+          package-manager-cache: false
       - name: Linux toolchains
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld libssl-dev wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
@@ -1428,9 +1445,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-wasip1
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
+          package-manager-cache: false
       - name: WASI toolchain
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: Checked WASI ownership and physical storage

@@ -21,14 +21,12 @@ for mode in ['arc', 'tracing']:
     declarations = re.findall(
         r'^static fwp_clo (fwp_static_function\d+) = \{(\d+), (\d+), \{([0, ]+)\}\};$', code, re.M)
     assert declarations
-    headers = subprocess.check_output(
-        [str(args.llvm_bin / 'llvm-objdump'), '--file-headers', str(binary)], text=True)
-    format_name = re.search(r'file format (\S+)', headers)[1]
-    if format_name in ['elf64-x86-64', 'elf64-littleaarch64', 'coff-x86-64', 'coff-arm64']:
-        section = '.data'
-    else:
-        assert format_name in ['mach-o 64-bit x86-64', 'mach-o arm64', 'mach-o'], format_name
+    format_name = subprocess.check_output(['file', '-b', str(binary)], text=True).strip()
+    if format_name.startswith('Mach-O 64-bit'):
         section = '__data'
+    else:
+        assert format_name.startswith(('ELF 64-bit LSB', 'PE32+ executable')), format_name
+        section = '.data'
     symbols = subprocess.check_output([str(args.llvm_bin / 'llvm-nm'), '-n', str(binary)], text=True)
     addresses = {}
     for line in symbols.splitlines():

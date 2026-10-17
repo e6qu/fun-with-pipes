@@ -102,13 +102,17 @@ workload. Intel macOS also passes the separated ownership/comparison jobs after
 the combined job reached its time limit. Every case and fixed limit is preserved.
 Final production acceptance remains pending in the handoff.
 
-The repeated server workload still makes approximately 899 managed allocation
-requests and 2,318 retains per additional request, including background work.
+Before the compiler change below, the repeated server workload made approximately
+899 managed allocation requests and 2,318 retains per additional request,
+including background work.
 Profiling identified 177 allocations containing only fixed function references.
-The compiler optimization in this batch removes those heap records; both Linux profiles
-measure about 722 allocations and 1,901 retains afterward. All six native focused jobs and both WASI jobs pass.
-Six-host memory and paired timing checks are running. Static storage and startup
-stores also cost memory and time; record them before making performance claims.
+The compiler optimization in this batch removes those heap records, leaving
+about 722 allocations and 1,901 retains. All six native focused jobs, both WASI
+jobs and all six native memory checks pass. Paired Linux measurements show about
+4–6% less elapsed time for this HTTP workload, compared with the previous fwp
+compiler. The [report](docs/measurements/fixed-functions-2026-10-18.json) records
+static storage, startup, code size and all raw samples; it makes no C/Rust parity
+claim. Full production acceptance and its repaired tests remain in the handoff.
 Preserve bounded memory, traps, cancellation and interpreter agreement.
 
 Browser, asynchronous WASI, REST/MCP entry, retained host callbacks, remaining

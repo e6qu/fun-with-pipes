@@ -354,11 +354,13 @@ copy transfers ownership of the new data, not ownership of that context.
 
 Copied values do not borrow the source strings or body buffer. Typed cleanup
 releases partially copied fields if a managed result allocation fails. The source
-stream remains live during copying. The HTTP client extension also gives pooled
-connections, I/O tasks and requests explicit owners. It is under native platform
-validation in [the handoff](development-state.md). The server extension gives
-stream handles typed owners and retains handler captures once per connection;
-its platform validation is pending. Handler tasks start with fresh State and
+stream remains live during copying. HTTP clients give pooled connections, I/O
+tasks and requests explicit owners, accepted across the native platform matrix in
+[PR #162](roadmap-history.md#http-client-owners-and-complete-connection-keys-pr-162).
+The server extension gives stream handles typed owners and retains handler captures
+once per connection. Its focused checks pass on all six native hosts; final
+production acceptance is tracked in [the handoff](development-state.md).
+Handler tasks start with fresh State and
 automatic-differentiation scopes, rather than borrowing a caller's dynamic scope.
 
 ## Remote stream positions
@@ -368,11 +370,14 @@ result already received at that position. `grpc._force` is an internal operation
 that returns an optional pair of the value and the next position. `None` means
 the stream ended. Multiple reads of one position must return its saved result.
 
-The current candidate consumes one position owner. When that owner is exclusive,
+The operation consumes one position owner. When that owner is exclusive,
 it moves the saved result; otherwise it adds one result owner. Typed cleanup
 releases cached values and continuation wrappers, stopping at a shared wrapper.
 It follows long cache chains in a loop. Positions and receive sources use raw
 runtime layouts, so their release must not interpret them as record headers
-when verifying memory reuse. These contracts do not establish ownership of
-connections, streams or retained decoder captures. Remote calls still require
-tracing; [the handoff](development-state.md) records candidate validation.
+when verifying memory reuse. This position contract is one part of the complete
+connection, stream and decoder-capture ownership needed for remote calls.
+[PR #161](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161)
+accepted checked ARC for supported gRPC clients and services on all six native
+hosts. The [ownership guide](ownership.md#checked-grpc-clients-and-services)
+states the remaining restrictions, including cycles through channel payloads.

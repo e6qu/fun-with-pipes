@@ -610,8 +610,7 @@ versus 253 in the control; both backward functions have 374. Linux AMD64 counts
 are 239 versus 296 for append and 399 for both backward functions. The report
 also counts stack-address instructions without labeling them all as register
 spills. Smaller append code has not established a dependable speed improvement.
-The handoff tracks the next controlled layout experiment; production behavior
-is unchanged by that experiment.
+The following controlled layout experiment leaves production behavior unchanged.
 
 ### Interleaving recorded operation pairs
 
@@ -646,8 +645,9 @@ Native instructions also show a tradeoff. On ARM macOS, append shrinks from 198
 to 182 instructions but backward grows from 374 to 384. On Linux AMD64 the counts
 are 239 to 207 and 399 to 412. The report retains both function disassemblies.
 These counts alone explain neither the speed differences nor their cause. The
-next investigation attributes the much larger managed allocation count to actual
-call sites rather than assuming tape layout is the dominant cost.
+[allocation-site investigation](#where-derivative-allocations-occur) attributes
+the much larger managed allocation count to actual calls instead of assuming
+tape layout is the dominant cost.
 
 ## Selecting invariant array data once
 
@@ -1003,7 +1003,7 @@ tracked in the handoff separately from these focused measurements.
 
 ### Keeping captured computations outside a fused hash loop
 
-The next transformation recognizes hash and bitwise reduction as total operations:
+The compiler recognizes hash and bitwise reduction as total operations:
 valid inputs produce results without language traps or callbacks. It computes the
 known callback's captured array once, before input evaluation, then combines the
 map and fold into one loop. Effects and distinguishable traps still prevent
@@ -2089,11 +2089,10 @@ reviews, source/binary/disassembly fingerprints and compiler/hardware details.
 This baseline motivates server lifetime work; it does not prove a fix. Raw
 request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process
 memory and elapsed time are excluded. There is no C/Rust comparison or speed
-claim. Retained callbacks/channels, failures, cancellation and cycles need
-ownership proofs before remote calls can support checked ARC. The
-[fixture guide](../tests/fixtures/server-memory/README.md) explains the workload
-notation and the
-[session handoff](development-state.md) records the next implementation action.
+claim. The later [accepted remote-call delivery](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161)
+adds the necessary callback/channel, failure, cancellation and cycle checks for
+its supported ARC subset. The [fixture guide](../tests/fixtures/server-memory/README.md)
+explains this historical baseline's workload notation.
 
 ### Freeing finished server tasks and keeping argument slots on the stack
 
@@ -2635,6 +2634,41 @@ instruction section falls from 5,260,322 to 5,171,106 bytes on AMD64 (1.7%), and
 from 4,977,916 to 4,909,500 on ARM64 (1.4%). These are section sizes, not cache-miss
 or elapsed-time measurements. Binaries were inspected as data, not run locally.
 
-Paired timing, startup and six-host long-running memory checks are in progress;
-[the handoff](development-state.md) records their runs and final acceptance.
-No timing improvement or C/Rust parity is established by the counts above.
+The [paired comparison](https://github.com/e6qu/fun-with-pipes/actions/runs/39068684995)
+at `85988056` repeats those counts and rebuilds the baseline server from its saved
+C on the same runner. Both servers use the same current native client, Clang
+18.1.3, `-O2`, `-ffp-contract=off` (separate multiplication/addition rounding)
+and no additional optimization while linking compiled files. The AMD64 runner has an AMD EPYC 7763;
+ARM64 uses Neoverse-N2. The [complete report](measurements/fixed-functions-2026-10-18.json)
+keeps hardware, source and binary fingerprints, all samples and scope statements.
+
+Each transport uses six fresh processes per server version, alternating which
+version runs first. After 1,024 warm-up calls, the measured client makes 8,192
+calls. Elapsed time includes that client's startup, response processing, network
+and server work; it excludes compilation, server startup, warm-up and shutdown.
+Each sample pair produces a current/baseline ratio; the table takes the median
+of those six ratios. Below 1 means the current server took less time.
+
+| Transport | AMD64 elapsed ratio | ARM64 elapsed ratio | AMD64 startup ratio | ARM64 startup ratio |
+|---|---:|---:|---:|---:|
+| Cleartext | 0.936 | 0.958 | 1.009 | 1.020 |
+| TLS | 0.943 | 0.950 | 0.951 | 0.983 |
+
+These runs show about 4–6% less elapsed time for this workload. They do not
+establish a general speedup or C/Rust parity. Startup measures process spawn
+through the listening announcement: its medians were about 1.4–2.3 ms for
+cleartext and 4.2–5.7 ms for TLS. OS, loader and listener work are included, so
+these noisy startup ratios do not isolate the cost of the 618 address stores.
+RSS samples after warm-up and the measured batch are retained, but are not peak
+memory measurements.
+
+The unchanged [six-host memory workload](https://github.com/e6qu/fun-with-pipes/actions/runs/39068696985)
+also passes at `85988056`: Linux, macOS and Windows on both architectures.
+Each host has 36 managed-memory rows, 20 persistent-server RSS samples through
+20,480 calls per case, and 48 separate ownership-check rows. Final managed storage
+stays constant across request counts; the largest post-warm-up RSS increase is
+2 MiB, within the unchanged 8 MiB bound. Static inspection verifies actual
+function-record bytes and alignment in all twelve ordinary server binaries,
+including tracing controls. Linux startup instructions additionally match all
+618 captured addresses. No downloaded binary was executed locally.
+The [handoff](development-state.md) tracks final production acceptance separately.

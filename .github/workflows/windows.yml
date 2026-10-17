@@ -26,6 +26,7 @@ jobs:
     env:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
+      FWP_UDP_ARTIFACTS: ownership-evidence/udp
     steps:
       - uses: actions/checkout@v7
         with:
@@ -87,7 +88,7 @@ jobs:
             windows-host.txt
             windows-probe.log
             windows-native.log
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         id: windows_tls_cache
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         with:
@@ -98,7 +99,7 @@ jobs:
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: ./scripts/setup-windows-tls.ps1
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         if: ${{ !cancelled() && inputs.full && env.FWP_WINDOWS_DEPS_READY == '1' && steps.windows_tls_cache.outputs.cache-hit != 'true' }}
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
@@ -176,3 +177,4 @@ jobs:
           path: |
             windows-host.txt
             windows-probe.log
+            ownership-evidence/udp/

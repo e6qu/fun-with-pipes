@@ -438,9 +438,11 @@ allowed; the restriction concerns publishing a handle through a mutable queue.
 Focused O1/O2 failure, cancellation, escaped-handle and tracing-stress probes pass
 locally. All six native server-memory jobs pass, with constant final managed
 storage and bounded sampled process memory; the [report](benchmarks.md#http-server-ownership-and-memory)
-explains the workload and remaining allocation costs. Five complete platform HTTP
-suites pass; Intel macOS is rerunning after its combined job reached its time
-limit. Full production acceptance remains pending. This does not establish REST/MCP entry support or GPU ownership.
+explains the workload and remaining allocation costs. All six platform HTTP suites
+pass. Intel macOS passed separate ownership and comparison jobs after the combined
+job reached its time limit; every case and the same limit were preserved. Full
+production acceptance remains pending in the handoff. This does not establish
+REST/MCP entry support or GPU ownership.
 
 WASI supplies standard streams and file access to a WebAssembly module. Build a
 supported program with `fwp build --gc arc --target wasm32-wasi app.fwp -o app.wasm`

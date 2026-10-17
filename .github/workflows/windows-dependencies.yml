@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         id: tls_cache
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
@@ -44,7 +44,7 @@ jobs:
       - name: Build or validate native TLS dependencies
         shell: pwsh
         run: ./scripts/setup-windows-tls.ps1
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         if: env.FWP_WINDOWS_DEPS_READY == '1' && steps.tls_cache.outputs.cache-hit != 'true'
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
