@@ -31,6 +31,9 @@ fn served_status_messages_release_after_encoding_and_on_cancellation() {
     let generated = generated.replacen(finish,
         &format!("    if(stage==5&&!cancelled){{fwp_cancel_tree(fwp_cur);fwp_check_cancel();}}\n{finish}"), 1);
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 #include <string.h>
 static int stage,allocations,frees,fail_copy;
@@ -129,7 +132,12 @@ int main(int argc,char **argv){
             .output()
             .unwrap();
         assert_eq!(out.status.code(), Some(102), "failed status copy: {out:?}");
-        assert_eq!(out.stderr, b"fwp: out of memory\n");
+        // This embeds the library in a C host, whose standard streams retain
+        // the platform's text mode (CRLF on Windows).
+        assert_eq!(
+            String::from_utf8(out.stderr).unwrap().replace("\r\n", "\n"),
+            "fwp: out of memory\n"
+        );
         assert!(out.stdout.is_empty());
         for gc in ["off", "on"] {
             for poison in ["0", "1"] {

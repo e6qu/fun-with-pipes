@@ -32,10 +32,15 @@ fn cancelling_grpc_server_releases_listener_and_preserves_accepted_owners() {
         .replace("    fwp_cleanup_push(&cleanup, g_listener_finish, &listener);", "    fwp_cleanup_push(&cleanup, g_listener_finish, &listener); if(fail_stage==1){fwp_cancel_tree(fwp_cur);fwp_check_cancel();}")
         .replace("    g_server *srv = (g_server *)fwp_mem_alloc(sizeof *srv);", "    if(fail_stage==2){fwp_cancel_tree(fwp_cur);fwp_check_cancel();} g_server *srv = (g_server *)fwp_mem_alloc(sizeof *srv);");
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
+#include <stdint.h>
 #include <openssl/ssl.h>
 static SSL_CTX *watched_ctx;static void *watched_wire,*watched_owner;
-static int watched_fd=-1,contexts,wires,owners,cancelled,fail_stage,plain;
+static uintptr_t watched_fd;
+static int contexts,wires,owners,cancelled,fail_stage,plain;
 static void observe_ctx_free(SSL_CTX *ctx);
 static void observe_free(void *p);
 #define SSL_CTX_free(p) observe_ctx_free(p)
@@ -46,6 +51,30 @@ static void observe_free(void *p);
 #undef free
 static void observe_ctx_free(SSL_CTX *ctx){if(ctx==watched_ctx)contexts++;SSL_CTX_free(ctx);}
 static void observe_free(void *p){if(p){if(p==watched_wire)wires++;if(p==watched_owner)owners++;}free(p);}
+/* Keep native socket handles at their platform width and verify closure with
+ * the OS, independently of the cleanup instrumentation. */
+static int listener_closed(void){
+ int kind=0;socklen_t n=sizeof kind;
+#ifdef _WIN32
+ return getsockopt((SOCKET)watched_fd,SOL_SOCKET,SO_TYPE,(char *)&kind,&n)==SOCKET_ERROR && WSAGetLastError()==WSAENOTSOCK;
+#else
+ return getsockopt((int)watched_fd,SOL_SOCKET,SO_TYPE,&kind,&n)==-1 && errno==EBADF;
+#endif
+}
+/* Use loopback TCP on every host; the TLS handshake below uses a BIO pair. */
+static int connected_pair(fwp_socket_t pair[2]){
+ fwp_socket_t listener=socket(AF_INET,SOCK_STREAM,0);
+ if(listener==FWP_INVALID_SOCKET)return 0;
+ struct sockaddr_in addr={0};addr.sin_family=AF_INET;addr.sin_addr.s_addr=htonl(INADDR_LOOPBACK);
+ socklen_t n=sizeof addr;
+ if(bind(listener,(struct sockaddr *)&addr,sizeof addr)||listen(listener,1)||getsockname(listener,(struct sockaddr *)&addr,&n)){fwp_socket_close(listener);return 0;}
+ pair[1]=socket(AF_INET,SOCK_STREAM,0);
+ if(pair[1]==FWP_INVALID_SOCKET){fwp_socket_close(listener);return 0;}
+ if(connect(pair[1],(struct sockaddr *)&addr,sizeof addr)){fwp_socket_close(pair[1]);fwp_socket_close(listener);return 0;}
+ pair[0]=accept(listener,0,0);fwp_socket_close(listener);
+ if(pair[0]==FWP_INVALID_SOCKET){fwp_socket_close(pair[1]);return 0;}
+ return 1;
+}
 static int handshake(SSL *server){
  SSL_CTX *ctx=SSL_CTX_new(TLS_client_method());if(!ctx)return 0;
  SSL *client=SSL_new(ctx);SSL_CTX_free(ctx);if(!client)return 0;
@@ -70,39 +99,45 @@ static void server(void *arg,int stop){
 int main(int argc,char **argv){
  if(argc!=3)return 30;cert=argv[1];key=argv[2];fwp_lib_init();
  for(int accepted=0;accepted<2;accepted++){
-  contexts=wires=owners=cancelled=0;watched_fd=-1;watched_ctx=0;watched_wire=watched_owner=0;
+  contexts=wires=owners=cancelled=0;watched_fd=(uintptr_t)FWP_INVALID_SOCKET;watched_ctx=0;watched_wire=watched_owner=0;
   fwp_task *task=fwp_spawn_task(0,server,0,0,0);fwp_p_task_yield();
-  if(watched_fd<0||!watched_ctx||task->done)return 31;
-  int pair[2];SSL *session=0;if(accepted){if(socketpair(AF_UNIX,SOCK_STREAM,0,pair))return 32;session=fwp_tls_accepted(watched_ctx,pair[0]);if(!session)return 33;}
+  if(watched_fd==(uintptr_t)FWP_INVALID_SOCKET||!watched_ctx||task->done)return 31;
+  fwp_socket_t pair[2];SSL *session=0;if(accepted){if(!connected_pair(pair))return 32;session=fwp_tls_accepted(watched_ctx,pair[0]);if(!session)return 33;}
   fwp_p_task_cancel(PTR(task));fwp_await(task);
   if(!task->done||cancelled!=1||fwp_cleanups)return 34;
-  if(fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF)return 1;
+  if(!listener_closed())return 1;
   if(!accepted){if(contexts!=1||wires!=1||owners!=1)return 2;}
   else {
    if(contexts||wires||owners)return 3;
    if(!handshake(session))return 5;
-   fwp_tls_dispose(session);close(pair[0]);close(pair[1]);
+   fwp_tls_dispose(session);fwp_socket_close(pair[0]);fwp_socket_close(pair[1]);
    if(contexts!=1||wires!=1||owners!=1)return 4;
   }
  }
  for(fail_stage=1;fail_stage<=2;fail_stage++){
-  contexts=wires=owners=cancelled=0;watched_fd=-1;watched_ctx=0;watched_wire=watched_owner=0;
+  contexts=wires=owners=cancelled=0;watched_fd=(uintptr_t)FWP_INVALID_SOCKET;watched_ctx=0;watched_wire=watched_owner=0;
   fwp_task *task=fwp_spawn_task(0,server,0,0,0);fwp_await(task);
   if(!task->done||cancelled!=1||fwp_cleanups||contexts!=1||wires!=1||owners!=1)return 6;
-  if(fail_stage==2&&(watched_fd<0||fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF))return 7;
+  if(fail_stage==2&&(watched_fd==(uintptr_t)FWP_INVALID_SOCKET||!listener_closed()))return 7;
  }
- fail_stage=0;plain=1;contexts=wires=owners=cancelled=0;watched_fd=-1;watched_ctx=0;watched_wire=watched_owner=0;
+ fail_stage=0;plain=1;contexts=wires=owners=cancelled=0;watched_fd=(uintptr_t)FWP_INVALID_SOCKET;watched_ctx=0;watched_wire=watched_owner=0;
  fwp_task *task=fwp_spawn_task(0,server,0,0,0);fwp_p_task_yield();
- if(watched_fd<0||watched_ctx||task->done)return 8;
+ if(watched_fd==(uintptr_t)FWP_INVALID_SOCKET||watched_ctx||task->done)return 8;
  fwp_p_task_cancel(PTR(task));fwp_await(task);
- if(cancelled!=1||fwp_cleanups||fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF||contexts||wires||owners)return 9;
+ if(cancelled!=1||fwp_cleanups||!listener_closed()||contexts||wires||owners)return 9;
  return 0;
 }
 "#;
     let dir = std::env::temp_dir().join(format!("fwp-grpc-server-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let openssl = std::env::var("FWP_OPENSSL_DIR")
-        .map(|p| format!("{p}/bin/openssl"))
+        .map(|p| {
+            if cfg!(windows) {
+                format!("{p}/tools/openssl/openssl.exe")
+            } else {
+                format!("{p}/bin/openssl")
+            }
+        })
         .unwrap_or_else(|_| "openssl".into());
     let out = Command::new(openssl)
         .args([

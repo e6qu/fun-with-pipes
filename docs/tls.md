@@ -90,8 +90,8 @@ connection. `tcp.close` closes it for every copy; automatic cleanup closes it
 when its final owner finishes. A function or task that captures the connection
 keeps it alive. Closing a listener does not close connections it has already
 accepted: those connections retain the TLS configuration they still need.
-[Ownership](ownership.md#tcp-and-tls-socket-preparation) distinguishes the current
-TCP/TLS preparation and its tests from accepted checked-ARC support.
+[Ownership](ownership.md#tcp-and-tls-socket-owners) describes the accepted
+TCP/TLS ownership checks and the remaining limits for whole services.
 
 | Function | |
 |---|---|

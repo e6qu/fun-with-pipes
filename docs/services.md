@@ -248,6 +248,50 @@ takes three input values and multiplies each by ten. Thus
 the server ends the call after three requests even though its input can keep
 producing numbers.
 
+### Reading the same stream in two tasks
+
+An iterator value identifies a position in a sequence. Keeping another reference
+to that position preserves the same value: it does not split the sequence between
+readers. Received positions are cached, meaning their first received value is
+saved for later reads. If two tasks reach an unread position together, one receives
+while the other waits for that saved value.
+
+The [shared-stream example](../tests/grpc/shared-stream.fwp) uses the test
+service's `greeter.count`, which produces the integers from 1 through its argument.
+`iter.fold add 0` sums them, starting at zero. `iter.later` captures the iterator
+in a function to run later, and `task.spawn` starts that function in a child task.
+In the type below, `Iterator[I64]` is an iterator of integers, `Task[I64]` is a task
+whose result is an integer, and `! {Async}` marks task scheduling as an effect.
+
+```fwp
+import greeter
+
+start : Iterator[I64] -> Task[I64] ! {Async}
+start = iter.later (iter.fold add 0) | task.spawn
+
+main =
+    1024
+    | greeter.count
+    | both start start
+    | both (.0 | task.await) (.1 | task.await)
+    | echo
+```
+
+`both f g` gives the same input to both functions and returns their results as a
+pair. Here it starts two sums from the same iterator. Tuple selectors `.0` and
+`.1` select the first and second task. `task.await` waits for each, returning
+`Some result` on completion or `None` on cancellation. The output is
+`(Some 524800, Some 524800)`: each task sums all 1,024 values, and
+1,024 × 1,025 ÷ 2 = 524,800.
+
+Cancelling a task that is waiting for another reader does not cancel that reader.
+If cancellation interrupts decoding before a value is saved, the received bytes
+return to the front of the queue so a surviving reader can still receive them.
+Cancelling the task actually receiving a client response can still reset the
+remote call. Retaining an earlier position also retains its saved values and
+continuations, so sharing an iterator can increase memory use. Native stream
+storage still depends on tracing collection; the [ownership guide](ownership.md#what-remains-before-remote-calls-can-use-arc)
+records the remaining cleanup work.
 
 ### Errors and status codes
 

@@ -303,7 +303,7 @@ scope ends. Returning only an address string does not keep the socket alive.
 The UDP implementation preserves those original scopes before optimization,
 uses a separate 64-bit logical owner count for descriptors, and owns both fields of a
 received `(Bytes, String)` pair while constructing it. The socket count is aligned
-in the common header. The following TCP/TLS preparation keeps UDP headers the same
+in the common header. TCP/TLS stream handles keep UDP headers the same
 size while giving stream handles a separate TLS field when needed. Failure releases completed
 fields and receive scratch storage. Closing a Linux descriptor wakes its waiting
 tasks and releases its polling records; synchronization after wake does not
@@ -313,16 +313,16 @@ without taking ownership of host sockets.
 
 All six focused native jobs and both shared-runtime WASI regression jobs pass;
 [the UDP report](measurements/udp-ownership-2026-10-16.json) retains the exact
-results and an ARM64 binary inspection. Full combined production acceptance is
-still required. This does not establish whole-language GC removal. Opaque
+results and an ARM64 binary inspection. [PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153)
+supplies the passing full production acceptance. This does not establish whole-language GC removal. Opaque
 function types do not describe their captures, so programs using UDP currently
 preserve possible closure-holder frames conservatively. This may prevent some
 optimizations; there is no zero-cost or throughput claim. Tracing programs retain
 weak finalizers for unproved sharing, while checked ARC must prove ownership and
-exclude tracing from its binary. TCP/TLS ownership, arbitrary retained callbacks
-and mutable cycles remain separate work.
+exclude tracing from its binary. Whole-service ownership, arbitrary retained
+callbacks and mutable cycles remain separate work.
 
-### TCP and TLS socket preparation
+### TCP and TLS socket owners
 
 The next preparation extends logical socket owners to TCP connections and
 listeners. Copies share a handle; explicit close affects every copy, while the
@@ -359,14 +359,40 @@ header: the count is at byte offset 8, and the TLS pointer is at byte offset 16.
 The plain TCP executable requests 16 bytes. These sizes describe the handle,
 not all memory used by the allocator, operating system or OpenSSL. [The TCP/TLS report](measurements/tcp-tls-ownership-2026-10-16.json) records
 passing focused checks on all six native targets and actual WASI shared-runtime
-regressions. Full combined production acceptance is still required.
+regressions. [PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153)
+records full production acceptance on the final combined revision.
 
 ARC executables omit the finalizer-table lookup during socket release because
 they never register these sockets in that table. Tracing programs and unloadable
 libraries keep the lookup so they cannot later finalize reused storage. This
 removes a specific unnecessary operation; it does not remove all count or
-allocator metadata costs. This is preparation, not accepted TCP/TLS support
-without tracing.
+allocator metadata costs. These socket owners support checked ARC; remote
+service graphs still require separate ownership work.
+
+## Releasing long chains
+
+An owner must release a value's children when its last reference disappears.
+For a long sequence, recursively calling one cleanup function per node can
+exhaust the machine stack even when there is enough heap memory. Ordinary lists
+already use a cleanup loop. The compiler now also follows a final owned field
+through records and variants with one nonempty constructor, such as `Option`,
+when that path returns to the starting type. `Option` represents either no value
+or one present value; a tuple can hold both a payload and the next node.
+
+At every wrapper, a remaining alias stops destruction of its children. Releasing
+the final alias later resumes ordinary typed cleanup. The compiler emits these
+steps directly, without a heap work list. This covers the measured record →
+optional value → next record and record → optional value → tuple → next record
+paths. It does not make every branching recursive graph use constant stack space.
+Existing direct list-tail handling and `FWP_FREE=0` count-only behavior remain.
+
+[The six-platform comparison](benchmarks.md#stack-use-when-releasing-wrapped-chains)
+checks up to 16,384 links, retained aliases at each wrapper and complete physical
+reclamation without tracing. Real source programs match the interpreter and
+also pass GC/reuse stress. Full delivery acceptance remains in the handoff.
+Reference-count operations and the chain's allocations still exist. Native remote
+stream caches are opaque runtime objects and still need their own explicit
+ownership before this removes their dependence on tracing.
 
 ## Checked ARC delivery
 
@@ -786,6 +812,38 @@ receive a second message. The cache can hold both a value and the next stream
 position. Owning the copied result alone therefore does not settle the lifetime
 of the stream, its connection or the task receiving messages.
 
+The [six-host compact-storage report](measurements/remote-stream-compact-2026-10-17.json)
+uses real queued messages containing 16-character strings. Each received value
+adds four managed allocations requesting 81 bytes, charged as 96 bytes after
+allocator rounding. Setup charges another 704 bytes. At 128 received values,
+12,992 managed bytes remain charged after C references are cleared, with collection
+disabled. Repeated reads receive and allocate nothing more. The
+[benchmark guide](benchmarks.md#storage-for-received-stream-values) compares the
+preceding representation and explains the excluded costs. Whole-library shutdown
+frees queued raw messages; this does not prove explicit per-stream destruction.
+
+A receive source holds the connection, stream, message decoder, deadline and
+error description. A decoder turns received bytes into a typed value. The runtime
+copies the description into the source's own allocation, so it stays
+valid for exactly that source's lifetime. Completed positions keep their cached
+value and continuation; only unread positions keep a direct reference to the
+source. An earlier position can still keep that source alive through its chain
+of saved continuations. The interpreter releases it after the last owner of an
+unread position disappears. Native
+positions replace their source with the completed result in the same storage
+word. The compact representation passes focused tests on all six native hosts;
+cached values still rely on tracing. Clearing a reference alone is not explicit native destruction.
+
+Concurrent readers also need to agree on one value. The new receive guard lets
+one task receive while others wait for that same position's cache. Completion,
+failure and cancellation release the guard and wake waiters. Cancelling a waiting
+task leaves the receiving task running; existing client-call cancellation still
+resets the call's stream. Recursive reading of the same source traps. The guard
+borrows task identities and uses the scheduler's existing wait lists, with no
+allocation per element. [The handoff](development-state.md) records full delivery
+acceptance separately from these focused checks. Neither this change nor its
+controlled storage measurements admits whole services to ARC.
+
 The next service-memory work must establish these facts before removing its
 current collector requirement:
 
@@ -796,6 +854,23 @@ current collector requirement:
 | Keep connections and requests alive for their users | Sending, receiving and detached tasks remain valid after their creating scope returns. Completion, failure and cancellation release each acquired owner exactly once. |
 | Prevent ownership cycles | Identify which component owns each task, stream and connection. A pointer back to an owner must not silently become another owning reference. Any shared cycle needs an explicit policy and a test that drops every external reference. |
 | Admit supported remote calls without tracing | Compare interpreter/native values, errors and receive order; run stress and deliberate missing-cleanup controls; inspect actual binaries and repeat calls with collection disabled. |
+
+The existing `g_conn.refs` counter covers connection startup and its reader/writer
+tasks. Its last release closes the socket and releases input/output buffers;
+the collector still owns the connection object and its remaining buffers.
+Removing a stream from `g_conn.streams` only unlinks it. Its queued messages and
+metadata are released later by `g_stream_final`. Replacing tracing must preserve
+the distinction between closing a transport and destroying the values that still
+refer to it.
+
+The next implementation must assign owners to the pool, active calls, receive
+sources and I/O tasks, while keeping scheduler task identities and wait lists
+borrowed. A completed cache must own its value and continuation; an unread
+continuation must keep its connection, stream and decoder captures alive. Prefer
+moving that source owner forward to counting it anew for every message. Destruction
+of a long cached sequence must use bounded stack space, including the alternating
+position, optional result and tuple wrappers. Test partial construction and each
+last-owner case before admitting remote calls to checked ARC.
 
 These are acceptance requirements, not implemented stream ownership. Keep the
 ordinary immutable iterator behavior and existing syntax while proving them.

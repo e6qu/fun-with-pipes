@@ -73,22 +73,29 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #153](https://github.com/e6qu/fun-with-pipes/pull/153) is accepted. It reduces
-temporary numerical storage and gives decoded values, socket handles and copied
-service results explicit cleanup. All nine production jobs and documentation
-passed; the merge has the same files as the tested commit.
-[Delivery history](docs/roadmap-history.md) retains its evidence.
+[PR #154](https://github.com/e6qu/fun-with-pipes/pull/154) is accepted after all
+nine production jobs, documentation and both new Windows dependency jobs passed.
+It reduces service-helper storage, removes discarded iteration results and fixes
+an incomplete native stack scan. The [delivery history](docs/roadmap-history.md)
+and [benchmark guide](docs/benchmarks.md) retain the evidence and limits.
 
-[PR #154](https://github.com/e6qu/fun-with-pipes/pull/154) keeps temporary service
-settings on the stack, copies them into independently running child tasks, avoids
-rebuilding forwarded tuples, and releases message buffers on failure or
-cancellation. List iteration now avoids discarded results, and the compiler
-turns known callbacks inside state and service helpers into direct calls. Focused
-checks pass on all six native platforms and both Linux WebAssembly hosts. The
-measured million-element count takes about half the previous time on Linux ARM64
-and AMD64; remaining state bookkeeping and input storage still cost work. Tests
-also exposed and fixed an incomplete native stack scan. The handoff records
-measurements and final production acceptance, which is still required.
+The current stream delivery fixes concurrent readers receiving different messages
+for the same position, gives error descriptions the source's lifetime, and releases
+obsolete source references. Native positions share storage between their unread
+source and completed result. Focused checks pass on all six native platforms:
+positions shrink from 24 to 16 bytes, and requested bytes per received 16-character
+value fall from 89 to 81. The allocation count remains four per value. Full
+acceptance of the combined delivery is still required.
+
+The same delivery also releases long ordinary ownership chains in a loop even
+when the next node sits inside optional values or tuples. Focused checks pass on
+all six native targets through 16,384 links, including retained aliases, complete
+reclamation and collector/reuse stress. Its full delivery gate remains required.
+
+Then give native cached values and continuations explicit last-owner destruction,
+including long chains and partial failures, and establish connection, stream and
+decoder owners before admitting remote calls to checked ARC. These objects still depend on
+tracing; the storage reduction does not complete GC removal.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

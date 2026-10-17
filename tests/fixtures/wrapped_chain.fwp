@@ -1,0 +1,11 @@
+# Each link owns a string and an optional next link. The optional value is a
+# separate wrapper, so freeing the chain crosses two types at every position.
+Link = { a: String, b: Option[Link] }
+
+prepend : Option[Link] -> I64 -> Option[Link]
+prepend = curry (make Link { a = .1 | show, b = .0 } | Some)
+
+# Print the last prepended string and a structural hash of the complete chain.
+# Hashing requests runtime type descriptions for every wrapper; their cleanup
+# functions remain available even when ordinary calls are inlined.
+main = range 0 64 | fold prepend None | both (option.map .a) hash | echo

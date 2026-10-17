@@ -100,7 +100,8 @@ Linux builds every Cargo test target once, then runs two test executables at a
 time with one harness thread each. All Linux stress tests remain enabled. Each
 executable has an uploaded log, and any failure fails the job. The runner checks
 that Cargo produced every requested executable before starting tests. This
-scheduling change needs final-head CI verification; it is not a measured speedup.
+scheduling change passed PR #154's complete acceptance matrix; that establishes
+coverage, not a measured speedup.
 
 For each macOS architecture, the two jobs use the explicit integration-target
 lists in `scripts/macos-test-shards.json`, read by `scripts/run-native-tests.py`.
@@ -115,7 +116,8 @@ executables concurrently with one harness thread each. Tests keep their existing
 internal workers. Every executable gets a separate uploaded log; any failed test
 fails the job after the remaining targets run. This avoids leaving the runner
 idle between the many single-test executables. The 90-minute limits and target
-assignments are unchanged; the final CI run must establish acceptance.
+assignments are unchanged. PR #154 passed the complete acceptance matrix with
+this scheduling; every later delivery still requires its own passing matrix.
 
 The documentation job verifies the real Cargo target set, artifact coverage,
 assignment stability, concurrent execution and failure propagation. The stress

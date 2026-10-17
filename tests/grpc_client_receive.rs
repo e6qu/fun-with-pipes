@@ -72,6 +72,9 @@ fn client_received_buffers_release_on_retry_errors_and_cancelled_waits() {
     }
     let generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 #include <stdint.h>
 static int stage,allocations,frees,cancelled,trapped,delivered,opens;

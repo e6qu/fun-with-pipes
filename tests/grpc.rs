@@ -288,6 +288,67 @@ fn calls_are_concurrent() {
     }
 }
 
+/// Two tasks retain and consume the same cached stream positions.
+#[test]
+fn stream_aliases_are_consistent_across_tasks() {
+    assert!(
+        have_cc(),
+        "shared stream comparison requires native compilation"
+    );
+    let d = scratch("shared-stream");
+    let servers = greeter_servers(Some(d.as_path()));
+    let client = dir().join("shared-stream.fwp");
+    let split = d.join("split");
+    build(
+        &[
+            client.to_str().unwrap(),
+            "--service",
+            "greeter",
+            "-o",
+            split.to_str().unwrap(),
+        ],
+        &dir(),
+    );
+    for server in &servers {
+        let mut interpreted = Command::new(fwp());
+        interpreted
+            .args(["run", "--interp", "--service", "greeter"])
+            .arg(&client)
+            .env("FWP_SERVICE_GREETER", &server.addr);
+        expect_file(
+            &dir().join("shared-stream.out"),
+            &render(&run(interpreted, 120)),
+            "interpreted shared stream",
+        );
+        let mut native = Command::new(split.join("shared-stream"));
+        native.env("FWP_SERVICE_GREETER", &server.addr);
+        expect_file(
+            &dir().join("shared-stream.out"),
+            &render(&run(native, 120)),
+            "native shared stream",
+        );
+    }
+    if let Some(path) = std::env::var_os("FWP_STREAM_ARTIFACTS") {
+        let path = PathBuf::from(path);
+        std::fs::create_dir_all(&path).unwrap();
+        let suffix = std::env::consts::EXE_SUFFIX;
+        std::fs::copy(
+            split.join(format!("shared-stream{suffix}")),
+            path.join("shared-client.exe"),
+        )
+        .unwrap();
+        std::fs::copy(
+            d.join("servers").join(format!("greeter{suffix}")),
+            path.join("shared-server.exe"),
+        )
+        .unwrap();
+        std::fs::copy(&client, path.join("shared-client.fwp")).unwrap();
+        std::fs::copy(dir().join("greeter.fwp"), path.join("shared-server.fwp")).unwrap();
+        std::fs::write(path.join("service-build.txt"), "Both executables built by this revision's fwp build --service greeter -O1. Client source: shared-stream.fwp; server built from client.fwp and greeter.fwp. Native C flags include -std=gnu11 -ffp-contract=off. These correctness binaries have no allocation counters and are not timed.
+").unwrap();
+    }
+}
+
 // ------------------------------------------------------------ interoperability
 
 /// Go's HTTP/2 client (the standard library only) calls both servers.

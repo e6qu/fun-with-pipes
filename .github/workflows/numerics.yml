@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       source_revision:
         description: Full source commit for the CI profile comparison
@@ -18,11 +18,11 @@ on:
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'context-owners' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+    if: inputs.suite == 'chain-cleanup' || inputs.suite == 'stream-owners' || inputs.suite == 'stream-storage' || inputs.suite == 'context-owners' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
       fail-fast: false
       matrix:
-        runner: ${{ fromJSON((inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux') && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows' || inputs.suite == 'tcp-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
+        runner: ${{ fromJSON((inputs.suite == 'stream-storage' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux') && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows' || inputs.suite == 'tcp-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
@@ -40,16 +40,16 @@ jobs:
         run: ./scripts/setup-windows.ps1
       - uses: actions/cache/restore@v4
         id: decoder_tls_cache
-        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners')
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || inputs.suite == 'stream-owners')
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
       - name: Native Windows TLS dependencies
-        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners')
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || inputs.suite == 'stream-owners')
         shell: pwsh
         run: ./scripts/setup-windows-tls.ps1
       - uses: actions/cache/save@v4
-        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners') && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || inputs.suite == 'stream-owners') && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
@@ -61,6 +61,17 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
+      - name: Measure wrapped-chain cleanup
+        if: inputs.suite == 'chain-cleanup'
+        env:
+          FWP_CHAIN_ARTIFACTS: chain-evidence
+        run: cargo test --test arc_execution wrapped_chain_cleanup_stack_measurement -- --exact --nocapture
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'chain-cleanup'
+        with:
+          name: chain-cleanup-${{ matrix.runner }}
+          path: chain-evidence/
+          if-no-files-found: error
       - name: Byte decoder cleanup repair
         if: inputs.suite == 'byte-decoders'
         run: cargo test --test byte_decoder_ownership -- --nocapture
@@ -83,6 +94,37 @@ jobs:
           name: udp-${{ matrix.runner }}
           path: udp-evidence/
           if-no-files-found: ignore
+      - name: Measure queued remote-stream cache storage
+        if: inputs.suite == 'stream-storage' || inputs.suite == 'stream-owners'
+        shell: bash
+        env:
+          FWP_STREAM_ARTIFACTS: stream-evidence
+        run: |
+          mkdir -p stream-evidence
+          git rev-parse HEAD > stream-evidence/source.txt
+          rustc --version --verbose > stream-evidence/rust.txt
+          python3 - <<'PYENV'
+          import os, pathlib, subprocess
+          commands = {
+              "Linux": ["lscpu"],
+              "macOS": ["sysctl", "machdep.cpu", "hw.memsize"],
+              "Windows": ["powershell", "-NoProfile", "-Command", "Get-CimInstance Win32_Processor | Format-List Name,Architecture,NumberOfCores,NumberOfLogicalProcessors"],
+          }
+          compiler = subprocess.check_output([os.environ["CC"], "--version"], text=True)
+          pathlib.Path("stream-evidence/c.txt").write_text(compiler)
+          details = subprocess.check_output(commands[os.environ["RUNNER_OS"]], text=True)
+          pathlib.Path("stream-evidence/cpu.txt").write_text(details)
+          PYENV
+          cargo test --lib grpc::stream_source_tests
+          cargo test --no-fail-fast --test grpc_force_cleanup --test grpc_render_cleanup --test grpc_receive_cleanup --test grpc_status_cleanup --test grpc_send_cleanup --test grpc_request_encoding --test grpc_response_encoding --test grpc_client_receive --test grpc_client_requests --test grpc_client_failure_text --test grpc_server_ownership -- --nocapture
+          cargo test --test grpc every_kind_of_call -- --exact
+          cargo test --test grpc stream_aliases_are_consistent_across_tasks -- --exact
+      - uses: actions/upload-artifact@v7
+        if: always() && (inputs.suite == 'stream-storage' || inputs.suite == 'stream-owners')
+        with:
+          name: stream-storage-${{ matrix.runner }}
+          path: stream-evidence/
+          if-no-files-found: error
       - name: Service scope ownership contract inventory
         if: inputs.suite == 'context-storage' || inputs.suite == 'context-owners'
         run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output context-evidence/contracts.json

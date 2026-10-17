@@ -1228,8 +1228,8 @@ The retained reference-counted (ARC) probe binaries use packed double multiplica
 AMD64, but still load/store arithmetic workspace and copy each completed chunk.
 That is evidence of vector instructions, not register-only execution or C/Rust
 parity. The report retains C, binary and disassembly hashes, failure controls and
-the separate Windows library-test repair. Full delivery acceptance remains in the
-[handoff](development-state.md).
+the separate Windows library-test repair. [PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153)
+records the passing combined production delivery.
 
 ## Fixed-size lane calculations against C and Rust
 
@@ -1336,6 +1336,116 @@ independent iteration values; scalar additions combine those values in the
 original order. Setup and output remain outside those loops. The actual C,
 assembly and binary identities are recorded; this is static code inspection,
 not a measurement of cache misses or dynamic register spills.
+
+## Storage for received stream values
+
+A remote iterator saves each received value so another reader of the same
+position gets that value again. An unread position needs a receive source; a
+completed position needs its saved result. The compact representation gives these
+two alternatives the same storage word instead of reserving space for both.
+
+The [preceding fwp representation](measurements/remote-stream-shared-2026-10-16.json)
+at `00c09cdc` and [compact fwp representation](measurements/remote-stream-compact-2026-10-17.json)
+at `4c26f21f` receive queued Protocol Buffer messages containing 16-character
+strings. Both versions already include the shared-reader and description-lifetime
+repairs. Tests consume 1, 32 and 128 values, read every position twice, stop half
+way, or retain the first position while consuming the sequence. Collection is
+disabled for the allocation counts. Separate runs check collector stress,
+verification, cancellation and reuse.
+
+All six native hosts report these storage costs:
+
+| Measurement | Separate source/result fields | Shared storage word |
+|---|---:|---:|
+| Bytes per position, aligned to 8 bytes | 24 | 16 |
+| Managed allocation requests per received value | 4 | 4 |
+| Requested bytes per received value | 89 | 81 |
+| Bytes charged after allocator rounding, per value | 112 | 96 |
+| Fixed setup bytes charged | 720 | 704 |
+| Bytes charged after consuming 128 values, including setup | 15,056 | 12,992 |
+
+The four allocations hold the decoded string, next position and two result
+wrappers. The position itself is one third smaller; requested bytes per received
+value fall by about 9%. Use the two revisions above to compare the same receive
+work with the shared-reader and description-lifetime repairs present in both.
+
+These are fwp-to-fwp memory measurements, not timing or C/Rust comparisons.
+Socket I/O, connection pooling, raw message/codec buffers, allocator pages and
+total process memory are excluded. The reports retain actual compiler and CPU
+details, layouts, counts and binary hashes. Actual AMD64 and ARM64 test and service
+binaries read the completed value from the same word used by an unread source;
+the cached-value load moves from offset 16 to offset 0. Combining receive-storage
+and reader cleanup also reduces the receive function's stack frame: the O2 test
+uses 344 rather than 360 bytes on AMD64 and 336 rather than 368 on ARM64; the O1
+service client uses 216 rather than 232 bytes on AMD64 and 240 rather than 272 on
+ARM64. AMD64 figures include saved registers and exclude the incoming return
+address; ARM64 figures include its saved registers. These are static observations
+of the retained binaries, not timing results. Smaller storage alone does not
+establish faster execution.
+
+Clearing C references still leaves the measured cache storage charged with
+collection disabled. Explicit native last-owner destruction remains unfinished.
+To reproduce, dispatch the `stream-owners` evidence suite, then run
+[`collect-stream-measurements.py`](../scripts/collect-stream-measurements.py)
+through the local guard with `--run`, exact `--head`, `--artifacts`, `--baseline`
+and `--output`. The baseline is the passing preceding-representation report above.
+The collector checks jobs, named tests, artifact revisions and matching inputs
+before recording the differences; it does not execute downloaded binaries.
+
+## Stack use when releasing wrapped chains
+
+Releasing a value means giving up its ownership; its final owner also releases
+its children. A record that contains an optional next record is a simple chain.
+Previously, cleanup called one function for the record and another for the
+optional wrapper at every link. The new compiler follows these links in a loop.
+It stops when another owner still needs a node or wrapper.
+
+The [retained comparison](measurements/wrapped-chain-cleanup-2026-10-17.json)
+compares fwp at `70e36523` with `aea7d6df`. Each record owns a five-byte string and
+an optional next record. Both versions free every measured allocation with
+tracing disabled. This compares two fwp cleanup implementations; it measures
+neither elapsed time nor a speed gap against C or Rust.
+
+A small observer samples a stack address whenever a generated cleanup function
+starts. The difference between its highest and lowest addresses shows stack
+growth. It is not total stack usage: zero means the sampled address stayed the
+same, and instrumentation can change frame sizes. These are the O2 byte spans:
+
+| Native target | Previous span, 64 links | Previous span, 1,024 links | Largest new span, through 16,384 links |
+|---|---:|---:|---:|
+| Linux AMD64 | 2,048 | 32,768 | 16 |
+| Linux ARM64 | 3,072 | 49,152 | 32 |
+| macOS ARM64 | 4,096 | 65,536 | 0 |
+| macOS AMD64 | 3,072 | 49,152 | 0 |
+| Windows AMD64 | 4,096 | 65,536 | 0 |
+| Windows ARM64 | 3,072 | 49,152 | 0 |
+
+O1 results and every sample remain in the report. The candidate also checks a
+chain whose optional value holds a tuple of another string and the next record.
+Each shape runs at 64, 1,024 and 16,384 links, retaining either no alias, the root,
+a middle record or a middle wrapper; the tuple case retains a tuple too. All
+memory must be reclaimed after the final alias is released. Restoring the old
+recursive cleanup bodies must exceed the stack bound.
+
+Actual language programs are compared with the raw interpreter, then checked
+under collector stress, reuse verification and count-only storage mode. Static
+inspection of the uninstrumented Linux binaries shows fixed Link-cleanup frames
+of 24 bytes on AMD64 and 64 on ARM64, with backward branches through the chain.
+The AMD64 figure excludes the caller's return address; ARM64 includes its saved
+registers. Calls into ordinary release helpers still have their own frames.
+
+The reports retain source revisions, C files, binaries, instruction excerpts,
+hashes and candidate CPU/compiler details. The baseline did not separately record
+its CPU/compiler metadata; its CI logs and binaries remain available. Construction
+cost, total process memory and cleanup allocation requests are not separately
+measured. This change leaves the node allocations and reference counts in place.
+It does not establish explicit ownership for native remote-stream caches.
+
+Reproduce with the `chain-cleanup` evidence suite and
+[`collect-chain-measurements.py`](../scripts/collect-chain-measurements.py), supplying
+both runs and exact heads, an artifact directory and an output file. Use the local
+guard for collection; builds and native executions belong on CI. The original
+source is preserved by `evidence/wrapped-chain-baseline-20261017`.
 
 ## CI compiler build cost
 

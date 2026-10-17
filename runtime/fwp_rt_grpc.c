@@ -1,4 +1,4 @@
-/* fwp runtime: gRPC (see docs/grpc.md, and src/grpc.rs for the
+/* fwp runtime: gRPC (see docs/services.md, and src/grpc.rs for the
  * interpreter's side, which this file mirrors).
  *
  * HTTP/2 connections and streams run on the task scheduler
@@ -198,8 +198,11 @@ static g_ctx *g_ctx_of(void) {
     return fwp_cur->gctx ? (g_ctx *)fwp_cur->gctx : &g_empty_ctx;
 }
 
+/* Diagnostic text includes its terminator; preserve existing truncation. */
+enum { G_MESSAGE_BYTES = 1024 };
+
 static char *g_strdupf(const char *fmt, ...) {
-    char buf[1024];
+    char buf[G_MESSAGE_BYTES];
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(buf, sizeof buf, fmt, ap);
@@ -208,7 +211,7 @@ static char *g_strdupf(const char *fmt, ...) {
 }
 
 static void g_trapf(const char *fmt, ...) {
-    char buf[1024];
+    char buf[G_MESSAGE_BYTES];
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(buf, sizeof buf, fmt, ap);
@@ -1287,14 +1290,46 @@ typedef struct {
     const char *what;          /* the call, for messages (client side) */
     int64_t deadline;
     int results;               /* elements are Result[R, GrpcError] (client side) */
+    fwp_task *reader;           /* borrowed while this source is receiving */
+    fwp_wl read_waiters;        /* scheduler owns the parked tasks */
 } g_incoming;
+
+/* The description has the source's lifetime, with no separate raw allocation
+ * and no borrow from a serving handler that may already have returned. */
+static g_incoming *g_incoming_new(const char *what, size_t length) {
+    if (length > SIZE_MAX - sizeof(g_incoming) - 1)
+        fwp_trap("stream description too long");
+    g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src + length + 1);
+    char *text = (char *)(src + 1);
+    memcpy(text, what, length);
+    text[length] = 0;
+    src->what = text;
+    return src;
+}
+
+/* Format directly into the source: no separate text allocation or 1 KiB
+ * scratch array in a caller that may later suspend. Preserve g_strdupf's limit. */
+static g_incoming *g_incoming_client(const char *method, const char *address) {
+    const size_t limit = G_MESSAGE_BYTES - 1;
+    size_t method_bytes = strlen(method), address_bytes = strlen(address);
+    if (method_bytes > limit) method_bytes = limit;
+    if (address_bytes > limit) address_bytes = limit;
+    /* Both terms are bounded before addition; the punctuation is " (" and ")". */
+    size_t length = method_bytes + address_bytes + 3;
+    if (length > limit) length = limit;
+    g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src + length + 1);
+    char *text = (char *)(src + 1);
+    snprintf(text, length + 1, "%s (%s)", method, address);
+    src->what = text;
+    return src;
+}
 
 /* a position in a received stream (GrpcCell): forcing it receives the
  * message there, once */
 typedef struct {
-    g_incoming *src;
+    /* Unread positions hold a source; completed positions hold only a result. */
+    union { g_incoming *src; V memo; };
     int forced;
-    V memo;
 } g_cell;
 
 /* fail the call being served with a status: its task is cancelled and
@@ -1318,9 +1353,8 @@ typedef struct { int code; char *text; } g_failure;
 /* Option[(a, GrpcCell[a])]: the next element; with `first`, failures go
  * to *f or *err_desc (the cell stays unforced) instead of trapping */
 /* `Some((Err (GrpcError code text), <the end>))` */
-static V g_err_element(g_incoming *src, int code, const char *text) {
+static V g_err_element(int code, const char *text) {
     g_cell *last = (g_cell *)fwp_mem_alloc(sizeof *last);
-    last->src = src;
     last->forced = 1;
     last->memo = FWP_NONE;
     V f[2] = {(V)(int64_t)code, fwp_cstr(text)};
@@ -1328,22 +1362,59 @@ static V g_err_element(g_incoming *src, int code, const char *text) {
     return fwp_some(fwp_tuple2(fwp_data(1, 1, &e), PTR(last)));
 }
 
+static void g_incoming_read_done(void *value) {
+    g_incoming *source = (g_incoming *)value;
+    source->reader = 0;
+    fwp_wake_all(&source->read_waiters);
+}
+
+typedef struct { g_incoming *source; g_got got; } g_received_stream;
+
+static void g_received_stream_release(void *value) {
+    g_received_stream *received = (g_received_stream *)value;
+    g_got *got = &received->got;
+    if (got->kind == G_MSG && got->m && fwp_cur->cancelled) {
+        /* Decoding may suspend. Cancellation before publication must not make
+         * another reader skip this position. Flow credit is issued when DATA
+         * frames arrive, so restoring the queue does not issue it twice. */
+        g_stream *stream = received->source->s;
+        got->m->next = stream->mhead;
+        stream->mhead = got->m;
+        if (!stream->mtail) stream->mtail = got->m;
+        got->m = 0;
+    }
+    g_got_release(got);
+    g_incoming_read_done(received->source);
+}
+
 static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_desc **err_desc) {
     if (cell->forced) return cell->memo;
     g_incoming *src = cell->src;
-    g_got g;
-    g_recv(src->c, src->s, src->deadline, &g);
-    fwp_cleanup received_cleanup;
-    fwp_cleanup_push(&received_cleanup, g_got_release, &g);
+    /* Two tasks can reach the same unread position before receiving resumes.
+     * Wait for its cache instead of consuming a second message for that cell. */
+    while (src->reader) {
+        if (src->reader == fwp_cur) fwp_trap("recursive stream read");
+        fwp_check_cancel();
+        fwp_park(&src->read_waiters, 0);
+        fwp_check_cancel();
+        if (cell->forced) return cell->memo;
+    }
+    src->reader = fwp_cur;
+    /* One owner covers waiting, decoding and unpublished receive storage. */
+    g_received_stream received = {src, {0}};
+    fwp_cleanup reading_cleanup;
+    fwp_cleanup_push(&reading_cleanup, g_received_stream_release, &received);
+    g_got *g = &received.got;
+    g_recv(src->c, src->s, src->deadline, g);
     V r = FWP_NONE;
     if (src->results) {
         /* a failure is an `Err` element, then the end */
-        if (g.kind == G_MSG) {
+        if (g->kind == G_MSG) {
             V x;
             char *why = 0;
-            int k = g_decode(&src->dec, g.m->d, g.m->n, &x, &why);
-            free(g.m);
-            g.m = 0;
+            int k = g_decode(&src->dec, g->m->d, g->m->n, &x, &why);
+            free(g->m);
+            g->m = 0;
             fwp_cleanup decode_cleanup;
             fwp_cleanup_push(&decode_cleanup, fwp_tls_subject_free, why);
             if (k == G_DEC_OK) {
@@ -1355,29 +1426,30 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
                                          : strdup("unexpected error in a response");
                 fwp_cleanup text_cleanup;
                 fwp_cleanup_push(&text_cleanup, fwp_tls_subject_free, t);
-                r = g_err_element(src, GRPC_INTERNAL, t);
+                r = g_err_element(GRPC_INTERNAL, t);
                 fwp_cleanup_pop(&text_cleanup);
                 free(t);
             }
             fwp_cleanup_pop(&decode_cleanup);
             fwp_tls_subject_free(why);
-        } else if (g.kind == G_END && g.code == 0) {
+        } else if (g->kind == G_END && g->code == 0) {
             r = FWP_NONE;
         } else {
-            r = g_err_element(src, g.kind == G_END ? g.code : GRPC_UNAVAILABLE, g.text);
+            r = g_err_element(g->kind == G_END ? g->code : GRPC_UNAVAILABLE, g->text);
         }
-        fwp_cleanup_pop(&received_cleanup);
-        g_got_release(&g);
+        g_got_release(g);
+        cell->memo = r; /* replaces the source after complete construction */
         cell->forced = 1;
-        cell->memo = r;
+        fwp_cleanup_pop(&reading_cleanup);
+        g_incoming_read_done(src);
         return r;
     }
-    if (g.kind == G_MSG) {
+    if (g->kind == G_MSG) {
         V x;
         char *why = 0;
-        int k = g_decode(&src->dec, g.m->d, g.m->n, &x, &why);
-        free(g.m);
-        g.m = 0;
+        int k = g_decode(&src->dec, g->m->d, g->m->n, &x, &why);
+        free(g->m);
+        g->m = 0;
         fwp_cleanup decode_cleanup;
         fwp_cleanup_push(&decode_cleanup, fwp_tls_subject_free, why);
         if (k == G_DEC_BAD) {
@@ -1390,8 +1462,9 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
                 *err_desc = src->dec.error;
                 fwp_cleanup_pop(&decode_cleanup);
                 fwp_tls_subject_free(why);
-                fwp_cleanup_pop(&received_cleanup);
-                g_got_release(&g);
+                g_got_release(g);
+                fwp_cleanup_pop(&reading_cleanup);
+                g_incoming_read_done(src);
                 return 0;
             }
             fwp_buf b = {0};
@@ -1405,7 +1478,7 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
         r = fwp_some(fwp_tuple2(x, PTR(next)));
         fwp_cleanup_pop(&decode_cleanup);
         fwp_tls_subject_free(why);
-    } else if (g.kind == G_END && g.code == 0) {
+    } else if (g->kind == G_END && g->code == 0) {
         r = FWP_NONE;
     } else {
         if (src->server) {
@@ -1413,23 +1486,25 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             fwp_cancel_tree(fwp_cur);
             fwp_check_cancel();
         }
-        int code = g.kind == G_END ? g.code : -1;
+        int code = g->kind == G_END ? g->code : -1;
         if (first) {
             f->code = code;
-            f->text = g.text;
-            g.text = 0;
-            fwp_cleanup_pop(&received_cleanup);
-            g_got_release(&g);
+            f->text = g->text;
+            g->text = 0;
+            g_got_release(g);
+            fwp_cleanup_pop(&reading_cleanup);
+            g_incoming_read_done(src);
             return 0;
         }
-        if (code == GRPC_INTERNAL && strncmp(g.text, "trap: ", 6) == 0) fwp_trap(g.text + 6);
-        if (code >= 0) g_trapf("service call %s failed: gRPC status %d: %s", src->what, code, g.text);
-        g_trapf("service call %s failed: %s", src->what, g.text);
+        if (code == GRPC_INTERNAL && strncmp(g->text, "trap: ", 6) == 0) fwp_trap(g->text + 6);
+        if (code >= 0) g_trapf("service call %s failed: gRPC status %d: %s", src->what, code, g->text);
+        g_trapf("service call %s failed: %s", src->what, g->text);
     }
-    fwp_cleanup_pop(&received_cleanup);
-    g_got_release(&g);
+    g_got_release(g);
+    cell->memo = r; /* failures before publication leave the source intact */
     cell->forced = 1;
-    cell->memo = r;
+    fwp_cleanup_pop(&reading_cleanup);
+    g_incoming_read_done(src);
     return r;
 }
 
@@ -1722,11 +1797,10 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     }
     /* an Iterator: the first element now, so that a failure before it is
      * raised in the caller */
-    g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src);
+    g_incoming *src = g_incoming_client(r->what, addr);
     src->c = c;
     src->s = s;
     src->dec = dec;
-    src->what = g_strdupf("%s (%s)", r->what, addr);
     src->deadline = deadline;
     src->results = r->m.output == 3;
     g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
@@ -2031,13 +2105,12 @@ static int g_run_method(g_job *j, char **msg) {
         fwp_cleanup_pop(&request_canonical);
         h2b_free(&canon);
     } else {
-        g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src);
+        g_incoming *src = g_incoming_new(j->what, strlen(j->what));
         src->c = j->c;
         src->s = j->s;
         src->server = 1;
         g_codec d = {0, m->schema, m->req_node, m->req[0], 0};
         src->dec = d;
-        src->what = j->what;
         g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
         cell->src = src;
         args[na++] = fwp_apply1(fwp_pap((uint32_t)m->iter_fn, 0, 0), PTR(cell));
