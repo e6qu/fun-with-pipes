@@ -417,7 +417,9 @@ header pairs and list cells are owned as they are created, so partial copies can
 be released. Completed responses do not borrow the network buffers. Full pool
 keys, including long TLS-option strings, remain distinct without a fixed-size
 temporary buffer. HTTP server handlers are still outside checked ARC; candidate
-implementation is not verified platform support.
+implementation is not final platform acceptance. The [HTTP measurements](benchmarks.md#http-clients-without-tracing)
+record constant managed storage, remaining allocation/count traffic and larger
+ARC code sections; raw transport/process memory and timing are excluded.
 
 WASI supplies standard streams and file access to a WebAssembly module. Build a
 supported program with `fwp build --gc arc --target wasm32-wasi app.fwp -o app.wasm`
