@@ -30,7 +30,8 @@ loopback TCP pairs, an OS-level closed-socket check and the configured Windows
 tool location. Formatting through the guard passed in 1.27s. Both worktrees
 contain the repairs; runtime/compiler behavior is unchanged by them.
 
-Next: publish the preparation repair and repeat the six-host focused stream suite.
+Repair `6ac13de78fd10932f28a34ce776a9197acd3175a` is published; focused run
+`38990255544` is testing it on all six native hosts. Next: finish that run.
 Fix any failures; refresh its stream report, then commit/push the complete combined
 PR #155 with a description covering both changes. Require all nine production
 jobs plus documentation on that new final head. Create a new merge watcher for
@@ -133,7 +134,18 @@ application machinery and transfer arguments exactly once. These are proposed
 implementation constraints, not completed work. Measure actual language clients
 as well as C fixtures: retaining an earlier iterator intentionally retains its
 saved sequence, so dropping C roots alone cannot prove bounded consumption.
-Retained host callbacks, GPU resources and all seven project areas remain open.
+The next measurement is prepared locally on `measure-remote-stream-clients` in
+`/private/tmp/fwp-stream-clients`, based on `6ac13de7`; it has no PR and has not
+run yet. The ignored runner-only test in `tests/grpc.rs` generates actual native
+clients for full consumption, the first 32 values, and a retained first position.
+It compares output with raw interpretation, then records three allocation/live
+storage samples at 64/1,024/16,384 values with GC off. The server is interpreted
+and excluded from the counters; raw buffers/process memory and timings are also
+excluded. The new `stream-clients` focused suite records compiler/CPU/source and
+binaries. Local guarded formatting passed in 1.11s; runner verification remains
+required. Finish the current PR's repair/publication first, then validate this
+preparation while production runs. Retained host callbacks, GPU resources and
+all seven project areas remain open.
 
 ## Roadmap status
 
