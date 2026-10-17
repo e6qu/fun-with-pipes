@@ -137,16 +137,15 @@ not support for that platform.
 
 ## Value decoders
 
-A decoder turns encoded bytes or text into ordinary language values. The current
-preparation gives balanced-ternary conversions, URL/form decoding and HTTP-head
-parsing explicit owners for their results. Complete and partial results must be
+A decoder turns encoded bytes or text into ordinary language values.
+Balanced-ternary conversions, URL/form decoding and HTTP-head parsing have
+explicit owners for their results. Complete and partial results must be
 released without relying on a later collection.
 
 The decoder subset passes focused checks on all six native hosts at `30399066`
 (`38886033175`). Actual WASI checks cover its available ternary/text helpers at
-`72321a55` (`38884843627`). These focused results precede the combined batch's
-full production acceptance; the [handoff](development-state.md) records current
-validation. [Earlier allocation evidence](measurements/value-decoders-2026-10-16.json)
+`72321a55` (`38884843627`). These focused results precede the combined batch accepted in
+[PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153). [Earlier allocation evidence](measurements/value-decoders-2026-10-16.json)
 retains the six-host ternary/text counts and the neighboring Windows failures
 that were subsequently repaired.
 
@@ -324,8 +323,7 @@ callbacks and mutable cycles remain separate work.
 
 ### TCP and TLS socket owners
 
-The next preparation extends logical socket owners to TCP connections and
-listeners. Copies share a handle; explicit close affects every copy, while the
+TCP connections and listeners have logical socket owners. Copies share a handle; explicit close affects every copy, while the
 last owner closes the socket automatically. Function and task captures preserve
 the original lifetime. Returned optional connections, bytes and certificate text
 keep their partially built values alive and release them on allocation failure.
@@ -391,8 +389,8 @@ checks up to 16,384 links, retained aliases at each wrapper and complete physica
 reclamation without tracing. Real source programs match the interpreter and
 also pass GC/reuse stress. Full delivery acceptance remains in the handoff.
 Reference-count operations and the chain's allocations still exist. Native remote
-stream caches are opaque runtime objects and still need their own explicit
-ownership before this removes their dependence on tracing.
+stream caches use a separate runtime cleanup loop, described below; their
+connection and callback graph still depends on tracing.
 
 ## Checked ARC delivery
 
@@ -620,7 +618,7 @@ pass. General removal of tracing remains unfinished.
 
 ## Process metrics and syntax text
 
-The next ownership batch prepares copied metric snapshots and syntax rendering.
+Metric snapshots and rendered syntax text have explicit value owners.
 A metric registry stores names and numbers for a process or library instance.
 Repeated updates of an existing name reuse that entry; distinct names require
 more native storage. Process shutdown and library teardown free it. A snapshot
@@ -634,12 +632,14 @@ lookup and string sorting. Observation suffixes are compared and copied directly
 without a temporary concatenated name. `syntax.show` borrows its syntax tree and
 returns new text; its native formatting buffer is protected if result allocation
 traps. Managed allocation fault tests, missing-cleanup controls, tracing stress,
-checked ARC and actual WASI checks pass in preparation. Windows and POSIX library
+checked ARC and actual WASI checks pass. Windows and POSIX library
 unload tests verify registry release separately. The
 [retained report](measurements/owned-values-and-kernels-2026-10-16.json) records
-the artifacts and repaired test failures; the handoff tracks full acceptance.
+the artifacts and repaired test failures.
+[PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153)
+records full production acceptance.
 
-### DNS result ownership under validation
+### DNS result ownership
 
 `dns.resolve` borrows its hostname and returns an owned list of copied address
 strings. The native implementation releases the operating system's temporary
@@ -667,18 +667,17 @@ above cover handles.
 
 A served request carries headers (name/value strings) and may identify a peer
 certificate. `grpc.metadata` returns an independent list of incoming headers;
-`grpc.peer-subject` returns copied certificate text when available. The combined
-preparation gives these output values ordinary owners and releases partially
+`grpc.peer-subject` returns copied certificate text when available. These output
+values have ordinary owners, with cleanup for partially
 copied fields if construction fails. Metadata preserves the input order and
 duplicate names while omitting protocol headers; it builds directly into the
 result list without a temporary array of pointers.
 
 This does not establish ownership of the service's callbacks, connection,
-stream or retained request context. Those remain separate work. The preparation
-handoff records focused checks; full service execution without tracing has not
-been established by these result-copy changes.
+stream or retained request context. Those remain separate work; these accepted
+result-copy changes do not establish full service execution without tracing.
 
-The same preparation gives `http2.request` and `http2.body` owned results.
+`http2.request` and `http2.body` also return owned results.
 A request copies its method, path, headers, remote address and optional certificate
 name; a body copies every byte, including zero and non-text bytes. The source
 stream remains live during copying. Header order and duplicates are preserved,
@@ -686,8 +685,8 @@ and an existing `host` header takes precedence over `:authority`. Partial string
 pairs, lists and result wrappers use the existing typed cleanup on failure.
 These changes do not yet own the stream itself or remove tracing from a server.
 These copied results pass focused allocation-failure and lifetime checks on all
-six native hosts at `e715de1a` (`38935341434`). Full delivery acceptance remains
-separate; see the [handoff](development-state.md).
+six native hosts at `e715de1a` (`38935341434`), followed by full acceptance in
+[PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
 
 Outgoing gRPC response headers and trailers also copy their input strings.
 Normalization now happens in the owned copy: names become lowercase, and carriage
@@ -832,7 +831,8 @@ of saved continuations. The interpreter releases it after the last owner of an
 unread position disappears. Native
 positions replace their source with the completed result in the same storage
 word. The compact representation passes focused tests on all six native hosts;
-cached values still rely on tracing. Clearing a reference alone is not explicit native destruction.
+that measured revision still relied on tracing for cached values. The current
+candidate adds typed cache destruction, with acceptance tracked below.
 
 Concurrent readers also need to agree on one value. The new receive guard lets
 one task receive while others wait for that same position's cache. Completion,
@@ -849,8 +849,8 @@ current collector requirement:
 
 | Work | Evidence required |
 |---|---|
-| Measure repeated calls and stream consumption | Count live connection, stream, message and cached-value storage for 1, 32 and 128 elements, including full consumption, early stop and retained earlier positions. Separate reusable connection-pool storage from per-call growth. |
-| Own each cached result | Repeated reads return the same value without receiving again. Releasing one iterator preserves other references; releasing the last reference releases its cached value and continuation. Partially constructed results release on failure. |
+| Measure repeated calls and stream consumption | Keep the complete-client baseline at 64, 1,024 and 16,384 integers, with full consumption, early stop and retained iterators. Add raw connection, stream and message-buffer counts; separate reusable pool storage from per-call growth. |
+| Preserve cache ownership | The candidate has focused evidence for stable repeated reads, retained aliases, final-owner destruction and partial failure. Keep these controls while extending ownership to connections and callbacks. |
 | Keep connections and requests alive for their users | Sending, receiving and detached tasks remain valid after their creating scope returns. Completion, failure and cancellation release each acquired owner exactly once. |
 | Prevent ownership cycles | Identify which component owns each task, stream and connection. A pointer back to an owner must not silently become another owning reference. Any shared cycle needs an explicit policy and a test that drops every external reference. |
 | Admit supported remote calls without tracing | Compare interpreter/native values, errors and receive order; run stress and deliberate missing-cleanup controls; inspect actual binaries and repeat calls with collection disabled. |
@@ -865,13 +865,58 @@ refer to it.
 
 The next implementation must assign owners to the pool, active calls, receive
 sources and I/O tasks, while keeping scheduler task identities and wait lists
-borrowed. A completed cache must own its value and continuation; an unread
-continuation must keep its connection, stream and decoder captures alive. Prefer
-moving that source owner forward to counting it anew for every message. Destruction
-of a long cached sequence must use bounded stack space, including the alternating
-position, optional result and tuple wrappers. Test partial construction and each
-last-owner case before admitting remote calls to checked ARC.
+borrowed. The candidate already moves the source allocation to the next unread
+position and releases cached values through a bounded-stack loop. The source must
+next keep its connection, stream and decoder captures alive through explicit
+owners. Test partial construction and each last-owner case before admitting
+remote calls to checked ARC.
 
-These are acceptance requirements, not implemented stream ownership. Keep the
-ordinary immutable iterator behavior and existing syntax while proving them.
+The current candidate implements typed cache ownership and consumes a position
+when reading it. An exclusive position transfers its saved result; a shared one
+adds a result reference. Typed cleanup walks position/optional/tuple wrappers in
+a loop and stops when another owner remains. The source allocation moves forward
+to the next unread position, without cancelling the connection when released.
+Custom decoder callbacks transfer their input and result owners, release caught
+errors and restore the enclosing handler on traps. This is not ownership of the
+whole connection/stream/callback graph.
+
+The [complete-client comparison](benchmarks.md#memory-used-by-complete-remote-stream-clients)
+now passes focused checks on all six native hosts at `886dad3b`. A one-pass
+client's peak and final managed charge stay constant across the tested sizes;
+retained aliases keep their history until released. Cleanup controls verify
+16,384-position chains, exact releases, failures and stress. Expanded stress
+caught invalid record poisoning on a raw runtime layout; that is repaired with
+the existing raw-storage release operation. Full production acceptance remains
+required. The [handoff](development-state.md) tracks that delivery and the
+separate effort to reduce the extra reference-count operations.
+
 HTTP/2 server operations and GPU resource ownership also remain separate work.
+
+### Moving values held by a closure
+
+A closure is a function that keeps values for a later call. For example, `add 1`
+keeps the integer `1` until it receives the number to add it to. Captured strings,
+arrays or stream positions can require separate storage and owners.
+
+The candidate runtime transfers captured owners when consuming a closure with
+exactly one owner. It copies their value words into the destination, then clears
+the original closure's capture count so its cleanup cannot release them twice.
+For a partial call, the destination is the new closure; for a complete call, it
+is the callee's argument storage. Shared closures still acquire typed references
+so that existing aliases remain valid. Scalar values are never treated as heap
+references merely because their bits resemble an address.
+
+The destination is ready before this transfer. No allocation, task suspension or
+recoverable trap occurs between moving the owners and assigning responsibility
+for cleanup. The callee owns its arguments on both return and failure, while
+runtime cleanup still frees the consumed closure. This needs no new language
+syntax or closure fields. It removes capture retains on this path, but dynamic
+calls still perform dispatch, ownership checks and argument copying.
+
+Focused controls cover unique/shared closures, partial/complete application,
+normal returns, errors and traps. They require exact reclamation without
+collection and deliberately restore unnecessary duplication or steal shared
+captures to ensure those bugs are detected. All six native jobs pass at `afd7d460`, including native Windows stack-allocation
+failure injection. [The comparison](benchmarks.md#moving-captured-values-instead-of-retaining-them-again)
+records the saved retains and remaining costs. The full delivery gate is tracked
+in the [handoff](development-state.md).

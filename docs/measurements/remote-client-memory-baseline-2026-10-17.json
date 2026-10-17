@@ -1,0 +1,3851 @@
+{
+  "source_revision": "456f2dbd381513af855e7e43186190b95b259c19",
+  "run_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38991578784",
+  "checks": [
+    "remote_stream_client_memory_measurement",
+    "server_startup_deadline_covers_silent_processes"
+  ],
+  "modes": {
+    "unique": "Sum 1..n in one pass",
+    "retained": "Sum 1..n, retaining the original iterator until rereading its first value",
+    "partial": "Sum only the first 32 values of the requested n"
+  },
+  "sampling": "Three separate instrumented client processes per mode and size; raw interpreter and uninstrumented client outputs must agree with the expected sums. No elapsed-time comparison.",
+  "limits": "Managed client allocation requests, requested bytes, counted retains and allocator-charged storage. GC disabled; physical freeing enabled. Includes iterator and connection setup, argument parsing and entry cleanup; excludes raw network buffers, allocator metadata/pages, whole-process memory and the interpreted server. Storage is sampled after each managed allocation. Final means before whole-runtime shutdown, not after process exit. Partial-consumption networking may vary with scheduling.",
+  "hosts": [
+    {
+      "host": "macos-15-intel",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38991578784/job/117274918889",
+      "rows": [
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 332,
+          "requested_bytes": 9128,
+          "retains": 65,
+          "peak_charged_bytes": 6944,
+          "final_charged_bytes": 6816,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 332,
+          "requested_bytes": 9128,
+          "retains": 65,
+          "peak_charged_bytes": 6944,
+          "final_charged_bytes": 6816,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 332,
+          "requested_bytes": 9128,
+          "retains": 65,
+          "peak_charged_bytes": 6944,
+          "final_charged_bytes": 6816,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 5132,
+          "requested_bytes": 108972,
+          "retains": 1025,
+          "peak_charged_bytes": 68384,
+          "final_charged_bytes": 68256,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 5132,
+          "requested_bytes": 108972,
+          "retains": 1025,
+          "peak_charged_bytes": 68384,
+          "final_charged_bytes": 68256,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 5132,
+          "requested_bytes": 108972,
+          "retains": 1025,
+          "peak_charged_bytes": 68384,
+          "final_charged_bytes": 68256,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 81932,
+          "requested_bytes": 1706416,
+          "retains": 16385,
+          "peak_charged_bytes": 1051424,
+          "final_charged_bytes": 1051296,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 81932,
+          "requested_bytes": 1706416,
+          "retains": 16385,
+          "peak_charged_bytes": 1051424,
+          "final_charged_bytes": 1051296,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 81932,
+          "requested_bytes": 1706416,
+          "retains": 16385,
+          "peak_charged_bytes": 1051424,
+          "final_charged_bytes": 1051296,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 335,
+          "requested_bytes": 9207,
+          "retains": 65,
+          "peak_charged_bytes": 6944,
+          "final_charged_bytes": 6816,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 335,
+          "requested_bytes": 9207,
+          "retains": 65,
+          "peak_charged_bytes": 6944,
+          "final_charged_bytes": 6816,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 335,
+          "requested_bytes": 9207,
+          "retains": 65,
+          "peak_charged_bytes": 6944,
+          "final_charged_bytes": 6816,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 5135,
+          "requested_bytes": 109051,
+          "retains": 1025,
+          "peak_charged_bytes": 68384,
+          "final_charged_bytes": 68256,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 5135,
+          "requested_bytes": 109051,
+          "retains": 1025,
+          "peak_charged_bytes": 68384,
+          "final_charged_bytes": 68256,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 5135,
+          "requested_bytes": 109051,
+          "retains": 1025,
+          "peak_charged_bytes": 68384,
+          "final_charged_bytes": 68256,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 81935,
+          "requested_bytes": 1706495,
+          "retains": 16385,
+          "peak_charged_bytes": 1051424,
+          "final_charged_bytes": 1051296,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 81935,
+          "requested_bytes": 1706495,
+          "retains": 16385,
+          "peak_charged_bytes": 1051424,
+          "final_charged_bytes": 1051296,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 81935,
+          "requested_bytes": 1706495,
+          "retains": 16385,
+          "peak_charged_bytes": 1051424,
+          "final_charged_bytes": 1051296,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 172,
+          "requested_bytes": 5799,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 172,
+          "requested_bytes": 5799,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 172,
+          "requested_bytes": 5799,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 172,
+          "requested_bytes": 5801,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 172,
+          "requested_bytes": 5801,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 172,
+          "requested_bytes": 5801,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 172,
+          "requested_bytes": 5802,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 172,
+          "requested_bytes": 5802,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 172,
+          "requested_bytes": 5802,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        }
+      ],
+      "ranges": [
+        {
+          "mode": "unique",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              332,
+              332
+            ],
+            "requested_bytes": [
+              9128,
+              9128
+            ],
+            "retains": [
+              65,
+              65
+            ],
+            "peak_charged_bytes": [
+              6944,
+              6944
+            ],
+            "final_charged_bytes": [
+              6816,
+              6816
+            ]
+          }
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              5132,
+              5132
+            ],
+            "requested_bytes": [
+              108972,
+              108972
+            ],
+            "retains": [
+              1025,
+              1025
+            ],
+            "peak_charged_bytes": [
+              68384,
+              68384
+            ],
+            "final_charged_bytes": [
+              68256,
+              68256
+            ]
+          }
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              81932,
+              81932
+            ],
+            "requested_bytes": [
+              1706416,
+              1706416
+            ],
+            "retains": [
+              16385,
+              16385
+            ],
+            "peak_charged_bytes": [
+              1051424,
+              1051424
+            ],
+            "final_charged_bytes": [
+              1051296,
+              1051296
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              335,
+              335
+            ],
+            "requested_bytes": [
+              9207,
+              9207
+            ],
+            "retains": [
+              65,
+              65
+            ],
+            "peak_charged_bytes": [
+              6944,
+              6944
+            ],
+            "final_charged_bytes": [
+              6816,
+              6816
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              5135,
+              5135
+            ],
+            "requested_bytes": [
+              109051,
+              109051
+            ],
+            "retains": [
+              1025,
+              1025
+            ],
+            "peak_charged_bytes": [
+              68384,
+              68384
+            ],
+            "final_charged_bytes": [
+              68256,
+              68256
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              81935,
+              81935
+            ],
+            "requested_bytes": [
+              1706495,
+              1706495
+            ],
+            "retains": [
+              16385,
+              16385
+            ],
+            "peak_charged_bytes": [
+              1051424,
+              1051424
+            ],
+            "final_charged_bytes": [
+              1051296,
+              1051296
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              172,
+              172
+            ],
+            "requested_bytes": [
+              5799,
+              5799
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              4864,
+              4864
+            ],
+            "final_charged_bytes": [
+              4768,
+              4768
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              172,
+              172
+            ],
+            "requested_bytes": [
+              5801,
+              5801
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              4864,
+              4864
+            ],
+            "final_charged_bytes": [
+              4768,
+              4768
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              172,
+              172
+            ],
+            "requested_bytes": [
+              5802,
+              5802
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              4864,
+              4864
+            ],
+            "final_charged_bytes": [
+              4768,
+              4768
+            ]
+          }
+        }
+      ],
+      "environment": {
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "c": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+        "cpu": "machdep.cpu.mwait.linesize_min: 64\nmachdep.cpu.mwait.linesize_max: 64\nmachdep.cpu.mwait.extensions: 3\nmachdep.cpu.mwait.sub_Cstates: 286531872\nmachdep.cpu.thermal.sensor: 0\nmachdep.cpu.thermal.dynamic_acceleration: 0\nmachdep.cpu.thermal.invariant_APIC_timer: 1\nmachdep.cpu.thermal.thresholds: 0\nmachdep.cpu.thermal.ACNT_MCNT: 0\nmachdep.cpu.thermal.core_power_limits: 0\nmachdep.cpu.thermal.fine_grain_clock_mod: 0\nmachdep.cpu.thermal.package_thermal_intr: 0\nmachdep.cpu.thermal.hardware_feedback: 0\nmachdep.cpu.thermal.energy_policy: 0\nmachdep.cpu.xsave.extended_state: 7 832 832 0\nmachdep.cpu.xsave.extended_state1: 1 0 0 0\nmachdep.cpu.arch_perf.version: 0\nmachdep.cpu.arch_perf.number: 0\nmachdep.cpu.arch_perf.width: 0\nmachdep.cpu.arch_perf.events_number: 0\nmachdep.cpu.arch_perf.events: 0\nmachdep.cpu.arch_perf.fixed_number: 0\nmachdep.cpu.arch_perf.fixed_width: 0\nmachdep.cpu.cache.linesize: 64\nmachdep.cpu.cache.L2_associativity: 4\nmachdep.cpu.cache.size: 256\nmachdep.cpu.tlb.inst.large: 8\nmachdep.cpu.tlb.data.small: 64\nmachdep.cpu.tlb.data.small_level1: 64\nmachdep.cpu.address_bits.physical: 39\nmachdep.cpu.address_bits.virtual: 48\nmachdep.cpu.tsc_ccc.numerator: 266\nmachdep.cpu.tsc_ccc.denominator: 2\nmachdep.cpu.max_basic: 22\nmachdep.cpu.max_ext: 2147483656\nmachdep.cpu.vendor: GenuineIntel\nmachdep.cpu.brand_string: Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz\nmachdep.cpu.family: 6\nmachdep.cpu.model: 58\nmachdep.cpu.extmodel: 3\nmachdep.cpu.extfamily: 0\nmachdep.cpu.stepping: 10\nmachdep.cpu.feature_bits: 18373132009129901055\nmachdep.cpu.leaf7_feature_bits: 43806655 0\nmachdep.cpu.extfeature_bits: 1241850578944\nmachdep.cpu.signature: 198314\nmachdep.cpu.brand: 0\nmachdep.cpu.features: FPU VME DE PSE TSC MSR PAE MCE CX8 APIC SEP MTRR PGE MCA CMOV PAT PSE36 CLFSH MMX FXSR SSE SSE2 SS HTT PBE SSE3 PCLMULQDQ DTES64 DSCPL VMX SSSE3 FMA CX16 TPR SSE4.1 SSE4.2 x2APIC MOVBE POPCNT AES VMM PCID XSAVE OSXSAVE SEGLIM64 AVX1.0 RDRAND F16C\nmachdep.cpu.leaf7_features: RDWRFSGS TSC_THREAD_OFFSET SGX BMI1 HLE AVX2 SMEP BMI2 ERMS INVPCID RTM FPU_CSDS MPX RDSEED ADX SMAP CLFSOPT IPT\nmachdep.cpu.extfeatures: SYSCALL XD 1GBPAGE EM64T LAHF LZCNT PREFETCHW\nmachdep.cpu.logical_per_package: 4\nmachdep.cpu.cores_per_package: 4\nmachdep.cpu.microcode_version: 0\nmachdep.cpu.processor_flag: 0\nmachdep.cpu.core_count: 4\nmachdep.cpu.thread_count: 4\nhw.memsize: 15032385536\n"
+      },
+      "scope": "Generated standalone clients call an interpreted greeter server over real loopback HTTP/2. For each input size, raw unoptimized interpretation and an uninstrumented compiled client must print the expected result. Three separate measured client processes count managed allocation requests, requested bytes and effective retains, sampling allocator-charged storage after each allocation. Measurement starts after constant initialization and ends after entry execution and top-level cached-value cleanup, before complete runtime shutdown. GC is disabled and physical freeing enabled. Raw network/message buffers, allocator metadata/pages, process memory and server memory are excluded. No timing or C/Rust comparison. Inputs are 64, 1024 and 16384; full consumers sum 1..n, partial consumers sum the first 32, retained consumers sum then reread the initial value. The compiler uses its ordinary optimizer and native -O2; code is emitted through fwp build --service greeter --emit-c and compiled through this revision's cgen::compile_c. Compiler versions, CPU details, source, generated C and binaries accompany this report.\n",
+      "files": {
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "5e92c8214a6cf01bc4e377f8c5a23ed5ca87f75d25db350f50769d30c5d116c4"
+        },
+        "rust.txt": {
+          "bytes": 191,
+          "sha256": "bf1658636877f9403ad0a32419fc3b0da3d3164f3585a184108063f8499d7434"
+        },
+        "c.txt": {
+          "bytes": 207,
+          "sha256": "2837c5948b45916f519912ef23256ae973af42c72decd6185aec65f45b804d3f"
+        },
+        "cpu.txt": {
+          "bytes": 2357,
+          "sha256": "34906f51eedf2b47df9e91be1563fcdf5a42c7337d9b6ec2da23ba90e96072a6"
+        },
+        "scope.txt": {
+          "bytes": 1121,
+          "sha256": "aefa9088f0e3517e3ffe7412718a2bf5e38c434a01d41b4a5e57c3bc8ffa9223"
+        },
+        "memory.tsv": {
+          "bytes": 1279,
+          "sha256": "2b3c8e548c9042b859604759aca667a767c783c715b686af59e8fd3e9581e254"
+        },
+        "greeter.fwp": {
+          "bytes": 2491,
+          "sha256": "8ed806ce7ae7962bce299eb54b19419eae7f2d4986647056cf1fffc910c10edc"
+        },
+        "job.log": {
+          "bytes": 42848,
+          "sha256": "bfe6ba0c2c7076251a4bf18ca08e20569125f83c4de5f23f576b29bdfb28a59a"
+        },
+        "unique.fwp": {
+          "bytes": 222,
+          "sha256": "a01d229af28a35ed1bc214b99a6a23cf47caed9ca395c6c90ee87ebf7d3d5fcf"
+        },
+        "unique.c": {
+          "bytes": 886323,
+          "sha256": "37daf31950092d6a3e60781e9b272bcb759c9bc87585874867ab9e17c006a915"
+        },
+        "unique-measured.c": {
+          "bytes": 888089,
+          "sha256": "6324f652e7c34574ec850a90a9cb3ad68688e403218237e27891191f8ef49c37"
+        },
+        "unique": {
+          "bytes": 176280,
+          "sha256": "ac817434a026f2f1ad40f7296154defaa0ac291978bf52a8b8a23bed4d8e647f"
+        },
+        "unique-measured": {
+          "bytes": 180552,
+          "sha256": "a08d0f5c693dfe59c16f01913280ea83459a4c211591085e22aaec4336ea88ff"
+        },
+        "retained.fwp": {
+          "bytes": 258,
+          "sha256": "04146a979daa662b89f5d1f057c8bdca3428591dba33a3cabd4c8b77bb70b49b"
+        },
+        "retained.c": {
+          "bytes": 911183,
+          "sha256": "a75923c05e7d20de5c76bf8d90cb27167c91dad09e0d675965be467f5c4a3216"
+        },
+        "retained-measured.c": {
+          "bytes": 912949,
+          "sha256": "56650542b2e445575826c6b33f04602843cd30fb3310031011e35eb79dbdab6c"
+        },
+        "retained": {
+          "bytes": 190032,
+          "sha256": "5bba90968e25f2f2ea9f3d25d3a21025f82ac74a468eb02090af4b01b02573e0"
+        },
+        "retained-measured": {
+          "bytes": 194304,
+          "sha256": "68edefa2126a30339d810ccd1e073dd81dddc67a41a7cdbbf310e53d836f2db6"
+        },
+        "partial.fwp": {
+          "bytes": 237,
+          "sha256": "c69fd3d2b2dae808e322caa034e5feb78c8d1c7e98ca8628499b4982bf887151"
+        },
+        "partial.c": {
+          "bytes": 891172,
+          "sha256": "3f3f1766bb9e7a03d711f10b659951073846bbafefb7ae1359b3a6e3365dd770"
+        },
+        "partial-measured.c": {
+          "bytes": 892938,
+          "sha256": "8b6f34e133c273e1ab8a6e74379334b6c10e5e729ac9bfbe0f2c3499f75bacca"
+        },
+        "partial": {
+          "bytes": 176264,
+          "sha256": "73c603a383d8081bb2fbeab68a93c450512909a7aa157c4164df0fae9eb90bda"
+        },
+        "partial-measured": {
+          "bytes": 176440,
+          "sha256": "8ab353c5c7e9426a918841f7b3f962837cf3207ff2fae62f313ee7ced6d8b850"
+        }
+      }
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38991578784/job/117274919019",
+      "rows": [
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 334,
+          "requested_bytes": 23824,
+          "retains": 65,
+          "peak_charged_bytes": 24000,
+          "final_charged_bytes": 23872,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 334,
+          "requested_bytes": 23824,
+          "retains": 65,
+          "peak_charged_bytes": 24000,
+          "final_charged_bytes": 23872,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 334,
+          "requested_bytes": 23824,
+          "retains": 65,
+          "peak_charged_bytes": 24000,
+          "final_charged_bytes": 23872,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 5134,
+          "requested_bytes": 123668,
+          "retains": 1025,
+          "peak_charged_bytes": 85440,
+          "final_charged_bytes": 85312,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 5134,
+          "requested_bytes": 123668,
+          "retains": 1025,
+          "peak_charged_bytes": 85440,
+          "final_charged_bytes": 85312,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 5134,
+          "requested_bytes": 123668,
+          "retains": 1025,
+          "peak_charged_bytes": 85440,
+          "final_charged_bytes": 85312,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 81934,
+          "requested_bytes": 1721112,
+          "retains": 16385,
+          "peak_charged_bytes": 1068480,
+          "final_charged_bytes": 1068352,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 81934,
+          "requested_bytes": 1721112,
+          "retains": 16385,
+          "peak_charged_bytes": 1068480,
+          "final_charged_bytes": 1068352,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 81934,
+          "requested_bytes": 1721112,
+          "retains": 16385,
+          "peak_charged_bytes": 1068480,
+          "final_charged_bytes": 1068352,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 337,
+          "requested_bytes": 23903,
+          "retains": 65,
+          "peak_charged_bytes": 24000,
+          "final_charged_bytes": 23872,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 337,
+          "requested_bytes": 23903,
+          "retains": 65,
+          "peak_charged_bytes": 24000,
+          "final_charged_bytes": 23872,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 337,
+          "requested_bytes": 23903,
+          "retains": 65,
+          "peak_charged_bytes": 24000,
+          "final_charged_bytes": 23872,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 5137,
+          "requested_bytes": 123747,
+          "retains": 1025,
+          "peak_charged_bytes": 85440,
+          "final_charged_bytes": 85312,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 5137,
+          "requested_bytes": 123747,
+          "retains": 1025,
+          "peak_charged_bytes": 85440,
+          "final_charged_bytes": 85312,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 5137,
+          "requested_bytes": 123747,
+          "retains": 1025,
+          "peak_charged_bytes": 85440,
+          "final_charged_bytes": 85312,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 81937,
+          "requested_bytes": 1721191,
+          "retains": 16385,
+          "peak_charged_bytes": 1068480,
+          "final_charged_bytes": 1068352,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 81937,
+          "requested_bytes": 1721191,
+          "retains": 16385,
+          "peak_charged_bytes": 1068480,
+          "final_charged_bytes": 1068352,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 81937,
+          "requested_bytes": 1721191,
+          "retains": 16385,
+          "peak_charged_bytes": 1068480,
+          "final_charged_bytes": 1068352,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 174,
+          "requested_bytes": 20495,
+          "retains": 33,
+          "peak_charged_bytes": 21920,
+          "final_charged_bytes": 21824,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 174,
+          "requested_bytes": 20495,
+          "retains": 33,
+          "peak_charged_bytes": 21920,
+          "final_charged_bytes": 21824,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 174,
+          "requested_bytes": 20495,
+          "retains": 33,
+          "peak_charged_bytes": 21920,
+          "final_charged_bytes": 21824,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 174,
+          "requested_bytes": 20497,
+          "retains": 33,
+          "peak_charged_bytes": 21920,
+          "final_charged_bytes": 21824,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 174,
+          "requested_bytes": 20497,
+          "retains": 33,
+          "peak_charged_bytes": 21920,
+          "final_charged_bytes": 21824,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 174,
+          "requested_bytes": 20497,
+          "retains": 33,
+          "peak_charged_bytes": 21920,
+          "final_charged_bytes": 21824,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 174,
+          "requested_bytes": 20498,
+          "retains": 33,
+          "peak_charged_bytes": 21920,
+          "final_charged_bytes": 21824,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 174,
+          "requested_bytes": 20498,
+          "retains": 33,
+          "peak_charged_bytes": 21920,
+          "final_charged_bytes": 21824,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 174,
+          "requested_bytes": 20498,
+          "retains": 33,
+          "peak_charged_bytes": 21920,
+          "final_charged_bytes": 21824,
+          "collections": 0
+        }
+      ],
+      "ranges": [
+        {
+          "mode": "unique",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              334,
+              334
+            ],
+            "requested_bytes": [
+              23824,
+              23824
+            ],
+            "retains": [
+              65,
+              65
+            ],
+            "peak_charged_bytes": [
+              24000,
+              24000
+            ],
+            "final_charged_bytes": [
+              23872,
+              23872
+            ]
+          }
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              5134,
+              5134
+            ],
+            "requested_bytes": [
+              123668,
+              123668
+            ],
+            "retains": [
+              1025,
+              1025
+            ],
+            "peak_charged_bytes": [
+              85440,
+              85440
+            ],
+            "final_charged_bytes": [
+              85312,
+              85312
+            ]
+          }
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              81934,
+              81934
+            ],
+            "requested_bytes": [
+              1721112,
+              1721112
+            ],
+            "retains": [
+              16385,
+              16385
+            ],
+            "peak_charged_bytes": [
+              1068480,
+              1068480
+            ],
+            "final_charged_bytes": [
+              1068352,
+              1068352
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              337,
+              337
+            ],
+            "requested_bytes": [
+              23903,
+              23903
+            ],
+            "retains": [
+              65,
+              65
+            ],
+            "peak_charged_bytes": [
+              24000,
+              24000
+            ],
+            "final_charged_bytes": [
+              23872,
+              23872
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              5137,
+              5137
+            ],
+            "requested_bytes": [
+              123747,
+              123747
+            ],
+            "retains": [
+              1025,
+              1025
+            ],
+            "peak_charged_bytes": [
+              85440,
+              85440
+            ],
+            "final_charged_bytes": [
+              85312,
+              85312
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              81937,
+              81937
+            ],
+            "requested_bytes": [
+              1721191,
+              1721191
+            ],
+            "retains": [
+              16385,
+              16385
+            ],
+            "peak_charged_bytes": [
+              1068480,
+              1068480
+            ],
+            "final_charged_bytes": [
+              1068352,
+              1068352
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              174,
+              174
+            ],
+            "requested_bytes": [
+              20495,
+              20495
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              21920,
+              21920
+            ],
+            "final_charged_bytes": [
+              21824,
+              21824
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              174,
+              174
+            ],
+            "requested_bytes": [
+              20497,
+              20497
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              21920,
+              21920
+            ],
+            "final_charged_bytes": [
+              21824,
+              21824
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              174,
+              174
+            ],
+            "requested_bytes": [
+              20498,
+              20498
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              21920,
+              21920
+            ],
+            "final_charged_bytes": [
+              21824,
+              21824
+            ]
+          }
+        }
+      ],
+      "environment": {
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "c": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+        "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n"
+      },
+      "scope": "Generated standalone clients call an interpreted greeter server over real loopback HTTP/2. For each input size, raw unoptimized interpretation and an uninstrumented compiled client must print the expected result. Three separate measured client processes count managed allocation requests, requested bytes and effective retains, sampling allocator-charged storage after each allocation. Measurement starts after constant initialization and ends after entry execution and top-level cached-value cleanup, before complete runtime shutdown. GC is disabled and physical freeing enabled. Raw network/message buffers, allocator metadata/pages, process memory and server memory are excluded. No timing or C/Rust comparison. Inputs are 64, 1024 and 16384; full consumers sum 1..n, partial consumers sum the first 32, retained consumers sum then reread the initial value. The compiler uses its ordinary optimizer and native -O2; code is emitted through fwp build --service greeter --emit-c and compiled through this revision's cgen::compile_c. Compiler versions, CPU details, source, generated C and binaries accompany this report.\n",
+      "files": {
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "5e92c8214a6cf01bc4e377f8c5a23ed5ca87f75d25db350f50769d30c5d116c4"
+        },
+        "rust.txt": {
+          "bytes": 197,
+          "sha256": "ba203e33fe4a5b8e05147bb6e57fb1ddace26d9f799f357420b666887dd7e2f1"
+        },
+        "c.txt": {
+          "bytes": 116,
+          "sha256": "c0003bf916cbcae3cba03ba1cad136b6d501c1d343f380e58d5ba25cf693aafc"
+        },
+        "cpu.txt": {
+          "bytes": 2355,
+          "sha256": "e5f7302f9882c8b4eca9892fce7bab78f37c49da0f8babcb23d2c2db5ed004bc"
+        },
+        "scope.txt": {
+          "bytes": 1121,
+          "sha256": "aefa9088f0e3517e3ffe7412718a2bf5e38c434a01d41b4a5e57c3bc8ffa9223"
+        },
+        "memory.tsv": {
+          "bytes": 1324,
+          "sha256": "14c505b3c0a05d4f5e3067da3c68ee59ec8219efd596755decd37e752dfbb724"
+        },
+        "greeter.fwp": {
+          "bytes": 2491,
+          "sha256": "8ed806ce7ae7962bce299eb54b19419eae7f2d4986647056cf1fffc910c10edc"
+        },
+        "job.log": {
+          "bytes": 40904,
+          "sha256": "b734b25b74d71d42821300f3f0d92b9f16dba16f78b78d503d94d917cb78a060"
+        },
+        "unique.fwp": {
+          "bytes": 222,
+          "sha256": "a01d229af28a35ed1bc214b99a6a23cf47caed9ca395c6c90ee87ebf7d3d5fcf"
+        },
+        "unique.c": {
+          "bytes": 886323,
+          "sha256": "37daf31950092d6a3e60781e9b272bcb759c9bc87585874867ab9e17c006a915"
+        },
+        "unique-measured.c": {
+          "bytes": 888089,
+          "sha256": "6324f652e7c34574ec850a90a9cb3ad68688e403218237e27891191f8ef49c37"
+        },
+        "unique": {
+          "bytes": 226648,
+          "sha256": "8c1828041f4243c5eb1eaab3673315c7117e214e24072bd035faf4263270710f"
+        },
+        "unique-measured": {
+          "bytes": 226952,
+          "sha256": "e0e51aad4f3cb2b24df3da0549c526e36bcc5a4df06b016000ed703041273c6e"
+        },
+        "retained.fwp": {
+          "bytes": 258,
+          "sha256": "04146a979daa662b89f5d1f057c8bdca3428591dba33a3cabd4c8b77bb70b49b"
+        },
+        "retained.c": {
+          "bytes": 911183,
+          "sha256": "a75923c05e7d20de5c76bf8d90cb27167c91dad09e0d675965be467f5c4a3216"
+        },
+        "retained-measured.c": {
+          "bytes": 912949,
+          "sha256": "56650542b2e445575826c6b33f04602843cd30fb3310031011e35eb79dbdab6c"
+        },
+        "retained": {
+          "bytes": 228304,
+          "sha256": "c58a5cc88a2d90decb5264e4545aceec5499e1bf691972c8b7347c08d6e8584e"
+        },
+        "retained-measured": {
+          "bytes": 228568,
+          "sha256": "5bf9a0e8d7ebaaf3ef6302e995f3f97787e1dd9d85d8d2a3d99a3f3404a170de"
+        },
+        "partial.fwp": {
+          "bytes": 237,
+          "sha256": "c69fd3d2b2dae808e322caa034e5feb78c8d1c7e98ca8628499b4982bf887151"
+        },
+        "partial.c": {
+          "bytes": 891172,
+          "sha256": "3f3f1766bb9e7a03d711f10b659951073846bbafefb7ae1359b3a6e3365dd770"
+        },
+        "partial-measured.c": {
+          "bytes": 892938,
+          "sha256": "8b6f34e133c273e1ab8a6e74379334b6c10e5e729ac9bfbe0f2c3499f75bacca"
+        },
+        "partial": {
+          "bytes": 226720,
+          "sha256": "7cf53258036a2c0da4e267795d4042dddbcfe534e33a1f3a28c02f6322625ade"
+        },
+        "partial-measured": {
+          "bytes": 227024,
+          "sha256": "901605f962822162840b3fe8b30eadff80746bf4060a224539ea349cc01b9de8"
+        }
+      }
+    },
+    {
+      "host": "windows-2025",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38991578784/job/117274919071",
+      "rows": [
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 332,
+          "requested_bytes": 10384,
+          "retains": 65,
+          "peak_charged_bytes": 8096,
+          "final_charged_bytes": 7968,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 332,
+          "requested_bytes": 10384,
+          "retains": 65,
+          "peak_charged_bytes": 8096,
+          "final_charged_bytes": 7968,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 332,
+          "requested_bytes": 10384,
+          "retains": 65,
+          "peak_charged_bytes": 8096,
+          "final_charged_bytes": 7968,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 5132,
+          "requested_bytes": 110228,
+          "retains": 1025,
+          "peak_charged_bytes": 69536,
+          "final_charged_bytes": 69408,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 5132,
+          "requested_bytes": 110228,
+          "retains": 1025,
+          "peak_charged_bytes": 69536,
+          "final_charged_bytes": 69408,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 5132,
+          "requested_bytes": 110228,
+          "retains": 1025,
+          "peak_charged_bytes": 69536,
+          "final_charged_bytes": 69408,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 81932,
+          "requested_bytes": 1707672,
+          "retains": 16385,
+          "peak_charged_bytes": 1052576,
+          "final_charged_bytes": 1052448,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 81932,
+          "requested_bytes": 1707672,
+          "retains": 16385,
+          "peak_charged_bytes": 1052576,
+          "final_charged_bytes": 1052448,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 81932,
+          "requested_bytes": 1707672,
+          "retains": 16385,
+          "peak_charged_bytes": 1052576,
+          "final_charged_bytes": 1052448,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 335,
+          "requested_bytes": 10463,
+          "retains": 65,
+          "peak_charged_bytes": 8096,
+          "final_charged_bytes": 7968,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 335,
+          "requested_bytes": 10463,
+          "retains": 65,
+          "peak_charged_bytes": 8096,
+          "final_charged_bytes": 7968,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 335,
+          "requested_bytes": 10463,
+          "retains": 65,
+          "peak_charged_bytes": 8096,
+          "final_charged_bytes": 7968,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 5135,
+          "requested_bytes": 110307,
+          "retains": 1025,
+          "peak_charged_bytes": 69536,
+          "final_charged_bytes": 69408,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 5135,
+          "requested_bytes": 110307,
+          "retains": 1025,
+          "peak_charged_bytes": 69536,
+          "final_charged_bytes": 69408,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 5135,
+          "requested_bytes": 110307,
+          "retains": 1025,
+          "peak_charged_bytes": 69536,
+          "final_charged_bytes": 69408,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 81935,
+          "requested_bytes": 1707751,
+          "retains": 16385,
+          "peak_charged_bytes": 1052576,
+          "final_charged_bytes": 1052448,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 81935,
+          "requested_bytes": 1707751,
+          "retains": 16385,
+          "peak_charged_bytes": 1052576,
+          "final_charged_bytes": 1052448,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 81935,
+          "requested_bytes": 1707751,
+          "retains": 16385,
+          "peak_charged_bytes": 1052576,
+          "final_charged_bytes": 1052448,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 172,
+          "requested_bytes": 7055,
+          "retains": 33,
+          "peak_charged_bytes": 6016,
+          "final_charged_bytes": 5920,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 172,
+          "requested_bytes": 7055,
+          "retains": 33,
+          "peak_charged_bytes": 6016,
+          "final_charged_bytes": 5920,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 172,
+          "requested_bytes": 7055,
+          "retains": 33,
+          "peak_charged_bytes": 6016,
+          "final_charged_bytes": 5920,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 172,
+          "requested_bytes": 7057,
+          "retains": 33,
+          "peak_charged_bytes": 6016,
+          "final_charged_bytes": 5920,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 172,
+          "requested_bytes": 7057,
+          "retains": 33,
+          "peak_charged_bytes": 6016,
+          "final_charged_bytes": 5920,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 172,
+          "requested_bytes": 7057,
+          "retains": 33,
+          "peak_charged_bytes": 6016,
+          "final_charged_bytes": 5920,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 172,
+          "requested_bytes": 7058,
+          "retains": 33,
+          "peak_charged_bytes": 6016,
+          "final_charged_bytes": 5920,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 172,
+          "requested_bytes": 7058,
+          "retains": 33,
+          "peak_charged_bytes": 6016,
+          "final_charged_bytes": 5920,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 172,
+          "requested_bytes": 7058,
+          "retains": 33,
+          "peak_charged_bytes": 6016,
+          "final_charged_bytes": 5920,
+          "collections": 0
+        }
+      ],
+      "ranges": [
+        {
+          "mode": "unique",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              332,
+              332
+            ],
+            "requested_bytes": [
+              10384,
+              10384
+            ],
+            "retains": [
+              65,
+              65
+            ],
+            "peak_charged_bytes": [
+              8096,
+              8096
+            ],
+            "final_charged_bytes": [
+              7968,
+              7968
+            ]
+          }
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              5132,
+              5132
+            ],
+            "requested_bytes": [
+              110228,
+              110228
+            ],
+            "retains": [
+              1025,
+              1025
+            ],
+            "peak_charged_bytes": [
+              69536,
+              69536
+            ],
+            "final_charged_bytes": [
+              69408,
+              69408
+            ]
+          }
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              81932,
+              81932
+            ],
+            "requested_bytes": [
+              1707672,
+              1707672
+            ],
+            "retains": [
+              16385,
+              16385
+            ],
+            "peak_charged_bytes": [
+              1052576,
+              1052576
+            ],
+            "final_charged_bytes": [
+              1052448,
+              1052448
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              335,
+              335
+            ],
+            "requested_bytes": [
+              10463,
+              10463
+            ],
+            "retains": [
+              65,
+              65
+            ],
+            "peak_charged_bytes": [
+              8096,
+              8096
+            ],
+            "final_charged_bytes": [
+              7968,
+              7968
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              5135,
+              5135
+            ],
+            "requested_bytes": [
+              110307,
+              110307
+            ],
+            "retains": [
+              1025,
+              1025
+            ],
+            "peak_charged_bytes": [
+              69536,
+              69536
+            ],
+            "final_charged_bytes": [
+              69408,
+              69408
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              81935,
+              81935
+            ],
+            "requested_bytes": [
+              1707751,
+              1707751
+            ],
+            "retains": [
+              16385,
+              16385
+            ],
+            "peak_charged_bytes": [
+              1052576,
+              1052576
+            ],
+            "final_charged_bytes": [
+              1052448,
+              1052448
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              172,
+              172
+            ],
+            "requested_bytes": [
+              7055,
+              7055
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              6016,
+              6016
+            ],
+            "final_charged_bytes": [
+              5920,
+              5920
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              172,
+              172
+            ],
+            "requested_bytes": [
+              7057,
+              7057
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              6016,
+              6016
+            ],
+            "final_charged_bytes": [
+              5920,
+              5920
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              172,
+              172
+            ],
+            "requested_bytes": [
+              7058,
+              7058
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              6016,
+              6016
+            ],
+            "final_charged_bytes": [
+              5920,
+              5920
+            ]
+          }
+        }
+      ],
+      "environment": {
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "c": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin\nConfiguration file: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin/x86_64-w64-windows-gnu.cfg\n",
+        "cpu": "\n\nName                      : AMD EPYC 7763 64-Core Processor                \nArchitecture              : 9\nNumberOfCores             : 2\nNumberOfLogicalProcessors : 4\n\n\n\n"
+      },
+      "scope": "Generated standalone clients call an interpreted greeter server over real loopback HTTP/2. For each input size, raw unoptimized interpretation and an uninstrumented compiled client must print the expected result. Three separate measured client processes count managed allocation requests, requested bytes and effective retains, sampling allocator-charged storage after each allocation. Measurement starts after constant initialization and ends after entry execution and top-level cached-value cleanup, before complete runtime shutdown. GC is disabled and physical freeing enabled. Raw network/message buffers, allocator metadata/pages, process memory and server memory are excluded. No timing or C/Rust comparison. Inputs are 64, 1024 and 16384; full consumers sum 1..n, partial consumers sum the first 32, retained consumers sum then reread the initial value. The compiler uses its ordinary optimizer and native -O2; code is emitted through fwp build --service greeter --emit-c and compiled through this revision's cgen::compile_c. Compiler versions, CPU details, source, generated C and binaries accompany this report.\n",
+      "files": {
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "5e92c8214a6cf01bc4e377f8c5a23ed5ca87f75d25db350f50769d30c5d116c4"
+        },
+        "rust.txt": {
+          "bytes": 194,
+          "sha256": "341fed434cf52bd9ba5ab2f3507dbd943a2062212028574e529fc3e7e5ecd7a8"
+        },
+        "c.txt": {
+          "bytes": 316,
+          "sha256": "0d26d50244464d062f9140cb176b82ad8f08b888d9dfac2357ce75fd0162a6d7"
+        },
+        "cpu.txt": {
+          "bytes": 180,
+          "sha256": "b7abddf0593d5c6953701f94f96dc8cf45a10d7fbc3a6cda38c1b3adcb0e759e"
+        },
+        "scope.txt": {
+          "bytes": 1121,
+          "sha256": "aefa9088f0e3517e3ffe7412718a2bf5e38c434a01d41b4a5e57c3bc8ffa9223"
+        },
+        "memory.tsv": {
+          "bytes": 1285,
+          "sha256": "a1b4c255622e5188d140d07bc1a457a10851b8a9a2fbe437661948dc911e0048"
+        },
+        "greeter.fwp": {
+          "bytes": 2491,
+          "sha256": "8ed806ce7ae7962bce299eb54b19419eae7f2d4986647056cf1fffc910c10edc"
+        },
+        "job.log": {
+          "bytes": 50173,
+          "sha256": "0eca17ece0e3273af0e6977acb3b3603c33be528319f7da3045a355410c49b1a"
+        },
+        "unique.fwp": {
+          "bytes": 222,
+          "sha256": "a01d229af28a35ed1bc214b99a6a23cf47caed9ca395c6c90ee87ebf7d3d5fcf"
+        },
+        "unique.c": {
+          "bytes": 886323,
+          "sha256": "37daf31950092d6a3e60781e9b272bcb759c9bc87585874867ab9e17c006a915"
+        },
+        "unique-measured.c": {
+          "bytes": 888089,
+          "sha256": "6324f652e7c34574ec850a90a9cb3ad68688e403218237e27891191f8ef49c37"
+        },
+        "unique.exe": {
+          "bytes": 257024,
+          "sha256": "ab9ea6a98f1bcda47d5b65d5e1cb695c4d92e1839197d0022532ea7d2ea92916"
+        },
+        "unique-measured.exe": {
+          "bytes": 256000,
+          "sha256": "0cde6fa00fd37df82ead9276d2cfa2b61ddce3307ca0296931ff8aead4416234"
+        },
+        "retained.fwp": {
+          "bytes": 258,
+          "sha256": "04146a979daa662b89f5d1f057c8bdca3428591dba33a3cabd4c8b77bb70b49b"
+        },
+        "retained.c": {
+          "bytes": 911183,
+          "sha256": "a75923c05e7d20de5c76bf8d90cb27167c91dad09e0d675965be467f5c4a3216"
+        },
+        "retained-measured.c": {
+          "bytes": 912949,
+          "sha256": "56650542b2e445575826c6b33f04602843cd30fb3310031011e35eb79dbdab6c"
+        },
+        "retained.exe": {
+          "bytes": 272896,
+          "sha256": "cb0a7727d3a083bccbd967b41eaa235272fa2ce2d3d554fbb6ecf8d9564bc173"
+        },
+        "retained-measured.exe": {
+          "bytes": 272384,
+          "sha256": "3138c6a296a392a1c73cb6fcf1c77c296ed92edf1be4a6364a3c7a936c1809f1"
+        },
+        "partial.fwp": {
+          "bytes": 237,
+          "sha256": "c69fd3d2b2dae808e322caa034e5feb78c8d1c7e98ca8628499b4982bf887151"
+        },
+        "partial.c": {
+          "bytes": 891172,
+          "sha256": "3f3f1766bb9e7a03d711f10b659951073846bbafefb7ae1359b3a6e3365dd770"
+        },
+        "partial-measured.c": {
+          "bytes": 892938,
+          "sha256": "8b6f34e133c273e1ab8a6e74379334b6c10e5e729ac9bfbe0f2c3499f75bacca"
+        },
+        "partial.exe": {
+          "bytes": 257536,
+          "sha256": "caab33284c128a4c7b781dd4edb8f603268bac4bb43c9ce2ea9bf1451d3e35fa"
+        },
+        "partial-measured.exe": {
+          "bytes": 256000,
+          "sha256": "e1b7f1c4e971d1ce59c4d424d9a3e6f31fd98bd91917d6dd22b34898efd54982"
+        }
+      }
+    },
+    {
+      "host": "ubuntu-latest",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38991578784/job/117274919093",
+      "rows": [
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 334,
+          "requested_bytes": 12688,
+          "retains": 65,
+          "peak_charged_bytes": 10944,
+          "final_charged_bytes": 10816,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 334,
+          "requested_bytes": 12688,
+          "retains": 65,
+          "peak_charged_bytes": 10944,
+          "final_charged_bytes": 10816,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 334,
+          "requested_bytes": 12688,
+          "retains": 65,
+          "peak_charged_bytes": 10944,
+          "final_charged_bytes": 10816,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 5134,
+          "requested_bytes": 112532,
+          "retains": 1025,
+          "peak_charged_bytes": 72384,
+          "final_charged_bytes": 72256,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 5134,
+          "requested_bytes": 112532,
+          "retains": 1025,
+          "peak_charged_bytes": 72384,
+          "final_charged_bytes": 72256,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 5134,
+          "requested_bytes": 112532,
+          "retains": 1025,
+          "peak_charged_bytes": 72384,
+          "final_charged_bytes": 72256,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 81934,
+          "requested_bytes": 1709976,
+          "retains": 16385,
+          "peak_charged_bytes": 1055424,
+          "final_charged_bytes": 1055296,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 81934,
+          "requested_bytes": 1709976,
+          "retains": 16385,
+          "peak_charged_bytes": 1055424,
+          "final_charged_bytes": 1055296,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 81934,
+          "requested_bytes": 1709976,
+          "retains": 16385,
+          "peak_charged_bytes": 1055424,
+          "final_charged_bytes": 1055296,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 337,
+          "requested_bytes": 12767,
+          "retains": 65,
+          "peak_charged_bytes": 10944,
+          "final_charged_bytes": 10816,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 337,
+          "requested_bytes": 12767,
+          "retains": 65,
+          "peak_charged_bytes": 10944,
+          "final_charged_bytes": 10816,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 337,
+          "requested_bytes": 12767,
+          "retains": 65,
+          "peak_charged_bytes": 10944,
+          "final_charged_bytes": 10816,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 5137,
+          "requested_bytes": 112611,
+          "retains": 1025,
+          "peak_charged_bytes": 72384,
+          "final_charged_bytes": 72256,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 5137,
+          "requested_bytes": 112611,
+          "retains": 1025,
+          "peak_charged_bytes": 72384,
+          "final_charged_bytes": 72256,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 5137,
+          "requested_bytes": 112611,
+          "retains": 1025,
+          "peak_charged_bytes": 72384,
+          "final_charged_bytes": 72256,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 81937,
+          "requested_bytes": 1710055,
+          "retains": 16385,
+          "peak_charged_bytes": 1055424,
+          "final_charged_bytes": 1055296,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 81937,
+          "requested_bytes": 1710055,
+          "retains": 16385,
+          "peak_charged_bytes": 1055424,
+          "final_charged_bytes": 1055296,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 81937,
+          "requested_bytes": 1710055,
+          "retains": 16385,
+          "peak_charged_bytes": 1055424,
+          "final_charged_bytes": 1055296,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 174,
+          "requested_bytes": 9359,
+          "retains": 33,
+          "peak_charged_bytes": 8864,
+          "final_charged_bytes": 8768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 174,
+          "requested_bytes": 9359,
+          "retains": 33,
+          "peak_charged_bytes": 8864,
+          "final_charged_bytes": 8768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 174,
+          "requested_bytes": 9359,
+          "retains": 33,
+          "peak_charged_bytes": 8864,
+          "final_charged_bytes": 8768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 174,
+          "requested_bytes": 9361,
+          "retains": 33,
+          "peak_charged_bytes": 8864,
+          "final_charged_bytes": 8768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 174,
+          "requested_bytes": 9361,
+          "retains": 33,
+          "peak_charged_bytes": 8864,
+          "final_charged_bytes": 8768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 174,
+          "requested_bytes": 9361,
+          "retains": 33,
+          "peak_charged_bytes": 8864,
+          "final_charged_bytes": 8768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 174,
+          "requested_bytes": 9362,
+          "retains": 33,
+          "peak_charged_bytes": 8864,
+          "final_charged_bytes": 8768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 174,
+          "requested_bytes": 9362,
+          "retains": 33,
+          "peak_charged_bytes": 8864,
+          "final_charged_bytes": 8768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 174,
+          "requested_bytes": 9362,
+          "retains": 33,
+          "peak_charged_bytes": 8864,
+          "final_charged_bytes": 8768,
+          "collections": 0
+        }
+      ],
+      "ranges": [
+        {
+          "mode": "unique",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              334,
+              334
+            ],
+            "requested_bytes": [
+              12688,
+              12688
+            ],
+            "retains": [
+              65,
+              65
+            ],
+            "peak_charged_bytes": [
+              10944,
+              10944
+            ],
+            "final_charged_bytes": [
+              10816,
+              10816
+            ]
+          }
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              5134,
+              5134
+            ],
+            "requested_bytes": [
+              112532,
+              112532
+            ],
+            "retains": [
+              1025,
+              1025
+            ],
+            "peak_charged_bytes": [
+              72384,
+              72384
+            ],
+            "final_charged_bytes": [
+              72256,
+              72256
+            ]
+          }
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              81934,
+              81934
+            ],
+            "requested_bytes": [
+              1709976,
+              1709976
+            ],
+            "retains": [
+              16385,
+              16385
+            ],
+            "peak_charged_bytes": [
+              1055424,
+              1055424
+            ],
+            "final_charged_bytes": [
+              1055296,
+              1055296
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              337,
+              337
+            ],
+            "requested_bytes": [
+              12767,
+              12767
+            ],
+            "retains": [
+              65,
+              65
+            ],
+            "peak_charged_bytes": [
+              10944,
+              10944
+            ],
+            "final_charged_bytes": [
+              10816,
+              10816
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              5137,
+              5137
+            ],
+            "requested_bytes": [
+              112611,
+              112611
+            ],
+            "retains": [
+              1025,
+              1025
+            ],
+            "peak_charged_bytes": [
+              72384,
+              72384
+            ],
+            "final_charged_bytes": [
+              72256,
+              72256
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              81937,
+              81937
+            ],
+            "requested_bytes": [
+              1710055,
+              1710055
+            ],
+            "retains": [
+              16385,
+              16385
+            ],
+            "peak_charged_bytes": [
+              1055424,
+              1055424
+            ],
+            "final_charged_bytes": [
+              1055296,
+              1055296
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              174,
+              174
+            ],
+            "requested_bytes": [
+              9359,
+              9359
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              8864,
+              8864
+            ],
+            "final_charged_bytes": [
+              8768,
+              8768
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              174,
+              174
+            ],
+            "requested_bytes": [
+              9361,
+              9361
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              8864,
+              8864
+            ],
+            "final_charged_bytes": [
+              8768,
+              8768
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              174,
+              174
+            ],
+            "requested_bytes": [
+              9362,
+              9362
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              8864,
+              8864
+            ],
+            "final_charged_bytes": [
+              8768,
+              8768
+            ]
+          }
+        }
+      ],
+      "environment": {
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "c": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+        "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.27\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n"
+      },
+      "scope": "Generated standalone clients call an interpreted greeter server over real loopback HTTP/2. For each input size, raw unoptimized interpretation and an uninstrumented compiled client must print the expected result. Three separate measured client processes count managed allocation requests, requested bytes and effective retains, sampling allocator-charged storage after each allocation. Measurement starts after constant initialization and ends after entry execution and top-level cached-value cleanup, before complete runtime shutdown. GC is disabled and physical freeing enabled. Raw network/message buffers, allocator metadata/pages, process memory and server memory are excluded. No timing or C/Rust comparison. Inputs are 64, 1024 and 16384; full consumers sum 1..n, partial consumers sum the first 32, retained consumers sum then reread the initial value. The compiler uses its ordinary optimizer and native -O2; code is emitted through fwp build --service greeter --emit-c and compiled through this revision's cgen::compile_c. Compiler versions, CPU details, source, generated C and binaries accompany this report.\n",
+      "files": {
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "5e92c8214a6cf01bc4e377f8c5a23ed5ca87f75d25db350f50769d30c5d116c4"
+        },
+        "rust.txt": {
+          "bytes": 196,
+          "sha256": "f22d5e4e9ced367e774ce5bc140d9e6b1235c1882fec80d011044851f3ae6369"
+        },
+        "c.txt": {
+          "bytes": 110,
+          "sha256": "3635b8631d4ebcd8ed7586f4e01e7a6b44407de9d38db6e01daca9c242ed7a53"
+        },
+        "cpu.txt": {
+          "bytes": 3339,
+          "sha256": "4b1ebe526b12ce9b830b970d257dd9f342e7c06f1ccb5020f2b081d5998ea3c4"
+        },
+        "scope.txt": {
+          "bytes": 1121,
+          "sha256": "aefa9088f0e3517e3ffe7412718a2bf5e38c434a01d41b4a5e57c3bc8ffa9223"
+        },
+        "memory.tsv": {
+          "bytes": 1297,
+          "sha256": "8d22bfe116b4151ad9c689b92f3bd8fa2d74443016b6727e24fc29f7d748e30e"
+        },
+        "greeter.fwp": {
+          "bytes": 2491,
+          "sha256": "8ed806ce7ae7962bce299eb54b19419eae7f2d4986647056cf1fffc910c10edc"
+        },
+        "job.log": {
+          "bytes": 40833,
+          "sha256": "5c645437e648516a74efb6b119185b845e8c10edbf8dec4d0f65366122960f61"
+        },
+        "unique.fwp": {
+          "bytes": 222,
+          "sha256": "a01d229af28a35ed1bc214b99a6a23cf47caed9ca395c6c90ee87ebf7d3d5fcf"
+        },
+        "unique.c": {
+          "bytes": 886323,
+          "sha256": "37daf31950092d6a3e60781e9b272bcb759c9bc87585874867ab9e17c006a915"
+        },
+        "unique-measured.c": {
+          "bytes": 888089,
+          "sha256": "6324f652e7c34574ec850a90a9cb3ad68688e403218237e27891191f8ef49c37"
+        },
+        "unique": {
+          "bytes": 216800,
+          "sha256": "4ac98cd3c8fe4d85b51ab1ab21a2fccbdb0f92a281be8642d04cadcbbed9566e"
+        },
+        "unique-measured": {
+          "bytes": 213008,
+          "sha256": "f1c9ea89353b6302cbdb82e87362845812fccfc6ca9fec0d63c3d0002f810490"
+        },
+        "retained.fwp": {
+          "bytes": 258,
+          "sha256": "04146a979daa662b89f5d1f057c8bdca3428591dba33a3cabd4c8b77bb70b49b"
+        },
+        "retained.c": {
+          "bytes": 911183,
+          "sha256": "a75923c05e7d20de5c76bf8d90cb27167c91dad09e0d675965be467f5c4a3216"
+        },
+        "retained-measured.c": {
+          "bytes": 912949,
+          "sha256": "56650542b2e445575826c6b33f04602843cd30fb3310031011e35eb79dbdab6c"
+        },
+        "retained": {
+          "bytes": 230744,
+          "sha256": "58f6c233405c4a8be52ee11f18c4d9a68fbc8f2098aa1951414e049c67b17057"
+        },
+        "retained-measured": {
+          "bytes": 231008,
+          "sha256": "95169d220ae449864ea8e6dac3f2cdbeda292f4593f4ea8a1459078d92036840"
+        },
+        "partial.fwp": {
+          "bytes": 237,
+          "sha256": "c69fd3d2b2dae808e322caa034e5feb78c8d1c7e98ca8628499b4982bf887151"
+        },
+        "partial.c": {
+          "bytes": 891172,
+          "sha256": "3f3f1766bb9e7a03d711f10b659951073846bbafefb7ae1359b3a6e3365dd770"
+        },
+        "partial-measured.c": {
+          "bytes": 892938,
+          "sha256": "8b6f34e133c273e1ab8a6e74379334b6c10e5e729ac9bfbe0f2c3499f75bacca"
+        },
+        "partial": {
+          "bytes": 212776,
+          "sha256": "33aed53187556daf3540e3717bb1d35b5b913880b8aed3c4ef7f2aa93ded92b8"
+        },
+        "partial-measured": {
+          "bytes": 213080,
+          "sha256": "53c18c454e19e90a7808c40e917936c16d3b5ddda957ab4d520dacf98f3cfa09"
+        }
+      }
+    },
+    {
+      "host": "windows-11-arm",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38991578784/job/117274919133",
+      "rows": [
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 332,
+          "requested_bytes": 9904,
+          "retains": 65,
+          "peak_charged_bytes": 7712,
+          "final_charged_bytes": 7584,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 332,
+          "requested_bytes": 9904,
+          "retains": 65,
+          "peak_charged_bytes": 7712,
+          "final_charged_bytes": 7584,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 332,
+          "requested_bytes": 9904,
+          "retains": 65,
+          "peak_charged_bytes": 7712,
+          "final_charged_bytes": 7584,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 5132,
+          "requested_bytes": 109748,
+          "retains": 1025,
+          "peak_charged_bytes": 69152,
+          "final_charged_bytes": 69024,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 5132,
+          "requested_bytes": 109748,
+          "retains": 1025,
+          "peak_charged_bytes": 69152,
+          "final_charged_bytes": 69024,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 5132,
+          "requested_bytes": 109748,
+          "retains": 1025,
+          "peak_charged_bytes": 69152,
+          "final_charged_bytes": 69024,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 81932,
+          "requested_bytes": 1707192,
+          "retains": 16385,
+          "peak_charged_bytes": 1052192,
+          "final_charged_bytes": 1052064,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 81932,
+          "requested_bytes": 1707192,
+          "retains": 16385,
+          "peak_charged_bytes": 1052192,
+          "final_charged_bytes": 1052064,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 81932,
+          "requested_bytes": 1707192,
+          "retains": 16385,
+          "peak_charged_bytes": 1052192,
+          "final_charged_bytes": 1052064,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 335,
+          "requested_bytes": 9983,
+          "retains": 65,
+          "peak_charged_bytes": 7712,
+          "final_charged_bytes": 7584,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 335,
+          "requested_bytes": 9983,
+          "retains": 65,
+          "peak_charged_bytes": 7712,
+          "final_charged_bytes": 7584,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 335,
+          "requested_bytes": 9983,
+          "retains": 65,
+          "peak_charged_bytes": 7712,
+          "final_charged_bytes": 7584,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 5135,
+          "requested_bytes": 109827,
+          "retains": 1025,
+          "peak_charged_bytes": 69152,
+          "final_charged_bytes": 69024,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 5135,
+          "requested_bytes": 109827,
+          "retains": 1025,
+          "peak_charged_bytes": 69152,
+          "final_charged_bytes": 69024,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 5135,
+          "requested_bytes": 109827,
+          "retains": 1025,
+          "peak_charged_bytes": 69152,
+          "final_charged_bytes": 69024,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 81935,
+          "requested_bytes": 1707271,
+          "retains": 16385,
+          "peak_charged_bytes": 1052192,
+          "final_charged_bytes": 1052064,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 81935,
+          "requested_bytes": 1707271,
+          "retains": 16385,
+          "peak_charged_bytes": 1052192,
+          "final_charged_bytes": 1052064,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 81935,
+          "requested_bytes": 1707271,
+          "retains": 16385,
+          "peak_charged_bytes": 1052192,
+          "final_charged_bytes": 1052064,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 172,
+          "requested_bytes": 6575,
+          "retains": 33,
+          "peak_charged_bytes": 5632,
+          "final_charged_bytes": 5536,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 172,
+          "requested_bytes": 6575,
+          "retains": 33,
+          "peak_charged_bytes": 5632,
+          "final_charged_bytes": 5536,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 172,
+          "requested_bytes": 6575,
+          "retains": 33,
+          "peak_charged_bytes": 5632,
+          "final_charged_bytes": 5536,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 172,
+          "requested_bytes": 6577,
+          "retains": 33,
+          "peak_charged_bytes": 5632,
+          "final_charged_bytes": 5536,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 172,
+          "requested_bytes": 6577,
+          "retains": 33,
+          "peak_charged_bytes": 5632,
+          "final_charged_bytes": 5536,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 172,
+          "requested_bytes": 6577,
+          "retains": 33,
+          "peak_charged_bytes": 5632,
+          "final_charged_bytes": 5536,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 172,
+          "requested_bytes": 6578,
+          "retains": 33,
+          "peak_charged_bytes": 5632,
+          "final_charged_bytes": 5536,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 172,
+          "requested_bytes": 6578,
+          "retains": 33,
+          "peak_charged_bytes": 5632,
+          "final_charged_bytes": 5536,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 172,
+          "requested_bytes": 6578,
+          "retains": 33,
+          "peak_charged_bytes": 5632,
+          "final_charged_bytes": 5536,
+          "collections": 0
+        }
+      ],
+      "ranges": [
+        {
+          "mode": "unique",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              332,
+              332
+            ],
+            "requested_bytes": [
+              9904,
+              9904
+            ],
+            "retains": [
+              65,
+              65
+            ],
+            "peak_charged_bytes": [
+              7712,
+              7712
+            ],
+            "final_charged_bytes": [
+              7584,
+              7584
+            ]
+          }
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              5132,
+              5132
+            ],
+            "requested_bytes": [
+              109748,
+              109748
+            ],
+            "retains": [
+              1025,
+              1025
+            ],
+            "peak_charged_bytes": [
+              69152,
+              69152
+            ],
+            "final_charged_bytes": [
+              69024,
+              69024
+            ]
+          }
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              81932,
+              81932
+            ],
+            "requested_bytes": [
+              1707192,
+              1707192
+            ],
+            "retains": [
+              16385,
+              16385
+            ],
+            "peak_charged_bytes": [
+              1052192,
+              1052192
+            ],
+            "final_charged_bytes": [
+              1052064,
+              1052064
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              335,
+              335
+            ],
+            "requested_bytes": [
+              9983,
+              9983
+            ],
+            "retains": [
+              65,
+              65
+            ],
+            "peak_charged_bytes": [
+              7712,
+              7712
+            ],
+            "final_charged_bytes": [
+              7584,
+              7584
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              5135,
+              5135
+            ],
+            "requested_bytes": [
+              109827,
+              109827
+            ],
+            "retains": [
+              1025,
+              1025
+            ],
+            "peak_charged_bytes": [
+              69152,
+              69152
+            ],
+            "final_charged_bytes": [
+              69024,
+              69024
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              81935,
+              81935
+            ],
+            "requested_bytes": [
+              1707271,
+              1707271
+            ],
+            "retains": [
+              16385,
+              16385
+            ],
+            "peak_charged_bytes": [
+              1052192,
+              1052192
+            ],
+            "final_charged_bytes": [
+              1052064,
+              1052064
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              172,
+              172
+            ],
+            "requested_bytes": [
+              6575,
+              6575
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              5632,
+              5632
+            ],
+            "final_charged_bytes": [
+              5536,
+              5536
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              172,
+              172
+            ],
+            "requested_bytes": [
+              6577,
+              6577
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              5632,
+              5632
+            ],
+            "final_charged_bytes": [
+              5536,
+              5536
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              172,
+              172
+            ],
+            "requested_bytes": [
+              6578,
+              6578
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              5632,
+              5632
+            ],
+            "final_charged_bytes": [
+              5536,
+              5536
+            ]
+          }
+        }
+      ],
+      "environment": {
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "c": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: aarch64-w64-windows-gnu\nThread model: posix\nInstalledDir: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin\nConfiguration file: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin/aarch64-w64-windows-gnu.cfg\n",
+        "cpu": "\n\nName                      : Cobalt 100\nArchitecture              : 12\nNumberOfCores             : 4\nNumberOfLogicalProcessors : 4\n\n\n\n"
+      },
+      "scope": "Generated standalone clients call an interpreted greeter server over real loopback HTTP/2. For each input size, raw unoptimized interpretation and an uninstrumented compiled client must print the expected result. Three separate measured client processes count managed allocation requests, requested bytes and effective retains, sampling allocator-charged storage after each allocation. Measurement starts after constant initialization and ends after entry execution and top-level cached-value cleanup, before complete runtime shutdown. GC is disabled and physical freeing enabled. Raw network/message buffers, allocator metadata/pages, process memory and server memory are excluded. No timing or C/Rust comparison. Inputs are 64, 1024 and 16384; full consumers sum 1..n, partial consumers sum the first 32, retained consumers sum then reread the initial value. The compiler uses its ordinary optimizer and native -O2; code is emitted through fwp build --service greeter --emit-c and compiled through this revision's cgen::compile_c. Compiler versions, CPU details, source, generated C and binaries accompany this report.\n",
+      "files": {
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "5e92c8214a6cf01bc4e377f8c5a23ed5ca87f75d25db350f50769d30c5d116c4"
+        },
+        "rust.txt": {
+          "bytes": 195,
+          "sha256": "0400e842b69023487d35975ececcd0edec4f13d84d2fc9a87a2de331b2df2d2f"
+        },
+        "c.txt": {
+          "bytes": 320,
+          "sha256": "bbec0636659c548c7f7d34f8897cc2a8b3c96ad0a5bb81a5234fbf62da9fe6a6"
+        },
+        "cpu.txt": {
+          "bytes": 144,
+          "sha256": "872708849a31923de2e0cf60aacb612bf4587a64983498b3f47f646bfda554e3"
+        },
+        "scope.txt": {
+          "bytes": 1121,
+          "sha256": "aefa9088f0e3517e3ffe7412718a2bf5e38c434a01d41b4a5e57c3bc8ffa9223"
+        },
+        "memory.tsv": {
+          "bytes": 1279,
+          "sha256": "834946be323ed42a6ace8c6f319990b32118fc0141bd30c0523a813b00fbd31a"
+        },
+        "greeter.fwp": {
+          "bytes": 2491,
+          "sha256": "8ed806ce7ae7962bce299eb54b19419eae7f2d4986647056cf1fffc910c10edc"
+        },
+        "job.log": {
+          "bytes": 51822,
+          "sha256": "ecd65b9aa217e942bfc36fa63031c2532ddec737d577ff5f0ccd96dd1b92b29a"
+        },
+        "unique.fwp": {
+          "bytes": 222,
+          "sha256": "a01d229af28a35ed1bc214b99a6a23cf47caed9ca395c6c90ee87ebf7d3d5fcf"
+        },
+        "unique.c": {
+          "bytes": 886323,
+          "sha256": "37daf31950092d6a3e60781e9b272bcb759c9bc87585874867ab9e17c006a915"
+        },
+        "unique-measured.c": {
+          "bytes": 888089,
+          "sha256": "6324f652e7c34574ec850a90a9cb3ad68688e403218237e27891191f8ef49c37"
+        },
+        "unique.exe": {
+          "bytes": 231424,
+          "sha256": "3aced08590b2981e523433773be2b207f8db50c9f24c0b85bef430431703a718"
+        },
+        "unique-measured.exe": {
+          "bytes": 231936,
+          "sha256": "b7cbd7e8bd0a24cb57aa8df59b06204dab7eba290e79b774a6090b0e10747a79"
+        },
+        "retained.fwp": {
+          "bytes": 258,
+          "sha256": "04146a979daa662b89f5d1f057c8bdca3428591dba33a3cabd4c8b77bb70b49b"
+        },
+        "retained.c": {
+          "bytes": 911183,
+          "sha256": "a75923c05e7d20de5c76bf8d90cb27167c91dad09e0d675965be467f5c4a3216"
+        },
+        "retained-measured.c": {
+          "bytes": 912949,
+          "sha256": "56650542b2e445575826c6b33f04602843cd30fb3310031011e35eb79dbdab6c"
+        },
+        "retained.exe": {
+          "bytes": 245760,
+          "sha256": "14f2200df50158786a2d0431146141bd9dcfa5e6b46ae1c2f3b451eb9b2bcc78"
+        },
+        "retained-measured.exe": {
+          "bytes": 245760,
+          "sha256": "bca1d082d00f252f1009d60236d91212995a275c1a6f13da838e91a585550182"
+        },
+        "partial.fwp": {
+          "bytes": 237,
+          "sha256": "c69fd3d2b2dae808e322caa034e5feb78c8d1c7e98ca8628499b4982bf887151"
+        },
+        "partial.c": {
+          "bytes": 891172,
+          "sha256": "3f3f1766bb9e7a03d711f10b659951073846bbafefb7ae1359b3a6e3365dd770"
+        },
+        "partial-measured.c": {
+          "bytes": 892938,
+          "sha256": "8b6f34e133c273e1ab8a6e74379334b6c10e5e729ac9bfbe0f2c3499f75bacca"
+        },
+        "partial.exe": {
+          "bytes": 232448,
+          "sha256": "95e859e95f37f53886064a8df2f7e026b2b9cbbb9c42ad1ea8c5116cdddc5853"
+        },
+        "partial-measured.exe": {
+          "bytes": 232448,
+          "sha256": "135611550a2e2bad2bda9b5bd260a82f32c1fe6ebb2e908522f43bc82055ab0c"
+        }
+      }
+    },
+    {
+      "host": "macos-15",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/38991578784/job/117274919135",
+      "rows": [
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 332,
+          "requested_bytes": 9248,
+          "retains": 65,
+          "peak_charged_bytes": 6944,
+          "final_charged_bytes": 6816,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 332,
+          "requested_bytes": 9248,
+          "retains": 65,
+          "peak_charged_bytes": 6944,
+          "final_charged_bytes": 6816,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 332,
+          "requested_bytes": 9248,
+          "retains": 65,
+          "peak_charged_bytes": 6944,
+          "final_charged_bytes": 6816,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 5132,
+          "requested_bytes": 109092,
+          "retains": 1025,
+          "peak_charged_bytes": 68384,
+          "final_charged_bytes": 68256,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 5132,
+          "requested_bytes": 109092,
+          "retains": 1025,
+          "peak_charged_bytes": 68384,
+          "final_charged_bytes": 68256,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 5132,
+          "requested_bytes": 109092,
+          "retains": 1025,
+          "peak_charged_bytes": 68384,
+          "final_charged_bytes": 68256,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 81932,
+          "requested_bytes": 1706536,
+          "retains": 16385,
+          "peak_charged_bytes": 1051424,
+          "final_charged_bytes": 1051296,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 81932,
+          "requested_bytes": 1706536,
+          "retains": 16385,
+          "peak_charged_bytes": 1051424,
+          "final_charged_bytes": 1051296,
+          "collections": 0
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 81932,
+          "requested_bytes": 1706536,
+          "retains": 16385,
+          "peak_charged_bytes": 1051424,
+          "final_charged_bytes": 1051296,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 335,
+          "requested_bytes": 9327,
+          "retains": 65,
+          "peak_charged_bytes": 6944,
+          "final_charged_bytes": 6816,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 335,
+          "requested_bytes": 9327,
+          "retains": 65,
+          "peak_charged_bytes": 6944,
+          "final_charged_bytes": 6816,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 335,
+          "requested_bytes": 9327,
+          "retains": 65,
+          "peak_charged_bytes": 6944,
+          "final_charged_bytes": 6816,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 5135,
+          "requested_bytes": 109171,
+          "retains": 1025,
+          "peak_charged_bytes": 68384,
+          "final_charged_bytes": 68256,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 5135,
+          "requested_bytes": 109171,
+          "retains": 1025,
+          "peak_charged_bytes": 68384,
+          "final_charged_bytes": 68256,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 5135,
+          "requested_bytes": 109171,
+          "retains": 1025,
+          "peak_charged_bytes": 68384,
+          "final_charged_bytes": 68256,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 81935,
+          "requested_bytes": 1706615,
+          "retains": 16385,
+          "peak_charged_bytes": 1051424,
+          "final_charged_bytes": 1051296,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 81935,
+          "requested_bytes": 1706615,
+          "retains": 16385,
+          "peak_charged_bytes": 1051424,
+          "final_charged_bytes": 1051296,
+          "collections": 0
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 81935,
+          "requested_bytes": 1706615,
+          "retains": 16385,
+          "peak_charged_bytes": 1051424,
+          "final_charged_bytes": 1051296,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 0,
+          "requests": 172,
+          "requested_bytes": 5919,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 1,
+          "requests": 172,
+          "requested_bytes": 5919,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "repetition": 2,
+          "requests": 172,
+          "requested_bytes": 5919,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 0,
+          "requests": 172,
+          "requested_bytes": 5921,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 1,
+          "requests": 172,
+          "requested_bytes": 5921,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "repetition": 2,
+          "requests": 172,
+          "requested_bytes": 5921,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 0,
+          "requests": 172,
+          "requested_bytes": 5922,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 1,
+          "requests": 172,
+          "requested_bytes": 5922,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "repetition": 2,
+          "requests": 172,
+          "requested_bytes": 5922,
+          "retains": 33,
+          "peak_charged_bytes": 4864,
+          "final_charged_bytes": 4768,
+          "collections": 0
+        }
+      ],
+      "ranges": [
+        {
+          "mode": "unique",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              332,
+              332
+            ],
+            "requested_bytes": [
+              9248,
+              9248
+            ],
+            "retains": [
+              65,
+              65
+            ],
+            "peak_charged_bytes": [
+              6944,
+              6944
+            ],
+            "final_charged_bytes": [
+              6816,
+              6816
+            ]
+          }
+        },
+        {
+          "mode": "unique",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              5132,
+              5132
+            ],
+            "requested_bytes": [
+              109092,
+              109092
+            ],
+            "retains": [
+              1025,
+              1025
+            ],
+            "peak_charged_bytes": [
+              68384,
+              68384
+            ],
+            "final_charged_bytes": [
+              68256,
+              68256
+            ]
+          }
+        },
+        {
+          "mode": "unique",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              81932,
+              81932
+            ],
+            "requested_bytes": [
+              1706536,
+              1706536
+            ],
+            "retains": [
+              16385,
+              16385
+            ],
+            "peak_charged_bytes": [
+              1051424,
+              1051424
+            ],
+            "final_charged_bytes": [
+              1051296,
+              1051296
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              335,
+              335
+            ],
+            "requested_bytes": [
+              9327,
+              9327
+            ],
+            "retains": [
+              65,
+              65
+            ],
+            "peak_charged_bytes": [
+              6944,
+              6944
+            ],
+            "final_charged_bytes": [
+              6816,
+              6816
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              5135,
+              5135
+            ],
+            "requested_bytes": [
+              109171,
+              109171
+            ],
+            "retains": [
+              1025,
+              1025
+            ],
+            "peak_charged_bytes": [
+              68384,
+              68384
+            ],
+            "final_charged_bytes": [
+              68256,
+              68256
+            ]
+          }
+        },
+        {
+          "mode": "retained",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              81935,
+              81935
+            ],
+            "requested_bytes": [
+              1706615,
+              1706615
+            ],
+            "retains": [
+              16385,
+              16385
+            ],
+            "peak_charged_bytes": [
+              1051424,
+              1051424
+            ],
+            "final_charged_bytes": [
+              1051296,
+              1051296
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 64,
+          "min_max": {
+            "requests": [
+              172,
+              172
+            ],
+            "requested_bytes": [
+              5919,
+              5919
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              4864,
+              4864
+            ],
+            "final_charged_bytes": [
+              4768,
+              4768
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 1024,
+          "min_max": {
+            "requests": [
+              172,
+              172
+            ],
+            "requested_bytes": [
+              5921,
+              5921
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              4864,
+              4864
+            ],
+            "final_charged_bytes": [
+              4768,
+              4768
+            ]
+          }
+        },
+        {
+          "mode": "partial",
+          "elements": 16384,
+          "min_max": {
+            "requests": [
+              172,
+              172
+            ],
+            "requested_bytes": [
+              5922,
+              5922
+            ],
+            "retains": [
+              33,
+              33
+            ],
+            "peak_charged_bytes": [
+              4864,
+              4864
+            ],
+            "final_charged_bytes": [
+              4768,
+              4768
+            ]
+          }
+        }
+      ],
+      "environment": {
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "c": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+        "cpu": "machdep.cpu.cores_per_package: 3\nmachdep.cpu.core_count: 3\nmachdep.cpu.logical_per_package: 3\nmachdep.cpu.thread_count: 3\nmachdep.cpu.brand_string: Apple M1 (Virtual)\nhw.memsize: 7516192768\n"
+      },
+      "scope": "Generated standalone clients call an interpreted greeter server over real loopback HTTP/2. For each input size, raw unoptimized interpretation and an uninstrumented compiled client must print the expected result. Three separate measured client processes count managed allocation requests, requested bytes and effective retains, sampling allocator-charged storage after each allocation. Measurement starts after constant initialization and ends after entry execution and top-level cached-value cleanup, before complete runtime shutdown. GC is disabled and physical freeing enabled. Raw network/message buffers, allocator metadata/pages, process memory and server memory are excluded. No timing or C/Rust comparison. Inputs are 64, 1024 and 16384; full consumers sum 1..n, partial consumers sum the first 32, retained consumers sum then reread the initial value. The compiler uses its ordinary optimizer and native -O2; code is emitted through fwp build --service greeter --emit-c and compiled through this revision's cgen::compile_c. Compiler versions, CPU details, source, generated C and binaries accompany this report.\n",
+      "files": {
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "5e92c8214a6cf01bc4e377f8c5a23ed5ca87f75d25db350f50769d30c5d116c4"
+        },
+        "rust.txt": {
+          "bytes": 192,
+          "sha256": "e003fd3d385fcd0de16bc6b049124efb20207831dd810fd4ab39ff079bbb12a5"
+        },
+        "c.txt": {
+          "bytes": 206,
+          "sha256": "df12815703ce3452ab4bd51ecbea4cf8155246b94b5b15113a580ff6aec2befd"
+        },
+        "cpu.txt": {
+          "bytes": 190,
+          "sha256": "c8a8ebf53a152d1eb149ef7fe68b192b46e1f65222da0fddeea2b4d3b18e81a0"
+        },
+        "scope.txt": {
+          "bytes": 1121,
+          "sha256": "aefa9088f0e3517e3ffe7412718a2bf5e38c434a01d41b4a5e57c3bc8ffa9223"
+        },
+        "memory.tsv": {
+          "bytes": 1279,
+          "sha256": "eed1f6f5ec35729bca75271447f7a82924a38a2f955dc0788ed27aece75b2d85"
+        },
+        "greeter.fwp": {
+          "bytes": 2491,
+          "sha256": "8ed806ce7ae7962bce299eb54b19419eae7f2d4986647056cf1fffc910c10edc"
+        },
+        "job.log": {
+          "bytes": 42864,
+          "sha256": "c93c6eca438862767f45436733402dc9c1b95a740863d4f7260f415ac0e0647b"
+        },
+        "unique.fwp": {
+          "bytes": 222,
+          "sha256": "a01d229af28a35ed1bc214b99a6a23cf47caed9ca395c6c90ee87ebf7d3d5fcf"
+        },
+        "unique.c": {
+          "bytes": 886323,
+          "sha256": "37daf31950092d6a3e60781e9b272bcb759c9bc87585874867ab9e17c006a915"
+        },
+        "unique-measured.c": {
+          "bytes": 888089,
+          "sha256": "6324f652e7c34574ec850a90a9cb3ad68688e403218237e27891191f8ef49c37"
+        },
+        "unique": {
+          "bytes": 182024,
+          "sha256": "9307a3b19aa53598fde76d291f6686c34f629be2d81326c3c4925705bbc1a61e"
+        },
+        "unique-measured": {
+          "bytes": 182208,
+          "sha256": "fd2dc375b1737d939ebfa3084e6de548038969fec880c53e2f99b0e66765c36d"
+        },
+        "retained.fwp": {
+          "bytes": 258,
+          "sha256": "04146a979daa662b89f5d1f057c8bdca3428591dba33a3cabd4c8b77bb70b49b"
+        },
+        "retained.c": {
+          "bytes": 911183,
+          "sha256": "a75923c05e7d20de5c76bf8d90cb27167c91dad09e0d675965be467f5c4a3216"
+        },
+        "retained-measured.c": {
+          "bytes": 912949,
+          "sha256": "56650542b2e445575826c6b33f04602843cd30fb3310031011e35eb79dbdab6c"
+        },
+        "retained": {
+          "bytes": 199992,
+          "sha256": "49a4912716a53607db9125c895d483b25475d24ec57787500e5dd78949d0fe62"
+        },
+        "retained-measured": {
+          "bytes": 200176,
+          "sha256": "dafebcc6cfe8f5aef9b169dc35919a309df0e1bef1b5b9eb992b772daeaafa03"
+        },
+        "partial.fwp": {
+          "bytes": 237,
+          "sha256": "c69fd3d2b2dae808e322caa034e5feb78c8d1c7e98ca8628499b4982bf887151"
+        },
+        "partial.c": {
+          "bytes": 891172,
+          "sha256": "3f3f1766bb9e7a03d711f10b659951073846bbafefb7ae1359b3a6e3365dd770"
+        },
+        "partial-measured.c": {
+          "bytes": 892938,
+          "sha256": "8b6f34e133c273e1ab8a6e74379334b6c10e5e729ac9bfbe0f2c3499f75bacca"
+        },
+        "partial": {
+          "bytes": 182008,
+          "sha256": "9ef7e7bbae7b54689c2a6c31ee1155f8ec6e21e4da4f39bce115b08c2e16bf7a"
+        },
+        "partial-measured": {
+          "bytes": 182192,
+          "sha256": "04fd9c1753af5e76e16c584757813e6c2517eb97b5064876f49ec1ea0f3b0712"
+        }
+      }
+    }
+  ]
+}

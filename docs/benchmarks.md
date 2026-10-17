@@ -1473,3 +1473,178 @@ noise, predict the complete CI gate, or establish memory savings. Physical CPU
 models, host contention and resident memory were not sampled. The report retains
 compiler versions, artifact build settings, executable hashes, samples and log
 hashes; the workflow retains the complete logs.
+
+## Memory used by complete remote-stream clients
+
+A complete client receives a stream from a running service, constructs the
+language's iterator values and consumes them. The
+[baseline report](measurements/remote-client-memory-baseline-2026-10-17.json)
+at `456f2dbd` measures that path on all six native targets. The server sends the
+integers from 1 through the requested count over a real loopback HTTP/2 connection.
+The server uses the interpreter; its memory is outside the client counters.
+
+Three client programs request 64, 1,024 or 16,384 integers. The first sums the
+whole stream. The second also sums it, but retains the original iterator until
+it reads the first value again. The third consumes only the first 32 values.
+For 64 requested values, their outputs are respectively `2080`, `(2080, [1])`
+and `528`. The pair in the second output contains the sum and a one-element list
+holding the reread value. Raw unoptimized interpretation and ordinary compiled
+clients must agree with those expected results before collecting measurements.
+
+Separate instrumented clients run three times per case with collection disabled
+and physical freeing enabled. Counters start after constant initialization and
+stop after the entry function and cached top-level values are cleaned up. They
+count managed allocation requests, requested bytes and managed value retains,
+and sample allocator-charged storage after each allocation. A retain adds an
+owner to an already-counted value; this counter does not cover separate transport
+reference counts. Native clients use `-O2` through the recorded compiler revision's
+usual C compilation path. Compiler versions, CPU details, source, generated C,
+binaries and all samples are retained.
+
+Here is the charged storage remaining after entry cleanup for the first client:
+
+| Native client | 64 values | 1,024 values | 16,384 values |
+|---|---:|---:|---:|
+| Linux AMD64 | 10,816 bytes | 72,256 bytes | 1,055,296 bytes |
+| Linux ARM64 | 23,872 bytes | 85,312 bytes | 1,068,352 bytes |
+| macOS AMD64 | 6,816 bytes | 68,256 bytes | 1,051,296 bytes |
+| macOS ARM64 | 6,816 bytes | 68,256 bytes | 1,051,296 bytes |
+| Windows AMD64 | 7,968 bytes | 69,408 bytes | 1,052,448 bytes |
+| Windows ARM64 | 7,584 bytes | 69,024 bytes | 1,052,064 bytes |
+
+All three repetitions agree on these hosts. Remaining managed storage grows by
+64 bytes per consumed integer, even without deliberately retaining an earlier
+iterator. Each additional integer causes five allocation requests totaling about
+104 requested bytes; the changing length of the command-line count adds a small
+fixed difference. The retained-iterator case has the same remaining storage at
+this final sampling point. The partial reader's measured managed storage stays
+fixed as the requested count increases.
+
+These observations identify missing cache destruction with collection disabled;
+they do not show a leak under ordinary collection or establish bounded total
+memory for partial readers. The counters exclude raw network/message buffers,
+allocator metadata/pages, total process memory and server memory. The final
+sample precedes whole-runtime shutdown. No execution timings or C/Rust comparison
+are included. Generated C from that baseline also shows the missing ownership:
+`GrpcCell`, the internal type for a remote stream position, was not counted,
+and tuple cleanup did not release its cell field.
+
+To reproduce, dispatch `numerics.yml` with `suite=stream-clients`, then use
+[`collect-stream-client-measurements.py`](../scripts/collect-stream-client-measurements.py)
+through the local guard. Supply the workflow number, exact source revision,
+artifact directory and report path through `--run`, `--head`, `--artifacts` and
+`--output`. It requires all six native jobs, the startup-deadline regression,
+the client measurement, matching source identities and every expected sample.
+It never executes downloaded binaries.
+
+The [cache-ownership report](measurements/remote-client-cache-ownership-2026-10-17.json)
+compares that baseline with `886dad3b`, which passes focused ownership checks on
+all six native hosts. Full production acceptance is tracked in the
+[handoff](development-state.md). Both revisions run the same clients and inputs.
+The candidate gives a stream position responsibility for its cached values;
+releasing the final owner releases the cache without waiting for collection.
+
+| Native client | Baseline final charge, 16,384 values | Candidate final charge, each tested size | Candidate one-pass peak, each tested size |
+|---|---:|---:|---:|
+| Linux AMD64 | 1,055,296 bytes | 6,480 bytes | 6,832 bytes |
+| Linux ARM64 | 1,068,352 bytes | 19,536 bytes | 19,888 bytes |
+| macOS AMD64 | 1,051,296 bytes | 2,480 bytes | 2,832 bytes |
+| macOS ARM64 | 1,051,296 bytes | 2,480 bytes | 2,832 bytes |
+| Windows AMD64 | 1,052,448 bytes | 3,632 bytes | 3,984 bytes |
+| Windows ARM64 | 1,052,064 bytes | 3,248 bytes | 3,600 bytes |
+
+Final managed charge is constant across 64, 1,024 and 16,384 values in all three
+modes, and all three repetitions agree. The 64-byte-per-value retained growth is
+removed. The one-pass peak is also constant. Keeping an earlier iterator still
+keeps its history until released, so that mode's peak grows with the sequence.
+These are single-call clients, not evidence for unlimited repeated calls in one
+process or bounded unread network queues.
+
+There is a bookkeeping cost: at 16,384 values, the one-pass client's effective
+retains rise from 16,385 to 81,921, about five times as many. Each additional
+integer still allocates five objects requesting about 104 bytes. No timing or
+C/Rust speed comparison is included. The capture-transfer comparison below
+reduces these retains; wrapper references and allocations remain optimization
+work. Ownership alone is not a zero-cost claim.
+
+Independent controls release chains through 16,384 positions, preserving aliases
+to positions, optional results and tuples. All counted allocations release after
+the final owner, without collection. Deliberately recursive cleanup and omitted
+source release must fail. Collector stress, memory-reuse poisoning and decoder
+success/error/trap controls also pass. Across all hosts, instrumented cleanup
+stack-address span is at most 592 bytes and does not grow with chain length.
+Ordinary Linux client binaries show backward branches and fixed cache-cleanup
+frames: 24 bytes on AMD64, excluding the incoming return address, and 64 bytes on
+ARM64 including saved registers. These figures exclude helper-call frames.
+
+For a candidate ownership comparison, pass the retained baseline report with
+`--baseline-report` to the collector. This also requires passing cache-owner and
+callback-failure controls, the primitive contract audit, exact release counts
+and bounded stack samples. It checks that final managed charge stays constant
+across sizes, and that one-pass peak charge does too. Retaining an earlier
+iterator intentionally keeps its history until that reference is released.
+
+Use [`inspect-stream-client-binaries.py`](../scripts/inspect-stream-client-binaries.py)
+with `--artifacts`, an explicit LLVM `--objdump` executable and `--clients unique
+retained` to save static disassembly and fingerprints. It inspects the ordinary
+compiled clients, without executing downloaded programs. A backward branch can
+confirm a cleanup loop; count saved registers and stack adjustments separately
+when reporting a function's frame. Helper calls have their own frames. Samples
+of stack-address variation do not measure total stack storage.
+
+### Moving captured values instead of retaining them again
+
+A closure is a function carrying values for a later call. When a call consumes
+its only owner, those captured values can move into the callee or a new partial
+application. The old closure then releases its own storage without releasing
+the transferred values. Shared closures still need separate references.
+
+[The capture-transfer report](measurements/remote-client-capture-moves-2026-10-17.json)
+at `afd7d460` passes all six native jobs in
+[the focused run](https://github.com/e6qu/fun-with-pipes/actions/runs/38996238360).
+It compares the cache-ownership revision with the
+same native clients, inputs, compiler settings and measurement boundaries above.
+For the one-pass client, every host reports these retain counts; three separate
+processes agree:
+
+| Received integers | Original tracing-dependent cache | Explicit cache ownership | Cache ownership plus capture moves |
+|---|---:|---:|---:|
+| 64 | 65 | 321 | 194 |
+| 1,024 | 1,025 | 5,121 | 3,074 |
+| 16,384 | 16,385 | 81,921 | 49,154 |
+
+At 16,384 integers, moving captures removes about 40% of the new ownership
+implementation's retains. It still performs about three times the original
+tracing-dependent implementation's retains. Moving a continuation's stream
+position also avoids an artificial second owner, allowing that read to move its
+cached result. Remaining wrapper references and five allocations per additional
+integer are still optimization work. No timing or C/Rust comparison is included.
+
+Final charged storage stays at the cache-ownership values in the preceding table,
+constant across sizes and all three modes. One-pass peak drops another 64 bytes
+on every host: 6,768 bytes on Linux AMD64, 19,824 on Linux ARM64, 2,768 on either
+Mac, 3,920 on Windows AMD64 and 3,536 on Windows ARM64. Retained histories still
+keep earlier values alive until the iterator is released. Connections and raw
+message queues remain outside this complete ownership claim.
+
+Independent controls cover unique/shared closures, partial/full calls, normal
+returns, language errors and traps. They require zero capture retains for the
+unique cases and exactly the necessary typed retains for shared ones, with no
+remaining managed storage. Deliberately restoring capture duplication or stealing
+shared captures makes the controls fail. Existing unwind, cancellation, scalar-bit
+and reference-counter overflow tests remain in the native selection.
+
+The actual Linux AMD64 and ARM64 binaries branch on ownership count one, clear
+the consumed closure's capture count and skip the capture-retain callback. Shared
+paths still call it. Dynamic dispatch, argument copying and stack storage remain;
+this is not a claim that dynamic calls use registers alone. Cache cleanup still
+uses a backward branch with fixed frames of 24 bytes on AMD64 (excluding the
+incoming return address) and 64 bytes on ARM64 (including saved registers).
+Helper-call frames are separate.
+
+To collect this comparison, use `--baseline-report` with the cache-ownership
+report and add `--capture-moves`. The collector requires all six native jobs at
+the exact source revision, the capture controls and their 12 cases at both
+optimization levels. The report retains source identities, raw samples, binary
+hashes and reviewed instruction evidence. Full production acceptance is recorded
+separately in the handoff.

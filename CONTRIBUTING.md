@@ -63,7 +63,10 @@ prove that a fresh CI clone can resolve the recorded head.
 
 During a combined delivery, draft PRs use explicitly dispatched focused checks.
 Marking the PR ready runs the complete production matrix; every final-head
-production job must pass before merge. Draft skips are never acceptance gates.
+production job must pass before merge. Draft skips are never acceptance gates. For an
+early native probe in `numerics.yml`, `native_runner` selects one runner instead
+of the suite's matrix. Use `all` for complete evidence; report collectors still
+require every expected native host. This does not change production acceptance.
 
 Windows dependency setup uses an exact cache key for each architecture and setup
 script. The [dependency-only workflow](.github/workflows/windows-dependencies.yml)

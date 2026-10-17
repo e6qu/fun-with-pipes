@@ -1,148 +1,99 @@
 # Session handoff
 
-Updated 2026-10-17 UTC. [PLAN.md](../PLAN.md) retains seven unfinished work areas.
-One delivery is open: [PR #155](https://github.com/e6qu/fun-with-pipes/pull/155),
-branch `remote-stream-delivery` in `/Users/zardoz/projects/fun-with-pipes`.
-The combined revision includes stream correctness/storage work, bounded-stack
-chain cleanup and portable neighboring service tests. Final production acceptance
-is still required; no merge has occurred.
+Updated 2026-10-17 UTC. All seven work areas in [PLAN.md](../PLAN.md) remain open.
 
-## Current delivery and acceptance
+## Current delivery
 
-The stream component report remains the passing six-host measurement at
-`4c26f21fe717c4df35a4439e59c1812a5edb449d`, run `38985903147`. The chain component
-report remains the passing six-host measurement at `aea7d6df`, run `38988093805`.
-Preserve these measured source identities instead of relabeling them as the
-combined revision. Their runtime/compiler changes are now bundled in PR #155.
+PR #155 is accepted as `45410bea4b59e2e6478632cf253f9c29cbd9863d`, with all nine
+production jobs `38990872293` and docs `38990872208` passing at `e71a2295`.
+The verified merge has the tested tree, parent `11ae0f63`, and exactly the subject
+`Fix shared stream reads and bound cleanup stack use`, with no body or trailers.
+The watcher completed and saved `/private/tmp/fwp155-merge-record.json`.
+Duplicate production `38996775271` was canceled; Windows dependency jobs remain.
 
-The first production attempt (`38986731253`, head `31385092`) found a fragile
-receive-test fault injection: a generic `free(g->m)` match was no longer unique.
-The repair targets only `g_got_release`. Expanded focused checks then exposed
-Windows-only fixture assumptions: late API-version selection, POSIX-only socket
-handles/pairs and a Unix OpenSSL path. Those are repaired. Run `38990255544` at
-`6ac13de7` passed Linux AMD64; Windows AMD64 passed every neighboring fixture
-except a diagnostic assertion expecting LF instead of Windows CRLF. That assertion
-now normalizes text line endings; it still checks the exact message, exit 102
-and empty stdout. These fixes change tests, not runtime behavior.
+The root branch `release-stream-caches` starts at that accepted merge and adds
+cache ownership, unique closure capture transfers, Windows portability fixes,
+reports and clearer docs. Publish this single delivery and require all nine
+production jobs plus documentation on its final commit before squash merge.
+Suggested subject: `Release unused stream values and reduce memory bookkeeping`.
+Do not treat the focused evidence as final production acceptance.
 
-Next: publish the combined revision and run the full production matrix once.
-Do not repeat the entire six-host focused suite solely for the line-ending fix:
-all affected targets are included in final production CI. Require all nine
-production jobs plus documentation on the exact combined commit. Create a new
-merge watcher with the new head/run IDs; the old watcher exited after the failed
-head and cannot merge the new one. Squash with one line of at most 80 characters
-and an explicitly empty body, without trailers or AI attribution. Cancel the
-superseded focused run to free runners; leave Windows dependency jobs running.
-Fix any final-head failures. Queued CI does not block independent preparation.
+The combined preparation is published at `a49ffe3e` on
+`move-unique-closure-captures`, worktree `/private/tmp/fwp-closure-capture-moves`.
+Its final measured source is `afd7d460fcbc5a897ee4b4b960a3735830fe52a1`, preserved
+as `evidence/remote-capture-moves-20261017`. All six native jobs pass in
+`38996238360`. [The report](measurements/remote-client-capture-moves-2026-10-17.json)
+retains that measured source; report/doc changes do not relabel it.
 
-Static inspection of the combined Linux AMD64 binaries from passing job
-`117270859226` confirms unchanged stream receive frames: 344 bytes in the O2
-fixture and 216 bytes in the O1 service client, including saved registers and
-excluding the incoming return address. Download took 2.67s and inspection 0.15s
-through the local guard; no downloaded executable ran locally. Artifacts are in
-`/private/tmp/fwp-stream-combined/38990255544/stream-storage-ubuntu-latest`.
-The retained report still identifies its original measured binaries.
+The comparison uses the same real loopback clients at 64/1,024/16,384 integers,
+three processes per case, including one-pass, retained-history and first-32-only
+reads. Raw unoptimized interpretation and ordinary compiled output agree.
+Managed counters run with collection disabled, from constant initialization to
+entry cleanup before whole-runtime shutdown. Raw buffers, server/whole-process
+memory and timing are excluded. The earlier baseline is `456f2dbd`, run
+`38991578784`; the cache-only component is `886dad3b`, run `38994414068`.
+Both pass all six native hosts and have retained evidence tags/reports.
 
-## Verified chain cleanup
+Typed cache ownership removes the baseline's 64-byte-per-consumed-integer
+remaining growth. Final managed charge is constant in each tested mode and size:
+Linux AMD64 6,480 bytes, Linux ARM64 19,536, either Mac 2,480, Windows AMD64 3,632
+and Windows ARM64 3,248. Keeping an earlier iterator intentionally keeps its
+history until released. These single-call clients do not prove bounded repeated
+calls or unread network queues. Five allocations per integer remain.
 
-Baseline [38987418673](https://github.com/e6qu/fun-with-pipes/actions/runs/38987418673)
-at `70e36523aa42926683a3d9944a04ebfba943709f` and candidate
-[38988093805](https://github.com/e6qu/fun-with-pipes/actions/runs/38988093805)
-at `aea7d6df` pass on all six native OS/architecture targets. The baseline tag is
-`evidence/wrapped-chain-baseline-20261017`. Earlier fixture lookup/poisoning
-failures are repaired and superseded; they establish no acceptance.
+Moving captured values from consumed unique closures reduces one-pass retains
+from 81,921 in the cache-only component to 49,154 at 16,384 integers on every
+host. This remains above the original tracing-dependent baseline's 16,385.
+Unique captures move through partial/full calls; shared captures still acquire
+typed references. The destination is ready before transfer, with no intervening
+allocation, suspension or recoverable trap. Error/trap cleanup remains owned.
+One-pass peak drops another 64 bytes per host; Linux AMD64 is now 6,768 bytes.
+No timing, zero-cost or C/Rust parity claim.
 
-The compiler follows a final counted field through records and variants with
-one nonempty constructor when that path returns to the original type. These
-wrappers release in a loop; a remaining owner stops child destruction. Existing
-direct self-tail handling and count-only mode stay unchanged. Other branching
-recursive graphs can still need calls. There is no runtime work list.
+Controls cover 16,384-position chains and aliases to positions/wrappers, physical
+reclamation without collection, collector/reuse stress, decoder errors/traps,
+12 capture-sharing/application/failure combinations at O1/O2, scalar bits that
+resemble pointers, cancellation and reference-counter overflow. Deliberately
+omitted cleanup, recursive destruction, restored duplicate captures and stolen
+shared captures must fail. Actual Linux AMD64/ARM64 binaries show capture-count
+one branches bypassing duplicate callbacks and looped cache cleanup. Cleanup
+frames are 24 bytes on AMD64 excluding the incoming return address and 64 bytes
+on ARM64 including saved registers; helper frames are separate. Dynamic dispatch,
+argument copying and stack storage remain.
 
-Checks cover optional and optional/tuple chains at 64, 1,024 and 16,384 links,
-root/node/optional/tuple aliases, physical reclamation with zero collections,
-O1/O2 interpreter/native agreement, and hybrid collector/reuse stress with
-physical freeing enabled and disabled. Restoring recursive destructors must
-exceed the stack bound. The source examples hash their whole small chain to
-retain independently callable type-specific cleanup functions.
+## Repaired failures and local checks
 
-The [report](measurements/wrapped-chain-cleanup-2026-10-17.json) compares O1/O2
-stack-address variation, not total stack size or timing. Linux AMD64's preceding
-O2 span grows from 2,048 bytes at 64 links to 32,768 at 1,024; ARM64 grows from
-3,072 to 49,152. Candidate spans stay at 16 and 32 bytes respectively through
-16,384 links. Across all hosts/flags/aliases, candidate spans are at most 48 bytes.
-A zero span means the sampled address stayed the same, not zero stack storage.
+Earlier probe `38994754283` exposed two test assumptions: reversed expected
+concatenation and rounded freed-byte statistics. The failure-loop test now
+requires exact zero remaining managed bytes after 10,000 failures and detects a
+missing closure release. Six-host run `38995678897` then passed Linux/macOS but
+found Windows CRLF diagnostics and Unix-only stack failure injection. Repairs
+normalize only fixture diagnostics and inject native `CreateFiberEx` failures on
+Windows. All seven closure/unwind test targets now join Windows production.
+Those repairs pass `38996238360`; no focused failure remains unresolved.
 
-Static inspection of actual Linux O2 binaries confirms backward branches and
-fixed Link-cleanup frames: AMD64 24 bytes excluding the incoming return address;
-ARM64 64 bytes including saved registers. Apple Silicon also reserves 64 bytes.
-The report retains excerpts/hashes; ordinary release helpers have their own
-frames. Node allocations and reference counts remain. Baseline CPU/compiler
-metadata was not recorded separately, so its logs/binaries are retained without
-a timing claim. Native remote caches still need explicit ownership.
+Full builds and native execution stay on GitHub. Every local check uses
+`python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py` with unchanged
+limits. Formatting passed in 1.05s, docs in 2.53s, collector syntax in 0.19s;
+final report collection passed in 21.59s. Linux AMD64/ARM64 downloads passed in
+2.90s/2.95s and static inspection in 0.15s/0.14s. No downloaded executable ran.
 
-## Reproduction and local checks
+## Next action
 
-Artifacts: `/private/tmp/fwp-chain-evidence/`, grouped by run and native host.
-Use `scripts/collect-chain-measurements.py` with both run IDs/full heads,
-`--artifacts` and `--output`, through
-`python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py`.
-Collection passed in 27.83s; refresh after binary inspection passed in 2.89s.
-Static inspections used `/private/tmp/fwp-inspect-chain-binaries.py` with each
-artifact folder through the same guard and passed in 0.14–0.15s. Mach-O uses its
-format-specific objdump mode. No downloaded executable ran locally.
+Next: publish `release-stream-caches`, record its PR/head/run identities here,
+fix every discovered failure and wait for its complete final-head acceptance.
+Squash-merge with the explicit one-line subject and empty body, then verify the
+merge tree, parent and message. Preserve Windows dependency jobs; cancel only
+superseded or duplicate production runs. Keep one active delivery PR.
 
-Formatting passed in 1.14s; the tuple example's prebuilt-compiler type check in
-0.26s; collector syntax in 0.14s; docs audit in 2.70s. The guard remains serial/low priority with 64 GiB free disk,
-target below 2 GiB, sampled aggregate RSS below 1 GiB and a 180-second deadline.
-Full builds, tests and native execution stay on GitHub runners.
-
-## Documentation cleanup
-
-Ownership and TLS guides now point to PR #153's accepted UDP/TCP/TLS delivery;
-they no longer describe it as unaccepted preparation. A stale runtime reference
-to `docs/grpc.md` now points to `docs/services.md`. The benchmark guide explains
-stack-address span, instrumentation overhead and what the measurements exclude.
-The seven project areas remain open, and JIT is excluded.
-
-## Subsequent ownership work
-
-Next give cached results and continuations typed owners and bounded-stack
-last-reference destruction, including partial construction and retained aliases.
-Move a source owner forward when possible. Establish owners for pools, calls,
-connections, streams and decoder captures; scheduler identities remain borrows.
-The existing connection counter controls transport closure, not complete object
-destruction. [Ownership](ownership.md#what-remains-before-remote-calls-can-use-arc)
-records these distinctions. Remote calls remain excluded from checked ARC. Compiler work must review
-`CGen::drop_body`, lowering of `grpc._force` and RPC result descriptors together.
-Standard wire decoding already returns owned values and cleans partial fields
-through `fwp_decode` in `runtime/fwp_rt_exec.c`. The cache must preserve/transfer
-those owners through wrapper construction, publication and failure. The custom
-callback branch still uses `fwp_apply1` and needs a separate result contract;
-marking `grpc._force` reviewed alone cannot establish graph ownership.
-
-A promising next contract consumes a position: when it has one owner, transfer
-its saved result directly; when shared, return another result owner. Keep type
-information in generated code or existing method descriptors instead of adding
-a destructor pointer to every position. For long chains, release a position,
-its optional-result wrapper and its tuple iteratively while each is uniquely
-owned; stop at a shared wrapper. Decode results and partial construction need
-owners before publication. Runtime calls into `grpc._iter` must use the owned
-application machinery and transfer arguments exactly once. These are proposed
-implementation constraints, not completed work. Measure actual language clients
-as well as C fixtures: retaining an earlier iterator intentionally retains its
-saved sequence, so dropping C roots alone cannot prove bounded consumption.
-The next measurement is published as `9e07096b` on `measure-remote-stream-clients` in
-`/private/tmp/fwp-stream-clients`, based on `6ac13de7`; it has no PR and has not
-run yet. The ignored runner-only test in `tests/grpc.rs` generates actual native
-clients for full consumption, the first 32 values, and a retained first position.
-It compares output with raw interpretation, then records three allocation/live
-storage samples at 64/1,024/16,384 values with GC off. The server is interpreted
-and excluded from the counters; raw buffers/process memory and timings are also
-excluded. The new `stream-clients` focused suite records compiler/CPU/source and
-binaries. Local guarded formatting passed in 1.11s; runner verification remains
-required. After publishing the current PR, validate this
-preparation while production runs. Retained host callbacks, GPU resources and
-all seven project areas remain open.
+While that next delivery validates, measure repeated calls in one client process
+before changing connection lifetimes. Use fixed 64-value responses and 1/16/256
+calls, full/partial reads and retained earlier iterators. Add created/destroyed
+connection and stream counts and raw message bytes, separate reusable pool
+storage from per-call growth, and compare raw interpreter/native output. Then
+assign owners to connections, streams, retained codecs and sender callbacks,
+with borrowed scheduler links and explicit cycle handling. Whole remote calls
+remain excluded from checked ARC; this cache change does not remove tracing.
 
 ## Roadmap status
 
