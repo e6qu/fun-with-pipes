@@ -31,16 +31,45 @@ runs; retain actual input counts rather than impose equal allocation totals.
 No elapsed-time, whole-process memory or C/Rust comparison is claimed. Retain
 source, emitted C, binaries and raw checkpoints before modifying ownership.
 
-Linux probe `39008824856` runs measurement-only source
-`ef69079dccc87fb08ed829fe83467bfc65d7df20`. Next: inspect and repair it, then freeze
-the passing baseline across all six native hosts. Inspect actual ARM64/AMD64
-binaries. Only then implement concrete input-iterator ownership, preserving
-continuation evaluation before current-element encoding, retained aliases,
-early response, cancellation and failed sender publication. Existing remote
-entries can mark input values permanently shared; adding a retain alone does
-not fix that. Keep pending node owners alive through next evaluation and send.
+Linux probe `39008824856` passed at `ef69079d`. On Linux AMD64, remaining
+managed storage grows by 7,104 bytes per synchronous call and 13,104 per
+bidirectional/retained-input call despite complete connection/request/message
+release and finished sender tasks. At 256 calls that leaves 1,820,416 and
+3,356,416 bytes respectively. Early completion performs variable input work.
+Static actual-binary review confirms entry sharing and unowned iterator advance;
+review and artifacts are under `/private/tmp/fwp-sender-input-evidence/39008824856`.
+These are probe results, not six-platform acceptance or a speed comparison.
 
-Local work uses the root guard with unchanged limits. Formatting passed in 1.30s; fixture formatting in 0.01s and documentation
+The frozen baseline tag `evidence/sender-input-baseline-20261017` points at
+`f6ebb2e9a8c0c8d5bffbc40f1f46e374e0acbd22`; six-host run `39009268395`
+is pending. Its runtime, compiler and workloads match the passing Linux probe.
+The baseline source is fixed while independent candidate work proceeds.
+
+## Input ownership candidate
+
+The local compiler supplies each streamed remote call's concrete iterator drop
+function, including direct-only calls, and stops marking that input permanently
+shared. Arguments remain borrowed at entry; the cursor acquires an independent
+owner. It keeps current and pending nodes separately so the current element
+survives next-step evaluation and encoding. A static client descriptor supplies
+the type information; no additional input heap object is introduced.
+
+Synchronous cursors live on the stack. Detached senders hold the same state,
+release it and their raw record on completion/failure/cancellation, and use the
+existing unique scheduler-task policy. Existing fixtures now use explicit empty
+input descriptions and drain task lists without reading freed handles.
+New negative controls omit input retains, each node release, sender freeing or
+unique task disposal. Normal cases include retained aliases, continuation and
+encoding traps, pre-entry cancellation and cancellation during encoding.
+This is implemented locally, not yet natively verified.
+
+Next: publish the candidate and run Linux `sender-repeat`; repair failures.
+Keep collecting the frozen six-host baseline independently. Require six native
+candidate jobs, matching outputs, complete input/sender/connection cleanup,
+bounded remaining storage, failure controls and actual ARM64/AMD64 binary review
+before preparing the next delivery. PR #158 remains the only active PR.
+
+Local work uses the root guard with unchanged limits. Candidate formatting passed in 1.31s; fixture formatting in 0.01s and documentation
 audit in 3.19s. The local six-host collector passed syntax parsing in 0.20s.
 No local builds or native execution ran. All native measurement work belongs on
 GitHub. Private design notes are `/private/tmp/fwp-next-connection-ownership.md`.

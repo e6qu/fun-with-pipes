@@ -53,6 +53,8 @@ def main():
               'owned_client_streams_release_after_readers_and_senders_finish',
               'request_encoding_buffer_releases_on_encode_trap_and_cancelled_send',
               'unique_closure_captures_move_through_partial_calls_and_failures']
+    if baseline:
+        checks.append('input_owners_release_after_lookahead_failure_and_sender_cancellation')
     output_tables = args.output.parent / args.output.stem
     output_tables.mkdir(parents=True, exist_ok=True)
     hosts = []

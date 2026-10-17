@@ -43,6 +43,7 @@ typedef struct {
     const char *env;           /* FWP_SERVICE_<MODULE> */
     const char *default_addr;
     fwp_rpc m;
+    void (*input_drop)(V);     /* concrete Iterator type for streamed clients */
 } fwp_remote;
 
 /* a module's exported functions served over gRPC */
@@ -1759,6 +1760,55 @@ static int g_iter_next(V *cur, V *x) {
     return 1;
 }
 
+/* A client owns its current iterator node and, during lookahead/encoding,
+ * the previous node that keeps the borrowed element alive. No new heap object. */
+typedef struct { V cur, pending; const fwp_remote *remote; } g_input;
+
+static void g_input_release(void *arg) {
+    g_input *input = arg;
+    V cur = input->cur, pending = input->pending;
+    input->cur = input->pending = 0;
+#ifdef FWP_RESOURCE_OWNERS
+    input->remote->input_drop(pending);
+    input->remote->input_drop(cur);
+#else
+    (void)cur; (void)pending;
+#endif
+}
+
+static void g_input_acquire(g_input *input, V iter) {
+#ifdef FWP_RESOURCE_OWNERS
+    if (!input->remote || !input->remote->input_drop)
+        fwp_trap("missing client input ownership metadata");
+    fwp_rc_dup(iter);
+#endif
+    input->cur = iter;
+}
+
+static int g_input_next(g_input *input, V *value) {
+    V previous = input->pending;
+    input->pending = 0;
+#ifdef FWP_RESOURCE_OWNERS
+    input->remote->input_drop(previous);
+#else
+    (void)previous;
+#endif
+    V node = input->cur;
+    if (fwp_tag(node) != 1) return 0;
+    input->cur = 0;
+    input->pending = node;
+    *value = OBJ(node)->f[0];
+    /* Preserve the established order: evaluate the next iterator before
+     * encoding this element. The pending node owns both fields throughout. */
+#ifdef FWP_RESOURCE_OWNERS
+    V unit = FWP_UNIT;
+    input->cur = fwp_apply_borrowed(OBJ(node)->f[1], 1, &unit);
+#else
+    input->cur = fwp_apply1(OBJ(node)->f[1], FWP_UNIT);
+#endif
+    return 1;
+}
+
 /* ---------------------------------------------------------------- senders */
 
 static void g_encode_request(const fwp_remote *r, V *vals, h2_buf *out);
@@ -1772,13 +1822,13 @@ static void g_encode_request(const fwp_remote *r, V *vals, h2_buf *out);
 typedef struct {
     g_conn *c;
     g_stream *s;
-    V cur;
-    const fwp_remote *r;
+    g_input input;
     g_serving *serving;
 } g_sender;
 
 static void g_sender_peer_finish(void *arg) {
     g_sender *x = (g_sender *)arg;
+    g_input_release(&x->input);
     g_serving_peer_release(x->serving);
     x->serving = 0;
     g_stream *s = x->s;
@@ -1787,6 +1837,9 @@ static void g_sender_peer_finish(void *arg) {
     g_conn *c = x->c;
     x->c = 0;
     g_conn_drop(c);
+#ifndef FWP_RESOURCE_NO_FREE
+    fwp_mem_free(x);
+#endif
 }
 
 static void g_send_all(void *arg, int cancelled) {
@@ -1811,16 +1864,14 @@ static void g_send_all(void *arg, int cancelled) {
     V v;
     for (;;) {
         if (!x->s->listed || x->s->remote_end) break;
-        V cur = x->cur;
-        if (!g_iter_next(&cur, &v)) {
+        if (!g_input_next(&x->input, &v)) {
             g_send_data(x->c, x->s, 0, 0, 1);
             break;
         }
-        x->cur = cur;
         h2_buf req = {0};
         fwp_cleanup request_buffer;
         fwp_cleanup_push(&request_buffer, g_h2_buffer_release, &req);
-        g_encode_request(x->r, &v, &req);
+        g_encode_request(x->input.remote, &v, &req);
         int ok = g_send_msg(x->c, x->s, req.d, req.len, 0);
         fwp_cleanup_pop(&request_buffer);
         h2b_free(&req);
@@ -1835,24 +1886,30 @@ static void g_send_all(void *arg, int cancelled) {
 }
 
 static void g_spawn_sender(g_conn *c, g_stream *s, V iter, const fwp_remote *r) {
+#ifdef FWP_RESOURCE_OWNERS
+    if (!r || !r->input_drop) fwp_trap("missing client input ownership metadata");
+#endif
     g_sender *x = (g_sender *)fwp_alloc(sizeof *x);
     x->c = 0;
-    x->s = 0; /* assigned only after the reference is acquired */
-    x->cur = iter;
-    x->r = r;
-    x->serving = g_ctx_of()->serving;
-    if (x->serving) {
-        if (x->serving->peer_users == SIZE_MAX) fwp_trap("too many serving context owners");
-        x->serving->peer_users++;
-    }
+    x->s = 0;
+    x->input = (g_input){0, 0, r};
+    x->serving = 0;
     fwp_cleanup peer_cleanup;
     fwp_cleanup_push(&peer_cleanup, g_sender_peer_finish, x);
+    g_serving *serving = g_ctx_of()->serving;
+    if (serving) {
+        if (serving->peer_users == SIZE_MAX) fwp_trap("too many serving context owners");
+        serving->peer_users++;
+        x->serving = serving;
+    }
+    g_input_acquire(&x->input, iter);
     fwp_rc_dup(PTR(s));
     x->s = s;
     fwp_rc_dup(PTR(c));
     x->c = c;
     fwp_task *t = fwp_spawn_task(0, g_send_all, x, 0, 1);
     t->cfinish = g_sender_peer_finish;
+    t->ownership = FWP_TASK_UNIQUE;
     fwp_cleanup_pop(&peer_cleanup);
 }
 
@@ -1922,8 +1979,16 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
             /* requests are sent as responses arrive */
             g_spawn_sender(c, s, args[0], r);
         } else {
-            V cur = args[0], x;
-            while (g_iter_next(&cur, &x)) {
+            g_input input = {0, 0, r};
+            fwp_cleanup input_cleanup;
+            /* Validate metadata before publishing a cleanup that uses it. */
+#ifdef FWP_RESOURCE_OWNERS
+            if (!r->input_drop) fwp_trap("missing client input ownership metadata");
+#endif
+            fwp_cleanup_push(&input_cleanup, g_input_release, &input);
+            g_input_acquire(&input, args[0]);
+            V x;
+            while (g_input_next(&input, &x)) {
                 h2_buf req = {0};
                 fwp_cleanup client_request;
                 fwp_cleanup_push(&client_request, g_h2_buffer_release, &req);
@@ -1933,6 +1998,8 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
                 h2b_free(&req);
                 if (!ok) break;
             }
+            fwp_cleanup_pop(&input_cleanup);
+            g_input_release(&input);
             g_send_data(c, s, 0, 0, 1);
         }
         if (r->m.output != 0) break;

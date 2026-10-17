@@ -44,8 +44,8 @@ fn client_request_buffers_release_on_encode_trap_and_cancelled_send() {
             1,
         ),
         (
-            "while (g_iter_next(&cur, &x)) {",
-            "while (observed_next(&cur, &x)) {",
+            "while (g_input_next(&input, &x)) {",
+            "while (observed_next(&input.cur, &x)) {",
             1,
         ),
         (
@@ -82,6 +82,7 @@ static int observed_next(uintptr_t *,uintptr_t *);
 #undef free
 static void observed_free(void *p){if(p&&p==watched_request){request_frees++;watched_request=0;}if(p&&p==watched_wire){wire_frees++;watched_wire=0;}free(p);}
 static void no_release(void *p){(void)p;}
+static void observed_input_drop(V value){(void)value;}
 static int observed_next(uintptr_t *cur,uintptr_t *value){if(*cur)return 0;*cur=1;*value=42;return 1;}
 static void call(void *arg,int stop){if(stop){cancelled++;return;}jmp_buf failed;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;if(!setjmp(failed)){fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;V args[]={0};fwp_remote_call(arg,args);_Exit(7);}else trapped++;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;}
 int main(void){
@@ -90,7 +91,7 @@ int main(void){
  for(int kind=0;kind<2;kind++)for(stage=0;stage<3;stage++){
   watched_request=watched_wire=0;request_frees=wire_frees=cancelled=trapped=0;c->out.len=0;c->conn_window=stage==1?0:65535;
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*(kind*3+stage)));s->sent_headers=1;stream=s;
-  fwp_remote remote={0};remote.env="FWP_CLIENT_REQUEST_PROBE";remote.default_addr="local";remote.what="probe";remote.m.input=kind;
+  fwp_remote remote={0};remote.env="FWP_CLIENT_REQUEST_PROBE";remote.default_addr="local";remote.what="probe";remote.m.input=kind;remote.input_drop=observed_input_drop;
   fwp_task *t=fwp_spawn_task(0,call,&remote,0,0);
   if(stage==1){fwp_p_task_yield();if(t->done||!watched_request||!watched_wire||request_frees||wire_frees)return 2;fwp_p_task_cancel(PTR(t));}
   fwp_await(t);

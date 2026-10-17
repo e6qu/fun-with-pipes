@@ -3,6 +3,8 @@ static void observed_message_free(void *p) {
     if (p && p == probe_message) { probe_message = 0; probe_message_frees++; }
     free(p);
 }
+static void empty_input_drop(V value) { if(value)_Exit(224); }
+static const fwp_remote empty_input_remote={.input_drop=empty_input_drop};
 static jmp_buf probe_trap;
 static int recover_probe(void) { return 1; }
 static double probe_charge(void) {
@@ -47,7 +49,7 @@ int main(int argc,char **argv) {
     h2b_put(&s->data,"partial",7);
     if(mode==5)fwp_rc_dup(PTR(s)); /* a sender-like independent alias */
     if(mode==6||mode==7) {
-        g_spawn_sender(c,s,0,0);
+        g_spawn_sender(c,s,0,&empty_input_remote);
         if(!probe_sender||*fwp_rc_slot(PTR(s))!=3)return 216;
     }
     if(mode>=8) {
@@ -55,7 +57,7 @@ int main(int argc,char **argv) {
         if(mode>=9){*slot=254;fwp_rc_dup(mode==10?PTR(c):PTR(s));(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
         probe_spawn_fail=mode==8;
         fwp_trap_recover=recover_probe;fwp_trap_jb=&probe_trap;fwp_trap_cleanup=fwp_cleanups;
-        if(!setjmp(probe_trap)){g_spawn_sender(c,s,0,0);return 217;}
+        if(!setjmp(probe_trap)){g_spawn_sender(c,s,0,&empty_input_remote);return 217;}
         fwp_trap_recover=0;fwp_trap_jb=0;fwp_trap_cleanup=0;probe_spawn_fail=0;
         if(fwp_cleanups||probe_sender||probe_stream_finals)return 217;
         if(mode>=9){
@@ -83,9 +85,13 @@ int main(int argc,char **argv) {
         if(probe_stream_finals||!fwp_rc_last(PTR(s)))return 213;
         fwp_task *task=probe_sender;
         if(mode==7)fwp_cancel_tree(task);
-        fwp_await(task);
-        if(!task->done||task->cfinish||((g_sender *)task->carg)->s)return 214;
-        FWP_KEEP_ALIVE(PTR(task));
+        int64_t deadline=fwp_now_ns()+10000000000LL;
+        while(fwp_gc_tasks){
+            if(fwp_now_ns()>=deadline)return 214;
+            fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();
+        }
+        fwp_free_zombie();
+        if(fwp_cleanups)return 214;
     }
     if(probe_stream_finals!=1)return 212;
     if(still_finalized(s))return 215;
