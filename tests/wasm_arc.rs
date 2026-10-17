@@ -594,7 +594,7 @@ fn fixed_function_captures_initialize_in_wasi() {
     let code = emit(&source, &cfile, &[]);
     assert!(code.contains("static fwp_clo fwp_static_function"));
     for opt in ["-O1", "-O2"] {
-        let binary = dir.join(&format!("fixed{opt}.wasm"));
+        let binary = dir.join(format!("fixed{opt}.wasm"));
         fwp::cgen::compile_for(&code, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
         let output = checked(&mut wasi(&binary, root));
         assert_eq!(

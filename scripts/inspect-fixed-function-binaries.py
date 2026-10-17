@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+"""Check saved Linux function objects and startup code without running binaries."""
+import argparse
+import hashlib
+import json
+import re
+import subprocess
+from pathlib import Path
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--artifact', type=Path, required=True)
+parser.add_argument('--llvm-bin', type=Path, required=True)
+args = parser.parse_args()
+directory = args.artifact
+binary = directory / 'server.exe'
+code = (directory / 'server.c').read_text()
+assert '#define FWP_ARC_ONLY 1' in code
+declarations = re.findall(
+    r'^static fwp_clo (fwp_static_function\d+) = \{(\d+), (\d+), \{([0, ]+)\}\};$',
+    code, re.M)
+assert declarations
+symbols = subprocess.check_output(
+    [str(args.llvm_bin / 'llvm-nm'), '-S', '--defined-only', str(binary)], text=True)
+assert not any(name in symbols for name in ['fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'])
+objects = {}
+for line in symbols.splitlines():
+    fields = line.split()
+    if len(fields) == 4 and fields[3].startswith('fwp_static_function'):
+        objects[fields[3]] = {'address': int(fields[0], 16), 'bytes': int(fields[1], 16),
+                              'symbol_kind': fields[2]}
+assert set(objects) == {name for name, _, _, _ in declarations}
+captures = 0
+for name, function, count, zeroes in declarations:
+    count = int(count)
+    assert zeroes.split(', ') == ['0'] * count
+    # Two uint32_t header fields followed by count 64-bit V capture words.
+    assert objects[name]['bytes'] == 8 + 8 * count, (name, objects[name], count)
+    assert objects[name]['address'] % 8 == 0, (name, objects[name])
+    assert objects[name]['symbol_kind'] == 'd', (name, objects[name])
+    stores = re.findall(r'    ' + name + r'\.a\[(\d+)\] = PTR\(&fc(\d+)\);', code)
+    assert [int(index) for index, _ in stores] == list(range(count)), (name, stores)
+    objects[name].update(function=int(function), captures=[int(target) for _, target in stores])
+    captures += count
+sections = subprocess.check_output(
+    [str(args.llvm_bin / 'llvm-size'), '--format=sysv', str(binary)], text=True)
+sizes = {}
+for line in sections.splitlines():
+    fields = line.split()
+    if len(fields) == 3 and fields[1].isdigit():
+        sizes[fields[0]] = int(fields[1])
+assembly = subprocess.check_output(
+    [str(args.llvm_bin / 'llvm-objdump'), '-d', '--no-show-raw-insn', '--disassemble-symbols=main,fwp_main_thread',
+     str(binary)], text=True)
+assert '<main>:' in assembly
+assert '<fwp_main_thread>:' in assembly
+(directory / 'server-startup.asm').write_text(assembly)
+report = {
+    'revision': (directory / 'revision.txt').read_text().strip(),
+    'method': 'Static LLVM inspection only. Object size/alignment and C initialization are checked; main and fwp_main_thread disassembly is saved for review. No binary execution.',
+    'binary_sha256': hashlib.sha256(binary.read_bytes()).hexdigest(),
+    'source_sha256': hashlib.sha256(code.encode()).hexdigest(),
+    'sections': sizes, 'file_bytes': binary.stat().st_size,
+    'object_count': len(objects), 'object_bytes': sum(o['bytes'] for o in objects.values()),
+    'startup_capture_stores_in_source': captures, 'objects': objects,
+}
+(directory / 'fixed-function-binary-review.json').write_text(json.dumps(report, indent=2) + '\n')
+print(directory.name, {key: report[key] for key in ['object_count', 'object_bytes', 'startup_capture_stores_in_source']}, flush=True)

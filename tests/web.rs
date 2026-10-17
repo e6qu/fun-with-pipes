@@ -1586,3 +1586,91 @@ fn chat_example() {
     let _ = child.kill();
     let _ = child.wait();
 }
+
+/// Compare ordinary servers built from saved baseline C and current C on one
+/// runner. The same current client drives both, so client changes do not bias
+/// the server comparison. Timings include that client's process and network work.
+#[test]
+#[ignore = "runner-only paired HTTP server timing and startup measurement"]
+#[cfg(any(target_os = "linux", target_os = "macos", windows))]
+fn fixed_function_server_timing_comparison() {
+    assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
+    let artifacts = PathBuf::from(
+        std::env::var_os("FWP_HTTP_FUNCTION_PROFILE_ARTIFACTS")
+            .expect("current profile artifact directory"),
+    );
+    let baseline = PathBuf::from(
+        std::env::var_os("FWP_HTTP_FUNCTION_BASELINE")
+            .expect("baseline profile artifact directory"),
+    );
+    for source in ["server.fwp", "repeated-client.fwp"] {
+        assert_eq!(
+            std::fs::read(baseline.join(source)).unwrap(),
+            std::fs::read(artifacts.join(source)).unwrap(),
+            "timing comparison requires identical {source}"
+        );
+    }
+    let baseline_code = std::fs::read_to_string(baseline.join("server.c")).unwrap();
+    let baseline_binary = artifacts.join("server-baseline.exe");
+    std::fs::write(artifacts.join("server-baseline.c"), &baseline_code).unwrap();
+    std::fs::copy(
+        baseline.join("revision.txt"),
+        artifacts.join("baseline-revision.txt"),
+    )
+    .unwrap();
+    fwp::cgen::compile_c(&baseline_code, &baseline_binary, "-O2").unwrap();
+    let current_binary = artifacts.join("server.exe");
+    let client = artifacts.join("client.exe");
+    assert!(current_binary.is_file() && client.is_file());
+    let ca = certs()
+        .expect("timing comparison requires TLS")
+        .join("ca.pem");
+    std::fs::write(artifacts.join("timing-scope.txt"), "Current fwp checked-ARC HTTP server versus the saved baseline fwp checked-ARC server, rebuilt from C on the same host with the same -O2 toolchain and -ffp-contract=off. Both use identical server/request program sources and the same current ordinary native client. No instrumented binaries run here. Six fresh processes per variant and transport, with alternating baseline/current order. Each server receives 1024 warm-up GET /hello requests, then 8192 measured requests; the client consumes/releases bodies and sums status 200. The default 1000-request limit exercises connection replacement. Elapsed time covers the complete measured client subprocess, including its startup, parsing, network/TLS and server work; excludes compilation, server startup, warm-up and shutdown. Startup separately measures spawn through the server's listening announcement, including OS/process and listener initialization, not just constant initialization. RSS samples follow warm-up and the measured batch, not a peak bound. Collection disabled and freeing enabled. No C/Rust comparison or isolated initialization/scheduler speed claim.\n").unwrap();
+    let env = [
+        ("FWP_GC", "off"),
+        ("FWP_FREE", "1"),
+        ("FWP_GC_STRESS", "0"),
+        ("FWP_GC_VERIFY", "0"),
+        ("FWP_REUSE_VERIFY", "0"),
+    ];
+    let run_client = |base: &str, calls: usize| {
+        let output = Command::new(&client)
+            .arg(calls.to_string())
+            .env("FWP_BASE", base)
+            .env("SSL_CERT_FILE", &ca)
+            .envs(env)
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout),
+            format!("{}\n", 200 * calls)
+        );
+    };
+    let mut rows = String::from("tls\trepetition\tposition\tvariant\tcalls\tstartup_ns\telapsed_ns\twarm_rss_kib\tfinal_rss_kib\n");
+    for tls in [false, true] {
+        for repetition in 0..6 {
+            let variants = if repetition % 2 == 0 {
+                [("baseline", &baseline_binary), ("current", &current_binary)]
+            } else {
+                [("current", &current_binary), ("baseline", &baseline_binary)]
+            };
+            for (position, (variant, binary)) in variants.iter().enumerate() {
+                eprintln!("HTTP timing: TLS={tls}, repetition={repetition}, {variant}");
+                let began = Instant::now();
+                let mut server = start_command(Command::new(binary), tls, &env).unwrap();
+                let startup = began.elapsed().as_nanos();
+                let base = format!("{}://{}", if tls { "https" } else { "http" }, server.addr);
+                run_client(&base, 1024);
+                let warm_rss = process_rss_kib(server.child.id());
+                let began = Instant::now();
+                run_client(&base, 8192);
+                let elapsed = began.elapsed().as_nanos();
+                let final_rss = process_rss_kib(server.child.id());
+                stop_server(&mut server, &base, &ca);
+                rows.push_str(&format!("{tls}\t{repetition}\t{position}\t{variant}\t8192\t{startup}\t{elapsed}\t{warm_rss}\t{final_rss}\n"));
+                std::fs::write(artifacts.join("server-timing.tsv"), &rows).unwrap();
+            }
+        }
+    }
+}

@@ -17,8 +17,8 @@ managed allocation requests. No timing savings are established. Raw artifacts
 and the checked summary are under `/private/tmp/fwp-function-profile` and
 `/private/tmp/fwp-function-profile-baseline.json`.
 
-The compiler change is local; focused native checks pass, with platform evidence pending. It interns identical partial-function
-recipes in static storage, using the existing closure type and typed call path.
+The compiler change is published at `01ae40da`. Equal partial functions share
+static storage, using the existing closure type and typed call path.
 Captured values must be literal capture-free functions; zero-argument evaluations,
 effects, runtime data and saturated applications keep their original evaluation.
 Addresses are filled during existing constant initialization. A small C compile
@@ -71,9 +71,44 @@ its existing runtime contract, then corrected in the test. The fixture's initial
 function-return effect annotation and function-valued pipe were corrected to the
 existing final-arrow effect and composition rules. WASI harness compilation passed
 (0.72 s); actual WASI execution belongs on equipped runners. Compiler clippy, workflow lint
-and documentation checks passed; Linux runner checks also exercise GCC. No post-change server
-allocation savings have been measured yet. Keep delivery
-acceptance and merge decisions for PR #163 in the root handoff.
+and documentation checks passed; Linux runner checks also exercise GCC. Keep delivery acceptance and merge decisions for PR #163 in the root handoff.
+
+## Current evidence and repair
+
+The repeated [profile at `01ae40da`](https://github.com/e6qu/fun-with-pipes/actions/runs/39067651911)
+passes on both Linux architectures. The classified allocations fall from 177 to
+zero per additional request. Total managed requests fall from about 899 to 722,
+and retains from about 2,318 to 1,901; background activity remains included.
+Requested payload falls by 3,808 bytes per additional request. This is an older
+fwp/current fwp comparison, not C/Rust parity or a timing result.
+
+Guarded `scripts/summarize-closed-functions.py` validated all 18 rows per host
+(0.19 s). `scripts/inspect-fixed-function-binaries.py` inspected the two ordinary
+ELF binaries without running them (about 4 s each): both contain 331 aligned
+function objects totaling 7,592 bytes, with 618 capture-address stores in generated
+startup code. It checked actual symbol sizes against the closure layout and
+saved startup disassembly. Reports and artifacts are under
+`/private/tmp/fwp-function-profile/39067651911`; combined allocation summaries are
+`/private/tmp/fwp-function-profile-{baseline,current}.json`.
+
+[Focused checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39067653871)
+pass on Windows ARM64/AMD64 (four executing targets each; Unix-only cleanup has
+zero tests there) and Linux AMD64 WASI (all nine tests). Completed macOS ARM/Intel
+and Linux ARM jobs failed on one needless borrow in the new WASI test; the fix is
+local. All their logs were audited, as were every completed target. Linux AMD64
+native and ARM64 WASI are still queued. The repair also makes native/GCC tests
+run after a lint failure, so independent failures are not hidden. Targeted clippy
+for all three changed test harnesses passes (0.49 s).
+
+A paired timing experiment now rebuilds baseline server C on the current runner,
+uses the same ordinary client for both revisions and alternates their order.
+It measures six fresh processes per server/transport, 1,024 warm-up then 8,192
+measured calls. It records total client/network/server time, spawn-to-listening
+time and two RSS samples. It does not isolate startup stores or establish a peak
+memory bound. Harness compilation (0.96 s), formatting (1.52 s) and workflow lint
+(1.47 s) passed. Publish the complete repair batch, rerun focused native/WASI and
+run paired profiling/timing with baseline run `39066197415`. Repeat six-host server
+memory checks before final acceptance; retain existing bounds and controls.
 
 ## Roadmap status
 

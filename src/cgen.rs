@@ -2075,8 +2075,7 @@ impl<'p> Gen<'p> {
         format!("PTR(&s{})", id)
     }
 
-    /// C expression for a constant value (complex values are built once at
-    /// startup into a global).
+    /// A function reference that neither evaluates nor captures runtime data.
     fn bare_function(&self, e: &Expr) -> Option<FuncId> {
         let id = match e {
             Expr::Func(id) => *id,
@@ -2102,6 +2101,8 @@ impl<'p> Gen<'p> {
         format!("PTR(&fwp_static_function{id})")
     }
 
+    /// C expression for a constant value (complex values are built once at
+    /// startup into a global).
     fn const_expr(&mut self, v: &Value) -> String {
         match v {
             Value::I8(x) => format!("(V)(int64_t){}", x),
