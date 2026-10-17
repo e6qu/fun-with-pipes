@@ -29,6 +29,71 @@ fn receive_runtime() -> String {
 }
 
 #[test]
+fn library_unload_closes_idle_connections_before_draining_tasks() {
+    let mut generated = receive_runtime();
+    for (before, after) in [
+        ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) { if(p==watched_connection)connection_finalized++;"),
+        ("static void fwp_library_tasks_finish(void) {", "static void fwp_library_tasks_finish(void) { int64_t test_deadline=fwp_now_ns()+1000000000LL;"),
+        ("        while (fwp_gc_tasks) {", "        while (fwp_gc_tasks) { if(fwp_now_ns()>=test_deadline)_Exit(209);"),
+    ] {
+        assert_eq!(generated.matches(before).count(), 1, "{before}");
+        generated = generated.replacen(before, after, 1);
+    }
+    let fixture = r#"
+int main(int argc,char **argv){
+ if(argc!=2)return 201;int unpooled=atoi(argv[1]);
+ fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
+ V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);
+ V address=fwp_p_local_addr(listener);char *error=0;
+ g_conn *c=g_connect(STR(address)->d,0,&error);
+ if(!c||error||g_pool!=c)return 202;watched_connection=c;
+ // Allow reader and writer to enter their normal idle waits.
+ fwp_p_task_sleep(fwp_record(1,(V[]){1000000}));
+ int readers=0,writers=0;
+ for(fwp_task *t=fwp_gc_tasks;t;t=t->gc_next){
+  if(t->done||!t->unwinding)return 203;
+  readers+=t->cfn==g_reader;writers+=t->cfn==g_writer;
+ }
+ if(readers!=1||writers!=1||c->refs!=2||c->dead)return 204;
+ if(unpooled){g_pool=c->next_pool;c->next_pool=0;g_conn_drop(c);}
+ g_conn_drop(c); // caller releases; only I/O and any pool owner remain
+ FWP_KEEP_ALIVE(listener);
+ fwp_lib_finish();
+ if(connection_finalized!=1||g_pool||fwp_cur||fwp_gc_tasks||fwp_gc.ready)return 205;
+ return 0;
+}
+"#;
+    let hooks = "static void *watched_connection; static int connection_finalized;";
+    let finish = "    g_connections_finish();";
+    assert_eq!(generated.matches(finish).count(), 1);
+    let broken = generated.replacen(finish, "    /* omitted connection shutdown */", 1);
+    let dir = fwp::cgen::TempDir::new("grpc-library-unload").unwrap();
+    let binary = dir.join("probe");
+    for opt in ["-O1", "-O2"] {
+        for (source, expected) in [(&broken, 209), (&generated, 0)] {
+            fwp::cgen::compile_c(&format!("{hooks}\n{source}\n{fixture}"), &binary, opt).unwrap();
+            for unpooled in ["0", "1"] {
+                for gc in ["off", "on"] {
+                    let out = Command::new(&binary)
+                        .arg(unpooled)
+                        .env("FWP_GC", gc)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", "1")
+                        .output()
+                        .unwrap();
+                    assert_eq!(
+                        out.status.code(),
+                        Some(expected),
+                        "{opt}/{unpooled}/{gc}: {out:?}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn received_requests_and_statuses_release_on_errors_and_cancelled_waits() {
     let generated = receive_runtime();
     let hooks = r#"

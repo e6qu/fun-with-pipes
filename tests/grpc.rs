@@ -729,11 +729,11 @@ fn instrument_closed_connections(code: &str) -> String {
         + code[begin..].find("    fwp_check_cancel();").unwrap()
         + "    fwp_check_cancel();".len();
     code.insert_str(at, "\n    client_drain_connections();");
-    let close = "    fwp_socket_close(c->fd);\n    c->fd = FWP_INVALID_SOCKET;";
+    let close = "        fwp_socket_close(c->fd);\n        c->fd = FWP_INVALID_SOCKET;";
     assert_eq!(code.matches(close).count(), 1);
     code = code.replacen(
         close,
-        &format!("{close}\n    if(client_active)client_connections_closed++;"),
+        &format!("{close}\n        if(client_active)client_connections_closed++;"),
         1,
     );
     let declaration = "static uint64_t client_connections_created, client_connections_finalized;";

@@ -74,7 +74,8 @@ def main():
                    "failed_environment_tls_construction_releases_unpublished_storage"]
     if args.closed_connections and baseline:
         checks += ["task_handles_and_cached_results_have_independent_owners",
-                   "fatal_runtime_allocations_report_errors_from_task_stacks"]
+                   "fatal_runtime_allocations_report_errors_from_task_stacks",
+                   "library_unload_closes_idle_connections_before_draining_tasks"]
     output_tables = args.output.parent / args.output.stem
     output_tables.mkdir(parents=True, exist_ok=True)
     results = []

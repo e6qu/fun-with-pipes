@@ -1069,6 +1069,14 @@ static const g_tls *g_env_tls(const char *var) {
 }
 
 #ifdef FWP_LIBRARY
+/* Connection I/O defers cancellation while it owns transport state. Close it
+ * before library task draining, including connections no longer in the pool. */
+static void g_connections_finish(void) {
+    for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next)
+        if (!t->done && (t->cfn == g_reader || t->cfn == g_writer))
+            g_conn_dead(t->carg, "library unloading");
+}
+
 /* Called only after task draining and GC finalization, before SSL cache disposal. */
 static void g_environment_finish(void) {
     while (g_env_options_known) {

@@ -864,6 +864,11 @@ Client I/O task records have only the scheduler, which runs ready tasks, as owne
 Their storage releases after their stack and scheduler links are removed, without
 task reference-count updates. Language task handles can have independent aliases and retain their
 shared policy. Server and HTTP/2 task graphs still need separate ownership work.
+Library teardown first shuts down connections used by live I/O tasks, then waits
+for those tasks to finish. This includes connections removed from the reuse pool:
+canceling a task alone is insufficient while it defers cancellation to protect
+transport state. A regression test must detect omitted shutdown within a fixed
+deadline, instead of hanging the test job.
 These are candidate contracts, not verified six-platform support; the
 [closed-connection baseline](benchmarks.md#memory-after-closing-connections-and-finishing-their-io-tasks)
 and [handoff](development-state.md) record the evidence and unresolved tests.

@@ -108,11 +108,22 @@ runnable while waiting for socket shutdown, preventing scheduler I/O polling.
 It now parks during draining and has a ten-second deadline with a stage-specific
 error. Other drain fixtures explicitly wake canceled I/O tasks.
 
-`33da866e` published the fifteen-case fatal-error extension. Next: publish the
-startup fixture repair, run `connection-repeat` on all six native hosts, inspect
-actual binaries and compare with the frozen closed-connection baseline. Later
-steps skipped by the canceled probe are still unverified. Transfer the final
-patch onto accepted #157 before opening the next single PR.
+Six-host run `39006246686` at `bb02f067` is still running. ARM Mac passes
+the fifteen fatal-error cases, unique task tests, repaired startup fixture and
+ordinary/concurrent/aliased remote calls, then fails measurement setup: the
+connection-close instrumentation still expected the old indentation. The hook
+now matches the actual last-transport-owner close, without a fallback matcher.
+Other hosts are still reporting; collect their failures before replacing the run.
+
+Review also found library unload can leave noncancellable connection I/O waiting
+forever. The local fix shuts down live reader/writer connections before task
+draining, including connections outside the reuse pool. A bounded O1/O2 test
+checks idle pooled/unpooled clients with collection off/on and stress/reuse;
+omitting shutdown must hit its explicit deadline. This new repair is unverified.
+
+Next: publish the measurement-hook and library-unload repairs together, run all
+six native hosts, inspect actual binaries and compare with the frozen baseline.
+Transfer the final patch onto accepted #157 before opening the next single PR.
 
 Pending sender language values, server callbacks/channels, remaining host and
 numerical ownership, cycle policies and all seven roadmap areas remain open.
