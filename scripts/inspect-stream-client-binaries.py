@@ -22,7 +22,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--artifacts", type=Path, required=True)
     parser.add_argument("--objdump", required=True, help="LLVM objdump executable")
-    parser.add_argument("--clients", nargs="+", choices=["unique", "retained", "partial"], required=True)
+    parser.add_argument("--clients", nargs="+", choices=["unique", "full", "retained", "partial"], required=True)
     args = parser.parse_args()
     observations = []
     for client in args.clients:
@@ -32,7 +32,9 @@ def main():
         assert len(drops) == 1, (source, drops)
         iterator = re.search(r"/\* grpc\._iter :[^\n]*\*/\nstatic V (f\d+)\(", code)
         assert iterator, source
-        symbols = [drops[0], iterator[1], "g_cell_drop", "g_force", "fwp_p_grpc_force", "fwp_apply_owned"]
+        symbols = [drops[0], iterator[1], "g_cell_drop", "g_force", "fwp_p_grpc_force", "fwp_apply_owned",
+                   "g_stream_drop", "g_stream_reader_release", "g_unlink",
+                   "g_sender_peer_finish", "g_conn_dead"]
         files = [args.artifacts / client, args.artifacts / f"{client}.exe"]
         files = [path for path in files if path.is_file()]
         assert len(files) == 1, files

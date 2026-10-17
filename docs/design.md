@@ -317,15 +317,23 @@ its existing child-owner rules. The accepted tests include aliases, pointer-like
 scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
 count operations; they do not prove every record or call allocation-free.
 
+The current delivery also handles selecting a field from a consumed heap record
+when that field is its only value needing reference-counted storage. A record
+with one owner gives the selected value to its caller and frees its outer storage.
+A shared record retains the selected value before releasing the caller's record
+reference. Other fields must be scalars, with no cleanup to perform. Existing
+stack, resource-scope and storage-reuse rules keep their current paths. Focused tests and real clients pass on all six native platforms; the
+[handoff](development-state.md) tracks final production acceptance. Allocations and runtime ownership checks remain.
+
 A function that only forwards a callback's tuple can keep its existing storage.
 A callback is a function supplied by the caller; its concrete target may be
 unknown during compilation. Such calls return a boxed tuple. Unpacking that
 tuple into separate C fields and immediately boxing it again adds an allocation
-without changing the value. The prepared compiler change avoids this conversion
+without changing the value. The compiler avoids this conversion
 when every return path forwards a callback result, including through local names
 or branches. Functions that build records or make known direct calls retain their
-existing choices. Alias, failure-cleanup and allocation checks must pass before
-acceptance; the [handoff](development-state.md) records current evidence.
+existing choices. Alias, failure-cleanup and allocation checks passed with
+[PR #154](roadmap-history.md#service-settings-and-iteration-storage-pr-154).
 
 List `each` runs a callback from first to last and returns unit, written `()`.
 Its definition, `const | flip fold ()`, uses unit as the running value
@@ -338,12 +346,13 @@ measure allocations against the previous mapping definition. The
 
 A closure contains a function and its already supplied arguments, called its
 captures. Generated calls transfer or retain those values according to ownership
-and their types. The current candidate moves captures when consuming a closure
+and their types. The runtime moves captures when consuming a closure
 with one owner, both when supplying more arguments and when entering the function.
 Shared closures still need additional owners for the captures used by that call.
 The destination is prepared before transfer, and generated callee cleanup handles
 failure after entry. This adds no language syntax or fields to the closure layout.
-[The handoff](development-state.md) records candidate validation.
+[PR #156](roadmap-history.md#released-stream-caches-and-moved-closure-captures-pr-156)
+records full platform acceptance.
 
 Shared top-level computed values have cached owners, released during teardown.
 A type descriptor is runtime metadata used for operations such as equality,

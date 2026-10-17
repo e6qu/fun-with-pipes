@@ -4,96 +4,85 @@ Updated 2026-10-17 UTC. All seven work areas in [PLAN.md](../PLAN.md) remain ope
 
 ## Current delivery
 
-PR #155 is accepted as `45410bea4b59e2e6478632cf253f9c29cbd9863d`, with all nine
-production jobs `38990872293` and docs `38990872208` passing at `e71a2295`.
-The verified merge has the tested tree, parent `11ae0f63`, and exactly the subject
-`Fix shared stream reads and bound cleanup stack use`, with no body or trailers.
-The watcher completed and saved `/private/tmp/fwp155-merge-record.json`.
-Duplicate production `38996775271` was canceled; Windows dependency jobs remain.
+Branch `own-client-requests`, [PR #157](https://github.com/e6qu/fun-with-pipes/pull/157),
+starts at accepted #156 merge `29302bae30f6dbfae63166bb9171c7da5b237789`.
+It combines finished-request cleanup, compiler field transfers and service TLS
+settings construction fixes. No syntax changes. Final evidence and documentation
+are complete. Next: push this revision, mark the PR ready and require all nine production
+jobs plus documentation at its exact final head before authorized squash merge.
+Use an explicit one-line subject of at most 80 characters and an empty body;
+verify the resulting tree, parent and complete message. One delivery PR at a time.
 
-The root branch `release-stream-caches` starts at that accepted merge and adds
-cache ownership, unique closure capture transfers, Windows portability fixes,
-reports and clearer docs. Publish this single delivery and require all nine
-production jobs plus documentation on its final commit before squash merge.
-Suggested subject: `Release unused stream values and reduce memory bookkeeping`.
-Do not treat the focused evidence as final production acceptance.
+#156 passed production `38996879616` and docs `38996879603` at `d19ab045`.
+Its verified acceptance is in [the history](roadmap-history.md); the private
+merge record is `/private/tmp/fwp156-merge-record.json`. Duplicate production
+`39001824256` was canceled. Do not rerun accepted gates without a new reason.
 
-The combined preparation is published at `a49ffe3e` on
-`move-unique-closure-captures`, worktree `/private/tmp/fwp-closure-capture-moves`.
-Its final measured source is `afd7d460fcbc5a897ee4b4b960a3735830fe52a1`, preserved
-as `evidence/remote-capture-moves-20261017`. All six native jobs pass in
-`38996238360`. [The report](measurements/remote-client-capture-moves-2026-10-17.json)
-retains that measured source; report/doc changes do not relabel it.
+## Focused evidence retained for #157
 
-The comparison uses the same real loopback clients at 64/1,024/16,384 integers,
-three processes per case, including one-pass, retained-history and first-32-only
-reads. Raw unoptimized interpretation and ordinary compiled output agree.
-Managed counters run with collection disabled, from constant initialization to
-entry cleanup before whole-runtime shutdown. Raw buffers, server/whole-process
-memory and timing are excluded. The earlier baseline is `456f2dbd`, run
-`38991578784`; the cache-only component is `886dad3b`, run `38994414068`.
-Both pass all six native hosts and have retained evidence tags/reports.
+| Component | Exact measured source | Six-platform run | Retained source tag |
+|---|---|---|---|
+| Original repeated calls | `ac95632b8c77cc8c52f35a451f3c7451d0e29b06` | `38997585835` | `evidence/repeated-remote-baseline-20261017` |
+| Request cleanup | `997b23a9aa392a3cde8fb8bd5026c348545c06b2` | `39000228402` | `evidence/remote-request-ownership-20261017` |
+| Combined compiler/runtime change | `d7a161d1328f78c54870688c6dd30cf24fa22aa0` | `39001772549` | `evidence/remote-projection-moves-20261017` |
 
-Typed cache ownership removes the baseline's 64-byte-per-consumed-integer
-remaining growth. Final managed charge is constant in each tested mode and size:
-Linux AMD64 6,480 bytes, Linux ARM64 19,536, either Mac 2,480, Windows AMD64 3,632
-and Windows ARM64 3,248. Keeping an earlier iterator intentionally keeps its
-history until released. These single-call clients do not prove bounded repeated
-calls or unread network queues. Five allocations per integer remain.
+All six jobs pass in each run. Combined Intel Mac tests passed initially but
+artifact upload timed out; the failed job's retry passed at the same source.
+The report and raw checkpoints are
+[remote-projection-moves-2026-10-17.json](measurements/remote-projection-moves-2026-10-17.json).
+The collector verifies exact revisions, job logs, all output/control checks and
+comparison bounds. It includes static review of actual Linux ARM64/AMD64 binaries.
+The delivery's Mac test-schedule correction is additional CI metadata, not a
+change to the measured compiler/runtime. Documentation `39002352493` passed it.
 
-Moving captured values from consumed unique closures reduces one-pass retains
-from 81,921 in the cache-only component to 49,154 at 16,384 integers on every
-host. This remains above the original tracing-dependent baseline's 16,385.
-Unique captures move through partial/full calls; shared captures still acquire
-typed references. The destination is ready before transfer, with no intervening
-allocation, suspension or recoverable trap. Error/trap cleanup remains owned.
-One-pass peak drops another 64 bytes per host; Linux AMD64 is now 6,768 bytes.
-No timing, zero-cost or C/Rust parity claim.
+Every created request/message releases; final managed bytes remain constant over
+1/16/256 batches in full, partial and retained-reader modes. Request cleanup adds
+one retain per call; the compiler then removes 24.6%/19.5%/14.3% of retains for
+256 full/partial/retained batches. Allocation requests and bytes stay unchanged.
+Final pooled-client bytes are Linux AMD64 6,240, ARM64 19,296; either Mac 2,240;
+Windows AMD64 3,392, ARM64 3,008. Reusable connections and detached tasks are
+still alive at this sample. Other raw buffers, TLS/OS/process/server memory and
+timing are excluded. See [the guide](benchmarks.md#memory-left-behind-by-repeated-remote-calls)
+for inputs, comparison stages and remaining costs. This is not checked ARC.
 
-Controls cover 16,384-position chains and aliases to positions/wrappers, physical
-reclamation without collection, collector/reuse stress, decoder errors/traps,
-12 capture-sharing/application/failure combinations at O1/O2, scalar bits that
-resemble pointers, cancellation and reference-counter overflow. Deliberately
-omitted cleanup, recursive destruction, restored duplicate captures and stolen
-shared captures must fail. Actual Linux AMD64/ARM64 binaries show capture-count
-one branches bypassing duplicate callbacks and looped cache cleanup. Cleanup
-frames are 24 bytes on AMD64 excluding the incoming return address and 64 bytes
-on ARM64 including saved registers; helper frames are separate. Dynamic dispatch,
-argument copying and stack storage remain.
+## Next preparation: closed connection and I/O task storage
 
-## Repaired failures and local checks
+Worktree `/private/tmp/fwp-client-connection-owners`, branch
+`own-client-connections`, is independent preparation for the next delivery.
+Its own handoff is current. Do not open a second PR while #157 remains active.
+The frozen baseline `4103b0a09f06cae69721c29151571ba9e9a621b9` passed all six
+native jobs in `39002767125`; tag `evidence/closed-remote-baseline-20261017`
+and report `docs/measurements/closed-remote-baseline-2026-10-17.json` in that
+worktree preserve it. All connections close and I/O tasks finish, yet each adds
+managed storage: Linux AMD64 3,904 bytes, ARM64 12,608; either Mac 1,600;
+Windows AMD64 2,368, ARM64 2,112. Raw TLS/OS/process storage and timing are excluded.
 
-Earlier probe `38994754283` exposed two test assumptions: reversed expected
-concatenation and rounded freed-byte statistics. The failure-loop test now
-requires exact zero remaining managed bytes after 10,000 failures and detects a
-missing closure release. Six-host run `38995678897` then passed Linux/macOS but
-found Windows CRLF diagnostics and Unix-only stack failure injection. Repairs
-normalize only fixture diagnostics and inject native `CreateFiberEx` failures on
-Windows. All seven closure/unwind test targets now join Windows production.
-Those repairs pass `38996238360`; no focused failure remains unresolved.
+The candidate separates socket liveness from shared connection storage and gives
+client I/O tasks one scheduler owner, without task retain/release operations.
+First Linux run `39003608985` at `4d595abf` found two fixture defects: a mutation
+matched two release sites, and a C-task probe omitted its cancellation check.
+Repairs plus connection-overflow/last-owner controls are in `c4747dc7`, running
+Linux `connection-repeat` in `39003964943`. Inspect and fix failures, then run
+all six hosts and compare with the baseline. Pooled reuse, startup failure,
+shared readers, cancellation, physical release, stress/reuse and binary review
+remain acceptance requirements. Server/HTTP and pending sender values remain open.
 
-Full builds and native execution stay on GitHub. Every local check uses
-`python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py` with unchanged
-limits. Formatting passed in 1.05s, docs in 2.53s, collector syntax in 0.19s;
-final report collection passed in 21.59s. Linux AMD64/ARM64 downloads passed in
-2.90s/2.95s and static inspection in 0.15s/0.14s. No downloaded executable ran.
+## Local checks and continuing work
 
-## Next action
+All native builds/execution run on GitHub. Use the root `scripts/local-guard.py`
+with its fixed limits for focused local work. Formatting passed in 1.06–1.16s;
+documentation audits in 2.55–2.60s. Seven mocked native-runner selection tests
+passed in 0.89s. Combined evidence collection passed in 22.05s, closed-baseline
+collection in 28.43s; static Linux inspection took 0.15s per architecture.
+No downloaded executable ran locally. The final documentation audit passed in
+2.55s after restoring the required roadmap status table and next-action marker.
 
-Next: publish `release-stream-caches`, record its PR/head/run identities here,
-fix every discovered failure and wait for its complete final-head acceptance.
-Squash-merge with the explicit one-line subject and empty body, then verify the
-merge tree, parent and message. Preserve Windows dependency jobs; cancel only
-superseded or duplicate production runs. Keep one active delivery PR.
-
-While that next delivery validates, measure repeated calls in one client process
-before changing connection lifetimes. Use fixed 64-value responses and 1/16/256
-calls, full/partial reads and retained earlier iterators. Add created/destroyed
-connection and stream counts and raw message bytes, separate reusable pool
-storage from per-call growth, and compare raw interpreter/native output. Then
-assign owners to connections, streams, retained codecs and sender callbacks,
-with borrowed scheduler links and explicit cycle handling. Whole remote calls
-remain excluded from checked ARC; this cache change does not remove tracing.
+Pending sender iterators, retained server callbacks/channels, host re-entry,
+remaining numerical/network ownership, cycle policy and all seven roadmap work
+areas remain open. Audit unused callback fields before adding owners. Fatal
+allocation paths using `exit` on task stacks need repair without weakening library
+unload checks. Remote calls remain excluded from checked ARC. JIT is permanently
+excluded. Historical preparation anchors are evidence, not additional tasks.
 
 ## Roadmap status
 

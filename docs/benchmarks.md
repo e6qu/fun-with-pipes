@@ -1648,3 +1648,152 @@ the exact source revision, the capture controls and their 12 cases at both
 optimization levels. The report retains source identities, raw samples, binary
 hashes and reviewed instruction evidence. Full production acceptance is recorded
 separately in the handoff.
+
+## Memory left behind by repeated remote calls
+
+A remote call asks another process to run a function. Several calls can share
+one network connection, but each call needs its own request state and queued
+response messages. To distinguish a reusable connection pool from per-call
+growth, this measurement repeats calls in one client process with collection
+disabled and ordinary physical freeing enabled.
+
+The baseline is fwp `ac95632b` (tag
+`evidence/repeated-remote-baseline-20261017`), before explicit client-stream
+ownership. [The report](measurements/repeated-remote-baseline-2026-10-17.json)
+preserves all six passing native jobs, hardware/compiler descriptions and raw
+per-call checkpoints. It compares different call counts in this same fwp
+implementation; there is no C/Rust comparison or elapsed-time claim.
+
+Each call returns integers 1 through 64 from an interpreted loopback server.
+A full reader sums them to 2,080; a partial reader sums the first 32 to 528.
+The retained-reader case sums two calls while keeping the first iterator alive,
+then rereads its first value, giving 4,161 per batch. It makes two calls per
+batch; the other cases make one. Each process runs 1, 16 or 256 batches, with
+three measured processes per case. Raw unoptimized interpretation and ordinary
+compiled output agree before instrumented execution.
+
+On all six platforms, one connection is reused and remaining managed storage
+grows by 240 bytes for every additional call. No stream object is finalized.
+Full and retained readers free every queued message. Partial readers leave 609
+requested message bytes per call in these samples, including message headers and
+the trailing byte, for 155,904 bytes after 256 calls. Scheduling can change queue
+occupancy; these raw bytes are separate from the managed totals below.
+
+| Platform | Managed bytes after 1 full call | After 256 full calls |
+|---|---:|---:|
+| Linux AMD64 | 6,480 | 67,680 |
+| Linux ARM64 | 19,536 | 80,736 |
+| macOS AMD64 and ARM64 | 2,480 | 63,680 |
+| Windows AMD64 | 3,632 | 64,832 |
+| Windows ARM64 | 3,248 | 64,448 |
+
+Counters start after constant initialization and end after root execution,
+joining its child tasks and releasing cached values, before whole-runtime
+shutdown. Reusable connections and detached I/O tasks are still live at this
+point; their remaining storage is not a demonstrated leak.
+Other raw buffers, allocator pages, TLS/operating-system storage and server or
+whole-process memory are excluded. This baseline identifies the request storage
+addressed by the following comparison. It does not establish bounded memory or
+collector-free remote execution. Connection and retained callback ownership
+remain open.
+
+### Releasing finished requests and unread messages
+
+[The request-ownership report](measurements/remote-request-ownership-2026-10-17.json)
+compares baseline `ac95632b` with `997b23a9`, preserved by tag
+`evidence/remote-request-ownership-20261017`. All six native jobs passed in
+[the focused run](https://github.com/e6qu/fun-with-pipes/actions/runs/39000228402).
+It uses the same clients, inputs, output checks and sampling boundaries above.
+
+Each request now has explicit owners: the connection's active-request list,
+its reader and any sender still using it. Releasing the reader discards unread
+messages. It does not cancel the remote operation; an unfinished request stays
+on the active list until completion or connection failure. The last owner frees
+the request. Keeping an earlier iterator still preserves its cached values.
+
+| Platform | Baseline managed bytes after 256 full calls | New managed bytes after 1, 16 or 256 calls |
+|---|---:|---:|
+| Linux AMD64 | 67,680 | 6,240 |
+| Linux ARM64 | 80,736 | 19,296 |
+| macOS AMD64 and ARM64 | 63,680 | 2,240 |
+| Windows AMD64 | 64,832 | 3,392 |
+| Windows ARM64 | 64,448 | 3,008 |
+
+The new final totals are constant in every measured mode and repetition,
+including retained readers with two calls per batch. Every created request and
+queued message is released. The partial reader no longer leaves the baseline's
+155,904 queued-message bytes after 256 calls. These raw message bytes are separate
+from the table's managed storage. Scheduling may change how many messages are
+constructed before a reader stops.
+
+This adds one reference-count increment per call, with unchanged managed
+allocation requests and requested bytes in these clients. The request header
+remains 232 bytes with 8-byte alignment on all six hosts: the new flag occupies
+existing padding at offset 228. Removing an unused sender encoder field leaves
+a 40-byte sender structure; allocator rounding means this alone is not a measured
+heap saving. These measurements compare two fwp implementations, without elapsed
+timing or a C/Rust comparison. Connections and callback graphs still need tracing.
+
+Native controls cover aliases, final owners, completion, reset, connection death,
+sender cancellation, retries, decoder errors and failed allocation. Deliberately
+omitting each owner's release or finalizer removal must fail. Ordinary execution,
+collector stress and memory-reuse poisoning pass. Existing Windows connection
+fixtures now select the required platform API before including system headers.
+
+Actual Linux binaries show unread-source cleanup calling request release before
+freeing the source. Queued messages release in a loop. That helper's frame is
+24 bytes on AMD64, excluding the incoming return address, and 32 bytes on ARM64,
+including saved registers. The last-owner request path removes its collector
+finalizer, cleans metadata and frees raw storage; it uses 8 and 32 frame bytes,
+respectively. Callee frames are additional. Existing cache-chain cleanup still
+uses fixed 24/64-byte frames. Dispatch, count lookups and argument storage remain.
+
+Collect the comparison with `collect-repeated-client-measurements.py`, supplying
+the exact run/head, artifact directory, output path and `--baseline-report`.
+It requires all six native jobs, matching outputs, complete request/message
+release and constant final managed storage. Binary inspection is static;
+downloaded programs are not executed locally. Full production acceptance is
+recorded separately in the [handoff](development-state.md).
+
+
+### Moving a selected field instead of retaining it again
+
+[The combined report](measurements/remote-projection-moves-2026-10-17.json)
+compares request cleanup at `997b23a9` with `d7a161d1`, preserved by
+`evidence/remote-projection-moves-20261017`. All six native jobs passed in
+[the focused run](https://github.com/e6qu/fun-with-pipes/actions/runs/39001772549).
+The clients, inputs and measurement boundaries are the same as above.
+
+A heap record is a container allocated separately from the current function's
+local variables. When the compiler consumes a record with exactly one field
+needing counted ownership, it now checks whether that record has one owner.
+If so, it transfers the field and frees the empty container. A shared record
+still retains the selected field before giving up its own reference, preserving
+other readers. No new syntax or layout fields are needed.
+
+| After 256 batches, on every measured platform | Request cleanup alone: count increments | With compiler transfer | Reduction |
+|---|---:|---:|---:|
+| Full reads, 256 calls | 66,562 | 50,178 | 24.6% |
+| Partial reads, 256 calls | 41,986 | 33,794 | 19.5% |
+| Retained readers, 512 calls | 116,226 | 99,586 | 14.3% |
+
+Allocation requests, requested bytes and final managed storage are unchanged
+in every case. Every request and queued message releases. Compared with the
+original baseline before either change, full reads fall from 66,306 to 50,178
+count increments: request cleanup adds one increment per call, while compiler
+transfers remove more. There is no elapsed-time or C/Rust comparison.
+
+Actual Linux machine code confirms the transfer on AMD64 and ARM64. The unique
+path frees the container and skips the shared path's field increment and parent
+release. The iterator helper uses a 168-byte AMD64 frame, excluding its incoming
+return address, and a 192-byte ARM64 frame including saved registers. These are
+observed frame sizes, not a measured reduction or whole-program stack bound.
+Callee frames are additional. Count-table lookups, cleanup records, dynamic calls,
+result allocations and an earlier payload increment remain. The report retains
+binary/source fingerprints and reviewed instruction locations; downloaded
+programs were not executed locally.
+
+The combined run also checks construction failure and long names in the service
+TLS-settings cache. Those tests establish cleanup correctness; this client
+workload does not measure a general heap saving from that separate fix. Full
+production acceptance remains recorded in the [handoff](development-state.md).

@@ -2,8 +2,7 @@
 use fwp::ir::*;
 use std::process::Command;
 
-#[test]
-fn environment_tls_cache_releases_after_task_and_finalizer_teardown() {
+fn runtime() -> String {
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -27,6 +26,12 @@ fn environment_tls_cache_releases_after_task_and_finalizer_teardown() {
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "grpc_environment").unwrap();
     assert!(generated.contains("#define FWP_GCTX_OWNERS 1"));
+    generated
+}
+
+#[test]
+fn environment_tls_cache_releases_after_task_and_finalizer_teardown() {
+    let generated = runtime();
     let hooks = r#"
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0a00
@@ -48,9 +53,11 @@ static void set_environment(const char *name,const char *value){
  if(value[0]?setenv(name,value,1):unsetenv(name))_Exit(10);
 #endif
 }
+
 static void observe_cache(void){
  nowned=0;for(g_env_options *k=g_env_options_known;k;k=k->next){
-  owned[nowned++]=k;owned[nowned++]=(void*)k->var;
+  if(k->var!=(char*)(k+1))_Exit(11);
+  owned[nowned++]=k;
   if(k->tls){const g_tls *t=k->tls;owned[nowned++]=(void*)t;}
  }
 }
@@ -68,6 +75,12 @@ int main(void){
   fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
   const g_tls *tls=g_env_tls("FWP_SERVICE_CACHE");if(!tls||strcmp(tls->ca,expected)||tls->users!=SIZE_MAX)return 4;
   if(g_env_tls("FWP_SERVICE_EMPTY"))return 5;
+  char long_variable[1025],long_ca[1040];memset(long_variable,'X',sizeof long_variable-1);long_variable[sizeof long_variable-1]=0;
+  snprintf(long_ca,sizeof long_ca,"%s_CA",long_variable);set_environment(long_ca,"long-name-ca");
+  const g_tls *long_options=g_env_tls(long_variable);
+  if(!long_options||strcmp(long_options->ca,"long-name-ca"))return 12;
+  set_environment(long_ca,"");
+  if(g_env_tls(long_variable)!=long_options)return 13;
   observe_cache();if(nowned!=5)return 6;
   set_environment("FWP_SERVICE_CACHE_CA",round?"third":"second");
   if(g_env_tls("FWP_SERVICE_CACHE")!=tls||strcmp(tls->ca,expected)||frees)return 7;
@@ -104,6 +117,103 @@ int main(void){
                     .unwrap();
                 assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
             }
+        }
+    }
+}
+
+#[test]
+fn failed_environment_tls_construction_releases_unpublished_storage() {
+    let mut generated = runtime();
+    for (before, after) in [
+        (
+            "g_env_options *k = (g_env_options *)malloc(sizeof *k + n + suffix_room);",
+            "g_env_options *k = (g_env_options *)entry_allocation(sizeof *k + n + suffix_room);",
+        ),
+        (
+            "g_tls *t = (g_tls *)malloc(total);",
+            "g_tls *t = (g_tls *)option_allocation(total);",
+        ),
+    ] {
+        assert_eq!(generated.matches(before).count(), 1);
+        generated = generated.replacen(before, after, 1);
+    }
+    let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
+#include <stdlib.h>
+static int failure_stage,entry_allocations,entry_frees,probe_error;
+static void *pending_storage;
+static void *entry_allocation(size_t);
+static void *option_allocation(size_t);
+static void observe_entry_free(void *);
+static void omit_entry_free(void *);
+#define free(p) observe_entry_free(p)
+"#;
+    let fixture = r#"
+#undef free
+static void *entry_allocation(size_t n){
+ if(failure_stage==1)return NULL;
+ void *p=malloc(n);if(p){entry_allocations++;pending_storage=p;}return p;
+}
+static void *option_allocation(size_t n){return failure_stage==2?NULL:malloc(n);}
+static void observe_entry_free(void *p){if(p&&p==pending_storage){entry_frees++;pending_storage=NULL;}free(p);}
+static void omit_entry_free(void *p){(void)p;}
+static void construct(void *arg,int stop){
+ if(stop)_Exit(210);
+ for(failure_stage=1;failure_stage<=2;failure_stage++)for(int i=0;i<32;i++){
+  jmp_buf failed;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;
+  if(!setjmp(failed)){
+   fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;
+   (void)g_env_tls("FWP_SERVICE_FAILURE");_Exit(211);
+  }
+  fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;
+  if(g_env_options_known||fwp_cleanups||entry_allocations!=entry_frees||pending_storage){probe_error=202;return;}
+  const char *expected=failure_stage==1?"cannot allocate service TLS cache entry":"cannot allocate TLS options";
+  if(strcmp(fwp_trap_msg,expected)){probe_error=203;return;}
+ }
+ failure_stage=0;
+ const g_tls *tls=g_env_tls("FWP_SERVICE_FAILURE");
+ if(!tls||strcmp(tls->ca,"test-ca")||g_env_tls("FWP_SERVICE_FAILURE")!=tls||entry_allocations!=entry_frees+1)probe_error=204;
+}
+int main(void){
+#ifdef _WIN32
+ if(_putenv_s("FWP_SERVICE_FAILURE_CA","test-ca"))return 212;
+#else
+ if(setenv("FWP_SERVICE_FAILURE_CA","test-ca",1))return 212;
+#endif
+ fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
+ fwp_task *task=fwp_spawn_task(0,construct,0,0,0);fwp_await(task);
+ if(probe_error)return probe_error;
+ if(fwp_cleanups||entry_allocations!=33||entry_frees!=32)return 205;
+ fwp_lib_finish();
+ if(g_env_options_known||pending_storage||entry_allocations!=entry_frees)return 206;
+ return 0;
+}
+"#;
+    let guard = "fwp_cleanup_push(&pending_entry, fwp_tls_subject_free, k);";
+    assert_eq!(generated.matches(guard).count(), 1);
+    let broken = generated.replacen(
+        guard,
+        "fwp_cleanup_push(&pending_entry, omit_entry_free, k);",
+        1,
+    );
+    let dir = fwp::cgen::TempDir::new("grpc-environment-failure").unwrap();
+    let exe = dir.join("probe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
+        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        assert_eq!(out.status.code(), Some(202), "omitted guard: {out:?}");
+        fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
+        for gc in ["off", "on"] {
+            let out = Command::new(&exe)
+                .env("FWP_GC", gc)
+                .env("FWP_GC_STRESS", "1")
+                .env("FWP_GC_VERIFY", "1")
+                .env("FWP_REUSE_VERIFY", "1")
+                .output()
+                .unwrap();
+            assert!(out.status.success(), "{opt}/{gc}: {out:?}");
         }
     }
 }

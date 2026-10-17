@@ -48,6 +48,31 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Released stream caches and moved closure captures (PR #156)
+
+[PR #156](https://github.com/e6qu/fun-with-pipes/pull/156) merged as `29302bae`
+on 2026-10-17 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38996879616)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38996879603)
+passed at `d19ab045`. Its tree matches that tested head; its parent is accepted
+#155. Its complete message is `Release unused stream values and reduce memory bookkeeping`.
+Duplicate postmerge production `39001824256` is confirmed canceled.
+
+Native stream caches now release after their last reader, preserving retained
+iterators and error/cancellation cleanup. Unique closures transfer captured owners
+into partial or complete calls. In the measured one-pass client, remaining
+managed storage stops growing with consumed values. Capture moves reduce retains
+from the explicit cache-ownership implementation by about 40%; five allocations
+per integer and about three times the original tracing-dependent retains remain.
+This is a comparison between fwp revisions, without timing or C/Rust parity claims.
+
+[The report](measurements/remote-client-capture-moves-2026-10-17.json) preserves
+six-platform source `afd7d460`, raw samples and binary observations. Fixed-frame
+cache cleanup uses a loop on ARM64 and AMD64. Windows failure injection and
+fixture line endings were repaired before acceptance. Request, connection and
+retained callback ownership remain subsequent work; this delivery does not
+complete GC removal.
+
 ## Shared remote reads and bounded chain cleanup (PR #155)
 
 [PR #155](https://github.com/e6qu/fun-with-pipes/pull/155) merged as `45410bea`

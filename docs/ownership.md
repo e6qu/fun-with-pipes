@@ -602,7 +602,7 @@ change alone is not a measured timing improvement or a C/Rust parity claim.
 ## Vector-library results
 
 A `Vec[N, T]` currently holds an array inside a record; each array entry is a lane.
-The prepared ownership path gives the result record and array one owner and
+The native ownership path gives the result record and array one owner and
 retains borrowed boxed integer lanes when they are shared. F128 arrays store their
 128-bit payloads directly, so copying a lane does not retain a temporary scalar
 box. Converting a correctly sized array to a vector retains that array; a wrong
@@ -612,9 +612,8 @@ protected until construction finishes, including arithmetic and allocation failu
 A reduction keeps one owned accumulator and releases each replaced boxed result.
 A one-lane sum owns its returned reference independently of the input. These
 changes preserve wrapping integer operations and existing division checks; they
-do not promise stack-only vectors or hardware vector instructions. Native and
-actual WASI acceptance remains tracked in the handoff until the required checks
-pass. General removal of tracing remains unfinished.
+do not promise stack-only vectors or hardware vector instructions. General
+removal of tracing remains unfinished; checked ARC deployment limits still apply.
 
 ## Process metrics and syntax text
 
@@ -771,6 +770,17 @@ Temporary decoding bytes also release on client result and served-request traps.
 These checks pass on all six native hosts at the source above. Final production
 acceptance remains separate; see the [handoff](development-state.md).
 
+A service's TLS settings, used for encrypted connections, are read from
+environment variables once per runtime instance. The cache must survive tasks
+and resource finalizers that still use those settings. Library teardown releases
+it after both have finished. The current delivery stores each entry and its name
+in one allocation instead of two, with enough room to look up complete variable
+names. It removes the old 300-byte truncation. A construction guard frees an
+unpublished entry if allocating the TLS settings fails, allowing a later retry.
+Tests inject failure at both allocations and check long names, repeated reads
+and teardown order. This reduces allocation count; allocator rounding and the
+name's temporary suffix space prevent a general claim about bytes saved.
+
 Actual Linux ARM64 instructions copy the 72-byte settings through four 16-byte
 registers and one eight-byte register onto the stack. That wrapper reserves
 144 stack bytes; its separate error handler reserves 464. These are instrumented
@@ -805,92 +815,76 @@ need ownership work; these scope changes do not remove tracing from a server.
 
 ### What remains before remote calls can use ARC
 
-A lazy stream receives an element only when the program asks for it. fwp caches
-that element so asking through another reference to the same position does not
-receive a second message. The cache can hold both a value and the next stream
-position. Owning the copied result alone therefore does not settle the lifetime
-of the stream, its connection or the task receiving messages.
+A remote call asks another process to run a function. A streaming response lets
+the caller request values one at a time. fwp saves each received value so two
+references to the same iterator position observe the same result, rather than
+receiving two different messages. Keeping an earlier iterator keeps its saved
+history alive.
 
-The [six-host compact-storage report](measurements/remote-stream-compact-2026-10-17.json)
-uses real queued messages containing 16-character strings. Each received value
-adds four managed allocations requesting 81 bytes, charged as 96 bytes after
-allocator rounding. Setup charges another 704 bytes. At 128 received values,
-12,992 managed bytes remain charged after C references are cleared, with collection
-disabled. Repeated reads receive and allocate nothing more. The
-[benchmark guide](benchmarks.md#storage-for-received-stream-values) compares the
-preceding representation and explains the excluded costs. Whole-library shutdown
-frees queued raw messages; this does not prove explicit per-stream destruction.
+The native cache now has typed owners: cleanup knows which fields are values
+that need releasing. Reading a uniquely owned position transfers its saved
+result; reading a shared position acquires another result reference. Cleanup
+walks the position and its wrappers in a loop, stopping when another owner
+remains. The receive source moves to the next unread position. Its error
+description lives in that same allocation, so a completed calling scope cannot
+leave a dangling description.
 
-A receive source holds the connection, stream, message decoder, deadline and
-error description. A decoder turns received bytes into a typed value. The runtime
-copies the description into the source's own allocation, so it stays
-valid for exactly that source's lifetime. Completed positions keep their cached
-value and continuation; only unread positions keep a direct reference to the
-source. An earlier position can still keep that source alive through its chain
-of saved continuations. The interpreter releases it after the last owner of an
-unread position disappears. Native
-positions replace their source with the completed result in the same storage
-word. The compact representation passes focused tests on all six native hosts;
-that measured revision still relied on tracing for cached values. The current
-candidate adds typed cache destruction, with acceptance tracked below.
+One task receives a position while other readers wait for its saved result.
+Completion, failure and cancellation release that guard and wake waiters.
+Cancelling a waiting reader leaves the receiving task running. Cancelling the
+active client call still resets its request. The guard borrows task identities
+from the scheduler and adds no allocation per element.
 
-Concurrent readers also need to agree on one value. The new receive guard lets
-one task receive while others wait for that same position's cache. Completion,
-failure and cancellation release the guard and wake waiters. Cancelling a waiting
-task leaves the receiving task running; existing client-call cancellation still
-resets the call's stream. Recursive reading of the same source traps. The guard
-borrows task identities and uses the scheduler's existing wait lists, with no
-allocation per element. [The handoff](development-state.md) records full delivery
-acceptance separately from these focused checks. Neither this change nor its
-controlled storage measurements admits whole services to ARC.
+[Complete-client measurements](benchmarks.md#moving-captured-values-instead-of-retaining-them-again)
+show constant remaining managed storage across 64, 1,024 and 16,384 consumed
+integers in all six native environments. Retained history deliberately increases
+peak memory until released. Five allocations per integer and extra reference
+counts remain; this is not a zero-cost result. The measured region excludes raw
+network buffers and whole-process memory.
 
-The next service-memory work must establish these facts before removing its
-current collector requirement:
+Repeating calls exposed a separate lifetime: the request object itself.
+[The repeated-call baseline](benchmarks.md#memory-left-behind-by-repeated-remote-calls)
+leaves 240 managed bytes per additional call on every native platform, plus
+unread message queues for partial readers. One connection is reused throughout.
+This separates finished-request growth from the cost of keeping a connection
+pool available.
 
-| Work | Evidence required |
-|---|---|
-| Measure repeated calls and stream consumption | Keep the complete-client baseline at 64, 1,024 and 16,384 integers, with full consumption, early stop and retained iterators. Add raw connection, stream and message-buffer counts; separate reusable pool storage from per-call growth. |
-| Preserve cache ownership | The candidate has focused evidence for stable repeated reads, retained aliases, final-owner destruction and partial failure. Keep these controls while extending ownership to connections and callbacks. |
-| Keep connections and requests alive for their users | Sending, receiving and detached tasks remain valid after their creating scope returns. Completion, failure and cancellation release each acquired owner exactly once. |
-| Prevent ownership cycles | Identify which component owns each task, stream and connection. A pointer back to an owner must not silently become another owning reference. Any shared cycle needs an explicit policy and a test that drops every external reference. |
-| Admit supported remote calls without tracing | Compare interpreter/native values, errors and receive order; run stress and deliberate missing-cleanup controls; inspect actual binaries and repeat calls with collection disabled. |
+The current delivery gives each client request references from its active
+connection list, response source and detached sender. Dropping the source
+releases unread messages without cancelling the remote operation. Later data
+for that abandoned reader is discarded while maintaining network flow control.
+The list keeps the unfinished request alive until completion, reset or connection
+failure. Final release removes the collector finalizer, frees metadata and
+releases request storage. All six focused native jobs verify complete request
+and message release across 1/16/256 batches, with constant final managed storage.
+[The comparison](benchmarks.md#memory-left-behind-by-repeated-remote-calls) records
+the remaining allocations and reduced reference-count traffic. Infinitely many unfinished operations can still require
+unbounded storage. [The handoff](development-state.md) records native validation
+and full delivery acceptance; implemented cleanup alone does not establish them.
 
-The existing `g_conn.refs` counter covers connection startup and its reader/writer
-tasks. Its last release closes the socket and releases input/output buffers;
-the collector still owns the connection object and its remaining buffers.
-Removing a stream from `g_conn.streams` only unlinks it. Its queued messages and
-metadata are released later by `g_stream_final`. Replacing tracing must preserve
-the distinction between closing a transport and destroying the values that still
-refer to it.
+The remaining relationships need separate checks:
 
-The next implementation must assign owners to the pool, active calls, receive
-sources and I/O tasks, while keeping scheduler task identities and wait lists
-borrowed. The candidate already moves the source allocation to the next unread
-position and releases cached values through a bounded-stack loop. The source must
-next keep its connection, stream and decoder captures alive through explicit
-owners. Test partial construction and each last-owner case before admitting
-remote calls to checked ARC.
+| Storage | Who currently keeps it alive | Work still needed |
+|---|---|---|
+| Client request | The active connection list, receive source and detached sender hold references. | Six native focused jobs pass; complete final production acceptance. |
+| Connection | Reader/writer tasks count use of the socket; tracing preserves the connection object and remaining metadata. | Give the pool, calls and tasks explicit storage owners without creating a connection/request cycle. Closing a socket alone does not finish every borrow. |
+| Pending sender values | The sender points at the remaining input iterator; tracing preserves its values. | Transfer or retain the iterator with its concrete type, then release it after completion, errors or cancellation. Its request description is static compiler metadata. |
+| Server callbacks and response channels | Serving tasks and retained language values can outlive the creating call scope. | Prove each retained handler and channel context, including failure during construction and cycles after external references disappear. |
+| Task identities and wait lists | The scheduler owns parked tasks; request state borrows their identities. | Preserve this direction when adding owners; do not turn back-pointers into owning cycles. |
 
-The current candidate implements typed cache ownership and consumes a position
-when reading it. An exclusive position transfers its saved result; a shared one
-adds a result reference. Typed cleanup walks position/optional/tuple wrappers in
-a loop and stops when another owner remains. The source allocation moves forward
-to the next unread position, without cancelling the connection when released.
-Custom decoder callbacks transfer their input and result owners, release caught
-errors and restore the enclosing handler on traps. This is not ownership of the
-whole connection/stream/callback graph.
+A detached sender sends iterator elements as requests described by compiler
+metadata. Its unused function-encoder field and branch have been removed from
+the preparation: the sole production caller always supplies that request
+description. Native fixtures record its size and test request encoding across
+errors and cancellation.
 
-The [complete-client comparison](benchmarks.md#memory-used-by-complete-remote-stream-clients)
-now passes focused checks on all six native hosts at `886dad3b`. A one-pass
-client's peak and final managed charge stay constant across the tested sizes;
-retained aliases keep their history until released. Cleanup controls verify
-16,384-position chains, exact releases, failures and stress. Expanded stress
-caught invalid record poisoning on a raw runtime layout; that is repaired with
-the existing raw-storage release operation. Full production acceptance remains
-required. The [handoff](development-state.md) tracks that delivery and the
-separate effort to reduce the extra reference-count operations.
-
-HTTP/2 server operations and GPU resource ownership also remain separate work.
+Keep the cache, shared-reader and decoder failure controls while extending these
+owners. Test partial construction and every last-owner case; retain deliberately
+broken variants to prove that missing cleanup is detected. Before admitting
+remote calls to checked ARC, compare interpreter/native values, errors and
+receive order, inspect actual binaries and measure repeated calls with collection
+disabled. Server/HTTP streams, retained handlers and connection graphs still need
+tracing. HTTP/2 server operations and GPU resource ownership remain separate work.
 
 ### Moving values held by a closure
 
@@ -898,7 +892,7 @@ A closure is a function that keeps values for a later call. For example, `add 1`
 keeps the integer `1` until it receives the number to add it to. Captured strings,
 arrays or stream positions can require separate storage and owners.
 
-The candidate runtime transfers captured owners when consuming a closure with
+The runtime transfers captured owners when consuming a closure with
 exactly one owner. It copies their value words into the destination, then clears
 the original closure's capture count so its cleanup cannot release them twice.
 For a partial call, the destination is the new closure; for a complete call, it
@@ -918,5 +912,6 @@ normal returns, errors and traps. They require exact reclamation without
 collection and deliberately restore unnecessary duplication or steal shared
 captures to ensure those bugs are detected. All six native jobs pass at `afd7d460`, including native Windows stack-allocation
 failure injection. [The comparison](benchmarks.md#moving-captured-values-instead-of-retaining-them-again)
-records the saved retains and remaining costs. The full delivery gate is tracked
-in the [handoff](development-state.md).
+records the saved retains and remaining costs.
+[PR #156](roadmap-history.md#released-stream-caches-and-moved-closure-captures-pr-156)
+records full production acceptance.
