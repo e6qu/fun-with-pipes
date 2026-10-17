@@ -61,10 +61,16 @@ aliases, typed errors, iterator continuation/encoding failures and cancellation.
 They include deliberately omitted cleanup to prove leak detection and use real
 generated owning method entries. These controls have not run yet.
 
-Next: publish the repaired control and served-value tests, then run the Linux
-semantic/lifetime/measurement probe. Fix failures before all-six measurements and
-actual binary reviews. Full production acceptance remains outstanding. Preserve
-these limits when transferring preparation into the next delivery.
+Probe `39019491138` at `b7db1159` passes the repaired sender control and the
+adapted response-buffer tests. The new served-value fixture used `div` instead
+of the internal primitive name `prim.div`, so generation rejected it before C
+execution. Correct the fixture and run response cleanup first in the focused
+workflow; coverage is preserved and failures surface sooner.
+
+Next: publish this repair and run the Linux semantic/lifetime/measurement probe.
+Fix failures before all-six measurements and actual binary reviews. Full
+production acceptance remains outstanding. The storage comparison is retained
+at `b80dbdfb` in the sibling worktree; transfer its evidence/docs separately.
 
 ## Checks
 

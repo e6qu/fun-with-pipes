@@ -303,7 +303,7 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
                     Box::new(integer.clone()),
                     Box::new(MT::Fun(Box::new(integer.clone()), Box::new(integer))),
                 ),
-                body: Body::Prim("div".into()),
+                body: Body::Prim("prim.div".into()),
             },
         ],
         main: Some(2),
