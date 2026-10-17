@@ -1811,7 +1811,11 @@ static V fwp_apply_owned(V f, uint32_t n, V *args) {
 #endif
             for (uint32_t i = 0; i < have; i++) r->a[i] = c->a[i];
             for (uint32_t i = 0; i < n; i++) r->a[have + i] = args[i];
-            fi->owned->captures(f, 1);
+            /* The consumed closure can transfer its captures when exclusive.
+             * Their destination is ready; clearing n prevents its later cleanup
+             * from releasing the transferred values. Shared closures still copy. */
+            if (fwp_rc_last(f)) c->n = 0;
+            else fi->owned->captures(f, 1);
             V result = fwp_rc_fresh(PTR(r));
 #if FWP_UNWIND
             owner.start = n; /* the fresh closure now owns supplied arguments */
@@ -1835,7 +1839,11 @@ static V fwp_apply_owned(V f, uint32_t n, V *args) {
             V all[ar ? ar : 1];
             for (uint32_t i = 0; i < have; i++) all[i] = c->a[i];
             for (uint32_t i = 0; i < need; i++) all[have + i] = args[i];
-            fi->owned->captures(f, 1);
+            /* The consumed closure can transfer its captures when exclusive.
+             * Their destination is ready; clearing n prevents its later cleanup
+             * from releasing the transferred values. Shared closures still copy. */
+            if (fwp_rc_last(f)) c->n = 0;
+            else fi->owned->captures(f, 1);
 #if FWP_UNWIND
             owner.start = need; /* captures prepared; entry now takes the prefix */
 #endif

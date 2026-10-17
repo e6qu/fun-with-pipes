@@ -48,6 +48,32 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Shared remote reads and bounded chain cleanup (PR #155)
+
+[PR #155](https://github.com/e6qu/fun-with-pipes/pull/155) merged as `45410bea`
+on 2026-10-17 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38990872293)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38990872208)
+passed at `e71a2295`. Its files match that tested head and its parent is accepted
+#154. The complete message is `Fix shared stream reads and bound cleanup stack use`.
+Duplicate postmerge production run `38996775271` was canceled; Windows dependency
+jobs were preserved.
+
+Shared readers now receive the same cached value. Cancellation restores unfinished
+messages for surviving readers, and error descriptions have the source's lifetime.
+Stream positions shrink from 24 to 16 bytes. The queued-string workload requests
+81 rather than 89 bytes per received value, with four allocations unchanged.
+Ordinary linked structures wrapped in optional values and tuples release in a
+loop, preserving aliases and reclaiming 16,384-link chains without stack growth.
+These memory/stack comparisons do not measure speed or C/Rust parity.
+
+The [stream report](measurements/remote-stream-compact-2026-10-17.json) and
+[chain report](measurements/wrapped-chain-cleanup-2026-10-17.json) preserve their
+actual component revisions, six-platform checks and binary evidence. Native
+Windows fixture API, socket, OpenSSL-path and diagnostic-line-ending problems
+were repaired before acceptance. Native caches still depended on tracing in
+this accepted revision; explicit cache ownership is the following delivery.
+
 ## Service settings and iteration storage (PR #154)
 
 [PR #154](https://github.com/e6qu/fun-with-pipes/pull/154) merged as `11ae0f63`

@@ -73,29 +73,27 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #154](https://github.com/e6qu/fun-with-pipes/pull/154) is accepted after all
-nine production jobs, documentation and both new Windows dependency jobs passed.
-It reduces service-helper storage, removes discarded iteration results and fixes
-an incomplete native stack scan. The [delivery history](docs/roadmap-history.md)
-and [benchmark guide](docs/benchmarks.md) retain the evidence and limits.
+[PR #155](https://github.com/e6qu/fun-with-pipes/pull/155) is accepted after all
+nine production jobs and documentation passed. It fixes shared stream readers,
+shrinks stream positions and releases eligible long linked structures in a loop.
+The [delivery history](docs/roadmap-history.md) preserves its exact acceptance.
 
-The current stream delivery fixes concurrent readers receiving different messages
-for the same position, gives error descriptions the source's lifetime, and releases
-obsolete source references. Native positions share storage between their unread
-source and completed result. Focused checks pass on all six native platforms:
-positions shrink from 24 to 16 bytes, and requested bytes per received 16-character
-value fall from 89 to 81. The allocation count remains four per value. Full
-acceptance of the combined delivery is still required.
+The current delivery releases native stream caches when their last owner goes
+away and moves captured values out of uniquely owned closures. Focused checks
+pass on all six native platforms. In the measured one-pass client, remaining
+managed storage stops growing with consumed values. Capture moves reduce the
+new ownership implementation's retains by about 40%, but still leave about
+three times the original tracing-dependent retain count and five allocations
+per integer. [The comparison](docs/benchmarks.md#moving-captured-values-instead-of-retaining-them-again)
+explains both revisions, inputs, scope and limitations. Full production acceptance
+of this combined delivery remains required.
 
-The same delivery also releases long ordinary ownership chains in a loop even
-when the next node sits inside optional values or tuples. Focused checks pass on
-all six native targets through 16,384 links, including retained aliases, complete
-reclamation and collector/reuse stress. Its full delivery gate remains required.
-
-Then give native cached values and continuations explicit last-owner destruction,
-including long chains and partial failures, and establish connection, stream and
-decoder owners before admitting remote calls to checked ARC. These objects still depend on
-tracing; the storage reduction does not complete GC removal.
+Next, measure repeated calls in one process, including connection, stream and raw
+message storage, then give those objects and retained codec/sender callbacks
+explicit owners. Preserve shared reads, cancellation and error order, and separate
+reusable connection pools from per-call growth. Sources currently own their own
+allocation but still borrow the connection and callback graph. Remote calls
+remain excluded from checked ARC until those lifetimes and cycles are proved.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

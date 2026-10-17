@@ -86,8 +86,9 @@ int main(int argc, char **argv) {
      * at most 81 bytes per element. Keeping both source and cache exceeds it. */
     if (!fwp_gc.ncollect && requested_bytes - setup_bytes > 81 * consumed) return 38;
     double after_read = charged();
-    /* Current cells have no explicit release operation. Clearing these C roots
-     * measures the unresolved storage; it does not pretend to implement ownership. */
+    /* This historical fixture calls the borrowed receive helper directly. Clearing
+     * C roots measures retained cache storage; the complete-client and typed
+     * cache-owner tests exercise the consuming release path separately. */
     position = retained = NULL; source = NULL; stream = NULL; connection = NULL;
     FWP_KEEP_ALIVE(PTR(position)); FWP_KEEP_ALIVE(PTR(retained));
     double after_roots = charged();

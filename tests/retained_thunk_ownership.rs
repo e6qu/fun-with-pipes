@@ -162,10 +162,19 @@ fn failing_spawn_preparation_releases_only_its_extra_thunk_owner() {
             .to_string()
     };
     let point = "static fwp_task *fwp_spawn_task(";
+    let windows_stack = "t->ctx.fiber = CreateFiberEx(65536, FWP_NATIVE_TASK_STACK,";
+    let unix_stack = "t->stack = (char *)mmap(0, t->stack_size,";
+    assert_eq!(emitted.matches(windows_stack).count(), 1);
+    assert_eq!(emitted.matches(unix_stack).count(), 1);
     let runtime=emitted.replacen(point,r#"static int fail_stack;
+#ifdef _WIN32
+static void *task_stack_fiber(SIZE_T commit,SIZE_T reserve,DWORD flags,LPFIBER_START_ROUTINE entry,void *arg){if(fail_stack){fail_stack=0;SetLastError(ERROR_NOT_ENOUGH_MEMORY);return NULL;}return CreateFiberEx(commit,reserve,flags,entry,arg);}
+#else
 static void *task_stack_map(void *a,size_t n,int p,int f,int fd,off_t o){if(fail_stack){fail_stack=0;errno=ENOMEM;return MAP_FAILED;}return mmap(a,n,p,f,fd,o);}
+#endif
 static fwp_task *fwp_spawn_task("#,1)
-        .replace("t->stack = (char *)mmap(0, t->stack_size,","t->stack = (char *)task_stack_map(0, t->stack_size,")
+        .replace(windows_stack,"t->ctx.fiber = task_stack_fiber(65536, FWP_NATIVE_TASK_STACK,")
+        .replace(unix_stack,"t->stack = (char *)task_stack_map(0, t->stack_size,")
         .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
     let probe=r#"
 static jmp_buf failed;static int recover(void){return 1;}
@@ -180,6 +189,7 @@ int main(void){
   if(mode==0)fail_stack=1;else if(mode==2){scope.n=SIZE_MAX;scope.cap=SIZE_MAX;}else{uint8_t *slot=fwp_rc_slot(fn);*slot=254;fwp_rc_dup(fn);(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
   fwp_trap_recover=recover;fwp_trap_jb=&failed;fwp_trap_cleanup=0;
   if(setjmp(failed)==0){fSPAWN(fn);return 1;}
+  if(mode==0&&fail_stack)return 11;
   fwp_trap_recover=0;fwp_trap_jb=0;
   if(fwp_cleanups||fwp_cur->first_child||fwp_gc_tasks!=gc_before)return 2;
   if(mode==2){if(scope.n!=SIZE_MAX||scope.cap!=SIZE_MAX)return 8;scope.n=0;scope.cap=8;}else if(scope.n)return 9;

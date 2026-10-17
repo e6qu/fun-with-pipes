@@ -29,11 +29,11 @@ fn forced_cells_release_received_storage_and_decoder_failure_text() {
     let decode = "g_decode(&src->dec, g->m->d, g->m->n, &x, &why)";
     assert_eq!(generated.matches(decode).count(), 2);
     let generated = generated.replace(decode, "observed_decode(&x, &why)");
-    let copy = "last->memo = FWP_NONE;\n    V f[2] = {(V)(int64_t)code, fwp_cstr(text)};";
+    let copy = "V f[2] = {(V)(int64_t)code, fwp_rc_fresh(fwp_cstr(text))};";
     assert_eq!(generated.matches(copy).count(), 1);
     let generated = generated.replacen(
         copy,
-        "last->memo = FWP_NONE;\n    V f[2] = {(V)(int64_t)code, observed_copy(text)};",
+        "V f[2] = {(V)(int64_t)code, fwp_rc_fresh(observed_copy(text))};",
         1,
     );
     let end = "if (c->server) { g->kind = G_END; g->code = 0; g->text = strdup(\"\"); return; }";
@@ -78,6 +78,7 @@ int main(void){
   allocations=frees=0;memset(owned,0,sizeof owned);
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*stage));
   g_incoming *src=fwp_mem_alloc(sizeof *src);src->c=c;src->s=s;src->what="probe";
+  static const fwp_desc scalar_type={.kind=K_I64};src->dec.ty=&scalar_type;src->dec.error=&scalar_type;
   src->results=stage==2||stage==4||stage==7||stage==10;
   if(stage<3)s->bad=strdup("bad request");else if(stage==3||stage==11)s->remote_end=1;
   else{g_msg *m=malloc(sizeof *m+1);if(!m)return 31;memset(m,0,sizeof *m);m->n=1;m->d[0]=42;remember(m);s->mhead=s->mtail=m;}
@@ -88,7 +89,7 @@ int main(void){
    V r=g_force(cell,stage==0||stage==9,&failure,&error,&desc);
    if(stage==1||stage==2||stage==5||stage==8||stage==10||stage==11)return 2;
    if(stage==0){if(r||cell->forced||cell->src!=src||!failure.text||strcmp(failure.text,"bad request")||frees)return 3;observed_free(failure.text);}
-   else if(stage==9){if(r||cell->forced||cell->src!=src||error!=42||desc)return 4;}
+   else if(stage==9){if(r||cell->forced||cell->src!=src||error!=42||desc!=&scalar_type)return 4;}
    else{
     if(!cell->forced||cell->memo!=r)return 5;
     if(stage==3){if(r!=FWP_NONE)return 6;}
@@ -460,6 +461,143 @@ static int decode_with_pause(const g_codec *codec,const unsigned char *message,s
             std::fs::create_dir_all(&path).unwrap();
             std::fs::write(path.join("readers.c"), &code).unwrap();
             std::fs::copy(&binary, path.join(format!("readers{opt}.exe"))).unwrap();
+        }
+    }
+}
+
+#[test]
+fn cache_owners_release_aliases_and_long_chains_without_collection() {
+    let mut generated = http2_values::generated();
+    let declaration = "typedef uint64_t V;";
+    let observer = r#"
+static int cache_observe;
+static size_t cache_releases;
+static uintptr_t cache_stack_low, cache_stack_high;
+static __attribute__((noinline)) void observe_cache_stack(void) {
+    if (!cache_observe) return;
+    volatile unsigned char marker = 0;
+    uintptr_t address = (uintptr_t)&marker;
+    if (address < cache_stack_low) cache_stack_low = address;
+    if (address > cache_stack_high) cache_stack_high = address;
+    if (cache_stack_high-cache_stack_low > 4096) _Exit(175);
+}
+"#;
+    assert_eq!(generated.matches(declaration).count(), 1);
+    generated = generated.replace(declaration, &format!("{declaration}\n{observer}"));
+    for function in ["fwp_rc_free_obj", "fwp_rc_free_arr"] {
+        let free = format!("static void {function}(V v) {{\n    if (!fwp_rc_last(v)) return;");
+        assert_eq!(generated.matches(&free).count(), 1);
+        generated = generated.replace(
+            &free,
+            &format!("{free}\n    if(cache_observe)cache_releases++;"),
+        );
+    }
+    let entry = "static void g_cell_drop(V value, void (*drop_element)(V)) {";
+    assert_eq!(generated.matches(entry).count(), 1);
+    generated = generated.replace(entry, &format!("{entry}\n    observe_cache_stack();"));
+    let code = format!(
+        "{generated}\n{}",
+        include_str!("fixtures/grpc_cache_ownership.c")
+    );
+    let tail = "        value = next;\n    }\n}\n\n/* Protect the first client read";
+    assert_eq!(code.matches(tail).count(), 1);
+    let recursive = code.replace(tail, "        g_cell_drop(next, drop_element);\n        observe_cache_stack();\n        return;\n    }\n}\n\n/* Protect the first client read");
+    let release = "            g_incoming_drop(source);";
+    assert_eq!(code.matches(release).count(), 1);
+    let missing_source = code.replace(release, "            (void)source;");
+    let dir = fwp::cgen::TempDir::new("grpc-cache-owners").unwrap();
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join("cache.exe");
+        for (broken, expected) in [(&recursive, 175), (&missing_source, 171)] {
+            fwp::cgen::compile_c(broken, &binary, opt).unwrap();
+            let output = Command::new(&binary)
+                .args(["16384", "0"])
+                .env("FWP_GC", "off")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
+        }
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        let mut samples = Vec::new();
+        for count in [64, 1024, 16384] {
+            for mode in 0..11 {
+                for stress in [false, true] {
+                    // Small repeated samples exercise collector and poison checks;
+                    // the large no-collection cases establish bounded destruction.
+                    if (stress || mode >= 7) && count != 64 {
+                        continue;
+                    }
+                    let output = Command::new(&binary)
+                        .args([count.to_string(), mode.to_string()])
+                        .env("FWP_GC", if stress { "on" } else { "off" })
+                        .env("FWP_GC_STRESS", if stress { "1" } else { "0" })
+                        .env("FWP_GC_VERIFY", if stress { "1" } else { "0" })
+                        .env("FWP_REUSE_VERIFY", if stress { "1" } else { "0" })
+                        .output()
+                        .unwrap();
+                    assert!(
+                        output.status.success(),
+                        "{opt}/{count}/{mode}/{stress}: {output:?}"
+                    );
+                    if !stress {
+                        samples.extend_from_slice(&output.stdout);
+                    }
+                }
+            }
+        }
+        if let Some(path) = std::env::var_os("FWP_STREAM_CLIENT_ARTIFACTS") {
+            let path = std::path::PathBuf::from(path);
+            std::fs::create_dir_all(&path).unwrap();
+            std::fs::write(path.join("cache-owners.c"), &code).unwrap();
+            std::fs::copy(&binary, path.join(format!("cache-owners{opt}.exe"))).unwrap();
+            std::fs::write(path.join(format!("cache-owners{opt}.tsv")), &samples).unwrap();
+        }
+    }
+}
+
+#[test]
+fn decoder_callbacks_transfer_values_and_restore_handlers_after_traps() {
+    let code = format!(
+        "{}\n{}",
+        http2_values::generated(),
+        include_str!("fixtures/grpc_decoder_callback.c")
+    );
+    let call = "fwp_apply_borrowed_prefix(k->fn, 1, &bytes, 1)";
+    assert_eq!(code.matches(call).count(), 1);
+    let legacy = code.replace(call, "fwp_apply1(k->fn, bytes)");
+    let release = "        fwp_value_release(&error);";
+    assert_eq!(code.matches(release).count(), 1);
+    let leaked_error = code.replace(release, "        (void)error;");
+    let restore = "    fwp_handlers = ((fwp_handler *)value)->prev;";
+    assert_eq!(code.matches(restore).count(), 1);
+    let stale_handler = code.replace(restore, "    (void)value;");
+    let dir = fwp::cgen::TempDir::new("grpc-decoder-callback").unwrap();
+    let binary = dir.join("decoder.exe");
+    for opt in ["-O1", "-O2"] {
+        for (source, expected) in [(&legacy, 197), (&leaked_error, 194), (&stale_handler, 192)] {
+            fwp::cgen::compile_c(source, &binary, opt).unwrap();
+            let output = Command::new(&binary)
+                .env("FWP_GC", "off")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(expected), "{opt}: {output:?}");
+        }
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        for stress in [false, true] {
+            let output = Command::new(&binary)
+                .env("FWP_GC", if stress { "on" } else { "off" })
+                .env("FWP_GC_STRESS", if stress { "1" } else { "0" })
+                .env("FWP_GC_VERIFY", if stress { "1" } else { "0" })
+                .env("FWP_REUSE_VERIFY", if stress { "1" } else { "0" })
+                .output()
+                .unwrap();
+            assert!(output.status.success(), "{opt}/{stress}: {output:?}");
         }
     }
 }

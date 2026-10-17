@@ -336,10 +336,18 @@ syntax. Tests compare output, aliases, state updates and early failures, and
 measure allocations against the previous mapping definition. The
 [benchmark guide](benchmarks.md) records the native measurements and their limits.
 
-A closure contains a function and its already supplied arguments. Generated
-calls retain/release captured values according to their types. Shared top-level
-computed values have cached owners, released during teardown. A type descriptor
-is runtime metadata used for operations such as equality, printing and decoding.
+A closure contains a function and its already supplied arguments, called its
+captures. Generated calls transfer or retain those values according to ownership
+and their types. The current candidate moves captures when consuming a closure
+with one owner, both when supplying more arguments and when entering the function.
+Shared closures still need additional owners for the captures used by that call.
+The destination is prepared before transfer, and generated callee cleanup handles
+failure after entry. This adds no language syntax or fields to the closure layout.
+[The handoff](development-state.md) records candidate validation.
+
+Shared top-level computed values have cached owners, released during teardown.
+A type descriptor is runtime metadata used for operations such as equality,
+printing and decoding.
 
 The default native memory mode combines reference counting with a non-moving
 tracing collector. Counting frees proved owned objects when their last owner is

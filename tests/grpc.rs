@@ -138,35 +138,65 @@ impl Server {
     }
 }
 
-/// Start a server and wait for its "listening on" line.
-// (the child is waited for when the `Server` is dropped)
-#[allow(clippy::zombie_processes)]
-fn start(mut cmd: Command) -> Server {
+/// Start a server and wait for its listening address. Reading a partial line
+/// must not defeat the deadline; a background reader drains stderr throughout.
+fn start(mut cmd: Command, timeout: Duration) -> Server {
     cmd.stdout(Stdio::null()).stderr(Stdio::piped());
     let mut child = cmd.spawn().expect("start server");
     let mut err = BufReader::new(child.stderr.take().unwrap());
-    let mut line = String::new();
-    let deadline = Instant::now() + Duration::from_secs(60);
-    loop {
-        line.clear();
-        if err.read_line(&mut line).unwrap() == 0 || Instant::now() > deadline {
-            let _ = child.kill();
-            panic!("server exited before listening: {}", line);
-        }
-        if let Some(a) = line.trim().split("listening on ").nth(1) {
-            let addr = a.to_string();
-            let log = Arc::new(Mutex::new(line.clone()));
-            let l = log.clone();
-            std::thread::spawn(move || {
-                let mut line = String::new();
-                while err.read_line(&mut line).unwrap_or(0) > 0 {
-                    l.lock().unwrap().push_str(&line);
-                    line.clear();
+    let log = Arc::new(Mutex::new(String::new()));
+    let output = log.clone();
+    let (ready, address) = std::sync::mpsc::channel();
+    let reader = std::thread::spawn(move || {
+        let mut ready = Some(ready);
+        let mut line = String::new();
+        while err.read_line(&mut line).is_ok_and(|n| n > 0) {
+            output.lock().unwrap().push_str(&line);
+            if let Some(addr) = line.trim().split("listening on ").nth(1) {
+                if let Some(sender) = ready.take() {
+                    let _ = sender.send(addr.to_owned());
                 }
-            });
-            return Server { child, addr, log };
+            }
+            line.clear();
+        }
+    });
+    match address.recv_timeout(timeout) {
+        Ok(addr) => Server { child, addr, log },
+        Err(error) => {
+            let _ = child.kill();
+            let _ = child.wait();
+            let _ = reader.join();
+            panic!("server did not start ({error}): {}", log.lock().unwrap());
         }
     }
+}
+
+#[test]
+fn server_startup_deadline_covers_silent_processes() {
+    let d = scratch("silent-startup");
+    let source = d.join("silent.fwp");
+    std::fs::write(&source, "main = 30s | task.sleep\n").unwrap();
+    let began = Instant::now();
+    let result = std::panic::catch_unwind(|| {
+        // Construct the command inside the unwind boundary: Unix Command can
+        // contain pre-exec callbacks and is not itself UnwindSafe.
+        let mut command = Command::new(fwp());
+        command.args(["run", "--interp"]).arg(&source);
+        start(command, Duration::from_millis(100))
+    });
+    let error = match result {
+        Err(error) => error,
+        Ok(_) => panic!("a silent process must not count as a ready server"),
+    };
+    let message = error
+        .downcast_ref::<String>()
+        .expect("startup failure message");
+    assert!(message.contains("timed out"), "{message}");
+    assert!(
+        began.elapsed() < Duration::from_secs(15),
+        "startup waited for the silent child instead of its deadline"
+    );
+    std::fs::remove_dir_all(d).unwrap();
 }
 
 fn build(args: &[&str], cwd: &Path) {
@@ -185,7 +215,7 @@ fn greeter_servers(native_dir: Option<&Path>) -> Vec<Server> {
         .arg(dir().join("client.fwp"))
         .arg("greeter")
         .args(["--listen", "127.0.0.1:0"]);
-    v.push(start(cmd));
+    v.push(start(cmd, Duration::from_secs(60)));
     if let Some(d) = native_dir {
         let out = d.join("servers");
         build(
@@ -200,7 +230,7 @@ fn greeter_servers(native_dir: Option<&Path>) -> Vec<Server> {
         );
         let mut cmd = Command::new(out.join("greeter"));
         cmd.args(["--listen", "127.0.0.1:0"]);
-        v.push(start(cmd));
+        v.push(start(cmd, Duration::from_secs(60)));
     }
     v
 }
@@ -347,6 +377,192 @@ fn stream_aliases_are_consistent_across_tasks() {
         std::fs::write(path.join("service-build.txt"), "Both executables built by this revision's fwp build --service greeter -O1. Client source: shared-stream.fwp; server built from client.fwp and greeter.fwp. Native C flags include -std=gnu11 -ffp-contract=off. These correctness binaries have no allocation counters and are not timed.
 ").unwrap();
     }
+}
+
+/// Measure complete generated clients, including iterator wrappers and the
+/// connection setup omitted by the queued-message C fixture. Run on CI only;
+/// these counters establish a baseline, not a bounded-memory guarantee.
+#[test]
+#[ignore = "runner-only remote client allocation measurement"]
+fn remote_stream_client_memory_measurement() {
+    assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
+    let artifacts = PathBuf::from(
+        std::env::var_os("FWP_STREAM_CLIENT_ARTIFACTS").expect("measurement artifact directory"),
+    );
+    std::fs::create_dir_all(&artifacts).unwrap();
+    std::fs::copy(dir().join("greeter.fwp"), artifacts.join("greeter.fwp")).unwrap();
+    std::fs::write(artifacts.join("scope.txt"), "Generated standalone clients call an interpreted greeter server over real loopback HTTP/2. For each input size, raw unoptimized interpretation and an uninstrumented compiled client must print the expected result. Three separate measured client processes count managed allocation requests, requested bytes and effective retains, sampling allocator-charged storage after each allocation. Measurement starts after constant initialization and ends after entry execution and top-level cached-value cleanup, before complete runtime shutdown. GC is disabled and physical freeing enabled. Raw network/message buffers, allocator metadata/pages, process memory and server memory are excluded. No timing or C/Rust comparison. Inputs are 64, 1024 and 16384; full consumers sum 1..n, partial consumers sum the first 32, retained consumers sum then reread the initial value. The compiler uses its ordinary optimizer and native -O2; code is emitted through fwp build --service greeter --emit-c and compiled through this revision's cgen::compile_c. Compiler versions, CPU details, source, generated C and binaries accompany this report.\n").unwrap();
+    let d = scratch("stream-client-memory");
+    std::fs::copy(dir().join("greeter.fwp"), d.join("greeter.fwp")).unwrap();
+    let mut server = Command::new(fwp());
+    server
+        .args(["serve", "--interp"])
+        .arg(dir().join("client.fwp"))
+        .arg("greeter")
+        .args(["--listen", "127.0.0.1:0"]);
+    let server = start(server, Duration::from_secs(60));
+    let mut rows = String::from("mode\telements\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\n");
+    for (mode, consume) in [
+        ("unique", "iter.fold add 0"),
+        (
+            "retained",
+            "both (iter.fold add 0) (iter.take 1 | iter.to-list)",
+        ),
+        ("partial", "iter.take 32 | iter.fold add 0"),
+    ] {
+        let source = d.join(format!("{mode}.fwp"));
+        std::fs::write(&source, format!("import greeter\n\nmain =\n    () | args | head | option.and-then parse-int\n    | (match\n        Some _ -> id\n        None -> \"expected a numeric measurement count\" | fail)\n    | greeter.count\n    | {consume}\n    | echo\n")).unwrap();
+        let split = d.join(mode);
+        build(
+            &[
+                source.to_str().unwrap(),
+                "--service",
+                "greeter",
+                "--emit-c",
+                "-o",
+                split.to_str().unwrap(),
+            ],
+            &d,
+        );
+        let cpath = split.join(format!("{mode}.c"));
+        let generated = std::fs::read_to_string(&cpath).unwrap();
+        let instrumented = instrument_client_allocations(&generated);
+        let measured_c = artifacts.join(format!("{mode}-measured.c"));
+        std::fs::copy(&source, artifacts.join(format!("{mode}.fwp"))).unwrap();
+        std::fs::copy(&cpath, artifacts.join(format!("{mode}.c"))).unwrap();
+        std::fs::write(&measured_c, &instrumented).unwrap();
+        let measured = artifacts.join(format!("{mode}-measured{}", std::env::consts::EXE_SUFFIX));
+        let ordinary = artifacts.join(format!("{mode}{}", std::env::consts::EXE_SUFFIX));
+        fwp::cgen::compile_c(&generated, &ordinary, "-O2").unwrap();
+        fwp::cgen::compile_c(&instrumented, &measured, "-O2").unwrap();
+        for elements in [64_i64, 1024, 16384] {
+            let count = if mode == "partial" { 32 } else { elements };
+            let sum = count * (count + 1) / 2;
+            let expected = if mode == "retained" {
+                format!("({sum}, [1])\n")
+            } else {
+                format!("{sum}\n")
+            };
+            let mut reference = Command::new(fwp());
+            reference
+                .args(["run", "--interp", "--service", "greeter"])
+                .arg(&source)
+                .arg(elements.to_string())
+                .env("FWP_NO_OPT", "1")
+                .env("FWP_SERVICE_GREETER", &server.addr);
+            let result = run(reference, 120);
+            assert!(result.status.success(), "reference: {}", render(&result));
+            assert_eq!(String::from_utf8_lossy(&result.stdout), expected);
+            for (exe, record, repetition) in [
+                (&ordinary, false, 0),
+                (&measured, true, 0),
+                (&measured, true, 1),
+                (&measured, true, 2),
+            ] {
+                let mut command = Command::new(exe);
+                command
+                    .arg(elements.to_string())
+                    .env("FWP_SERVICE_GREETER", &server.addr)
+                    .env("FWP_FREE", "1")
+                    .env("FWP_GC", "off")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_GC_STATS", "0")
+                    .env("FWP_REUSE_VERIFY", "0");
+                let result = run(command, 120);
+                assert!(
+                    result.status.success(),
+                    "{mode}/{elements}: {}",
+                    render(&result)
+                );
+                assert_eq!(String::from_utf8_lossy(&result.stdout), expected);
+                let stderr = String::from_utf8(result.stderr).unwrap();
+                if record {
+                    let fields = stderr
+                        .trim()
+                        .strip_prefix("client-memory\t")
+                        .expect("only the measurement line on stderr");
+                    let values: Vec<u64> = fields.split('\t').map(|v| v.parse().unwrap()).collect();
+                    assert_eq!(values.len(), 6);
+                    assert!(values[0] > 0 && values[1] > 0);
+                    assert_eq!(values[5], 0, "collections must be disabled");
+                    rows.push_str(&format!("{mode}\t{elements}\t{repetition}\t{fields}\n"));
+                } else {
+                    assert!(stderr.is_empty(), "{stderr}");
+                }
+            }
+        }
+    }
+    std::fs::write(artifacts.join("memory.tsv"), &rows).unwrap();
+    println!("{rows}");
+}
+
+fn instrument_client_allocations(generated: &str) -> String {
+    fn wrap(code: &mut String, signature: &str, name: &str, arguments: &str, count: &str) {
+        assert_eq!(code.matches(signature).count(), 1);
+        let begin = code.find(signature).unwrap();
+        let mut end = begin + signature.len();
+        let mut depth = 1;
+        while depth != 0 {
+            match code.as_bytes()[end] {
+                b'{' => depth += 1,
+                b'}' => depth -= 1,
+                _ => {}
+            }
+            end += 1;
+        }
+        let original = code[begin..end].replacen(name, &format!("{name}_measured_body"), 1);
+        let replacement = format!("{original}\n{signature}\n{count}\nvoid *result = {name}_measured_body({arguments});\nclient_sample();\nreturn result;\n}}\n");
+        code.replace_range(begin..end, &replacement);
+    }
+    let mut code = generated.to_string();
+    let declaration = "typedef uint64_t V;";
+    assert_eq!(code.matches(declaration).count(), 1);
+    code = code.replacen(declaration, &format!("{declaration}\nstatic int client_active;\nstatic uint64_t client_requests, client_requested_bytes, client_retains;\nstatic double client_start_charge, client_peak_charge;\nstatic void client_sample(void);\n"), 1);
+    wrap(
+        &mut code,
+        "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
+        "fwp_gc_alloc",
+        "n, leaf",
+        "if(client_active && leaf != 0){client_requests++;client_requested_bytes+=n;}",
+    );
+    wrap(
+        &mut code,
+        "static inline void *fwp_alloc_init(size_t n) {",
+        "fwp_alloc_init",
+        "n",
+        "if(client_active){client_requests++;client_requested_bytes+=n;}",
+    );
+    let retain = "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {";
+    assert_eq!(code.matches(retain).count(), 1);
+    code = code.replacen(
+        retain,
+        &format!("{retain}\nif(client_active)client_retains++;"),
+        1,
+    );
+    let main = code
+        .find("static void *fwp_main_thread(void *arg) {")
+        .unwrap();
+    code.insert_str(main, include_str!("fixtures/grpc_client_memory.c"));
+    let main = code
+        .find("static void *fwp_main_thread(void *arg) {")
+        .unwrap();
+    let mut entry = code[main..].to_owned();
+    for (before, after) in [
+        (
+            "    fwp_init_consts();\n",
+            "    fwp_init_consts();\n    client_measure_begin();\n",
+        ),
+        (
+            "    fwp_cl_finish();\n",
+            "    fwp_cl_finish();\n    client_measure_end();\n",
+        ),
+    ] {
+        assert_eq!(entry.matches(before).count(), 1);
+        entry = entry.replacen(before, after, 1);
+    }
+    code.replace_range(main.., &entry);
+    code
 }
 
 // ------------------------------------------------------------ interoperability

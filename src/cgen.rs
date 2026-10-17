@@ -1695,6 +1695,12 @@ impl<'p> Gen<'p> {
         if !free_enabled() && !self.resource_type(mt) {
             return format!("static void fwp_drop{id}(V v) {{ fwp_rc_drop(v); }}\n");
         }
+        if let MT::Con(name, args) = mt {
+            if name == "std::GrpcCell" && args.len() == 1 {
+                let element = self.value_drop(&args[0]);
+                return format!("static void fwp_drop{id}(V v) {{ g_cell_drop(v, {element}); }}\n");
+            }
+        }
         if matches!(mt, MT::Con(n, _) if n == "std::File") {
             return format!("static void fwp_drop{id}(V v) {{ fwp_file_drop(v); }}\n");
         }
@@ -5564,6 +5570,10 @@ impl<'p> Gen<'p> {
         let (rk, rname, rw) = nk(&result);
         let sc = scalar(&result);
         let sp = scalar(&p(0));
+        if sym == "grpc._force" {
+            let cell_drop = self.value_drop(&p(0));
+            return Ok(format!("return fwp_p_grpc_force(l0, {cell_drop});"));
+        }
         if sym == "array.length" {
             return Ok("return (V)(int64_t)fwp_array_len(l0);".into());
         }
@@ -6466,7 +6476,6 @@ impl<'p> Gen<'p> {
                     ("grpc.set-header", "fwp_p_grpc_set_meta(0, l0, l1)"),
                     ("grpc.set-trailer", "fwp_p_grpc_set_meta(1, l0, l1)"),
                     ("grpc.with-gzip", "fwp_p_grpc_with_gzip(l0)"),
-                    ("grpc._force", "fwp_p_grpc_force(l0)"),
                     ("http2.serve", "fwp_p_http2_serve(l0, l1, l2, l3, l4)"),
                     ("http2.respond", "fwp_p_http2_respond(l0, l1, l2, l3, l4)"),
                     ("http2.data", "fwp_p_http2_data(l0, l1, l2)"),
