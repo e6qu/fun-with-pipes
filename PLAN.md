@@ -73,31 +73,35 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #156](https://github.com/e6qu/fun-with-pipes/pull/156) is accepted after all
-nine production jobs and documentation passed. Cached stream values release when
-their last owner goes away; uniquely owned closures transfer captured values.
-The [delivery history](docs/roadmap-history.md) preserves its exact acceptance.
-This still leaves allocations and reference counting in ordinary iteration.
+[PR #157](https://github.com/e6qu/fun-with-pipes/pull/157) is accepted after all
+nine production jobs and documentation passed. Finished client requests and
+unread messages release through explicit owners. Selecting a field from a
+uniquely owned heap record avoids retaining it again. Earlier deliveries released
+stream caches and moved closure captures. The [history](docs/roadmap-history.md)
+records exact acceptance; these changes do not complete GC removal.
 
-The current delivery releases finished request storage and unread messages,
-reduces reference counting when selecting a value from a consumed heap record,
-and repairs service-settings construction. No syntax changes are involved.
-The request component passes all six native platforms: every created request and
-message releases, and final managed storage stays constant across measured call
-counts. It adds one retain per call with unchanged allocation requests.
+The current delivery frees closed client connections and finished background
+I/O tasks. It separates the lifetime of a socket from the lifetime of its record,
+which older response readers may still need. The scheduler owns each client
+I/O task exclusively, so disposing it needs no task reference-count updates.
+Library unload closes idle connections before draining tasks, and fatal
+allocation failures preserve their intended errors without entering unload
+from a task stack. No language syntax changes are involved.
 
-The combined compiler and runtime change passes all six focused native platforms.
-For 256 full reads, compiler transfers reduce retains from 66,562 to 50,178
-relative to request cleanup alone, with unchanged allocation requests and final
-managed storage. Shared readers, failure cleanup and service-cache construction
-also pass. Full production acceptance remains required.
-[The benchmark guide](docs/benchmarks.md#memory-left-behind-by-repeated-remote-calls)
-names the compared revisions, inputs, measurement boundaries and remaining costs.
+All six focused native jobs verify complete connection/request/message release
+and constant remaining managed storage across 1/16/256 batches, with collection
+disabled and physical freeing enabled. Alias, failure/cancellation and stress/reuse
+checks pass; actual ARM64/AMD64 binaries confirm direct unique-task freeing.
+Allocation requests stay unchanged; connection sharing adds three count
+increments per connection. Full production acceptance still requires all nine jobs and docs.
+[The comparison](docs/benchmarks.md#memory-after-closing-connections-and-finishing-their-io-tasks)
+explains inputs, revisions, allocation costs and excluded memory.
 
-Next, prove connection/pool/task ownership and release pending sender values and
-retained server callbacks. Preserve shared reads, cancellation and error order;
-keep scheduler back-pointers borrowed to avoid cycles. Audit unused runtime
-callback fields before adding owners for them. Remote calls remain excluded from
+Next, measure pending sender inputs before giving their iterators explicit typed
+owners; cover ordinary, retained and early-completion clients. Preserve the
+existing order of evaluating the next input and encoding the current value.
+Then address retained server callbacks and channels, without turning borrowed
+scheduler back-pointers into owning cycles. Remote calls remain excluded from
 checked ARC until their complete lifetimes and cycles are proved.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and

@@ -32,9 +32,11 @@ static void end_response(g_conn *c, g_stream *s, int mode) {
 }
 int main(int argc,char **argv) {
     if(argc!=2)return 200;
-    int mode=atoi(argv[1]);if(mode<0||mode>9)return 200;
+    int mode=atoi(argv[1]);if(mode<0||mode>10)return 200;
     fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+    double before_connection=probe_charge();
     g_conn *c=g_conn_new(FWP_INVALID_SOCKET,"local",0);
+    fwp_rc_fresh(PTR(c));fwp_rc_dup(PTR(c)); /* fixture and incoming source */
     double before=probe_charge();
     g_stream *s=g_stream_new(c,1);
     fwp_rc_fresh(PTR(s));fwp_rc_dup(PTR(s)); /* source and active list */
@@ -48,18 +50,19 @@ int main(int argc,char **argv) {
         g_spawn_sender(c,s,0,0);
         if(!probe_sender||*fwp_rc_slot(PTR(s))!=3)return 216;
     }
-    if(mode==8||mode==9) {
-        uint8_t *slot=fwp_rc_slot(PTR(s));
-        if(mode==9){*slot=254;fwp_rc_dup(PTR(s));(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
+    if(mode>=8) {
+        uint8_t *slot=fwp_rc_slot(mode==10?PTR(c):PTR(s));
+        if(mode>=9){*slot=254;fwp_rc_dup(mode==10?PTR(c):PTR(s));(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
         probe_spawn_fail=mode==8;
         fwp_trap_recover=recover_probe;fwp_trap_jb=&probe_trap;fwp_trap_cleanup=fwp_cleanups;
         if(!setjmp(probe_trap)){g_spawn_sender(c,s,0,0);return 217;}
         fwp_trap_recover=0;fwp_trap_jb=0;fwp_trap_cleanup=0;probe_spawn_fail=0;
         if(fwp_cleanups||probe_sender||probe_stream_finals)return 217;
-        if(mode==9){
+        if(mode>=9){
             if(*slot!=255||(*fwp_rc_wide_link(slot))->count!=SIZE_MAX)return 218;
             fwp_rc_forget_slot(slot);*slot=2;
         } else if(*slot!=2)return 218;
+        if(*fwp_rc_slot(PTR(c))!=2||*fwp_rc_slot(PTR(s))!=2)return 218;
     }
     size_t outgoing=c->out.len;
     g_incoming_drop(source);
@@ -89,7 +92,12 @@ int main(int argc,char **argv) {
 #ifndef FWP_RESOURCE_NO_FREE
     if(mode<6&&!fwp_gc.enabled&&!fwp_reuse_verify&&probe_charge()!=before)return 220;
 #endif
-    FWP_KEEP_ALIVE(PTR(c));
+    if(*fwp_rc_slot(PTR(c))!=1)return 221;
+    g_conn_drop(c);
+    if(still_finalized(c))return 222;
+#ifndef FWP_RESOURCE_NO_FREE
+    if(mode<6&&!fwp_gc.enabled&&!fwp_reuse_verify&&probe_charge()!=before_connection)return 223;
+#endif
     fwp_lib_finish();
     if(probe_stream_finals!=1)return 215;
     printf("stream_bytes\tstream_alignment\traw_offset\tabandoned_offset\tsource_bytes\tsender_bytes\tconnection_bytes\n%zu\t%zu\t%zu\t%zu\t%zu\t%zu\t%zu\n",

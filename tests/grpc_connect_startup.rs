@@ -28,13 +28,14 @@ fn grpc_connection_startup_releases_failed_task_reservations() {
     let (generated, _) = fwp::cgen::generate_library(&p, "grpc_startup").unwrap();
     let mut generated = generated;
     for (before,after) in [
+        ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) { if(p==pending)finalized++;"),
         ("g_conn *c = g_conn_new(fd, given, 0);","g_conn *c = g_conn_new(fd, given, 0);pending=c;"),
         ("startup.reader = fwp_spawn_task(0, g_reader, c, 0, 1);","if(stage==0)fwp_trap(\"reader spawn trap\"); startup.reader=fwp_spawn_task(0,g_reader,c,0,1);started_reader=startup.reader;"),
         ("startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1);","if(stage==1)fwp_trap(\"writer spawn trap\"); startup.writer=fwp_spawn_task(0,g_writer,c,0,1);started_writer=startup.writer;"),
     ]{assert_eq!(generated.matches(before).count(),1);generated=generated.replacen(before,after,1);}
     let hooks = r#"
 #include <stdlib.h>
-static int stage,trapped;
+static int stage,trapped,finalized;
 static void *pending,*started_reader,*started_writer;
 static void no_release(void *);
 static void observed_free(void *);
@@ -50,15 +51,22 @@ int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_trap_recover=g_trap_recover;
  for(stage=0;stage<3;stage++){
   V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);V address=fwp_p_local_addr(listener);snprintf(target,sizeof target,"%s",STR(address)->d);
-  pending=started_reader=started_writer=0;trapped=0;result=0;
+  pending=started_reader=started_writer=0;trapped=finalized=0;result=0;
   fwp_task *task=fwp_spawn_task(0,client,0,0,0);fwp_await(task);g_conn *c=pending;
   if(!task->done||!c||fwp_cleanups||trapped!=(stage<2))return 2;
-  if(stage==0){if(result||g_pool||started_reader||started_writer||c->fd!=-1||c->refs!=0)return 1;if(strcmp(fwp_trap_msg,"reader spawn trap"))return 3;}
-  if(stage==1){if(result||g_pool||!started_reader||started_writer||c->refs!=(((fwp_task*)started_reader)->done?0:1)||c->dead!=g_connect_start_failed)return 1;if(strcmp(fwp_trap_msg,"writer spawn trap"))return 4;fwp_await(started_reader);}
-  if(stage==2){if(result!=c||g_pool!=c||!started_reader||!started_writer||c->refs!=2||c->dead||fcntl(c->fd,F_GETFD)==-1)return 1;g_conn_dead(c,"finished");fwp_await(started_reader);fwp_await(started_writer);}
-  if(c->refs!=0||c->fd!=-1||g_pool||fwp_cleanups)return 1;
-  fwp_gc_forget_finalizer(c);g_conn_final(c);
-  fwp_p_tcp_stop(listener);FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(c));
+  if(stage==0){if(result||g_pool||started_reader||started_writer)return 1;if(strcmp(fwp_trap_msg,"reader spawn trap"))return 3;}
+  if(stage==1){if(result||g_pool||!started_reader||started_writer)return 1;if(strcmp(fwp_trap_msg,"writer spawn trap"))return 4;}
+  if(stage==2){if(result!=c||g_pool!=c||!started_reader||!started_writer||c->refs!=2||c->dead||fcntl(c->fd,F_GETFD)==-1)return 1;g_conn_dead(c,"finished");}
+  // A ready root would prevent the scheduler from polling the closed socket.
+  // Park briefly so its reader wakes naturally; never await a freed I/O handle.
+  int64_t drain_deadline=fwp_now_ns()+10000000000LL;
+  while(fwp_gc_tasks){
+   if(fwp_now_ns()>=drain_deadline){fprintf(stderr,"startup drain timed out at stage %d\n",stage);return 9;}
+   fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();
+  }fwp_free_zombie();
+  if(stage==2){if(c->refs||c->fd!=-1||finalized)return 1;g_conn_drop(c);result=0;}
+  if(finalized!=1||g_pool||fwp_cleanups)return 1;
+  fwp_p_tcp_stop(listener);FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(PTR(task));
  }
  fwp_lib_finish();return 0;
 }

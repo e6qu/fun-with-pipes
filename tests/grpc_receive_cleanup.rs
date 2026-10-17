@@ -29,6 +29,71 @@ fn receive_runtime() -> String {
 }
 
 #[test]
+fn library_unload_closes_idle_connections_before_draining_tasks() {
+    let mut generated = receive_runtime();
+    for (before, after) in [
+        ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) { if(p==watched_connection)connection_finalized++;"),
+        ("static void fwp_library_tasks_finish(void) {", "static void fwp_library_tasks_finish(void) { int64_t test_deadline=fwp_now_ns()+1000000000LL;"),
+        ("        while (fwp_gc_tasks) {", "        while (fwp_gc_tasks) { if(fwp_now_ns()>=test_deadline)_Exit(209);"),
+    ] {
+        assert_eq!(generated.matches(before).count(), 1, "{before}");
+        generated = generated.replacen(before, after, 1);
+    }
+    let fixture = r#"
+int main(int argc,char **argv){
+ if(argc!=2)return 201;int unpooled=atoi(argv[1]);
+ fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
+ V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);
+ V address=fwp_p_local_addr(listener);char *error=0;
+ g_conn *c=g_connect(STR(address)->d,0,&error);
+ if(!c||error||g_pool!=c)return 202;watched_connection=c;
+ // Allow reader and writer to enter their normal idle waits.
+ fwp_p_task_sleep(fwp_record(1,(V[]){1000000}));
+ int readers=0,writers=0;
+ for(fwp_task *t=fwp_gc_tasks;t;t=t->gc_next){
+  if(t->done||!t->unwinding)return 203;
+  readers+=t->cfn==g_reader;writers+=t->cfn==g_writer;
+ }
+ if(readers!=1||writers!=1||c->refs!=2||c->dead)return 204;
+ if(unpooled){g_pool=c->next_pool;c->next_pool=0;g_conn_drop(c);}
+ g_conn_drop(c); // caller releases; only I/O and any pool owner remain
+ FWP_KEEP_ALIVE(listener);
+ fwp_lib_finish();
+ if(connection_finalized!=1||g_pool||fwp_cur||fwp_gc_tasks||fwp_gc.ready)return 205;
+ return 0;
+}
+"#;
+    let hooks = "static void *watched_connection; static int connection_finalized;";
+    let finish = "    g_connections_finish();";
+    assert_eq!(generated.matches(finish).count(), 1);
+    let broken = generated.replacen(finish, "    /* omitted connection shutdown */", 1);
+    let dir = fwp::cgen::TempDir::new("grpc-library-unload").unwrap();
+    let binary = dir.join("probe");
+    for opt in ["-O1", "-O2"] {
+        for (source, expected) in [(&broken, 209), (&generated, 0)] {
+            fwp::cgen::compile_c(&format!("{hooks}\n{source}\n{fixture}"), &binary, opt).unwrap();
+            for unpooled in ["0", "1"] {
+                for gc in ["off", "on"] {
+                    let out = Command::new(&binary)
+                        .arg(unpooled)
+                        .env("FWP_GC", gc)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", "1")
+                        .output()
+                        .unwrap();
+                    assert_eq!(
+                        out.status.code(),
+                        Some(expected),
+                        "{opt}/{unpooled}/{gc}: {out:?}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn received_requests_and_statuses_release_on_errors_and_cancelled_waits() {
     let generated = receive_runtime();
     let hooks = r#"
@@ -213,9 +278,23 @@ static void observed_message_free(void *);
 "#;
     let fixture = include_str!("fixtures/grpc_client_stream_ownership.c");
     let code = format!("{hooks}\n{generated}\n{fixture}");
+    let source_connection =
+        "    g_stream_reader_release(c, s);\n    g_conn_drop(c);\n#ifndef FWP_RESOURCE_NO_FREE";
+    let sender_connection = "    x->c = 0;\n    g_conn_drop(c);";
+    let connection_finalizer = "    fwp_gc_forget_finalizer(c);\n    g_conn_final(c);";
+    let connection_storage = "    g_conn_final(c);\n    fwp_rc_resource_free_arr(PTR(c));";
+    for marker in [
+        source_connection,
+        sender_connection,
+        connection_finalizer,
+        connection_storage,
+    ] {
+        assert_eq!(code.matches(marker).count(), 1, "{marker}");
+    }
+
     let list_release =
         "    g_stream_drop(s); /* the active-list owner, when this is an owned client stream */";
-    let source_release = "    g_stream_reader_release(c, s);";
+    let source_release = "    source->s = 0;\n    g_stream_reader_release(c, s);";
     let sender_release = "    x->s = 0;\n    g_stream_drop(s);";
     let finalizer_release = "    fwp_gc_forget_finalizer(s);\n    g_stream_final(s);";
     for marker in [
@@ -227,9 +306,28 @@ static void observed_message_free(void *);
         assert_eq!(code.matches(marker).count(), 1, "{marker}");
     }
     let controls = [
+        (
+            code.replace(
+                source_connection,
+                "    g_stream_reader_release(c, s);\n#ifndef FWP_RESOURCE_NO_FREE",
+            ),
+            "0",
+            221,
+        ),
+        (code.replace(sender_connection, "    x->c = 0;"), "6", 221),
+        (
+            code.replace(connection_finalizer, "    g_conn_final(c);"),
+            "0",
+            222,
+        ),
+        (
+            code.replace(connection_storage, "    g_conn_final(c);"),
+            "0",
+            223,
+        ),
         (code.replace(list_release, "    (void)s;"), "0", 212),
         (
-            code.replace(source_release, "    (void)c; (void)s;"),
+            code.replace(source_release, "    source->s = 0; (void)c; (void)s;"),
             "0",
             211,
         ),
@@ -263,7 +361,7 @@ static void observed_message_free(void *);
             };
             fwp::cgen::compile_c(&format!("{prefix}{code}"), &binary, opt).unwrap();
             let mut layout = Vec::new();
-            for mode in 0..10 {
+            for mode in 0..11 {
                 for stress in [false, true] {
                     let out = Command::new(&binary)
                         .arg(mode.to_string())
@@ -301,6 +399,122 @@ static void observed_message_free(void *);
                 )
                 .unwrap();
             }
+        }
+    }
+}
+
+#[test]
+fn fatal_runtime_allocations_report_errors_from_task_stacks() {
+    let mut generated = receive_runtime();
+    for (before, after) in [
+        (
+            "realloc(b->d, c)",
+            "(failure_kind == 0 ? NULL : realloc(b->d, c))",
+        ),
+        (
+            "realloc(h->v, cap * sizeof(h2_hdr))",
+            "(failure_kind == 1 ? NULL : realloc(h->v, cap * sizeof(h2_hdr)))",
+        ),
+        (
+            "copy.name = (char *)malloc(nl + 1);",
+            "copy.name = failure_kind == 2 ? NULL : (char *)malloc(nl + 1);",
+        ),
+        (
+            "copy.value = (char *)malloc(vl + 1);",
+            "copy.value = failure_kind == 3 ? NULL : (char *)malloc(vl + 1);",
+        ),
+        (
+            "char *copy = strdup(text);",
+            "char *copy = failure_kind == 4 || failure_kind >= 15 ? NULL : strdup(text);",
+        ),
+        (
+            "unsigned char *alpn = (unsigned char *)strdup(\"\\x02h2\");",
+            "unsigned char *alpn = failure_kind == 18 ? NULL : (unsigned char *)strdup(\"\\x02h2\");",
+        ),
+    ] {
+        assert_eq!(generated.matches(before).count(), 1, "{before}");
+        generated = generated.replace(before, after);
+    }
+    for (before, after) in [
+        ("realloc(b->d, cap)", "(failure_kind == 9 ? NULL : realloc(b->d, cap))"),
+        ("static void *fwp_k_malloc(size_t n) {\n    void *p = malloc(n ? n : 1);", "static void *fwp_k_malloc(size_t n) {\n    void *p = failure_kind == 10 ? NULL : malloc(n ? n : 1);"),
+        ("realloc(fwp_tapes, (size_t)cap * sizeof(fwp_tape))", "(failure_kind == 11 ? NULL : realloc(fwp_tapes, (size_t)cap * sizeof(fwp_tape)))"),
+        ("realloc(t->pa, (size_t)cap * (2 * sizeof(int32_t)))", "(failure_kind == 12 ? NULL : realloc(t->pa, (size_t)cap * (2 * sizeof(int32_t))))"),
+        ("realloc(t->da, (size_t)cap * (2 * sizeof(double)))", "(failure_kind == 13 ? NULL : realloc(t->da, (size_t)cap * (2 * sizeof(double))))"),
+        ("calloc((size_t)capacity, sizeof(double))", "(failure_kind == 14 ? NULL : calloc((size_t)capacity, sizeof(double)))"),
+    ] {
+        assert_eq!(generated.matches(before).count(), 1, "{before}");
+        generated = generated.replace(before, after);
+    }
+    let fixture = r#"
+static void attempt_transport(void *arg,int cancelled){
+ (void)arg;(void)cancelled;
+ h2_buf buffer={0};h2_hdrs headers={0};
+ if(failure_kind==0)h2b_reserve(&buffer,1);
+ else if(failure_kind<4)h2_hdrs_add(&headers,"name",4,"value",5);
+ else if(failure_kind==4){
+  g_serving serving={0};g_ctx context={0};context.serving=&serving;
+  fwp_cur->gctx=&context;g_fail_call(GRPC_INTERNAL,"failure");
+ }else if(failure_kind==5){buffer.len=SIZE_MAX;h2b_reserve(&buffer,1);}
+ else if(failure_kind==6)h2_hdrs_add(&headers,"name",SIZE_MAX,"value",5);
+ else if(failure_kind==7)fwp_gc_alloc_big(((size_t)1<<62)+1,2);
+ else if(failure_kind==8){fwp_buf b={0};b.len=SIZE_MAX;buf_grow(&b,1);}
+ else if(failure_kind==9){fwp_buf b={0};buf_grow(&b,1);}
+ else if(failure_kind==10)fwp_k_malloc(1);
+ else if(failure_kind==11)fwp_ad_tape_new(1,NULL);
+ else if(failure_kind==12||failure_kind==13){fwp_tape tape={0};fwp_tape_reserve(&tape,1);}
+ else if(failure_kind==14){V base=fwp_ad_tape_new(1,NULL);V empty=fwp_array_new_packed(0,NULL);fwp_p_ad_backward(base,empty,empty);}
+ else if(failure_kind==15){g_conn connection={0};connection.fd=FWP_INVALID_SOCKET;g_conn_dead(&connection,"closed");}
+ else if(failure_kind==16){g_stream stream={0};g_set_reset(&stream,"reset");}
+ else g_strdupf("formatted %s","failure");
+ _Exit(201);
+}
+int main(int argc,char **argv){
+ if(argc!=2)return 202;failure_kind=atoi(argv[1]);
+ if(failure_kind==18){
+  int failed=0;
+  SSL_CTX *context=g_server_tls("unused-cert","unused-key","",&failed);
+  return context==NULL&&failed==1?0:203;
+ }
+ fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ fputs("before fatal allocation\n",stdout);
+ fwp_task *task=fwp_spawn_task(0,attempt_transport,0,0,0);fwp_await(task);
+ return 201;
+}
+"#;
+    let dir = fwp::cgen::TempDir::new("grpc-fatal-transport").unwrap();
+    let binary = dir.join("probe");
+    for opt in ["-O1", "-O2"] {
+        let code = format!("static int failure_kind = -1;\n{generated}\n{fixture}");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        let recoverable = Command::new(&binary).arg("18").output().unwrap();
+        assert!(recoverable.status.success(), "{opt}: {recoverable:?}");
+        assert!(recoverable.stdout.is_empty());
+        assert_eq!(
+            String::from_utf8(recoverable.stderr)
+                .unwrap()
+                .replace("\r\n", "\n"),
+            "fwp serve: cannot allocate TLS protocol list\n"
+        );
+        for kind in 0..18 {
+            let out = Command::new(&binary)
+                .arg(kind.to_string())
+                .output()
+                .unwrap();
+            assert_eq!(out.status.code(), Some(102), "{opt}/{kind}: {out:?}");
+            assert_eq!(
+                String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
+                "before fatal allocation\n"
+            );
+            let expected = match kind {
+                5 => "fwp: HTTP/2 buffer too large\n",
+                6 => "fwp: HTTP/2 headers too large\n",
+                _ => "fwp: out of memory\n",
+            };
+            assert_eq!(
+                String::from_utf8(out.stderr).unwrap().replace("\r\n", "\n"),
+                expected
+            );
         }
     }
 }

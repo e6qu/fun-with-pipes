@@ -199,6 +199,13 @@ static g_ctx *g_ctx_of(void) {
     return fwp_cur->gctx ? (g_ctx *)fwp_cur->gctx : &g_empty_ctx;
 }
 
+/* Check raw text allocation before publishing status, diagnostics or options. */
+static char *g_copy_text(const char *text) {
+    char *copy = strdup(text);
+    if (!copy) { fprintf(stderr, "fwp: out of memory\n"); fflush(NULL); _Exit(102); }
+    return copy;
+}
+
 /* Diagnostic text includes its terminator; preserve existing truncation. */
 enum { G_MESSAGE_BYTES = 1024 };
 
@@ -208,7 +215,7 @@ static char *g_strdupf(const char *fmt, ...) {
     va_start(ap, fmt);
     vsnprintf(buf, sizeof buf, fmt, ap);
     va_end(ap);
-    return strdup(buf);
+    return g_copy_text(buf);
 }
 
 static void g_trapf(const char *fmt, ...) {
@@ -299,11 +306,15 @@ static void g_stream_reader_release(g_conn *c, g_stream *s) {
 }
 
 typedef struct { g_conn *c; g_stream *s; } g_call_owner;
+static void g_conn_drop(void *value);
 static void g_call_release(void *value) {
     g_call_owner *owner = value;
+    g_conn *c = owner->c;
     g_stream *s = owner->s;
+    owner->c = 0;
     owner->s = 0;
-    g_stream_reader_release(owner->c, s);
+    g_stream_reader_release(c, s);
+    g_conn_drop(c);
 }
 
 /* Nonallocating failure marker: no stream observes an unpublished connection. */
@@ -325,6 +336,17 @@ static void g_conn_final(void *p) {
     free(c->tlskey);
 }
 
+/* Pool, callers and live I/O tasks share client storage. Transport users
+ * separately determine when the socket closes; requests may outlive it. */
+static void g_conn_drop(void *value) {
+    g_conn *c = value;
+    if (!fwp_rc_release_last(PTR(c))) return;
+    if (c->refs || c->fd != FWP_INVALID_SOCKET || c->streams) abort();
+    fwp_gc_forget_finalizer(c);
+    g_conn_final(c);
+    fwp_rc_resource_free_arr(PTR(c));
+}
+
 static g_stream *g_stream_new(g_conn *c, uint32_t id) {
     g_stream *s = (g_stream *)fwp_mem_alloc(sizeof *s);
     fwp_gc_finalizer(s, g_stream_final);
@@ -337,7 +359,7 @@ static g_stream *g_stream_new(g_conn *c, uint32_t id) {
 }
 
 static void g_set_reset(g_stream *s, const char *why) {
-    if (!s->reset) s->reset = strdup(why);
+    if (!s->reset) s->reset = g_copy_text(why);
 }
 
 static g_conn *g_conn_new(fwp_socket_t fd, const char *authority, const g_server *server) {
@@ -414,7 +436,7 @@ static void g_goaway(g_conn *c, uint32_t code, const char *why, char **dead) {
     for (int i = 0; i < 4; i++) p[i] = (unsigned char)(c->last_stream >> (24 - 8 * i));
     for (int i = 0; i < 4; i++) p[4 + i] = (unsigned char)(code >> (24 - 8 * i));
     h2_frame(&c->out, H2_GOAWAY, 0, 0, p, 8);
-    if (!*dead) *dead = strdup(why);
+    if (!*dead) *dead = g_copy_text(why);
 }
 
 static void g_split(g_stream *s) {
@@ -429,7 +451,7 @@ static void g_split(g_stream *s) {
             if (!enc || strcmp(enc, "gzip") != 0) {
                 if (!s->bad)
                     s->bad = enc ? g_strdupf("unsupported grpc-encoding `%s`", enc)
-                                 : strdup("a compressed message without grpc-encoding");
+                                 : g_copy_text("a compressed message without grpc-encoding");
                 s->data.len = 0;
                 return;
             }
@@ -443,7 +465,7 @@ static void g_split(g_stream *s) {
         }
         size_t mn = s->data.d[0] != 0 ? plain.len : n;
         g_msg *m = (g_msg *)malloc(sizeof(g_msg) + mn + 1);
-        if (!m) { fprintf(stderr, "fwp: out of memory\n"); _Exit(102); }
+        if (!m) { fprintf(stderr, "fwp: out of memory\n"); fflush(NULL); _Exit(102); }
         m->next = 0;
         m->n = mn;
         if (mn) memcpy(m->d, src, mn);
@@ -542,7 +564,7 @@ static void g_on_frame(g_conn *c, const h2_fr *f, g_slist *fresh, char **dead) {
         }
         if (end) {
             s->remote_end = 1;
-            if (!s->raw && s->data.len && !s->bad) s->bad = strdup("truncated gRPC message");
+            if (!s->raw && s->data.len && !s->bad) s->bad = g_copy_text("truncated gRPC message");
             if (s->abandoned) g_unlink(c, s);
         }
         return;
@@ -614,7 +636,7 @@ static void g_process(g_conn *c, const unsigned char *b, size_t n, g_slist *fres
     if (!c->preface) {
         size_t pn = sizeof h2_preface - 1;
         size_t k = c->in.len < pn ? c->in.len : pn;
-        if (memcmp(c->in.d, h2_preface, k) != 0) { *dead = strdup("not an HTTP/2 connection"); return; }
+        if (memcmp(c->in.d, h2_preface, k) != 0) { *dead = g_copy_text("not an HTTP/2 connection"); return; }
         if (c->in.len < pn) return;
         h2b_drop(&c->in, pn);
         c->preface = 1;
@@ -636,7 +658,7 @@ static void g_process(g_conn *c, const unsigned char *b, size_t n, g_slist *fres
 
 static void g_conn_dead(g_conn *c, const char *why) {
     if (c->dead) return;
-    c->dead = strdup(why);
+    c->dead = g_copy_text(why);
     shutdown(c->fd, SHUT_RDWR);
     g_stream *streams = c->streams;
     c->streams = 0;
@@ -650,21 +672,26 @@ static void g_conn_dead(g_conn *c, const char *why) {
         fwp_wake_all(&s->waiters);
         g_stream_drop(s);
     }
+    int pooled = 0;
     for (g_conn **p = &g_pool; *p; p = &(*p)->next_pool)
-        if (*p == c) { *p = c->next_pool; break; }
+        if (*p == c) { *p = c->next_pool; c->next_pool = 0; pooled = 1; break; }
     fwp_wake_all(&c->space_wl);
     fwp_wake_all(&c->writer_wl);
+    if (pooled) g_conn_drop(c);
 }
 
 /* the reader or the writer is done; the last one closes the socket */
 static void g_conn_release(g_conn *c) {
-    if (--c->refs > 0) return;
-    fwp_fd_closing(c->fd);
-    if (c->ssl) { fwp_tls_free(c->ssl); c->ssl = 0; }
-    fwp_socket_close(c->fd);
-    c->fd = FWP_INVALID_SOCKET;
-    h2b_free(&c->in);
-    h2b_free(&c->out);
+    if (c->refs <= 0) abort();
+    if (--c->refs == 0) {
+        fwp_fd_closing(c->fd);
+        if (c->ssl) { fwp_tls_free(c->ssl); c->ssl = 0; }
+        fwp_socket_close(c->fd);
+        c->fd = FWP_INVALID_SOCKET;
+        h2b_free(&c->in);
+        h2b_free(&c->out);
+    }
+    g_conn_drop(c);
 }
 
 static void g_start_call(g_conn *c, g_stream *s);
@@ -889,7 +916,7 @@ static void g_status_of(g_conn *c, g_stream *s, g_got *g) {
     long code = strtol(gs, &end, 10);
     g->code = end == gs ? GRPC_UNKNOWN : (int)code;
     const char *m = h2_get(hs, "grpc-message");
-    g->text = strdup(m ? m : "");
+    g->text = g_copy_text(m ? m : "");
     h2_pct_decode(g->text);
 }
 
@@ -941,16 +968,16 @@ static void g_recv(g_conn *c, g_stream *s, int64_t deadline, g_got *g) {
             if (!s->mhead) s->mtail = 0;
             return;
         }
-        if (s->bad) { g->kind = G_LOST; g->text = strdup(s->bad); return; }
+        if (s->bad) { g->kind = G_LOST; g->text = g_copy_text(s->bad); return; }
         if (s->remote_end) {
-            if (c->server) { g->kind = G_END; g->code = 0; g->text = strdup(""); return; }
+            if (c->server) { g->kind = G_END; g->code = 0; g->text = g_copy_text(""); return; }
             if (g_ctx_of()->capture) g_metadata_into(s, g_ctx_of()->capture);
             g_status_of(c, s, g);
             g_unlink(c, s);
             if (g->code == GRPC_DEADLINE_EXCEEDED) g_deadline_passed(deadline);
             return;
         }
-        if (s->reset) { g->kind = G_LOST; g->text = strdup(s->reset); g->retry = s->retry; return; }
+        if (s->reset) { g->kind = G_LOST; g->text = g_copy_text(s->reset); g->retry = s->retry; return; }
         if (g_cancelled()) {
             if (!c->server) g_reset(c, s, 8); /* CANCEL */
             fwp_check_cancel();
@@ -959,7 +986,7 @@ static void g_recv(g_conn *c, g_stream *s, int64_t deadline, g_got *g) {
             g_reset(c, s, 8);
             g->kind = G_END;
             g->code = GRPC_DEADLINE_EXCEEDED;
-            g->text = strdup("deadline exceeded");
+            g->text = g_copy_text("deadline exceeded");
             return;
         }
         fwp_park(&s->waiters, deadline);
@@ -1049,6 +1076,14 @@ static const g_tls *g_env_tls(const char *var) {
 }
 
 #ifdef FWP_LIBRARY
+/* Connection I/O defers cancellation while it owns transport state. Close it
+ * before library task draining, including connections no longer in the pool. */
+static void g_connections_finish(void) {
+    for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next)
+        if (!t->done && (t->cfn == g_reader || t->cfn == g_writer))
+            g_conn_dead(t->carg, "library unloading");
+}
+
 /* Called only after task draining and GC finalization, before SSL cache disposal. */
 static void g_environment_finish(void) {
     while (g_env_options_known) {
@@ -1160,6 +1195,7 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
         }
     }
     g_conn *c = g_conn_new(fd, given, 0);
+    fwp_rc_fresh(PTR(c)); /* startup storage, transferred to the caller */
     c->ssl = ssl;
     ssl = 0;
     fwp_cleanup_pop(&ssl_cleanup);
@@ -1170,7 +1206,7 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
         c->tlskey = (char *)malloc(opts->key_len);
         /* A fatal allocation failure can occur on a task stack. Do not run
          * library unload destructors from inside that live task. */
-        if (!c->tlskey) { fprintf(stderr, "fwp: out of memory\n"); _Exit(102); }
+        if (!c->tlskey) { fprintf(stderr, "fwp: out of memory\n"); fflush(NULL); _Exit(102); }
         memcpy(c->tlskey, opts->key, opts->key_len);
     }
     c->refs = 1; /* temporary startup owner */
@@ -1178,18 +1214,23 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
     fwp_cleanup startup_cleanup;
     fwp_cleanup_push(&startup_cleanup, g_connect_start_abort, &startup);
     fwp_cleanup reserved_ref;
+    fwp_rc_dup(PTR(c));
     c->refs++;
     fwp_cleanup_push(&reserved_ref, g_connect_ref_release, c);
     startup.reader = fwp_spawn_task(0, g_reader, c, 0, 1);
+    startup.reader->ownership = FWP_TASK_UNIQUE;
     fwp_cleanup_pop(&reserved_ref); /* reader takes its reserved reference */
+    fwp_rc_dup(PTR(c));
     c->refs++;
     fwp_cleanup_push(&reserved_ref, g_connect_ref_release, c);
     startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1);
+    startup.writer->ownership = FWP_TASK_UNIQUE;
     fwp_cleanup_pop(&reserved_ref);
+    fwp_rc_dup(PTR(c)); /* pool owner */
     c->next_pool = g_pool;
     g_pool = c;
     fwp_cleanup_pop(&startup_cleanup);
-    g_conn_release(c); /* only the reader and writer remain */
+    c->refs--; /* reader/writer keep transport; caller takes startup storage */
     return c;
 }
 
@@ -1221,8 +1262,11 @@ static g_stream *g_open_tls(const char *addr, const char *path, const char *fp, 
             break;
         }
     *reused = c != 0;
-    if (!c) c = g_connect(addr, opts, err);
+    if (c) fwp_rc_dup(PTR(c));
+    else c = g_connect(addr, opts, err);
     if (!c) return 0;
+    fwp_cleanup connection_cleanup;
+    fwp_cleanup_push(&connection_cleanup, g_conn_drop, c);
     g_ctx *ctx = g_ctx_of();
     int64_t deadline = g_earliest(ctx->deadline, fwp_cur->deadline);
     uint32_t id = c->next_stream;
@@ -1254,6 +1298,7 @@ static g_stream *g_open_tls(const char *addr, const char *path, const char *fp, 
     s->gzip = ctx->gzip;
     fwp_wake_all(&c->writer_wl);
     *cp = c;
+    fwp_cleanup_pop(&connection_cleanup); /* returned caller owns c and s */
     return s;
 }
 
@@ -1309,7 +1354,7 @@ static int g_decode(const g_codec *k, const unsigned char *msg, size_t n, V *out
         fwp_value_owner error = {h.value, h.desc->drop};
         fwp_cleanup error_cleanup;
         fwp_value_protect(&error, &error_cleanup);
-        *why = strdup(STR(OBJ(h.value)->f[1])->d);
+        *why = g_copy_text(STR(OBJ(h.value)->f[1])->d);
         fwp_cleanup_pop(&error_cleanup);
         fwp_value_release(&error);
         return G_DEC_BAD;
@@ -1336,7 +1381,7 @@ static int g_decode(const g_codec *k, const unsigned char *msg, size_t n, V *out
  done:
     fwp_cleanup_pop(&decoded_canonical);
     h2b_free(&canon);
-    if (status == G_DEC_BAD) *why = strdup("malformed message");
+    if (status == G_DEC_BAD) *why = g_copy_text("malformed message");
     return status;
 }
 
@@ -1416,14 +1461,14 @@ typedef struct {
     int forced;
 } g_cell;
 
-/* Exactly one unread position owns the source and its client-stream reference.
- * Connection and server callback graphs still require tracing. */
+/* Exactly one unread position owns the source, request and connection. */
 static void g_incoming_drop(g_incoming *source) {
     g_conn *c = source->c;
     g_stream *s = source->s;
     source->c = 0;
     source->s = 0;
     g_stream_reader_release(c, s);
+    g_conn_drop(c);
 #ifndef FWP_RESOURCE_NO_FREE
     /* Source and position storage have raw runtime layouts, not record headers.
      * The array/storage release poisons only the first word under verification. */
@@ -1484,8 +1529,7 @@ static void g_iterator_release(void *value) {
 static void g_fail_call(int code, const char *msg) {
     g_serving *sv = g_ctx_of()->serving;
     if (!sv) fwp_trap(msg);
-    char *copy = strdup(msg);
-    if (!copy) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+    char *copy = g_copy_text(msg);
     free(sv->msg);
     sv->code = code;
     sv->msg = copy;
@@ -1582,7 +1626,7 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             } else {
                 if (k == G_DEC_ERROR && src->dec.error->drop) src->dec.error->drop(x);
                 char *t = k == G_DEC_BAD ? g_strdupf("bad response from %s: %s", src->what, why)
-                                         : strdup("unexpected error in a response");
+                                         : g_copy_text("unexpected error in a response");
                 fwp_cleanup text_cleanup;
                 fwp_cleanup_push(&text_cleanup, fwp_tls_subject_free, t);
                 r = g_err_element(GRPC_INTERNAL, t);
@@ -1740,6 +1784,9 @@ static void g_sender_peer_finish(void *arg) {
     g_stream *s = x->s;
     x->s = 0;
     g_stream_drop(s);
+    g_conn *c = x->c;
+    x->c = 0;
+    g_conn_drop(c);
 }
 
 static void g_send_all(void *arg, int cancelled) {
@@ -1789,7 +1836,7 @@ static void g_send_all(void *arg, int cancelled) {
 
 static void g_spawn_sender(g_conn *c, g_stream *s, V iter, const fwp_remote *r) {
     g_sender *x = (g_sender *)fwp_alloc(sizeof *x);
-    x->c = c;
+    x->c = 0;
     x->s = 0; /* assigned only after the reference is acquired */
     x->cur = iter;
     x->r = r;
@@ -1802,6 +1849,8 @@ static void g_spawn_sender(g_conn *c, g_stream *s, V iter, const fwp_remote *r) 
     fwp_cleanup_push(&peer_cleanup, g_sender_peer_finish, x);
     fwp_rc_dup(PTR(s));
     x->s = s;
+    fwp_rc_dup(PTR(c));
+    x->c = c;
     fwp_task *t = fwp_spawn_task(0, g_send_all, x, 0, 1);
     t->cfinish = g_sender_peer_finish;
     fwp_cleanup_pop(&peer_cleanup);
@@ -1990,7 +2039,8 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     fwp_cleanup cell_cleanup;
     fwp_cleanup_push(&cell_cleanup, g_iterator_release, &pending);
 #endif
-    call.s = 0; /* the unread source now owns the call's stream reference */
+    call.c = 0;
+    call.s = 0; /* unread source takes both request and connection owners */
     g_failure f = {0, 0};
     V ev = 0;
     const fwp_desc *ed = 0;
@@ -2164,7 +2214,7 @@ static g_msg *g_recv_one(g_job *j, int *code, char **msg) {
     if (g.kind != G_MSG) {
         if (g.kind == G_LOST && !j->s->bad) { fwp_cancel_tree(fwp_cur); fwp_check_cancel(); }
         *code = GRPC_INVALID_ARGUMENT;
-        *msg = g.kind == G_LOST ? g.text : strdup("missing request message");
+        *msg = g.kind == G_LOST ? g.text : g_copy_text("missing request message");
         if (g.kind == G_LOST) g.text = 0;
         fwp_cleanup_pop(&first_cleanup);
         g_got_release(&g);
@@ -2185,7 +2235,7 @@ static g_msg *g_recv_one(g_job *j, int *code, char **msg) {
     }
     if (e.kind == G_LOST && !j->s->bad) { fwp_cancel_tree(fwp_cur); fwp_check_cancel(); }
     *code = GRPC_INVALID_ARGUMENT;
-    *msg = e.kind == G_LOST ? e.text : strdup("expected one request message");
+    *msg = e.kind == G_LOST ? e.text : g_copy_text("expected one request message");
     if (e.kind == G_LOST) e.text = 0;
     fwp_cleanup_pop(&second_cleanup);
     g_got_release(&e);
@@ -2253,7 +2303,7 @@ static int g_outcome(g_job *j, int k, V err, const fwp_desc *ed, int *in_respons
         return GRPC_INTERNAL;
     }
     if (g_grpc_error_desc && ed == g_grpc_error_desc) {
-        *msg = strdup(STR(OBJ(err)->f[1])->d);
+        *msg = g_copy_text(STR(OBJ(err)->f[1])->d);
         return g_error_code(err);
     }
     if (j->route->kind == G_ROUTE_METHOD && j->route->m->error) { *in_response = 1; return -1; }
@@ -2284,7 +2334,7 @@ static int g_run_method(g_job *j, char **msg) {
             fwp_cleanup_pop(&request_canonical);
             h2b_free(&canon);
             free(req);
-            *msg = strdup("malformed request message");
+            *msg = g_copy_text("malformed request message");
             return GRPC_INVALID_ARGUMENT;
         }
         free(req);
@@ -2293,7 +2343,7 @@ static int g_run_method(g_job *j, char **msg) {
             if (!fwp_decode(&rd, m->req[i], &args[na++])) {
                 fwp_cleanup_pop(&request_canonical);
                 h2b_free(&canon);
-                *msg = strdup("malformed request message");
+                *msg = g_copy_text("malformed request message");
                 return GRPC_INVALID_ARGUMENT;
             }
         fwp_cleanup_pop(&request_canonical);
@@ -2375,7 +2425,7 @@ static int g_run_method(g_job *j, char **msg) {
                 if (fwp_tag(x) == 1) {
                     V e = OBJ(x)->f[0];
                     int64_t code = (int64_t)OBJ(e)->f[0];
-                    *msg = strdup(STR(OBJ(e)->f[1])->d);
+                    *msg = g_copy_text(STR(OBJ(e)->f[1])->d);
                     return code >= 1 && code <= 16 ? (int)code : GRPC_UNKNOWN;
                 }
                 x = OBJ(x)->f[0];
@@ -2571,10 +2621,10 @@ static void g_handle(void *arg, int cancelled) {
         fflush(fwp_prog_out);
         if (logged) fprintf(stderr, "fwp: deadline exceeded (in %s)\n", j->what);
         code = GRPC_DEADLINE_EXCEEDED;
-        msg = strdup("deadline exceeded");
+        msg = g_copy_text("deadline exceeded");
     } else {
         code = GRPC_CANCELLED;
-        msg = strdup("cancelled");
+        msg = g_copy_text("cancelled");
     }
     fflush(fwp_prog_out);
     fwp_cleanup message_cleanup;

@@ -849,7 +849,7 @@ unread message queues for partial readers. One connection is reused throughout.
 This separates finished-request growth from the cost of keeping a connection
 pool available.
 
-The current delivery gives each client request references from its active
+PR #157 gives each client request references from its active
 connection list, response source and detached sender. Dropping the source
 releases unread messages without cancelling the remote operation. Later data
 for that abandoned reader is discarded while maintaining network flow control.
@@ -862,19 +862,44 @@ the remaining allocations and reduced reference-count traffic. Infinitely many u
 unbounded storage. [The handoff](development-state.md) records native validation
 and full delivery acceptance; implemented cleanup alone does not establish them.
 
+The connection change separates an open socket from the information
+kept about it. Each connection has two background tasks: one reads incoming
+bytes and one writes outgoing bytes. These are its I/O tasks. A response reader
+can still need the final error or completion information after both tasks finish,
+so closing the socket does not by itself free the connection record. Its last
+storage owner removes the collector's cleanup registration and frees that record
+and its metadata. The pool, a cache of reusable connections, owns each connection
+while it is available for another call. Calls and detached senders also keep
+their own references.
+The request record does not gain an owning back-pointer to the connection.
+
+Client I/O task records have only the scheduler, which runs ready tasks, as owner.
+Their storage releases after their stack and scheduler links are removed, without
+task reference-count updates. Language task handles can have independent aliases and retain their
+shared policy. Server and HTTP/2 task graphs still need separate ownership work.
+Library teardown first shuts down connections used by live I/O tasks, then waits
+for those tasks to finish. This includes connections removed from the reuse pool:
+canceling a task alone is insufficient while it defers cancellation to protect
+transport state. A regression test must detect omitted shutdown within a fixed
+deadline, instead of hanging the test job.
+All six focused native jobs verify complete connection/request/message release
+and constant final managed storage across the measured call counts. The
+[comparison](benchmarks.md#freeing-closed-connections-and-finished-tasks) explains
+the added connection count operations and remaining allocations. Full production
+acceptance is tracked separately in [the handoff](development-state.md).
+
 The remaining relationships need separate checks:
 
 | Storage | Who currently keeps it alive | Work still needed |
 |---|---|---|
-| Client request | The active connection list, receive source and detached sender hold references. | Six native focused jobs pass; complete final production acceptance. |
-| Connection | Reader/writer tasks count use of the socket; tracing preserves the connection object and remaining metadata. | Give the pool, calls and tasks explicit storage owners without creating a connection/request cycle. Closing a socket alone does not finish every borrow. |
+| Client request | The active connection list, receive source and detached sender hold references. | Accepted in PR #157; preserve completion, failure, cancellation and repeated-call checks. |
+| Connection | The pool, readers/writers and callers hold separate storage owners; the socket has its own reader/writer use count. | Six focused native jobs pass; complete production acceptance; closing a socket alone does not finish every borrow. |
 | Pending sender values | The sender points at the remaining input iterator; tracing preserves its values. | Transfer or retain the iterator with its concrete type, then release it after completion, errors or cancellation. Its request description is static compiler metadata. |
 | Server callbacks and response channels | Serving tasks and retained language values can outlive the creating call scope. | Prove each retained handler and channel context, including failure during construction and cycles after external references disappear. |
 | Task identities and wait lists | The scheduler owns parked tasks; request state borrows their identities. | Preserve this direction when adding owners; do not turn back-pointers into owning cycles. |
 
 A detached sender sends iterator elements as requests described by compiler
-metadata. Its unused function-encoder field and branch have been removed from
-the preparation: the sole production caller always supplies that request
+metadata. Its unused function-encoder field and branch were removed in PR #157: the sole production caller always supplies that request
 description. Native fixtures record its size and test request encoding across
 errors and cancellation.
 
@@ -883,7 +908,7 @@ owners. Test partial construction and every last-owner case; retain deliberately
 broken variants to prove that missing cleanup is detected. Before admitting
 remote calls to checked ARC, compare interpreter/native values, errors and
 receive order, inspect actual binaries and measure repeated calls with collection
-disabled. Server/HTTP streams, retained handlers and connection graphs still need
+disabled. Pending sender values, server/HTTP streams and retained handlers still need
 tracing. HTTP/2 server operations and GPU resource ownership remain separate work.
 
 ### Moving values held by a closure

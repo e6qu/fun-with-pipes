@@ -4,85 +4,100 @@ Updated 2026-10-17 UTC. All seven work areas in [PLAN.md](../PLAN.md) remain ope
 
 ## Current delivery
 
-Branch `own-client-requests`, [PR #157](https://github.com/e6qu/fun-with-pipes/pull/157),
-starts at accepted #156 merge `29302bae30f6dbfae63166bb9171c7da5b237789`.
-It combines finished-request cleanup, compiler field transfers and service TLS
-settings construction fixes. No syntax changes. Final evidence and documentation
-are complete. Next: push this revision, mark the PR ready and require all nine production
-jobs plus documentation at its exact final head before authorized squash merge.
-Use an explicit one-line subject of at most 80 characters and an empty body;
-verify the resulting tree, parent and complete message. One delivery PR at a time.
+Branch `free-closed-connections` starts at accepted #157 merge
+`30668bf83894b9a3739cc24ba8ba63911826da2d`. It frees closed client connections
+and completed I/O task records, closes idle connections during library unload,
+and repairs fatal allocation errors on task stacks. No syntax changes.
+[PR #158](https://github.com/e6qu/fun-with-pipes/pull/158) is open at
+`2e747ce652f97d19e26737b5ac3d271cd66dc3ca` failed production `39008557317`:
+two ARM Mac allocation-failure tests still intercepted `exit`, while the runtime
+now terminates fatal allocation failures with `_Exit`. Both test hooks are
+repaired; runtime behavior is unchanged. Docs `39008557262` passed. The merge
+watch stopped without merging. Publish the repair and require fresh exact-head
+production and documentation gates. Keep one active delivery PR at a time.
 
-#156 passed production `38996879616` and docs `38996879603` at `d19ab045`.
-Its verified acceptance is in [the history](roadmap-history.md); the private
-merge record is `/private/tmp/fwp156-merge-record.json`. Duplicate production
-`39001824256` was canceled. Do not rerun accepted gates without a new reason.
+#157 passed all nine production jobs in `39004098429` and documentation in
+`39004095234` at `57d2a09eee4937ad644721f73e286b9fc94a2c25`.
+The squash tree, parent and complete one-line message were verified; duplicate
+postmerge production `39007997287` was canceled. See [history](roadmap-history.md).
+Private acceptance record: `/private/tmp/fwp157-merge-record.json`.
 
-## Focused evidence retained for #157
+## Evidence and remaining acceptance
 
-| Component | Exact measured source | Six-platform run | Retained source tag |
-|---|---|---|---|
-| Original repeated calls | `ac95632b8c77cc8c52f35a451f3c7451d0e29b06` | `38997585835` | `evidence/repeated-remote-baseline-20261017` |
-| Request cleanup | `997b23a9aa392a3cde8fb8bd5026c348545c06b2` | `39000228402` | `evidence/remote-request-ownership-20261017` |
-| Combined compiler/runtime change | `d7a161d1328f78c54870688c6dd30cf24fa22aa0` | `39001772549` | `evidence/remote-projection-moves-20261017` |
+The closed-connection baseline `4103b0a09f06cae69721c29151571ba9e9a621b9`
+passes all six native jobs in `39002767125`, retained by
+`evidence/closed-remote-baseline-20261017`. Its report and raw tables are
+[retained here](measurements/closed-remote-baseline-2026-10-17.json).
+It closes every connection and finishes its I/O tasks, but leaves additional
+managed storage per connection: Linux AMD64 3,904 bytes, ARM64 12,608;
+either Mac 1,600; Windows AMD64 2,368, ARM64 2,112.
 
-All six jobs pass in each run. Combined Intel Mac tests passed initially but
-artifact upload timed out; the failed job's retry passed at the same source.
-The report and raw checkpoints are
-[remote-projection-moves-2026-10-17.json](measurements/remote-projection-moves-2026-10-17.json).
-The collector verifies exact revisions, job logs, all output/control checks and
-comparison bounds. It includes static review of actual Linux ARM64/AMD64 binaries.
-The delivery's Mac test-schedule correction is additional CI metadata, not a
-change to the measured compiler/runtime. Documentation `39002352493` passed it.
+The final focused candidate is `3a773a85bb147ea8e7acb03ffa1eeeba59c2d4d8`,
+run `39007195648`, with all six native jobs passing. The source tag is
+`evidence/closed-remote-ownership-20261017`; the
+[final report](measurements/closed-remote-ownership-2026-10-17.json) retains raw
+checkpoint/drain tables and actual Linux AMD64/ARM64 binary reviews. Collection
+passed in 23.82s. All connections, requests and messages release without GC;
+final managed bytes stay constant across 1/16/256 full, partial and retained
+batches: Linux AMD64 1,792, ARM64 6,144; either Mac 640;
+Windows AMD64 1,024, ARM64 896. Allocation requests/bytes are unchanged.
+Shared connections add three count increments each; unique task cleanup adds none.
+See [the guide](benchmarks.md#freeing-closed-connections-and-finished-tasks) for
+measurement boundaries, baseline values and remaining costs.
 
-Every created request/message releases; final managed bytes remain constant over
-1/16/256 batches in full, partial and retained-reader modes. Request cleanup adds
-one retain per call; the compiler then removes 24.6%/19.5%/14.3% of retains for
-256 full/partial/retained batches. Allocation requests and bytes stay unchanged.
-Final pooled-client bytes are Linux AMD64 6,240, ARM64 19,296; either Mac 2,240;
-Windows AMD64 3,392, ARM64 3,008. Reusable connections and detached tasks are
-still alive at this sample. Other raw buffers, TLS/OS/process/server memory and
-timing are excluded. See [the guide](benchmarks.md#memory-left-behind-by-repeated-remote-calls)
-for inputs, comparison stages and remaining costs. This is not checked ARC.
+Transferred compiler/runtime/test/workflow files matched the measured candidate.
+Final review then restored the existing recoverable server TLS protocol-list
+allocation path and added its failure regression check. This is outside the
+measured client workload; its validation awaits the full production gate.
+Earlier failing probes exposed and repaired fixture mutations, starvation in a
+drain fixture, unique tasks incorrectly sent through a counted-free helper and
+Windows artifact filenames. Partially passing probes are not acceptance.
 
-## Next preparation: closed connection and I/O task storage
+Actual binary review confirms last-owner connection cleanup and direct unique-task
+freeing after stack/link removal, without task reference-count updates. Private
+artifacts are under `/private/tmp/fwp-closed-client-evidence/39007195648`;
+downloaded executables have not run locally. No speed or C/Rust parity claim.
 
-Worktree `/private/tmp/fwp-client-connection-owners`, branch
-`own-client-connections`, is independent preparation for the next delivery.
-Its own handoff is current. Do not open a second PR while #157 remains active.
-The frozen baseline `4103b0a09f06cae69721c29151571ba9e9a621b9` passed all six
-native jobs in `39002767125`; tag `evidence/closed-remote-baseline-20261017`
-and report `docs/measurements/closed-remote-baseline-2026-10-17.json` in that
-worktree preserve it. All connections close and I/O tasks finish, yet each adds
-managed storage: Linux AMD64 3,904 bytes, ARM64 12,608; either Mac 1,600;
-Windows AMD64 2,368, ARM64 2,112. Raw TLS/OS/process storage and timing are excluded.
+Next: publish the allocation-failure fixture repairs and inspect the new gates; require all nine production jobs
+plus documentation at the exact head before authorized squash merge. Use the explicit subject
+`Free closed connections and finished I/O tasks` and an empty body; verify the
+resulting tree, parent and complete message. Queued gates merge, not independent
+preparation; fix test failures. Do not push status-only updates during final gates.
 
-The candidate separates socket liveness from shared connection storage and gives
-client I/O tasks one scheduler owner, without task retain/release operations.
-First Linux run `39003608985` at `4d595abf` found two fixture defects: a mutation
-matched two release sites, and a C-task probe omitted its cancellation check.
-Repairs plus connection-overflow/last-owner controls are in `c4747dc7`, running
-Linux `connection-repeat` in `39003964943`. Inspect and fix failures, then run
-all six hosts and compare with the baseline. Pooled reuse, startup failure,
-shared readers, cancellation, physical release, stress/reuse and binary review
-remain acceptance requirements. Server/HTTP and pending sender values remain open.
+## Local checks and next preparation
 
-## Local checks and continuing work
+Use the root `scripts/local-guard.py` with fixed limits for serial local checks.
+Native builds, full suites and measurements run on GitHub. Final `cargo fmt --all -- --check` passed under the guard in 1.32s;
+`python3 scripts/check-roadmap.py` passed under the guard in 3.32s. Baseline
+collection passed in 28.43s; static final binary inspection took 0.14–0.16s.
+No local native build or full test suite ran.
 
-All native builds/execution run on GitHub. Use the root `scripts/local-guard.py`
-with its fixed limits for focused local work. Formatting passed in 1.06–1.16s;
-documentation audits in 2.55–2.60s. Seven mocked native-runner selection tests
-passed in 0.89s. Combined evidence collection passed in 22.05s, closed-baseline
-collection in 28.43s; static Linux inspection took 0.15s per architecture.
-No downloaded executable ran locally. The final documentation audit passed in
-2.55s after restoring the required roadmap status table and next-action marker.
+Connection preparation `/private/tmp/fwp-client-connection-owners` preserves the
+measured source. Input preparation `/private/tmp/fwp-sender-input-owners`, branch
+`own-sender-inputs`, starts at #158's exact head and has no PR. Its own handoff
+tracks the detailed work. Linux baseline `39008824856` passes at `ef69079d`:
+remaining managed bytes grow by 7,104 per synchronous call and 13,104 per
+bidirectional/retained call after connection cleanup. Actual AMD64 binaries
+confirm entry sharing and unowned iterator advancement. The baseline source is
+frozen at `f6ebb2e9` under `evidence/sender-input-baseline-20261017`; six-host
+run `39009268395` passes on every host. The preparation report and raw tables
+were collected under the root guard in 24.24s, with actual Linux ARM64/AMD64
+binary reviews; this is baseline evidence, not candidate acceptance.
 
-Pending sender iterators, retained server callbacks/channels, host re-entry,
-remaining numerical/network ownership, cycle policy and all seven roadmap work
-areas remain open. Audit unused callback fields before adding owners. Fatal
-allocation paths using `exit` on task stacks need repair without weakening library
-unload checks. Remote calls remain excluded from checked ARC. JIT is permanently
-excluded. Historical preparation anchors are evidence, not additional tasks.
+Candidate `81e2586e0192a8d71bdac002a078122d8c1aa7de` supplies concrete input
+destruction metadata, keeps current/pending nodes alive through lookahead and
+encoding, and uniquely owns completed senders/tasks. Linux run `39010422154` failed because a fixture expected a reset request to
+still have its active-list owner. That expectation is now repaired locally.
+Earlier probe `39009844155` exposed a fixture early-exit defect, also repaired. Tests include retained input aliases, continuation/encoding failure,
+cancellation and deliberately missing release operations. Formatting and docs
+pass under the root guard; no local native builds. Private artifacts/notes are
+`/private/tmp/fwp-sender-input-evidence` and
+`/private/tmp/fwp-next-connection-ownership.md`. Do not copy preparation plans
+or history over the accepted root documents.
+
+Pending sender values, server callbacks/channels, host re-entry, remaining
+numerical/network ownership and cycle policies remain open. Remote calls still
+require tracing; this batch does not admit them to checked ARC. JIT is excluded.
 
 ## Roadmap status
 

@@ -48,6 +48,28 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Freed requests and transferred selected fields (PR #157)
+
+[PR #157](https://github.com/e6qu/fun-with-pipes/pull/157) merged as `30668bf8`
+on 2026-10-17 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39004098429)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39004095234)
+passed at `57d2a09e`. Its tree matches that tested head and its parent is accepted
+#156. Its complete message is `Free finished client requests and reduce reference counting`.
+Duplicate postmerge production `39007997287` was canceled.
+
+Finished requests and unread messages now release through explicit owners.
+Selecting the only counted field from a uniquely owned heap record transfers
+that field instead of retaining it again. Service TLS-settings construction also
+cleans partial failures. The [combined report](measurements/remote-projection-moves-2026-10-17.json)
+retains six-platform measurements and actual ARM64/AMD64 binary observations.
+For 256 full reads, remaining managed storage on Linux AMD64 falls from 67,680
+to 6,240 bytes and reference-count increments from 66,306 to 50,178 relative to
+the original repeated-call implementation. Allocation requests are unchanged.
+Connections and background I/O tasks are still alive at that sample; this is
+neither a whole-process memory measurement nor a timing comparison with C/Rust.
+Closed connections, pending sender inputs and server callbacks remain later work.
+
 ## Released stream caches and moved closure captures (PR #156)
 
 [PR #156](https://github.com/e6qu/fun-with-pipes/pull/156) merged as `29302bae`

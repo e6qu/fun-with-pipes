@@ -221,7 +221,7 @@ fn runtime_owners(fixture: String) -> String {
  V h=fwp_p_file_open(fwp_cstr(argv[1]),0,0);
  fwp_file *file=(fwp_file *)(uintptr_t)h;int fd=fileno(file->f);
  fwp_task *task=(fwp_task *)fwp_mem_alloc(sizeof *task);
- task->done=1;task->counted=1;task->has_result=1;task->result=h;task->result_drop=fwp_file_drop;
+ task->done=1;task->ownership=FWP_TASK_SHARED;task->has_result=1;task->result=h;task->result_drop=fwp_file_drop;
  V cached=fwp_rc_fresh(PTR(task));fwp_rc_dup(cached);fwp_task_drop(cached);
  if(file->refs!=1||fstat(fd,&descriptor_status)==-1)return 9;
  fwp_task_drop(cached);

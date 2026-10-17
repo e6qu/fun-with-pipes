@@ -1797,3 +1797,110 @@ The combined run also checks construction failure and long names in the service
 TLS-settings cache. Those tests establish cleanup correctness; this client
 workload does not measure a general heap saving from that separate fix. Full
 production acceptance remains recorded in the [handoff](development-state.md).
+
+### Memory after closing connections and finishing their I/O tasks
+
+A reusable connection is intentionally kept alive for another call. To measure
+storage left after that connection is no longer usable, this separate workload
+closes it and waits for its reader and writer tasks to finish before opening the
+next one. A task is a computation scheduled on the runtime's event loop; finishing
+its work and releasing its task record are separate operations.
+
+[The closed-connection baseline](measurements/closed-remote-baseline-2026-10-17.json)
+uses `4103b0a0`, preserved by `evidence/closed-remote-baseline-20261017`.
+[All six native jobs passed](https://github.com/e6qu/fun-with-pipes/actions/runs/39002767125).
+It measures the same full, partial and retained-reader programs, 64 response
+integers, 1/16/256 batches and three processes per case described above.
+Only the instrumented clients force connection closure. Ordinary native and raw
+interpreter runs establish matching output using normal connection pooling;
+they do different transport work. Revision comparisons must use the same
+connection-closing instrumentation, not compare this with the pooled workload.
+
+All sockets close, both I/O tasks finish, and every request and queued message
+releases. Nevertheless, managed storage grows with the number of closed
+connections. Here are the allocation categories and observed additional remaining
+bytes per connection; allocator-charged bytes include allocation-size rounding.
+
+| Platform | Connection allocation, charged bytes | Two I/O task allocations, charged bytes | Additional remaining bytes per connection |
+|---|---:|---:|---:|
+| Linux AMD64 | 320 | 3,584 | 3,904 |
+| Linux ARM64 | 320 | 12,288 | 12,608 |
+| macOS AMD64 and ARM64 | 320 | 1,280 | 1,600 |
+| Windows AMD64 | 320 | 2,048 | 2,368 |
+| Windows ARM64 | 320 | 1,792 | 2,112 |
+
+The category counters record cumulative allocations, not live-object identities.
+Their sums match the measured growth. Static review of actual Linux binaries
+also shows why these objects remain: connection release closes the transport
+without freeing the connection record, and scheduler cleanup skips task-record
+release for these uncounted I/O tasks. The source and binary fingerprints and
+instruction locations are retained in the report. Task layouts differ by host:
+Linux uses glibc's saved-context structure, macOS uses the runtime's own register
+save layout, and Windows uses native fibers. The measurements do not compare
+scheduling speed or justify changing those implementations without validation.
+
+Counters stop after the final connection closes, I/O tasks finish and cached
+values release, before whole-runtime shutdown. Collection is disabled and
+physical freeing enabled. Stack pools, other raw buffers, TLS/OS/allocator
+metadata, server/process memory and timing are excluded. Empty task lists alone
+do not prove their record storage was freed. The following comparison tests explicit
+connection/task ownership against this baseline. Neither report establishes
+checked ARC or speed parity with C/Rust.
+
+### Freeing closed connections and finished tasks
+
+[The ownership comparison](measurements/closed-remote-ownership-2026-10-17.json)
+uses `3a773a85`, preserved by `evidence/closed-remote-ownership-20261017`.
+[All six focused native jobs passed](https://github.com/e6qu/fun-with-pipes/actions/runs/39007195648).
+It compares the same connection-closing workload with `4103b0a0` above.
+The connection record now has owners for the pool, active callers and background
+I/O tasks. Its last owner frees its metadata and storage. Each client I/O task
+has one scheduler owner and releases its record without task reference-count
+updates, after its stack and scheduler links have been removed.
+
+| Platform | Before: remaining managed bytes after 256 full reads | After: remaining bytes at 1, 16 or 256 batches |
+|---|---:|---:|
+| Linux AMD64 | 1,001,216 | 1,792 |
+| Linux ARM64 | 3,233,792 | 6,144 |
+| macOS AMD64 and ARM64 | 410,240 | 640 |
+| Windows AMD64 | 607,232 | 1,024 |
+| Windows ARM64 | 541,568 | 896 |
+
+The final totals are constant across all measured sizes, repetitions and modes,
+including readers retained across another call. Every created connection,
+request and queued message releases, with no collection. The fixed remainder
+matches one root-task allocation, which is still live at sampling; allocation
+category counters alone do not identify every live object. These are bytes
+charged by the runtime allocator, not pages returned to the operating system.
+The exclusions and different transport work of interpreter references remain
+exactly as described above.
+
+Managed allocation requests and requested bytes are unchanged in every case.
+Connection sharing adds three reference-count increments per connection: at
+256 full reads, the total increases from 50,178 to 50,946 on every host, about
+1.5%. Retained mode creates two connections per batch and adds 1,536 increments
+at 256 batches. Task disposal itself adds no task count updates. This trades
+some connection bookkeeping for immediate storage reclamation; it does not
+establish zero overhead or faster execution. There are no elapsed timings or
+C/Rust comparisons in this report.
+
+Actual Linux machine code confirms last-owner connection cleanup and direct
+unique-task freeing on AMD64 and ARM64. The task cleanup path skips the shared
+path's reference-count lookup. Its frames remain 8 bytes on AMD64, excluding
+the incoming return address, and 32 bytes on ARM64, including saved registers.
+Transport release uses 40/48 bytes, unchanged from the baseline; the new
+last-storage-owner helper uses 8/32 bytes. Callee frames are additional; these
+are observed function frames, not whole-program stack bounds. Scheduler work,
+policy branches, allocator bookkeeping and shared-connection counts remain.
+The report retains reviewed instruction locations and source/binary fingerprints;
+downloaded executables were inspected statically, not run locally.
+
+Native controls cover shared readers, construction failure, cancellation,
+library unload, missing last-owner releases and disabled physical freeing.
+Eighteen injected fatal-allocation cases verify the error, exit code and prior
+buffered output. The final delivery additionally preserves the existing
+recoverable server TLS protocol-list allocation error and adds its regression
+check; that server-startup path is outside the measured client workload.
+Final production acceptance is tracked in [the handoff](development-state.md).
+Pending sender inputs and server callbacks still need ownership work, so remote
+calls remain excluded from checked ARC.

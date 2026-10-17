@@ -317,13 +317,14 @@ its existing child-owner rules. The accepted tests include aliases, pointer-like
 scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
 count operations; they do not prove every record or call allocation-free.
 
-The current delivery also handles selecting a field from a consumed heap record
+The compiler also handles selecting a field from a consumed heap record
 when that field is its only value needing reference-counted storage. A record
 with one owner gives the selected value to its caller and frees its outer storage.
 A shared record retains the selected value before releasing the caller's record
 reference. Other fields must be scalars, with no cleanup to perform. Existing
-stack, resource-scope and storage-reuse rules keep their current paths. Focused tests and real clients pass on all six native platforms; the
-[handoff](development-state.md) tracks final production acceptance. Allocations and runtime ownership checks remain.
+stack, resource-scope and storage-reuse rules keep their current paths. Focused tests and real clients pass on all six native platforms;
+[PR #157](roadmap-history.md#freed-requests-and-transferred-selected-fields-pr-157)
+records production acceptance. Allocations and runtime ownership checks remain.
 
 A function that only forwards a callback's tuple can keep its existing storage.
 A callback is a function supplied by the caller; its concrete target may be
@@ -382,6 +383,17 @@ using a scheduling baton. Inlining can change the number of function entries;
 wall-clock timers do not define an order between independent actions. Use a
 channel or await when ordering matters. [Concurrency](concurrency.md) gives the
 user-visible behavior and platform implementation.
+
+Client connection I/O tasks have one scheduler owner. Their records release
+when execution finishes and their stacks and scheduler links have been removed;
+this path needs no task reference-count updates. Language-visible task handles
+retain the shared-owner policy because callers can keep independent aliases.
+Server and HTTP tasks still need separate lifetime proofs. Connection records
+can outlive their sockets while response readers retain status information;
+the pool, I/O tasks and callers hold separate storage owners. Library teardown
+closes these connections before waiting for their tasks. The
+[ownership guide](ownership.md) and [measured comparison](benchmarks.md#freeing-closed-connections-and-finished-tasks)
+describe the limits; remote checked ARC remains unsupported.
 
 When a compiled program has no tasks or services, its runtime primitives omit
 task-slice checks as well as function-entry checks. Programs that can schedule

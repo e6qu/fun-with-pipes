@@ -126,10 +126,13 @@ fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
             .unwrap();
     let tape = c_instrument::calls(
         &source[start..end],
-        &[("realloc", "capacity_realloc"), ("free", "capacity_free")],
+        &[
+            ("realloc", "capacity_realloc"),
+            ("free", "capacity_free"),
+            ("_Exit", "capacity_exit"),
+        ],
     )
     .replace("PTRDIFF_MAX", "INT32_MAX")
-    .replace("exit(102)", "capacity_exit(102)")
     // Faults recover instead of exiting; an invalid-registry negative
     // control must not run real process shutdown after returning its code.
     .replace("atexit(fwp_tape_finish)", "0");

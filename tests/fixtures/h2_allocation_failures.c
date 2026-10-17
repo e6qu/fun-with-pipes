@@ -9,12 +9,12 @@ static void allocation_exit(int);
 #define malloc allocation_malloc
 #define realloc allocation_realloc
 #define free allocation_free
-#define exit allocation_exit
+#define _Exit allocation_exit
 /* H2_RUNTIME */
 #undef malloc
 #undef realloc
 #undef free
-#undef exit
+#undef _Exit
 static void *live[128];
 static int fail_at,allocations,caught;
 static jmp_buf failure;

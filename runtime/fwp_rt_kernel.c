@@ -225,7 +225,7 @@ static void *fwp_k_malloc(size_t n) {
     void *p = malloc(n ? n : 1);
     if (!p) {
         fprintf(stderr, "fwp: out of memory\n");
-        exit(102);
+        fflush(NULL); _Exit(102);
     }
     return p;
 }
@@ -279,7 +279,7 @@ oom:
     t->pa = t->pb = 0;t->da = t->db = t->adj = 0;
     t->live = 0;t->len = t->cap = t->leaves = t->adjcap = 0;
     fprintf(stderr, "fwp: out of memory\n");
-    exit(102);
+    fflush(NULL); _Exit(102);
 }
 
 static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {
@@ -288,7 +288,7 @@ static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {
 #ifndef FWP_LIBRARY
     static int registered_finish;
     if (!registered_finish) {
-        if (atexit(fwp_tape_finish)) { fprintf(stderr, "fwp: out of memory\n");exit(102); }
+        if (atexit(fwp_tape_finish)) { fprintf(stderr, "fwp: out of memory\n");fflush(NULL); _Exit(102); }
         registered_finish = 1;
     }
 #endif
@@ -302,7 +302,7 @@ static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {
             fwp_tape *next = (fwp_tape *)realloc(fwp_tapes, (size_t)cap * sizeof(fwp_tape));
             if (!next) {
                 fprintf(stderr, "fwp: out of memory\n");
-                exit(102);
+                fflush(NULL); _Exit(102);
             }
             fwp_tapes = next;
             fwp_tapes_cap = cap;
@@ -431,7 +431,7 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
         fwp_cleanup_pop(&cleanup);
         fwp_tape_buffers_release(&buffers);
         fprintf(stderr, "fwp: out of memory\n");
-        exit(102);
+        fflush(NULL); _Exit(102);
     }
     if (needed) memset(adj, 0, (size_t)needed * sizeof(double));
     for (size_t i = 0; i < m; i++) {
