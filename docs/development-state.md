@@ -121,9 +121,13 @@ server/process memory and timing are excluded. A deliberately omitted message
 release must leave measured message bytes even when output is still correct.
 Do not assert bounded memory or ARC support from this baseline.
 
-Next preparation action: dispatch `numerics.yml` with `suite=stream-repeat` first
-on Linux AMD64; repair any failures, inspect measurements, then validate all six
-native hosts before choosing the next runtime ownership change. Full builds and
+Linux AMD64 probe `38997237145` checks `b2cc0915` with `suite=stream-repeat`.
+Next preparation action: inspect its result, repair any failures, then validate
+all six native hosts before choosing the next runtime ownership change. The
+collector requires all six jobs and copies raw checkpoint tables beside the
+report; guarded Python syntax passed in 0.20s. Runtime review found unchecked
+raw message allocation in `g_split`; preserve the baseline, then add an injected
+failure test and the established exit-102 out-of-memory handling. Full builds and
 execution remain on runners. Exact measurement sources type-check locally with
 the prebuilt compiler under the guard (0.51s). An earlier handwritten check used
 unsupported semicolon match syntax; checking the exact generated source fixed
