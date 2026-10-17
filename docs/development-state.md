@@ -63,16 +63,31 @@ fill in final validation and require all nine production jobs plus documentation
 before the authorized squash merge. Preserve one-line messages of at most 80
 characters, with an empty body and no trailers or attribution.
 
-## Independent server measurement
+## Server baseline bundled with this delivery
 
-`/private/tmp/fwp-server-request-baseline`, branch
-`measure-server-request-lifetimes`, is frozen at `06432959`, tag
-`evidence/server-call-baseline-20261017`. Six-host run `39014733093` is running.
-The Linux probe passes at `e0baca20` in `39014302981`; server memory grows after
-all calls/tasks finish and the connection closes. This changes no production
-compiler/runtime and has no PR. Its own handoff tracks measurements, sampling
-boundary repair, actual AMD64 review and strict collection. Finish input delivery
-before server ownership changes. Client measurements exclude server memory.
+The measurement foundation from `/private/tmp/fwp-server-request-baseline` is
+included in this worktree: the ignored server test, fixture, workflow suite,
+strict collector and static-binary inspector. Its report and raw tables are
+[retained here](measurements/server-call-baseline-2026-10-17.json). All six hosts
+pass run `39014733093` at `0643295938a432cefedb4a3d0c1f263aa9482ee2`, tag
+`evidence/server-call-baseline-20261017`. Production server ownership is unchanged.
+
+Four workloads measure server memory after 1/16/256 completed calls and client
+connection closure. A measurement-only wake of the existing listener lets the
+scheduler retire its last finished task; this creates no extra task/connection.
+Storage grows on every host. At 256 calls Linux AMD64 retains 721,248 / 2,486,624 /
+1,753,440 / 971,104 bytes for greetings / returned streams / sent streams /
+channel output. Actual ARM64/AMD64 reviews confirm traced task/job retention and
+unowned user-method/response-iterator application. These measurements exclude
+client memory and timing. Collection passed under the root guard in 21.62s.
+
+After input delivery, address server call storage with surviving readers and
+callbacks in view: detached senders can retain embedded serving contexts after
+handler return, and request/scope/context task pointers need lifetime proofs
+before task records become unique. Review concrete function ownership metadata
+for argument/result cleanup and direct method entry, preserving failure order.
+Keep borrowed scheduler links from becoming owning cycles. The separate server
+worktree handoff records the review detail; no server ownership fix is claimed.
 
 ## Checks and artifacts
 
@@ -80,7 +95,9 @@ Use the root `scripts/local-guard.py` with fixed limits. Native builds, full
 suites and measurements run on GitHub; no downloaded executable has run locally.
 Final report collection passed in 13.06s; each architecture's static inspection
 passed in 0.15s. Completed Windows/ARM Mac artifact collection took 11.50s. Formatting passed
-in 1.30s; the final documentation audit passed in 3.38s.
+in 1.30s; the combined documentation audit passed in 3.37s. Report-wide
+checks confirmed stable server repetitions and unchanged complete-input allocation
+counts in 0.14s.
 Private artifacts are under `/private/tmp/fwp-sender-input-evidence`.
 
 Server/HTTP lifetimes, host re-entry, numerical ownership, cycle policies and

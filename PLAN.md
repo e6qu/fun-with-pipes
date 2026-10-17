@@ -106,11 +106,12 @@ version. Complete full production acceptance before merging.
 Preserve the existing order of evaluating the next input and encoding the
 current value, and keep retained original iterators usable.
 
-Before changing server ownership, measure repeated calls in the server process:
-client measurements exclude its memory. Cover decoded arguments, returned
-values, retained incoming iterators, output channels and completed serving tasks.
-Record what remains after each call and after connection closure, including
-failure and cancellation. Then establish the required owners without turning
+The server-process baseline now passes on all six native hosts. Greeting,
+returned-stream, sent-stream and output-channel workloads retain increasing
+managed storage after calls/tasks finish and connections close. Use these
+measurements to establish owners for decoded arguments, returned values,
+retained incoming iterators, callbacks/channels and serving tasks. Cover failure
+and cancellation as well as success, without turning
 borrowed scheduler back-pointers into owning cycles. Remote calls remain excluded
 from checked ARC until their complete lifetimes and cycles are proved.
 

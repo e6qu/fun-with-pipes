@@ -2037,3 +2037,57 @@ in the focused matrix. Full delivery acceptance remains separate in
 TLS/OS/allocator metadata, server/process memory and timing remain excluded.
 This does not establish checked ARC for remote calls, zero-cost abstractions or
 speed parity with C/Rust.
+
+
+## Server memory after completed remote calls
+
+Client measurements exclude the service process. This
+[server baseline](measurements/server-call-baseline-2026-10-17.json) measures
+that process directly at `06432959`, tag `evidence/server-call-baseline-20261017`,
+with [all six native hosts passing](https://github.com/e6qu/fun-with-pipes/actions/runs/39014733093).
+It precedes server ownership changes. The four clients ask the server to:
+
+- Return a greeting for a 64-character name; the response length is 71.
+- Return integers 1 through 64 as an iterator; the client sums them to 2,080.
+- Sum 64 integers sent by the client, also giving 2,080.
+- Send `tick 1` through `tick 64` through an output channel; the client sums
+  their string lengths to 439. A channel is a queue between tasks.
+
+Each native server receives 1, 16 or 256 calls over one reused connection, with
+three fresh processes per case. Matching client output is checked against both
+an interpreted and an ordinary native server. Collection is off, physical
+freeing is on and native C compilation uses `-O2`. Counters start after listener,
+routing and root-task setup. Per-call samples follow serving-task removal;
+final samples require every call and spawned task to finish and the client
+connection to close. The listener remains open. A measurement-only wake of the
+existing listener lets the scheduler retire the last finished task's stack;
+it adds no task or connection. Future comparisons must use that same boundary.
+
+Despite completed calls and tasks, remaining managed storage grows with call
+count. At 256 calls the baseline retains these bytes in every repetition:
+
+| Platform | Greeting | Returned iterator | Sent iterator | Output channel |
+|---|---:|---:|---:|---:|
+| Linux AMD64 | 721,248 | 2,486,624 | 1,753,440 | 971,104 |
+| Linux ARM64 | 1,844,064 | 3,609,440 | 2,876,256 | 2,093,920 |
+| macOS ARM64 or AMD64 | 423,488 | 2,188,864 | 1,455,680 | 673,344 |
+| Windows AMD64 | 522,560 | 2,287,936 | 1,554,752 | 772,416 |
+| Windows ARM64 | 489,536 | 2,254,912 | 1,521,728 | 739,392 |
+
+On Linux AMD64, each additional call leaves 2,800 / 9,696 / 6,832 / 3,776 bytes
+for these four modes. Connection/request finalizers do not run. Task and job
+allocation categories help locate the cost, but cumulative category counters
+do not identify individual remaining objects. Actual Linux ARM64/AMD64 machine
+code confirms that traced task records skip physical disposal, job cleanup
+releases peer/status text without freeing the job, and method/response-iterator
+application still uses the unowned call path. The report retains instruction
+reviews, source/binary/disassembly fingerprints and compiler/hardware details.
+
+This baseline motivates server lifetime work; it does not prove a fix. Raw
+request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process
+memory and elapsed time are excluded. There is no C/Rust comparison or speed
+claim. Retained callbacks/channels, failures, cancellation and cycles need
+ownership proofs before remote calls can support checked ARC. The
+[fixture guide](../tests/fixtures/server-memory/README.md) explains the workload
+notation and the
+[session handoff](development-state.md) records the next implementation action.
