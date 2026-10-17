@@ -2,6 +2,7 @@
  * but this sample belongs to the server process and begins after listener setup. */
 static uint64_t server_expected_calls;
 static int server_final_recorded;
+static int server_listener_woken;
 static size_t server_storage_charge(const void *p) {
     size_t ci;
     gc_chunk *m=fwp_gc_chunk_of((uintptr_t)p,&ci);
@@ -14,6 +15,18 @@ static void server_begin(void) {
     server_expected_calls=strtoull(count,&end,10);
     if(!end || *end || !server_expected_calls || server_expected_calls>256)_Exit(242);
     server_measure_begin();
+}
+/* A finished task cannot retire its own stack. Once the connection has closed
+ * and every spawned task is done, wake the existing listener exactly once so
+ * the scheduler can remove the final task before sampling. No new task or
+ * connection is created and no production cleanup behavior is replaced. */
+static void server_task_retiring(void) {
+    if(!server_active || server_listener_woken ||
+       server_calls_started!=server_expected_calls ||
+       server_connections_created!=server_connections_closed)return;
+    for(fwp_task *t=fwp_gc_tasks;t;t=t->gc_next)if(!t->done)return;
+    server_listener_woken=1;
+    fwp_make_ready(fwp_root);
 }
 static void server_task_finished(void (*entry)(void *,int)) {
     if(!server_active)return;

@@ -36,3 +36,11 @@ Raw request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process
 memory and timing are excluded. Both an interpreted server and ordinary native
 server provide functional output references. No timing or C/Rust comparison is
 claimed; the baseline does not establish server ownership or checked ARC.
+
+The first server probe (`39013983686`) passed ordinary call checks but could
+not take its final sample: an idle scheduler stays on the last finished task's
+stack until another task becomes ready. The measurement now wakes the existing
+listener once, only after the connection closes and all spawned tasks finish.
+The ordinary scheduler then removes the final task before sampling. This adds
+no task or connection and does not change production runtime cleanup; both the
+baseline and future comparisons must use the same wake and drain boundary.

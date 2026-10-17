@@ -26,10 +26,12 @@ static uint64_t server_connections_created,server_connections_closed,server_conn
 static uint64_t server_job_requested,server_job_charged,server_task_requested,server_task_charged,server_args_requested,server_args_charged;
 static void server_begin(void);
 static void server_task_finished(void (*)(void *,int));
+static void server_task_retiring(void);
 static size_t server_storage_charge(const void *);
 "#;
     code = code.replacen(declaration, &format!("{declaration}\n{counters}"), 1);
     for (before,after) in [
+        ("    fwp_zombie = t;", "    fwp_zombie = t;\n    server_task_retiring();"),
         ("    server_measure_begin();\n", ""),
         ("    fwp_tasks_init();\n    g_accept_loop(fd, srv);", "    fwp_tasks_init();\n    server_begin();\n    g_accept_loop(fd, srv);"),
         ("        enum fwp_task_ownership ownership = finished->ownership;", "        void (*server_entry)(void *,int) = finished->cfn;\n        enum fwp_task_ownership ownership = finished->ownership;"),

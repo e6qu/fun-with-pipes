@@ -46,8 +46,10 @@ The `server-repeat` workflow suite can select one native runner or all six.
 Native execution is unverified. The four workload expressions typechecked in
 0.76s under the root guard after adding concrete input types and explicit channel
 effects. Formatting passed in 1.30s and the documentation audit in 3.49s.
-Next: publish the measurement branch and dispatch a Linux AMD64 probe; fix sampling
-or execution failures before collecting a six-platform baseline. Do not change
+Published head `3c9f4e48` is running Linux AMD64 probe `39013983686`.
+Final guarded formatting passed in 1.32s and documentation audit in 3.32s.
+Next: inspect and fix sampling or execution failures before collecting a
+six-platform baseline. Do not change
 production server ownership before that baseline is frozen.
 
 ## Local work rules
@@ -69,3 +71,11 @@ or history when transferring changes.
 | 5 | In progress | CPU kernels and GPU resource ownership |
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
+
+The first server probe (`39013983686`) passed ordinary call checks but could
+not take its final sample: an idle scheduler stays on the last finished task's
+stack until another task becomes ready. The measurement now wakes the existing
+listener once, only after the connection closes and all spawned tasks finish.
+The ordinary scheduler then removes the final task before sampling. This adds
+no task or connection and does not change production runtime cleanup; both the
+baseline and future comparisons must use the same wake and drain boundary.
