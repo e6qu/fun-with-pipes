@@ -132,7 +132,12 @@ int main(int argc,char **argv){
             .output()
             .unwrap();
         assert_eq!(out.status.code(), Some(102), "failed status copy: {out:?}");
-        assert_eq!(out.stderr, b"fwp: out of memory\n");
+        // This embeds the library in a C host, whose standard streams retain
+        // the platform's text mode (CRLF on Windows).
+        assert_eq!(
+            String::from_utf8(out.stderr).unwrap().replace("\r\n", "\n"),
+            "fwp: out of memory\n"
+        );
         assert!(out.stdout.is_empty());
         for gc in ["off", "on"] {
             for poison in ["0", "1"] {

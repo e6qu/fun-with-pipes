@@ -826,8 +826,10 @@ A receive source holds the connection, stream, message decoder, deadline and
 error description. A decoder turns received bytes into a typed value. The runtime
 copies the description into the source's own allocation, so it stays
 valid for exactly that source's lifetime. Completed positions keep their cached
-value and continuation; only unread positions retain a reference to the source.
-The interpreter releases the source after the last such owner disappears. Native
+value and continuation; only unread positions keep a direct reference to the
+source. An earlier position can still keep that source alive through its chain
+of saved continuations. The interpreter releases it after the last owner of an
+unread position disappears. Native
 positions replace their source with the completed result in the same storage
 word. The compact representation passes focused tests on all six native hosts;
 cached values still rely on tracing. Clearing a reference alone is not explicit native destruction.

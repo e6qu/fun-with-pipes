@@ -127,7 +127,7 @@ def main():
     report = {
         "source_revision": args.head, "run_url": run["url"],
         "workload": "Receive queued protobuf messages with 16-character strings; 1/32/128 values, full/half consumption and retained first positions. Read each position twice.",
-        "results": "Four managed requests and 81 requested bytes per received value. Completed cells no longer retain incoming sources. Native cached storage still needs explicit owners and is not released merely by clearing C references with collection disabled.",
+        "results": "Four managed requests and 81 requested bytes per received value. Completed cells no longer hold direct source references; their saved continuations can still retain the unread source. Native cached storage still needs explicit owners and is not released merely by clearing C references with collection disabled.",
         "limits": "This is fwp representation and lifetime evidence, not a C/Rust comparison or timing benchmark. Excludes socket I/O, pooled connections, raw codec buffers and total process memory. Native services still require tracing.",
         "checks": required_tests,
         "modes": {"0": "consume all", "1": "consume ceil(elements/2)", "2": "consume all while retaining the first position"},

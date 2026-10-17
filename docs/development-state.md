@@ -3,48 +3,51 @@
 Updated 2026-10-17 UTC. [PLAN.md](../PLAN.md) retains seven unfinished work areas.
 One delivery is open: [PR #155](https://github.com/e6qu/fun-with-pipes/pull/155),
 branch `remote-stream-delivery` in `/Users/zardoz/projects/fun-with-pipes`.
-Its published head is `31385092e4a3b357243b7c255af0e7d4521901c9`. Production
-`38986731253` failed in `grpc_receive_cleanup`; no merge occurred and the old
-watcher exited. The error was a fault-injection hook expecting one generic
-`free(g->m)` statement after the runtime added two more. It now matches only
-`g_got_release`. Documentation and benchmarks passed; other old jobs were still
-running when the failure was found. That superseded production run is cancelled. The failed head is not acceptance.
+Published head `e71a2295b1d0d0a5d51fb90b6cbe442364aee431` includes stream correctness/storage work, bounded-stack
+chain cleanup and portable neighboring service tests. Final production acceptance
+is still required; no merge has occurred.
 
-## Combined stream and chain delivery
+## Current delivery and acceptance
 
-The verified chain preparation `7ffb4552` has been applied to the existing PR
-branch, together with the receive-test repair, to avoid a second full CI cycle.
-Root changes are still awaiting the focused repair run before publication.
-The same repair is mirrored to preparation branch `bounded-chain-destruction`
-in `/private/tmp/fwp-chain-destruction`, which already contains both batches.
-The focused stream suite and Windows production job now include neighboring
-receive, status, send, encoding, client and server cleanup targets. The stream
-collector explicitly requires the repaired receive test.
+The stream component report remains the passing six-host measurement at
+`4c26f21fe717c4df35a4439e59c1812a5edb449d`, run `38985903147`. The chain component
+report remains the passing six-host measurement at `aea7d6df`, run `38988093805`.
+Preserve these measured source identities instead of relabeling them as the
+combined revision. Their runtime/compiler changes are now bundled in PR #155.
 
-Focused run `38989714484` at `117f817b` passed on Intel macOS but exposed
-Windows fixture portability failures in the newly added neighboring tests.
-Eight hooks included CRT headers before selecting the required Windows API.
-The server fixture also assumed POSIX socket descriptors and the Unix OpenSSL
-executable layout. These are repaired: early API selection, native-width handles,
-loopback TCP pairs, an OS-level closed-socket check and the configured Windows
-tool location. Formatting through the guard passed in 1.27s. Both worktrees
-contain the repairs; runtime/compiler behavior is unchanged by them.
+The first production attempt (`38986731253`, head `31385092`) found a fragile
+receive-test fault injection: a generic `free(g->m)` match was no longer unique.
+The repair targets only `g_got_release`. Expanded focused checks then exposed
+Windows-only fixture assumptions: late API-version selection, POSIX-only socket
+handles/pairs and a Unix OpenSSL path. Those are repaired. Run `38990255544` at
+`6ac13de7` passed Linux AMD64; Windows AMD64 passed every neighboring fixture
+except a diagnostic assertion expecting LF instead of Windows CRLF. That assertion
+now normalizes text line endings; it still checks the exact message, exit 102
+and empty stdout. These fixes change tests, not runtime behavior.
 
-Repair `6ac13de78fd10932f28a34ce776a9197acd3175a` is published; focused run
-`38990255544` is testing it on all six native hosts. Next: finish that run.
-Fix any failures; refresh its stream report, then commit/push the complete combined
-PR #155 with a description covering both changes. Require all nine production
-jobs plus documentation on that new final head. Create a new merge watcher for
-its new head/run IDs; the prior watcher is finished. Squash with one line of at
-most 80 characters and an explicitly empty body, no trailers or AI attribution.
-Cancel duplicate/superseded production runs only; leave Windows dependency jobs
-running. Failing tests are tasks, and JIT is excluded.
+Final production run `38990872293` and documentation run `38990872208` are
+queued/running on that exact published head. The superseded focused run
+`38990255544` was cancelled after diagnosing the Windows assertion; all affected
+targets are included in production CI. Do not repeat the entire six-host focused
+suite solely for that assertion. Both measured component identities remain intact.
 
-The first stream batch's six-host evidence is `38985903147` at `4c26f21f`, with
-16-byte positions and 81 requested bytes per received 16-character value versus
-24/89 previously; four allocations remain. It fixes shared readers, cancellation
-during decoding and description lifetime. This focused source predates the new
-compiler loop and receive-test repair, so the combined run is required.
+Next: monitor the final matrix and fix failures. The new merge watcher is running in exec session `9247`:
+`/private/tmp/fwp-watch-155.py`, invoking `/private/tmp/fwp-merge-155.py` with this
+head and those run IDs. It requires all nine named production jobs plus the
+single documentation job to pass on the same head. It supplies the squash subject
+`Fix shared stream reads and bound cleanup stack use` and an empty body, then
+verifies tree, parent and exact one-line message and writes
+`/private/tmp/fwp155-merge-record.json`. Keep Windows dependency jobs running;
+only cancel superseded checks or duplicate postmerge production jobs. Queued CI
+does not block independent preparation.
+
+Static inspection of the combined Linux AMD64 binaries from passing job
+`117270859226` confirms unchanged stream receive frames: 344 bytes in the O2
+fixture and 216 bytes in the O1 service client, including saved registers and
+excluding the incoming return address. Download took 2.67s and inspection 0.15s
+through the local guard; no downloaded executable ran locally. Artifacts are in
+`/private/tmp/fwp-stream-combined/38990255544/stream-storage-ubuntu-latest`.
+The retained report still identifies its original measured binaries.
 
 ## Verified chain cleanup
 
@@ -134,7 +137,7 @@ application machinery and transfer arguments exactly once. These are proposed
 implementation constraints, not completed work. Measure actual language clients
 as well as C fixtures: retaining an earlier iterator intentionally retains its
 saved sequence, so dropping C roots alone cannot prove bounded consumption.
-The next measurement is prepared locally on `measure-remote-stream-clients` in
+The next measurement is published as `9e07096b` on `measure-remote-stream-clients` in
 `/private/tmp/fwp-stream-clients`, based on `6ac13de7`; it has no PR and has not
 run yet. The ignored runner-only test in `tests/grpc.rs` generates actual native
 clients for full consumption, the first 32 values, and a retained first position.
@@ -143,7 +146,7 @@ storage samples at 64/1,024/16,384 values with GC off. The server is interpreted
 and excluded from the counters; raw buffers/process memory and timings are also
 excluded. The new `stream-clients` focused suite records compiler/CPU/source and
 binaries. Local guarded formatting passed in 1.11s; runner verification remains
-required. Finish the current PR's repair/publication first, then validate this
+required. After publishing the current PR, validate this
 preparation while production runs. Retained host callbacks, GPU resources and
 all seven project areas remain open.
 
