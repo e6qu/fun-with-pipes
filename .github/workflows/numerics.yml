@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, chain-cleanup, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -23,7 +23,7 @@ on:
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'chain-cleanup' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || inputs.suite == 'connection-repeat'))) || inputs.suite == 'stream-storage' || inputs.suite == 'context-owners' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+    if: inputs.suite == 'chain-cleanup' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat')))) || inputs.suite == 'stream-storage' || inputs.suite == 'context-owners' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
       fail-fast: false
       matrix:
@@ -45,16 +45,16 @@ jobs:
         run: ./scripts/setup-windows.ps1
       - uses: actions/cache/restore@v4
         id: decoder_tls_cache
-        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || inputs.suite == 'connection-repeat'))))
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat')))))
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
       - name: Native Windows TLS dependencies
-        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || inputs.suite == 'connection-repeat'))))
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat')))))
         shell: pwsh
         run: ./scripts/setup-windows-tls.ps1
       - uses: actions/cache/save@v4
-        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || inputs.suite == 'connection-repeat')))) && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat'))))) && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
@@ -100,7 +100,7 @@ jobs:
           path: udp-evidence/
           if-no-files-found: ignore
       - name: Measure complete remote-stream clients
-        if: (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || inputs.suite == 'connection-repeat'))
+        if: (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat')))
         shell: bash
         env:
           FWP_STREAM_CLIENT_ARTIFACTS: stream-client-evidence
@@ -125,11 +125,13 @@ jobs:
             cargo test --no-fail-fast --test grpc_connect_startup --test grpc_connect_cleanup -- --nocapture
           fi
           cargo test --test grpc server_startup_deadline_covers_silent_processes -- --exact
-          if [ "${{ inputs.suite }}" = "stream-repeat" ] || [ "${{ inputs.suite }}" = "connection-repeat" ]; then
+          if [ "${{ inputs.suite }}" = "stream-repeat" ] || [ "${{ inputs.suite }}" = "connection-repeat" ] || [ "${{ inputs.suite }}" = "sender-repeat" ]; then
             cargo test --test grpc every_kind_of_call -- --exact
             cargo test --test grpc stream_aliases_are_consistent_across_tasks -- --exact
             cargo test --test grpc calls_are_concurrent -- --exact
-            if [ "${{ inputs.suite }}" = "connection-repeat" ]; then
+            if [ "${{ inputs.suite }}" = "sender-repeat" ]; then
+              cargo test --test grpc sender_input_memory_measurement -- --exact --ignored --nocapture
+            elif [ "${{ inputs.suite }}" = "connection-repeat" ]; then
               cargo test --test grpc closed_remote_connection_memory_measurement -- --exact --ignored --nocapture
             else
               cargo test --test grpc repeated_remote_call_memory_measurement -- --exact --ignored --nocapture
@@ -138,15 +140,15 @@ jobs:
             cargo test --test grpc remote_stream_client_memory_measurement -- --exact --ignored --nocapture
           fi
       - name: Unique closure capture ownership
-        if: (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || inputs.suite == 'connection-repeat'))
+        if: (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat')))
         env:
           FWP_STREAM_CLIENT_ARTIFACTS: stream-client-evidence
           FWP_REPEATED_CLIENT_ARTIFACTS: stream-client-evidence
         run: cargo test --no-fail-fast --test boxed_projection_ownership --test argument_preparation_ownership --test closure_ownership --test retain_unwind_ownership --test runtime_call_ownership --test constructor_type_ownership --test scope_thunk_ownership --test retained_thunk_ownership
       - uses: actions/upload-artifact@v7
-        if: always() && (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || inputs.suite == 'connection-repeat'))
+        if: always() && (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat')))
         with:
-          name: ${{ inputs.suite == 'connection-repeat' && 'closed-clients' || inputs.suite == 'stream-repeat' && 'repeated-clients' || 'stream-clients' }}-${{ matrix.runner }}
+          name: ${{ inputs.suite == 'sender-repeat' && 'sender-clients' || inputs.suite == 'connection-repeat' && 'closed-clients' || inputs.suite == 'stream-repeat' && 'repeated-clients' || 'stream-clients' }}-${{ matrix.runner }}
           path: stream-client-evidence/
           if-no-files-found: error
       - name: Measure queued remote-stream cache storage

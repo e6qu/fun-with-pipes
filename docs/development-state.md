@@ -2,84 +2,51 @@
 
 Updated 2026-10-17 UTC. All seven work areas in [PLAN.md](../PLAN.md) remain open.
 
-## Current delivery
+## Current delivery and next preparation
 
-Branch `free-closed-connections` starts at accepted #157 merge
-`30668bf83894b9a3739cc24ba8ba63911826da2d`. It frees closed client connections
-and completed I/O task records, closes idle connections during library unload,
-and repairs fatal allocation errors on task stacks. No syntax changes.
-There is no open delivery PR yet. Keep one active delivery PR at a time.
+Root branch `free-closed-connections` has [PR #158](https://github.com/e6qu/fun-with-pipes/pull/158)
+at `2e747ce652f97d19e26737b5ac3d271cd66dc3ca`. Production `39008557317`
+and documentation `39008557262` gate its authorized squash merge. The root
+handoff and `/private/tmp/fwp-watch-merge-158.py` own that acceptance. Do not
+open a second PR. #157 is accepted as `30668bf8`; see [history](roadmap-history.md).
 
-#157 passed all nine production jobs in `39004098429` and documentation in
-`39004095234` at `57d2a09eee4937ad644721f73e286b9fc94a2c25`.
-The squash tree, parent and complete one-line message were verified; duplicate
-postmerge production `39007997287` was canceled. See [history](roadmap-history.md).
-Private acceptance record: `/private/tmp/fwp157-merge-record.json`.
+This worktree `/private/tmp/fwp-sender-input-owners`, branch `own-sender-inputs`,
+prepares pending input ownership after #158. Its current change is measurement
+only, with the production runtime/compiler unchanged from #158. It measures
+synchronous integer sending, bidirectional strings, retained original input
+aliases and early server completion. The [fixture guide](../tests/fixtures/sender-inputs/README.md)
+explains notation, outputs and scope. Do not infer lifetime safety from typechecking.
 
-## Evidence and remaining acceptance
+The baseline uses 1/16/256 calls of up to 64 inputs and three measured processes
+per case, with collection disabled and physical freeing enabled. Native hooks
+close connections and drain I/O/sender tasks before the next call and final
+sample. Ordinary native/raw interpreter outputs provide functional references;
+their pooling performs different transport work. A separate input-client drain
+fixture admits sender tasks without weakening the response-only fixture.
 
-The closed-connection baseline `4103b0a09f06cae69721c29151571ba9e9a621b9`
-passes all six native jobs in `39002767125`, retained by
-`evidence/closed-remote-baseline-20261017`. Its report and raw tables are
-[retained here](measurements/closed-remote-baseline-2026-10-17.json).
-It closes every connection and finishes its I/O tasks, but leaves additional
-managed storage per connection: Linux AMD64 3,904 bytes, ARM64 12,608;
-either Mac 1,600; Windows AMD64 2,368, ARM64 2,112.
+Counters record allocation requests/charged bytes, retains, connection/request/
+message cleanup, sender task completion, input values pulled/encoded and sender/
+task allocation categories. Early completion can perform different work between
+runs; retain actual input counts rather than impose equal allocation totals.
+No elapsed-time, whole-process memory or C/Rust comparison is claimed. Retain
+source, emitted C, binaries and raw checkpoints before modifying ownership.
 
-The final focused candidate is `3a773a85bb147ea8e7acb03ffa1eeeba59c2d4d8`,
-run `39007195648`, with all six native jobs passing. The source tag is
-`evidence/closed-remote-ownership-20261017`; the
-[final report](measurements/closed-remote-ownership-2026-10-17.json) retains raw
-checkpoint/drain tables and actual Linux AMD64/ARM64 binary reviews. Collection
-passed in 23.82s. All connections, requests and messages release without GC;
-final managed bytes stay constant across 1/16/256 full, partial and retained
-batches: Linux AMD64 1,792, ARM64 6,144; either Mac 640;
-Windows AMD64 1,024, ARM64 896. Allocation requests/bytes are unchanged.
-Shared connections add three count increments each; unique task cleanup adds none.
-See [the guide](benchmarks.md#freeing-closed-connections-and-finished-tasks) for
-measurement boundaries, baseline values and remaining costs.
+Next: run a Linux `sender-repeat` probe on GitHub, repair failures, then freeze
+the passing baseline across all six native hosts. Inspect actual ARM64/AMD64
+binaries. Only then implement concrete input-iterator ownership, preserving
+continuation evaluation before current-element encoding, retained aliases,
+early response, cancellation and failed sender publication. Existing remote
+entries can mark input values permanently shared; adding a retain alone does
+not fix that. Keep pending node owners alive through next evaluation and send.
 
-Transferred compiler/runtime/test/workflow files matched the measured candidate.
-Final review then restored the existing recoverable server TLS protocol-list
-allocation path and added its failure regression check. This is outside the
-measured client workload; its validation awaits the full production gate.
-Earlier failing probes exposed and repaired fixture mutations, starvation in a
-drain fixture, unique tasks incorrectly sent through a counted-free helper and
-Windows artifact filenames. Partially passing probes are not acceptance.
+Local work uses the root guard with unchanged limits. Formatting passed in 1.30s;
+no local builds or native execution ran. All native measurement work belongs on
+GitHub. Private design notes are `/private/tmp/fwp-next-connection-ownership.md`.
+Do not copy this preparation's old plan/history over the active root handoff.
 
-Actual binary review confirms last-owner connection cleanup and direct unique-task
-freeing after stack/link removal, without task reference-count updates. Private
-artifacts are under `/private/tmp/fwp-closed-client-evidence/39007195648`;
-downloaded executables have not run locally. No speed or C/Rust parity claim.
-
-Next: publish this delivery and require all nine production jobs plus documentation
-at its exact final head before authorized squash merge. Use the explicit subject
-`Free closed connections and finished I/O tasks` and an empty body; verify the
-resulting tree, parent and complete message. Queued gates merge, not independent
-preparation; fix test failures. Do not push status-only updates during final gates.
-
-## Local checks and next preparation
-
-Use the root `scripts/local-guard.py` with fixed limits for serial local checks.
-Native builds, full suites and measurements run on GitHub. Final `cargo fmt --all -- --check` passed under the guard in 1.32s;
-`python3 scripts/check-roadmap.py` passed under the guard in 3.32s. Baseline
-collection passed in 28.43s; static final binary inspection took 0.14–0.16s.
-No local native build or full test suite ran.
-
-Preparation worktree `/private/tmp/fwp-client-connection-owners`, branch
-`own-client-connections`, preserves the measured source. Do not copy its older
-plan/history over this handoff. Private next-input notes and four workloads are
-`/private/tmp/fwp-next-connection-ownership.md` and
-`/private/tmp/fwp-next-input-workloads`. They describe synchronous sending,
-bidirectional sending, retained inputs and early server completion. The workloads
-only pass typechecking with the existing prebuilt compiler; they have not run.
-Measure those lifetimes before implementing typed pending-input owners. Preserve
-continuation evaluation before encoding the current value; a sender retain alone
-cannot own an iterator already marked permanently shared.
-
-Pending sender values, server callbacks/channels, host re-entry, remaining
-numerical/network ownership and cycle policies remain open. Remote calls still
-require tracing; this batch does not admit them to checked ARC. JIT is excluded.
+Pending sender values, retained server callbacks/channels, host re-entry,
+numerical ownership and cycle policies remain open. Remote checked ARC remains
+unsupported. All seven project work areas remain open; JIT is excluded.
 
 ## Roadmap status
 
