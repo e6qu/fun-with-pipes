@@ -29,7 +29,7 @@ they do not establish that every abstraction is free or every program avoids GC.
 
 Default native execution still combines reference counting with tracing.
 Checked `--gc arc` removes tracing for supported programs, including accepted
-synchronous WASI entries and gRPC clients/services. Some
+synchronous WASI entries, gRPC clients/services and HTTP clients. Some
 closures, containers and call boundaries still allocate, and measured numerical
 workloads still have performance gaps. See [ownership](docs/ownership.md),
 [numerics](docs/numerics.md) and [benchmarks](docs/benchmarks.md) for current limits.
@@ -80,27 +80,46 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #161](https://github.com/e6qu/fun-with-pipes/pull/161) is accepted after all
-nine production jobs and documentation passed. Checked gRPC clients and services
-can run without tracing. Remote replies/errors have explicit cleanup, and calls
-move fields from uniquely owned records without redundant retains. Previous
-server cleanup and borrowed fold values remain accepted. [History](docs/roadmap-history.md)
-records the exact commits, checks and measured costs.
+[PR #162](https://github.com/e6qu/fun-with-pipes/pull/162) is accepted after all
+nine production jobs and documentation passed. HTTP clients own pooled connections,
+I/O tasks, requests and partial responses, and preserve complete connection keys.
+Checked gRPC clients/services and moves from unique record fields remain accepted.
+[History](docs/roadmap-history.md) records exact source, gates and measured costs.
 
-The current delivery gives HTTP client connections, I/O tasks, requests and
-partially built responses explicit owners. It also fixes truncated connection
-keys that could confuse distinct TLS configurations. Implementation is under
-six-platform validation; it does not establish checked HTTP server support.
-Acceptance requires interpreted/native cleartext and TLS comparisons, cleanup
-failure controls, repeated memory counts and actual ARM64/AMD64 binary inspection.
-Require all nine final-head production jobs and documentation before merging.
-[The handoff](docs/development-state.md) identifies the candidate and next action.
+The current batch extends ownership to HTTP servers: connections, request handles,
+handler captures and tasks clean up on success, failure and cancellation. It
+removes a separate job allocation and moves a nonescaping receive buffer to the
+stack. A measured code-placement change keeps one copy of the existing ARC
+ownership check, reducing HTTP instruction sections by about 13% on both Linux
+architectures without removing checks. Full platform memory and final production
+acceptance remain separate requirements; [the handoff](docs/development-state.md)
+records their current status.
 
-Browser/HTTP host entry, retained callbacks, remaining numerical and
-networking ownership, derivative scaling, broader applications and the seven
-work areas above remain open. Current checked ARC support does not remove the
-collector from all fwp programs. Neither fewer allocations nor a single fast
-sample establishes zero-cost abstractions or parity with C/Rust.
+The long-running checks exposed unnecessary 10 ms socket polling delays on macOS
+and Windows. The same batch replaces those sleeps with OS readiness waits and
+checks ready sockets during preemption. All six hosts pass the unchanged memory
+workload. Intel macOS also passes the separated ownership/comparison jobs after
+the combined job reached its time limit. Every case and fixed limit is preserved.
+Final production acceptance remains pending in the handoff.
+
+Before the compiler change below, the repeated server workload made approximately
+899 managed allocation requests and 2,318 retains per additional request,
+including background work.
+Profiling identified 177 allocations containing only fixed function references.
+The compiler optimization in this batch removes those heap records, leaving
+about 722 allocations and 1,901 retains. All six native focused jobs, both WASI
+jobs and all six native memory checks pass. Paired Linux measurements show about
+4–6% less elapsed time for this HTTP workload, compared with the previous fwp
+compiler. The [report](docs/measurements/fixed-functions-2026-10-18.json) records
+static storage, startup, code size and all raw samples; it makes no C/Rust parity
+claim. Full production acceptance and its repaired tests remain in the handoff.
+Preserve bounded memory, traps, cancellation and interpreter agreement.
+
+Browser, asynchronous WASI, REST/MCP entry, retained host callbacks, remaining
+numerical/networking ownership, derivative scaling and broader applications all
+remain work. The seven areas above stay open. Checked ARC support does not remove
+the collector from every fwp program, and code-size reductions do not establish
+zero-cost abstractions or parity with C/Rust.
 
 Each delivery must state its workload, expected change and acceptance criteria
 before implementation. Narrow broad work areas into reviewable changes in the

@@ -3,6 +3,84 @@
 use std::process::Command;
 
 #[test]
+fn socket_scheduler_waits_on_readiness_and_releases_waiters() {
+    let dir = fwp::cgen::TempDir::new("socket-poll").unwrap();
+    let input = dir.join("main.fwp");
+    let cfile = dir.join("main.c");
+    std::fs::write(&input, "main = ()\n").unwrap();
+    let built = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .args(["build", "--emit-c"])
+        .arg(&input)
+        .arg("-o")
+        .arg(&cfile)
+        .output()
+        .unwrap();
+    assert!(built.status.success(), "{built:?}");
+    let generated = std::fs::read_to_string(cfile).unwrap();
+    let runtime = include_str!("../runtime/fwp_rt_task.c");
+    assert!(generated.contains(runtime));
+    // Exercise the actual poll implementation on Linux too. Native Linux epoll
+    // remains covered by the unmodified networking tests; this is not a platform claim.
+    let runtime = runtime
+        .replace("#ifdef __linux__", "#if 0")
+        .replace("defined(__linux__)", "0")
+        .replace(
+            "static void fwp_poll_reserve(size_t n) {",
+            "static void fwp_poll_reserve(size_t n) { if(poll_reserve_fail) fwp_trap(\"injected poll array failure\");",
+        )
+        .replace(
+            "static void fwp_poll_sockets(int timeout) {",
+            &format!(
+                "{}\nstatic void fwp_poll_sockets(int timeout) {{",
+                include_str!("fixtures/socket_poll_observer.c")
+            ),
+        )
+        .replace("WSAPoll(fwp_poll_fds, (ULONG)n, timeout)", "observe_poll(fwp_poll_fds, n, timeout)")
+        .replace("poll(fwp_poll_fds, (nfds_t)n, timeout)", "observe_poll(fwp_poll_fds, n, timeout)");
+    let generated = generated
+        .replace(include_str!("../runtime/fwp_rt_task.c"), &runtime)
+        .replace(
+            "typedef uint64_t V;",
+            "typedef uint64_t V;\nstatic int poll_reserve_fail;",
+        )
+        .replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");
+    let code = generated[..generated.find("int main(").unwrap()].to_owned()
+        + include_str!("fixtures/socket_poll_scheduler.c");
+    let delayed = code.replace("fwp_poll_sockets(timeout);", "fwp_poll_sockets(10);");
+    let starved = code.replace(
+        "if (fwp_io_waiting) fwp_poll_sockets(0);",
+        "/* omit ready socket polling */",
+    );
+    let late_reserve = code
+        .replace("    fwp_poll_reserve((size_t)fwp_io_waiting + 1);\n", "")
+        .replace(
+            "fwp_poll_waits = &wait;",
+            "fwp_poll_waits = &wait; fwp_poll_reserve((size_t)fwp_io_waiting + 1);",
+        );
+    assert_ne!(code, delayed);
+    assert_ne!(code, starved);
+    assert_ne!(code, late_reserve);
+    for opt in ["-O1", "-O2"] {
+        for (source, expected) in [
+            (&delayed, 41),
+            (&starved, 46),
+            (&late_reserve, 66),
+            (&code, 0),
+        ] {
+            let binary = dir.join("socket-poll.exe");
+            fwp::cgen::compile_c(source, &binary, opt).unwrap();
+            let out = Command::new(&binary)
+                .env("FWP_GC_STRESS", "1")
+                .env("FWP_GC_VERIFY", "1")
+                .env("FWP_REUSE_VERIFY", "1")
+                .output()
+                .unwrap();
+            assert_eq!(out.status.code(), Some(expected), "{opt}: {out:?}");
+        }
+    }
+}
+
+#[test]
 fn native_socket_handles_errors_and_binary_transfers() {
     let source = include_str!("fixtures/native_socket_probe.c").replace(
         "/* SOCKET_RUNTIME */",
@@ -168,21 +246,23 @@ fn tcp_constructor_failures_release_real_descriptors() {
     let mut code = std::fs::read_to_string(cfile)
         .unwrap()
         .replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");
-    let allocation_hook = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
-    assert!(code.contains(allocation_hook));
-    code = code.replace(
-        allocation_hook,
-        &format!("{allocation_hook} if(leaf) tcp_allocation();"),
-    );
+    // Fail the acquired handle/read result and its optional wrapper explicitly.
+    // Scheduler scratch allocation is a separate failure contract, tested above.
+    for name in ["fwp_p_tcp_accept_for", "fwp_p_tcp_read_for", "fwp_tcp_read"] {
+        let start = code.find(&format!("static V {name}(")).unwrap();
+        let end = start + code[start..].find("\n}\n").unwrap() + 3;
+        let needle = if name == "fwp_tcp_read" {
+            "V r = fwp_str_new(buf, (size_t)k);"
+        } else {
+            "V result = fwp_rc_fresh(fwp_some("
+        };
+        assert!(code[start..end].contains(needle));
+        let body = code[start..end].replace(needle, &format!("tcp_allocation(); {needle}"));
+        code.replace_range(start..end, &body);
+    }
     code = code.replace(
         "typedef uint64_t V;",
         "typedef uint64_t V;\nstatic void tcp_allocation(void);",
-    );
-    let initialized_hook = "static inline void *fwp_alloc_init(size_t n) {";
-    assert!(code.contains(initialized_hook));
-    code = code.replace(
-        initialized_hook,
-        &format!("{initialized_hook} tcp_allocation();"),
     );
     let declarations = r#"
 static fwp_socket_t tcp_open(int,int,int);

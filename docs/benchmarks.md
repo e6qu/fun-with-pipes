@@ -610,8 +610,7 @@ versus 253 in the control; both backward functions have 374. Linux AMD64 counts
 are 239 versus 296 for append and 399 for both backward functions. The report
 also counts stack-address instructions without labeling them all as register
 spills. Smaller append code has not established a dependable speed improvement.
-The handoff tracks the next controlled layout experiment; production behavior
-is unchanged by that experiment.
+The following controlled layout experiment leaves production behavior unchanged.
 
 ### Interleaving recorded operation pairs
 
@@ -646,8 +645,9 @@ Native instructions also show a tradeoff. On ARM macOS, append shrinks from 198
 to 182 instructions but backward grows from 374 to 384. On Linux AMD64 the counts
 are 239 to 207 and 399 to 412. The report retains both function disassemblies.
 These counts alone explain neither the speed differences nor their cause. The
-next investigation attributes the much larger managed allocation count to actual
-call sites rather than assuming tape layout is the dominant cost.
+[allocation-site investigation](#where-derivative-allocations-occur) attributes
+the much larger managed allocation count to actual calls instead of assuming
+tape layout is the dominant cost.
 
 ## Selecting invariant array data once
 
@@ -704,7 +704,7 @@ slower cases. No local timings were used.
 Full benchmarks run on GitHub runners. The C/Rust comparison command is:
 
 ```sh
-cargo test --release --test bench -- --ignored --nocapture
+cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
 ```
 
 It writes the report to standard output, `target/bench.md` and the `bench` job
@@ -1003,7 +1003,7 @@ tracked in the handoff separately from these focused measurements.
 
 ### Keeping captured computations outside a fused hash loop
 
-The next transformation recognizes hash and bitwise reduction as total operations:
+The compiler recognizes hash and bitwise reduction as total operations:
 valid inputs produce results without language traps or callbacks. It computes the
 known callback's captured array once, before input evaluation, then combines the
 map and fold into one loop. Effects and distinguishable traps still prevent
@@ -2089,11 +2089,10 @@ reviews, source/binary/disassembly fingerprints and compiler/hardware details.
 This baseline motivates server lifetime work; it does not prove a fix. Raw
 request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process
 memory and elapsed time are excluded. There is no C/Rust comparison or speed
-claim. Retained callbacks/channels, failures, cancellation and cycles need
-ownership proofs before remote calls can support checked ARC. The
-[fixture guide](../tests/fixtures/server-memory/README.md) explains the workload
-notation and the
-[session handoff](development-state.md) records the next implementation action.
+claim. The later [accepted remote-call delivery](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161)
+adds the necessary callback/channel, failure, cancellation and cycle checks for
+its supported ARC subset. The [fixture guide](../tests/fixtures/server-memory/README.md)
+explains this historical baseline's workload notation.
 
 ### Freeing finished server tasks and keeping argument slots on the stack
 
@@ -2406,7 +2405,8 @@ measurement steps in [the focused run](https://github.com/e6qu/fun-with-pipes/ac
 Both Windows jobs separately exposed a cancellation probe's header-order error.
 The repaired full suites pass on [AMD64](https://github.com/e6qu/fun-with-pipes/actions/runs/39054383589)
 and [ARM64](https://github.com/e6qu/fun-with-pipes/actions/runs/39054388163);
-[the handoff](development-state.md) tracks final production acceptance.
+[PR #162](roadmap-history.md#http-client-owners-and-complete-connection-keys-pr-162)
+records passing final production acceptance.
 
 The [measurement client](../tests/web/repeated-client.fwp) sends 1, 16 or 256
 sequential HTTP/2 requests to an interpreted loopback server. Each response has
@@ -2478,3 +2478,197 @@ modes, including saved registers, excluding callees and AMD64's incoming return
 address. The report retains instruction details and every binary's file/code size.
 This delivery establishes specific ownership behavior and remaining costs; it
 does not establish zero-cost networking abstractions or complete GC removal.
+
+### HTTP server ownership and memory
+
+[The six-host report](measurements/http-server-owners-2026-10-17.json) compares
+**the same fwp server in tracing and checked ARC modes**, at `cd4f0b06`, preserved
+by `evidence/http-server-memory-20261017`. This is a memory comparison, not a
+speed measurement against C, Rust or an older fwp implementation. All six native
+[server-memory jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39063863085)
+passed. Functional and final production acceptance are recorded separately in
+[the handoff](development-state.md).
+
+The [server](../tests/web/server.fwp) answers sequential HTTP/2 `GET /hello`
+requests from an ordinary native ARC client. The client consumes and releases
+each response body and sums status 200. Each measured server handles 1, 16 or
+256 calls, then one HTTP/1.1 shutdown request and drains its tasks. There are
+three fresh servers per count, mode and transport, including TLS encryption.
+Native builds use `-O2`, ordinary compiler optimization and
+`-ffp-contract=off`. Hardware, compilers and flags are retained in the report.
+
+An allocation request asks for managed storage; a retain increments a reference
+count. Counters begin after constant initialization and end after main and cached
+value cleanup, before whole-runtime shutdown. Collection is disabled and physical
+freeing enabled in both modes. Final storage stays constant across counts;
+cleartext/TLS peak storage differs by 16 bytes:
+
+| Host | Final managed bytes | Peak cleartext / TLS bytes | Largest RSS increase after warm-up |
+|---|---:|---:|---:|
+| Linux AMD64 | 1,792 | 19,824 / 19,840 | 2,048 KiB |
+| Linux ARM64 | 6,144 | 45,936 / 45,952 | 44 KiB |
+| macOS AMD64 | 640 | 12,464 / 12,480 | 192 KiB |
+| macOS ARM64 | 640 | 12,464 / 12,480 | 128 KiB |
+| Windows AMD64 | 1,024 | 14,896 / 14,912 | 60 KiB |
+| Windows ARM64 | 896 | 14,128 / 14,144 | 16 KiB |
+
+RSS is resident set size, the process memory currently held in physical RAM
+(Windows reports its working set). These separate samples use ordinary,
+uninstrumented servers: five batches of 4,096 requests, with the first as warm-up.
+The default 1,000-request connection limit exercises connection replacement.
+Every later sample stays less than 8 MiB above the first. Managed counters exclude
+raw network buffers, TLS/OS/allocator metadata and stack pools; RSS includes more
+of the process but is sampled, not a peak-memory bound.
+
+The additional-call cost is approximately **899 managed allocations and 2,318
+retains**. Background work is included: slopes between the 16- and 256-call
+medians range from 899 to 899.13 allocations and 2,318 to 2,318.46 retains.
+These costs remain substantial; bounded storage does not make the abstraction
+free. Compared with completed samples before the socket scheduler repair, its
+small reusable event array adds 128 peak managed bytes on macOS and 256 on
+Windows. It replaces periodic 10 ms retries with readiness waits; the unfinished
+earlier runs are not a throughput baseline.
+
+[Static inspection](../scripts/inspect-http-server-binaries.py) covers 60 saved
+binaries: ordinary O1/O2 comparison servers, ordinary/instrumented O2 memory
+servers, and ordinary/counted memory clients. All 36 ARC binaries exclude tracing
+scan/mark/sweep routines; 24 tracing binaries retain positive controls. Downloaded
+executables are inspected as data, never run locally. The O2 server instruction
+sections are smaller in ARC on each host, for example 5,260,322 versus 5,266,290
+bytes on Linux AMD64. Separate ownership-check counters record zero entries for
+this workload; instrumentation can change compilation, so those are not ordinary
+machine-call frequencies. The following experiment isolates the code-placement
+change against the older ARC arrangement.
+
+### Keeping one copy of the ownership check
+
+A runtime check rejects counted values that escape through a call without an
+ownership contract. ARC previously let the C compiler copy this check into many
+entries used to call function values. The [two-host experiment](measurements/entry-check-code-costs-2026-10-17.json)
+compares that arrangement with one shared copy of the **same check**. It adds
+`noinline` to the existing helper; it removes no check and adds no wrapper.
+The source is `e5bc8531`, tag `evidence/http-server-costs-20261017`; both jobs in
+[the experiment](https://github.com/e6qu/fun-with-pipes/actions/runs/39059315375) passed.
+The selected runtime change still needs final production acceptance.
+
+Both variants use identical checked-ARC generated C, Clang 18.1.3, `-O2` and
+`-ffp-contract=off`. Linux AMD64 uses an AMD EPYC 7763 runner; Linux ARM64 uses
+Neoverse-N2. Each runner reports four virtual CPUs. Actual downloaded binaries,
+inspected without executing them locally, have these instruction-section sizes:
+
+| Program | AMD64: copied → one check function | ARM64: copied → one check function |
+|---|---:|---:|
+| Integer loop | 18,194 → 15,938 bytes (−12.4%) | 16,780 → 14,828 bytes (−11.6%) |
+| Numeric pipeline | 19,938 → 17,266 bytes (−13.4%) | 18,700 → 16,348 bytes (−12.6%) |
+| Sorted map | 26,802 → 22,994 bytes (−14.2%) | 25,068 → 21,676 bytes (−13.5%) |
+| HTTP client | 1,611,138 → 1,406,258 bytes (−12.7%) | 1,533,404 → 1,340,124 bytes (−12.6%) |
+| HTTP server | 6,098,930 → 5,260,322 bytes (−13.8%) | 5,768,796 → 4,977,916 bytes (−13.7%) |
+
+These are instruction bytes, not complete executable sizes or measured cache
+misses. The report also records file sizes, fingerprints and the larger inputs'
+remaining code. HTTP binaries were compiled for size only in this experiment;
+the separate HTTP suites check execution, cleanup and memory.
+
+The numerical inputs are the same loop, pipeline and map workloads described at
+the top of this page. After one warmup, six fresh processes per variant alternate
+order. Times include startup, computation, allocation, output and shutdown;
+compilation is excluded. C verifies output only. These ratios compare **two fwp
+variants**, with the single-function variant divided by the copied-check variant; above 1 is slower:
+
+| Program | AMD64 elapsed ratio | ARM64 elapsed ratio |
+|---|---:|---:|
+| Integer loop | 1.016 | 1.000 |
+| Numeric pipeline | 0.933 | 0.993 |
+| Sorted map | 1.020 | 0.975 |
+
+Separate instrumented processes recorded zero check executions for all three
+numerical workloads in both variants on both hosts. Their timing differences do
+not measure the cost of executing the check and do not establish a speedup or
+parity with C/Rust. Instrumentation can also prevent elimination or inlining;
+these counts are not ordinary machine-call profiles. This experiment records no
+allocation, live-memory or RSS counters. The selection is a measured code-size
+reduction, with correctness and server-memory acceptance tracked separately.
+
+## Fixed function values in the HTTP server
+
+A function value can store the operation to call and arguments already supplied.
+Those stored arguments are its captures. The current compiler candidate avoids
+rebuilding such a record when every capture is itself a fixed function with no
+captures. It puts one record in program storage and initializes its addresses at
+startup. Runtime strings, requests and other captured data keep ordinary owners.
+
+This experiment compares **the same fwp HTTP server before and after that compiler
+change**, using checked ARC and an ordinary native client. It does not compare
+fwp with C or Rust. The [baseline profile](https://github.com/e6qu/fun-with-pipes/actions/runs/39066197415)
+at `a141efd4` and [candidate profile](https://github.com/e6qu/fun-with-pipes/actions/runs/39067651911)
+at `01ae40da` both pass on Linux AMD64 and ARM64. Each transport, cleartext and
+TLS, uses three fresh processes at each of 1, 16 and 256 sequential `GET /hello`
+requests. The client consumes and releases every response body and sums status
+200; ordinary native and interpreted servers verify the same outputs.
+
+Counters start after constant initialization and end after the main program and
+cached-value cleanup. They include the stop request, timers and other background
+work. The figures below subtract the 16-request median from the 256-request
+median and divide by 240. Small fractional differences from background work are
+rounded here; the saved artifacts keep every sample. Payload bytes exclude
+allocator overhead, sockets, TLS internals and OS storage.
+
+| Per additional HTTP request | Baseline | Candidate | Change |
+|---|---:|---:|---:|
+| Managed allocation requests | About 899 | About 722 | About 19.7% fewer |
+| Actual reference-count increments | About 2,318 | About 1,901 | About 18.0% fewer |
+| Allocations for classified fixed function records | 177 | 0 | 177 removed |
+| Payload bytes for those records | 3,808 | 0 | 3,808 removed |
+
+These results agree on both architectures and transports. Remaining calls may
+still check whether a value has a count, even when no count is incremented.
+Final measured managed storage stays constant across request counts: 1,792 bytes
+on AMD64 and 6,144 on ARM64, in both revisions. This interval excludes constant
+initialization and whole-runtime disposal; the totals are not process memory.
+
+Static inspection of the ordinary saved ELF binaries found 331 function records,
+each aligned to eight bytes, totaling 7,592 bytes on either architecture. Their
+generated initialization contains 618 address stores. The net `.data` section
+increase is 5,240 bytes because other emitted data also changes. The `.text`
+instruction section falls from 5,260,322 to 5,171,106 bytes on AMD64 (1.7%), and
+from 4,977,916 to 4,909,500 on ARM64 (1.4%). These are section sizes, not cache-miss
+or elapsed-time measurements. Binaries were inspected as data, not run locally.
+
+The [paired comparison](https://github.com/e6qu/fun-with-pipes/actions/runs/39068684995)
+at `85988056` repeats those counts and rebuilds the baseline server from its saved
+C on the same runner. Both servers use the same current native client, Clang
+18.1.3, `-O2`, `-ffp-contract=off` (separate multiplication/addition rounding)
+and no additional optimization while linking compiled files. The AMD64 runner has an AMD EPYC 7763;
+ARM64 uses Neoverse-N2. The [complete report](measurements/fixed-functions-2026-10-18.json)
+keeps hardware, source and binary fingerprints, all samples and scope statements.
+
+Each transport uses six fresh processes per server version, alternating which
+version runs first. After 1,024 warm-up calls, the measured client makes 8,192
+calls. Elapsed time includes that client's startup, response processing, network
+and server work; it excludes compilation, server startup, warm-up and shutdown.
+Each sample pair produces a current/baseline ratio; the table takes the median
+of those six ratios. Below 1 means the current server took less time.
+
+| Transport | AMD64 elapsed ratio | ARM64 elapsed ratio | AMD64 startup ratio | ARM64 startup ratio |
+|---|---:|---:|---:|---:|
+| Cleartext | 0.936 | 0.958 | 1.009 | 1.020 |
+| TLS | 0.943 | 0.950 | 0.951 | 0.983 |
+
+These runs show about 4–6% less elapsed time for this workload. They do not
+establish a general speedup or C/Rust parity. Startup measures process spawn
+through the listening announcement: its medians were about 1.4–2.3 ms for
+cleartext and 4.2–5.7 ms for TLS. OS, loader and listener work are included, so
+these noisy startup ratios do not isolate the cost of the 618 address stores.
+RSS samples after warm-up and the measured batch are retained, but are not peak
+memory measurements.
+
+The unchanged [six-host memory workload](https://github.com/e6qu/fun-with-pipes/actions/runs/39068696985)
+also passes at `85988056`: Linux, macOS and Windows on both architectures.
+Each host has 36 managed-memory rows, 20 persistent-server RSS samples through
+20,480 calls per case, and 48 separate ownership-check rows. Final managed storage
+stays constant across request counts; the largest post-warm-up RSS increase is
+2 MiB, within the unchanged 8 MiB bound. Static inspection verifies actual
+function-record bytes and alignment in all twelve ordinary server binaries,
+including tracing controls. Linux startup instructions additionally match all
+618 captured addresses. No downloaded binary was executed locally.
+The [handoff](development-state.md) tracks final production acceptance separately.

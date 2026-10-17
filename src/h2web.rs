@@ -1194,7 +1194,7 @@ int main(void){
 #endif
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
  g_conn *c=g_conn_new(-1, "", "local",0);g_stream *s=g_stream_new(c,1);
- V call=g_call_value(c,s,1,0);
+ V call=g_call_value(c,s);
  struct {uint32_t tag,n;V f[1];} duration={0,1,{0}};
  const unsigned char bytes[]={0,255,192,128,10};
  for(size_t i=0;i<sizeof cases/sizeof *cases;i++){

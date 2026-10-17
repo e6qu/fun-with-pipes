@@ -47,7 +47,7 @@ pub fn generated() -> String {
     };
     let program = Program {
         funcs: vec![
-            primitive("tls.available", vec![unit], MT::con("std::Bool")),
+            primitive("tls.available", vec![unit.clone()], MT::con("std::Bool")),
             primitive("http2.request", vec![MT::con("std::H2Stream")], request),
             primitive(
                 "http2.body",
@@ -63,6 +63,32 @@ pub fn generated() -> String {
                 vec![string.clone(), connection.clone(), outbound],
                 response,
             ),
+            Func {
+                name: "handler".into(),
+                arity: 2,
+                locals: vec![string.clone(), MT::con("std::H2Stream")],
+                ty: MT::Fun(
+                    Box::new(string.clone()),
+                    Box::new(MT::Fun(
+                        Box::new(MT::con("std::H2Stream")),
+                        Box::new(unit.clone()),
+                    )),
+                ),
+                body: Body::Expr(Expr::Const(fwp::value::Value::unit())),
+            },
+            Func {
+                name: "handler-value".into(),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: MT::Fun(
+                    Box::new(unit.clone()),
+                    Box::new(MT::Fun(
+                        Box::new(string.clone()),
+                        Box::new(MT::Fun(Box::new(MT::con("std::H2Stream")), Box::new(unit))),
+                    )),
+                ),
+                body: Body::Expr(Expr::Func(4)),
+            },
         ],
         shapes: [
             (
@@ -101,6 +127,7 @@ pub fn generated() -> String {
             ("request".into(), 1),
             ("body".into(), 2),
             ("send".into(), 3),
+            ("handler-value".into(), 5),
         ],
         ..Program::default()
     };

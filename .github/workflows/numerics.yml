@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, chain-cleanup, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -22,13 +22,217 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
-  paths:
-    name: ${{ matrix.part == 'client' && format('client checks ({0})', matrix.runner) || matrix.part == 'server' && format('server checks ({0})', matrix.runner) || format('paths ({0})', matrix.runner) }}
-    if: inputs.suite == 'http-clients' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc') || inputs.suite == 'chain-cleanup' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat')))) || inputs.suite == 'stream-storage' || inputs.suite == 'context-owners' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+  server_checks:
+    if: inputs.suite == 'server-checks'
     strategy:
       fail-fast: false
       matrix:
-        part: ${{ fromJSON((inputs.suite == 'server-repeat' || inputs.suite == 'server-arc') && '["server","client","calls"]' || '["all"]') }}
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_UDP_ARTIFACTS: server-check-evidence/udp
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Native Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows.ps1
+      - uses: actions/cache/restore@v6
+        id: server_tls_cache
+        if: runner.os == 'Windows'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native Windows TLS dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v6
+        if: ${{ !cancelled() && runner.os == 'Windows' && env.FWP_WINDOWS_DEPS_READY == '1' && steps.server_tls_cache.outputs.cache-hit != 'true' }}
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Record source and toolchains
+        shell: bash
+        run: |
+          mkdir -p server-check-evidence
+          git rev-parse HEAD > server-check-evidence/revision.txt
+          clang --version > server-check-evidence/c.txt
+          rustc -Vv > server-check-evidence/rust.txt
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - name: Accepted connections, UDP cleanup and readiness failures
+        if: ${{ !cancelled() }}
+        run: cargo test --no-fail-fast --test grpc_server_connections --test udp_ownership --test native_sockets -- --nocapture
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: server-checks-${{ matrix.runner }}
+          path: server-check-evidence/
+          if-no-files-found: error
+  fixed_functions:
+    if: inputs.suite == 'fixed-functions'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Native Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows.ps1
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - name: Function lifetime, stack and library regressions
+        if: ${{ !cancelled() }}
+        run: cargo test --no-fail-fast --test closure_ownership --test closure_cleanup --test stack_ownership --test stack_match_ownership --test arc_library
+      - name: GCC static function representation
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        env:
+          CC: gcc
+        run: cargo test --test closure_ownership fixed_function_values_preserve_aliases_and_effect_order -- --exact --nocapture
+  fixed_functions_wasi:
+    if: inputs.suite == 'fixed-functions'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_REQUIRE_WASI_ARC: 1
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: WASI toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+      - name: Static capture initialization and checked WASI ownership
+        run: cargo test --test wasm_arc -- --nocapture
+  function_captures:
+    if: inputs.suite == 'function-captures'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 1
+      FWP_HTTP_FUNCTION_PROFILE_ARTIFACTS: function-capture-evidence
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Record source and host
+        run: |
+          mkdir -p function-capture-evidence
+          git rev-parse HEAD > function-capture-evidence/revision.txt
+          lscpu > function-capture-evidence/cpu.txt
+          uname -a > function-capture-evidence/platform.txt
+          clang --version > function-capture-evidence/c.txt
+          rustc -Vv > function-capture-evidence/rust.txt
+      - run: cargo fmt --all -- --check
+      - name: Profile constant function captures in the HTTP server
+        run: cargo test --test web http_server_function_capture_allocation_profile -- --ignored --exact --nocapture
+      - name: Download the explicit baseline for paired timing
+        if: inputs.baseline_run != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASELINE_RUN: ${{ inputs.baseline_run }}
+        run: gh run download "$BASELINE_RUN" --name "function-captures-${{ matrix.runner }}" --dir function-capture-baseline
+      - name: Compare ordinary server execution and startup
+        if: inputs.baseline_run != ''
+        env:
+          FWP_HTTP_FUNCTION_BASELINE: function-capture-baseline
+        run: cargo test --test web fixed_function_server_timing_comparison -- --ignored --exact --nocapture
+      - name: Record ordinary server instruction and static-data sizes
+        run: |
+          nm -S --defined-only function-capture-evidence/server.exe > function-capture-evidence/server-symbols.txt
+          size -A function-capture-evidence/server.exe > function-capture-evidence/server-sections.txt
+      - name: Record rebuilt baseline instruction and data sizes
+        if: inputs.baseline_run != ''
+        run: |
+          nm -S --defined-only function-capture-evidence/server-baseline.exe > function-capture-evidence/baseline-symbols.txt
+          size -A function-capture-evidence/server-baseline.exe > function-capture-evidence/baseline-sections.txt
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: function-captures-${{ matrix.runner }}
+          path: function-capture-evidence/
+          if-no-files-found: error
+  entry_checks:
+    if: inputs.suite == 'entry-checks'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 1
+      FWP_ENTRY_CHECK_ARTIFACTS: entry-check-evidence
+      FWP_GC_STRESS: 0
+      FWP_GC_VERIFY: 0
+      FWP_REUSE_VERIFY: 0
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Record source and host
+        run: |
+          mkdir -p entry-check-evidence
+          git rev-parse HEAD > entry-check-evidence/revision.txt
+          lscpu > entry-check-evidence/cpu.txt
+          uname -a > entry-check-evidence/platform.txt
+      - name: Compare ownership-check code arrangements
+        run: cargo test --test bench entry_check_arrangement_measurement -- --ignored --exact --nocapture
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: entry-checks-${{ matrix.runner }}
+          path: entry-check-evidence/
+          if-no-files-found: error
+  paths:
+    name: ${{ matrix.part == 'ownership' && format('HTTP ownership ({0})', matrix.runner) || matrix.part == 'comparisons' && format('HTTP comparisons ({0})', matrix.runner) || matrix.part == 'client' && format('client checks ({0})', matrix.runner) || matrix.part == 'server' && format('server checks ({0})', matrix.runner) || format('paths ({0})', matrix.runner) }}
+    if: inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc') || inputs.suite == 'chain-cleanup' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat')))) || inputs.suite == 'stream-storage' || inputs.suite == 'context-owners' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+    strategy:
+      fail-fast: false
+      matrix:
+        part: ${{ fromJSON(inputs.suite == 'http-clients' && '["ownership","comparisons"]' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc') && '["server","client","calls"]' || '["all"]') }}
         runner: ${{ fromJSON(inputs.native_runner != 'all' && format('["{0}"]', inputs.native_runner) || (inputs.suite == 'stream-storage' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux') && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows' || inputs.suite == 'tcp-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
@@ -45,18 +249,18 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./scripts/setup-windows.ps1
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         id: decoder_tls_cache
-        if: runner.os == 'Windows' && (inputs.suite == 'http-clients' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc')))))))
+        if: runner.os == 'Windows' && (inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc')))))))
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
       - name: Native Windows TLS dependencies
-        if: runner.os == 'Windows' && (inputs.suite == 'http-clients' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc')))))))
+        if: runner.os == 'Windows' && (inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc')))))))
         shell: pwsh
         run: ./scripts/setup-windows-tls.ps1
-      - uses: actions/cache/save@v4
-        if: runner.os == 'Windows' && (inputs.suite == 'http-clients' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc'))))))) && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
+      - uses: actions/cache/save@v6
+        if: runner.os == 'Windows' && (inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc'))))))) && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
@@ -68,14 +272,20 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
-        if: matrix.part == 'all' || matrix.part == 'server'
-      - name: HTTP client ownership and shared connection controls
-        if: ${{ !cancelled() && inputs.suite == 'http-clients' }}
+        if: matrix.part == 'all' || matrix.part == 'server' || matrix.part == 'ownership'
+      - name: HTTP ownership and shared connection controls
+        if: ${{ !cancelled() && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
         shell: bash
         run: |
-          cargo test --no-fail-fast --test http2_client_ownership --test http2_peer_cleanup --test http2_body_roots --test grpc_connect_startup --test grpc_connect_cleanup --test grpc_connection_addresses --test grpc_tls_pool_identity --test grpc_client_receive --test grpc_client_requests --test library_resources
-      - name: Native HTTP client comparisons and binary evidence
-        if: ${{ !cancelled() && inputs.suite == 'http-clients' }}
+          cargo test --no-fail-fast --lib --test native_sockets --test http2_client_ownership --test http2_server_ownership --test http2_peer_cleanup --test http2_body_roots --test grpc_connect_startup --test grpc_connect_cleanup --test grpc_connection_addresses --test grpc_tls_pool_identity --test grpc_client_receive --test grpc_client_requests --test library_resources
+      - name: Reject cyclic ownership at unsupported boundaries
+        if: ${{ !cancelled() && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
+        run: cargo test --test arc_execution arc_rejects_unproved_runtime_boundaries_and_disabled_counting -- --exact --nocapture
+      - name: Preserve the counted-owner escape check
+        if: ${{ !cancelled() && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
+        run: cargo test --test arc_execution arc_checks_reject_counted_owners_at_uncounted_boundaries -- --exact --nocapture
+      - name: Record HTTP platform and ownership metadata
+        if: ${{ !cancelled() && (inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory') }}
         env:
           FWP_HTTP_CLIENT_ARTIFACTS: http-client-evidence
         shell: bash
@@ -95,16 +305,25 @@ jobs:
           pathlib.Path("http-client-evidence/cpu.txt").write_text(subprocess.check_output(commands[os.environ["RUNNER_OS"]], text=True))
           PYENV
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output http-client-evidence/primitive-inventory.json
-          cargo test --test web checked_arc_http_clients_match_interpreter_with_pooled_and_tls_calls -- --exact --nocapture
+      - name: Native HTTP client and server comparisons
+        if: ${{ !cancelled() && inputs.suite == 'http-clients' && matrix.part == 'comparisons' }}
+        env:
+          FWP_HTTP_CLIENT_ARTIFACTS: http-client-evidence
+        run: cargo test --test web checked_arc_http_matches_interpreter_with_pooled_and_tls_calls -- --exact --nocapture
       - name: Repeated HTTP client memory costs
-        if: ${{ !cancelled() && inputs.suite == 'http-clients' }}
+        if: ${{ !cancelled() && inputs.suite == 'http-clients' && matrix.part == 'comparisons' }}
         env:
           FWP_HTTP_MEMORY_ARTIFACTS: http-client-evidence/memory
         run: cargo test --test web repeated_http_client_memory_measurement -- --ignored --exact --nocapture
+      - name: HTTP server managed memory and resident memory
+        if: ${{ !cancelled() && inputs.suite == 'http-server-memory' }}
+        env:
+          FWP_HTTP_SERVER_MEMORY_ARTIFACTS: http-client-evidence/server-memory
+        run: cargo test --test web repeated_http_server_memory_measurement -- --ignored --exact --nocapture
       - uses: actions/upload-artifact@v7
-        if: always() && inputs.suite == 'http-clients'
+        if: always() && (inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory')
         with:
-          name: http-clients-${{ matrix.runner }}
+          name: ${{ inputs.suite }}-${{ matrix.runner }}${{ matrix.part == 'ownership' && '-ownership' || '' }}
           path: http-client-evidence/
           if-no-files-found: error
       - name: Measure wrapped-chain cleanup
@@ -479,9 +698,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
+          package-manager-cache: false
       - name: WASI toolchain
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: Positive 64-bit counts on the actual 32-bit target
@@ -843,7 +1063,7 @@ jobs:
         run: python3 scripts/measure-ad-metadata.py --output performance-evidence/metadata
       - name: Complete-program C and Rust comparison
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
-        run: cargo test --release --test bench -- --ignored --nocapture
+        run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -1003,10 +1223,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: runner.os == 'Linux'
         with:
           node-version: 24
+          package-manager-cache: false
       - name: WebAssembly toolchain
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
@@ -1095,10 +1316,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: inputs.suite == 'bundle' && runner.os == 'Linux'
         with:
           node-version: 24
+          package-manager-cache: false
       - name: Linux toolchains
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld libssl-dev wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
@@ -1223,9 +1445,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-wasip1
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
+          package-manager-cache: false
       - name: WASI toolchain
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: Checked WASI ownership and physical storage

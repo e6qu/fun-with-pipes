@@ -4,12 +4,15 @@
 //! reported with raw samples, compiler/host metadata and ratios to both baselines
 //! (on stdout, in target/bench.md, and in the GitHub
 //! Actions job summary). Timings are not asserted: shared machines are too
-//! noisy. Run with `cargo test --release --test bench -- --ignored
-//! --nocapture`.
+//! noisy. Run with `cargo test --release --test bench benchmarks -- --ignored
+//! --exact --nocapture`.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, Instant};
+
+#[path = "support/entry_checks.rs"]
+mod entry_checks;
 
 fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -45,6 +48,114 @@ fn command_output(command: &str, args: &[&str]) -> String {
     let output = Command::new(command).args(args).output().unwrap();
     assert!(output.status.success(), "{command} {args:?} failed");
     String::from_utf8(output.stdout).unwrap().trim().to_owned()
+}
+
+/// Reproduce the ordinary-inlining control and selected separate-function
+/// arrangement of the existing generic ownership check.
+#[test]
+#[ignore = "runner-only ownership-check code size, frequency and elapsed samples"]
+fn entry_check_arrangement_measurement() {
+    assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
+    let dir = PathBuf::from(
+        std::env::var_os("FWP_ENTRY_CHECK_ARTIFACTS").expect("entry-check artifact directory"),
+    );
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("scope.txt"), "Compare ordinary compiler-selected inlining with an explicit noinline attribute on the existing native fwp_rc_share ownership check. Both variants use identical checked-ARC generated C, -O2, the ordinary fwp optimizer and -ffp-contract=off. No check is removed or relaxed. Whole binary sizes include linking/runtime choices; archived binaries permit separate instruction-section inspection. Numerical inputs are the maintained loop, pipeline and map benchmarks at their declared sizes; C implementations establish output only, not a timed performance baseline here. After one warm-up, six whole-process samples per fwp variant alternate run order; startup, allocation, execution, output and shutdown are included. Separate instrumented binaries count calls to the ownership check through entry execution and cached-value cleanup; these binaries are excluded from timing and size comparison. Counting can prevent elimination/inlining and does not establish ordinary machine-call frequency. HTTP client/server variants are compiled for size only in this experiment; network behavior has separate tests. This is a code-arrangement experiment at one source revision, not evidence of C/Rust speed parity.\n").unwrap();
+    let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
+    std::fs::write(dir.join("c.txt"), command_output(&cc, &["--version"])).unwrap();
+    std::fs::write(dir.join("rust.txt"), command_output("rustc", &["-Vv"])).unwrap();
+    let mut sizes = String::from("program\tvariant\tfile_bytes\n");
+    let mut timings = String::from("program\tround\tposition\tvariant\telapsed_ns\n");
+    let mut checks = String::from("program\tvariant\tentry_check_calls\n");
+    for (name, source, numerical) in [
+        ("loop", "bench/loop/main.fwp", true),
+        ("pipeline", "bench/pipeline/main.fwp", true),
+        ("map", "bench/map/main.fwp", true),
+        ("http-client", "tests/web/arc-client.fwp", false),
+        ("http-server", "tests/web/server.fwp", false),
+    ] {
+        std::fs::copy(root().join(source), dir.join(format!("{name}.fwp"))).unwrap();
+        let cfile = dir.join(format!("{name}-ordinary.c"));
+        build(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .args(["build", "--gc", "arc", "--emit-c", "-o"])
+                .arg(&cfile)
+                .arg(root().join(source)),
+        );
+        let selected = std::fs::read_to_string(cfile).unwrap();
+        let declaration = "static __attribute__((noinline)) void fwp_rc_share(V v);";
+        assert_eq!(selected.matches(declaration).count(), 1);
+        // Reconstruct compiler-selected inlining as the explicit control even
+        // after the runtime adopts the measured noinline arrangement.
+        let ordinary = selected.replace(declaration, "static void fwp_rc_share(V v);");
+        let signature = entry_checks::SIGNATURE;
+        assert_eq!(ordinary.matches(signature).count(), 1);
+        let outlined = ordinary.replace(
+            signature,
+            "static __attribute__((noinline)) void fwp_rc_share(V v) {",
+        );
+        let mut executables = Vec::new();
+        let expected = if numerical {
+            let reference = dir.join(format!("{name}-c-reference.exe"));
+            build(
+                Command::new(&cc)
+                    .args(["-O2", "-o"])
+                    .arg(&reference)
+                    .arg(root().join("bench").join(name).join("main.c")),
+            );
+            Some(measure(&reference).0)
+        } else {
+            None
+        };
+        for (variant, code) in [("ordinary", ordinary), ("noinline", outlined)] {
+            std::fs::write(dir.join(format!("{name}-{variant}.c")), &code).unwrap();
+            let binary = dir.join(format!("{name}-{variant}.exe"));
+            fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+            sizes.push_str(&format!(
+                "{name}\t{variant}\t{}\n",
+                std::fs::metadata(&binary).unwrap().len()
+            ));
+            std::fs::write(dir.join("binary-sizes.tsv"), &sizes).unwrap();
+            if let Some(reference) = &expected {
+                assert_eq!(&measure(&binary).0, reference, "{name}/{variant}");
+                let definition = if variant == "ordinary" {
+                    signature
+                } else {
+                    "static __attribute__((noinline)) void fwp_rc_share(V v) {"
+                };
+                let instrumented = entry_checks::instrument(&code, definition);
+                let measured = dir.join(format!("{name}-{variant}-counted.exe"));
+                std::fs::write(
+                    dir.join(format!("{name}-{variant}-counted.c")),
+                    &instrumented,
+                )
+                .unwrap();
+                fwp::cgen::compile_c(&instrumented, &measured, "-O2").unwrap();
+                let out = Command::new(measured).output().unwrap();
+                assert!(out.status.success(), "{out:?}");
+                assert_eq!(&String::from_utf8_lossy(&out.stdout), reference);
+                let stderr = String::from_utf8(out.stderr).unwrap();
+                let count = entry_checks::count(&stderr);
+                checks.push_str(&format!("{name}\t{variant}\t{count}\n"));
+                std::fs::write(dir.join("entry-checks.tsv"), &checks).unwrap();
+            }
+            executables.push((variant, binary));
+        }
+        if let Some(reference) = expected {
+            for round in 0..6 {
+                for position in 0..2 {
+                    let (variant, binary) = &executables[(round + position) % 2];
+                    let (output, elapsed) = measure(binary);
+                    assert_eq!(output, reference, "{name}/{variant}/{round}");
+                    timings.push_str(&format!(
+                        "{name}\t{round}\t{position}\t{variant}\t{}\n",
+                        elapsed.as_nanos()
+                    ));
+                    std::fs::write(dir.join("elapsed.tsv"), &timings).unwrap();
+                }
+            }
+        }
+    }
 }
 
 #[test]

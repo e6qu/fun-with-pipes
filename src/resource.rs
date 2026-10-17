@@ -49,7 +49,7 @@ pub(crate) fn contains_resource(shapes: &Shapes, ty: &MT) -> bool {
         |name| {
             matches!(
                 name,
-                "std::File" | "std::UdpSocket" | "std::Conn" | "std::Listener"
+                "std::File" | "std::UdpSocket" | "std::Conn" | "std::Listener" | "std::H2Stream"
             )
         },
         false,
@@ -63,7 +63,7 @@ pub(crate) fn may_hold_resource(shapes: &Shapes, ty: &MT) -> bool {
         |name| {
             matches!(
                 name,
-                "std::File" | "std::UdpSocket" | "std::Conn" | "std::Listener"
+                "std::File" | "std::UdpSocket" | "std::Conn" | "std::Listener" | "std::H2Stream"
             )
         },
         true,
@@ -78,7 +78,12 @@ pub(crate) fn has_socket_values(funcs: &[Func], shapes: &Shapes) -> bool {
             contains_where(
                 shapes,
                 ty,
-                |name| matches!(name, "std::UdpSocket" | "std::Conn" | "std::Listener"),
+                |name| {
+                    matches!(
+                        name,
+                        "std::UdpSocket" | "std::Conn" | "std::Listener" | "std::H2Stream"
+                    )
+                },
                 false,
             )
         })

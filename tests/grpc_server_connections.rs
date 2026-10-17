@@ -35,11 +35,20 @@ fn accepted_connections_release_after_startup_io_jobs_and_channels() {
         ("fwp_cleanup_push(&accepted_owner, g_connect_ref_release, c);", "fwp_cleanup_push(&accepted_owner, g_connect_ref_release, c); if(connection_stage==0)fwp_trap(\"accepted startup trap\");"),
         ("c->ssl = (SSL *)fwp_tls_accepted(srv->tls, fd);", "c->ssl = connection_tls(srv->tls, fd);"),
         ("fwp_task *reader = fwp_spawn_task(0, g_reader, c, 0, 0);", "fwp_task *reader = fwp_spawn_task(0, connection_reader, c, 0, 0); seen_reader=reader;"),
-        ("fwp_task *writer = fwp_spawn_task(0, g_writer, c, 0, 0);", "if(connection_stage==4)fwp_trap(\"writer startup trap\"); fwp_task *writer = fwp_spawn_task(0, g_writer, c, 0, 0); if(connection_stage==5)fwp_cancel_tree(writer);"),
     ] {
         assert_eq!(code.matches(before).count(), 1, "{before}");
         code = code.replace(before, after);
     }
+    // HTTP and gRPC both start a writer. Inject this failure only into the
+    // gRPC reader whose connection lifetime this test exercises.
+    let start = code
+        .find("static void g_reader(void *arg, int cancelled) {")
+        .unwrap();
+    let end = start + code[start..].find("\n}\n").unwrap() + 3;
+    let writer = "fwp_task *writer = fwp_spawn_task(0, g_writer, c, 0, 0);";
+    assert_eq!(code[start..end].matches(writer).count(), 1);
+    let reader = code[start..end].replace(writer, "if(connection_stage==4)fwp_trap(\"writer startup trap\"); fwp_task *writer = fwp_spawn_task(0, g_writer, c, 0, 0); if(connection_stage==5)fwp_cancel_tree(writer);");
+    code.replace_range(start..end, &reader);
     let prefix = "static int connection_stage,connection_finals;static void *seen_connection,*seen_reader;\n";
     let fixture = include_str!("fixtures/grpc_server_connections.c");
     let controls = [

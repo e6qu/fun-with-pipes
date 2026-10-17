@@ -38,6 +38,7 @@ jobs:
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
       FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
       FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes
+      FWP_UDP_ARTIFACTS: ownership-evidence/udp
     steps:
       - uses: actions/checkout@v7
         with:
@@ -142,6 +143,7 @@ jobs:
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
       FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
       FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes
+      FWP_UDP_ARTIFACTS: ownership-evidence/udp
     steps:
       - uses: actions/checkout@v7
         with:
@@ -209,6 +211,7 @@ jobs:
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
       FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
       FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes
+      FWP_UDP_ARTIFACTS: ownership-evidence/udp
     strategy:
       fail-fast: false
       matrix:
@@ -223,9 +226,10 @@ jobs:
           components: rustfmt, clippy
           # fwp itself as WebAssembly (tests/browser.rs, the playground)
           targets: wasm32-wasip1
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
+          package-manager-cache: false
       - name: WebAssembly toolchain, OpenSSL headers (TLS)
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32 libssl-dev openssl
       - name: aarch64 cross compiler and qemu (tests/cross.rs)
@@ -323,7 +327,7 @@ jobs:
       - name: Language formatting preflight
         run: cargo run --release --bin fwp -- fmt --check lib examples docs/tutorials bench
       - name: benchmarks against C and Rust (docs/benchmarks.md)
-        run: cargo test --release --test bench -- --ignored --nocapture
+        run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
       - name: Preserve readable benchmark comparisons
         uses: actions/upload-artifact@v7
         with:
