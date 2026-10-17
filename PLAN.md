@@ -11,6 +11,13 @@ failures and the next concrete action. [Delivery evidence](docs/roadmap-history.
 records past results; completed checklists and preparation branches are not an
 active backlog.
 
+This is very early pre-alpha development. Backward compatibility is not an
+objective, including compatibility with already compiled programs. Change source
+APIs, internal layouts, calling conventions and binary formats when the design
+benefits; rebuild affected programs and libraries with the matching compiler.
+Update current examples, documentation and correctness checks together. Do not
+add compatibility machinery solely to keep an older version working.
+
 ## Existing foundation
 
 The compiler provides strong ordinary type inference, explicit generic

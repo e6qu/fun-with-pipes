@@ -1,10 +1,16 @@
 # Session handoff
 
 Updated 2026-10-17 UTC. All seven areas in [PLAN.md](../PLAN.md) remain open.
+Standing policy: very early pre-alpha; no backward compatibility requirement,
+including existing binaries. Layouts, calling conventions, APIs and formats may
+change. Rebuild consumers and update current tests/docs; do not add machinery
+solely for old code. [AGENTS.md](../AGENTS.md) preserves this across sessions.
 Current delivery branch: **checked-remote-arc**, based on accepted PR #160.
 The root now combines checked remote ARC, typed reply/error cleanup, unique record
-field transfers, bounded native CI groups and documentation cleanup. No new PR
-is open yet. Preparation branches are evidence sources, not separate next actions.
+field transfers, bounded native CI groups and documentation cleanup. [PR #161](https://github.com/e6qu/fun-with-pipes/pull/161) is a draft; immutable
+native validation uses **efaab358**. Full production waits for the final report
+commit. AGENTS.md is streamlined to 78 lines and records the no-compatibility
+policy; the plan/reference/handoff agree. Documentation audit passes (3.06s). Preparation branches are evidence sources, not separate next actions.
 
 ## Next action
 
@@ -13,8 +19,8 @@ Next: validate the platform-fixture repairs at tag
 and collect
 all six hosts with `--comparison server-arc-moves --split-checks` against
 `docs/measurements/server-borrows-2026-10-17.json`. Fix failures; require all 18
-focused jobs. Retain the report and explain measured costs before publishing the
-combined PR. Run all nine production gates plus docs on the final head before
+focused jobs. Retain the report and explain measured costs before marking the
+combined draft PR ready. Run all nine production gates plus docs on the final head before
 squash merge. Every commit message is one line, at most 80 characters, with an
 empty body and no trailers or attribution.
 
@@ -53,7 +59,7 @@ Real calls compare interpreter/ARC clients and servers at O1/O2. Deliberately
 omitted reply cleanup, queue owners and error owners must fail.
 
 Linux probe **39033267465** passes at **c5952f14**. Its 32,000-call RSS samples
-are **[16084, 16084, 16084, 16084, 16084] KiB**. All 108 memory rows match baseline
+are **[16084, 16084, 16084, 16084, 16084] KiB**. All 36 memory rows match baseline
 allocations, requested bytes and retains, with constant final storage. Its strict
 collector passed (1.48s), report `/private/tmp/fwp-remote-arc-linux-report.json`.
 All-six run **39034262363**, source **e796ea63ef28162367f9bf4a29d94ea1eab5528d**,
@@ -82,7 +88,8 @@ alive through the call. Resource-containing records preserve existing lifetimes.
 
 Focused Linux **39035085462 passes**: preparation failures, entry cancellation,
 shared parent/field aliases, scalar bits, result boxing, liveness and field/resource
-regressions. The unsplit six-native run **39035855561** is superseded and confirmed cancelled. Replacement **39036291837** runs source
+regressions. The unsplit six-native run **39035855561** is superseded and confirmed
+cancelled. First split run **39036291837** used source
 **273d516b64342356c82dbe48b65da7dee2c7f45d**, tag
 `evidence/remote-arc-moves-split-20261017`. It splits server cleanup, client cleanup
 and real-call measurements into three native jobs per host, retaining every
@@ -90,7 +97,9 @@ previous test command and the 25-minute limit. Worker ownership tests are added
 to the measurement jobs. The collector requires all 18 jobs with `--split-checks`
 and compares with server-borrows using `--comparison server-arc-moves`. Expected
 saving is one retain per greeting and no allocation or final-storage change;
-verify the actual rows before making that claim. Workflow actionlint passes
+Both Linux hosts verify all 36 memory rows against these expectations. Final
+all-host evidence remains pending the replacement run. Do not describe these
+36 memory rows as 108; three tables record different measurements. Workflow actionlint passes
 (1.10s); command preservation/collector syntax check passes (0.13s). Inspect actual binaries and compare every row;
 require matching work, no extra allocations and bounded remaining storage before
 including the change. All nine final PR gates still need this compiler revision.
@@ -100,19 +109,20 @@ The split run exposed two fixture problems. ARM Mac server checks exited 237 at
 The driver counted unsuccessful nonblocking accepts as a connection. It now counts
 successful accepts, forces a readiness retry, and verifies that restoring the old
 assumption fails. Recovery diagnostics distinguish the other causes of code 237;
-this repair still needs native confirmation. Windows AMD64 worker controls passed
+this repair still needs native confirmation in replacement **39037037021**
+at **efaab358e730595f40aa5d46e6df6a8ec0151a5c**. Windows AMD64 worker controls passed
 their ownership checks but failed exact output because their replacement C mains
 left stdout in text mode. All seven such probes now select binary stdout like
 ordinary generated programs; the three target suites are added to the normal
 Windows gate. Log `/private/tmp/fwp-arc-moves-windows-failure.log`.
-Cancellation of **39036291837** was requested; confirm it. Its two Linux measurement
+Superseded run **39036291837** is confirmed cancelled. Its two Linux measurement
 jobs pass, with artifacts under `/private/tmp/fwp-server-memory-evidence/39036291837`.
 They are partial evidence only. The replacement run must pass every platform.
 Formatting passes (1.24s), workflow actionlint (1.22s); these do not verify the
 native repairs. Compiler/runtime code remains identical to 273d516b.
 
-The PR draft is `/private/tmp/fwp-remote-arc-pr.md`; update its validation before
-publication. The root already includes the combined code and documentation. It
+The published PR body is `/private/tmp/fwp-remote-arc-pr.md`; update its validation
+before marking the PR ready. The root already includes the combined code and documentation. It
 also records #160 acceptance and removes obsolete candidate/exclusion statements. Historical experiment
 notes are saved in `/private/tmp/fwp160-handoff-before-streamlining.md`.
 

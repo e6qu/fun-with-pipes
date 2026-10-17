@@ -521,7 +521,7 @@ fwp build file.fwp [options]                  compile
                      (needs GCC)
     --gc arc         checked native/WASI executables and native C libraries;
                      unsupported value/runtime boundaries diagnose
-    --gc tracing     existing tracing compatibility mode (the default)
+    --gc tracing     tracing collection mode (the default)
     --memory static  bounded runtime storage and stacks at startup, with
                      --heap S, --pool S, --stack S, --tasks N,
                      --task-stack S and --threads N
