@@ -83,21 +83,24 @@ static int observed_next(uintptr_t *,uintptr_t *);
 static void observed_free(void *p){if(p&&p==watched_request){request_frees++;watched_request=0;}if(p&&p==watched_wire){wire_frees++;watched_wire=0;}free(p);}
 static void no_release(void *p){(void)p;}
 static void observed_input_drop(V value){(void)value;}
-static int observed_next(uintptr_t *cur,uintptr_t *value){if(*cur)return 0;*cur=1;*value=42;return 1;}
+static int observed_next(uintptr_t *cur,uintptr_t *value){if(stage==3)fwp_trap("client input trap");if(*cur)return 0;*cur=1;*value=42;return 1;}
 static void call(void *arg,int stop){if(stop){cancelled++;return;}jmp_buf failed;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;if(!setjmp(failed)){fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;V args[]={0};fwp_remote_call(arg,args);_Exit(7);}else trapped++;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;}
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
  g_server srv={0};srv.module="probe";g_conn *c=g_conn_new(-1,"local",&srv);connection=c;
- for(int kind=0;kind<2;kind++)for(stage=0;stage<3;stage++){
+ for(int kind=0;kind<2;kind++)for(stage=0;stage<4;stage++){
+  if(!kind&&stage==3)continue;
   watched_request=watched_wire=0;request_frees=wire_frees=cancelled=trapped=0;c->out.len=0;c->conn_window=stage==1?0:65535;
   g_stream *s=g_stream_new(c,(uint32_t)(1+2*(kind*3+stage)));s->sent_headers=1;stream=s;
   fwp_remote remote={0};remote.env="FWP_CLIENT_REQUEST_PROBE";remote.default_addr="local";remote.what="probe";remote.m.input=kind;remote.input_drop=observed_input_drop;
   fwp_task *t=fwp_spawn_task(0,call,&remote,0,0);
   if(stage==1){fwp_p_task_yield();if(t->done||!watched_request||!watched_wire||request_frees||wire_frees)return 2;fwp_p_task_cancel(PTR(t));}
   fwp_await(t);
-  if(!t->done||request_frees!=1||watched_request||watched_wire||wire_frees!=(stage==2?0:1)||cancelled!=(stage==1)||trapped!=(stage!=1)||fwp_cleanups)return 1;
+  if(!t->done||request_frees!=(stage==3?0:1)||watched_request||watched_wire||wire_frees!=(stage>=2?0:1)||cancelled!=(stage==1)||trapped!=(stage!=1)||fwp_cleanups)return 1;
   if(stage==0){if(!s->local_end)return 3;int found=0;for(size_t i=0;i+7<=c->out.len;i++)if(!memcmp(c->out.d+i,"request",7))found=1;if(!found)return 4;if(strcmp(fwp_trap_msg,"bad response from probe (local): missing response message"))return 5;}
   if(stage==2&&strcmp(fwp_trap_msg,"client encode trap"))return 6;
+  if(stage==3&&strcmp(fwp_trap_msg,"client input trap"))return 6;
+  if(stage && (s->listed||!s->reset||c->out.len<13||c->out.d[c->out.len-10]!=H2_RST_STREAM))_Exit(8);
   FWP_KEEP_ALIVE(PTR(t));FWP_KEEP_ALIVE(PTR(s));FWP_KEEP_ALIVE(PTR(c));
  }
  FWP_KEEP_ALIVE(PTR(c));fwp_lib_finish();return 0;
@@ -111,7 +114,16 @@ int main(void){
         cleanup,
         "fwp_cleanup_push(&client_request, no_release, &req);",
     );
+    let abort = "fwp_cleanup_push(&request_abort, g_call_reset, &call);";
+    assert_eq!(generated.matches(abort).count(), 1);
+    let missing_abort = generated.replace(
+        abort,
+        "fwp_cleanup_push(&request_abort, no_release, &call);",
+    );
     for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&format!("{hooks}\n{missing_abort}\n{fixture}"), &exe, opt).unwrap();
+        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        assert_eq!(out.status.code(), Some(8), "omitted request reset: {out:?}");
         fwp::cgen::compile_c(&format!("{hooks}\n{omitted}\n{fixture}"), &exe, opt).unwrap();
         let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
         assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");

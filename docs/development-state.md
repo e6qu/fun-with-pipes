@@ -5,14 +5,15 @@ Updated 2026-10-17 UTC. All seven work areas in [PLAN.md](../PLAN.md) remain ope
 ## Current delivery and next preparation
 
 Root branch `free-closed-connections` has [PR #158](https://github.com/e6qu/fun-with-pipes/pull/158)
-at `2e747ce652f97d19e26737b5ac3d271cd66dc3ca`. Production `39008557317`
-and documentation `39008557262` gate its authorized squash merge. The root
+at `30036a1576aa537e2b882b7d166502f8bfa892f3`. Production `39011071759`
+and documentation `39011071706` gate its authorized squash merge after repairing
+two stale allocation-failure test hooks exposed by the prior Mac stress run. The root
 handoff and `/private/tmp/fwp-watch-merge-158.py` own that acceptance. Do not
 open a second PR. #157 is accepted as `30668bf8`; see [history](roadmap-history.md).
 
 This worktree `/private/tmp/fwp-sender-input-owners`, branch `own-sender-inputs`,
-prepares pending input ownership after #158. Its current change is measurement
-only, with the production runtime/compiler unchanged from #158. It measures
+prepares pending input ownership after #158. Its frozen baseline has the production runtime/compiler unchanged from #158.
+The candidate adds typed input ownership and request failure cleanup. It measures
 synchronous integer sending, bidirectional strings, retained original input
 aliases and early server completion. The [fixture guide](../tests/fixtures/sender-inputs/README.md)
 explains notation, outputs and scope. Do not infer lifetime safety from typechecking.
@@ -42,7 +43,10 @@ These are probe results, not six-platform acceptance or a speed comparison.
 
 The frozen baseline tag `evidence/sender-input-baseline-20261017` points at
 `f6ebb2e9a8c0c8d5bffbc40f1f46e374e0acbd22`; six-host run `39009268395`
-is pending. Its runtime, compiler and workloads match the passing Linux probe.
+passes on all six hosts. Its runtime, compiler and workloads match the Linux
+probe. The [report](measurements/sender-input-baseline-2026-10-17.json) and raw
+tables were collected through the root guard in 24.24s. Actual Linux ARM64 and
+AMD64 binaries were inspected; no downloaded executable ran locally.
 The baseline source is fixed while independent candidate work proceeds.
 
 ## Input ownership candidate
@@ -71,9 +75,21 @@ cases and client measurements were not reached; no candidate acceptance yet.
 The next probe also includes failed input-retain acquisition and remote-output
 pipelines, retained upstream readers and chained senders.
 
-Next: publish the fixture repair and added cases, run Linux `sender-repeat`,
-and inspect/repair all failures.
-Keep collecting the frozen six-host baseline independently. Require six native
+Repaired candidate `81e2586e0192a8d71bdac002a078122d8c1aa7de` runs in
+Linux probe `39010422154` failed because the fixture expected a reset request
+to retain its already-released active-list owner. The assertion now accounts for
+whether the request is still listed. This is not candidate acceptance.
+
+Review also found that native synchronous input failures and failed response
+channel deliveries did not reset the request, unlike the interpreter. Scoped
+reset cleanup now runs before dropping the caller's request owner. Tests cover
+encoding/continuation traps, blocked sends and channel delivery, including
+deliberately omitted resets. A real input-continuation failure runs with each
+interpreter/native client/server combination. The failure and ownership changes
+await the next runner probe; no native validation is claimed yet.
+
+Next: publish the repaired candidate, inspect its Linux run, then compare memory
+and reference-count totals before selecting any further optimization. Require six native
 candidate jobs, matching outputs, complete input/sender/connection cleanup,
 bounded remaining storage, failure controls and actual ARM64/AMD64 binary review
 before preparing the next delivery. PR #158 remains the only active PR.

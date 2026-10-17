@@ -1,0 +1,9 @@
+# A yielded value is paired with a function that produces the next iterator.
+# The next function traps. Sending must evaluate it before encoding the value,
+# report the same error in both engines, and abandon the unfinished request.
+import greeter
+
+bad-tail : () -> Iterator[I64]
+bad-tail = const 1 | div 0 | iter.count-from
+
+main = Yield 7 bad-tail | greeter.total | echo

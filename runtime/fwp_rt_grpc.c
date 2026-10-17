@@ -804,6 +804,13 @@ static void g_reset(g_conn *c, g_stream *s, uint32_t code) {
     fwp_wake_all(&c->writer_wl);
 }
 
+/* A failed request must notify the peer before its reader owner is released.
+ * Ordinary response-iterator abandonment keeps its existing behavior. */
+static void g_call_reset(void *arg) {
+    g_call_owner *call = (g_call_owner *)arg;
+    if (call->c && call->s) g_reset(call->c, call->s, 8);
+}
+
 /* send data within the flow-control windows: 0 when the stream is closed;
  * waiting for a window can be cancelled */
 static int g_send_data(g_conn *c, g_stream *s, const unsigned char *d, size_t n, int end) {
@@ -1967,6 +1974,8 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
         if (!s) g_stub_fail(r, addr, -1, err);
         call.c = c;
         call.s = s;
+        fwp_cleanup request_abort;
+        fwp_cleanup_push(&request_abort, g_call_reset, &call);
         if (r->m.input == 0) {
             h2_buf req = {0};
             fwp_cleanup client_request;
@@ -2002,8 +2011,12 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
             g_input_release(&input);
             g_send_data(c, s, 0, 0, 1);
         }
-        if (r->m.output != 0) break;
+        if (r->m.output != 0) {
+            fwp_cleanup_pop(&request_abort);
+            break;
+        }
         g_recv(c, s, deadline, &first);
+        fwp_cleanup_pop(&request_abort);
         if (first.kind == G_LOST && first.retry && reused && attempt == 0 && r->m.input == 0) {
             g_got_release(&first);
             continue;
@@ -2068,7 +2081,10 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
                 }
                 fwp_cleanup_pop(&decode_text);
                 free(why);
+                fwp_cleanup channel_abort;
+                fwp_cleanup_push(&channel_abort, g_call_reset, &call);
                 fwp_p_channel_send(ch, v);
+                fwp_cleanup_pop(&channel_abort);
                 fwp_cleanup_pop(&received);
                 g_got_release(&g);
                 continue;

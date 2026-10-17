@@ -246,6 +246,8 @@ fn every_kind_of_call() {
     let servers = greeter_servers(native.then_some(d.as_path()));
     let client = dir().join("client.fwp");
     let split = d.join("split");
+    let failed_client = dir().join("input-failure.fwp");
+    let failed_split = d.join("input-failure-split");
     if native {
         build(
             &[
@@ -254,6 +256,16 @@ fn every_kind_of_call() {
                 "greeter",
                 "-o",
                 split.to_str().unwrap(),
+            ],
+            &dir(),
+        );
+        build(
+            &[
+                failed_client.to_str().unwrap(),
+                "--service",
+                "greeter",
+                "-o",
+                failed_split.to_str().unwrap(),
             ],
             &dir(),
         );
@@ -269,6 +281,29 @@ fn every_kind_of_call() {
             let mut cmd = Command::new(split.join("client"));
             cmd.env("FWP_SERVICE_GREETER", &s.addr);
             outputs.push(("native client", render(&run(cmd, 120))));
+        }
+        // A failing input continuation must preserve the caller's trap and
+        // produce no response, for each interpreter/native client/server pair.
+        for interpreted in [true, false] {
+            if !interpreted && !native {
+                continue;
+            }
+            let mut cmd = if interpreted {
+                let mut cmd = Command::new(fwp());
+                cmd.args(["run", "--interp", "--service", "greeter"])
+                    .arg(&failed_client);
+                cmd
+            } else {
+                Command::new(failed_split.join("input-failure"))
+            };
+            cmd.env("FWP_SERVICE_GREETER", &s.addr);
+            let out = run(cmd, 120);
+            assert_eq!(out.status.code(), Some(101), "{out:?}");
+            assert!(out.stdout.is_empty(), "{out:?}");
+            assert!(
+                String::from_utf8_lossy(&out.stderr).contains("division by zero"),
+                "{out:?}"
+            );
         }
         // a slow call past its deadline is cancelled on the server
         assert!(

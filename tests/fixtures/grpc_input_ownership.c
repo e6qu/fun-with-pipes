@@ -84,7 +84,8 @@ int main(int argc,char **argv) {
     if(stage==2&&(!s->reset||strcmp(s->reset,"trap: input continuation failed")||encoded))_Exit(233);
     if(stage==3&&(!s->reset||strcmp(s->reset,"trap: input encoding failed")||encoded!=1))_Exit(234);
     if(stage==5&&(advanced||encoded))_Exit(235);
-    if(*fwp_rc_slot(PTR(s))!=2||*fwp_rc_slot(PTR(c))!=1||fwp_cleanups)_Exit(236);
+    /* Reset requests have already released their active-list owner. */
+    if(*fwp_rc_slot(PTR(s))!=1+s->listed||*fwp_rc_slot(PTR(c))!=1||fwp_cleanups)_Exit(236);
     g_unlink(c,s);g_stream_drop(s);g_conn_drop(c);
     if(!fwp_gc.enabled&&!fwp_reuse_verify&&input_charge()!=before)_Exit(222);
     fwp_lib_finish();return 0;
