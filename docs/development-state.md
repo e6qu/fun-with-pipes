@@ -23,10 +23,11 @@ verifier distinguishes external lifetimes from locally acquired copies; unwind
 and entry cleanup include only owned references. Recursive callbacks and resource
 close scopes retain their existing compilation. No body is added when borrowed
 parameters need no counting. Actual channel-loop binaries in #160 retain a
-channel 64 times per call, motivating this change; the reduction is unverified.
+channel 64 times per call, motivating this change; Linux now verifies removal of those 64 retains; other targets remain pending.
 
-Next: finish Linux borrowing probe **39027507441** at `f7aeb774` and Windows
-shutdown probe **39027501833** at `96fa4e2c`; fix failures. Then publish one frozen
+Linux borrowing probe **39027507441** at `f7aeb774` passes.
+Next: finish Windows shutdown probe **39027501833** at `96fa4e2c`; fix failures.
+Then publish one frozen
 combined candidate and run all six native hosts, including the added waiter
 lifetime tests. Retain equivalent-workload measurements and actual AMD64/ARM64
 instructions, comparing against root's six-host server-values report. Use the
@@ -53,7 +54,15 @@ shape assertions fixed them. Probe `39027098579` then passed all 31 ownership
 unit tests, borrowed application and existing left-fold alias/reclamation tests.
 The new workload's interpreter check found mismatched prepend/append construction;
 `f7aeb774` uses matching heap strings while preserving the expected count of one.
-Native zero-retain checks and the rest of the suite remain pending.
+The rerun passes the entire focused suite, including zero-retain checks.
+All 36 measurement rows preserve allocations and 544 final managed bytes; channel
+retains fall from 68 to 4 per call plus one per connection. The strict collected
+report is `/private/tmp/fwp-server-borrows-linux-report.json` (2.98s). Actual AMD64
+code inlines the borrowed callback and removes its per-send channel retain/drop.
+The caller frame grows by 80 bytes but no longer nests the old 184-byte callback
+frame. The ordinary binary grows 88 bytes; text grows 864. No timing claim.
+The collector now has an explicit `server-borrows` comparison against #160,
+requiring the ownership/fold controls and those exact counter changes.
 
 Windows `39026702591` caught header order before declaring the Windows API
 contract. `4cca1a10` fixed it. `39027091673` then exposed a reader that stayed
@@ -67,7 +76,8 @@ Use root `scripts/local-guard.py` for focused local checks. Full builds/tests,
 benchmarks and large regeneration run on GitHub; fixed limits must not rise.
 Prior compiler formatting passed in 1.18s and docs in 2.79s. Waiter lifetime
 formatting passed in 1.36s and its docs audit in 2.83s. Integration applied cleanly;
-combined formatting/docs and native validation are next. Never execute downloaded
+combined formatting passed in 1.04s and docs in 2.86s. Combined native
+validation remains next. Never execute downloaded
 binaries locally. These are fwp revision comparisons, not timing or C/Rust parity.
 
 HTTP graphs, escaped callback cycles, remote checked ARC, complete GC removal,
