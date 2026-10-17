@@ -107,8 +107,33 @@ def main():
             for variant in ['client', 'server', 'server-measured']:
                 names += [f'{mode}-{variant}.c', f'{mode}-{variant}{suffix}']
             names += [f'{mode}-{calls}-{rep}.log' for calls in [1, 16, 256] for rep in range(3)]
+        observations = folder / 'binary-observations.json'
+        inspected = json.loads(observations.read_text()) if observations.exists() else None
+        if host in {'ubuntu-latest', 'ubuntu-24.04-arm'}:
+            assert inspected is not None, (host, 'missing actual-binary inspection')
+            review = inspected.get('manual_review', {})
+            assert review.get('source_revision') == args.head
+            assert review.get('architecture') == ('AMD64' if host == 'ubuntu-latest' else 'ARM64')
+            assert all(review.get(mode, {}).get('observations')
+                       for mode in ['unary-strings', 'request-stream'])
+            assert {'unary-strings', 'request-stream'} <= {
+                item['workload'] for item in inspected['observations']}
+        if inspected:
+            assert inspected['source_revision'] == args.head
+            names.append(observations.name)
+            for item in inspected['observations']:
+                mode = item['workload']
+                assert mode in MODES
+                assert fingerprint(folder / (mode + '-server.c')) == item['source']
+                assert fingerprint(folder / (mode + '-server' + suffix)) == item['binary']
+                assembly = item['assembly']
+                assert assembly['file'] == mode + '-server.asm'
+                assert fingerprint(folder / assembly['file']) == {
+                    key: assembly[key] for key in ['bytes', 'sha256']}
+                names.append(assembly['file'])
         hosts.append({'host': host, 'job_url': job['url'], 'rows': rows,
             'storage_allocations': storage, 'raw_tables': raw,
+            'binary_observations': inspected,
             'scope': (folder / 'scope.txt').read_text(),
             'environment': {name: (folder / (name + '.txt')).read_text() for name in ['rust', 'c', 'cpu']},
             'files': {name: fingerprint(folder / name) for name in names}})

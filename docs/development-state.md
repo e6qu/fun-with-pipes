@@ -46,10 +46,25 @@ The `server-repeat` workflow suite can select one native runner or all six.
 Native execution is unverified. The four workload expressions typechecked in
 0.76s under the root guard after adding concrete input types and explicit channel
 effects. Formatting passed in 1.30s and the documentation audit in 3.49s.
-Published head `3c9f4e48` is running Linux AMD64 probe `39013983686`.
-Final guarded formatting passed in 1.32s and documentation audit in 3.32s.
-Next: inspect and fix sampling or execution failures before collecting a
-six-platform baseline. Do not change
+Initial head `3c9f4e48` failed Linux AMD64 probe `39013983686` at the final
+sampling boundary, described below. Repair `e0baca20` passes Linux AMD64 run `39014302981`. The four workloads
+finish every call and close the connection, with no spawned tasks remaining.
+Server connection/request finalizers still do not run: tracing is disabled.
+At 256 calls, final managed bytes are 721,248 for greetings, 2,486,624 for
+returned streams, 1,753,440 for sent streams and 971,104 for channel output.
+Each additional call adds 2,800 / 9,696 / 6,832 / 3,776 bytes respectively.
+This is a baseline with retained memory, not an ownership improvement.
+Final guarded formatting passed in 1.44s and documentation audit in 3.32s.
+The six-host collector CLI check passed under the guard in 0.20s; actual
+six-host collection awaits its full matrix. Static-inspector CLI check passed
+in 0.20s; collector requires exact-source ARM64/AMD64 reviews.
+Static AMD64 review confirms traced task records skip physical disposal,
+job cleanup releases peer text but not the job, and user-method/response-stream
+dispatch still uses unowned application. Probe artifacts and review are under
+`/private/tmp/fwp-server-memory-evidence/39014302981`; download passed under
+the guard in 3.39s and static disassembly in 0.15s.
+Next: publish the collection/inspection tools and run the frozen six-platform
+baseline. Do not change
 production server ownership before that baseline is frozen.
 
 ## Local work rules
