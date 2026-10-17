@@ -741,7 +741,11 @@ static void g_reader(void *arg, int cancelled) {
             fwp_cleanup_push(&pending_requests, g_slist_release, &fresh);
             char *dead = 0;
             g_process(c, buf, (size_t)k, &fresh, &dead);
-            for (size_t i = 0; i < fresh.n; i++) g_start_call(c, fresh.v[i]);
+            for (size_t i = 0; i < fresh.n; i++) {
+                g_stream *request = fresh.v[i];
+                fresh.v[i] = NULL;
+                g_start_call(c, request); /* move the pending-list owner */
+            }
             fwp_cleanup_pop(&pending_requests);
             g_slist_release(&fresh);
             g_wake_conn(c);
@@ -2305,9 +2309,11 @@ static int64_t g_parse_timeout(const char *t) {
     return ns > (uint64_t)(INT64_MAX - now) ? INT64_MAX : now + (int64_t)ns;
 }
 
+/* Consume the pending-list owner; the job keeps it through task completion. */
 static void g_start_call(g_conn *c, g_stream *s) {
     g_job *j = (g_job *)fwp_mem_alloc(sizeof *j);
     j->c = c;
+    j->s = s;
     j->srv = c->server;
     const char *path = h2_get(&s->headers, ":path");
     if (!path) path = "";
@@ -2324,8 +2330,6 @@ static void g_start_call(g_conn *c, g_stream *s) {
     j->sv.peer_users = 1;
     fwp_cleanup peer_cleanup;
     fwp_cleanup_push(&peer_cleanup, g_job_peer_finish, j);
-    fwp_rc_dup(PTR(s));
-    j->s = s; /* publish only after acquisition succeeds */
     j->sv.s = s;
     /* responses are compressed like the requests */
     const char *enc = h2_get(&s->headers, "grpc-encoding");
