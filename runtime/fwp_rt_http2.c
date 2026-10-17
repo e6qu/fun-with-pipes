@@ -23,6 +23,16 @@ struct g_web {
     int draining;              /* GOAWAY was sent: new streams are refused */
 };
 
+/* One connection owner keeps captures alive even when serve unwinds before
+ * its cancelled children finish. Jobs borrow this owner, not the serve frame. */
+static void w_server_storage_drop(void *value) {
+    struct g_web *w = value;
+    fwp_closure_drop(w->handler);
+#ifndef FWP_RESOURCE_NO_FREE
+    fwp_mem_free(w);
+#endif
+}
+
 static void w_rst(g_conn *c, uint32_t sid, uint32_t code) {
     unsigned char p[4] = {(unsigned char)(code >> 24), (unsigned char)(code >> 16), (unsigned char)(code >> 8),
                           (unsigned char)code};
@@ -73,19 +83,13 @@ static void g_web_stream(g_conn *c, uint32_t sid, h2_hdrs *hs, int end, g_slist 
         w_goaway(c);
     }
     g_stream *s = g_stream_new(c, sid);
+    fwp_rc_fresh(PTR(s)); /* active-list owner */
     s->headers = *hs;
     s->got_headers = 1;
     s->remote_end = end;
     s->raw = 1;
     g_slist_add(fresh, s);
 }
-
-/* a stream's task */
-typedef struct {
-    g_conn *c;
-    g_stream *s;
-    V handler, call;
-} w_job;
 
 static void w_end_stream(g_conn *c, g_stream *s) {
     if (!c->dead && s->listed) {
@@ -97,19 +101,33 @@ static void w_end_stream(g_conn *c, g_stream *s) {
 }
 
 static void w_handle(void *arg, int cancelled) {
-    w_job *j = (w_job *)arg;
-    if (!cancelled) fwp_apply1(j->handler, j->call);
+    g_call *j = arg;
+    if (!cancelled) {
+        V call = PTR(j);
+        fwp_apply_borrowed_span(((struct g_web *)j->c->web)->handler, 1, &call, 0, 0);
+    }
     fflush(fwp_prog_out);
     w_end_stream(j->c, j->s);
 }
 
+/* The task's one owner also covers its joined children. An escaped H2Stream
+ * may keep the connection/request storage, but never this task identity. */
+static void w_job_finish(void *arg) {
+    g_call *j = arg;
+    if (j->s->task == j->task) j->s->task = NULL;
+    j->task = NULL;
+    g_call_drop(PTR(j));
+}
+
 static void w_start(g_conn *c, g_stream *s) {
-    w_job *j = (w_job *)fwp_mem_alloc(sizeof *j);
-    j->c = c;
-    j->s = s;
-    j->handler = ((struct g_web *)c->web)->handler;
-    j->call = g_call_value(c, s, 1, 0);
-    s->task = fwp_spawn_task(0, w_handle, j, 0, 0);
+    fwp_value_owner owner = {g_call_value(c, s), g_call_drop};
+    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);
+    g_call *j = (g_call *)(uintptr_t)owner.value;
+    fwp_task *task = fwp_spawn_task(0, w_handle, j, 0, 0);
+    fwp_task_own_internal(task, fwp_cur->scope != NULL);
+    s->task = j->task = task;
+    task->cfinish = w_job_finish;
+    fwp_cleanup_pop(&cleanup); /* task takes the call owner */
 }
 
 /* the conn's socket and TLS session, which the HTTP/2 connection takes */
@@ -123,6 +141,14 @@ static fwp_socket_t w_take(V conn, SSL **ssl) {
 
 static void w_upgraded(g_conn *c, V r, g_slist *fresh);
 
+typedef struct { g_conn *c; int unwinding; } w_server_owner;
+static void w_server_release(void *arg) {
+    w_server_owner *owner = arg;
+    g_conn_dead(owner->c, "HTTP server finished");
+    g_conn_release(owner->c);
+    if (!fwp_cur->cancelled) fwp_cur->unwinding = owner->unwinding;
+}
+
 /* serve an HTTP/2 connection; one upgraded from HTTP/1.1 (Upgrade: h2c)
  * brings its request, (method, target, headers, body), as stream 1 */
 static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
@@ -133,6 +159,11 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
     socklen_t sl = sizeof ss;
     if (getpeername(fd, (struct sockaddr *)&ss, &sl) == 0) fwp_fmt_addr((struct sockaddr *)&ss, peer, sizeof peer);
     g_conn *c = g_conn_new(fd, "", peer, 0);
+    fwp_rc_fresh(PTR(c));
+    c->refs = 1; /* inline reader owns storage and transport */
+    w_server_owner server_owner = {c, fwp_cur->unwinding};
+    fwp_cleanup server_cleanup;
+    fwp_cleanup_push(&server_cleanup, w_server_release, &server_owner);
     c->fd = w_take(conn, &c->ssl);
     FWP_KEEP_ALIVE(conn);
     c->out.len = 0;
@@ -141,23 +172,35 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
     h2_frame(&c->out, H2_SETTINGS, 0, 0, st, 6);
     c->preface = 0;
     struct g_web *w = (struct g_web *)fwp_mem_alloc(sizeof *w);
+    c->web = w;
+    fwp_rc_dup(handler);
     w->handler = handler;
     int64_t mh = (int64_t)OBJ(limits)->f[0], mr = (int64_t)OBJ(limits)->f[1];
     w->max_header = mh < 0 ? 0 : (size_t)mh;
     w->max_requests = mr < 1 ? 1 : (uint64_t)mr;
     int64_t idle = fwp_dur_ns(OBJ(limits)->f[2]);
-    c->web = w;
     g_slist up = {0, 0, 0};
+    fwp_cleanup upgrade_cleanup;
+    fwp_cleanup_push(&upgrade_cleanup, g_slist_release, &up);
     if (upgraded != FWP_NONE) w_upgraded(c, OBJ(upgraded)->f[0], &up);
-    c->refs = 2;
-    fwp_spawn_task(0, g_writer, c, 0, 0);
+    fwp_cleanup writer_owner;
+    fwp_rc_dup(PTR(c));
+    c->refs++;
+    fwp_cleanup_push(&writer_owner, g_connect_ref_release, c);
+    fwp_task *writer = fwp_spawn_task(0, g_writer, c, 0, 0);
+    fwp_cleanup_pop(&writer_owner);
+    fwp_task_own_internal(writer, fwp_cur->scope != NULL);
     for (size_t i = 0; i < up.n; i++) w_start(c, up.v[i]);
-    fwp_mem_free(up.v);
+    fwp_cleanup_pop(&upgrade_cleanup);
+    g_slist_release(&up);
     fwp_task *me = fwp_cur;
     int was = me->unwinding;
     me->unwinding = 1; /* cancellation is checked below */
     int64_t last = fwp_now_ns();
     unsigned char *buf = (unsigned char *)malloc(65536);
+    if (!buf) fwp_trap("HTTP receive buffer allocation failed");
+    fwp_cleanup buffer_cleanup;
+    fwp_cleanup_push(&buffer_cleanup, free, buf);
     const char *why = "connection closed";
     char whybuf[600];
     int first = 1;
@@ -216,6 +259,7 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
             break;
         }
     }
+    fwp_cleanup_pop(&buffer_cleanup);
     free(buf);
     /* send what is left (final responses, a GOAWAY) */
     for (int i = 0; i < 100 && c->out.len && !c->dead; i++) {
@@ -229,7 +273,8 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
         break;
     }
     g_conn_dead(c, why);
-    g_conn_release(c);
+    fwp_cleanup_pop(&server_cleanup);
+    w_server_release(&server_owner);
     fwp_join_children();
     me->unwinding = was;
     fwp_check_cancel();
@@ -375,14 +420,20 @@ static V fwp_p_http2_respond(V status, V hs, V body, V end, V call) {
     if (only) s->local_end = 1;
     fwp_wake_all(&c->writer_wl);
     if (n == 0) return FWP_TRUE;
-    return g_send_data(c, s, (const unsigned char *)STR(body)->d, n, end == FWP_TRUE) ? FWP_TRUE : FWP_FALSE;
+    V result = g_send_data(c, s, (const unsigned char *)STR(body)->d, n, end == FWP_TRUE) ? FWP_TRUE : FWP_FALSE;
+    FWP_KEEP_ALIVE(body);
+    FWP_KEEP_ALIVE(call);
+    return result;
 }
 
 static V fwp_p_http2_data(V d, V end, V call) {
     g_call *k = WCALL(call);
     if (STR(d)->len == 0 && end != FWP_TRUE) return !k->s->reset && !k->c->dead ? FWP_TRUE : FWP_FALSE;
-    return g_send_data(k->c, k->s, (const unsigned char *)STR(d)->d, STR(d)->len, end == FWP_TRUE) ? FWP_TRUE
-                                                                                                  : FWP_FALSE;
+    V result = g_send_data(k->c, k->s, (const unsigned char *)STR(d)->d, STR(d)->len, end == FWP_TRUE) ? FWP_TRUE
+                                                                                                            : FWP_FALSE;
+    FWP_KEEP_ALIVE(d);
+    FWP_KEEP_ALIVE(call);
+    return result;
 }
 
 static g_conn *w_pooled(const char *key) {

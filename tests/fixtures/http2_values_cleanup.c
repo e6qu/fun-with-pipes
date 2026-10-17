@@ -19,7 +19,7 @@ static int request_matches(V request) {
 int main(void) {
     fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
     char remote[]="remote";g_conn conn={0};conn.authority=remote;
-    g_stream stream={0};g_call call={.c=&conn,.s=&stream,.server=1};
+    g_stream stream={0};g_call call={.c=&conn,.s=&stream};
     struct {uint32_t tag,n;V f[1];} duration={0,1,{0}};
     h2_hdrs_add(&stream.headers,":method",7,"POST",4);
     h2_hdrs_add(&stream.headers,":path",5,"/echo",5);

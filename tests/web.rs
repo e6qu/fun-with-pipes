@@ -187,7 +187,10 @@ fn program(b: Backend, name: &str) -> Option<Command> {
 }
 
 fn start(b: Backend, tls: bool, env: &[(&str, &str)]) -> Option<Server> {
-    let mut cmd = program(b, "server")?;
+    start_command(program(b, "server")?, tls, env)
+}
+
+fn start_command(mut cmd: Command, tls: bool, env: &[(&str, &str)]) -> Option<Server> {
     if tls {
         let d = certs()?;
         cmd.env("FWP_TLS_CERT", d.join("server.pem"))
@@ -604,7 +607,7 @@ fn fwp_client_and_server_over_tls() {
 }
 
 #[test]
-fn checked_arc_http_clients_match_interpreter_with_pooled_and_tls_calls() {
+fn checked_arc_http_matches_interpreter_with_pooled_and_tls_calls() {
     assert!(have_cc(), "HTTP ARC checks require a native C compiler");
     let ca = certs().expect("HTTP ARC checks require OpenSSL for native TLS");
     let dir = scratch("arc-client");
@@ -614,41 +617,76 @@ fn checked_arc_http_clients_match_interpreter_with_pooled_and_tls_calls() {
         std::fs::create_dir_all(path).unwrap();
     }
     let mut binaries = Vec::new();
-    for mode in ["tracing", "arc"] {
-        for opt in ["-O1", "-O2"] {
-            let cfile = dir.join(format!("{mode}{opt}.c"));
-            let binary = dir.join(format!("{mode}{opt}.exe"));
-            let out = Command::new(fwp())
-                .args(["build", "--gc", mode, "--emit-c", "-o"])
-                .arg(&cfile)
-                .arg(&source)
-                .output()
-                .unwrap();
-            assert!(out.status.success(), "{mode}: {out:?}");
-            let code = std::fs::read_to_string(&cfile).unwrap();
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            if let Some(path) = &artifacts {
-                std::fs::copy(&cfile, path.join(format!("{mode}{opt}.c"))).unwrap();
-                std::fs::copy(&binary, path.join(format!("{mode}{opt}.exe"))).unwrap();
+    let mut servers = Vec::new();
+    for role in ["client", "server"] {
+        let input = root().join(if role == "client" {
+            "tests/web/arc-client.fwp"
+        } else {
+            "tests/web/server.fwp"
+        });
+        let artifact_dir = artifacts.as_ref().map(|path| {
+            if role == "client" {
+                path.clone()
+            } else {
+                path.join("server")
             }
-            if mode == "arc" {
-                let symbols = Command::new("nm").arg(&binary).output().unwrap();
-                assert!(symbols.status.success(), "{symbols:?}");
-                let symbols = String::from_utf8_lossy(&symbols.stdout);
-                for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
-                    assert!(!symbols.contains(name), "ARC client contains {name}");
+        });
+        if let Some(path) = &artifact_dir {
+            std::fs::create_dir_all(path).unwrap();
+        }
+        for mode in ["tracing", "arc"] {
+            for opt in ["-O1", "-O2"] {
+                let cfile = dir.join(format!("{role}-{mode}{opt}.c"));
+                let binary = dir.join(format!("{role}-{mode}{opt}.exe"));
+                let out = Command::new(fwp())
+                    .args(["build", "--gc", mode, "--emit-c", "-o"])
+                    .arg(&cfile)
+                    .arg(&input)
+                    .output()
+                    .unwrap();
+                assert!(out.status.success(), "{mode}: {out:?}");
+                let code = std::fs::read_to_string(&cfile).unwrap();
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                if let Some(path) = &artifact_dir {
+                    std::fs::copy(&cfile, path.join(format!("{mode}{opt}.c"))).unwrap();
+                    std::fs::copy(&binary, path.join(format!("{mode}{opt}.exe"))).unwrap();
                 }
-                if let Some(path) = &artifacts {
-                    std::fs::write(path.join(format!("{mode}{opt}.nm")), symbols.as_bytes())
-                        .unwrap();
+                if mode == "arc" {
+                    let symbols = Command::new("nm").arg(&binary).output().unwrap();
+                    assert!(symbols.status.success(), "{symbols:?}");
+                    let symbols = String::from_utf8_lossy(&symbols.stdout);
+                    for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                        assert!(!symbols.contains(name), "ARC {role} contains {name}");
+                    }
+                    if let Some(path) = &artifact_dir {
+                        std::fs::write(path.join(format!("{mode}{opt}.nm")), symbols.as_bytes())
+                            .unwrap();
+                    }
+                }
+                if role == "client" {
+                    binaries.push((mode, opt, binary));
+                } else {
+                    servers.push((mode, opt, binary));
                 }
             }
-            binaries.push((mode, opt, binary));
         }
     }
     for tls in [false, true] {
-        for backend in [Backend::Interp, Backend::Native] {
-            let server = start(backend, tls, &[]).unwrap();
+        let mut programs = vec![(
+            "interp".to_owned(),
+            program(Backend::Interp, "server").unwrap(),
+        )];
+        for (mode, opt, binary) in &servers {
+            let mut command = Command::new(binary);
+            let stress = if *mode == "tracing" { "1" } else { "0" };
+            command
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress);
+            programs.push((format!("{mode}{opt}"), command));
+        }
+        for (backend, command) in programs {
+            let server = start_command(command, tls, &[]).unwrap();
             let base = format!("{}://{}", if tls { "https" } else { "http" }, server.addr);
             let run = |command: &mut Command| {
                 command

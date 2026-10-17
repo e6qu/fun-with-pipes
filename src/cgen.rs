@@ -1700,6 +1700,9 @@ impl<'p> Gen<'p> {
             return format!("static void fwp_drop{id}(V v) {{ fwp_rc_drop(v); }}\n");
         }
         if let MT::Con(name, args) = mt {
+            if name == "std::H2Stream" {
+                return format!("static void fwp_drop{id}(V v) {{ g_call_drop(v); }}\n");
+            }
             if name == "std::GrpcCell" && args.len() == 1 {
                 let element = self.value_drop(&args[0]);
                 return format!("static void fwp_drop{id}(V v) {{ g_cell_drop(v, {element}); }}\n");
@@ -1900,6 +1903,7 @@ impl<'p> Gen<'p> {
                     "std::Task" => return simple("K_NATIVE", "task"),
                     "std::Channel" => return simple("K_NATIVE", "channel"),
                     "std::Listener" => return simple("K_NATIVE", "listener"),
+                    "std::H2Stream" => return simple("K_NATIVE", "HTTP/2 stream"),
                     "std::Conn" => return simple("K_NATIVE", "connection"),
                     "std::UdpSocket" => return simple("K_NATIVE", "udp socket"),
                     "std::List" | "std::Array" | "std::Set" => {
@@ -7136,6 +7140,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                     &format!("fwp_p_task_within_retained(l0, l1, {drop}, {dup})"),
                                 )
                             }
+                            // The HTTP connection owns the handler; every
+                            // invocation returns unit and borrows its handle.
+                            "http2.serve" => {}
                             _ => unreachable!("unmodeled retained callback: {sym}"),
                         }
                     }

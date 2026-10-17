@@ -303,6 +303,11 @@ impl Proof<'_> {
                 let callback = usize::from(symbol == "task.within");
                 self.apply(&args[callback], &[Targets::new()], 0)
             }
+            Body::Prim(symbol) if symbol == "http2.serve" => {
+                // Request handlers run in new tasks, with independent State
+                // and AD stacks, even while serve's caller has a live scope.
+                self.apply(&args[3], &[Targets::new()], 0)
+            }
             Body::Prim(symbol) if symbol == "run-state" => {
                 // State cells are stack owners, never captured addresses. A
                 // callback can return a closure, but that closure must execute
@@ -572,11 +577,11 @@ mod tests {
     }
 
     #[test]
-    fn retained_task_callbacks_do_not_inherit_dynamic_scopes() {
+    fn asynchronous_callbacks_do_not_inherit_dynamic_scopes() {
         // Check the lowered graph directly: the public effect checker already
         // excludes a bare State callback from spawn's closed effect signature.
         // The ownership proof must independently protect that invariant.
-        for symbol in ["task.spawn", "task.within"] {
+        for symbol in ["task.spawn", "task.within", "http2.serve"] {
             let mut p = state_program(true);
             let unit = MT::unit();
             let getter = p.funcs[1].ty.clone();
@@ -584,11 +589,22 @@ mod tests {
             let task = MT::Con("std::Task".into(), vec![string.clone()]);
             let mut args = vec![Expr::Func(1)];
             let mut locals = vec![getter.clone()];
-            let mut ty = arrow(getter, task.clone());
+            let mut ty = arrow(getter.clone(), task.clone());
             if symbol == "task.within" {
                 args.insert(0, Expr::Const(Value::unit()));
                 locals.insert(0, unit.clone());
                 ty = arrow(unit.clone(), ty);
+            }
+            if symbol == "http2.serve" {
+                // Scope checking is independent of the transport arguments.
+                ty = arrow(getter, arrow(unit.clone(), task.clone()));
+                for _ in 0..3 {
+                    args.insert(0, Expr::Const(Value::unit()));
+                    locals.insert(0, unit.clone());
+                    ty = arrow(unit.clone(), ty);
+                }
+                args.push(Expr::Const(Value::unit()));
+                locals.push(unit.clone());
             }
             p.funcs.push(Func {
                 name: symbol.into(),

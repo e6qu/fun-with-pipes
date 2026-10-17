@@ -69,12 +69,12 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
         if: matrix.part == 'all' || matrix.part == 'server'
-      - name: HTTP client ownership and shared connection controls
+      - name: HTTP ownership and shared connection controls
         if: ${{ !cancelled() && inputs.suite == 'http-clients' }}
         shell: bash
         run: |
-          cargo test --no-fail-fast --test http2_client_ownership --test http2_peer_cleanup --test http2_body_roots --test grpc_connect_startup --test grpc_connect_cleanup --test grpc_connection_addresses --test grpc_tls_pool_identity --test grpc_client_receive --test grpc_client_requests --test library_resources
-      - name: Native HTTP client comparisons and binary evidence
+          cargo test --no-fail-fast --lib --test http2_client_ownership --test http2_server_ownership --test http2_peer_cleanup --test http2_body_roots --test grpc_connect_startup --test grpc_connect_cleanup --test grpc_connection_addresses --test grpc_tls_pool_identity --test grpc_client_receive --test grpc_client_requests --test library_resources
+      - name: Native HTTP client and server comparisons
         if: ${{ !cancelled() && inputs.suite == 'http-clients' }}
         env:
           FWP_HTTP_CLIENT_ARTIFACTS: http-client-evidence
@@ -95,7 +95,7 @@ jobs:
           pathlib.Path("http-client-evidence/cpu.txt").write_text(subprocess.check_output(commands[os.environ["RUNNER_OS"]], text=True))
           PYENV
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output http-client-evidence/primitive-inventory.json
-          cargo test --test web checked_arc_http_clients_match_interpreter_with_pooled_and_tls_calls -- --exact --nocapture
+          cargo test --test web checked_arc_http_matches_interpreter_with_pooled_and_tls_calls -- --exact --nocapture
       - name: Repeated HTTP client memory costs
         if: ${{ !cancelled() && inputs.suite == 'http-clients' }}
         env:

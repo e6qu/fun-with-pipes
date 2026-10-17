@@ -47,6 +47,7 @@
     "hash_ownership",
     "http2_body_roots",
     "http2_client_ownership",
+    "http2_server_ownership",
     "io_error_ownership",
     "iteration_consumers",
     "iterator_fusion",
