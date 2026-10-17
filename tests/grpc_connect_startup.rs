@@ -34,6 +34,9 @@ fn grpc_connection_startup_releases_failed_task_reservations() {
         ("startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1);","if(stage==1)fwp_trap(\"writer spawn trap\"); startup.writer=fwp_spawn_task(0,g_writer,c,0,1);started_writer=startup.writer;"),
     ]{assert_eq!(generated.matches(before).count(),1);generated=generated.replacen(before,after,1);}
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 static int stage,trapped,finalized;
 static void *pending,*started_reader,*started_writer;

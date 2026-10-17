@@ -1508,7 +1508,7 @@ mod tests {
     fn borrowed_parameters_do_not_become_cleanup_owners() {
         let p = prog(vec![list(), list()], vec![], Expr::Local(1));
         let (body, locals) = insert_function(&p, &p.funcs[0], &[0]).unwrap();
-        assert_eq!(body, Expr::Local(1));
+        assert!(matches!(body, Expr::Local(1)));
         let live = ownership_liveness(&p, &p.funcs[0], &body, &locals, &[0]).unwrap();
         assert!(live
             .values()
@@ -1521,7 +1521,7 @@ mod tests {
     fn returned_borrowed_parameter_acquires_an_owner() {
         let p = prog(vec![list()], vec![], Expr::Local(0));
         let (body, locals) = insert_function(&p, &p.funcs[0], &[0]).unwrap();
-        assert_eq!(body, Expr::Dup(0, Box::new(Expr::Local(0))));
+        assert!(matches!(&body, Expr::Dup(0, next) if matches!(**next, Expr::Local(0))));
         ownership_liveness(&p, &p.funcs[0], &body, &locals, &[0]).unwrap();
         assert!(ownership_liveness(&p, &p.funcs[0], &Expr::Local(0), &locals, &[0]).is_err());
     }

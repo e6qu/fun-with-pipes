@@ -56,3 +56,11 @@ unchanged six-host run is `39026702591`.
 | 5 | In progress | CPU kernels and GPU resource ownership |
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
+
+## First probe repairs
+
+Linux `39026721148` failed to compile two new assertions because IR expressions
+do not implement equality. The tests now match the expected expression shape.
+The separate ownership preparation also fixes Windows API declaration order in
+the existing client startup fixture; that same repair is included here.
+Next: publish and rerun the Linux probe before claiming native results.
