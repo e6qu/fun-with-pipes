@@ -406,7 +406,7 @@ asynchronous WASI host tasks, REST and MCP remain outside this mode. The
 entries and has separate platform acceptance. Focused checks and final delivery acceptance are distinguished
 in [the handoff](development-state.md).
 
-The HTTP client extension is implemented under platform validation. Client
+HTTP client ownership is accepted in [PR #162](roadmap-history.md#http-client-owners-and-complete-connection-keys-pr-162). Client
 connections have independent pool, caller and I/O-task owners; startup cleanup
 releases a reserved owner if a background task cannot start. Client and server
 entry transfer the socket/TLS session only after the connection allocation
@@ -416,7 +416,7 @@ cancellation notify the peer before releasing request storage. Response strings,
 header pairs and list cells are owned as they are created, so partial copies can
 be released. Completed responses do not borrow the network buffers. Full pool
 keys, including long TLS-option strings, remain distinct without a fixed-size
-temporary buffer. HTTP client implementation is not final platform acceptance. The [HTTP measurements](benchmarks.md#http-clients-without-tracing)
+temporary buffer. The [HTTP measurements](benchmarks.md#http-clients-without-tracing)
 record constant managed storage, remaining allocation/count traffic and larger
 ARC code sections; raw transport/process memory and timing are excluded.
 

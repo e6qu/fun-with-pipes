@@ -2406,7 +2406,8 @@ measurement steps in [the focused run](https://github.com/e6qu/fun-with-pipes/ac
 Both Windows jobs separately exposed a cancellation probe's header-order error.
 The repaired full suites pass on [AMD64](https://github.com/e6qu/fun-with-pipes/actions/runs/39054383589)
 and [ARM64](https://github.com/e6qu/fun-with-pipes/actions/runs/39054388163);
-[the handoff](development-state.md) tracks final production acceptance.
+[PR #162](roadmap-history.md#http-client-owners-and-complete-connection-keys-pr-162)
+records passing final production acceptance.
 
 The [measurement client](../tests/web/repeated-client.fwp) sends 1, 16 or 256
 sequential HTTP/2 requests to an interpreted loopback server. Each response has
@@ -2478,3 +2479,52 @@ modes, including saved registers, excluding callees and AMD64's incoming return
 address. The report retains instruction details and every binary's file/code size.
 This delivery establishes specific ownership behavior and remaining costs; it
 does not establish zero-cost networking abstractions or complete GC removal.
+
+### Keeping one copy of the ownership check
+
+A runtime check rejects counted values that escape through a call without an
+ownership contract. ARC previously let the C compiler copy this check into many
+entries used to call function values. The [two-host experiment](measurements/entry-check-code-costs-2026-10-17.json)
+compares that arrangement with one shared copy of the **same check**. It adds
+`noinline` to the existing helper; it removes no check and adds no wrapper.
+The source is `e5bc8531`, tag `evidence/http-server-costs-20261017`; both jobs in
+[the experiment](https://github.com/e6qu/fun-with-pipes/actions/runs/39059315375) passed.
+The selected runtime change still needs final production acceptance.
+
+Both variants use identical checked-ARC generated C, Clang 18.1.3, `-O2` and
+`-ffp-contract=off`. Linux AMD64 uses an AMD EPYC 7763 runner; Linux ARM64 uses
+Neoverse-N2. Each runner reports four virtual CPUs. Actual downloaded binaries,
+inspected without executing them locally, have these instruction-section sizes:
+
+| Program | AMD64: copied → one check function | ARM64: copied → one check function |
+|---|---:|---:|
+| Integer loop | 18,194 → 15,938 bytes (−12.4%) | 16,780 → 14,828 bytes (−11.6%) |
+| Numeric pipeline | 19,938 → 17,266 bytes (−13.4%) | 18,700 → 16,348 bytes (−12.6%) |
+| Sorted map | 26,802 → 22,994 bytes (−14.2%) | 25,068 → 21,676 bytes (−13.5%) |
+| HTTP client | 1,611,138 → 1,406,258 bytes (−12.7%) | 1,533,404 → 1,340,124 bytes (−12.6%) |
+| HTTP server | 6,098,930 → 5,260,322 bytes (−13.8%) | 5,768,796 → 4,977,916 bytes (−13.7%) |
+
+These are instruction bytes, not complete executable sizes or measured cache
+misses. The report also records file sizes, fingerprints and the larger inputs'
+remaining code. HTTP binaries were compiled for size only in this experiment;
+the separate HTTP suites check execution, cleanup and memory.
+
+The numerical inputs are the same loop, pipeline and map workloads described at
+the top of this page. After one warmup, six fresh processes per variant alternate
+order. Times include startup, computation, allocation, output and shutdown;
+compilation is excluded. C verifies output only. These ratios compare **two fwp
+variants**, with the single-function variant divided by the copied-check variant; above 1 is slower:
+
+| Program | AMD64 elapsed ratio | ARM64 elapsed ratio |
+|---|---:|---:|
+| Integer loop | 1.016 | 1.000 |
+| Numeric pipeline | 0.933 | 0.993 |
+| Sorted map | 1.020 | 0.975 |
+
+Separate instrumented processes recorded zero check executions for all three
+numerical workloads in both variants on both hosts. Their timing differences do
+not measure the cost of executing the check and do not establish a speedup or
+parity with C/Rust. Instrumentation can also prevent elimination or inlining;
+these counts are not ordinary machine-call profiles. This experiment records no
+allocation, live-memory or RSS counters. The selection is a measured code-size
+reduction, with correctness and server-memory acceptance tracked separately.

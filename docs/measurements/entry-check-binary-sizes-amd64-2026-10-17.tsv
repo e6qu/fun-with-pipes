@@ -1,0 +1,11 @@
+program	variant	file_bytes
+loop	ordinary	51680
+loop	noinline	51712
+pipeline	ordinary	56192
+pipeline	noinline	52136
+map	ordinary	60872
+map	noinline	56816
+http-client	ordinary	2337896
+http-client	noinline	2129040
+http-server	ordinary	8825432
+http-server	noinline	7985792

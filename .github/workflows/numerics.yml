@@ -106,10 +106,13 @@ jobs:
         if: ${{ !cancelled() && inputs.suite == 'http-clients' }}
         shell: bash
         run: |
-          cargo test --no-fail-fast --lib --test http2_client_ownership --test http2_server_ownership --test http2_peer_cleanup --test http2_body_roots --test grpc_connect_startup --test grpc_connect_cleanup --test grpc_connection_addresses --test grpc_tls_pool_identity --test grpc_client_receive --test grpc_client_requests --test library_resources
+          cargo test --no-fail-fast --lib --test native_sockets --test http2_client_ownership --test http2_server_ownership --test http2_peer_cleanup --test http2_body_roots --test grpc_connect_startup --test grpc_connect_cleanup --test grpc_connection_addresses --test grpc_tls_pool_identity --test grpc_client_receive --test grpc_client_requests --test library_resources
       - name: Reject cyclic ownership at unsupported boundaries
         if: ${{ !cancelled() && inputs.suite == 'http-clients' }}
         run: cargo test --test arc_execution arc_rejects_unproved_runtime_boundaries_and_disabled_counting -- --exact --nocapture
+      - name: Preserve the counted-owner escape check
+        if: ${{ !cancelled() && inputs.suite == 'http-clients' }}
+        run: cargo test --test arc_execution arc_checks_reject_counted_owners_at_uncounted_boundaries -- --exact --nocapture
       - name: Record HTTP platform and ownership metadata
         if: ${{ !cancelled() && (inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory') }}
         env:

@@ -936,8 +936,9 @@ fn repeated_http_server_memory_measurement() {
         )
         .unwrap();
     }
-    std::fs::write(artifacts.join("scope.txt"), "Current fwp tracing and checked ARC servers handle identical sequential HTTP/2 GET /hello requests from an ordinary native ARC client over loopback. Each body is received and released; status 200 is summed. Inputs 1, 16 and 256 calls, cleartext and TLS, three fresh measured server processes per case; an ordinary server is the output control. Every server then handles one HTTP/1.1 /stop request, drains children and exits. Managed counters begin after constant initialization and end after entry execution and cached-value cleanup, before complete runtime shutdown; they include server startup, the requested calls and the fixed shutdown request. Collection is disabled and freeing enabled in both modes. Counters exclude raw transport/TLS buffers, allocator metadata/pages and client memory. Separately, ordinary uninstrumented servers receive five batches of 4096 calls each; each batch uses a fresh client process/connection. Current server resident memory is sampled after each client exits and a 100 ms settling interval; the first batch warms caches and the next four must remain within 8 MiB of that first sample. Linux uses /proc VmRSS, macOS ps RSS and Windows process WorkingSet64; these are resident-memory samples, not allocated/live-value counts. Native -O2 with normal compiler optimization and -ffp-contract=off. This compares memory modes at one revision; it makes no speed or C/Rust parity claim. Source, generated C, ordinary/instrumented binaries, raw counter rows, RSS samples and stderr are retained. Separate counters record entries into the generic ownership check through cached-value cleanup. Instrumentation can prevent check elimination/inlining, so these are instrumented executions, not ordinary machine-call counts. The counted client runs against a control server; its work is excluded from measured-server allocation rows.\n").unwrap();
+    std::fs::write(artifacts.join("scope.txt"), "Current fwp tracing and checked ARC servers handle identical sequential HTTP/2 GET /hello requests from an ordinary native ARC client over loopback. Each body is received and released; status 200 is summed. Inputs 1, 16 and 256 calls, cleartext and TLS, three fresh measured server processes per case; an ordinary server is the output control. Every server then handles one HTTP/1.1 /stop request, drains children and exits. Managed counters begin after constant initialization and end after entry execution and cached-value cleanup, before complete runtime shutdown; they include server startup, the requested calls and the fixed shutdown request. Collection is disabled and freeing enabled in both modes. Counters exclude raw transport/TLS buffers, allocator metadata/pages and client memory. Separately, ordinary uninstrumented servers receive five batches of 4096 calls each; each batch starts a fresh client process, and the server's 1000-request connection limit exercises connection replacement within each batch. Current server resident memory is sampled after each client exits and a 100 ms settling interval; the first batch warms caches and the next four must remain within 8 MiB of that first sample. Linux uses /proc VmRSS, macOS ps RSS and Windows process WorkingSet64; these are resident-memory samples, not allocated/live-value counts. Native -O2 with normal compiler optimization and -ffp-contract=off. This compares memory modes at one revision; it makes no speed or C/Rust parity claim. Source, generated C, ordinary/instrumented binaries, raw counter rows, RSS samples and stderr are retained. Separate counters record entries into the generic ownership check through cached-value cleanup. Instrumentation can prevent check elimination/inlining, so these are instrumented executions, not ordinary machine-call counts. The counted client runs against a control server; its work is excluded from measured-server allocation rows.\n").unwrap();
     let emit = |name: &str, mode: &str, file: &str| {
+        eprintln!("server memory: emitting {name}");
         let cfile = artifacts.join(format!("{name}.c"));
         let out = Command::new(fwp())
             .args(["build", "--gc", mode, "--emit-c", "-o"])
@@ -977,6 +978,7 @@ fn repeated_http_server_memory_measurement() {
     let mut entry_rows =
         String::from("role\tserver_mode\ttls\tcalls\trepetition\tentry_check_calls\n");
     for mode in ["tracing", "arc"] {
+        eprintln!("server memory: building {mode} ordinary and measured servers");
         let code = emit(&format!("server-{mode}"), mode, "server.fwp");
         let ordinary = artifacts.join(format!("server-{mode}.exe"));
         fwp::cgen::compile_c(&code, &ordinary, "-O2").unwrap();
@@ -1040,6 +1042,9 @@ fn repeated_http_server_memory_measurement() {
                 std::fs::write(artifacts.join("entry-checks.tsv"), &entry_rows).unwrap();
                 stop_server(&mut control, &base, &ca);
                 for repetition in 0..3 {
+                    eprintln!(
+                        "server memory: {mode}, TLS={tls}, {calls} calls, repetition {repetition}"
+                    );
                     let mut server = launch(&measured);
                     let base = address(&server);
                     assert_eq!(run_client(&base, calls), expected);
@@ -1079,10 +1084,12 @@ fn repeated_http_server_memory_measurement() {
             let base = address(&server);
             let mut samples = Vec::new();
             for batch in 0..5 {
+                eprintln!("server RSS: {mode}, TLS={tls}, batch {batch}, 4096 calls");
                 run_client(&base, 4096);
                 std::thread::sleep(Duration::from_millis(100));
                 let rss = process_rss_kib(server.child.id());
                 samples.push(rss);
+                eprintln!("server RSS: {mode}, TLS={tls}, batch {batch}: {rss} KiB");
                 rss_rows.push_str(&format!(
                     "{mode}\t{tls}\t{batch}\t{}\t{rss}\n",
                     (batch + 1) * 4096

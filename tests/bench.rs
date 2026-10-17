@@ -50,8 +50,8 @@ fn command_output(command: &str, args: &[&str]) -> String {
     String::from_utf8(output.stdout).unwrap().trim().to_owned()
 }
 
-/// Compare two arrangements of the existing generic ownership check. This
-/// experiment does not change the runtime until native measurements are read.
+/// Reproduce the ordinary-inlining control and selected separate-function
+/// arrangement of the existing generic ownership check.
 #[test]
 #[ignore = "runner-only ownership-check code size, frequency and elapsed samples"]
 fn entry_check_arrangement_measurement() {
@@ -82,7 +82,12 @@ fn entry_check_arrangement_measurement() {
                 .arg(&cfile)
                 .arg(root().join(source)),
         );
-        let ordinary = std::fs::read_to_string(cfile).unwrap();
+        let selected = std::fs::read_to_string(cfile).unwrap();
+        let declaration = "static __attribute__((noinline)) void fwp_rc_share(V v);";
+        assert_eq!(selected.matches(declaration).count(), 1);
+        // Reconstruct compiler-selected inlining as the explicit control even
+        // after the runtime adopts the measured noinline arrangement.
+        let ordinary = selected.replace(declaration, "static void fwp_rc_share(V v);");
         let signature = entry_checks::SIGNATURE;
         assert_eq!(ordinary.matches(signature).count(), 1);
         let outlined = ordinary.replace(

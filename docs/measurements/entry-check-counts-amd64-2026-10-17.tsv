@@ -1,0 +1,7 @@
+program	variant	entry_check_calls
+loop	ordinary	0
+loop	noinline	0
+pipeline	ordinary	0
+pipeline	noinline	0
+map	ordinary	0
+map	noinline	0

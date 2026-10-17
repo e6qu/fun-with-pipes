@@ -27,6 +27,7 @@ static int tcp_close(fwp_socket_t fd) {
 }
 static void *tcp_header_alloc(size_t bytes) {
     if(tcp_fail_header) fwp_trap("injected TCP header allocation failure");
+    tcp_allocation();
     return fwp_alloc_leaf(bytes);
 }
 static void tcp_expect(size_t handles,intptr_t budget) {

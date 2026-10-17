@@ -178,6 +178,50 @@ main = range 0 129 | map (choose | checks) | length | echo
 }
 
 #[test]
+fn arc_checks_reject_counted_owners_at_uncounted_boundaries() {
+    let dir = fwp::cgen::TempDir::new("arc-escape-check").unwrap();
+    let input = dir.join("main.fwp");
+    let cfile = dir.join("main.c");
+    std::fs::write(&input, "main = 7 | echo\n").unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--gc", "arc", "--emit-c", "-o"])
+            .arg(&cfile)
+            .arg(input),
+    );
+    let generated = std::fs::read_to_string(cfile).unwrap();
+    let entry = "    fwp_init_consts();\n";
+    assert_eq!(generated.matches(entry).count(), 1);
+    let code = generated.replace(entry, &format!("{entry}\n    V probe = PTR(fwp_alloc_init(16));\n    if (getenv(\"FWP_TEST_COUNTED_ESCAPE\")) fwp_rc_fresh(probe);\n    fwp_rc_share(FWP_UNIT);\n    fwp_rc_share(probe);\n    fwp_mem_free((void *)(uintptr_t)probe);\n"));
+    for opt in ["-O1", "-O2"] {
+        let binary = dir.join(format!("probe{opt}.exe"));
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        for invalid in [false, true] {
+            let mut command = Command::new(&binary);
+            command
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .env_remove("FWP_TEST_COUNTED_ESCAPE");
+            if invalid {
+                command.env("FWP_TEST_COUNTED_ESCAPE", "1");
+            }
+            let out = command.output().unwrap();
+            if invalid {
+                assert_eq!(out.status.code(), Some(101), "{opt}: {out:?}");
+                assert!(String::from_utf8_lossy(&out.stderr)
+                    .contains("counted owner escaped ARC contract"));
+                assert!(out.stdout.is_empty(), "{out:?}");
+            } else {
+                assert!(out.status.success(), "{opt}: {out:?}");
+                assert_eq!(out.stdout, b"7\n");
+                assert!(out.stderr.is_empty(), "{out:?}");
+            }
+        }
+    }
+}
+
+#[test]
 fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     let dir = std::env::temp_dir().join(format!("fwp-arc-reject-{}", std::process::id()));
     std::fs::create_dir(&dir).unwrap();

@@ -55,11 +55,20 @@ processes.
 |---|---|---|
 | task | an OS thread; the threads take turns holding a fair baton, so only one evaluates at a time | a green thread with its own stack, on one OS thread; `ucontext` on glibc, the runtime's x86-64/AArch64 switch on musl and Darwin; native fibers on Windows |
 | task, WebAssembly | a fiber that the JavaScript host switches with JavaScript Promise Integration (fwp.wasm, the playground) | a fiber, as in the interpreter (`wasm32-wasi`, `wasm32-browser`) |
-| waiting for sockets | `poll` in 50 ms slices, without the baton | non-blocking sockets on an epoll event loop (poll elsewhere) |
+| waiting for sockets | `poll` in 50 ms slices, without the baton | non-blocking sockets; `epoll` on Linux, `poll` on macOS, `WSAPoll` on Windows |
 | scheduling | preemptive at safe points: a task that used up its slice hands the baton to the next task waiting for it | the same, switching green threads |
 
 A native program in which every task waits forever stops with a
 `deadlock` trap, as does any program on WebAssembly.
+
+Native socket waits use one OS readiness query for the parked tasks, bounded by
+the next actual timer or task deadline. They do not add a periodic sleep before
+checking each socket. Task preemption also checks sockets without waiting, so
+ready network work can run alongside computation. Closing a local socket wakes
+its waiters explicitly; cancellation removes a task's wait record before its
+stack unwinds. On macOS and Windows, a reusable event array grows with concurrent
+waiters and is freed when the last waiter leaves. This change is under platform
+validation in [the current delivery](development-state.md).
 
 ### Preemption
 

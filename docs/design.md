@@ -408,7 +408,7 @@ describe the limits. Checked gRPC client/service builds add iterator scope
 checks and use these owners; [PR #161](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161)
 records passing production acceptance. HTTP handler acceptance is separate.
 
-The next HTTP client extension gives pooled connections, I/O tasks and requests
+Accepted HTTP client support gives pooled connections, I/O tasks and requests
 explicit owners. Responses are copied into typed fields and lists with cleanup
 for partially built values. It also stores complete connection keys, including
 TLS options, instead of truncating them in a fixed-size buffer. The server
@@ -419,6 +419,14 @@ survives failure before child tasks finish. The reader's 64 KiB scratch buffer
 stays on its stack because processing copies each chunk before the next read.
 Platform checks and stack/memory measurements are pending;
 [the handoff](development-state.md) tracks acceptance.
+
+The server measurement also exposed periodic socket retry delays on macOS and
+Windows. Their scheduler now queries all parked sockets together with poll or
+WSAPoll, using the next real deadline as the timeout; preemption checks without
+waiting. Stack-local wait records unlink before cancellation unwinds. A reusable
+leaf array holds only OS descriptors/events and is released when the last waiter
+leaves. Local close still wakes waiters explicitly, including before descriptor
+reuse. This repair needs the same native platform validation as the server owners.
 
 Accepted input ownership gives remote input iterators concrete destruction
 metadata. Its cursor keeps the current element alive while advancing to the
@@ -512,7 +520,8 @@ main/function/CLI entries use the same ownership checks and free counted storage
 through their existing external count table. Checked gRPC clients and service
 methods additionally prove when sent and received iterator steps run; the
 [service guide](services.md#building-without-tracing-collection) explains the
-command and current validation. HTTP client/server extensions are under validation.
+command and current validation. HTTP clients are accepted in PR #162; server
+ownership is under validation.
 Browser re-entry, WASI host fibers, REST and MCP entry points remain excluded.
 HTTP stream handles cannot be queued through a channel in checked ARC: their
 connection retains the handler, whose captures could contain that same channel.
