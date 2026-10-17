@@ -548,10 +548,19 @@ fn rest_server_runs_in_bounded_memory() {
 
 #[test]
 fn grpc_server_runs_in_bounded_memory() {
+    grpc_server_memory("tracing");
+}
+
+#[test]
+fn arc_grpc_server_runs_in_bounded_memory() {
+    grpc_server_memory("arc");
+}
+
+fn grpc_server_memory(memory_mode: &str) {
     if !have_cc() || !linux() {
         return;
     }
-    let dir = TempDir::new("grpc");
+    let dir = TempDir::new(&format!("grpc-{memory_mode}"));
     std::fs::copy(
         root().join("tests/grpc/greeter.fwp"),
         dir.0.join("greeter.fwp"),
@@ -559,24 +568,46 @@ fn grpc_server_runs_in_bounded_memory() {
     .unwrap();
     std::fs::copy(root().join("tests/gc/hammer.fwp"), dir.0.join("hammer.fwp")).unwrap();
     build(
-        &["hammer.fwp", "--service", "greeter", "-o", "split"],
+        &[
+            "--gc",
+            memory_mode,
+            "hammer.fwp",
+            "--service",
+            "greeter",
+            "-o",
+            "split",
+        ],
         &dir.0,
     );
     let mut cmd = Command::new(dir.0.join("split/greeter"));
     cmd.args(["--listen", "127.0.0.1:0"]);
+    if memory_mode == "arc" {
+        cmd.env_remove("FWP_GC")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0");
+    }
     let (server, addr) = start(cmd, "listening on ");
     let client = |n: &str| {
-        let out = Command::new(dir.0.join("split/hammer"))
-            .env("FWP_SERVICE_GREETER", &addr)
+        let mut cmd = Command::new(dir.0.join("split/hammer"));
+        cmd.env("FWP_SERVICE_GREETER", &addr)
             .env("N", n)
-            .env("FWP_GC_STATS", "1")
-            .output()
-            .unwrap();
+            .env("FWP_GC_STATS", "1");
+        if memory_mode == "arc" {
+            cmd.env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0");
+        }
+        let out = cmd.output().unwrap();
         assert!(
             out.status.success(),
             "{}",
             String::from_utf8_lossy(&out.stderr)
         );
+        if memory_mode == "arc" {
+            assert_eq!(stats(&String::from_utf8_lossy(&out.stderr)).1, 0);
+        }
         out
     };
     // the client: 2 calls per iteration
@@ -591,7 +622,7 @@ fn grpc_server_runs_in_bounded_memory() {
     }
     let after = rss_kib(server.0.id());
     drop(server);
-    eprintln!("server RSS KiB after warm-up and each 8000-call batch: {samples:?}");
+    eprintln!("{memory_mode} server RSS KiB after warm-up and each 8000-call batch: {samples:?}");
     // Keep the same whole-process bound as ownership replaces traced storage.
     assert!(
         after < before + 8 * 1024,

@@ -211,8 +211,11 @@ int main(void){
  reset(); const char *grown=repeat(2,"hi");
  if(strcmp(grown,"hihi")||ns!=2||!dead_string(strings[0])||drops[0]!=1)return 8;
  reset(); if(prepare("prior",input)!=42||ns!=3||nd!=2||!data_released())return 9;
- // The record worker duplicates fields, then releases them and their box.
- if(drops[0]!=1||drops[1]!=2||drops[2]!=2)return 9;
+ // C conversion creates a unique record: its fields move into the worker.
+ // Each copied string is released once, without a duplicate owner to release.
+ if(drops[0]!=1||drops[1]!=1||drops[2]!=1){
+  fprintf(stderr,"prepare string releases: %u %u %u (expected 1 each)\n",drops[0],drops[1],drops[2]);return 9;
+ }
  for(int i=0;i<ns;i++)if(!dead_string(strings[i]))return 9;
  fwp_cleanup *boundary=fwp_cleanups;
  fwp_trap_recover=recover;fwp_trap_jb=&failure;fwp_trap_cleanup=boundary;
@@ -278,11 +281,16 @@ int main(void){
         );
         let missing_field =
             observed.replace("    input_arg1_fields_owner.v1 = input_arg1_fields[1];", "");
+        let redundant_copies = observed.replace(
+            "int move1 = fwp_rc_last(l1);",
+            "int move1 = 0; /* force field copies instead of a unique transfer */",
+        );
         for (broken, expected) in [
             (missing_release, 1),
             (missing_transfer, 2),
             (missing_argument, 11),
             (missing_field, 12),
+            (redundant_copies, 9),
         ] {
             assert_ne!(broken, observed, "negative control must change code");
             fwp::cgen::compile_c(&format!("{broken}\n{probe}"), &exe, opt).unwrap();

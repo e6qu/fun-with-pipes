@@ -521,7 +521,7 @@ fwp build file.fwp [options]                  compile
                      (needs GCC)
     --gc arc         checked native/WASI executables and native C libraries;
                      unsupported value/runtime boundaries diagnose
-    --gc tracing     existing tracing compatibility mode (the default)
+    --gc tracing     tracing collection mode (the default)
     --memory static  bounded runtime storage and stacks at startup, with
                      --heap S, --pool S, --stack S, --tasks N,
                      --task-stack S and --threads N
@@ -614,23 +614,27 @@ Rust's `String::from_utf8_lossy` does. Strings are therefore always valid
 UTF-8. Strings in the binary pipe protocol must be valid UTF-8 and are
 rejected otherwise.
 
-### Checked reference counting
-
-The `--gc arc` mode checks eligibility and reclaims supported immutable
-values and scoped File/State owners by reference counts. It supports native
-main, CLI and typed executable protocol entries, and C libraries whose inputs
-are copied and whose results contain no managed pointers. For example,
 `fwp build` takes one input file. Unknown options, unsupported optimization
 levels and options missing a required value fail before producing an artifact.
 For a shared C library, use `--cdylib`; the compiler does not guess another mode
 from a misspelled option.
+
+### Checked reference counting
+
+The `--gc arc` mode checks memory ownership and excludes tracing collection.
+Supported entries include native main/CLI/function executables, synchronous WASI
+executables, and C libraries whose inputs are copied and whose results contain
+no managed pointers. The [gRPC extension](services.md#building-without-tracing-collection)
+adds checked split clients and services; its platform acceptance is recorded in
+[the handoff](development-state.md).
 
 `fwp build --gc arc --staticlib stats.fwp -o libstats.a` can export a
 `String -> I64` function: it copies the input for the call and returns the count
 by value. A `String -> String` export is rejected because the existing C ABI
 returns a pointer with no host release operation. Records follow these rules
 field by field. Host calls must be serialized and finish before library unload.
-The mode rejects unproved cycle/owner boundaries, WebAssembly and services.
+The mode rejects unproved ownership or cycles, browser execution, asynchronous
+WASI host tasks, REST and MCP boundaries.
 Channels are eligible when their payload contains no functions, tasks or channels:
 `Channel[String]` is eligible; `Channel[Task[String]]` is not, since the task
 could capture that channel. The check also examines record and container fields.

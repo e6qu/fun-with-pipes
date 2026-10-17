@@ -1,9 +1,13 @@
 /* Accepted connection storage moves to its reader; writer, job and channel
  * users have independent references. A host alias observes closed transport. */
-static int accept_calls,reader_failed;
+static int accept_calls,accept_attempts,reader_failed;
 static fwp_socket_t connection_accept(fwp_socket_t fd,struct sockaddr *address,socklen_t *length){
- if(accept_calls++)fwp_trap("accept complete");
- return fwp_socket_accept(fd,address,length);
+ if(accept_calls)fwp_trap("accept complete");
+ /* A readiness retry is not an accepted connection. Exercise it explicitly. */
+ if(!accept_attempts++){errno=EAGAIN;return FWP_INVALID_SOCKET;}
+ fwp_socket_t accepted=fwp_socket_accept(fd,address,length);
+ if(accepted!=FWP_INVALID_SOCKET)accept_calls++;
+ return accepted;
 }
 static SSL *connection_tls(SSL_CTX *ctx,fwp_socket_t fd){(void)ctx;(void)fd;return NULL;}
 static void connection_reader(void *arg,int cancelled){
@@ -32,7 +36,9 @@ int main(int argc,char **argv){
  jmp_buf failure;fwp_cur->trap_jb=&failure;fwp_cur->trap_cleanup=fwp_cleanups;
  if(!setjmp(failure)){g_accept_loop(listener,&server);_Exit(236);}
  fwp_cur->trap_jb=0;fwp_cur->trap_cleanup=0;fwp_trap_jb=0;fwp_trap_cleanup=0;
- if(strcmp(fwp_trap_msg,connection_stage==0?"accepted startup trap":"accept complete")||fwp_cleanups||!seen_connection)_Exit(237);
+ if(strcmp(fwp_trap_msg,connection_stage==0?"accepted startup trap":"accept complete")||fwp_cleanups||!seen_connection){
+  fprintf(stderr,"accept recovery: stage=%d trap=%s cleanups=%p connection=%p accepted=%d attempts=%d\n",connection_stage,fwp_trap_msg,(void *)fwp_cleanups,seen_connection,accept_calls,accept_attempts);_Exit(237);
+ }
  fwp_fd_closing(listener);fwp_socket_close(listener);
  g_conn *c=seen_connection;g_job *retained=NULL;V channel=0;
  if(connection_stage<2){

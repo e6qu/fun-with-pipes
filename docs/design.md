@@ -317,6 +317,17 @@ its existing child-owner rules. The accepted tests include aliases, pointer-like
 scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
 count operations; they do not prove every record or call allocation-free.
 
+A function used as a value may receive a boxed record even when its compiled
+body accepts separate fields. The entry code reads those fields before calling
+that body. For a uniquely owned plain-data record, it transfers counted fields
+and clears their old slots instead of acquiring duplicate owners. Shared records
+still duplicate their counted fields. Cleanup protects the original arguments
+and each prepared field until the body takes responsibility, including failure
+partway through preparation. The outer record stays alive until the call ends.
+Records containing resources retain their existing lifetime treatment. This
+removes redundant count operations at eligible calls; the outer allocation and
+runtime uniqueness check remain. Validation is tracked in the handoff.
+
 The compiler also handles selecting a field from a consumed heap record
 when that field is its only value needing reference-counted storage. A record
 with one owner gives the selected value to its caller and frees its outer storage.
@@ -388,12 +399,14 @@ Client connection I/O tasks have one scheduler owner. Their records release
 when execution finishes and their stacks and scheduler links have been removed;
 this path needs no task reference-count updates. Language-visible task handles
 retain the shared-owner policy because callers can keep independent aliases.
-The server task candidate adds separate lifetime proofs; HTTP tasks remain open. Connection records
+Server jobs also have explicit owners; HTTP tasks remain open. Connection records
 can outlive their sockets while response readers retain status information;
 the pool, I/O tasks and callers hold separate storage owners. Library teardown
 closes these connections before waiting for their tasks. The
 [ownership guide](ownership.md) and [measured comparison](benchmarks.md#freeing-closed-connections-and-finished-tasks)
-describe the limits; remote checked ARC remains unsupported.
+describe the limits. Checked gRPC client/service builds add iterator scope
+checks and use these owners; [the current acceptance status](development-state.md)
+is separate from implementation. HTTP handlers remain outside that extension.
 
 Accepted input ownership gives remote input iterators concrete destruction
 metadata. Its cursor keeps the current element alive while advancing to the
@@ -406,23 +419,23 @@ cleanup and semantic checks. [The comparison](benchmarks.md#input-owners-and-mov
 records bounded memory and remaining count costs; [history](roadmap-history.md)
 records production acceptance in PR #159.
 
-The server candidate keeps argument and typed-cleanup records on the stack,
+The server keeps argument and typed-cleanup records on the stack,
 calls each compiled method directly, and releases its arguments, result or error
 through concrete generated destructors. Native output channels borrow sent values
 and embed their callback payload after the channel header. Queue and callback
 cleanup share alternative header fields; sends retain their direct callback
-pointer. Focused evidence and remaining transport ownership are recorded in
-[ownership](ownership.md) and [the handoff](development-state.md). These changes
-are not yet full production acceptance or removal of server tracing.
+pointer. The [ownership guide](ownership.md) describes the lifetime rules, and
+[history](roadmap-history.md) records production acceptance in PR #160. The next
+checked ARC extension excludes tracing from eligible service binaries.
 
-The same delivery now gives server requests and connections explicit owners and
+The same delivery gives server requests and connections explicit owners and
 lets known fold callbacks borrow captures and collection elements while owning
 their running result. A capture is a value kept by a function for a later call.
 Borrowing removes count updates when the enclosing call already keeps that value
 alive; values that escape still acquire owners. Socket shutdown wakes parked
-readers explicitly on polling platforms. The earlier partial implementation failed
-the long-running Linux ARM64 memory check, so both the combined ownership work and
-that unchanged production limit must pass before acceptance.
+readers explicitly on polling platforms. The combined implementation passes the
+long-running Linux ARM64 memory check that failed with partial ownership, keeping
+its original memory limit.
 
 When a compiled program has no tasks or services, its runtime primitives omit
 task-slice checks as well as function-entry checks. Programs that can schedule
@@ -479,13 +492,16 @@ does not silently switch to tracing.
 Admitted programs include ordinary immutable values, scoped files and state,
 proved derivative scopes, selected retained tasks, channels carrying data without
 functions/tasks/channel handles, and scoped C calls. Mutable
-cycles, raw pointers, unproved external callbacks and remote/service contexts
-remain excluded. Checked ARC supports native main and function executables,
+cycles, raw pointers and unproved external callbacks remain excluded.
+Checked ARC supports native main and function executables,
 including CLI commands, and C libraries with copied inputs and pointer-free
 results. Every library export is checked as a separate entry. Synchronous WASI
 main/function/CLI entries use the same ownership checks and free counted storage
-through their existing external count table. Browser re-entry, WASI host fibers
-and service entry points remain excluded. The allocators still use metadata;
+through their existing external count table. Checked gRPC clients and service
+methods additionally prove when sent and received iterator steps run; the
+[service guide](services.md#building-without-tracing-collection) explains the
+command and current validation. Browser re-entry, WASI host fibers, HTTP handlers,
+REST and MCP entry points remain excluded. The allocators still use metadata;
 native allocation may retain reusable pages. See
 [the precise memory contract](ownership.md#checked-arc-delivery).
 

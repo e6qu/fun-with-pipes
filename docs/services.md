@@ -113,6 +113,46 @@ replaced by `_`: `inventory` is `FWP_SERVICE_INVENTORY`, `shop.billing` is
 `FWP_SERVICE_SHOP_BILLING`. The variable is read at each call, so a
 process can be pointed elsewhere without rebuilding.
 
+## Building without tracing collection
+
+The normal native runtime combines reference counts with a tracing garbage
+collector, which searches live objects to find what a program can still reach.
+`--gc arc` excludes that tracing code. An owner keeps a value alive; the last
+owner releases it. A borrow uses a value while an existing owner keeps it alive.
+Shared values still need reference counts, and message encoding, network buffers
+and task stacks still cost memory.
+
+For a program `app.fwp` that imports module `m`, this command produces the client
+`out/app` and server `out/m` with the same checked memory mode:
+
+```sh
+fwp build app.fwp --service m --gc arc -o out
+```
+
+Use the ordinary listen/address settings above to run them. The compiler rejects
+programs whose lifetimes it cannot prove. It does not silently enable tracing.
+Focused native tests pass on Linux, macOS and Windows, each on ARM64 and AMD64.
+They compare interpreted and compiled calls and check cleanup on failure and
+cancellation. [The handoff](development-state.md) records final production
+acceptance separately from those focused checks.
+
+An iterator computes later elements on demand. That makes **when** its next step
+runs part of the ownership check. A **handler** supplies a temporary state store
+or derivative-recording context to a calculation. A call that sends an iterator
+and receives one result consumes its input in the calling task. A call that
+streams in both directions uses a background sender that does not inherit the
+caller's handlers. Its producer can install a handler inside its own step.
+Similarly, the server drains a returned iterator after the method returns; that
+iterator cannot use a method-local handler that has already ended.
+
+Received values belong to the caller or its response iterator. Sending a reply
+into a channel borrows it during delivery; a queue keeps an independent owner.
+Closed channels, failed sends, cancelled calls and caught remote errors release
+their completed values. Earlier aliases remain usable. The
+[ownership contract](ownership.md#checked-grpc-clients-and-services) describes the
+checks and the remaining limits. HTTP/2 handlers, REST, MCP and browser entry
+are separate boundaries and remain outside this extension.
+
 ## What stays the same, and what changes
 
 Splitting a program keeps its meaning wherever the network allows:
@@ -290,8 +330,9 @@ return to the front of the queue so a surviving reader can still receive them.
 Cancelling the task actually receiving a client response can still reset the
 remote call. Retaining an earlier position also retains its saved values and
 continuations, so sharing an iterator can increase memory use. Native stream
-storage still depends on tracing collection; the [ownership guide](ownership.md#what-remains-before-remote-calls-can-use-arc)
-records the remaining cleanup work.
+storage has typed owners: a shared position keeps its saved values until its
+last reader releases it. The [ownership guide](ownership.md#received-iterators-and-remote-call-storage)
+describes its cleanup and measured costs.
 
 ### Errors and status codes
 

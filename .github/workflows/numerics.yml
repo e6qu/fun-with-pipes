@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, chain-cleanup, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -23,10 +23,12 @@ on:
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'server-repeat' || inputs.suite == 'chain-cleanup' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat')))) || inputs.suite == 'stream-storage' || inputs.suite == 'context-owners' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+    name: ${{ matrix.part == 'client' && format('client checks ({0})', matrix.runner) || matrix.part == 'server' && format('server checks ({0})', matrix.runner) || format('paths ({0})', matrix.runner) }}
+    if: (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc') || inputs.suite == 'chain-cleanup' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat')))) || inputs.suite == 'stream-storage' || inputs.suite == 'context-owners' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
       fail-fast: false
       matrix:
+        part: ${{ fromJSON((inputs.suite == 'server-repeat' || inputs.suite == 'server-arc') && '["server","client","calls"]' || '["all"]') }}
         runner: ${{ fromJSON(inputs.native_runner != 'all' && format('["{0}"]', inputs.native_runner) || (inputs.suite == 'stream-storage' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux') && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows' || inputs.suite == 'tcp-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
@@ -45,16 +47,16 @@ jobs:
         run: ./scripts/setup-windows.ps1
       - uses: actions/cache/restore@v4
         id: decoder_tls_cache
-        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || inputs.suite == 'server-repeat'))))))
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc')))))))
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
       - name: Native Windows TLS dependencies
-        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || inputs.suite == 'server-repeat'))))))
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc')))))))
         shell: pwsh
         run: ./scripts/setup-windows-tls.ps1
       - uses: actions/cache/save@v4
-        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || inputs.suite == 'server-repeat')))))) && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || (inputs.suite == 'sender-repeat' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc'))))))) && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
@@ -66,6 +68,7 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
+        if: matrix.part == 'all' || matrix.part == 'server'
       - name: Measure wrapped-chain cleanup
         if: inputs.suite == 'chain-cleanup'
         env:
@@ -100,13 +103,16 @@ jobs:
           path: udp-evidence/
           if-no-files-found: ignore
       - name: Check long-running server resident memory
-        if: inputs.suite == 'server-repeat' && runner.os == 'Linux'
-        run: cargo test --test gc grpc_server_runs_in_bounded_memory -- --exact --nocapture
-      - name: Measure server memory after completed calls
-        if: inputs.suite == 'server-repeat'
+        if: matrix.part == 'calls' && runner.os == 'Linux'
+        run: |
+          if [ "${{ inputs.suite }}" = server-arc ]; then
+            cargo test --test gc arc_grpc_server_runs_in_bounded_memory -- --exact --nocapture
+          else
+            cargo test --test gc grpc_server_runs_in_bounded_memory -- --exact --nocapture
+          fi
+      - name: Prepare server measurements and check compiler ownership
+        if: matrix.part == 'calls'
         shell: bash
-        env:
-          FWP_SERVER_MEMORY_ARTIFACTS: server-memory-evidence
         run: |
           mkdir -p server-memory-evidence
           git rev-parse HEAD > server-memory-evidence/source.txt
@@ -122,16 +128,38 @@ jobs:
           pathlib.Path("server-memory-evidence/cpu.txt").write_text(subprocess.check_output(commands[os.environ["RUNNER_OS"]], text=True))
           PYENV
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output server-memory-evidence/primitive-inventory.json
+          cargo test --lib arc_scope::tests
           cargo test --lib rc::tests
+          cargo test --test worker_preparation_ownership --test compiler_call_liveness --test worker_boxing_ownership --test wide_workers --test library_input_ownership
+      - name: Check callback and server cleanup
+        if: matrix.part == 'server'
+        shell: bash
+        run: |
           cargo test --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership --test borrowed_callbacks
           cargo test --test grpc_server_connections --test grpc_server_requests --test grpc_connect_startup --test grpc_server_ownership
-          cargo test --test grpc_response_encoding --test channel_queue_ownership --test arc_tasks
+          cargo test --test grpc_client_receive --test grpc_response_encoding --test channel_queue_ownership --test arc_tasks
           cargo test --test list_applicative_ownership inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries -- --exact
-          cargo test --test grpc_peer_completion --test grpc_status_cleanup --test grpc_receive_cleanup --test grpc_send_cleanup --test task_ownership --test grpc_request_encoding --test grpc_client_requests
-          cargo test --test grpc
-          cargo test --test grpc server_measurement::repeated_server_call_memory -- --exact --ignored --nocapture
+      - name: Check client cleanup
+        if: matrix.part == 'client'
+        shell: bash
+        run: |
+          cargo test --test grpc_peer_completion --test grpc_status_cleanup --test grpc_receive_cleanup --test grpc_send_cleanup --test grpc_client_failure_text --test task_ownership --test grpc_request_encoding --test grpc_client_requests
+      - name: Check calls between processes
+        if: matrix.part == 'calls'
+        run: cargo test --test grpc
+      - name: Measure memory after repeated server calls
+        if: matrix.part == 'calls'
+        shell: bash
+        env:
+          FWP_SERVER_MEMORY_ARTIFACTS: server-memory-evidence
+        run: |
+          if [ "${{ inputs.suite }}" = server-arc ]; then
+            cargo test --test grpc server_measurement::repeated_arc_server_call_memory -- --exact --ignored --nocapture
+          else
+            cargo test --test grpc server_measurement::repeated_server_call_memory -- --exact --ignored --nocapture
+          fi
       - uses: actions/upload-artifact@v7
-        if: always() && inputs.suite == 'server-repeat'
+        if: always() && matrix.part == 'calls'
         with:
           name: server-calls-${{ matrix.runner }}
           path: server-memory-evidence/
@@ -371,6 +399,9 @@ jobs:
           name: hash-${{ matrix.runner }}
           path: hash-evidence/
           if-no-files-found: ignore
+      - name: Check ownership at unboxed worker entry
+        if: inputs.suite == 'fields'
+        run: cargo test --test worker_preparation_ownership --test compiler_call_liveness --test worker_boxing_ownership --test wide_workers --test library_input_ownership
       - name: Field movement and resource lifetime regressions
         if: inputs.suite == 'fields'
         run: cargo test --no-fail-fast --test clock_ownership --test directory_report --test working_directory --test arc_execution --test field_moves --test boxed_projection_ownership --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test borrowed_callbacks --test general_record_update_ownership
@@ -714,7 +745,26 @@ jobs:
           components: rustfmt, clippy
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test --lib arc_scope::tests
+      - name: Check remote ARC binaries and behavior
+        env:
+          CC: clang
+          FWP_REMOTE_ARC_ARTIFACTS: remote-arc-evidence
+        run: |
+          mkdir -p remote-arc-evidence
+          git rev-parse HEAD > remote-arc-evidence/source.txt
+          rustc --version --verbose > remote-arc-evidence/rust.txt
+          clang --version > remote-arc-evidence/c.txt
+          lscpu > remote-arc-evidence/cpu.txt
+          cargo test --test grpc_client_receive --test grpc_client_failure_text
+          cargo test --test grpc arc_remote_calls_exclude_tracing_and_preserve_behavior -- --exact --nocapture
       - run: cargo test --no-fail-fast --test infix --test fmt --test golden_parse --test golden_check --test numeric_array_fusion --test arc_execution --test loop_unwind_ownership
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: remote-arc-ubuntu-latest
+          path: remote-arc-evidence/
+          if-no-files-found: ignore
   performance:
     if: inputs.suite == 'performance'
     strategy:

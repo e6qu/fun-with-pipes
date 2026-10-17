@@ -48,6 +48,37 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Server cleanup and borrowed fold values (PR #160)
+
+[PR #160](https://github.com/e6qu/fun-with-pipes/pull/160) merged as `8ae595df`
+on 2026-10-17 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39030633846)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39030633906)
+passed at `a8fa519d`. The tested and merged trees match; its parent is accepted
+#159. Its complete message is
+`Free server call storage and borrow values in fold callbacks`.
+Duplicate postmerge production `39036532034` is confirmed cancelled.
+
+Server task/job storage, decoded values, requests and connections have explicit
+owners. Arguments and cleanup records stay on the stack; methods are called
+directly. Known fold callbacks borrow captures and collection elements, acquiring
+owners only when values escape. Socket shutdown wakes parked readers, and
+cancellation removes stack wait records before their storage disappears.
+
+The earlier partial implementation failed Linux ARM64 production `39025708821`:
+RSS grew 17,104 -> 49,420 KiB across 32,000 calls. The combined repair preserves
+the 8 MiB growth limit and passes that test in focused probe `39030258307` and
+final production. The probe's five samples are all 8,136 KiB. A stale state fixture
+and allocation-failure checks were also repaired without removing their controls.
+
+[The six-host comparison](benchmarks.md#freeing-server-requests-and-borrowing-fold-captures)
+records constant final managed storage: 544 bytes on Linux and zero on macOS and
+Windows. Independently live owners still cost counts; callback borrowing removes
+64 per-message channel retains per call. Code size and stack-frame changes remain
+explicit in the report. These measurements compare fwp versions, exclude timing
+and raw-buffer/OS costs, and do not establish C/Rust parity or complete GC removal.
+Checked remote ARC is the next delivery, not part of this accepted change.
+
 ## Streamed input cleanup and continuation moves (PR #159)
 
 [PR #159](https://github.com/e6qu/fun-with-pipes/pull/159) merged as `7c463441`

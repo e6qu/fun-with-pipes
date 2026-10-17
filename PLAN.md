@@ -11,6 +11,13 @@ failures and the next concrete action. [Delivery evidence](docs/roadmap-history.
 records past results; completed checklists and preparation branches are not an
 active backlog.
 
+This is very early pre-alpha development. Backward compatibility is not an
+objective, including compatibility with already compiled programs. Change source
+APIs, internal layouts, calling conventions and binary formats when the design
+benefits; rebuild affected programs and libraries with the matching compiler.
+Update current examples, documentation and correctness checks together. Do not
+add compatibility machinery solely to keep an older version working.
+
 ## Existing foundation
 
 The compiler provides strong ordinary type inference, explicit generic
@@ -22,7 +29,8 @@ they do not establish that every abstraction is free or every program avoids GC.
 
 Default native execution still combines reference counting with tracing.
 Checked `--gc arc` removes tracing for supported programs, including accepted
-synchronous WASI entries. Some
+synchronous WASI entries. Checked gRPC entries are under validation in the current
+delivery. Some
 closures, containers and call boundaries still allocate, and measured numerical
 workloads still have performance gaps. See [ownership](docs/ownership.md),
 [numerics](docs/numerics.md) and [benchmarks](docs/benchmarks.md) for current limits.
@@ -73,34 +81,30 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #159](https://github.com/e6qu/fun-with-pipes/pull/159) is accepted after all
-nine production jobs and documentation passed. Client input iterators and finished
-senders release on completion, failure and cancellation; unique iterator nodes
-move their continuations. Earlier deliveries freed client requests, closed
-connections and completed I/O tasks. [History](docs/roadmap-history.md) records
-acceptance. These deliveries do not complete GC removal.
+[PR #160](https://github.com/e6qu/fun-with-pipes/pull/160) is accepted after all
+nine production jobs and documentation passed. Server tasks, requests and
+connections now release when their owners finish. Known fold callbacks borrow
+captured values and input elements. Socket shutdown wakes parked readers.
+The repeated server measurements leave constant managed storage, and the original
+long-running memory regression passes. [History](docs/roadmap-history.md) records
+acceptance and the measured allocation, count, code-size and stack costs.
 
-PR #160 now combines server task/job cleanup, stack argument slots, direct method
-calls, typed value cleanup, output channels, request/connection owners and borrowed
-fold callbacks. A capture is a value kept by a function for a later call; borrowing
-it avoids a reference-count update on every loop iteration. Parser lists must
-protect requests reset before their task starts. Connection owners must survive
-closed sockets and retained iterators/channels. The same delivery fixes a Windows
-shutdown wakeup bug exposed by native tests.
+The next combined delivery admits checked gRPC client/service builds with
+`--gc arc`, proves when streamed computations run, and cleans up decoded replies
+and caught remote errors on failure or cancellation. It also transfers fields
+from uniquely owned records into compiled function calls without redundant
+reference-count increments. Shared values keep their owners; resource lifetimes
+retain their existing rules. This is implemented work under validation.
 
-The earlier partial implementation passed short six-platform measurements but
-failed the long-running production memory test on Linux ARM64. Its remaining
-240-byte growth per call is not acceptable completion. The combined ownership
-changes are being checked against both the identical four short workloads and
-the unchanged 32,000-call resident-memory limit. Preserve aliases, failure order,
-cancellation and all nine final-head production gates plus documentation before
-merge. Report allocation requests, count costs, managed storage and whole-process
-memory separately. Remote calls remain excluded from checked ARC until their
-complete lifetimes and cycles are proved.
-[The handoff](docs/development-state.md) identifies the exact candidate, checks
-and next action.
+Acceptance requires all six native hosts to pass real interpreted/compiled calls,
+cleanup controls, repeated memory measurements and actual binary inspection.
+The measurements compare identical fwp programs with the accepted server baseline;
+report allocation requests, reference counts, managed storage, process RSS and
+code size separately. Require every final-head production job and documentation
+before merge. [The handoff](docs/development-state.md) identifies the exact
+candidate and next action.
 
-Browser/service re-entry, retained host callbacks, remaining numerical and
+Browser/HTTP host entry, retained callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven
 work areas above remain open. Current checked ARC support does not remove the
 collector from all fwp programs. Neither fewer allocations nor a single fast

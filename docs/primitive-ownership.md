@@ -130,9 +130,9 @@ cycle, while unreachable shared cycles still need tracing. Checked ARC now admit
 data-only channel payloads: no functions, tasks or channel handles at any nested
 position. The queue owns each retained message and the last channel owner releases
 remaining messages; the type restriction prevents a queue from owning a path
-back to its channel. Preserve callback,
-trap and task ordering when extending contracts. The finite review classifies this compatibility model. Checked ARC separately enforces its proved eligibility
-and cycle policy, rejecting unproved shared boundaries.
+back to its channel. Preserve callback, trap and task ordering when extending
+contracts. These contracts describe the current runtime. Checked ARC additionally
+enforces its lifetime and cycle rules, rejecting unproved shared boundaries.
 
 ## Complete runtime sharing
 
