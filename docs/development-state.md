@@ -8,7 +8,13 @@ Branch `free-closed-connections` starts at accepted #157 merge
 `30668bf83894b9a3739cc24ba8ba63911826da2d`. It frees closed client connections
 and completed I/O task records, closes idle connections during library unload,
 and repairs fatal allocation errors on task stacks. No syntax changes.
-There is no open delivery PR yet. Keep one active delivery PR at a time.
+[PR #158](https://github.com/e6qu/fun-with-pipes/pull/158) is open at
+`2e747ce652f97d19e26737b5ac3d271cd66dc3ca` failed production `39008557317`:
+two ARM Mac allocation-failure tests still intercepted `exit`, while the runtime
+now terminates fatal allocation failures with `_Exit`. Both test hooks are
+repaired; runtime behavior is unchanged. Docs `39008557262` passed. The merge
+watch stopped without merging. Publish the repair and require fresh exact-head
+production and documentation gates. Keep one active delivery PR at a time.
 
 #157 passed all nine production jobs in `39004098429` and documentation in
 `39004095234` at `57d2a09eee4937ad644721f73e286b9fc94a2c25`.
@@ -52,8 +58,8 @@ freeing after stack/link removal, without task reference-count updates. Private
 artifacts are under `/private/tmp/fwp-closed-client-evidence/39007195648`;
 downloaded executables have not run locally. No speed or C/Rust parity claim.
 
-Next: publish this delivery and require all nine production jobs plus documentation
-at its exact final head before authorized squash merge. Use the explicit subject
+Next: publish the allocation-failure fixture repairs and inspect the new gates; require all nine production jobs
+plus documentation at the exact head before authorized squash merge. Use the explicit subject
 `Free closed connections and finished I/O tasks` and an empty body; verify the
 resulting tree, parent and complete message. Queued gates merge, not independent
 preparation; fix test failures. Do not push status-only updates during final gates.
@@ -66,16 +72,28 @@ Native builds, full suites and measurements run on GitHub. Final `cargo fmt --al
 collection passed in 28.43s; static final binary inspection took 0.14–0.16s.
 No local native build or full test suite ran.
 
-Preparation worktree `/private/tmp/fwp-client-connection-owners`, branch
-`own-client-connections`, preserves the measured source. Do not copy its older
-plan/history over this handoff. Private next-input notes and four workloads are
-`/private/tmp/fwp-next-connection-ownership.md` and
-`/private/tmp/fwp-next-input-workloads`. They describe synchronous sending,
-bidirectional sending, retained inputs and early server completion. The workloads
-only pass typechecking with the existing prebuilt compiler; they have not run.
-Measure those lifetimes before implementing typed pending-input owners. Preserve
-continuation evaluation before encoding the current value; a sender retain alone
-cannot own an iterator already marked permanently shared.
+Connection preparation `/private/tmp/fwp-client-connection-owners` preserves the
+measured source. Input preparation `/private/tmp/fwp-sender-input-owners`, branch
+`own-sender-inputs`, starts at #158's exact head and has no PR. Its own handoff
+tracks the detailed work. Linux baseline `39008824856` passes at `ef69079d`:
+remaining managed bytes grow by 7,104 per synchronous call and 13,104 per
+bidirectional/retained call after connection cleanup. Actual AMD64 binaries
+confirm entry sharing and unowned iterator advancement. The baseline source is
+frozen at `f6ebb2e9` under `evidence/sender-input-baseline-20261017`; six-host
+run `39009268395` passes on every host. The preparation report and raw tables
+were collected under the root guard in 24.24s, with actual Linux ARM64/AMD64
+binary reviews; this is baseline evidence, not candidate acceptance.
+
+Candidate `81e2586e0192a8d71bdac002a078122d8c1aa7de` supplies concrete input
+destruction metadata, keeps current/pending nodes alive through lookahead and
+encoding, and uniquely owns completed senders/tasks. Linux run `39010422154` failed because a fixture expected a reset request to
+still have its active-list owner. That expectation is now repaired locally.
+Earlier probe `39009844155` exposed a fixture early-exit defect, also repaired. Tests include retained input aliases, continuation/encoding failure,
+cancellation and deliberately missing release operations. Formatting and docs
+pass under the root guard; no local native builds. Private artifacts/notes are
+`/private/tmp/fwp-sender-input-evidence` and
+`/private/tmp/fwp-next-connection-ownership.md`. Do not copy preparation plans
+or history over the accepted root documents.
 
 Pending sender values, server callbacks/channels, host re-entry, remaining
 numerical/network ownership and cycle policies remain open. Remote calls still
