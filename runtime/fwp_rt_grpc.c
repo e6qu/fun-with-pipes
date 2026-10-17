@@ -1368,11 +1368,11 @@ static void g_incoming_read_done(void *value) {
     fwp_wake_all(&source->read_waiters);
 }
 
-typedef struct { g_incoming *source; g_got *got; } g_received_stream;
+typedef struct { g_incoming *source; g_got got; } g_received_stream;
 
 static void g_received_stream_release(void *value) {
     g_received_stream *received = (g_received_stream *)value;
-    g_got *got = received->got;
+    g_got *got = &received->got;
     if (got->kind == G_MSG && got->m && fwp_cur->cancelled) {
         /* Decoding may suspend. Cancellation before publication must not make
          * another reader skip this position. Flow credit is issued when DATA
@@ -1384,6 +1384,7 @@ static void g_received_stream_release(void *value) {
         got->m = 0;
     }
     g_got_release(got);
+    g_incoming_read_done(received->source);
 }
 
 static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_desc **err_desc) {
@@ -1399,22 +1400,21 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
         if (cell->forced) return cell->memo;
     }
     src->reader = fwp_cur;
+    /* One owner covers waiting, decoding and unpublished receive storage. */
+    g_received_stream received = {src, {0}};
     fwp_cleanup reading_cleanup;
-    fwp_cleanup_push(&reading_cleanup, g_incoming_read_done, src);
-    g_got g;
-    g_recv(src->c, src->s, src->deadline, &g);
-    g_received_stream received = {src, &g};
-    fwp_cleanup received_cleanup;
-    fwp_cleanup_push(&received_cleanup, g_received_stream_release, &received);
+    fwp_cleanup_push(&reading_cleanup, g_received_stream_release, &received);
+    g_got *g = &received.got;
+    g_recv(src->c, src->s, src->deadline, g);
     V r = FWP_NONE;
     if (src->results) {
         /* a failure is an `Err` element, then the end */
-        if (g.kind == G_MSG) {
+        if (g->kind == G_MSG) {
             V x;
             char *why = 0;
-            int k = g_decode(&src->dec, g.m->d, g.m->n, &x, &why);
-            free(g.m);
-            g.m = 0;
+            int k = g_decode(&src->dec, g->m->d, g->m->n, &x, &why);
+            free(g->m);
+            g->m = 0;
             fwp_cleanup decode_cleanup;
             fwp_cleanup_push(&decode_cleanup, fwp_tls_subject_free, why);
             if (k == G_DEC_OK) {
@@ -1432,25 +1432,24 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             }
             fwp_cleanup_pop(&decode_cleanup);
             fwp_tls_subject_free(why);
-        } else if (g.kind == G_END && g.code == 0) {
+        } else if (g->kind == G_END && g->code == 0) {
             r = FWP_NONE;
         } else {
-            r = g_err_element(g.kind == G_END ? g.code : GRPC_UNAVAILABLE, g.text);
+            r = g_err_element(g->kind == G_END ? g->code : GRPC_UNAVAILABLE, g->text);
         }
-        fwp_cleanup_pop(&received_cleanup);
-        g_got_release(&g);
+        g_got_release(g);
         cell->memo = r; /* replaces the source after complete construction */
         cell->forced = 1;
         fwp_cleanup_pop(&reading_cleanup);
         g_incoming_read_done(src);
         return r;
     }
-    if (g.kind == G_MSG) {
+    if (g->kind == G_MSG) {
         V x;
         char *why = 0;
-        int k = g_decode(&src->dec, g.m->d, g.m->n, &x, &why);
-        free(g.m);
-        g.m = 0;
+        int k = g_decode(&src->dec, g->m->d, g->m->n, &x, &why);
+        free(g->m);
+        g->m = 0;
         fwp_cleanup decode_cleanup;
         fwp_cleanup_push(&decode_cleanup, fwp_tls_subject_free, why);
         if (k == G_DEC_BAD) {
@@ -1463,8 +1462,7 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
                 *err_desc = src->dec.error;
                 fwp_cleanup_pop(&decode_cleanup);
                 fwp_tls_subject_free(why);
-                fwp_cleanup_pop(&received_cleanup);
-                g_got_release(&g);
+                g_got_release(g);
                 fwp_cleanup_pop(&reading_cleanup);
                 g_incoming_read_done(src);
                 return 0;
@@ -1480,7 +1478,7 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
         r = fwp_some(fwp_tuple2(x, PTR(next)));
         fwp_cleanup_pop(&decode_cleanup);
         fwp_tls_subject_free(why);
-    } else if (g.kind == G_END && g.code == 0) {
+    } else if (g->kind == G_END && g->code == 0) {
         r = FWP_NONE;
     } else {
         if (src->server) {
@@ -1488,23 +1486,21 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             fwp_cancel_tree(fwp_cur);
             fwp_check_cancel();
         }
-        int code = g.kind == G_END ? g.code : -1;
+        int code = g->kind == G_END ? g->code : -1;
         if (first) {
             f->code = code;
-            f->text = g.text;
-            g.text = 0;
-            fwp_cleanup_pop(&received_cleanup);
-            g_got_release(&g);
+            f->text = g->text;
+            g->text = 0;
+            g_got_release(g);
             fwp_cleanup_pop(&reading_cleanup);
             g_incoming_read_done(src);
             return 0;
         }
-        if (code == GRPC_INTERNAL && strncmp(g.text, "trap: ", 6) == 0) fwp_trap(g.text + 6);
-        if (code >= 0) g_trapf("service call %s failed: gRPC status %d: %s", src->what, code, g.text);
-        g_trapf("service call %s failed: %s", src->what, g.text);
+        if (code == GRPC_INTERNAL && strncmp(g->text, "trap: ", 6) == 0) fwp_trap(g->text + 6);
+        if (code >= 0) g_trapf("service call %s failed: gRPC status %d: %s", src->what, code, g->text);
+        g_trapf("service call %s failed: %s", src->what, g->text);
     }
-    fwp_cleanup_pop(&received_cleanup);
-    g_got_release(&g);
+    g_got_release(g);
     cell->memo = r; /* failures before publication leave the source intact */
     cell->forced = 1;
     fwp_cleanup_pop(&reading_cleanup);

@@ -35,7 +35,12 @@ A further repair preserves an unread message when its decoder is cancelled.
 Both runtimes had already removed that message from the queue; cancellation could
 free it before cache publication, making another reader skip it. Native unwind
 cleanup now restores it without allocation, before waking the waiting reader.
-The interpreter restores its owned message vector on decoder cancellation.
+The interpreter restores its owned message vector on decoder cancellation. One cleanup record now owns
+both receive storage and the read guard, including failures inside `g_recv`
+before it returns. A deliberate late-registration control must detect the raw
+error-text leak. New native cases also check restoring an emptied queue before
+later data arrives. These final changes still need CI; the older run at
+`95359566` is superseded.
 
 Next: publish and run this repair with `stream-owners` on all six hosts. New
 interpreter tests cover ordinary/result streams. The native fixture cancels after
