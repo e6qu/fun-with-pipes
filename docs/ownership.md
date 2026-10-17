@@ -435,8 +435,11 @@ it captures: channel → handle → connection → handler → channel would for
 reference-count cycle. Ordinary immutable storage and returned aliases remain
 allowed; the restriction concerns publishing a handle through a mutable queue.
 Focused O1/O2 failure, cancellation, escaped-handle and tracing-stress probes pass
-locally; six-platform comparisons, repeated server memory and full acceptance are
-still pending. This does not establish REST/MCP entry support or GPU ownership.
+locally. All six native server-memory jobs pass, with constant final managed
+storage and bounded sampled process memory; the [report](benchmarks.md#http-server-ownership-and-memory)
+explains the workload and remaining allocation costs. Five complete platform HTTP
+suites pass; Intel macOS is rerunning after its combined job reached its time
+limit. Full production acceptance remains pending. This does not establish REST/MCP entry support or GPU ownership.
 
 WASI supplies standard streams and file access to a WebAssembly module. Build a
 supported program with `fwp build --gc arc --target wasm32-wasi app.fwp -o app.wasm`

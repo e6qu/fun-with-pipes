@@ -2480,6 +2480,67 @@ address. The report retains instruction details and every binary's file/code siz
 This delivery establishes specific ownership behavior and remaining costs; it
 does not establish zero-cost networking abstractions or complete GC removal.
 
+### HTTP server ownership and memory
+
+[The six-host report](measurements/http-server-owners-2026-10-17.json) compares
+**the same fwp server in tracing and checked ARC modes**, at `cd4f0b06`, preserved
+by `evidence/http-server-memory-20261017`. This is a memory comparison, not a
+speed measurement against C, Rust or an older fwp implementation. All six native
+[server-memory jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39063863085)
+passed. Functional and final production acceptance are recorded separately in
+[the handoff](development-state.md).
+
+The [server](../tests/web/server.fwp) answers sequential HTTP/2 `GET /hello`
+requests from an ordinary native ARC client. The client consumes and releases
+each response body and sums status 200. Each measured server handles 1, 16 or
+256 calls, then one HTTP/1.1 shutdown request and drains its tasks. There are
+three fresh servers per count, mode and transport, including TLS encryption.
+Native builds use `-O2`, ordinary compiler optimization and
+`-ffp-contract=off`. Hardware, compilers and flags are retained in the report.
+
+An allocation request asks for managed storage; a retain increments a reference
+count. Counters begin after constant initialization and end after main and cached
+value cleanup, before whole-runtime shutdown. Collection is disabled and physical
+freeing enabled in both modes. Final storage stays constant across counts;
+cleartext/TLS peak storage differs by 16 bytes:
+
+| Host | Final managed bytes | Peak cleartext / TLS bytes | Largest RSS increase after warm-up |
+|---|---:|---:|---:|
+| Linux AMD64 | 1,792 | 19,824 / 19,840 | 2,048 KiB |
+| Linux ARM64 | 6,144 | 45,936 / 45,952 | 44 KiB |
+| macOS AMD64 | 640 | 12,464 / 12,480 | 192 KiB |
+| macOS ARM64 | 640 | 12,464 / 12,480 | 128 KiB |
+| Windows AMD64 | 1,024 | 14,896 / 14,912 | 60 KiB |
+| Windows ARM64 | 896 | 14,128 / 14,144 | 16 KiB |
+
+RSS is resident set size, the process memory currently held in physical RAM
+(Windows reports its working set). These separate samples use ordinary,
+uninstrumented servers: five batches of 4,096 requests, with the first as warm-up.
+The default 1,000-request connection limit exercises connection replacement.
+Every later sample stays less than 8 MiB above the first. Managed counters exclude
+raw network buffers, TLS/OS/allocator metadata and stack pools; RSS includes more
+of the process but is sampled, not a peak-memory bound.
+
+The additional-call cost is approximately **899 managed allocations and 2,318
+retains**. Background work is included: slopes between the 16- and 256-call
+medians range from 899 to 899.13 allocations and 2,318 to 2,318.46 retains.
+These costs remain substantial; bounded storage does not make the abstraction
+free. Compared with completed samples before the socket scheduler repair, its
+small reusable event array adds 128 peak managed bytes on macOS and 256 on
+Windows. It replaces periodic 10 ms retries with readiness waits; the unfinished
+earlier runs are not a throughput baseline.
+
+[Static inspection](../scripts/inspect-http-server-binaries.py) covers 60 saved
+binaries: ordinary O1/O2 comparison servers, ordinary/instrumented O2 memory
+servers, and ordinary/counted memory clients. All 36 ARC binaries exclude tracing
+scan/mark/sweep routines; 24 tracing binaries retain positive controls. Downloaded
+executables are inspected as data, never run locally. The O2 server instruction
+sections are smaller in ARC on each host, for example 5,260,322 versus 5,266,290
+bytes on Linux AMD64. Separate ownership-check counters record zero entries for
+this workload; instrumentation can change compilation, so those are not ordinary
+machine-call frequencies. The following experiment isolates the code-placement
+change against the older ARC arrangement.
+
 ### Keeping one copy of the ownership check
 
 A runtime check rejects counted values that escape through a call without an

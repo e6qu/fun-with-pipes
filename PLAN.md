@@ -97,11 +97,12 @@ records their current status.
 
 The long-running checks exposed unnecessary 10 ms socket polling delays on macOS
 and Windows. The same batch replaces those sleeps with OS readiness waits and
-checks ready sockets during preemption. Verify cancellation, deadlines and local
-close notifications, then rerun the unchanged memory workload on all six hosts.
+checks ready sockets during preemption. All six hosts pass the unchanged memory workload. The Intel macOS functional
+check is rerunning in separate ownership/comparison jobs after its combined job
+reached the time limit. Preserve every test and the fixed limits.
 
-The repeated server workload still makes 899 managed allocation requests and
-2,318 retains per additional request on the measured Linux hosts. Profile those
+The repeated server workload still makes approximately 899 managed allocation
+requests and 2,318 retains per additional request, including background work. Profile those
 sites before choosing the next heap/count optimization. Preserve bounded memory,
 traps, cancellation and interpreter agreement while reducing that work.
 

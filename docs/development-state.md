@@ -1,184 +1,108 @@
 # Session handoff
 
-Current batch: HTTP server ownership and smaller ARC ownership checks, on
-`http-server-delivery` in the root checkout. This is the active workspace.
-PR #162 is accepted at `1b542f32f352ecd34553f17fcce2de25b6f0bbb2`: all nine
-production jobs (`39055466891`) and documentation (`39055442588`) passed at
-`99d70deb9c9daa8fc041964f9cbee51e48047c38`. The squash parent, identical tree
-`0ff25a71b1b10a177d7f3a5dccc331861efdfa3c` and one-line message were verified.
-Duplicate postmerge production `39062147625` is cancelled.
-
-Server preparation `09f9b6ef` and `e5bc8531` is integrated here as `5ad59d96`
-and `75b8c91a`. The measured code-size change, scheduler repair and reports are
-published in `cd4f0b06`. Current local edits collect the final evidence/handoff.
-The old `/private/tmp/fwp-http-server-owners` worktree is a preparation copy;
-continue in this root checkout. [PR #163](https://github.com/e6qu/fun-with-pipes/pull/163)
-is a draft at `cd4f0b06e23d768100f8e5f3cfcf4d9cc0b383a6`. All nine final-head
-production jobs and documentation are required before squash merging.
+Active delivery: [PR #163](https://github.com/e6qu/fun-with-pipes/pull/163), branch
+`http-server-delivery` in the root checkout. PR #162 is accepted at `1b542f32`:
+all nine production jobs (`39055466891`) and documentation (`39055442588`) passed
+at `99d70deb`. Its squash tree/parent/message were verified; duplicate postmerge
+production `39062147625` is cancelled. [History](roadmap-history.md) keeps its record.
+The old `/private/tmp/fwp-http-server-owners` worktree is inactive preparation.
 
 ## Next action
 
-Next: rerun the complete Intel macOS HTTP suite with ownership checks and
-HTTP comparisons in separate jobs, preserving the 25-minute limit and every case.
+Next: finish [Intel HTTP validation](https://github.com/e6qu/fun-with-pipes/actions/runs/39066088716)
+at `397931ce`, then require all nine production jobs and documentation for the
+final PR head before squash merge. Use one subject, at most 80 characters, and an
+empty body; verify the merge tree, parent and message. Cancel duplicate postmerge
+production. Failing checks are work to fix: audit every failed job and completed
+target before a repair push. Do not increase timeouts or reduce workload coverage.
+
+The Intel rerun splits independent ownership and HTTP comparison work into two
+25-minute jobs. The earlier combined job at `cd4f0b06` passed all 15 ownership/
+boundary targets and 30/40 native HTTP comparisons before timeout; client-memory
+measurement had not started. All five other hosts passed all 17 targets. The
+repair only changes workflow scheduling and progress logging; language/compiler/
+runtime sources are unchanged. The [memory report](measurements/http-server-owners-2026-10-17.json)
+preserves that incomplete functional run explicitly. Draft production runs are
+skipped and do not count as acceptance.
+
+## What this delivery changes
+
+HTTP connections, active requests, escaped stream handles and writer tasks have
+explicit owners. One connection-owned handler outlives child jobs, which borrow
+it. A 24-byte handle includes task payload, replacing separate 32-byte handle and
+job allocations, excluding allocator overhead. The nonescaping 64 KiB receive
+buffer stays on the stack; actual Linux serve frames are 67,240 bytes on AMD64
+and 67,264 on ARM64, excluding callees. Typed destruction and fresh callback
+State/AD scopes preserve cleanup and isolation. ARC rejects channels containing
+stream handles, directly or nested, because they could form a handler cycle;
+ordinary immutable aliases remain supported.
+
+macOS/Windows socket waits now use poll/WSAPoll readiness and real deadlines,
+including readiness checks during task preemption. Stack-local wait records
+unlink before cancellation. A reusable event array frees when no waiters remain;
+it is allocated before registering a stack record so allocation failure cannot
+leave a dangling link. Local close remains explicit. Linux epoll is unchanged.
+
+Keeping one copy of the existing ARC ownership check reduces measured Linux HTTP
+instruction sections by about 13%, without removing the check. The
+[code-cost report](measurements/entry-check-code-costs-2026-10-17.json) records
+`e5bc8531`, tag `evidence/http-server-costs-20261017`, hardware, flags, repeated
+samples and binary evidence. No speedup or C/Rust parity is established.
+
+## Verified evidence and remaining limits
+
 At `cd4f0b06`, [server memory](https://github.com/e6qu/fun-with-pipes/actions/runs/39063863085)
-passed on all six hosts. [HTTP checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39063860925)
-passed all 17 targets on five hosts. Intel macOS passed its 15 ownership/boundary
-targets and 30 of 40 native comparisons, then hit the job limit before finishing
-comparisons and starting client-memory measurement. No completed target failed.
-The full twelve-job audit is `/private/tmp/fwp-server-repeat-partial-audit.json`;
-logs and artifacts are under `/private/tmp/fwp-server-evidence`. Splitting the two
-independent groups addresses the overloaded job without dropping coverage or
-raising limits. The comparison now logs each build and client/server case.
+passes on all six native hosts: 36 managed rows, 20 RSS rows and 48 separate
+ownership-check rows per host. Final managed storage is constant across counts;
+all persistent servers complete 20,480 calls per case within the unchanged
+8 MiB RSS growth bound. The largest observed increase is 2 MiB. All 60 saved
+binaries were inspected as data with `scripts/inspect-http-server-binaries.py`;
+36 ARC binaries exclude tracing routines and 24 tracing controls retain them.
+The [benchmark explanation](benchmarks.md#http-server-ownership-and-memory)
+defines scope, inputs, costs and limitations. Approximate per-call costs remain
+899 managed allocations and 2,318 retains, including background activity.
 
-Collect all six memory reports and inspect actual binaries, then publish the
-final evidence/handoff and run all nine production gates plus documentation.
-Documentation `39063862201` passed; production `39063862325` was skipped for the
-draft PR and is not acceptance. Keep `cd4f0b06` memory evidence distinct from the
-workflow-only repair's source revision. The earlier measured check-placement
-experiment at `e5bc8531` remains recorded in the tracked code-cost report.
+All twelve jobs and completed targets were audited before the scheduling repair:
+`/private/tmp/fwp-server-repeat-partial-audit.json`; logs/artifacts are under
+`/private/tmp/fwp-server-evidence`. Earlier failures were fixed at their causes:
+Windows declaration order, quoted artifact names, periodic socket sleeps and
+allocation unwinding past a registered wait record. Missing-unlink controls now
+detect stale links before task-stack disposal, avoiding accidental use-after-free.
 
-An isolated follow-on measurement is being prepared at
-`/private/tmp/fwp-closed-functions`, branch `profile-closed-functions`, based on
-`cd4f0b06`. It counts executed allocations for partial applications that capture
-only known functions. No optimization or second PR is selected. This root checkout
-remains the active delivery; finish its acceptance before another delivery PR.
+Local checks use `python3 scripts/local-guard.py COMMAND...`, serially:
+all six native socket tests passed (41.33 s); gRPC startup controls passed
+(15.46 s); both HTTP server controls, connection cancellation and library cleanup
+passed. Probes retain O1/O2, GC stress/verification, reuse and deliberate broken
+controls. Formatting, web/bench harness compilation, workflow lint, primitive
+inventory and seven native-runner checks passed. The scheduling repair passed
+formatting (1.42 s), workflow lint (2.06 s) and the twelve-job audit (0.20 s).
+Static binary checks took 28–34 s per host. Two checks attempted while the last
+inspection still ran were refused by the serial guard; both passed after it ended.
+Full builds, suites and benchmarks stay on GitHub; local limits remain fixed.
 
-The underlying scheduler imposed 10 ms sleeps before retrying sockets on macOS
-and Windows, and did not query their readiness during preemption. The repair
-waits on all parked descriptors using poll/WSAPoll, bounded by real timers only;
-preemption uses a zero-time query. Wait records live on parked task stacks and
-unlink before cancellation unwinds. One leaf event array grows with concurrent
-waiters and frees when the last waiter leaves. Local close notifications remain
-explicit. Linux epoll and WebAssembly fibers keep their existing platform paths.
-The regression observes actual wait arguments (not noisy elapsed thresholds),
-checks batch growth, preemption, close, cancellation, deadlines and poll errors,
-and uses deliberately delayed/starved controls. Native platform CI remains needed.
+## Follow-on work
 
-## Scope and acceptance
-
-HTTP connections, reader/writer tasks, active requests and H2Stream handles have
-explicit owners. A handle also carries its task payload, replacing two allocations
-with one. Jobs borrow the connection-owned handler; its captures survive failure
-before children finish. Escaped handles preserve request/connection storage after
-socket closure. The nonescaping 64 KiB receive buffer now lives on the reader
-stack. Actual Linux binaries use 67,240-byte AMD64 and 67,264-byte ARM64 serve
-frames including the 64 KiB buffer; these exclude callees. The requested handle
-payload is 24 bytes, replacing separate 32-byte handle and job payloads. Allocator
-metadata/rounding are excluded. The code-cost report records this binary evidence.
-
-Compiler changes emit concrete handle destruction, preserve resource lifetimes
-and check handlers under fresh State/AD task scopes. Shutdown signals have scalar
-contracts. Checked ARC rejects channels containing HTTP stream handles, including
-nested handles: a captured channel could otherwise keep its handler/connection
-alive through a queued handle. Ordinary handle aliases remain permitted.
-
-Functional checks build clients and servers in tracing/ARC at O1/O2, compare
-cleartext/TLS with the interpreter and verify graceful shutdown. Probes cover
-startup failures, cancellation, scope-owned tasks, escaped handles and TLS release,
-with deliberate missing-owner controls and GC/reuse verification.
-
-Runner-only server measurements use 1/16/256 calls, three fresh processes per case,
-then five 4096-call batches per persistent server. The default 1000-request limit
-also exercises connection replacement within each batch. Both modes have collection
-off and freeing enabled. Managed counters and resident-memory samples have separate
-scopes; final managed storage must stay constant and RSS growth after warm-up must
-remain below 8 MiB. Source, raw rows and ordinary/instrumented binaries are retained.
-All six hosts completed the unchanged memory workload; the tracked report is
-being assembled. Final production acceptance remains pending.
-
-The entry-check experiment passed on both Linux architectures. Static review of
-20 ordinary binaries finds HTTP client instruction sections 12.6–12.7% smaller
-and server sections 13.7–13.8% smaller with one noinline copy of the same check.
-All three numerical workloads recorded zero check executions in separate
-instrumented binaries; timing differences do not establish a speedup. Source
-`e5bc8531` is preserved by `evidence/http-server-costs-20261017`. The tracked
-[report](measurements/entry-check-code-costs-2026-10-17.json) retains hardware,
-flags, raw samples, hashes and limitations. Local static inspection used the root
-guard (AMD64 9.21 s, ARM64 9.62 s); no downloaded binary was executed.
-
-Working-tree follow-up selects noinline on the existing native ARC helper's
-forward declaration, leaving tracing unchanged. The experiment explicitly
-reconstructs the ordinary-inlining control after that selection. A new O1/O2
-behavioral probe accepts scalars/uncounted storage and requires a counted owner
-to trap at an uncounted boundary; it passes locally (17.65 s including rebuild).
-Formatting passes. All preparation HTTP results were audited before this combined
-follow-up. General benchmark workflows explicitly select the
-C/Rust comparison; the code-arrangement experiment is separately dispatched.
-
-Acceptance requires all six native hosts, actual ARM64/AMD64 binary inspection,
-stable memory and nine final production jobs plus documentation. All seven roadmap
-areas remain open; this batch does not remove tracing from every program.
-
-## Complete first-run audit
-
-Preparation `09f9b6eff3ca1c159b651696a27d844082eaf1b6` ran
-[39057316310](https://github.com/e6qu/fun-with-pipes/actions/runs/39057316310).
-All 84 target executions finished (14 per host). Linux/macOS passed all tests but
-artifact upload rejected quoted filenames. Windows also failed one server probe
-because stdint preceded the required Windows API definition; the HTTP comparison
-stopped at its first quoted filename write. Remaining Windows comparisons were
-not exercised. Client memory checks passed everywhere.
-
-The combined repair inserts fixture declarations after the generated value type,
-without prepending headers, and uses plain display labels in filenames. Logs and
-all target results are in `/private/tmp/fwp-http-server-first-audit.json` and
-`/private/tmp/fwp-http-server-first-*.log`. These two causes account for every
-observed failure. Follow-up validation must exercise the complete Windows matrix.
-
-## Local checks
-
-All checks run serially through
-`python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py COMMAND...`.
-C/TLS probes set `FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3`. Full gates, benchmarks
-and large evidence generation run on GitHub with unchanged local limits.
-
-- Server/body/peer probes: all four passed (31.55 s). Expanded server controls
-  passed with stack storage (37.62 s), then parent cancellation (18.78 s).
-- Existing HTTP client controls: two passed (27.48 s).
-- `cargo test --lib arc_scope::tests::asynchronous_callbacks_do_not_inherit_dynamic_scopes -- --exact`: passed (14.30 s).
-- `cargo test --test arc_execution arc_rejects_unproved_runtime_boundaries_and_disabled_counting -- --exact --nocapture`: all cases passed, including direct/nested handle cycles (25.32 s).
-- Representative server `build --gc arc --emit-c` passed after shutdown-route and
-  cycle-policy changes (3.04 s). Web/bench harness compilation passed (1.22 s).
-- Primitive inventory passed (1.09 s): 355 contracts, 19 templates, three scalar
-  declarations and one runtime-review primitive, `device.gpu-run`.
-- Seven native-runner checks passed (1.08 s); server target is assigned to regular
-  macOS and native Windows. After the final repairs, server probes passed
-  (18.64 s), formatting passed (1.20 s), workflow lint passed (1.44 s) and the
-  documentation audit passed.
-- `cargo test --no-fail-fast --test native_sockets --test http2_server_ownership --test grpc_connect_cleanup --test library_resources -- --nocapture`:
-  connection cancellation (8.17 s), both server controls (16.19 s) and library
-  cleanup (9.82 s) passed. Stopped the later socket constructor probe through the
-  guard after it exposed allocation unwinding past a registered wait record.
-  Moved event-array allocation before registration. Constructor injections now
-  target acquired results/optional wrappers, excluding scheduler scratch.
-- `cargo test --test native_sockets -- --nocapture`: all six passed after repair
-  (41.33 s including rebuild). The scheduler regression covers both optimization
-  levels, real sockets, batch growth, queued close/cancel omissions, interrupted
-  and failed OS polls. Three deliberately broken controls detect the 10 ms delay,
-  missing preemption readiness and allocation after registration. GC stress,
-  verification and reuse verification remain enabled. The initial probe's wrong
-  callback signature was corrected before these results.
-- Full memory audit passed (0.15 s); every completed row and all six job logs
-  were inspected before the repair push. Measurement progress is now logged per
-  build, managed case and RSS batch.
-- `cargo test --test grpc_connect_startup -- --nocapture`: passed (15.46 s).
-  Its missing-unlink control now detects the stale record before the task stack
-  is freed, so the control cannot become an accidental use-after-free probe.
-- Final formatting (1.34 s), web/bench harness compilation, workflow lint and
-  documentation links/history passed. Primitive inventory and all seven native
-  runner checks passed (1.53 s); the inventory needs an explicit output path.
+Preparation `/private/tmp/fwp-closed-functions`, branch `profile-closed-functions`,
+is published at `a141efd4`, based on `cd4f0b06`, with no second PR. Its
+[Linux profile](https://github.com/e6qu/fun-with-pipes/actions/runs/39066197415)
+counts executed partial applications capturing only fixed functions, using the
+same server and 1/16/256 requests. A partial application supplies some arguments
+and returns a function waiting for the rest. No optimization is selected yet;
+inspect measured sites and costs before choosing static storage or routing work.
+Preparation has a separate handoff; finish PR #163 acceptance in this checkout.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
-| 1 | In progress | HTTP server owners; remaining host boundaries/cycles; remove tracing |
-| 2 | In progress | Remove intermediate storage and unnecessary reference counts |
-| 3 | In progress | Reduce equivalent-work C/Rust gaps and measured code costs |
+| 1 | In progress | Server acceptance, remaining host owners and tracing removal |
+| 2 | In progress | Remove functional intermediates and unnecessary counts |
+| 3 | In progress | C/Rust gaps, register/cache use and code costs |
 | 4 | In progress | Differentiation precision, speed and memory scaling |
 | 5 | In progress | CPU kernels and GPU resource ownership |
-| 6 | In progress | Repeated, comparable performance measurements |
+| 6 | In progress | Dependable repeated performance comparisons |
 | 7 | In progress | Larger representative applications |
 
-Use guarded serial focused local checks; full builds and suites run on GitHub.
-Implementation is in progress; nothing in this batch is accepted yet.
+All seven [plan](../PLAN.md) areas remain open. HTTP server support alone does not
+complete any of them. Browser, asynchronous WASI, REST/MCP entries and retained
+host callbacks remain ownership work.

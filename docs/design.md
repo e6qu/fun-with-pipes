@@ -417,7 +417,8 @@ also carries its task payload, replacing two allocations with one. Handler
 captures have one connection owner, borrowed by its request tasks; this owner
 survives failure before child tasks finish. The reader's 64 KiB scratch buffer
 stays on its stack because processing copies each chunk before the next read.
-Platform checks and stack/memory measurements are pending;
+Six-host binary and server-memory evidence, with Linux stack measurements, is in the
+[measurement report](benchmarks.md#http-server-ownership-and-memory);
 [the handoff](development-state.md) tracks acceptance.
 
 The server measurement also exposed periodic socket retry delays on macOS and
