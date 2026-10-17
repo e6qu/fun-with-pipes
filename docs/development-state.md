@@ -108,22 +108,31 @@ runnable while waiting for socket shutdown, preventing scheduler I/O polling.
 It now parks during draining and has a ten-second deadline with a stage-specific
 error. Other drain fixtures explicitly wake canceled I/O tasks.
 
-Six-host run `39006246686` at `bb02f067` is still running. ARM Mac passes
-the fifteen fatal-error cases, unique task tests, repaired startup fixture and
-ordinary/concurrent/aliased remote calls, then fails measurement setup: the
-connection-close instrumentation still expected the old indentation. The hook
-now matches the actual last-transport-owner close, without a fallback matcher.
-Other hosts are still reporting; collect their failures before replacing the run.
+`bb02f067` fixed startup draining; Linux and ARM Mac passed that fixture,
+fifteen fatal-error cases and ordinary/concurrent/shared remote calls in
+`39006246686`. Measurement setup then failed on an outdated close-hook string.
+That hook is repaired; the superseded run was canceled.
 
-Review also found library unload can leave noncancellable connection I/O waiting
-forever. The local fix shuts down live reader/writer connections before task
-draining, including connections outside the reuse pool. A bounded O1/O2 test
-checks idle pooled/unpooled clients with collection off/on and stress/reuse;
-omitting shutdown must hit its explicit deadline. This new repair is unverified.
+`ea718a3d` added connection shutdown before library task draining, including
+connections outside the reuse pool. In six-host run `39006617423`, both Windows
+hosts pass the bounded library teardown test and fatal allocation cases, then
+fail copying a task-probe artifact: the compiler writes `probe.exe`, while the
+test copied `probe`. The test now uses the explicit native filename. ARM Mac
+has passed complete-client measurement and is running the final closure checks;
+other POSIX jobs are still reporting.
 
-Next: publish the measurement-hook and library-unload repairs together, run all
-six native hosts, inspect actual binaries and compare with the frozen baseline.
-Transfer the final patch onto accepted #157 before opening the next single PR.
+The local follow-up also checks every raw text copy in the gRPC runtime before
+publishing it. Previously a failed reason/status copy could leave a connection
+or request looking live, or pass a null diagnostic. Eighteen task-stack fatal
+cases now include connection shutdown, request reset and formatted diagnostic
+copies. They preserve buffered prior output and exit with the intended error.
+Existing status/message cleanup tests are included in the focused matrix.
+
+Next: publish the artifact-path and checked-text fixes together, run all six
+native hosts, inspect actual binaries and compare with the frozen baseline.
+Collect completed POSIX results from the previous candidate without treating a
+partially failed matrix as acceptance. Transfer the final patch onto accepted
+#157 before opening the next single PR.
 
 Pending sender language values, server callbacks/channels, remaining host and
 numerical ownership, cycle policies and all seven roadmap areas remain open.

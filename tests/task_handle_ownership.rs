@@ -7,7 +7,7 @@ fn task_handles_and_cached_results_have_independent_owners() {
     std::fs::create_dir_all(&dir).unwrap();
     let source = dir.join("probe.fwp");
     let cfile = dir.join("probe.c");
-    let exe = dir.join("probe");
+    let exe = dir.join(if cfg!(windows) { "probe.exe" } else { "probe" });
     std::fs::write(&source, r#"value : String -> () -> String
 value = const
 fresh : () -> String

@@ -199,6 +199,13 @@ static g_ctx *g_ctx_of(void) {
     return fwp_cur->gctx ? (g_ctx *)fwp_cur->gctx : &g_empty_ctx;
 }
 
+/* Check raw text allocation before publishing status, diagnostics or options. */
+static char *g_copy_text(const char *text) {
+    char *copy = strdup(text);
+    if (!copy) { fprintf(stderr, "fwp: out of memory\n"); fflush(NULL); _Exit(102); }
+    return copy;
+}
+
 /* Diagnostic text includes its terminator; preserve existing truncation. */
 enum { G_MESSAGE_BYTES = 1024 };
 
@@ -208,7 +215,7 @@ static char *g_strdupf(const char *fmt, ...) {
     va_start(ap, fmt);
     vsnprintf(buf, sizeof buf, fmt, ap);
     va_end(ap);
-    return strdup(buf);
+    return g_copy_text(buf);
 }
 
 static void g_trapf(const char *fmt, ...) {
@@ -352,7 +359,7 @@ static g_stream *g_stream_new(g_conn *c, uint32_t id) {
 }
 
 static void g_set_reset(g_stream *s, const char *why) {
-    if (!s->reset) s->reset = strdup(why);
+    if (!s->reset) s->reset = g_copy_text(why);
 }
 
 static g_conn *g_conn_new(fwp_socket_t fd, const char *authority, const g_server *server) {
@@ -429,7 +436,7 @@ static void g_goaway(g_conn *c, uint32_t code, const char *why, char **dead) {
     for (int i = 0; i < 4; i++) p[i] = (unsigned char)(c->last_stream >> (24 - 8 * i));
     for (int i = 0; i < 4; i++) p[4 + i] = (unsigned char)(code >> (24 - 8 * i));
     h2_frame(&c->out, H2_GOAWAY, 0, 0, p, 8);
-    if (!*dead) *dead = strdup(why);
+    if (!*dead) *dead = g_copy_text(why);
 }
 
 static void g_split(g_stream *s) {
@@ -444,7 +451,7 @@ static void g_split(g_stream *s) {
             if (!enc || strcmp(enc, "gzip") != 0) {
                 if (!s->bad)
                     s->bad = enc ? g_strdupf("unsupported grpc-encoding `%s`", enc)
-                                 : strdup("a compressed message without grpc-encoding");
+                                 : g_copy_text("a compressed message without grpc-encoding");
                 s->data.len = 0;
                 return;
             }
@@ -557,7 +564,7 @@ static void g_on_frame(g_conn *c, const h2_fr *f, g_slist *fresh, char **dead) {
         }
         if (end) {
             s->remote_end = 1;
-            if (!s->raw && s->data.len && !s->bad) s->bad = strdup("truncated gRPC message");
+            if (!s->raw && s->data.len && !s->bad) s->bad = g_copy_text("truncated gRPC message");
             if (s->abandoned) g_unlink(c, s);
         }
         return;
@@ -629,7 +636,7 @@ static void g_process(g_conn *c, const unsigned char *b, size_t n, g_slist *fres
     if (!c->preface) {
         size_t pn = sizeof h2_preface - 1;
         size_t k = c->in.len < pn ? c->in.len : pn;
-        if (memcmp(c->in.d, h2_preface, k) != 0) { *dead = strdup("not an HTTP/2 connection"); return; }
+        if (memcmp(c->in.d, h2_preface, k) != 0) { *dead = g_copy_text("not an HTTP/2 connection"); return; }
         if (c->in.len < pn) return;
         h2b_drop(&c->in, pn);
         c->preface = 1;
@@ -651,7 +658,7 @@ static void g_process(g_conn *c, const unsigned char *b, size_t n, g_slist *fres
 
 static void g_conn_dead(g_conn *c, const char *why) {
     if (c->dead) return;
-    c->dead = strdup(why);
+    c->dead = g_copy_text(why);
     shutdown(c->fd, SHUT_RDWR);
     g_stream *streams = c->streams;
     c->streams = 0;
@@ -909,7 +916,7 @@ static void g_status_of(g_conn *c, g_stream *s, g_got *g) {
     long code = strtol(gs, &end, 10);
     g->code = end == gs ? GRPC_UNKNOWN : (int)code;
     const char *m = h2_get(hs, "grpc-message");
-    g->text = strdup(m ? m : "");
+    g->text = g_copy_text(m ? m : "");
     h2_pct_decode(g->text);
 }
 
@@ -961,16 +968,16 @@ static void g_recv(g_conn *c, g_stream *s, int64_t deadline, g_got *g) {
             if (!s->mhead) s->mtail = 0;
             return;
         }
-        if (s->bad) { g->kind = G_LOST; g->text = strdup(s->bad); return; }
+        if (s->bad) { g->kind = G_LOST; g->text = g_copy_text(s->bad); return; }
         if (s->remote_end) {
-            if (c->server) { g->kind = G_END; g->code = 0; g->text = strdup(""); return; }
+            if (c->server) { g->kind = G_END; g->code = 0; g->text = g_copy_text(""); return; }
             if (g_ctx_of()->capture) g_metadata_into(s, g_ctx_of()->capture);
             g_status_of(c, s, g);
             g_unlink(c, s);
             if (g->code == GRPC_DEADLINE_EXCEEDED) g_deadline_passed(deadline);
             return;
         }
-        if (s->reset) { g->kind = G_LOST; g->text = strdup(s->reset); g->retry = s->retry; return; }
+        if (s->reset) { g->kind = G_LOST; g->text = g_copy_text(s->reset); g->retry = s->retry; return; }
         if (g_cancelled()) {
             if (!c->server) g_reset(c, s, 8); /* CANCEL */
             fwp_check_cancel();
@@ -979,7 +986,7 @@ static void g_recv(g_conn *c, g_stream *s, int64_t deadline, g_got *g) {
             g_reset(c, s, 8);
             g->kind = G_END;
             g->code = GRPC_DEADLINE_EXCEEDED;
-            g->text = strdup("deadline exceeded");
+            g->text = g_copy_text("deadline exceeded");
             return;
         }
         fwp_park(&s->waiters, deadline);
@@ -1347,7 +1354,7 @@ static int g_decode(const g_codec *k, const unsigned char *msg, size_t n, V *out
         fwp_value_owner error = {h.value, h.desc->drop};
         fwp_cleanup error_cleanup;
         fwp_value_protect(&error, &error_cleanup);
-        *why = strdup(STR(OBJ(h.value)->f[1])->d);
+        *why = g_copy_text(STR(OBJ(h.value)->f[1])->d);
         fwp_cleanup_pop(&error_cleanup);
         fwp_value_release(&error);
         return G_DEC_BAD;
@@ -1374,7 +1381,7 @@ static int g_decode(const g_codec *k, const unsigned char *msg, size_t n, V *out
  done:
     fwp_cleanup_pop(&decoded_canonical);
     h2b_free(&canon);
-    if (status == G_DEC_BAD) *why = strdup("malformed message");
+    if (status == G_DEC_BAD) *why = g_copy_text("malformed message");
     return status;
 }
 
@@ -1522,8 +1529,7 @@ static void g_iterator_release(void *value) {
 static void g_fail_call(int code, const char *msg) {
     g_serving *sv = g_ctx_of()->serving;
     if (!sv) fwp_trap(msg);
-    char *copy = strdup(msg);
-    if (!copy) { fprintf(stderr, "fwp: out of memory\n"); fflush(NULL); _Exit(102); }
+    char *copy = g_copy_text(msg);
     free(sv->msg);
     sv->code = code;
     sv->msg = copy;
@@ -1620,7 +1626,7 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             } else {
                 if (k == G_DEC_ERROR && src->dec.error->drop) src->dec.error->drop(x);
                 char *t = k == G_DEC_BAD ? g_strdupf("bad response from %s: %s", src->what, why)
-                                         : strdup("unexpected error in a response");
+                                         : g_copy_text("unexpected error in a response");
                 fwp_cleanup text_cleanup;
                 fwp_cleanup_push(&text_cleanup, fwp_tls_subject_free, t);
                 r = g_err_element(GRPC_INTERNAL, t);
@@ -2208,7 +2214,7 @@ static g_msg *g_recv_one(g_job *j, int *code, char **msg) {
     if (g.kind != G_MSG) {
         if (g.kind == G_LOST && !j->s->bad) { fwp_cancel_tree(fwp_cur); fwp_check_cancel(); }
         *code = GRPC_INVALID_ARGUMENT;
-        *msg = g.kind == G_LOST ? g.text : strdup("missing request message");
+        *msg = g.kind == G_LOST ? g.text : g_copy_text("missing request message");
         if (g.kind == G_LOST) g.text = 0;
         fwp_cleanup_pop(&first_cleanup);
         g_got_release(&g);
@@ -2229,7 +2235,7 @@ static g_msg *g_recv_one(g_job *j, int *code, char **msg) {
     }
     if (e.kind == G_LOST && !j->s->bad) { fwp_cancel_tree(fwp_cur); fwp_check_cancel(); }
     *code = GRPC_INVALID_ARGUMENT;
-    *msg = e.kind == G_LOST ? e.text : strdup("expected one request message");
+    *msg = e.kind == G_LOST ? e.text : g_copy_text("expected one request message");
     if (e.kind == G_LOST) e.text = 0;
     fwp_cleanup_pop(&second_cleanup);
     g_got_release(&e);
@@ -2297,7 +2303,7 @@ static int g_outcome(g_job *j, int k, V err, const fwp_desc *ed, int *in_respons
         return GRPC_INTERNAL;
     }
     if (g_grpc_error_desc && ed == g_grpc_error_desc) {
-        *msg = strdup(STR(OBJ(err)->f[1])->d);
+        *msg = g_copy_text(STR(OBJ(err)->f[1])->d);
         return g_error_code(err);
     }
     if (j->route->kind == G_ROUTE_METHOD && j->route->m->error) { *in_response = 1; return -1; }
@@ -2328,7 +2334,7 @@ static int g_run_method(g_job *j, char **msg) {
             fwp_cleanup_pop(&request_canonical);
             h2b_free(&canon);
             free(req);
-            *msg = strdup("malformed request message");
+            *msg = g_copy_text("malformed request message");
             return GRPC_INVALID_ARGUMENT;
         }
         free(req);
@@ -2337,7 +2343,7 @@ static int g_run_method(g_job *j, char **msg) {
             if (!fwp_decode(&rd, m->req[i], &args[na++])) {
                 fwp_cleanup_pop(&request_canonical);
                 h2b_free(&canon);
-                *msg = strdup("malformed request message");
+                *msg = g_copy_text("malformed request message");
                 return GRPC_INVALID_ARGUMENT;
             }
         fwp_cleanup_pop(&request_canonical);
@@ -2419,7 +2425,7 @@ static int g_run_method(g_job *j, char **msg) {
                 if (fwp_tag(x) == 1) {
                     V e = OBJ(x)->f[0];
                     int64_t code = (int64_t)OBJ(e)->f[0];
-                    *msg = strdup(STR(OBJ(e)->f[1])->d);
+                    *msg = g_copy_text(STR(OBJ(e)->f[1])->d);
                     return code >= 1 && code <= 16 ? (int)code : GRPC_UNKNOWN;
                 }
                 x = OBJ(x)->f[0];
@@ -2615,10 +2621,10 @@ static void g_handle(void *arg, int cancelled) {
         fflush(fwp_prog_out);
         if (logged) fprintf(stderr, "fwp: deadline exceeded (in %s)\n", j->what);
         code = GRPC_DEADLINE_EXCEEDED;
-        msg = strdup("deadline exceeded");
+        msg = g_copy_text("deadline exceeded");
     } else {
         code = GRPC_CANCELLED;
-        msg = strdup("cancelled");
+        msg = g_copy_text("cancelled");
     }
     fflush(fwp_prog_out);
     fwp_cleanup message_cleanup;
@@ -2699,7 +2705,7 @@ static SSL_CTX *g_server_tls(const char *cert, const char *key, const char *ca, 
         *failed = 1;
         return 0;
     }
-    unsigned char *alpn = (unsigned char *)strdup("\x02h2");
+    unsigned char *alpn = (unsigned char *)g_copy_text("\x02h2");
     if (!alpn) {
         fprintf(stderr, "fwp serve: cannot allocate TLS protocol list\n");
         *failed = 1;

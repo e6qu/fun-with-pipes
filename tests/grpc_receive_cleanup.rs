@@ -424,8 +424,8 @@ fn fatal_runtime_allocations_report_errors_from_task_stacks() {
             "copy.value = failure_kind == 3 ? NULL : (char *)malloc(vl + 1);",
         ),
         (
-            "char *copy = strdup(msg);",
-            "char *copy = failure_kind == 4 ? NULL : strdup(msg);",
+            "char *copy = strdup(text);",
+            "char *copy = failure_kind == 4 || failure_kind >= 15 ? NULL : strdup(text);",
         ),
     ] {
         assert_eq!(generated.matches(before).count(), 1, "{before}");
@@ -459,7 +459,10 @@ static void attempt_transport(void *arg,int cancelled){
  else if(failure_kind==10)fwp_k_malloc(1);
  else if(failure_kind==11)fwp_ad_tape_new(1,NULL);
  else if(failure_kind==12||failure_kind==13){fwp_tape tape={0};fwp_tape_reserve(&tape,1);}
- else{V base=fwp_ad_tape_new(1,NULL);V empty=fwp_array_new_packed(0,NULL);fwp_p_ad_backward(base,empty,empty);}
+ else if(failure_kind==14){V base=fwp_ad_tape_new(1,NULL);V empty=fwp_array_new_packed(0,NULL);fwp_p_ad_backward(base,empty,empty);}
+ else if(failure_kind==15){g_conn connection={0};connection.fd=FWP_INVALID_SOCKET;g_conn_dead(&connection,"closed");}
+ else if(failure_kind==16){g_stream stream={0};g_set_reset(&stream,"reset");}
+ else g_strdupf("formatted %s","failure");
  _Exit(201);
 }
 int main(int argc,char **argv){
@@ -475,7 +478,7 @@ int main(int argc,char **argv){
     for opt in ["-O1", "-O2"] {
         let code = format!("static int failure_kind = -1;\n{generated}\n{fixture}");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-        for kind in 0..15 {
+        for kind in 0..18 {
             let out = Command::new(&binary)
                 .arg(kind.to_string())
                 .output()

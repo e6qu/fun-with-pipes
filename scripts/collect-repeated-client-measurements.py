@@ -75,7 +75,9 @@ def main():
     if args.closed_connections and baseline:
         checks += ["task_handles_and_cached_results_have_independent_owners",
                    "fatal_runtime_allocations_report_errors_from_task_stacks",
-                   "library_unload_closes_idle_connections_before_draining_tasks"]
+                   "library_unload_closes_idle_connections_before_draining_tasks",
+                   "served_status_messages_release_after_encoding_and_on_cancellation",
+                   "encoded_messages_release_on_cancel_and_preserve_plain_and_gzip_frames"]
     output_tables = args.output.parent / args.output.stem
     output_tables.mkdir(parents=True, exist_ok=True)
     results = []
