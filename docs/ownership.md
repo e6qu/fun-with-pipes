@@ -832,7 +832,8 @@ of saved continuations. The interpreter releases it after the last owner of an
 unread position disappears. Native
 positions replace their source with the completed result in the same storage
 word. The compact representation passes focused tests on all six native hosts;
-cached values still rely on tracing. Clearing a reference alone is not explicit native destruction.
+that measured revision still relied on tracing for cached values. The current
+candidate adds typed cache destruction, with acceptance tracked below.
 
 Concurrent readers also need to agree on one value. The new receive guard lets
 one task receive while others wait for that same position's cache. Completion,
@@ -849,7 +850,7 @@ current collector requirement:
 
 | Work | Evidence required |
 |---|---|
-| Measure repeated calls and stream consumption | Count live connection, stream, message and cached-value storage for 1, 32 and 128 elements, including full consumption, early stop and retained earlier positions. Separate reusable connection-pool storage from per-call growth. |
+| Measure repeated calls and stream consumption | Keep the complete-client baseline at 64, 1,024 and 16,384 integers, with full consumption, early stop and retained iterators. Add raw connection, stream and message-buffer counts; separate reusable pool storage from per-call growth. |
 | Own each cached result | Repeated reads return the same value without receiving again. Releasing one iterator preserves other references; releasing the last reference releases its cached value and continuation. Partially constructed results release on failure. |
 | Keep connections and requests alive for their users | Sending, receiving and detached tasks remain valid after their creating scope returns. Completion, failure and cancellation release each acquired owner exactly once. |
 | Prevent ownership cycles | Identify which component owns each task, stream and connection. A pointer back to an owner must not silently become another owning reference. Any shared cycle needs an explicit policy and a test that drops every external reference. |
@@ -872,6 +873,19 @@ of a long cached sequence must use bounded stack space, including the alternatin
 position, optional result and tuple wrappers. Test partial construction and each
 last-owner case before admitting remote calls to checked ARC.
 
-These are acceptance requirements, not implemented stream ownership. Keep the
-ordinary immutable iterator behavior and existing syntax while proving them.
+The current candidate implements typed cache ownership and consumes a position
+when reading it. An exclusive position transfers its saved result; a shared one
+adds a result reference. Typed cleanup walks position/optional/tuple wrappers in
+a loop and stops when another owner remains. The source allocation moves forward
+to the next unread position, without cancelling the connection when released.
+Custom decoder callbacks transfer their input and result owners, release caught
+errors and restore the enclosing handler on traps. This is not ownership of the
+whole connection/stream/callback graph.
+
+The initial Linux AMD64 client probe showed bounded final managed charge, but
+expanded stress checks exposed record poisoning applied to a raw runtime layout.
+The repair uses the existing raw-storage release operation. Full focused and
+production acceptance remains required; the [handoff](development-state.md)
+records the current rerun. Preserve ordinary immutable iterator behavior and
+existing syntax throughout the remaining graph work.
 HTTP/2 server operations and GPU resource ownership also remain separate work.

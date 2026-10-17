@@ -70,3 +70,30 @@ while an ordinary language error stays inside the decoder's handler until caught
 Negative controls require failure for legacy callback entry, leaked errors and
 stale handlers. Guarded formatting passed in 1.14s. No acceptance is inferred
 from the earlier non-stress probe.
+
+Next: finish the repaired focused probe, then validate all six native targets.
+
+## Roadmap status
+
+| Step | Status | Remaining focus |
+|---|---|---|
+| 1 | In progress | Typed stream and external owners; remove tracing |
+| 2 | In progress | Remove intermediate storage and unnecessary reference counts |
+| 3 | In progress | Reduce equivalent-work C/Rust gaps |
+| 4 | In progress | Differentiation precision, speed and memory scaling |
+| 5 | In progress | CPU kernels and GPU resource ownership |
+| 6 | In progress | Repeated, comparable performance measurements |
+| 7 | In progress | Larger representative applications |
+
+The repaired Linux AMD64 probe `38994000736` at `4d31446f` passed, including
+primitive inventory, all cache/decoder controls, startup deadline and complete
+client measurements. Next: validate this implementation on all six native hosts,
+collect the explicit baseline comparison, and inspect their actual binaries.
+The collector now requires cleanup evidence when `--baseline-report` is supplied;
+it asserts flat final managed charge and flat unique-consumer peak across sizes.
+A reusable static inspector retains instructions and hashes without executing
+artifacts. Guarded syntax passed in 0.20s, initial Linux inspection in 0.16s,
+and documentation audit in 2.59s (50 documents, 106 immutable entries, seven
+roadmap rows). The first inspected client used a 24-byte fixed cleanup frame and
+a backward branch; re-inspect repaired binaries before attaching that observation
+to the final candidate.

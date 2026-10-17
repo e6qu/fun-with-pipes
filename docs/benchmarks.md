@@ -1525,9 +1525,9 @@ they do not show a leak under ordinary collection or establish bounded total
 memory for partial readers. The counters exclude raw network/message buffers,
 allocator metadata/pages, total process memory and server memory. The final
 sample precedes whole-runtime shutdown. No execution timings or C/Rust comparison
-are included. Generated C also shows why the cache needs further ownership work:
-`GrpcCell`, the internal type for a remote stream position, is not yet counted,
-and tuple cleanup does not release its cell field.
+are included. Generated C from that baseline also shows the missing ownership:
+`GrpcCell`, the internal type for a remote stream position, was not counted,
+and tuple cleanup did not release its cell field.
 
 To reproduce, dispatch `numerics.yml` with `suite=stream-clients`, then use
 [`collect-stream-client-measurements.py`](../scripts/collect-stream-client-measurements.py)
@@ -1536,3 +1536,26 @@ artifact directory and report path through `--run`, `--head`, `--artifacts` and
 `--output`. It requires all six native jobs, the startup-deadline regression,
 the client measurement, matching source identities and every expected sample.
 It never executes downloaded binaries.
+
+The current candidate gives those cache positions typed owners. Its first Linux
+AMD64 probe reduced final managed charge to 6,480 bytes at each input size, but
+later stress checks found an invalid poisoning operation on raw runtime storage.
+That repair and broader acceptance are still in progress; see the
+[handoff](development-state.md). Effective retains rose from about one to five
+per consumed integer, while allocation requests stayed at five. These counts
+expose remaining overhead; they are not an execution-time comparison.
+
+For a candidate ownership comparison, pass the retained baseline report with
+`--baseline-report` to the collector. This also requires passing cache-owner and
+callback-failure controls, the primitive contract audit, exact release counts
+and bounded stack samples. It checks that final managed charge stays constant
+across sizes, and that one-pass peak charge does too. Retaining an earlier
+iterator intentionally keeps its history until that reference is released.
+
+Use [`inspect-stream-client-binaries.py`](../scripts/inspect-stream-client-binaries.py)
+with `--artifacts`, an explicit LLVM `--objdump` executable and `--clients unique
+retained` to save static disassembly and fingerprints. It inspects the ordinary
+compiled clients, without executing downloaded programs. A backward branch can
+confirm a cleanup loop; count saved registers and stack adjustments separately
+when reporting a function's frame. Helper calls have their own frames. Samples
+of stack-address variation do not measure total stack storage.
