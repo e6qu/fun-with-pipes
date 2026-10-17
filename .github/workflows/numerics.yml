@@ -99,6 +99,9 @@ jobs:
           name: udp-${{ matrix.runner }}
           path: udp-evidence/
           if-no-files-found: ignore
+      - name: Unique closure capture ownership
+        if: inputs.suite == 'stream-clients'
+        run: cargo test --no-fail-fast --test argument_preparation_ownership --test closure_ownership --test retain_unwind_ownership --test runtime_call_ownership --test constructor_type_ownership --test scope_thunk_ownership --test retained_thunk_ownership
       - name: Measure complete remote-stream clients
         if: inputs.suite == 'stream-clients'
         shell: bash

@@ -178,7 +178,7 @@ int main(void) {
                     .env("FWP_GC_VERIFY", "1")
                     .env("FWP_REUSE_VERIFY", poison),
             );
-            assert_eq!(out.stdout,b"partial argument and capture preparation preserves aliases and releases pending owners\n");
+            assert_eq!(String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"), "partial argument and capture preparation preserves aliases and releases pending owners\n");
         }
         checked(
             Command::new(fwp)
@@ -194,5 +194,89 @@ int main(void) {
                 .env("FWP_REUSE_VERIFY", "1"),
         );
         assert_eq!(out.stdout, reference.stdout);
+    }
+}
+
+#[test]
+fn unique_closure_captures_move_through_partial_calls_and_failures() {
+    let dir = Scratch::new("capture-moves");
+    let source = dir.0.join("moves.fwp");
+    let cfile = dir.0.join("moves.c");
+    let binary = dir.0.join("moves.exe");
+    std::fs::write(&source, SOURCE).unwrap();
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    checked(
+        Command::new(fwp)
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let generated = std::fs::read_to_string(&cfile).unwrap();
+    let id = generated[generated.find("/* multi :").unwrap()..]
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let mut code = generated.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int capture_measuring,capture_retains,capture_trap;\nstatic V capture_first,capture_second;");
+    let retain = "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {";
+    assert_eq!(code.matches(retain).count(), 1);
+    code = code.replace(retain, &format!("{retain}\n        if(capture_measuring&&(v==capture_first||v==capture_second))capture_retains++;"));
+    let entry = format!("static V fwp_owned_entry{id}(V *a) {{");
+    assert_eq!(code.matches(&entry).count(), 1);
+    code = code.replace(&entry, &format!("{entry}\n    capture_measuring=0;"));
+    let concat = "static V fwp_p_concat(V t, V s) {";
+    assert_eq!(code.matches(concat).count(), 1);
+    code = code.replace(
+        concat,
+        &format!("{concat}\n    if(capture_trap)fwp_trap(\"capture callee trap\");"),
+    );
+    code = code.replace(
+        "int main(int argc, char **argv)",
+        "int language_main(int argc, char **argv)",
+    );
+    code.push_str(&include_str!("fixtures/closure_capture_moves.c").replace("ID", id));
+    let transfer = "if (fwp_rc_last(f)) c->n = 0;\n            else fi->owned->captures(f, 1);";
+    assert_eq!(code.matches(transfer).count(), 2);
+    let old = code.replace(transfer, "fi->owned->captures(f, 1);");
+    let stolen = code.replace(transfer, "c->n = 0;");
+    for opt in ["-O1", "-O2"] {
+        for control in [&old, &stolen] {
+            fwp::cgen::compile_c(control, &binary, opt).unwrap();
+            let output = Command::new(&binary)
+                .env("FWP_GC", "off")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(201), "{opt}: {output:?}");
+        }
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        for stress in [false, true] {
+            checked(
+                Command::new(&binary)
+                    .env("FWP_GC", if stress { "on" } else { "off" })
+                    .env("FWP_GC_STRESS", if stress { "1" } else { "0" })
+                    .env("FWP_GC_VERIFY", if stress { "1" } else { "0" })
+                    .env("FWP_REUSE_VERIFY", if stress { "1" } else { "0" }),
+            );
+        }
+        fwp::cgen::compile_c(&generated, &binary, opt).unwrap();
+        let result = checked(
+            Command::new(&binary)
+                .env("FWP_GC_STRESS", "1")
+                .env("FWP_GC_VERIFY", "1")
+                .env("FWP_REUSE_VERIFY", "1"),
+        );
+        assert_eq!(result.stdout, reference.stdout);
     }
 }
