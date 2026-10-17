@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, chain-cleanup, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -22,6 +22,41 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  function_captures:
+    if: inputs.suite == 'function-captures'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 1
+      FWP_HTTP_FUNCTION_PROFILE_ARTIFACTS: function-capture-evidence
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Record source and host
+        run: |
+          mkdir -p function-capture-evidence
+          git rev-parse HEAD > function-capture-evidence/revision.txt
+          lscpu > function-capture-evidence/cpu.txt
+          uname -a > function-capture-evidence/platform.txt
+          clang --version > function-capture-evidence/c.txt
+          rustc -Vv > function-capture-evidence/rust.txt
+      - run: cargo fmt --all -- --check
+      - name: Profile constant function captures in the HTTP server
+        run: cargo test --test web http_server_function_capture_allocation_profile -- --ignored --exact --nocapture
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: function-captures-${{ matrix.runner }}
+          path: function-capture-evidence/
+          if-no-files-found: error
   entry_checks:
     if: inputs.suite == 'entry-checks'
     strategy:

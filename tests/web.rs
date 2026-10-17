@@ -1124,6 +1124,142 @@ fn native_under_gc_stress() {
     }
 }
 
+#[test]
+#[ignore = "runner-only profile of function records with constant function captures"]
+fn http_server_function_capture_allocation_profile() {
+    assert_eq!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
+    let artifacts = PathBuf::from(
+        std::env::var_os("FWP_HTTP_FUNCTION_PROFILE_ARTIFACTS")
+            .expect("profile artifact directory"),
+    );
+    std::fs::create_dir_all(&artifacts).unwrap();
+    std::fs::write(artifacts.join("scope.txt"), "Profile the existing checked-ARC HTTP server with 1/16/256 sequential GET /hello calls, cleartext/TLS and three fresh measured servers per case. An ordinary native ARC client receives/releases each body and sums status 200. Ordinary native and interpreted servers validate output. Native -O2 with ordinary fwp optimization and -ffp-contract=off. Managed counters start after constant initialization and end after main and cached-value cleanup; include startup, all HTTP/2 calls, one HTTP/1.1 stop request and background timers. Collection is disabled and freeing enabled. Only partial applications supplying literal capture-free function references are classified; saturated calls, runtime captures, nested applications and zero-argument constant evaluation are excluded. Each classified execution allocates one function record, with the recorded native requested payload excluding allocator metadata/rounding. Counter arrays and profile output use static/raw C storage outside managed counters. Profiling can change compiler decisions and scheduling; no timing, process-memory or C/Rust parity claim.\n").unwrap();
+    let ca = certs().expect("profile requires TLS tools").join("ca.pem");
+    let emit = |name: &str, file: &str| {
+        let path = artifacts.join(format!("{name}.c"));
+        std::fs::copy(root().join("tests/web").join(file), artifacts.join(file)).unwrap();
+        let output = Command::new(fwp())
+            .args(["build", "--gc", "arc", "--emit-c", "-o"])
+            .arg(&path)
+            .arg(root().join("tests/web").join(file))
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{name}: {output:?}");
+        std::fs::read_to_string(path).unwrap()
+    };
+    let client = artifacts.join("client.exe");
+    fwp::cgen::compile_c(&emit("client", "repeated-client.fwp"), &client, "-O2").unwrap();
+    let code = emit("server", "server.fwp");
+    let ordinary = artifacts.join("server.exe");
+    fwp::cgen::compile_c(&code, &ordinary, "-O2").unwrap();
+    let counted = artifacts.join("server-counted.c");
+    std::fs::write(
+        &counted,
+        client_allocations::instrument_client_allocations(&code),
+    )
+    .unwrap();
+    let profile_source = artifacts.join("server-profile.c");
+    let instrument = Command::new("python3")
+        .arg(root().join("scripts/instrument-closed-functions.py"))
+        .arg("--input")
+        .arg(&counted)
+        .arg("--output")
+        .arg(&profile_source)
+        .arg("--sites")
+        .arg(artifacts.join("sites.json"))
+        .output()
+        .unwrap();
+    assert!(instrument.status.success(), "{instrument:?}");
+    let profiled = artifacts.join("server-profile.exe");
+    fwp::cgen::compile_c(
+        &std::fs::read_to_string(profile_source).unwrap(),
+        &profiled,
+        "-O2",
+    )
+    .unwrap();
+    let run = |server: &Server, tls: bool, calls: usize| {
+        let base = format!("{}://{}", if tls { "https" } else { "http" }, server.addr);
+        let output = Command::new(&client)
+            .arg(calls.to_string())
+            .env("FWP_BASE", &base)
+            .env("SSL_CERT_FILE", &ca)
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0")
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        assert_eq!(
+            String::from_utf8_lossy(&output.stdout),
+            format!("{}\n", calls * 200)
+        );
+        base
+    };
+    let env = [
+        ("FWP_GC", "off"),
+        ("FWP_FREE", "1"),
+        ("FWP_GC_STRESS", "0"),
+        ("FWP_GC_VERIFY", "0"),
+        ("FWP_REUSE_VERIFY", "0"),
+    ];
+    let mut rows = String::from("tls\tcalls\trepetition\tall_requests\tall_requested_bytes\tretains\tclosed_function_requests\tclosed_function_requested_bytes\n");
+    for tls in [false, true] {
+        for calls in [1, 16, 256] {
+            for interpreted in [true, false] {
+                let mut server = if interpreted {
+                    start(Backend::Interp, tls, &env).unwrap()
+                } else {
+                    start_command(Command::new(&ordinary), tls, &env).unwrap()
+                };
+                let base = run(&server, tls, calls);
+                stop_server(&mut server, &base, &ca);
+            }
+            for repetition in 0..3 {
+                eprintln!("function captures: TLS={tls}, calls={calls}, repetition={repetition}");
+                let file = artifacts.join(format!("sites-{tls}-{calls}-{repetition}.tsv"));
+                let mut command = Command::new(&profiled);
+                command.env("FWP_CLOSED_PROFILE", &file);
+                let mut server = start_command(command, tls, &env).unwrap();
+                let base = run(&server, tls, calls);
+                let stderr = stop_server(&mut server, &base, &ca);
+                std::fs::write(
+                    artifacts.join(format!("profile-{tls}-{calls}-{repetition}.stderr")),
+                    &stderr,
+                )
+                .unwrap();
+                let counters: Vec<u64> = stderr
+                    .lines()
+                    .find_map(|line| line.strip_prefix("client-memory\t"))
+                    .expect("managed allocation counters")
+                    .split('\t')
+                    .map(|n| n.parse().unwrap())
+                    .collect();
+                assert_eq!(counters.len(), 6);
+                assert_eq!(counters[5], 0);
+                let profile = std::fs::read_to_string(file).unwrap();
+                let mut allocated = 0;
+                let mut bytes = 0;
+                for (site, line) in profile.lines().skip(1).enumerate() {
+                    let fields: Vec<u64> = line.split('\t').map(|n| n.parse().unwrap()).collect();
+                    assert_eq!(fields.len(), 3);
+                    assert_eq!(fields[0], site as u64);
+                    allocated += fields[1];
+                    bytes += fields[1] * fields[2];
+                }
+                assert!(
+                    allocated <= counters[0] && bytes <= counters[1],
+                    "{profile}\n{stderr}"
+                );
+                rows.push_str(&format!(
+                    "{tls}\t{calls}\t{repetition}\t{}\t{}\t{}\t{allocated}\t{bytes}\n",
+                    counters[0], counters[1], counters[2]
+                ));
+                std::fs::write(artifacts.join("summary.tsv"), &rows).unwrap();
+            }
+        }
+    }
+}
+
 // ------------------------------------------------------- raw WebSocket
 
 struct Ws {
