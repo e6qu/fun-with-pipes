@@ -25,8 +25,8 @@ except a diagnostic assertion expecting LF instead of Windows CRLF. That asserti
 now normalizes text line endings; it still checks the exact message, exit 102
 and empty stdout. These fixes change tests, not runtime behavior.
 
-Final production run `38990872293` and documentation run `38990872208` are
-queued/running on that exact published head. The superseded focused run
+Final production run `38990872293` is queued/running on that exact published
+head; documentation run `38990872208` passed. The superseded focused run
 `38990255544` was cancelled after diagnosing the Windows assertion; all affected
 targets are included in production CI. Do not repeat the entire six-host focused
 suite solely for that assertion. Both measured component identities remain intact.
@@ -137,17 +137,28 @@ application machinery and transfer arguments exactly once. These are proposed
 implementation constraints, not completed work. Measure actual language clients
 as well as C fixtures: retaining an earlier iterator intentionally retains its
 saved sequence, so dropping C roots alone cannot prove bounded consumption.
-The next measurement is published as `9e07096b` on `measure-remote-stream-clients` in
-`/private/tmp/fwp-stream-clients`, based on `6ac13de7`; it has no PR and has not
-run yet. The ignored runner-only test in `tests/grpc.rs` generates actual native
+The next measurement is published as `36e99a62` on `measure-remote-stream-clients`
+in `/private/tmp/fwp-stream-clients`, merged with final delivery head `e71a2295`.
+It has no PR. Focused run `38990965239` failed: its raw-interpreter command
+passed an extra `--` as a program argument, so the old default-zero input path
+produced zero instead of the expected sum. The command now passes only the count;
+invalid input explicitly fails. A guarded prebuilt-compiler type check passed
+in 0.26s after correcting the zero-binding `None` arm (it evaluates its value
+directly). This is a measurement-driver repair, not a language semantic change.
+
+The same preparation fixes an encountered test-harness bug: reading a silent
+server's stderr could block past its nominal startup deadline. A background
+reader and timed receive now bound startup; timeout kills and waits for the child.
+The regression requires a timeout, not any startup failure. Formatting passed
+through the guard; the next focused run must verify both repairs. The ignored runner-only test in `tests/grpc.rs` generates actual native
 clients for full consumption, the first 32 values, and a retained first position.
 It compares output with raw interpretation, then records three allocation/live
 storage samples at 64/1,024/16,384 values with GC off. The server is interpreted
 and excluded from the counters; raw buffers/process memory and timings are also
 excluded. The new `stream-clients` focused suite records compiler/CPU/source and
 binaries. Local guarded formatting passed in 1.11s; runner verification remains
-required. After publishing the current PR, validate this
-preparation while production runs. Retained host callbacks, GPU resources and
+required. Validate this preparation while production runs; fix failures and retain actual
+counts before selecting the next cache ownership change. Retained host callbacks, GPU resources and
 all seven project areas remain open.
 
 ## Roadmap status

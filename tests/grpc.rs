@@ -138,35 +138,61 @@ impl Server {
     }
 }
 
-/// Start a server and wait for its "listening on" line.
-// (the child is waited for when the `Server` is dropped)
-#[allow(clippy::zombie_processes)]
-fn start(mut cmd: Command) -> Server {
+/// Start a server and wait for its listening address. Reading a partial line
+/// must not defeat the deadline; a background reader drains stderr throughout.
+fn start(mut cmd: Command, timeout: Duration) -> Server {
     cmd.stdout(Stdio::null()).stderr(Stdio::piped());
     let mut child = cmd.spawn().expect("start server");
     let mut err = BufReader::new(child.stderr.take().unwrap());
-    let mut line = String::new();
-    let deadline = Instant::now() + Duration::from_secs(60);
-    loop {
-        line.clear();
-        if err.read_line(&mut line).unwrap() == 0 || Instant::now() > deadline {
-            let _ = child.kill();
-            panic!("server exited before listening: {}", line);
-        }
-        if let Some(a) = line.trim().split("listening on ").nth(1) {
-            let addr = a.to_string();
-            let log = Arc::new(Mutex::new(line.clone()));
-            let l = log.clone();
-            std::thread::spawn(move || {
-                let mut line = String::new();
-                while err.read_line(&mut line).unwrap_or(0) > 0 {
-                    l.lock().unwrap().push_str(&line);
-                    line.clear();
+    let log = Arc::new(Mutex::new(String::new()));
+    let output = log.clone();
+    let (ready, address) = std::sync::mpsc::channel();
+    let reader = std::thread::spawn(move || {
+        let mut ready = Some(ready);
+        let mut line = String::new();
+        while err.read_line(&mut line).is_ok_and(|n| n > 0) {
+            output.lock().unwrap().push_str(&line);
+            if let Some(addr) = line.trim().split("listening on ").nth(1) {
+                if let Some(sender) = ready.take() {
+                    let _ = sender.send(addr.to_owned());
                 }
-            });
-            return Server { child, addr, log };
+            }
+            line.clear();
+        }
+    });
+    match address.recv_timeout(timeout) {
+        Ok(addr) => Server { child, addr, log },
+        Err(error) => {
+            let _ = child.kill();
+            let _ = child.wait();
+            let _ = reader.join();
+            panic!("server did not start ({error}): {}", log.lock().unwrap());
         }
     }
+}
+
+#[test]
+fn server_startup_deadline_covers_silent_processes() {
+    let d = scratch("silent-startup");
+    let source = d.join("silent.fwp");
+    std::fs::write(&source, "main = 30s | task.sleep\n").unwrap();
+    let mut command = Command::new(fwp());
+    command.args(["run", "--interp"]).arg(&source);
+    let began = Instant::now();
+    let result = std::panic::catch_unwind(|| start(command, Duration::from_millis(100)));
+    let error = match result {
+        Err(error) => error,
+        Ok(_) => panic!("a silent process must not count as a ready server"),
+    };
+    let message = error
+        .downcast_ref::<String>()
+        .expect("startup failure message");
+    assert!(message.contains("timed out"), "{message}");
+    assert!(
+        began.elapsed() < Duration::from_secs(15),
+        "startup waited for the silent child instead of its deadline"
+    );
+    std::fs::remove_dir_all(d).unwrap();
 }
 
 fn build(args: &[&str], cwd: &Path) {
@@ -185,7 +211,7 @@ fn greeter_servers(native_dir: Option<&Path>) -> Vec<Server> {
         .arg(dir().join("client.fwp"))
         .arg("greeter")
         .args(["--listen", "127.0.0.1:0"]);
-    v.push(start(cmd));
+    v.push(start(cmd, Duration::from_secs(60)));
     if let Some(d) = native_dir {
         let out = d.join("servers");
         build(
@@ -200,7 +226,7 @@ fn greeter_servers(native_dir: Option<&Path>) -> Vec<Server> {
         );
         let mut cmd = Command::new(out.join("greeter"));
         cmd.args(["--listen", "127.0.0.1:0"]);
-        v.push(start(cmd));
+        v.push(start(cmd, Duration::from_secs(60)));
     }
     v
 }
@@ -370,7 +396,7 @@ fn remote_stream_client_memory_measurement() {
         .arg(dir().join("client.fwp"))
         .arg("greeter")
         .args(["--listen", "127.0.0.1:0"]);
-    let server = start(server);
+    let server = start(server, Duration::from_secs(60));
     let mut rows = String::from("mode\telements\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\n");
     for (mode, consume) in [
         ("unique", "iter.fold add 0"),
@@ -381,7 +407,7 @@ fn remote_stream_client_memory_measurement() {
         ("partial", "iter.take 32 | iter.fold add 0"),
     ] {
         let source = d.join(format!("{mode}.fwp"));
-        std::fs::write(&source, format!("import greeter\n\nmain =\n    () | args | head | option.and-then parse-int | option.unwrap-or 0\n    | greeter.count\n    | {consume}\n    | echo\n")).unwrap();
+        std::fs::write(&source, format!("import greeter\n\nmain =\n    () | args | head | option.and-then parse-int\n    | (match\n        Some _ -> id\n        None -> \"expected a numeric measurement count\" | fail)\n    | greeter.count\n    | {consume}\n    | echo\n")).unwrap();
         let split = d.join(mode);
         build(
             &[
@@ -417,7 +443,6 @@ fn remote_stream_client_memory_measurement() {
             reference
                 .args(["run", "--interp", "--service", "greeter"])
                 .arg(&source)
-                .arg("--")
                 .arg(elements.to_string())
                 .env("FWP_NO_OPT", "1")
                 .env("FWP_SERVICE_GREETER", &server.addr);

@@ -113,6 +113,7 @@ jobs:
           pathlib.Path("stream-client-evidence/c.txt").write_text(subprocess.check_output([os.environ["CC"], "--version"], text=True))
           pathlib.Path("stream-client-evidence/cpu.txt").write_text(subprocess.check_output(commands[os.environ["RUNNER_OS"]], text=True))
           PYENV
+          cargo test --test grpc server_startup_deadline_covers_silent_processes -- --exact
           cargo test --test grpc remote_stream_client_memory_measurement -- --exact --ignored --nocapture
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'stream-clients'
