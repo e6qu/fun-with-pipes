@@ -177,7 +177,7 @@ static int entered,finished,mode;
 static double charged(void){return fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);}
 static void finish(void *arg){(void)arg;finished++;}
 static void worker(void *arg,int stop){
- (void)arg;if(stop)return;entered++;
+ (void)arg;if(stop)return;fwp_check_cancel();entered++;
  if(mode==2){fwp_park(0,0);fwp_check_cancel();}
 }
 int main(void){

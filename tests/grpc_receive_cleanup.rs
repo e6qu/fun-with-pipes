@@ -213,9 +213,23 @@ static void observed_message_free(void *);
 "#;
     let fixture = include_str!("fixtures/grpc_client_stream_ownership.c");
     let code = format!("{hooks}\n{generated}\n{fixture}");
+    let source_connection =
+        "    g_stream_reader_release(c, s);\n    g_conn_drop(c);\n#ifndef FWP_RESOURCE_NO_FREE";
+    let sender_connection = "    x->c = 0;\n    g_conn_drop(c);";
+    let connection_finalizer = "    fwp_gc_forget_finalizer(c);\n    g_conn_final(c);";
+    let connection_storage = "    g_conn_final(c);\n    fwp_rc_resource_free_arr(PTR(c));";
+    for marker in [
+        source_connection,
+        sender_connection,
+        connection_finalizer,
+        connection_storage,
+    ] {
+        assert_eq!(code.matches(marker).count(), 1, "{marker}");
+    }
+
     let list_release =
         "    g_stream_drop(s); /* the active-list owner, when this is an owned client stream */";
-    let source_release = "    g_stream_reader_release(c, s);";
+    let source_release = "    source->s = 0;\n    g_stream_reader_release(c, s);";
     let sender_release = "    x->s = 0;\n    g_stream_drop(s);";
     let finalizer_release = "    fwp_gc_forget_finalizer(s);\n    g_stream_final(s);";
     for marker in [
@@ -227,9 +241,28 @@ static void observed_message_free(void *);
         assert_eq!(code.matches(marker).count(), 1, "{marker}");
     }
     let controls = [
+        (
+            code.replace(
+                source_connection,
+                "    g_stream_reader_release(c, s);\n#ifndef FWP_RESOURCE_NO_FREE",
+            ),
+            "0",
+            221,
+        ),
+        (code.replace(sender_connection, "    x->c = 0;"), "6", 221),
+        (
+            code.replace(connection_finalizer, "    g_conn_final(c);"),
+            "0",
+            222,
+        ),
+        (
+            code.replace(connection_storage, "    g_conn_final(c);"),
+            "0",
+            223,
+        ),
         (code.replace(list_release, "    (void)s;"), "0", 212),
         (
-            code.replace(source_release, "    (void)c; (void)s;"),
+            code.replace(source_release, "    source->s = 0; (void)c; (void)s;"),
             "0",
             211,
         ),
@@ -263,7 +296,7 @@ static void observed_message_free(void *);
             };
             fwp::cgen::compile_c(&format!("{prefix}{code}"), &binary, opt).unwrap();
             let mut layout = Vec::new();
-            for mode in 0..10 {
+            for mode in 0..11 {
                 for stress in [false, true] {
                     let out = Command::new(&binary)
                         .arg(mode.to_string())
