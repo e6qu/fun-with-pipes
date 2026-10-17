@@ -42,6 +42,7 @@ def main():
         "cached_stream_positions_preserve_values_and_report_storage",
         "incoming_stream_descriptions_outlive_their_input_text",
         "forced_cells_release_received_storage_and_decoder_failure_text",
+        "streamed_error_rendering_releases_partial_and_complete_scratch",
         "every_kind_of_call",
         "concurrent_reads_share_one_receive_and_cancel_independently",
         "recursive_and_cancelled_waiters_preserve_the_active_reader",

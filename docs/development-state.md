@@ -75,6 +75,17 @@ A real client has two tasks sum 1..1024, both returning `Some 524800`, across al
 interpreted/native client/server combinations. The services guide explains its
 notation, output, cancellation and retention costs.
 
+## Current test repair
+
+Run `38985481740` at `d9e362e0` passes the interpreter cancellation test and all
+four receive/source/reader controls on Linux AMD64, including omitted restoration
+and late cleanup registration. It then fails because `grpc_render_cleanup` still
+matches the old `g.m` spelling after the runtime changed to `g->m`. That fixture
+is repaired, and a repository-wide search found no other stale decoder match.
+The collector now requires the rendering test explicitly too. Rerun all six hosts;
+this failing run does not establish final support. Log:
+`/private/tmp/fwp-stream-cancel-failure.log`.
+
 ## Measurements and binary evidence
 
 The [preceding report](measurements/remote-stream-shared-2026-10-16.json) and
