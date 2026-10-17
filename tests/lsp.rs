@@ -54,7 +54,7 @@ impl Client {
         let id = self.next_id;
         self.send(Json::obj(vec![
             ("jsonrpc", Json::str("2.0")),
-            ("id", Json::Num(id as f64)),
+            ("id", Json::Num(id.to_string())),
             ("method", Json::str(method)),
             ("params", params),
         ]));
@@ -99,8 +99,8 @@ fn at(uri: &str, line: u32, character: u32) -> Json {
         (
             "position",
             Json::obj(vec![
-                ("line", Json::Num(line as f64)),
-                ("character", Json::Num(character as f64)),
+                ("line", Json::Num(line.to_string())),
+                ("character", Json::Num(character.to_string())),
             ]),
         ),
     ])
@@ -148,7 +148,7 @@ fn language_server() {
             Json::obj(vec![
                 ("uri", Json::str(&uri)),
                 ("languageId", Json::str("fwp")),
-                ("version", Json::Num(1.0)),
+                ("version", Json::Num("1".into())),
                 ("text", Json::str(broken)),
             ]),
         )]),
@@ -293,7 +293,7 @@ fn language_server() {
             Json::obj(vec![
                 ("uri", Json::str(&user_uri)),
                 ("languageId", Json::str("fwp")),
-                ("version", Json::Num(1.0)),
+                ("version", Json::Num("1".into())),
                 ("text", Json::str(user_text)),
             ]),
         )]),
@@ -353,7 +353,7 @@ fn language_server() {
             (
                 "options",
                 Json::obj(vec![
-                    ("tabSize", Json::Num(4.0)),
+                    ("tabSize", Json::Num("4".into())),
                     ("insertSpaces", Json::Bool(true)),
                 ]),
             ),

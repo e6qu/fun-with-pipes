@@ -169,7 +169,7 @@ $ ./converter <<'EOF' | jq -c .result
 > {"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"split-bill","arguments":{"cents":1000,"people":0},"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}}}}
 > {"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"convert","arguments":{"value":"hot","from":"Celsius","to":"Kelvin"},"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}}}}
 > EOF
-{"content":[{"type":"text","text":"212"}],"structuredContent":{"result":212},"isError":false,"resultType":"complete"}
+{"content":[{"type":"text","text":"212.0"}],"structuredContent":{"result":212.0},"isError":false,"resultType":"complete"}
 {"content":[{"type":"text","text":"[334,333,333]"}],"structuredContent":{"result":[334,333,333]},"isError":false,"resultType":"complete"}
 {"content":[{"type":"text","text":"there must be at least one person"}],"isError":true,"resultType":"complete"}
 {"content":[{"type":"text","text":"invalid arguments: $.value: expected a number, got \"hot\""}],"isError":true,"resultType":"complete"}
@@ -194,8 +194,9 @@ $ ./converter <<'EOF' | jq -c .result.structuredContent
 {"result":[334,334,333]}
 ```
 
-Temperature conversions use `F64` and can round. Bill amounts here are
-nonnegative integer cents; this example does not implement currency conversion.
+Temperature conversions use `F64` and can round. Its JSON output retains the
+floating-point spelling `212.0`; no conversion through another numeric type is
+used for tool results. Bill amounts here are nonnegative integer cents; this example does not implement currency conversion.
 
 ## Adding it to a client
 

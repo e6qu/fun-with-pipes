@@ -89,8 +89,8 @@ jobs:
               cpu = subprocess.check_output(['powershell', '-NoProfile', '-Command', 'Get-CimInstance Win32_Processor | Select-Object Name,Manufacturer,NumberOfCores,NumberOfLogicalProcessors | ConvertTo-Json'], text=True)
           (evidence / 'cpu.txt').write_text(platform.platform() + '\n' + platform.machine() + '\n' + cpu)
           files = sorted(p for directory in ['src', 'lib', 'runtime'] for p in Path(directory).rglob('*') if p.is_file())
-          files += [Path('tests/server_entry_ownership.rs'), Path('tests/fixtures/server_entries.fwp'), Path('tests/fixtures/server_entry_client.fwp')]
-          Path('server-check-evidence/source-sha256.json').write_text(json.dumps({str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}, indent=2) + '\n')
+          files += [Path(name) for name in ['tests/server_entry_ownership.rs', 'tests/fixtures/server_entries.fwp', 'tests/fixtures/server_entry_client.fwp', 'tests/support/client_allocations.rs', 'tests/support/process_memory.rs', 'scripts/summarize-server-entries.py', '.github/workflows/numerics.yml']]
+          Path('server-check-evidence/source-sha256.json').write_text(json.dumps({p.as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}, indent=2) + '\n')
           PY
       - run: cargo fmt --all -- --check
         if: matrix.part == 'checks'
@@ -102,6 +102,15 @@ jobs:
       - name: Generated entry results and ownership restrictions
         if: ${{ !cancelled() && inputs.suite == 'server-entries' && matrix.part == 'checks' }}
         run: cargo test --no-fail-fast --test server_entry_ownership --test arc_execution -- --nocapture
+      - name: Exact JSON and YAML numeric parsing
+        if: ${{ !cancelled() && inputs.suite == 'server-entries' && matrix.part == 'checks' }}
+        shell: bash
+        run: |
+          status=0
+          cargo test --lib json::tests -- --nocapture || status=1
+          cargo test --lib yaml::tests -- --nocapture || status=1
+          cargo test --test rest openapi_balanced_integer_limits_are_exact -- --exact --nocapture || status=1
+          exit "$status"
       - name: REST API, authentication and multipart forms with checked ARC
         if: ${{ !cancelled() && inputs.suite == 'server-entries' && matrix.part == 'checks' }}
         run: cargo test --test rest checked_arc_rest_preserves_api_authentication_and_form_results -- --exact --nocapture

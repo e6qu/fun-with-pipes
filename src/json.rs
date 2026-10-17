@@ -7,21 +7,21 @@ use crate::value::Value;
 
 const MAX_DEPTH: usize = 512;
 
-/// A parsed JSON value whose numbers keep their text, so that typed
-/// decoding (`src/jsontype.rs`) can read integers of any width exactly.
+/// A JSON value whose numbers retain their exact text. Numeric conversions
+/// happen only when a caller requests a concrete numeric type.
 #[derive(Clone, Debug, PartialEq)]
-pub enum Raw {
+pub enum Json {
     Null,
     Bool(bool),
     Num(String),
     Str(String),
-    Arr(Vec<Raw>),
-    Obj(Vec<(String, Raw)>),
+    Arr(Vec<Json>),
+    Obj(Vec<(String, Json)>),
 }
 
-impl Raw {
+impl Json {
     /// Parse a JSON text (the errors of `json.parse`).
-    pub fn parse(text: &str) -> Result<Raw, String> {
+    pub fn parse(text: &str) -> Result<Json, String> {
         let mut p = Parser {
             s: text.as_bytes(),
             p: 0,
@@ -35,28 +35,18 @@ impl Raw {
         Ok(v)
     }
 
-    fn to_json(&self) -> Json {
-        match self {
-            Raw::Null => Json::Null,
-            Raw::Bool(b) => Json::Bool(*b),
-            Raw::Num(t) => Json::Num(t.parse().unwrap_or(0.0)),
-            Raw::Str(s) => Json::Str(s.clone()),
-            Raw::Arr(xs) => Json::Arr(xs.iter().map(Raw::to_json).collect()),
-            Raw::Obj(fs) => Json::Obj(fs.iter().map(|(k, v)| (k.clone(), v.to_json())).collect()),
-        }
-    }
-
     /// A value of the standard library's `Json` type.
     pub fn to_value(&self) -> Value {
         match self {
-            Raw::Null => Value::data(0, vec![]),
-            Raw::Bool(b) => Value::data(1, vec![Value::bool(*b)]),
-            Raw::Num(t) => Value::data(2, vec![Value::F64(t.parse().unwrap_or(0.0))]),
-            Raw::Str(s) => Value::data(3, vec![Value::str(s)]),
-            Raw::Arr(xs) => {
-                Value::data(4, vec![Value::list(xs.iter().map(Raw::to_value).collect())])
-            }
-            Raw::Obj(fs) => Value::data(
+            Json::Null => Value::data(0, vec![]),
+            Json::Bool(b) => Value::data(1, vec![Value::bool(*b)]),
+            Json::Num(t) => Value::data(2, vec![Value::str(t)]),
+            Json::Str(s) => Value::data(3, vec![Value::str(s)]),
+            Json::Arr(xs) => Value::data(
+                4,
+                vec![Value::list(xs.iter().map(Json::to_value).collect())],
+            ),
+            Json::Obj(fs) => Value::data(
                 5,
                 vec![Value::list(
                     fs.iter()
@@ -81,24 +71,14 @@ fn err<T>(what: &str, at: usize) -> PResult<T> {
 }
 
 impl Parser<'_> {
-    /// A value as plain data.
-    fn json(&mut self) -> PResult<Json> {
-        Ok(self.raw()?.to_json())
-    }
-
-    /// A value of the standard library's `Json` type.
-    fn value(&mut self) -> PResult<Value> {
-        Ok(self.raw()?.to_value())
-    }
-
     fn ws(&mut self) {
         while self.p < self.s.len() && matches!(self.s[self.p], b' ' | b'\t' | b'\n' | b'\r') {
             self.p += 1;
         }
     }
 
-    /// A value with its numbers as written (see [`Raw`]).
-    fn raw(&mut self) -> PResult<Raw> {
+    /// A value with its numbers as written (see [`Json`]).
+    fn raw(&mut self) -> PResult<Json> {
         self.ws();
         let Some(&c) = self.s.get(self.p) else {
             return err("unexpected end of input", self.p);
@@ -117,16 +97,16 @@ impl Parser<'_> {
                 self.depth -= 1;
                 r
             }
-            b'"' => Ok(Raw::Str(self.string()?)),
-            b't' => self.word("true", Raw::Bool(true)),
-            b'f' => self.word("false", Raw::Bool(false)),
-            b'n' => self.word("null", Raw::Null),
+            b'"' => Ok(Json::Str(self.string()?)),
+            b't' => self.word("true", Json::Bool(true)),
+            b'f' => self.word("false", Json::Bool(false)),
+            b'n' => self.word("null", Json::Null),
             b'-' | b'0'..=b'9' => self.number(),
             _ => err("unexpected character", self.p),
         }
     }
 
-    fn word(&mut self, w: &str, v: Raw) -> PResult<Raw> {
+    fn word(&mut self, w: &str, v: Json) -> PResult<Json> {
         if self.s[self.p..].starts_with(w.as_bytes()) {
             self.p += w.len();
             Ok(v)
@@ -143,7 +123,7 @@ impl Parser<'_> {
         self.p - start
     }
 
-    fn number(&mut self) -> PResult<Raw> {
+    fn number(&mut self) -> PResult<Json> {
         let start = self.p;
         if self.s[self.p] == b'-' {
             self.p += 1;
@@ -170,8 +150,9 @@ impl Parser<'_> {
                 return err("invalid number", self.p);
             }
         }
-        let text = std::str::from_utf8(&self.s[start..self.p]).unwrap_or("0");
-        Ok(Raw::Num(text.to_string()))
+        let text =
+            std::str::from_utf8(&self.s[start..self.p]).expect("JSON number grammar is ASCII");
+        Ok(Json::Num(text.to_string()))
     }
 
     fn hex4(&mut self) -> PResult<u32> {
@@ -262,7 +243,7 @@ impl Parser<'_> {
         }
     }
 
-    fn array(&mut self) -> PResult<Raw> {
+    fn array(&mut self) -> PResult<Json> {
         self.p += 1;
         let mut items = Vec::new();
         self.ws();
@@ -276,7 +257,7 @@ impl Parser<'_> {
                 }
             }
         }
-        Ok(Raw::Arr(items))
+        Ok(Json::Arr(items))
     }
 
     fn expect(&mut self, c: u8) -> PResult<()> {
@@ -288,7 +269,7 @@ impl Parser<'_> {
         }
     }
 
-    fn object(&mut self) -> PResult<Raw> {
+    fn object(&mut self) -> PResult<Json> {
         self.p += 1;
         let mut fields = Vec::new();
         self.ws();
@@ -307,25 +288,13 @@ impl Parser<'_> {
                 }
             }
         }
-        Ok(Raw::Obj(fields))
+        Ok(Json::Obj(fields))
     }
 }
 
 /// `Result[Json, String]`
 pub fn parse(text: &str) -> Value {
-    let mut p = Parser {
-        s: text.as_bytes(),
-        p: 0,
-        depth: 0,
-    };
-    let r = p.value().and_then(|v| {
-        p.ws();
-        if p.p != p.s.len() {
-            err("trailing characters", p.p)
-        } else {
-            Ok(v)
-        }
-    });
+    let r = Json::parse(text).map(|value| value.to_value());
     match r {
         Ok(v) => Value::data(0, vec![v]),
         Err(e) => Value::data(1, vec![Value::str(&e)]),
@@ -350,26 +319,33 @@ pub fn escape(s: &str, out: &mut String) {
     out.push('"');
 }
 
-/// Numbers: integers below 1e15 without a fraction, other finite values
-/// in the shortest round-trip form, non-finite values as `null`.
-pub fn number(x: f64, out: &mut String) {
-    if !x.is_finite() {
-        out.push_str("null");
-    } else if x == x.trunc() && x.abs() < 1e15 {
-        out.push_str(&format!("{}", x as i64));
-    } else {
-        out.push_str(&crate::value::fmt_f64(x));
+/// Validate the complete JSON number spelling, without a floating conversion.
+pub fn valid_number(text: &str) -> bool {
+    if text.is_empty() {
+        return false;
     }
+    let mut parser = Parser {
+        s: text.as_bytes(),
+        p: 0,
+        depth: 0,
+    };
+    parser.number().is_ok() && parser.p == parser.s.len()
 }
 
-pub fn encode(v: &Value, out: &mut String) {
+pub fn encode(v: &Value, out: &mut String) -> Result<(), String> {
     let Value::Data(tag, fs) = v else {
         out.push_str("null");
-        return;
+        return Ok(());
     };
     match tag {
         1 => out.push_str(if fs[0].as_bool() { "true" } else { "false" }),
-        2 => number(fs[0].as_f64().unwrap_or(0.0), out),
+        2 => {
+            let text = fs[0].as_str();
+            if !valid_number(text) {
+                return Err("invalid JSON number".into());
+            }
+            out.push_str(text);
+        }
         3 => escape(fs[0].as_str(), out),
         4 => {
             out.push('[');
@@ -377,7 +353,7 @@ pub fn encode(v: &Value, out: &mut String) {
                 if i > 0 {
                     out.push(',');
                 }
-                encode(x, out);
+                encode(x, out)?;
             }
             out.push(']');
         }
@@ -390,43 +366,17 @@ pub fn encode(v: &Value, out: &mut String) {
                 if let Value::Record(p) = kv {
                     escape(p[0].as_str(), out);
                     out.push(':');
-                    encode(&p[1], out);
+                    encode(&p[1], out)?;
                 }
             }
             out.push('}');
         }
         _ => out.push_str("null"),
     }
-}
-
-/// A JSON document as plain Rust data (for tools such as the language
-/// server; programs use the `Json` type of the standard library).
-#[derive(Clone, Debug, PartialEq)]
-pub enum Json {
-    Null,
-    Bool(bool),
-    Num(f64),
-    Str(String),
-    Arr(Vec<Json>),
-    Obj(Vec<(String, Json)>),
+    Ok(())
 }
 
 impl Json {
-    /// Parse a JSON text.
-    pub fn parse(text: &str) -> Result<Json, String> {
-        let mut p = Parser {
-            s: text.as_bytes(),
-            p: 0,
-            depth: 0,
-        };
-        let v = p.json()?;
-        p.ws();
-        if p.p != p.s.len() {
-            return err("trailing characters", p.p);
-        }
-        Ok(v)
-    }
-
     /// A member of an object.
     pub fn get(&self, key: &str) -> Option<&Json> {
         match self {
@@ -449,7 +399,7 @@ impl Json {
 
     pub fn as_f64(&self) -> Option<f64> {
         match self {
-            Json::Num(n) => Some(*n),
+            Json::Num(n) => n.parse().ok(),
             _ => None,
         }
     }
@@ -543,7 +493,7 @@ impl Json {
         match self {
             Json::Null => out.push_str("null"),
             Json::Bool(b) => out.push_str(if *b { "true" } else { "false" }),
-            Json::Num(n) => number(*n, out),
+            Json::Num(n) => out.push_str(n),
             Json::Str(s) => escape(s, out),
             Json::Arr(xs) => {
                 out.push('[');
@@ -567,6 +517,44 @@ impl Json {
                 }
                 out.push('}');
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn numbers_round_trip_without_floating_conversion() {
+        for text in [
+            "9007199254740993",
+            "-9223372036854775808",
+            "18446744073709551615",
+            "340282366920938463463374607431768211455",
+            "1.0000000000000000000000000000000001",
+            "1.2300e+9999",
+            "-0.00",
+        ] {
+            let parsed = Json::parse(text).unwrap();
+            assert_eq!(parsed, Json::Num(text.into()));
+            assert_eq!(parsed.to_string(), text);
+            let mut output = String::new();
+            encode(&parsed.to_value(), &mut output).unwrap();
+            assert_eq!(output, text);
+        }
+    }
+
+    #[test]
+    fn constructed_numbers_cannot_inject_invalid_json() {
+        for text in [
+            "", "x", "01", "+1", "1.", "1e", " 1", "1 ", "1,2", "NaN", "Infinity",
+        ] {
+            let value = Value::data(2, vec![Value::str(text)]);
+            assert_eq!(
+                encode(&value, &mut String::new()),
+                Err("invalid JSON number".into())
+            );
         }
     }
 }

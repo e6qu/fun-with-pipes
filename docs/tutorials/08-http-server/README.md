@@ -24,9 +24,12 @@ The sessions below run exactly as shown: the test suite runs them.
 
 `hello` reads an optional path parameter, substitutes "world" if absent and
 builds a 200 text response. `sum-numbers` requires a JSON array, then
-`filter-map json.as-number` keeps numeric members and drops other members: it
-does not reject a mixed array. `admin` checks the demonstration bearer token
-before returning a fixed message. `const` discards the authenticated request;
+`filter-map json.as-number` converts numeric members to `F64` and drops other
+members: it does not reject a mixed array. `F64` is a 64-bit floating-point type;
+this example therefore uses floating-point rounding when adding. The JSON tree
+itself keeps each number's exact text. `json.encode-value` converts the computed
+sum back into a JSON value for the response. `admin` checks the demonstration
+bearer token before returning a fixed message. `const` discards the authenticated request;
 it does not skip the preceding check.
 
 `serve` opens a TCP listener. `tap` prints its address while keeping that listener
@@ -137,7 +140,7 @@ sum-numbers =
     | or-fail { status = 400, message = "expected an array" }
     | filter-map json.as-number
     | sum
-    | Json.Num
+    | json.encode-value
     | json.response
 
 admin : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}

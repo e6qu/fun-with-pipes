@@ -106,7 +106,7 @@ Ok ()
 Ok ()
 Ok ()
 Err "$: expected {}, got an array"
-Ok map{"a": Obj [("b", Arr [Num 1.0, Num 2.5])], "c": Null}
+Ok map{"a": Obj [("b", Arr [Num "1", Num "2.5"])], "c": Null}
 Ok (-1, 0t+++)
 Err "$[0]: 2 is out of range for Trit"
 Err "$[1]: 14 is out of range for TInt[3]"

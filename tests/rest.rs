@@ -900,6 +900,38 @@ fn openapi_golden() {
     );
 }
 
+#[test]
+fn openapi_balanced_integer_limits_are_exact() {
+    use fwp::json::Json;
+    let dir = fwp::cgen::TempDir::new("openapi-exact-number").unwrap();
+    let source = dir.join("exact.fwp");
+    std::fs::write(
+        &source,
+        "# expose: rest\nexport keep : TInt[40] -> TInt[40]\nkeep = id\n",
+    )
+    .unwrap();
+    let document = Json::parse(&openapi_text(&source)).unwrap();
+    let schema = document
+        .at(&[
+            "paths",
+            "/keep",
+            "post",
+            "requestBody",
+            "content",
+            "application/json",
+            "schema",
+        ])
+        .unwrap();
+    assert_eq!(
+        schema.get("minimum"),
+        Some(&Json::Num("-6078832729528464400".into()))
+    );
+    assert_eq!(
+        schema.get("maximum"),
+        Some(&Json::Num("6078832729528464400".into()))
+    );
+}
+
 // --------------------------------------------------------- the documents
 
 /// A minimal JSON reader for the structural checks.

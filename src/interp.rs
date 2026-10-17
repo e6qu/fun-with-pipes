@@ -625,12 +625,12 @@ impl<'p> Interp<'p> {
             "json.parse" => Ok(crate::json::parse(a[0].as_str())),
             "json.encode" => {
                 let mut out = String::new();
-                crate::json::encode(&a[0], &mut out);
+                crate::json::encode(&a[0], &mut out).map_err(Ctl::Trap)?;
                 Ok(Value::str(&out))
             }
-            "json.write" => Ok(Value::str(&crate::jsontype::write(
-                &a[0], &params[0], self.prog,
-            ))),
+            "json.write" => Ok(Value::str(
+                &crate::jsontype::write(&a[0], &params[0], self.prog).map_err(Ctl::Trap)?,
+            )),
             "json.read" => {
                 let t = match &result {
                     MT::Con(_, args) => args.first().cloned().unwrap_or(MT::unit()),

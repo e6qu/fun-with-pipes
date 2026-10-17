@@ -39,6 +39,7 @@ read-array : String -> Result[Array[String], String]
 read-array = json.read
 main = [
     range 0 33 | map (show | concat "{\"key\":[\"owned\",\"value\"],\"key\":[\"replacement\"]}" | json.parse | show) | length | echo,
+    range 0 33 | map (format "[{},9007199254740993,1.2300e+9999]" | json.parse | both id (result.map json.encode) | show) | length | echo,
     "{\"key\":[\"owned\"],\"key\":[\"replacement\"]}" | read-map | both id id | echo,
     "[\"first\",3]" | read-array | echo,
     "{\"key\":[\"owned\"],\"bad\":[3]}" | read-map | echo,

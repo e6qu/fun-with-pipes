@@ -492,8 +492,14 @@ optional fields and variants, rather than relying on a client to guess their sha
 The codec is `json.write : a -> String where Encode[a]` and
 `json.read : String -> Result[a, String] where Decode[a]` in the standard
 library ([stdlib.md](stdlib.md#json)), with `json.encode-value` and
-`json.decode` for `Json` values. Any value that can be sent to a service
-can be written, in both backends, identically:
+`json.decode` for `Json` values.
+
+`Json.Num` stores numeric text, so passing through `Json` preserves integer and
+F128 precision. Use `json.encode-value` to construct JSON from a typed value and
+`json.decode` to recover the chosen type. `json.as-number` explicitly converts to
+F64 and has F64 rounding. Different number spellings remain distinct JSON values.
+
+The interpreter and native programs use the same encodings:
 
 | fwp | JSON |
 |---|---|
@@ -660,6 +666,9 @@ main = 1 | bookclient.book "http://127.0.0.1:8080" | option.map .title | echo
 * **YAML and Swagger 2.0.** YAML documents are read by a YAML 1.2 reader
   of fwp's own (`src/yaml.rs`: block and flow collections, the quoting
   styles, block scalars, comments, anchors, aliases and merge keys).
+  Decimal number text is retained exactly. Hexadecimal/octal integers must fit
+  U128; larger ones are reported as errors. Non-finite YAML numbers such as
+  `.inf` are rejected because JSON has no such numeric values.
   Swagger 2.0 documents are converted to OpenAPI 3 first
   (`src/swagger.rs`): `definitions` are the component schemas, a `body`
   parameter the request body with the media types of `consumes`,

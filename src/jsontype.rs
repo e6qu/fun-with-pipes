@@ -35,7 +35,7 @@ use std::collections::BTreeMap;
 use std::rc::Rc;
 
 use crate::ir::{Program, TypeShape, MT};
-use crate::json::{self, Raw};
+use crate::json::{self, Json};
 use crate::value::Value;
 
 /// How values of a type are written as JSON.
@@ -228,10 +228,10 @@ fn is_string(mt: &MT) -> bool {
 // ------------------------------------------------------------------ writing
 
 /// The JSON text of a value of type `mt`.
-pub fn write(v: &Value, mt: &MT, prog: &Program) -> String {
+pub fn write(v: &Value, mt: &MT, prog: &Program) -> Result<String, String> {
     let mut out = String::new();
-    write_to(&mut out, v, mt, prog);
-    out
+    write_to(&mut out, v, mt, prog)?;
+    Ok(out)
 }
 
 fn int_text(v: &Value) -> String {
@@ -255,7 +255,7 @@ fn float_text(out: &mut String, x: f64, text: String) {
     }
 }
 
-fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
+fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) -> Result<(), String> {
     match shape(mt, prog) {
         Shape::Int(_) | Shape::TInt(_) | Shape::Trit => out.push_str(&int_text(v)),
         Shape::Wide(_) => {
@@ -312,36 +312,36 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
             out.push('"');
         }
         Shape::Bool => out.push_str(if v.as_bool() { "true" } else { "false" }),
-        Shape::Json => json::encode(v, out),
+        Shape::Json => json::encode(v, out)?,
         Shape::Unit => out.push_str("{}"),
         Shape::Option(t) => match v {
             Value::Data(1, fs) => {
                 if is_option(&t) {
                     out.push('[');
-                    write_to(out, &fs[0], &t, prog);
+                    write_to(out, &fs[0], &t, prog)?;
                     out.push(']');
                 } else {
-                    write_to(out, &fs[0], &t, prog);
+                    write_to(out, &fs[0], &t, prog)?;
                 }
             }
             _ => out.push_str("null"),
         },
-        Shape::List(t) => write_items(out, &v.list_items(), &t, prog),
+        Shape::List(t) => write_items(out, &v.list_items(), &t, prog)?,
         Shape::Array(t) => match v {
-            Value::Array(items) => write_items(out, items, &t, prog),
+            Value::Array(items) => write_items(out, items, &t, prog)?,
             _ => out.push_str("[]"),
         },
         Shape::Set(t) => match v {
             Value::Map(m) => {
                 let keys: Vec<Value> = m.keys().cloned().collect();
-                write_items(out, &keys, &t, prog)
+                write_items(out, &keys, &t, prog)?
             }
             _ => out.push_str("[]"),
         },
         Shape::Map(kt, vt) => {
             let Value::Map(m) = v else {
                 out.push_str("{}");
-                return;
+                return Ok(());
             };
             let obj = is_string(&kt);
             out.push(if obj { '{' } else { '[' });
@@ -352,12 +352,12 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
                 if obj {
                     json::escape(k.as_str(), out);
                     out.push(':');
-                    write_to(out, x, &vt, prog);
+                    write_to(out, x, &vt, prog)?;
                 } else {
                     out.push('[');
-                    write_to(out, k, &kt, prog);
+                    write_to(out, k, &kt, prog)?;
                     out.push(',');
-                    write_to(out, x, &vt, prog);
+                    write_to(out, x, &vt, prog)?;
                     out.push(']');
                 }
             }
@@ -366,21 +366,21 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
         Shape::Tuple(ts) => {
             let Value::Record(fs) = v else {
                 out.push_str("[]");
-                return;
+                return Ok(());
             };
             out.push('[');
             for (i, (x, t)) in fs.iter().zip(&ts).enumerate() {
                 if i > 0 {
                     out.push(',');
                 }
-                write_to(out, x, t, prog);
+                write_to(out, x, t, prog)?;
             }
             out.push(']');
         }
         Shape::Record(_, fts, order, names) => {
             let Value::Record(fs) = v else {
                 out.push_str("{}");
-                return;
+                return Ok(());
             };
             out.push('{');
             let mut first = true;
@@ -395,7 +395,7 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
                 first = false;
                 json::escape(&names[i], out);
                 out.push(':');
-                write_to(out, &fs[i], t, prog);
+                write_to(out, &fs[i], t, prog)?;
             }
             out.push('}');
         }
@@ -414,14 +414,14 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
             let fts = &vs[tag.min(vs.len() - 1)].1;
             match fts.len() {
                 0 => out.push_str("null"),
-                1 => write_to(out, &fs[0], &fts[0], prog),
-                _ => write_items_of(out, fs, fts, prog),
+                1 => write_to(out, &fs[0], &fts[0], prog)?,
+                _ => write_items_of(out, fs, fts, prog)?,
             }
         }
         Shape::Adt(_, vs) => {
             let Value::Data(tag, fs) = v else {
                 out.push_str("null");
-                return;
+                return Ok(());
             };
             let (name, fts) = &vs[*tag as usize];
             out.push_str("{\"type\":");
@@ -430,7 +430,7 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
                 0 => {}
                 1 => {
                     out.push_str(",\"value\":");
-                    write_to(out, &fs[0], &fts[0], prog);
+                    write_to(out, &fs[0], &fts[0], prog)?;
                 }
                 _ => {
                     out.push_str(",\"value\":[");
@@ -438,7 +438,7 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
                         if i > 0 {
                             out.push(',');
                         }
-                        write_to(out, x, t, prog);
+                        write_to(out, x, t, prog)?;
                     }
                     out.push(']');
                 }
@@ -447,28 +447,36 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
         }
         Shape::Other => out.push_str("null"),
     }
+    Ok(())
 }
 
-fn write_items_of(out: &mut String, items: &[Value], ts: &[MT], prog: &Program) {
+fn write_items_of(
+    out: &mut String,
+    items: &[Value],
+    ts: &[MT],
+    prog: &Program,
+) -> Result<(), String> {
     out.push('[');
     for (i, (x, t)) in items.iter().zip(ts).enumerate() {
         if i > 0 {
             out.push(',');
         }
-        write_to(out, x, t, prog);
+        write_to(out, x, t, prog)?;
     }
     out.push(']');
+    Ok(())
 }
 
-fn write_items(out: &mut String, items: &[Value], t: &MT, prog: &Program) {
+fn write_items(out: &mut String, items: &[Value], t: &MT, prog: &Program) -> Result<(), String> {
     out.push('[');
     for (i, x) in items.iter().enumerate() {
         if i > 0 {
             out.push(',');
         }
-        write_to(out, x, t, prog);
+        write_to(out, x, t, prog)?;
     }
     out.push(']');
+    Ok(())
 }
 
 const B64: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -529,7 +537,7 @@ pub fn unbase64(s: &str) -> Option<Vec<u8>> {
 /// `json.parse` (`unexpected character at byte 3`); type errors start with
 /// the JSON path of the offending value.
 pub fn read(text: &str, mt: &MT, prog: &Program) -> Result<Value, String> {
-    let raw = Raw::parse(text)?;
+    let raw = Json::parse(text)?;
     let mut path = String::from("$");
     decode(&raw, mt, prog, &mut path)
 }
@@ -626,7 +634,7 @@ fn exact_int(t: &str) -> Exact {
 }
 
 /// How a JSON value is named in an error.
-fn got(r: &Raw) -> String {
+fn got(r: &Json) -> String {
     fn cut(s: &str) -> String {
         if s.chars().count() > 32 {
             format!("{}...", s.chars().take(32).collect::<String>())
@@ -635,20 +643,20 @@ fn got(r: &Raw) -> String {
         }
     }
     match r {
-        Raw::Null => "null".into(),
-        Raw::Bool(b) => b.to_string(),
-        Raw::Num(t) => cut(t),
-        Raw::Str(s) => {
+        Json::Null => "null".into(),
+        Json::Bool(b) => b.to_string(),
+        Json::Num(t) => cut(t),
+        Json::Str(s) => {
             let mut out = String::new();
             json::escape(&cut(s), &mut out);
             out
         }
-        Raw::Arr(_) => "an array".into(),
-        Raw::Obj(_) => "an object".into(),
+        Json::Arr(_) => "an array".into(),
+        Json::Obj(_) => "an object".into(),
     }
 }
 
-fn expected(path: &str, what: &str, r: &Raw) -> String {
+fn expected(path: &str, what: &str, r: &Json) -> String {
     format!("{}: expected {}, got {}", path, what, got(r))
 }
 
@@ -687,15 +695,15 @@ fn with_index<T>(path: &mut String, i: usize, f: impl FnOnce(&mut String) -> T) 
 }
 
 /// The last member named `k` of an object.
-fn member<'r>(fs: &'r [(String, Raw)], k: &str) -> Option<&'r Raw> {
+fn member<'r>(fs: &'r [(String, Json)], k: &str) -> Option<&'r Json> {
     fs.iter().rev().find(|(n, _)| n == k).map(|(_, v)| v)
 }
 
 /// A number, or a string holding one.
-fn number_text(r: &Raw) -> Option<&str> {
+fn number_text(r: &Json) -> Option<&str> {
     match r {
-        Raw::Num(t) => Some(t),
-        Raw::Str(s) if is_number(s) => Some(s),
+        Json::Num(t) => Some(t),
+        Json::Str(s) if is_number(s) => Some(s),
         _ => None,
     }
 }
@@ -730,7 +738,7 @@ fn int_value(name: &str, neg: bool, mag: u128) -> Option<Value> {
     })
 }
 
-fn decode_int(r: &Raw, name: &str, path: &str) -> Result<Value, String> {
+fn decode_int(r: &Json, name: &str, path: &str) -> Result<Value, String> {
     let Some(t) = number_text(r) else {
         return Err(expected(path, "an integer", r));
     };
@@ -742,9 +750,9 @@ fn decode_int(r: &Raw, name: &str, path: &str) -> Result<Value, String> {
     }
 }
 
-fn decode_float(r: &Raw, path: &str) -> Result<String, String> {
+fn decode_float(r: &Json, path: &str) -> Result<String, String> {
     match r {
-        Raw::Str(s) if s == "NaN" || s == "Infinity" || s == "-Infinity" => Ok(match s.as_str() {
+        Json::Str(s) if s == "NaN" || s == "Infinity" || s == "-Infinity" => Ok(match s.as_str() {
             "NaN" => "NaN".into(),
             "Infinity" => "inf".into(),
             _ => "-inf".into(),
@@ -798,7 +806,7 @@ pub fn parse_duration(s: &str) -> Option<i64> {
     i64::try_from(total).ok()
 }
 
-fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, String> {
+fn decode(r: &Json, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, String> {
     Ok(match shape(mt, prog) {
         Shape::Int(name) | Shape::Wide(name) => decode_int(r, &name, path)?,
         Shape::TInt(w) => {
@@ -833,11 +841,11 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
             crate::mono::float_value(mt, &decode_float(r, path)?).expect("typed float")
         }
         Shape::Str => match r {
-            Raw::Str(s) => Value::str(s),
+            Json::Str(s) => Value::str(s),
             _ => return Err(expected(path, "a string", r)),
         },
         Shape::Bytes => match r {
-            Raw::Str(s) => match unbase64(s) {
+            Json::Str(s) => match unbase64(s) {
                 Some(b) => Value::Bytes(Rc::from(b)),
                 None => return Err(expected(path, "a base64 string", r)),
             },
@@ -845,8 +853,8 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
         },
         Shape::Duration => {
             let ns = match r {
-                Raw::Str(s) => parse_duration(s),
-                Raw::Num(t) => match exact_int(t) {
+                Json::Str(s) => parse_duration(s),
+                Json::Num(t) => match exact_int(t) {
                     Exact::Int(neg, mag) => match int_value("I64", neg, mag) {
                         Some(Value::I64(x)) => Some(x),
                         _ => None,
@@ -861,20 +869,20 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
             }
         }
         Shape::Bool => match r {
-            Raw::Bool(b) => Value::bool(*b),
-            Raw::Str(s) if s == "true" || s == "false" => Value::bool(s == "true"),
+            Json::Bool(b) => Value::bool(*b),
+            Json::Str(s) if s == "true" || s == "false" => Value::bool(s == "true"),
             _ => return Err(expected(path, "true or false", r)),
         },
         Shape::Json => r.to_value(),
         Shape::Unit => match r {
-            Raw::Obj(_) | Raw::Null => Value::unit(),
-            Raw::Arr(xs) if xs.is_empty() => Value::unit(),
+            Json::Obj(_) | Json::Null => Value::unit(),
+            Json::Arr(xs) if xs.is_empty() => Value::unit(),
             _ => return Err(expected(path, "{}", r)),
         },
         Shape::Option(t) => match r {
-            Raw::Null => Value::nullary(0),
+            Json::Null => Value::nullary(0),
             _ if is_option(&t) => match r {
-                Raw::Arr(xs) if xs.len() == 1 => {
+                Json::Arr(xs) if xs.len() == 1 => {
                     let x = with_index(path, 0, |p| decode(&xs[0], &t, prog, p))?;
                     Value::data(1, vec![x])
                 }
@@ -883,7 +891,7 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
             _ => Value::data(1, vec![decode(r, &t, prog, path)?]),
         },
         Shape::List(t) | Shape::Array(t) | Shape::Set(t) => {
-            let Raw::Arr(xs) = r else {
+            let Json::Arr(xs) = r else {
                 return Err(expected(path, "an array", r));
             };
             let mut items = Vec::new();
@@ -901,7 +909,7 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
         Shape::Map(kt, vt) => {
             let mut m = BTreeMap::new();
             if is_string(&kt) {
-                let Raw::Obj(fs) = r else {
+                let Json::Obj(fs) = r else {
                     return Err(expected(path, "an object", r));
                 };
                 for (k, x) in fs {
@@ -910,12 +918,12 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
                 }
             } else {
                 let what = "an array of [key, value] pairs";
-                let Raw::Arr(xs) = r else {
+                let Json::Arr(xs) = r else {
                     return Err(expected(path, what, r));
                 };
                 for (i, x) in xs.iter().enumerate() {
                     let (k, v) = with_index(path, i, |p| match x {
-                        Raw::Arr(kv) if kv.len() == 2 => {
+                        Json::Arr(kv) if kv.len() == 2 => {
                             let k = with_index(p, 0, |p| decode(&kv[0], &kt, prog, p))?;
                             let v = with_index(p, 1, |p| decode(&kv[1], &vt, prog, p))?;
                             Ok((k, v))
@@ -929,7 +937,7 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
         }
         Shape::Tuple(ts) => Value::tuple(decode_tuple(r, &ts, prog, path)?),
         Shape::Record(_, fts, order, names) => {
-            let Raw::Obj(fs) = r else {
+            let Json::Obj(fs) = r else {
                 return Err(expected(path, "an object", r));
             };
             // in declaration order, so that errors come in that order
@@ -946,7 +954,7 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
         }
         Shape::Enum(_, names) => {
             let tag = match r {
-                Raw::Str(s) => names.iter().position(|n| n == s),
+                Json::Str(s) => names.iter().position(|n| n == s),
                 _ => None,
             };
             match tag {
@@ -955,7 +963,7 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
             }
         }
         Shape::Untagged(name, vs) => {
-            if matches!(r, Raw::Null) {
+            if matches!(r, Json::Null) {
                 if let Some(t) = vs.iter().position(|(_, f)| f.is_empty()) {
                     return Ok(Value::nullary(t as u32));
                 }
@@ -981,13 +989,13 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
             let names: Vec<String> = vs.iter().map(|(n, _)| n.clone()).collect();
             let tag_of = |s: &str| names.iter().position(|n| n == s);
             match r {
-                Raw::Str(s) if tag_of(s).is_some_and(|t| vs[t].1.is_empty()) => {
+                Json::Str(s) if tag_of(s).is_some_and(|t| vs[t].1.is_empty()) => {
                     Value::nullary(tag_of(s).unwrap() as u32)
                 }
-                Raw::Obj(fs) => {
+                Json::Obj(fs) => {
                     let tag = with_key(path, "type", |p| match member(fs, "type") {
                         None => Err(format!("{}: required field is missing", p)),
-                        Some(t @ Raw::Str(s)) => {
+                        Some(t @ Json::Str(s)) => {
                             tag_of(s).ok_or_else(|| expected(p, &one_of(&names), t))
                         }
                         Some(t) => Err(expected(p, &one_of(&names), t)),
@@ -1017,21 +1025,21 @@ fn one_of(names: &[String]) -> String {
 }
 
 fn decode_tuple(
-    r: &Raw,
+    r: &Json,
     ts: &[MT],
     prog: &Program,
     path: &mut String,
 ) -> Result<Vec<Value>, String> {
     let what = format!("an array of {} elements", ts.len());
     match r {
-        Raw::Arr(xs) if xs.len() == ts.len() => {
+        Json::Arr(xs) if xs.len() == ts.len() => {
             let mut out = Vec::new();
             for (i, (x, t)) in xs.iter().zip(ts).enumerate() {
                 out.push(with_index(path, i, |p| decode(x, t, prog, p))?);
             }
             Ok(out)
         }
-        Raw::Arr(xs) => Err(format!("{}: expected {}, got {}", path, what, xs.len())),
+        Json::Arr(xs) => Err(format!("{}: expected {}, got {}", path, what, xs.len())),
         _ => Err(expected(path, &what, r)),
     }
 }

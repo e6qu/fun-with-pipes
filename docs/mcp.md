@@ -49,6 +49,11 @@ host:port`, it serves HTTP instead (below). `--help` shows its options.
 
 ## Tools
 
+JSON numbers keep their exact text until an argument is decoded into its declared
+type. A large integer such as `9007199254740993` therefore reaches an `I64`
+parameter unchanged. Results, error payloads and numeric request IDs retain the
+same precision. An explicit conversion to `F64` still uses that type's rounding.
+
 Every exported function exposed as `mcp` (a line `# expose: mcp` above
 it, or in the file's leading comment) is a tool, named as the function
 (`split-bill`). Functions of no parameters (constants), `version` and

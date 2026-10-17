@@ -14,7 +14,7 @@ sum-numbers =
     | or-fail { status = 400, message = "expected an array" }
     | filter-map json.as-number
     | sum
-    | Json.Num
+    | json.encode-value
     | json.response
 
 admin : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}

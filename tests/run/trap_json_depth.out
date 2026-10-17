@@ -1,0 +1,3 @@
+--- stderr
+fwp: trap: encoded JSON cannot be parsed: nesting too deep at byte 512
+--- exit 101
