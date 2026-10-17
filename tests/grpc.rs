@@ -846,3 +846,6 @@ fn go_client_interoperates() {
         );
     }
 }
+
+#[path = "support/grpc_server_measurement.rs"]
+mod server_measurement;
