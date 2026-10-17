@@ -90,35 +90,45 @@ Use the retained `997b23a9` request report as baseline with `--projection-moves`
 Preserve actual measurement revisions. Then copy the accepted combined report into the root delivery and run all
 production gates. One delivery PR at a time.
 
-## Next independent measurement
+## Next preparation: own closed client connections and I/O tasks
 
-Worktree `/private/tmp/fwp-closed-client-connections`, branch
-`measure-closed-client-connections`, starts at `d7a161d1`. Linux probe `39002262144` passed at `d802e102`. The final drain leaves
-5,696/64,256/1,001,216 managed bytes after 1/16/256 connections, or 3,904
-additional bytes per connection. Every socket closes and I/O task finishes;
-all requests/messages release, but no connection is finalized. Retained mode
-makes two connections per batch and leaves 2,000,640 bytes after 256 batches. It closes connections
-and drains detached I/O tasks between calls and before the final sample. Preserve the pooled-client comparison
-as a separate workload. Validate output, connection counts and drained task lists;
-record remaining managed/raw storage before choosing the next ownership change.
-`closed_remote_connection_memory_measurement` shares source/output checks with
-the existing repeated-call harness. Its native-only hook closes the pool, wakes
-and drains only reader/writer tasks, requires one closed socket per connection,
-and records charge, unfinalized connection/request counts and queued bytes at
-each drain. A deliberately omitted drain must exit 213. Retained readers preserve
-cached values across closure. The interpreter/ordinary native outputs use pooling
-and are only functional references; do not claim equivalent transport timing.
+Worktree `/private/tmp/fwp-client-connection-owners`, branch
+`own-client-connections`, starts at frozen baseline `4103b0a0`. No implementation
+is published yet. Keep this separate from active draft PR #157. Its root worktree
+and current GitHub checks are authoritative for delivery status.
 
-The next revision adds separate requested/allocator-charged byte totals for
-connection objects and their two I/O task objects. These are cumulative allocations,
-not live memory. Publish and run the six-platform `connection-repeat` baseline;
-fix failures before freezing or comparing it. The explicit Mac test assignment
-repair is included; runtime behavior remains identical to `d7a161d1`. The
-new suite retains all request/closure/cache controls. No production runtime
-ownership change belongs in this baseline. After validation, measure connection
-and detached-task storage separately before deciding their ownership fix.
-Formatting passed under the root guard in 1.24s after correcting formatting-only
-failure. Full native builds remain on GitHub.
+Linux baseline `39002262144` at `d802e102` passes. Closing connections and draining
+I/O tasks leaves 3,904 additional managed bytes per connection: 5,696 after one,
+1,001,216 after 256. All sockets close and request/message storage releases;
+no connection finalizer runs. Baseline `4103b0a0` adds separate cumulative
+connection/task allocation categories; six-platform run `39002767125` and watcher
+`51721` retain its exact-source evidence. Do not relabel earlier artifacts.
+
+Acceptance for this preparation: every closed connection physically releases,
+completed client I/O task objects release, final charge stays constant across
+1/16/256 batches and all reader modes, pooled/shared readers keep working, and
+normal/failure/cancellation/overflow paths preserve output and cleanup order.
+Measure new count traffic and preserve all native platforms, stress/reuse and
+missing-cleanup controls. No admission of remote calls to checked ARC yet.
+
+Client connections need explicit pool, I/O, call/source and sender owners.
+Keep socket-liveness refs separate from storage ownership. Transfer a returned
+connection owner with the stream; protect partial construction and acquired refs.
+Drop request before connection, remove weak finalizers before physical freeing,
+and keep scheduler links borrowed to avoid cycles. Server/HTTP connections remain
+unproved paths. Private detailed notes: `/private/tmp/fwp-next-connection-ownership.md`.
+
+The detached client reader/writer task objects have one scheduler owner and no
+language-visible handles. Prefer an explicit unique-storage task policy and direct
+cleanup after stack removal over adding reference counts to them. Preserve shared
+language task handles and current tracing-dependent paths as distinct policies;
+reuse the existing policy field rather than enlarging task headers without evidence.
+Tests must distinguish those lifetimes, including startup failure before either
+background task is published. Do not weaken old task-handle or ARC controls.
+
+Next: implement these contracts, revise raw test handles that outlive a uniquely
+owned task, and run focused Linux checks on GitHub. Keep the frozen baseline
+worktree untouched. Fix failures and measure actual clients before publication.
 
 ## Local verification and remaining work
 
@@ -150,3 +160,27 @@ Remote calls remain excluded from checked ARC; all seven roadmap areas stay open
 | 5 | In progress | CPU kernels and GPU resource ownership |
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
+
+## Candidate written; native validation pending
+
+The candidate gives client connection storage separate pool, I/O and caller
+owners. Socket closure still follows the reader/writer transport count. Response
+sources and detached senders retain the connection until their own release.
+Client I/O tasks have one scheduler owner and dispose storage after stack and
+scheduler-link removal, without task retain/release operations. Server/HTTP
+connections and pending sender language values remain unproved.
+
+Existing synthetic tests now release owners returned by connection creation and
+call opening. They drain the scheduler instead of awaiting freed I/O handles.
+Task controls cover normal completion, cancellation before entry and after
+suspension, with 64 repetitions, exact charged-storage recovery without GC,
+stress/reuse checks and deliberate omitted/incorrect counted release. Existing
+shared task and ARC tests remain enabled. The focused connection suite also runs
+POSIX startup/failure controls. These tests are written, not yet passed.
+
+Root-guard `cargo fmt --all` passed in 1.06s; guarded
+`python3 scripts/check-roadmap.py` passed in 2.60s. No native builds ran locally.
+Next: publish this preparation branch and run Linux `connection-repeat`; repair
+failures before the six-platform comparison. Do not open another delivery PR
+while #157 remains active. Acquisition-overflow cases and retained callbacks still
+need review before acceptance.

@@ -38,6 +38,9 @@ fn grpc_connect_and_handshake_release_pending_resources_on_cancellation() {
         ("startup.reader = fwp_spawn_task(0, g_reader, c, 0, 1);","backgrounds++; startup.reader=0;"),
         ("startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1);","backgrounds++; startup.writer=0;"),
     ]{assert_eq!(method.matches(before).count(),1);method=method.replacen(before,after,1);}
+    method = method
+        .replace("startup.reader->ownership = FWP_TASK_UNIQUE;", "")
+        .replace("startup.writer->ownership = FWP_TASK_UNIQUE;", "");
     let generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
     let hooks = r#"
 #include <stdlib.h>
@@ -92,7 +95,7 @@ int main(void){
  if(!c||error||c->refs!=2||backgrounds!=2||res_freed!=1||ssl_freed||fwp_cleanups||fcntl(c->fd,F_GETFD)==-1)return 4;
  int fd=c->fd;g_conn_release(c);if(c->fd!=fd||fcntl(fd,F_GETFD)==-1)return 5;
  g_conn_release(c);if(c->fd!=-1||fcntl(fd,F_GETFD)!=-1||errno!=EBADF)return 6;
- g_pool=0;mode=0;fwp_p_tcp_stop(listener);
+ g_conn_dead(c,"finished");g_conn_drop(c);mode=0;fwp_p_tcp_stop(listener);
  mode=4;res_freed=ssl_freed=backgrounds=0;watched_res=0;watched_fd=-1;
  c=g_connect(target,0,&error);if(c||!error||strncmp(error,"cannot connect to ",18)||res_freed!=1||ssl_freed||backgrounds||fwp_cleanups||watched_fd<0||fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF)return 7;free(error);
  mode=0;FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(tick);fwp_lib_finish();return 0;

@@ -59,11 +59,7 @@ main = [ task.spawn (value ("input" | string.repeat 2)) | tap (task.await | echo
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
     );
-    let runtime = if runtime.contains("static void fwp_task_drop(") {
-        runtime
-    } else {
-        format!("{runtime}\nstatic void fwp_task_drop(V v){{fwp_rc_drop(v);}}\n")
-    };
+    assert!(runtime.contains("static void fwp_task_drop("));
     let runtime = runtime
         .replace(
             "static V fwp_await_owned(",
@@ -160,7 +156,7 @@ int main(void){
         "/* omit cached result destruction */",
     );
     let no_scheduler = runtime.replace(
-        "if (finished->counted) fwp_task_drop(PTR(finished));",
+        "if (ownership == FWP_TASK_SHARED) fwp_task_drop(PTR(finished));",
         "/* omit scheduler release */",
     );
     let no_scope = runtime.replace(
@@ -175,6 +171,64 @@ int main(void){
         "fwp_value_owner owner = {PTR(t), fwp_task_drop};",
         "fwp_value_owner owner = {PTR(t), NULL};",
     );
+    // Detached C tasks have a single scheduler owner and no language handle.
+    let unique_probe = r#"
+static int entered,finished,mode;
+static double charged(void){return fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);}
+static void finish(void *arg){(void)arg;finished++;}
+static void worker(void *arg,int stop){
+ (void)arg;if(stop)return;entered++;
+ if(mode==2){fwp_park(0,0);fwp_check_cancel();}
+}
+int main(void){
+ fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ int measured=!strcmp(getenv("FWP_GC"),"off");
+ double start=charged();
+ for(int i=0;i<64;i++)for(mode=0;mode<3;mode++){
+  entered=finished=0;
+  fwp_task *t=fwp_spawn_task(0,worker,0,0,1);
+  t->ownership=FWP_TASK_UNIQUE;t->cfinish=finish;
+  if(*fwp_rc_slot(PTR(t)))return 201;
+  if(mode==2){fwp_p_task_yield();if(entered!=1)return 202;}
+  if(mode)fwp_cancel_tree(t);
+  // Await would read a freed task; only the scheduler's live list is borrowed.
+  while(fwp_gc_tasks){fwp_make_ready(fwp_root);fwp_block();fwp_free_zombie();}
+  fwp_free_zombie();
+  if(finished!=1||entered!=(mode==1?0:1)||fwp_zombie)return 203;
+  if(measured&&(charged()!=start||fwp_gc.ncollect))return 204;
+ }
+ return 0;
+}
+"#;
+    let unique_release = "if (ownership == FWP_TASK_UNIQUE) fwp_task_dispose(PTR(finished));";
+    assert_eq!(runtime.matches(unique_release).count(), 1);
+    for opt in ["-O1", "-O2"] {
+        for release in [
+            "/* omitted sole owner */",
+            "if (ownership == FWP_TASK_UNIQUE) fwp_task_drop(PTR(finished));",
+        ] {
+            let broken = runtime.replace(unique_release, release);
+            fwp::cgen::compile_c(&format!("{broken}\n{unique_probe}"), &exe, opt).unwrap();
+            let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+            assert_eq!(out.status.code(), Some(204), "unique task release: {out:?}");
+        }
+        fwp::cgen::compile_c(&format!("{runtime}\n{unique_probe}"), &exe, opt).unwrap();
+        for gc in ["off", "on"] {
+            for poison in ["0", "1"] {
+                let out = Command::new(&exe)
+                    .env("FWP_GC", gc)
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
+                assert!(
+                    out.status.success(),
+                    "unique task {opt}/{gc}/{poison}: {out:?}"
+                );
+            }
+        }
+    }
     for opt in ["-O1", "-O2"] {
         for (control, code) in [
             (&no_duplicate, 2),

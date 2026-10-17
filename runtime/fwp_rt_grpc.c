@@ -299,11 +299,15 @@ static void g_stream_reader_release(g_conn *c, g_stream *s) {
 }
 
 typedef struct { g_conn *c; g_stream *s; } g_call_owner;
+static void g_conn_drop(void *value);
 static void g_call_release(void *value) {
     g_call_owner *owner = value;
+    g_conn *c = owner->c;
     g_stream *s = owner->s;
+    owner->c = 0;
     owner->s = 0;
-    g_stream_reader_release(owner->c, s);
+    g_stream_reader_release(c, s);
+    g_conn_drop(c);
 }
 
 /* Nonallocating failure marker: no stream observes an unpublished connection. */
@@ -323,6 +327,17 @@ static void g_conn_final(void *p) {
     h2b_free(&c->cont_buf);
     if (c->dead != g_connect_start_failed) free(c->dead);
     free(c->tlskey);
+}
+
+/* Pool, callers and live I/O tasks share client storage. Transport users
+ * separately determine when the socket closes; requests may outlive it. */
+static void g_conn_drop(void *value) {
+    g_conn *c = value;
+    if (!fwp_rc_release_last(PTR(c))) return;
+    if (c->refs || c->fd != FWP_INVALID_SOCKET || c->streams) abort();
+    fwp_gc_forget_finalizer(c);
+    g_conn_final(c);
+    fwp_rc_resource_free_arr(PTR(c));
 }
 
 static g_stream *g_stream_new(g_conn *c, uint32_t id) {
@@ -650,21 +665,26 @@ static void g_conn_dead(g_conn *c, const char *why) {
         fwp_wake_all(&s->waiters);
         g_stream_drop(s);
     }
+    int pooled = 0;
     for (g_conn **p = &g_pool; *p; p = &(*p)->next_pool)
-        if (*p == c) { *p = c->next_pool; break; }
+        if (*p == c) { *p = c->next_pool; c->next_pool = 0; pooled = 1; break; }
     fwp_wake_all(&c->space_wl);
     fwp_wake_all(&c->writer_wl);
+    if (pooled) g_conn_drop(c);
 }
 
 /* the reader or the writer is done; the last one closes the socket */
 static void g_conn_release(g_conn *c) {
-    if (--c->refs > 0) return;
-    fwp_fd_closing(c->fd);
-    if (c->ssl) { fwp_tls_free(c->ssl); c->ssl = 0; }
-    fwp_socket_close(c->fd);
-    c->fd = FWP_INVALID_SOCKET;
-    h2b_free(&c->in);
-    h2b_free(&c->out);
+    if (c->refs <= 0) abort();
+    if (--c->refs == 0) {
+        fwp_fd_closing(c->fd);
+        if (c->ssl) { fwp_tls_free(c->ssl); c->ssl = 0; }
+        fwp_socket_close(c->fd);
+        c->fd = FWP_INVALID_SOCKET;
+        h2b_free(&c->in);
+        h2b_free(&c->out);
+    }
+    g_conn_drop(c);
 }
 
 static void g_start_call(g_conn *c, g_stream *s);
@@ -1160,6 +1180,7 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
         }
     }
     g_conn *c = g_conn_new(fd, given, 0);
+    fwp_rc_fresh(PTR(c)); /* startup storage, transferred to the caller */
     c->ssl = ssl;
     ssl = 0;
     fwp_cleanup_pop(&ssl_cleanup);
@@ -1178,18 +1199,23 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
     fwp_cleanup startup_cleanup;
     fwp_cleanup_push(&startup_cleanup, g_connect_start_abort, &startup);
     fwp_cleanup reserved_ref;
+    fwp_rc_dup(PTR(c));
     c->refs++;
     fwp_cleanup_push(&reserved_ref, g_connect_ref_release, c);
     startup.reader = fwp_spawn_task(0, g_reader, c, 0, 1);
+    startup.reader->ownership = FWP_TASK_UNIQUE;
     fwp_cleanup_pop(&reserved_ref); /* reader takes its reserved reference */
+    fwp_rc_dup(PTR(c));
     c->refs++;
     fwp_cleanup_push(&reserved_ref, g_connect_ref_release, c);
     startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1);
+    startup.writer->ownership = FWP_TASK_UNIQUE;
     fwp_cleanup_pop(&reserved_ref);
+    fwp_rc_dup(PTR(c)); /* pool owner */
     c->next_pool = g_pool;
     g_pool = c;
     fwp_cleanup_pop(&startup_cleanup);
-    g_conn_release(c); /* only the reader and writer remain */
+    c->refs--; /* reader/writer keep transport; caller takes startup storage */
     return c;
 }
 
@@ -1221,8 +1247,11 @@ static g_stream *g_open_tls(const char *addr, const char *path, const char *fp, 
             break;
         }
     *reused = c != 0;
-    if (!c) c = g_connect(addr, opts, err);
+    if (c) fwp_rc_dup(PTR(c));
+    else c = g_connect(addr, opts, err);
     if (!c) return 0;
+    fwp_cleanup connection_cleanup;
+    fwp_cleanup_push(&connection_cleanup, g_conn_drop, c);
     g_ctx *ctx = g_ctx_of();
     int64_t deadline = g_earliest(ctx->deadline, fwp_cur->deadline);
     uint32_t id = c->next_stream;
@@ -1254,6 +1283,7 @@ static g_stream *g_open_tls(const char *addr, const char *path, const char *fp, 
     s->gzip = ctx->gzip;
     fwp_wake_all(&c->writer_wl);
     *cp = c;
+    fwp_cleanup_pop(&connection_cleanup); /* returned caller owns c and s */
     return s;
 }
 
@@ -1416,14 +1446,14 @@ typedef struct {
     int forced;
 } g_cell;
 
-/* Exactly one unread position owns the source and its client-stream reference.
- * Connection and server callback graphs still require tracing. */
+/* Exactly one unread position owns the source, request and connection. */
 static void g_incoming_drop(g_incoming *source) {
     g_conn *c = source->c;
     g_stream *s = source->s;
     source->c = 0;
     source->s = 0;
     g_stream_reader_release(c, s);
+    g_conn_drop(c);
 #ifndef FWP_RESOURCE_NO_FREE
     /* Source and position storage have raw runtime layouts, not record headers.
      * The array/storage release poisons only the first word under verification. */
@@ -1740,6 +1770,9 @@ static void g_sender_peer_finish(void *arg) {
     g_stream *s = x->s;
     x->s = 0;
     g_stream_drop(s);
+    g_conn *c = x->c;
+    x->c = 0;
+    g_conn_drop(c);
 }
 
 static void g_send_all(void *arg, int cancelled) {
@@ -1789,7 +1822,7 @@ static void g_send_all(void *arg, int cancelled) {
 
 static void g_spawn_sender(g_conn *c, g_stream *s, V iter, const fwp_remote *r) {
     g_sender *x = (g_sender *)fwp_alloc(sizeof *x);
-    x->c = c;
+    x->c = 0;
     x->s = 0; /* assigned only after the reference is acquired */
     x->cur = iter;
     x->r = r;
@@ -1802,6 +1835,8 @@ static void g_spawn_sender(g_conn *c, g_stream *s, V iter, const fwp_remote *r) 
     fwp_cleanup_push(&peer_cleanup, g_sender_peer_finish, x);
     fwp_rc_dup(PTR(s));
     x->s = s;
+    fwp_rc_dup(PTR(c));
+    x->c = c;
     fwp_task *t = fwp_spawn_task(0, g_send_all, x, 0, 1);
     t->cfinish = g_sender_peer_finish;
     fwp_cleanup_pop(&peer_cleanup);
@@ -1990,7 +2025,8 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     fwp_cleanup cell_cleanup;
     fwp_cleanup_push(&cell_cleanup, g_iterator_release, &pending);
 #endif
-    call.s = 0; /* the unread source now owns the call's stream reference */
+    call.c = 0;
+    call.s = 0; /* unread source takes both request and connection owners */
     g_failure f = {0, 0};
     V ev = 0;
     const fwp_desc *ed = 0;
