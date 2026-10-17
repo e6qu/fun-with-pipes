@@ -4,6 +4,7 @@ use std::process::Command;
 
 #[test]
 fn accepted_connections_release_after_startup_io_jobs_and_channels() {
+    let no_reuse = std::env::var("FWP_REUSE").as_deref() == Ok("0");
     let unit = MT::unit();
     let program = Program {
         funcs: vec![
@@ -76,6 +77,34 @@ fn accepted_connections_release_after_startup_io_jobs_and_channels() {
     let dir = fwp::cgen::TempDir::new("grpc-accepted-owners").unwrap();
     let binary = dir.join("connections.exe");
     for opt in ["-O1", "-O2"] {
+        if no_reuse {
+            assert!(!code.contains("#define FWP_RESOURCE_OWNERS 1"));
+            let counted = "#ifdef FWP_RESOURCE_OWNERS\n            fwp_rc_fresh(PTR(c));\n#endif";
+            assert_eq!(code.matches(counted).count(), 1);
+            // Enabling counts without counted channel owners must fail even
+            // though the callback remains reachable by the tracing collector.
+            let broken = code.replace(counted, "            fwp_rc_fresh(PTR(c));");
+            for (runtime, expected) in [(&code, 0), (&broken, 239)] {
+                fwp::cgen::compile_c(&format!("{prefix}{runtime}\n{fixture}"), &binary, opt)
+                    .unwrap();
+                for gc in ["off", "on"] {
+                    let output = Command::new(&binary)
+                        .arg("9")
+                        .env("FWP_GC", gc)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", "0")
+                        .output()
+                        .unwrap();
+                    assert_eq!(
+                        output.status.code(),
+                        Some(expected),
+                        "{opt}/{gc}/no-reuse: {output:?}"
+                    );
+                }
+            }
+            continue;
+        }
         for (needle, replacement, stage, expected) in controls {
             assert_eq!(code.matches(needle).count(), 1, "{needle}");
             let broken = code.replace(needle, replacement);
@@ -113,5 +142,19 @@ fn accepted_connections_release_after_startup_io_jobs_and_channels() {
                 }
             }
         }
+    }
+    if !no_reuse {
+        // Generate this mode in a separate process; do not mutate process-wide
+        // compiler options while Rust's test harness is running.
+        let output = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "accepted_connections_release_after_startup_io_jobs_and_channels",
+                "--nocapture",
+            ])
+            .env("FWP_REUSE", "0")
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "no-reuse compiler: {output:?}");
     }
 }

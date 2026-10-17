@@ -333,8 +333,8 @@ static void g_conn_final(void *p) {
     free(c->tlskey);
 }
 
-/* Pool, callers and live I/O tasks share client storage. Transport users
- * separately determine when the socket closes; requests may outlive it. */
+/* Pool, callers, server jobs and live I/O tasks own connection storage.
+ * Transport users determine when the socket closes; callbacks may outlive it. */
 static void g_conn_drop(void *value) {
     g_conn *c = value;
     if (!fwp_rc_release_last(PTR(c))) return;
@@ -2894,7 +2894,9 @@ static void g_accept_loop(fwp_socket_t lfd, const g_server *srv) {
             char peer[128];
             fwp_fmt_addr((struct sockaddr *)&ss, peer, sizeof peer);
             g_conn *c = g_conn_new(fd, peer, srv);
+#ifdef FWP_RESOURCE_OWNERS
             fwp_rc_fresh(PTR(c));
+#endif
             c->refs = 1; /* startup storage and transport, moved to the reader */
             fwp_cleanup accepted_owner;
             fwp_cleanup_push(&accepted_owner, g_connect_ref_release, c);

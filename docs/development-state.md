@@ -42,8 +42,17 @@ also gains the portable client startup test. The report collector has an explici
 `server-owners` comparison against the #160 report, requiring every request and
 connection finalized, constant final managed storage and unchanged allocations.
 
-Next: finish local formatting/audits, publish and freeze the combined candidate
-for all six native hosts. Fix any failures. Retain unchanged-workload memory,
+Further review found a real mode mismatch: accepted connections were counted
+in explicit `FWP_REUSE=0` builds, but output channels in that mode do not acquire
+counted owners. Connection startup now activates counts only with resource
+ownership enabled, matching request/source/channel construction. A separate
+compiler subprocess selects no-reuse mode and tests a channel retained across
+socket closure, plus a deliberately broken unconditional-count control.
+
+Superseded six-host `39025166581` at `d3d68598` was cancelled after finding this
+bug; it is not acceptance. The immutable tag `evidence/server-owners-20261017`
+retains that candidate. Publish the corrected candidate under a new tag and
+rerun all six hosts; do not move old evidence tags. Fix any failures. Retain unchanged-workload memory,
 allocation and count comparisons and inspect actual ARM64/AMD64 instructions.
 Do not execute downloaded artifacts. No full builds locally. Integrate into the
 next substantial PR only after #160 merges; preserve its final evidence/docs.
@@ -57,7 +66,8 @@ passes. Native test-runner tests pass (7 tests, guarded 1.16s). Request binary i
 passed in 0.15s, without executing artifacts. Broader native checks remain pending
 on GitHub. Final formatting passed in 1.10s, docs in 2.63s; real Cargo
 metadata coverage and report syntax checks passed in 0.14s (all 236 targets
-assigned, including both new ownership targets).
+assigned, including both new ownership targets). No-reuse fix formatting passed
+in 1.28s; documentation audit passed in 2.82s.
 
 ## Roadmap status
 
