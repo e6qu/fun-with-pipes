@@ -51,8 +51,9 @@ and clears its old field before calling it. Shared nodes still use borrowed
 application. Current elements remain owned until encoding finishes; evaluation
 and failure order are unchanged. Controls detect missing field clearing and
 incorrect mutation of shared nodes, alongside existing release/cancellation
-checks. This optimization is implemented locally but not yet verified. Publish
-it with the report/collector/docs changes and dispatch all six native hosts.
+checks. This optimization is implemented but not yet verified.
+Next: dispatch all six native hosts at the published branch head, inspect and
+repair failures, then collect and compare the final measurements.
 
 Passing Linux checks also include native request reset on input/encoding and
 response-channel failures, real failing-input clients with interpreter/native
