@@ -72,3 +72,14 @@ all final production gates. Do not open a second PR while #155 is active.
 | 5 | In progress | CPU kernels and GPU resource ownership |
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
+
+The six-host run `38995678897` at `12c807d2` passed Linux and macOS on both
+architectures. Both Windows jobs exposed identical fixture portability defects:
+four C diagnostic assertions expected LF, and spawn failure injection used Unix
+`mmap`. The diagnostics now normalize CRLF while retaining exact message checks;
+language output comparisons remain byte-for-byte. The spawn probe injects failure
+at native `CreateFiberEx` on Windows and `mmap` on Unix, verifies the injection
+was reached, and retains all three deliberately broken cleanup controls.
+Windows production now includes all seven closure/unwind targets from the probe.
+These repairs need a fresh six-host run on a common revision before collection.
+Guarded `cargo fmt --all -- --check` passed in 1.05s. No native test ran locally.

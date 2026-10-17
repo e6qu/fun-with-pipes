@@ -188,8 +188,8 @@ int main(void) {
                     .env("FWP_REUSE_VERIFY", poison),
             );
             assert_eq!(
-                out.stdout,
-                b"consumed closures release across failed entries\n"
+                String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
+                "consumed closures release across failed entries\n"
             );
         }
         checked(
@@ -313,8 +313,8 @@ int main(void) {
                         .env("FWP_REUSE_VERIFY", poison),
                 );
                 assert_eq!(
-                    out.stdout,
-                    b"overapplication owns pending typed arguments\n"
+                    String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
+                    "overapplication owns pending typed arguments\n"
                 );
             }
         }
@@ -424,8 +424,8 @@ int main(void) {
                     .env("FWP_REUSE_VERIFY", poison),
             );
             assert_eq!(
-                out.stdout,
-                b"primitive arguments and stack captures release on trap\n"
+                String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
+                "primitive arguments and stack captures release on trap\n"
             );
         }
         checked(
@@ -504,8 +504,8 @@ int main(void) {
                     .env("FWP_REUSE_VERIFY", poison),
             );
             assert_eq!(
-                out.stdout,
-                b"runtime function and incoming owners release on cancellation\n"
+                String::from_utf8(out.stdout).unwrap().replace("\r\n", "\n"),
+                "runtime function and incoming owners release on cancellation\n"
             );
         }
     }
