@@ -51,8 +51,10 @@ socket closure, plus a deliberately broken unconditional-count control.
 
 Superseded six-host `39025166581` at `d3d68598` was cancelled after finding this
 bug; it is not acceptance. The immutable tag `evidence/server-owners-20261017`
-retains that candidate. Publish the corrected candidate under a new tag and
-rerun all six hosts; do not move old evidence tags. Fix any failures. Retain unchanged-workload memory,
+retains that candidate. The corrected source is `7770db9a9c2bebee455d9c02dd748fbd7e54fb11`, frozen as
+`evidence/server-owners-modes-20261017`; all-six run `39025450771` is running.
+Next: fix any failures, collect and compare the six-host measurements, and review
+actual ARM64/AMD64 binaries. Do not move old evidence tags. Retain unchanged-workload memory,
 allocation and count comparisons and inspect actual ARM64/AMD64 instructions.
 Do not execute downloaded artifacts. No full builds locally. Integrate into the
 next substantial PR only after #160 merges; preserve its final evidence/docs.
@@ -67,7 +69,10 @@ passed in 0.15s, without executing artifacts. Broader native checks remain pendi
 on GitHub. Final formatting passed in 1.10s, docs in 2.63s; real Cargo
 metadata coverage and report syntax checks passed in 0.14s (all 236 targets
 assigned, including both new ownership targets). No-reuse fix formatting passed
-in 1.28s; documentation audit passed in 2.82s.
+in 1.28s; the documentation audit failed in 2.51s because the rewrite removed the
+required `Next:` marker. That marker is restored; the rerun passed in 2.66s (52 link sets,
+106 immutable pairs and seven roadmap steps). The earlier recorded pass was
+incorrect; this documentation-only correction does not change the frozen runtime.
 
 ## Roadmap status
 
