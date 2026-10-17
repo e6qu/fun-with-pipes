@@ -137,37 +137,66 @@ application machinery and transfer arguments exactly once. These are proposed
 implementation constraints, not completed work. Measure actual language clients
 as well as C fixtures: retaining an earlier iterator intentionally retains its
 saved sequence, so dropping C roots alone cannot prove bounded consumption.
-The next measurement is published as `36e99a62` on `measure-remote-stream-clients`
-in `/private/tmp/fwp-stream-clients`, merged with final delivery head `e71a2295`.
-It has no PR. Focused run `38990965239` failed: its raw-interpreter command
-passed an extra `--` as a program argument, so the old default-zero input path
-produced zero instead of the expected sum. The command now passes only the count;
-invalid input explicitly fails. A guarded prebuilt-compiler type check passed
-in 0.26s after correcting the zero-binding `None` arm (it evaluates its value
-directly). This is a measurement-driver repair, not a language semantic change.
+## Complete-client measurement preparation
 
-The same preparation fixes an encountered test-harness bug: reading a silent
-server's stderr could block past its nominal startup deadline. A background
-reader and timed receive now bound startup; timeout kills and waits for the child.
-The regression requires a timeout, not any startup failure. Formatting passed
-through the guard in 1.24s. Repair `91101d2e` is published; focused run
-`38991376833` exposed a Unix compilation error in the new regression: `Command`
-cannot cross a panic-unwind boundary. The regression now constructs it inside
-that boundary, with no unsafe assertion or runtime change. Publish this repair
-and repeat the focused suite; current delivery PR CI is unaffected. The collector
-`scripts/collect-stream-client-measurements.py` is prepared but uncommitted in
-that worktree; guarded Python syntax validation passed in 0.20s. It requires all
-six jobs, both named tests, matching source IDs and 27 rows per host before
-retaining counts, ranges, environment details and binary hashes. The ignored runner-only test in `tests/grpc.rs` generates actual native
-clients for full consumption, the first 32 values, and a retained first position.
-It compares output with raw interpretation, then records three allocation/live
-storage samples at 64/1,024/16,384 values with GC off. The server is interpreted
-and excluded from the counters; raw buffers/process memory and timings are also
-excluded. The new `stream-clients` focused suite records compiler/CPU/source and
-binaries. Local guarded formatting passed in 1.11s; runner verification remains
-required. Validate this preparation while production runs; fix failures and retain actual
-counts before selecting the next cache ownership change. Retained host callbacks, GPU resources and
-all seven project areas remain open.
+Branch `measure-remote-stream-clients`, worktree `/private/tmp/fwp-stream-clients`,
+is at `456f2dbd` and includes delivery head `e71a2295` through a merge. It has no
+PR. Focused run `38991578784` passed on all six native hosts. The baseline report
+`docs/measurements/remote-client-memory-baseline-2026-10-17.json` is generated in
+this preparation worktree; collection through the guard passed in 20.66s. Earlier preparation runs failed on an extra `--` program argument and a
+Unix `Command` captured across a panic-unwind boundary; both are corrected.
+
+The runner-only test generates actual native clients consuming all 64/1,024/16,384
+integers, only the first 32, or the whole sequence while retaining the original
+iterator for a later reread. Output must agree with raw interpretation and an
+uninstrumented native client. Three measured processes record managed allocations,
+retains and allocator-charged storage with collection off and physical freeing
+on. The server is interpreted. Raw buffers, process/server memory and timing are
+excluded. Invalid input fails explicitly. A neighboring regression now verifies
+that silent service startup times out: stderr is drained on a background reader,
+and timeout kills and waits for the child instead of blocking in `read_line`.
+
+Linux ARM64 and Apple Silicon samples are downloaded under
+`/private/tmp/fwp-stream-client-evidence/38991578784/`. Both show five allocation
+requests per additional consumed integer and about 104 requested bytes (argument
+string length contributes a small fixed difference). After entry cleanup, charged
+storage still grows by exactly 64 bytes per consumed integer in both full-read
+modes. Linux ARM64's unique case ends at 23,872 / 85,312 / 1,068,352 bytes; Apple
+Silicon ends at 6,816 / 68,256 / 1,051,296. All three repetitions agree on these
+hosts. Partial consumption stays fixed in managed storage; that does not prove
+bounded unread raw message queues, which are excluded.
+
+Generated C confirms `GrpcCell` is not counted by `src/rc.rs::needs_rc`: the
+`(I64, GrpcCell[I64])` destructor does not visit its cell field. The next cache
+change must coordinate that classification, a typed bounded-stack cell destructor,
+closure captures, the consuming `grpc._force` contract and remote iterator entry
+calls. Prefer transferring an exclusive cached result, duplicating only for a
+shared cell. Standard wire decoding already returns owned values. Connection,
+stream and decoder lifetimes still need review; do not admit whole remote calls
+to checked ARC before those graphs are owned. Releasing cache memory must not
+silently introduce earlier remote cancellation or change observable effects.
+
+The passing baseline is collected with
+`scripts/collect-stream-client-measurements.py` in that worktree. It requires all
+six jobs, both named tests, exact source IDs and 27 rows per host, then retains
+ranges, environments and binary hashes. Guarded Python syntax passed in 0.20s;
+formatting in 1.16s; the corrected fwp input program type-checks in 0.26s using
+the prebuilt compiler. Downloads took 2.87s/2.84s under the guard. No local native
+builds ran. Preserve the measurement source under
+`evidence/remote-client-memory-baseline-20261017` before publication.
+
+The ownership candidate is started separately on `own-remote-stream-caches` in
+`/private/tmp/fwp-owned-stream-caches`, based on `456f2dbd`. Its uncommitted changes
+span `src/rc.rs`, `src/ownership.rs`, `src/cgen.rs` and `runtime/fwp_rt_grpc.c`:
+count cells, consume force arguments, move exclusive cached results, release
+cell/optional/tuple chains iteratively, and use owned remote-iterator entry calls.
+Source allocations move between unread positions and release at the end; freeing
+a source does not cancel the connection. Connections, streams and decoder
+contracts remain unfinished, and ARC still rejects remote calls. This candidate
+is not verified. Finish partial-construction/error owners, update affected fixture
+hooks, add alias/cleanup/negative controls and single-host probes before broad CI.
+Do not publish it as supported merely because the baseline passed.
+Retained host callbacks, GPU resources and all seven project areas remain open.
 
 ## Roadmap status
 

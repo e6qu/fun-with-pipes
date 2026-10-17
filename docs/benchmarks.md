@@ -1473,3 +1473,66 @@ noise, predict the complete CI gate, or establish memory savings. Physical CPU
 models, host contention and resident memory were not sampled. The report retains
 compiler versions, artifact build settings, executable hashes, samples and log
 hashes; the workflow retains the complete logs.
+
+## Memory used by complete remote-stream clients
+
+A complete client receives a stream from a running service, constructs the
+language's iterator values and consumes them. The
+[baseline report](measurements/remote-client-memory-baseline-2026-10-17.json)
+at `456f2dbd` measures that path on all six native targets. The server sends the
+integers from 1 through the requested count over a real loopback HTTP/2 connection.
+The server uses the interpreter; its memory is outside the client counters.
+
+Three client programs request 64, 1,024 or 16,384 integers. The first sums the
+whole stream. The second also sums it, but retains the original iterator until
+it reads the first value again. The third consumes only the first 32 values.
+For 64 requested values, their outputs are respectively `2080`, `(2080, [1])`
+and `528`. The pair in the second output contains the sum and a one-element list
+holding the reread value. Raw unoptimized interpretation and ordinary compiled
+clients must agree with those expected results before collecting measurements.
+
+Separate instrumented clients run three times per case with collection disabled
+and physical freeing enabled. Counters start after constant initialization and
+stop after the entry function and cached top-level values are cleaned up. They
+count managed allocation requests, requested bytes and managed value retains,
+and sample allocator-charged storage after each allocation. A retain adds an
+owner to an already-counted value; this counter does not cover separate transport
+reference counts. Native clients use `-O2` through the recorded compiler revision's
+usual C compilation path. Compiler versions, CPU details, source, generated C,
+binaries and all samples are retained.
+
+Here is the charged storage remaining after entry cleanup for the first client:
+
+| Native client | 64 values | 1,024 values | 16,384 values |
+|---|---:|---:|---:|
+| Linux AMD64 | 10,816 bytes | 72,256 bytes | 1,055,296 bytes |
+| Linux ARM64 | 23,872 bytes | 85,312 bytes | 1,068,352 bytes |
+| macOS AMD64 | 6,816 bytes | 68,256 bytes | 1,051,296 bytes |
+| macOS ARM64 | 6,816 bytes | 68,256 bytes | 1,051,296 bytes |
+| Windows AMD64 | 7,968 bytes | 69,408 bytes | 1,052,448 bytes |
+| Windows ARM64 | 7,584 bytes | 69,024 bytes | 1,052,064 bytes |
+
+All three repetitions agree on these hosts. Remaining managed storage grows by
+64 bytes per consumed integer, even without deliberately retaining an earlier
+iterator. Each additional integer causes five allocation requests totaling about
+104 requested bytes; the changing length of the command-line count adds a small
+fixed difference. The retained-iterator case has the same remaining storage at
+this final sampling point. The partial reader's measured managed storage stays
+fixed as the requested count increases.
+
+These observations identify missing cache destruction with collection disabled;
+they do not show a leak under ordinary collection or establish bounded total
+memory for partial readers. The counters exclude raw network/message buffers,
+allocator metadata/pages, total process memory and server memory. The final
+sample precedes whole-runtime shutdown. No execution timings or C/Rust comparison
+are included. Generated C also shows why the cache needs further ownership work:
+`GrpcCell`, the internal type for a remote stream position, is not yet counted,
+and tuple cleanup does not release its cell field.
+
+To reproduce, dispatch `numerics.yml` with `suite=stream-clients`, then use
+[`collect-stream-client-measurements.py`](../scripts/collect-stream-client-measurements.py)
+through the local guard. Supply the workflow number, exact source revision,
+artifact directory and report path through `--run`, `--head`, `--artifacts` and
+`--output`. It requires all six native jobs, the startup-deadline regression,
+the client measurement, matching source identities and every expected sample.
+It never executes downloaded binaries.
