@@ -71,12 +71,27 @@ fn measured_server(binary: &Path, calls: usize) -> Server {
 #[test]
 #[ignore = "native server memory evidence runs on GitHub runners"]
 fn repeated_server_call_memory() {
+    measure_server_calls("tracing");
+}
+
+#[test]
+#[ignore = "native ARC server memory evidence runs on GitHub runners"]
+fn repeated_arc_server_call_memory() {
+    measure_server_calls("arc");
+}
+
+fn measure_server_calls(memory_mode: &str) {
     assert!(have_cc(), "native compiler is required for server evidence");
     let artifacts = PathBuf::from(
         std::env::var_os("FWP_SERVER_MEMORY_ARTIFACTS").expect("server artifact directory"),
     );
     std::fs::create_dir_all(&artifacts).unwrap();
-    let d = scratch("server-memory");
+    let d = scratch(&format!("server-memory-{memory_mode}"));
+    std::fs::write(
+        artifacts.join("memory-mode.txt"),
+        format!("{memory_mode}\n"),
+    )
+    .unwrap();
     std::fs::copy(dir().join("greeter.fwp"), d.join("greeter.fwp")).unwrap();
     std::fs::copy(dir().join("greeter.fwp"), artifacts.join("greeter.fwp")).unwrap();
     std::fs::write(
@@ -105,9 +120,12 @@ fn repeated_server_call_memory() {
         std::fs::write(&source,format!("import greeter\n\nconsume : {signature}\nconsume = {consume}\nstep = curry (both .0 (.1 | consume) | uncurry add)\n\nmain =\n    () | args | head | option.and-then parse-int\n    | (match\n        Some _ -> id\n        None -> \"expected a numeric call count\" | fail)\n    | flip iter.take (iter.count-from 0)\n    | iter.fold step 0\n    | echo\n")).unwrap();
         std::fs::copy(&source,artifacts.join(format!("{mode}.fwp"))).unwrap();
         let split=d.join(mode);
-        build(&[source.to_str().unwrap(),"--service","greeter","--emit-c","-o",split.to_str().unwrap()],&d);
+        build(&["--gc",memory_mode,source.to_str().unwrap(),"--service","greeter","--emit-c","-o",split.to_str().unwrap()],&d);
         let client_code=std::fs::read_to_string(split.join(format!("{mode}.c"))).unwrap();
         let server_code=std::fs::read_to_string(split.join("greeter.c")).unwrap();
+        for code in [&client_code, &server_code] {
+            assert_eq!(code.contains("#define FWP_ARC_ONLY 1"), memory_mode == "arc");
+        }
         let measured_code=instrument(&server_code);
         std::fs::write(artifacts.join(format!("{mode}-client.c")),&client_code).unwrap();
         std::fs::write(artifacts.join(format!("{mode}-server.c")),&server_code).unwrap();
@@ -117,6 +135,16 @@ fn repeated_server_call_memory() {
         let measured=artifacts.join(format!("{mode}-server-measured{}",std::env::consts::EXE_SUFFIX));
         for (code,binary) in [(&client_code,&client),(&server_code,&ordinary),(&measured_code,&measured)] {
             fwp::cgen::compile_c(code,binary,"-O2").unwrap();
+            if memory_mode == "arc" {
+                let mut nm = Command::new("nm"); nm.arg(binary);
+                let symbols = run(nm, 30);
+                assert!(symbols.status.success(), "{}", render(&symbols));
+                let text = String::from_utf8_lossy(&symbols.stdout);
+                for tracing in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                    assert!(!text.contains(tracing), "{} contains {tracing}", binary.display());
+                }
+                std::fs::write(binary.with_extension("nm"), symbols.stdout).unwrap();
+            }
         }
         let mut command=Command::new(&ordinary);command.args(["--listen","127.0.0.1:0"]);
         let ordinary_server=start(command,Duration::from_secs(60));

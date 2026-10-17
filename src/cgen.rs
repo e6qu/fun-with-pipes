@@ -7077,8 +7077,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
         for i in f.arity..f.nlocals() {
             let _ = writeln!(out, "    V l{} = 0;", i);
         }
-        // a primitive (a C function, a remote call) may keep what it is
-        // given: it is shared
+        // Unproved external primitives may keep arguments. Remote calls borrow
+        // their arguments while encoding/sending; retained input cursors acquire
+        // their own typed owners, and output-channel delivery finishes in-call.
         if self.reuse && !matches!(f.body, Body::Expr(_) | Body::Ctor(_)) {
             let sym = match &f.body {
                 Body::Prim(s) => s.as_str(),
@@ -7089,13 +7090,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                     params.iter().all(|(_, ty)| crate::ffi::scoped_argument(ty))
                         && crate::ffi::copied_result(&result)
                 });
-            let borrowed_remote_input = match &f.body {
-                Body::Remote(remote) => {
-                    crate::rpc::shape(&f.ty, f.arity as usize, remote.error.as_ref())
-                        .client_streaming()
-                }
-                _ => false,
-            };
+            let borrowed_remote = matches!(f.body, Body::Remote(_));
             for i in 0..f.arity {
                 let foreign_borrow = matches!(f.body, Body::ForeignC { .. })
                     && crate::ffi::classify(self.prog, &f.locals[i as usize]).is_ok_and(|ty| {
@@ -7105,7 +7100,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                 if crate::rc::needs_rc(&self.prog.shapes, &f.locals[i as usize])
                     && !crate::rc::prim_reads_only(sym, i as usize)
                     && !foreign_borrow
-                    && !(borrowed_remote_input && i == 0)
+                    && !borrowed_remote
                 {
                     let _ = writeln!(out, "    fwp_rc_share(l{});", i);
                 }

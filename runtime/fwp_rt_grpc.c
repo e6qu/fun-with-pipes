@@ -2102,6 +2102,11 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
         if (k == G_DEC_BAD) g_trapf("bad response from %s (%s): %s", r->what, addr, why);
         fwp_cleanup_pop(&decode_text);
         free(why);
+        /* The response is ours while waiting for the final status. A reset,
+         * cancellation or extra message must release it before unwinding. */
+        fwp_value_owner decoded = {v, k == G_DEC_ERROR ? dec.error->drop : dec.ty->drop};
+        fwp_cleanup decoded_cleanup;
+        fwp_value_protect(&decoded, &decoded_cleanup);
         g_got g = {0};
         fwp_cleanup received;
         fwp_cleanup_push(&received, g_got_release, &g);
@@ -2112,9 +2117,10 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
         }
         if (g.kind == G_LOST) g_stub_got_fail(r, addr, -1, &g);
         if (g.code != 0) g_stub_got_fail(r, addr, g.code, &g);
-        if (k == G_DEC_ERROR) fwp_fail(v, r->m.error);
         fwp_cleanup_pop(&received);
         g_got_release(&g);
+        v = fwp_value_finish(&decoded, &decoded_cleanup);
+        if (k == G_DEC_ERROR) fwp_fail(v, r->m.error);
         fwp_cleanup_pop(&first_received);
         g_got_release(&first);
         fwp_cleanup_pop(&call_cleanup);
@@ -2146,10 +2152,17 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
                 }
                 fwp_cleanup_pop(&decode_text);
                 free(why);
+                /* Sending borrows the decoded value. A queue acquires its own
+                 * owner; closed channels and native sinks retain none here. */
+                fwp_value_owner decoded = {v, dec.ty->drop};
+                fwp_cleanup decoded_cleanup;
+                fwp_value_protect(&decoded, &decoded_cleanup);
                 fwp_cleanup channel_abort;
                 fwp_cleanup_push(&channel_abort, g_call_reset, &call);
-                fwp_p_channel_send(ch, v);
+                fwp_p_channel_send_owned(ch, v, dec.ty->dup);
                 fwp_cleanup_pop(&channel_abort);
+                fwp_value_finish(&decoded, &decoded_cleanup);
+                if (dec.ty->drop) dec.ty->drop(v);
                 fwp_cleanup_pop(&received);
                 g_got_release(&g);
                 continue;
