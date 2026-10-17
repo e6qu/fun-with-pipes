@@ -34,8 +34,11 @@ fn grpc_connection_startup_releases_failed_task_reservations() {
         ("startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1);","if(stage==1)fwp_trap(\"writer spawn trap\"); startup.writer=fwp_spawn_task(0,g_writer,c,0,1);started_writer=startup.writer;"),
     ]{assert_eq!(generated.matches(before).count(),1);generated=generated.replacen(before,after,1);}
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
-static int stage,trapped,finalized;
+static int stage,trapped,finalized,wait_probe_active;
 static void *pending,*started_reader,*started_writer;
 static void no_release(void *);
 static void observed_free(void *);
@@ -47,6 +50,42 @@ static void no_release(void *p){(void)p;}
 static void observed_free(void *p){if(p==g_connect_start_failed)_Exit(8);free(p);}
 static char target[300];static g_conn *result;
 static void client(void *arg,int stop){if(stop)_Exit(30);jmp_buf failed;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;if(!setjmp(failed)){fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;char *error=0;result=g_connect(target,0,&error);if(error)_Exit(31);}else trapped++;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;}
+static int wait_entered,wait_finished,wait_cancelled;
+static int64_t wait_until;
+static void wait_socket(void *arg,int cancelled){
+ if(cancelled){wait_cancelled++;return;}
+ wait_entered++;
+ int ready=fwp_wait_fd(*(fwp_socket_t *)arg,0,wait_until);
+ if(ready!=(wait_until==0))_Exit(41);
+ wait_finished++;
+}
+static void check_wait_lifetimes(void){
+ wait_probe_active=1;
+ for(int mode=0;mode<4;mode++){
+  V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);
+  fwp_socket_t fd=SOCK(listener)->fd;
+  wait_entered=wait_finished=wait_cancelled=0;
+  wait_until=mode==0?fwp_now_ns()+100000000LL:0;
+  int64_t deadline=mode==3?fwp_now_ns()+100000000LL:0;
+  fwp_task *first=fwp_spawn_task(0,wait_socket,&fd,deadline,0);
+  fwp_task *second=fwp_spawn_task(0,wait_socket,&fd,deadline,0);
+  while(wait_entered!=2)fwp_p_task_yield();
+  if(mode==1){fwp_cancel_tree(first);fwp_cancel_tree(second);}
+  if(mode==2)fwp_fd_closing(fd); /* both parked readers must wake */
+  int64_t drain=fwp_now_ns()+5000000000LL;
+  while(!first->done||!second->done){
+   if(fwp_now_ns()>=drain)_Exit(44);
+   fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();
+  }
+  fwp_await(first);fwp_await(second);fwp_free_zombie();
+  int cancelled=mode==1||mode==3;
+  if(wait_finished!=(cancelled?0:2)||wait_cancelled!=(cancelled?2:0)||fwp_cleanups)_Exit(42);
+#ifndef __linux__
+  if(fwp_poll_waits)_Exit(43);
+#endif
+  fwp_p_tcp_stop(listener);FWP_KEEP_ALIVE(listener);
+ }
+}
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_trap_recover=g_trap_recover;
  for(stage=0;stage<3;stage++){
@@ -56,7 +95,7 @@ int main(void){
   if(!task->done||!c||fwp_cleanups||trapped!=(stage<2))return 2;
   if(stage==0){if(result||g_pool||started_reader||started_writer)return 1;if(strcmp(fwp_trap_msg,"reader spawn trap"))return 3;}
   if(stage==1){if(result||g_pool||!started_reader||started_writer)return 1;if(strcmp(fwp_trap_msg,"writer spawn trap"))return 4;}
-  if(stage==2){if(result!=c||g_pool!=c||!started_reader||!started_writer||c->refs!=2||c->dead||fcntl(c->fd,F_GETFD)==-1)return 1;g_conn_dead(c,"finished");}
+  if(stage==2){int kind=0;socklen_t n=sizeof kind;if(result!=c||g_pool!=c||!started_reader||!started_writer||c->refs!=2||c->dead||getsockopt(c->fd,SOL_SOCKET,SO_TYPE,(char *)&kind,&n))return 1;g_conn_dead(c,"finished");}
   // A ready root would prevent the scheduler from polling the closed socket.
   // Park briefly so its reader wakes naturally; never await a freed I/O handle.
   int64_t drain_deadline=fwp_now_ns()+10000000000LL;
@@ -64,11 +103,11 @@ int main(void){
    if(fwp_now_ns()>=drain_deadline){fprintf(stderr,"startup drain timed out at stage %d\n",stage);return 9;}
    fwp_park(0,fwp_now_ns()+1000000LL);fwp_free_zombie();
   }fwp_free_zombie();
-  if(stage==2){if(c->refs||c->fd!=-1||finalized)return 1;g_conn_drop(c);result=0;}
+  if(stage==2){if(c->refs||c->fd!=FWP_INVALID_SOCKET||finalized)return 1;g_conn_drop(c);result=0;}
   if(finalized!=1||g_pool||fwp_cleanups)return 1;
   fwp_p_tcp_stop(listener);FWP_KEEP_ALIVE(listener);FWP_KEEP_ALIVE(PTR(task));
  }
- fwp_lib_finish();return 0;
+ check_wait_lifetimes();fwp_lib_finish();return 0;
 }
 "#;
     let dir = fwp::cgen::TempDir::new("grpc-connect-startup").unwrap();
@@ -79,7 +118,7 @@ int main(void){
     assert_eq!(generated.matches(reserve).count(), 2);
     assert_eq!(generated.matches(startup).count(), 1);
     assert_eq!(generated.matches(marker).count(), 1);
-    let controls = [
+    let mut controls = vec![
         (
             generated.replace(reserve, "fwp_cleanup_push(&reserved_ref,no_release,c);"),
             1,
@@ -94,6 +133,26 @@ int main(void){
         ),
         (generated.replacen(marker, "free(c->dead);", 1), 8),
     ];
+    if cfg!(windows) {
+        let wake =
+            "    fwp_fd_closing(c->fd); /* wake I/O before shutdown, including polling hosts */";
+        assert_eq!(generated.matches(wake).count(), 1);
+        // Without the explicit wake, WSAPoll leaves the local reader parked.
+        controls.push((generated.replacen(wake, "", 1), 9));
+    }
+    if !cfg!(target_os = "linux") {
+        let unlink =
+            "    fwp_poll_wait_remove(&wait); /* unlink before fwp_check_cancel can unwind */";
+        assert_eq!(generated.matches(unlink).count(), 1);
+        controls.push((
+            generated.replacen(
+                unlink,
+                "    if(!wait_probe_active) fwp_poll_wait_remove(&wait);",
+                1,
+            ),
+            43,
+        ));
+    }
     for opt in ["-O1", "-O2"] {
         for (broken, expected) in &controls {
             fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();

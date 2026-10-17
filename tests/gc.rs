@@ -583,15 +583,19 @@ fn grpc_server_runs_in_bounded_memory() {
     let out = client("4000");
     assert_eq!(String::from_utf8_lossy(&out.stdout), "66893\n");
     let before = rss_kib(server.0.id());
+    let mut samples = vec![before];
     for _ in 0..4 {
-        client("4000");
+        let out = client("4000");
+        assert_eq!(String::from_utf8_lossy(&out.stdout), "66893\n");
+        samples.push(rss_kib(server.0.id()));
     }
     let after = rss_kib(server.0.id());
     drop(server);
-    // without the collector the server grows by about 7 KiB per call
+    eprintln!("server RSS KiB after warm-up and each 8000-call batch: {samples:?}");
+    // Keep the same whole-process bound as ownership replaces traced storage.
     assert!(
         after < before + 8 * 1024,
-        "RSS grew from {} KiB to {} KiB over 32000 calls",
+        "RSS grew from {} KiB to {} KiB over 32000 calls; samples {samples:?}",
         before,
         after
     );

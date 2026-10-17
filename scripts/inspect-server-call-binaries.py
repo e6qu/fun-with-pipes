@@ -23,6 +23,8 @@ def main():
     args = parser.parse_args()
     symbols = ['g_handle', 'g_start_call', 'g_job_peer_finish', 'g_run_method',
                'g_reader', 'g_accept_loop', 'g_serving_peer_release', 'fwp_task_own_internal',
+               'g_slist_release', 'g_incoming_drop', 'g_conn_release', 'g_conn_drop',
+               'g_conn_final', 'g_stream_drop', 'g_stream_final',
                'g_apply_user', 'g_method_values_release', 'g_cursor_next', 'g_cursor_release',
                'g_recv_one', 'g_finish', 'g_sink_value', 'g_sink_send', 'g_sink_drop',
                'fwp_channel_drop', 'fwp_p_channel_send_owned',

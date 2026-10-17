@@ -99,6 +99,9 @@ jobs:
           name: udp-${{ matrix.runner }}
           path: udp-evidence/
           if-no-files-found: ignore
+      - name: Check long-running server resident memory
+        if: inputs.suite == 'server-repeat' && runner.os == 'Linux'
+        run: cargo test --test gc grpc_server_runs_in_bounded_memory -- --exact --nocapture
       - name: Measure server memory after completed calls
         if: inputs.suite == 'server-repeat'
         shell: bash
@@ -119,6 +122,9 @@ jobs:
           pathlib.Path("server-memory-evidence/cpu.txt").write_text(subprocess.check_output(commands[os.environ["RUNNER_OS"]], text=True))
           PYENV
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output server-memory-evidence/primitive-inventory.json
+          cargo test --lib rc::tests
+          cargo test --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership --test borrowed_callbacks
+          cargo test --test grpc_server_connections --test grpc_server_requests --test grpc_connect_startup --test grpc_server_ownership
           cargo test --test grpc_response_encoding --test channel_queue_ownership --test arc_tasks
           cargo test --test list_applicative_ownership inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries -- --exact
           cargo test --test grpc_peer_completion --test grpc_status_cleanup --test grpc_receive_cleanup --test grpc_send_cleanup --test task_ownership --test grpc_request_encoding --test grpc_client_requests

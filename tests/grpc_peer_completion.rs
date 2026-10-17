@@ -177,11 +177,7 @@ int main(void){
     let sender_completion = "    t->cfinish = g_sender_peer_finish;";
     assert_eq!(generated.matches(sender_completion).count(), 1);
     let sender_omitted = generated.replacen(sender_completion, "", 1);
-    let job_omitted = generated.replacen(
-        "    observed_managed_free((g_job *)sv);",
-        "    (void)sv;",
-        1,
-    );
+    let job_omitted = generated.replacen("    observed_managed_free(job);", "    (void)sv;", 1);
     assert_ne!(job_omitted, generated);
     let task_omitted = generated.replacen(
         "    fwp_task_own_internal(s->task, fwp_cur->scope != NULL);",

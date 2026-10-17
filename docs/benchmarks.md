@@ -1902,8 +1902,9 @@ buffered output. The final delivery additionally preserves the existing
 recoverable server TLS protocol-list allocation error and adds its regression
 check; that server-startup path is outside the measured client workload.
 Final production acceptance is tracked in [the delivery history](roadmap-history.md).
-Pending sender inputs and server callbacks still need ownership work, so remote
-calls remain excluded from checked ARC.
+This comparison predates the input-owner work accepted in PR #159, described
+below. Server ownership still needs its own proof; remote calls remain excluded
+from checked ARC.
 
 
 ### Memory retained by client inputs after sending finishes
@@ -2192,8 +2193,9 @@ a memory improvement for these workloads, not zero runtime overhead.
 [All six native hosts pass](https://github.com/e6qu/fun-with-pipes/actions/runs/39022416616),
 including cleanup, aliases, cancellation, collection stress, reuse checks and
 ordinary interpreter/native comparisons with reuse explicitly enabled or disabled.
-The report compares identical programs and inputs with storage revision `e6455c0d`;
-the original baseline `06432959` shows the total change being delivered in PR #160.
+This is an intermediate stage of PR #160. The report compares identical programs
+and inputs with storage revision `e6455c0d`; the original baseline is `06432959`.
+The following section adds complete request/connection owners and callback borrowing.
 These are fwp version comparisons, without elapsed-time or C/Rust measurements.
 
 Typed cleanup now frees method arguments, results and errors. Returned iterators
@@ -2214,11 +2216,11 @@ from the original server baseline as follows:
 | Sent iterator | 1,753,440 bytes | 62,304 bytes |
 | Output channel | 971,104 bytes | 62,304 bytes |
 
-Every workload still grows by **240 bytes per call** on every host. Requests and
-connections remain to be owned completely. This does not establish bounded
+At this stage every workload still grows by **240 bytes per call** on every host.
+Requests and connections still need owners. This does not establish bounded
 long-running server memory or remote checked ARC support.
 
-The complete delivery removes two allocations per greeting/returned-iterator call
+This stage removes two allocations per greeting/returned-iterator call
 and three per sent-iterator/output-channel call. Requested bytes fall by 32, 32,
 56 and 32 per call respectively. Reference-count increments per call change from
 0 / 64 / 253 / 0 to **1 / 64 / 128 / 64**. Those are count costs, not time ratios.
@@ -2236,3 +2238,78 @@ hardware and compiler settings. Counters use the baseline's collection-off,
 physical-freeing-on boundary. Raw network buffers, task stack pools, TLS/OS and
 allocator metadata, whole-process memory and timing remain excluded. Full PR
 acceptance is tracked in [the handoff](development-state.md).
+
+### Freeing server requests and borrowing fold captures
+
+[The six-platform report](measurements/server-borrows-2026-10-17.json) records
+`8ed65cc7`, tag `evidence/server-borrows-controls-20261017`, from
+[the passing focused run](https://github.com/e6qu/fun-with-pipes/actions/runs/39029223789).
+It compares the identical four fwp programs with the preceding `855fe3d1` stage.
+Both versions serve 1, 16 or 256 calls over one connection, with three fresh
+processes per case. Streams have 64 elements. This is a comparison of fwp versions,
+not fwp against C/Rust, and it does not measure elapsed time.
+
+A request stores one call's messages and status; a connection holds the socket and
+information shared by calls. Explicit owners now release those records after the
+last task or retained iterator/channel finishes. A closed socket can safely have
+users that still need its record. Known fold callbacks also borrow captures:
+values supplied earlier and kept for later calls. The enclosing call keeps them
+alive, avoiding repeated reference-count updates inside the loop.
+
+The final managed-storage counter is constant at every call count and repetition:
+
+| Native hosts | Previous stage, after 256 calls | With request/connection owners and borrowing |
+|---|---:|---:|
+| Linux ARM64 and AMD64 | 62,304 bytes | 544 bytes |
+| macOS ARM64 and AMD64 | 61,760 bytes | 0 bytes |
+| Windows ARM64 and AMD64 | 61,760 bytes | 0 bytes |
+
+Every measured request and connection finalizes. The old 240-byte increase per
+call disappears. Allocation requests and requested bytes are unchanged from the
+preceding stage: storage now frees sooner. Compared with the original `06432959`
+baseline, the complete change still removes two allocations per greeting/returned
+stream and three per sent stream/output channel, saving 32 / 32 / 56 / 32 requested
+bytes per call. These are cumulative allocation costs, separate from live memory.
+
+Reference counting still pays for independent owners. A retain is one increment
+of a value's owner count; the following figures count those increments:
+
+| Workload | Previous stage, retains per call | Combined change, retains per call |
+|---|---:|---:|
+| Greeting | 1 | 3 |
+| Returned integer stream | 64 | 66 |
+| Received integer stream | 128 | 132 |
+| Output channel sending 64 texts | 64 | 4 |
+
+The combined version also adds **one retain per connection**. Before callback
+borrowing, complete connection ownership needed 68 retains per channel call;
+borrowing removes 64 per-message retain/release pairs. For 256 calls that is
+17,409 down to 1,025 retains. It does not remove sharing between independently
+live parser, task and channel owners.
+
+Actual ordinary Linux binaries keep the channel in `rbx` on AMD64 and `x19` on
+ARM64 through the send loop, with no channel retain/drop per iteration. The
+callback body is inlined. Its caller's frame grows from 200 to 280 bytes on AMD64
+(excluding the incoming return address) and from 240 to 336 on ARM64. The loop no
+longer calls the separate callback with its old 184/208-byte frame. Other callees
+still have frames; this is not a bound on total stack use. Parser/connection
+lifetime protection adds 16/32 bytes to the reader frame.
+
+Compared with `855fe3d1`, machine-code/text sections grow by 2,536 bytes on AMD64
+and 2,352 on ARM64; data and zero-initialized storage are unchanged. Ordinary
+binary files grow from 322,056 to 326,328 bytes on AMD64 and from 307,376 to
+307,544 on ARM64. File growth includes layout/alignment effects and differs from
+code growth. No timing benefit follows from these sizes or count reductions alone.
+
+Counters start after listener/routing/root setup and end after client disconnect
+and task retirement, with the listener still open. Tracing is disabled and
+physical freeing enabled. Raw network buffers, task-stack pools, OS/TLS/allocator
+metadata and whole-process memory are excluded. All 18 raw tables, environment
+records, source/binary fingerprints and instruction reviews are retained.
+
+The preceding partial implementation failed the separate Linux ARM64 production
+check: resident memory grew from 17,104 to 49,420 KiB over 32,000 calls. That test
+covers more than the managed counter and keeps its 8 MiB growth limit. The combined
+implementation must pass it and all final production gates before acceptance;
+[the handoff](development-state.md) records the current result. Short bounded
+measurements do not prove complete GC removal, remote checked ARC, or C/Rust parity.

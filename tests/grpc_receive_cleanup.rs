@@ -279,7 +279,7 @@ static void observed_message_free(void *);
     let fixture = include_str!("fixtures/grpc_client_stream_ownership.c");
     let code = format!("{hooks}\n{generated}\n{fixture}");
     let source_connection =
-        "    g_stream_reader_release(c, s);\n    g_conn_drop(c);\n#ifndef FWP_RESOURCE_NO_FREE";
+        "    else g_stream_reader_release(c, s);\n    g_conn_drop(c);\n#ifndef FWP_RESOURCE_NO_FREE";
     let sender_connection = "    x->c = 0;\n    g_conn_drop(c);";
     let connection_finalizer = "    fwp_gc_forget_finalizer(c);\n    g_conn_final(c);";
     let connection_storage = "    g_conn_final(c);\n    fwp_rc_resource_free_arr(PTR(c));";
@@ -292,9 +292,8 @@ static void observed_message_free(void *);
         assert_eq!(code.matches(marker).count(), 1, "{marker}");
     }
 
-    let list_release =
-        "    g_stream_drop(s); /* the active-list owner, when this is an owned client stream */";
-    let source_release = "    source->s = 0;\n    g_stream_reader_release(c, s);";
+    let list_release = "    g_stream_drop(s); /* the active-list owner of a counted request */";
+    let source_release = "    else g_stream_reader_release(c, s);";
     let sender_release = "    x->s = 0;\n    g_stream_drop(s);";
     let finalizer_release = "    fwp_gc_forget_finalizer(s);\n    g_stream_final(s);";
     for marker in [
@@ -309,7 +308,7 @@ static void observed_message_free(void *);
         (
             code.replace(
                 source_connection,
-                "    g_stream_reader_release(c, s);\n#ifndef FWP_RESOURCE_NO_FREE",
+                "    else g_stream_reader_release(c, s);\n#ifndef FWP_RESOURCE_NO_FREE",
             ),
             "0",
             221,
@@ -327,7 +326,7 @@ static void observed_message_free(void *);
         ),
         (code.replace(list_release, "    (void)s;"), "0", 212),
         (
-            code.replace(source_release, "    source->s = 0; (void)c; (void)s;"),
+            code.replace(source_release, "    else { (void)c; (void)s; }"),
             "0",
             211,
         ),

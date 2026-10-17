@@ -935,6 +935,69 @@ workloads still grow by 240 managed bytes per call. Full production acceptance
 is pending. Server requests/connections, escaped graphs
 and HTTP ownership remain open; these changes do not establish remote checked ARC.
 
+### Server request and connection ownership under validation
+
+A request record stores one remote call's headers, queued messages and status.
+A connection record holds the socket and information shared by calls using it.
+The combined PR #160 gives these records explicit owners; production acceptance
+is pending, as recorded in [the handoff](development-state.md).
+
+While parsing incoming bytes, a temporary list owns each new request. This matters
+when the same input contains both a new call and its cancellation: cancellation
+can remove the request from the connection before a serving task starts. The
+parser list keeps it alive, then moves its owner into the serving job. A parse
+failure releases every request still in the temporary list.
+
+Connection startup moves its owner to the reader task. The writer and each
+serving job acquire separate owners because they can finish at different times.
+An input iterator or output channel retained by language code also keeps its
+request and connection alive. Closing the socket finishes transport activity;
+the record remains available until those retained users release it. Job cleanup
+clears borrowed task pointers before releasing the request and connection, so
+those pointers do not keep finished tasks alive or form an owning cycle.
+
+Native Windows testing exposed a shutdown issue: a locally shut-down socket did
+not wake its parked reader through OS polling. The implementation explicitly wakes
+socket waiters on shutdown and close. On polling platforms, each wait record lives
+on the waiting task's stack and is removed on return or cancellation. This adds
+no heap allocation or task-header field. Timeout, cancellation, task deadlines and
+two simultaneous readers are tested separately from connection ownership.
+
+The [six-host comparison](benchmarks.md#freeing-server-requests-and-borrowing-fold-captures)
+finalizes every measured request and connection. All four workloads leave 544
+constant managed bytes on Linux and zero on macOS/Windows after 1, 16 or 256 calls.
+Allocation requests match the preceding values/channel stage; independently live
+owners add counts while callback borrowing removes repeated channel counts.
+The long-running resident-memory check and production gates remain separate
+acceptance requirements, tracked in the handoff.
+These measurements do not establish complete ownership for escaped callback
+cycles, HTTP handlers or remote checked ARC.
+
+### Borrowing values inside known folds
+
+A fold visits collection elements while updating a running result. Its callback
+receives that result and the next element; it may also keep values supplied
+earlier, called captures. For a callback known to the compiler, the collection
+and enclosing call can keep those elements and captures alive throughout each
+invocation. The callback borrows them instead of acquiring and releasing an owner
+on every iteration. The running result still transfers ownership between steps.
+
+If the callback returns a borrowed value or stores it somewhere that survives
+the invocation, the compiler acquires an owner at that use. Error and cancellation
+cleanup release only owners actually acquired. The ownership verifier checks
+these distinctions before generating the callback's actual body. Recursive
+callbacks and resource-closing scopes keep their existing compilation until their
+additional lifetime rules are proved. The language's function and fold semantics
+do not change, and no forwarding wrapper is added.
+
+The measured text-channel loop sends 64 messages per call. Borrowing removes its
+64 per-message channel retains and releases, while independent request/connection
+owners remain. Inlining also changes code size and stack frames; the binary
+comparison must report those costs alongside the count reduction. This is not
+a general zero-cost or execution-time claim.
+
+### Accepted input iterator ownership
+
 Accepted input ownership keeps two iterator nodes: the next node to read and
 the node whose element is currently being encoded. This preserves the existing
 order, which evaluates the next step before encoding the current element.

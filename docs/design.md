@@ -415,6 +415,15 @@ pointer. Focused evidence and remaining transport ownership are recorded in
 [ownership](ownership.md) and [the handoff](development-state.md). These changes
 are not yet full production acceptance or removal of server tracing.
 
+The same delivery now gives server requests and connections explicit owners and
+lets known fold callbacks borrow captures and collection elements while owning
+their running result. A capture is a value kept by a function for a later call.
+Borrowing removes count updates when the enclosing call already keeps that value
+alive; values that escape still acquire owners. Socket shutdown wakes parked
+readers explicitly on polling platforms. The earlier partial implementation failed
+the long-running Linux ARM64 memory check, so both the combined ownership work and
+that unchanged production limit must pass before acceptance.
+
 When a compiled program has no tasks or services, its runtime primitives omit
 task-slice checks as well as function-entry checks. Programs that can schedule
 tasks retain both. WebAssembly Asyncify's stack-bound checks remain active.

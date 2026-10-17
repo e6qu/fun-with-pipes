@@ -773,22 +773,34 @@ fn pat_binds(p: &Pat, out: &mut Vec<Local>) {
 pub fn insert(prog: &Program) -> Vec<Option<(Expr, Vec<MT>)>> {
     prog.funcs
         .iter()
-        .map(|f| insert_function(prog, f))
+        .map(|f| insert_function(prog, f, &[]))
         .collect()
 }
 
 /// Insert ownership for a concrete function, including backend representations
 /// whose state fields have become separate parameters.
-pub(crate) fn insert_function(prog: &Program, f: &Func) -> Option<(Expr, Vec<MT>)> {
+pub(crate) fn insert_function(
+    prog: &Program,
+    f: &Func,
+    borrowed_parameters: &[Local],
+) -> Option<(Expr, Vec<MT>)> {
+    assert!(borrowed_parameters.iter().all(|l| *l < f.arity));
     let Body::Expr(e) = &f.body else { return None };
     let mut p = Pass {
         funcs: &prog.funcs,
         shapes: &prog.shapes,
         locals: f.locals.clone(),
     };
-    let params: Set = (0..f.arity).filter(|l| p.counted(*l)).collect();
+    let borrowed: Set = borrowed_parameters
+        .iter()
+        .copied()
+        .filter(|l| p.counted(*l))
+        .collect();
+    let params: Set = (0..f.arity)
+        .filter(|l| p.counted(*l) && !borrowed.contains(l))
+        .collect();
     let result = f.ty.params(f.arity as usize).1.clone();
-    let body = p.conv_typed(e, &params, &Set::new(), &result);
+    let body = p.conv_typed(e, &params, &borrowed, &result);
     Some((body, p.locals))
 }
 
@@ -804,6 +816,8 @@ enum Held {
 }
 
 struct Checker<'a> {
+    /// The caller keeps these parameters alive, independently of local copies.
+    borrowed_parameters: &'a [Local],
     funcs: &'a [Func],
     shapes: &'a Shapes,
     locals: &'a [MT],
@@ -850,16 +864,19 @@ impl Checker<'_> {
         needs_rc(self.shapes, &self.locals[l as usize])
     }
 
-    fn alive(st: &State, l: Local) -> bool {
+    fn alive(&self, st: &State, l: Local) -> bool {
+        if self.borrowed_parameters.contains(&l) {
+            return true;
+        }
         match st.get(&l) {
             Some(Held::Owned(n)) => *n > 0,
-            Some(Held::From(p)) => Self::alive(st, *p),
+            Some(Held::From(p)) => self.alive(st, *p),
             None => false,
         }
     }
 
     fn need_alive(&self, st: &State, l: Local, what: &str) -> Result<(), String> {
-        if !self.counted(l) || Self::alive(st, l) {
+        if !self.counted(l) || self.alive(st, l) {
             Ok(())
         } else {
             Err(format!("local {} {} after its last reference", l, what))
@@ -1081,7 +1098,7 @@ impl Checker<'_> {
 /// more often than it is held, none is read after its last reference, and
 /// every one is released on every path.
 pub fn check(prog: &Program, f: &Func, body: &Expr, locals: &[MT]) -> Result<(), String> {
-    check_with_calls(prog, f, body, locals, None, false)
+    check_with_calls(prog, f, body, locals, None, false, &[])
 }
 
 #[cfg(test)]
@@ -1091,7 +1108,7 @@ fn call_liveness(
     body: &Expr,
     locals: &[MT],
 ) -> Result<HashMap<*const Expr, CallLiveness>, String> {
-    liveness(prog, f, body, locals, false)
+    liveness(prog, f, body, locals, false, &[])
 }
 
 pub(crate) fn ownership_liveness(
@@ -1099,8 +1116,9 @@ pub(crate) fn ownership_liveness(
     f: &Func,
     body: &Expr,
     locals: &[MT],
+    borrowed_parameters: &[Local],
 ) -> Result<HashMap<*const Expr, CallLiveness>, String> {
-    liveness(prog, f, body, locals, true)
+    liveness(prog, f, body, locals, true, borrowed_parameters)
 }
 
 fn liveness(
@@ -1109,9 +1127,18 @@ fn liveness(
     body: &Expr,
     locals: &[MT],
     include_values: bool,
+    borrowed_parameters: &[Local],
 ) -> Result<HashMap<*const Expr, CallLiveness>, String> {
     let calls = RefCell::new(HashMap::new());
-    check_with_calls(prog, f, body, locals, Some(&calls), include_values)?;
+    check_with_calls(
+        prog,
+        f,
+        body,
+        locals,
+        Some(&calls),
+        include_values,
+        borrowed_parameters,
+    )?;
     Ok(calls.into_inner())
 }
 
@@ -1122,8 +1149,11 @@ fn check_with_calls(
     locals: &[MT],
     calls: Option<&RefCell<HashMap<*const Expr, CallLiveness>>>,
     include_values: bool,
+    borrowed_parameters: &[Local],
 ) -> Result<(), String> {
+    assert!(borrowed_parameters.iter().all(|l| *l < f.arity));
     let c = Checker {
+        borrowed_parameters,
         funcs: &prog.funcs,
         shapes: &prog.shapes,
         locals,
@@ -1133,7 +1163,7 @@ fn check_with_calls(
     let mut st = State::new();
     for l in 0..f.arity {
         if c.counted(l) {
-            st.insert(l, Held::Owned(1));
+            st.insert(l, Held::Owned(u32::from(!borrowed_parameters.contains(&l))));
         }
     }
     c.expr(body, &mut st, true)?;
@@ -1475,6 +1505,56 @@ mod tests {
     }
 
     #[test]
+    fn borrowed_parameters_do_not_become_cleanup_owners() {
+        let p = prog(vec![list(), list()], vec![], Expr::Local(1));
+        let (body, locals) = insert_function(&p, &p.funcs[0], &[0]).unwrap();
+        assert!(matches!(body, Expr::Local(1)));
+        let live = ownership_liveness(&p, &p.funcs[0], &body, &locals, &[0]).unwrap();
+        assert!(live
+            .values()
+            .all(|c| !c.before_arguments.iter().any(|(l, _)| *l == 0)));
+        let bad = Expr::Drop(0, Box::new(body));
+        assert!(ownership_liveness(&p, &p.funcs[0], &bad, &locals, &[0]).is_err());
+    }
+
+    #[test]
+    fn returned_borrowed_parameter_acquires_an_owner() {
+        let p = prog(vec![list()], vec![], Expr::Local(0));
+        let (body, locals) = insert_function(&p, &p.funcs[0], &[0]).unwrap();
+        assert!(matches!(&body, Expr::Dup(0, next) if matches!(**next, Expr::Local(0))));
+        ownership_liveness(&p, &p.funcs[0], &body, &locals, &[0]).unwrap();
+        assert!(ownership_liveness(&p, &p.funcs[0], &Expr::Local(0), &locals, &[0]).is_err());
+    }
+
+    #[test]
+    fn external_borrow_survives_consumption_of_a_local_copy() {
+        let mut p = prog(
+            vec![list()],
+            vec![MT::unit()],
+            Expr::Let(
+                1,
+                Box::new(Expr::Call(1, vec![Expr::Local(0)])),
+                Box::new(Expr::Local(0)),
+            ),
+        );
+        p.funcs.push(Func {
+            name: "consume".into(),
+            arity: 1,
+            locals: vec![list()],
+            ty: MT::Fun(Box::new(list()), Box::new(MT::unit())),
+            body: Body::Expr(Expr::Const(Value::unit())),
+        });
+        let (body, locals) = insert_function(&p, &p.funcs[0], &[0]).unwrap();
+        let live = ownership_liveness(&p, &p.funcs[0], &body, &locals, &[0]).unwrap();
+        // Both escapes receive their own reference; after the first transfer,
+        // the caller's original borrow is still valid for the second one.
+        assert_eq!(format!("{body:?}").matches("Dup(0,").count(), 2);
+        assert!(live
+            .values()
+            .any(|c| c.before_arguments == vec![(0, 1)] && c.at_entry.is_empty()));
+    }
+
+    #[test]
     fn call_liveness_distinguishes_borrows_transfers_and_duplicate_owners() {
         let mut p = prog(vec![list()], vec![MT::unit()], Expr::Local(0));
         p.funcs.push(Func {
@@ -1618,7 +1698,7 @@ mod tests {
     fn consumed_value_conversion_keeps_only_remaining_caller_owners() {
         let body = Expr::Record(vec![Expr::Local(0), Expr::Local(1)]);
         let p = prog(vec![list(), list()], vec![], body.clone());
-        let live = ownership_liveness(&p, &p.funcs[0], &body, &p.funcs[0].locals).unwrap();
+        let live = ownership_liveness(&p, &p.funcs[0], &body, &p.funcs[0].locals, &[]).unwrap();
         let Expr::Record(fields) = &body else {
             unreachable!()
         };
@@ -1655,7 +1735,7 @@ mod tests {
             vec![record],
             body.clone(),
         );
-        let live = ownership_liveness(&p, &p.funcs[0], &body, &p.funcs[0].locals).unwrap();
+        let live = ownership_liveness(&p, &p.funcs[0], &body, &p.funcs[0].locals, &[]).unwrap();
         let Expr::Let(_, update, _) = &body else {
             unreachable!()
         };
@@ -1807,7 +1887,7 @@ mod tests {
             Box::new(record.clone()),
             Box::new(MT::Fun(Box::new(list()), Box::new(record))),
         );
-        let live = ownership_liveness(&p, &p.funcs[0], &body, &p.funcs[0].locals).unwrap();
+        let live = ownership_liveness(&p, &p.funcs[0], &body, &p.funcs[0].locals, &[]).unwrap();
         let Expr::Let(_, matched, _) = &body else {
             unreachable!()
         };

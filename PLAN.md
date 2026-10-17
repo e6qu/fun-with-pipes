@@ -80,23 +80,25 @@ move their continuations. Earlier deliveries freed client requests, closed
 connections and completed I/O tasks. [History](docs/roadmap-history.md) records
 acceptance. These deliveries do not complete GC removal.
 
-The current delivery combines server task/job cleanup, stack argument slots,
-direct method calls, typed argument/result cleanup and native output-channel
-ownership. Keep the ordinary language behavior, including aliases, failure order
-and cancellation. Use the same four server programs and 1/16/256-call boundary as
-the baseline, recording memory, allocation and count costs separately. The
-combined change passes all six focused native hosts and has actual ARM64/AMD64
-binary reviews. All four workloads retain much less memory, but still grow by
-240 bytes per call; reference-count costs are mixed. PR #160 needs all production
-gates before merge.
+PR #160 now combines server task/job cleanup, stack argument slots, direct method
+calls, typed value cleanup, output channels, request/connection owners and borrowed
+fold callbacks. A capture is a value kept by a function for a later call; borrowing
+it avoids a reference-count update on every loop iteration. Parser lists must
+protect requests reset before their task starts. Connection owners must survive
+closed sockets and retained iterators/channels. The same delivery fixes a Windows
+shutdown wakeup bug exposed by native tests.
 
-Next, establish complete server request/connection ownership, including retained
-incoming iterators and callbacks. A newly parsed request can be reset in the same
-network input before its serving task starts; temporary parser lists must keep it
-alive. Avoid owning cycles through borrowed scheduler back-pointers. Remote calls
-remain excluded from checked ARC until their complete lifetimes and cycles are
-proved. [The handoff](docs/development-state.md) identifies the exact candidate,
-checks and next action.
+The earlier partial implementation passed short six-platform measurements but
+failed the long-running production memory test on Linux ARM64. Its remaining
+240-byte growth per call is not acceptable completion. The combined ownership
+changes are being checked against both the identical four short workloads and
+the unchanged 32,000-call resident-memory limit. Preserve aliases, failure order,
+cancellation and all nine final-head production gates plus documentation before
+merge. Report allocation requests, count costs, managed storage and whole-process
+memory separately. Remote calls remain excluded from checked ARC until their
+complete lifetimes and cycles are proved.
+[The handoff](docs/development-state.md) identifies the exact candidate, checks
+and next action.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

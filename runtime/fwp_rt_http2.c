@@ -201,10 +201,13 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
         }
         last = fwp_now_ns();
         g_slist fresh = {0, 0, 0};
+        fwp_cleanup pending_requests;
+        fwp_cleanup_push(&pending_requests, g_slist_release, &fresh);
         char *dead = 0;
         g_process(c, in, (size_t)k, &fresh, &dead);
         for (size_t i = 0; i < fresh.n; i++) w_start(c, fresh.v[i]);
-        fwp_mem_free(fresh.v);
+        fwp_cleanup_pop(&pending_requests);
+        g_slist_release(&fresh);
         g_wake_conn(c);
         if (dead) {
             snprintf(whybuf, sizeof whybuf, "%s", dead);
