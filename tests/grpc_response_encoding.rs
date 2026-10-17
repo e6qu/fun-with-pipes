@@ -36,11 +36,10 @@ fn served_buffers_release_on_decode_encode_traps_and_cancelled_send() {
     let mut method = generated[start..end].to_owned();
     for (before, after) in [
         ("const fwp_owned_fninfo *types = fwp_fns[m->fn].owned;", "const fwp_owned_fninfo *types = &probe_method_types;"),
-        ("V function = fwp_rc_fresh(fwp_pap((uint32_t)m->fn, 0, 0));", "V function = 0;"),
         ("g_recv_one(j, &code, msg)", "observed_request()"),
         ("pb_decode(m->schema, m->req_node, req->d, req->n, &canon)", "observed_request_decode(&canon)"),
         ("fwp_decode(&rd, m->req[i], &args[na])", "observed_argument(&rd, m->req[i], &args[na])"),
-        ("g_apply_user(function, (uint32_t)na, args, &values.result, &values.error, &values.error_type)", "observed_user(&values.result,&values.error,&values.error_type)"),
+        ("g_apply_user((uint32_t)m->fn, args, &values.result, &values.error, &values.error_type)", "observed_user(&values.result,&values.error,&values.error_type)"),
         ("g_cursor_next(&output.cursor, output.drop, &x)", "observed_next(&output.cursor.cur, &x)"),
         ("fwp_encode(&canon, values.error, m->error);", "fwp_encode(&canon, values.error, m->error); watched_canonical=canon.d; if(stage==3)fwp_trap(\"canonical trap\");"),
         ("pb_encode(m->schema, m->resp_node, (const unsigned char *)canon.d, canon.len, &b)", "observed_transcode(canon.d, canon.len, &b)"),
@@ -357,28 +356,38 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
             "values->types->drop_arguments(values->args, 0, pending);",
             "(void)pending;",
             1,
+            246,
         ),
-        ("values->method->result_drop(result);", "(void)result;", 0),
-        ("values->error_type->drop(error);", "(void)error;", 5),
+        (
+            "values->method->result_drop(result);",
+            "(void)result;",
+            0,
+            246,
+        ),
+        ("values->error_type->drop(error);", "(void)error;", 5, 246),
         (
             "fwp_cleanup_push(&values_cleanup, g_method_values_release, &values);",
             "fwp_cleanup_push(&values_cleanup, owned_no_release, &values);",
             2,
+            246,
         ),
         (
             "        g_input_release(&output);",
             "        /* omitted normal output release */",
-            9,
+            14,
+            246,
         ),
         (
             "fwp_cleanup_push(&output_cleanup, g_input_release, &output);",
             "fwp_cleanup_push(&output_cleanup, owned_no_release, &output);",
             10,
+            246,
         ),
         (
-            "n ? fwp_apply_owned(f, n, args)",
-            "n ? fwp_apply(f, n, args)",
+            "fwp_fns[fn].owned->entry(args)",
+            "fwp_fns[fn].entry(args)",
             0,
+            242, // Unowned dispatch loses the returned value's counted owner.
         ),
     ];
     let dir = fwp::cgen::TempDir::new("served-value-owners").unwrap();
@@ -386,7 +395,7 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
     let declaration = "static void owned_no_release(void *);\n";
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&format!("{declaration}{generated}\n{fixture}"), &exe, opt).unwrap();
-        for stage in [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13] {
+        for stage in [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14] {
             for gc in ["off", "on"] {
                 for poison in ["0", "1"] {
                     let output = Command::new(&exe)
@@ -404,7 +413,7 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
                 }
             }
         }
-        for (before, after, stage) in controls {
+        for (before, after, stage, expected) in controls {
             assert_eq!(generated.matches(before).count(), 1, "{before}");
             let broken = generated.replacen(before, after, 1);
             fwp::cgen::compile_c(&format!("{declaration}{broken}\n{fixture}"), &exe, opt).unwrap();
@@ -414,7 +423,7 @@ fn served_values_release_on_partial_decode_aliases_errors_and_cancellation() {
                 .env("FWP_REUSE_VERIFY", "0")
                 .output()
                 .unwrap();
-            assert_eq!(output.status.code(), Some(246), "{before}: {output:?}");
+            assert_eq!(output.status.code(), Some(expected), "{before}: {output:?}");
         }
     }
 }

@@ -74,10 +74,33 @@ from its environment explicitly, so omitted cleanup cannot skip measurement.
 Run positive cases before mutations, and print before/after bytes on a mismatch.
 This repairs the observation; runtime correctness still needs a passing probe.
 
+Probe `39020179623` at `7f0a42fb` passes positive stages through shared input
+arguments, then detects the retained-output-alias fixture's incomplete destructor.
+It called the last-owner storage primitive directly, which cannot decrement a
+shared count. Give the synthetic String descriptor a proper typed destructor;
+production compiler-generated destructors already perform that decrement.
+Also stop an output stream before exhaustion to test its explicit normal cleanup;
+a completely exhausted cursor has already released its last node.
+
 Next: rerun the Linux semantic/lifetime/measurement probe. Fix failures before
 all-six measurements and actual binary reviews. The six-platform storage report
 and plain-language documentation are now included from sibling `b80dbdfb`.
 Full production acceptance remains outstanding.
+
+## Removing the temporary method closure
+
+Compiled service signatures include every method argument (`rpc::shape` uses
+its compiler arity); constants are excluded by `service_signature`. A fully
+supplied service call therefore need not allocate a zero-capture closure or
+route through generic partial application. Call its existing typed entry directly
+in ownership mode and its ordinary entry in the explicit no-reuse mode. Keep
+argument transfer immediately before entry and retain error/trap handlers.
+
+Expected change: one fewer eight-byte closure allocation per call relative to
+the first typed-value candidate, with no additional reference-count increments.
+Verify the same four workloads, failure/alias/cancellation controls and actual
+ARM64/AMD64 instructions. This optimization is not yet tested. Probe the prior
+typed-value candidate separately to explain the difference in work.
 
 ## Checks
 

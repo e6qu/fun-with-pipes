@@ -243,7 +243,7 @@ fn greeter_servers(native_dir: Option<&Path>) -> Vec<Server> {
 fn every_kind_of_call() {
     let native = have_cc();
     let d = scratch("served");
-    let servers = greeter_servers(native.then_some(d.as_path()));
+    let mut servers = greeter_servers(native.then_some(d.as_path()));
     let client = dir().join("client.fwp");
     let split = d.join("split");
     let failed_client = dir().join("input-failure.fwp");
@@ -269,6 +269,25 @@ fn every_kind_of_call() {
             ],
             &dir(),
         );
+        // The tracing comparison is an explicit compiler mode, selected before
+        // generation. It must not accidentally test another owned server.
+        let no_reuse = d.join("no-reuse");
+        let mut compile = Command::new(fwp());
+        compile
+            .args(["build", "--service", "greeter", "--emit-c", "-o"])
+            .arg(&no_reuse)
+            .arg(&client)
+            .current_dir(dir())
+            .env("FWP_REUSE", "0");
+        let generated = run(compile, 300);
+        assert!(generated.status.success(), "{}", render(&generated));
+        let source = std::fs::read_to_string(no_reuse.join("greeter.c")).unwrap();
+        assert!(!source.contains("#define FWP_RESOURCE_OWNERS 1"));
+        let binary = no_reuse.join("greeter");
+        fwp::cgen::compile_c(&source, &binary, "-O1").unwrap();
+        let mut server = Command::new(binary);
+        server.args(["--listen", "127.0.0.1:0"]);
+        servers.push(start(server, Duration::from_secs(60)));
     }
     let mut outputs = Vec::new();
     for s in &servers {

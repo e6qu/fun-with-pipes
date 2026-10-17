@@ -2354,7 +2354,7 @@ static g_msg *g_recv_one(g_job *j, int *code, char **msg) {
 
 /* apply a function to the arguments of a call: 0 with the result, 1 with
  * an error, 2 after a trap (its message in fwp_trap_msg) */
-static int g_apply_user(V f, uint32_t n, V *args, V *out, V *err, const fwp_desc **edesc) {
+static int g_apply_user(uint32_t fn, V *args, V *out, V *err, const fwp_desc **edesc) {
     fwp_task *t = fwp_cur;
     jmp_buf *saved = t->trap_jb;
     fwp_cleanup *saved_cleanup = t->trap_cleanup;
@@ -2375,8 +2375,13 @@ static int g_apply_user(V f, uint32_t n, V *args, V *out, V *err, const fwp_desc
     t->trap_cleanup = cleanup_base;
     fwp_handlers = &h;
     if (setjmp(h.jb) == 0) {
-        V unit = FWP_UNIT;
-        V r = n ? fwp_apply_owned(f, n, args) : fwp_apply_owned(f, 1, &unit);
+        /* The compiled service signature supplies every argument. No closure
+         * or generic partial-application machinery is needed for this call. */
+#ifdef FWP_RESOURCE_OWNERS
+        V r = fwp_fns[fn].owned->entry(args);
+#else
+        V r = fwp_fns[fn].entry(args);
+#endif
         fwp_handlers = h.prev;
         t->trap_jb = saved;
         t->trap_cleanup = saved_cleanup;
@@ -2517,9 +2522,8 @@ static int g_run_method(g_job *j, char **msg) {
         args[na++] = g_sink_value(j->c, j->s, enc, m->error != 0);
         values.pending = (uint32_t)na;
     }
-    V function = fwp_rc_fresh(fwp_pap((uint32_t)m->fn, 0, 0));
     values.pending = 0; /* the owning entry consumes every supplied argument */
-    int k = g_apply_user(function, (uint32_t)na, args, &values.result, &values.error, &values.error_type);
+    int k = g_apply_user((uint32_t)m->fn, args, &values.result, &values.error, &values.error_type);
     int in_response;
     int code = g_outcome(j, k, values.error, values.error_type, &in_response, msg);
     if (code >= 0) { status = code; goto done; }
