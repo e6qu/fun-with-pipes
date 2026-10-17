@@ -131,8 +131,10 @@ fwp build app.fwp --service m --gc arc -o out
 
 Use the ordinary listen/address settings above to run them. The compiler rejects
 programs whose lifetimes it cannot prove. It does not silently enable tracing.
-This extension is under platform validation; [the handoff](development-state.md)
-separates passing checks from final production acceptance.
+Focused native tests pass on Linux, macOS and Windows, each on ARM64 and AMD64.
+They compare interpreted and compiled calls and check cleanup on failure and
+cancellation. [The handoff](development-state.md) records final production
+acceptance separately from those focused checks.
 
 An iterator computes later elements on demand. That makes **when** its next step
 runs part of the ownership check. A **handler** supplies a temporary state store

@@ -1732,7 +1732,8 @@ remains 232 bytes with 8-byte alignment on all six hosts: the new flag occupies
 existing padding at offset 228. Removing an unused sender encoder field leaves
 a 40-byte sender structure; allocator rounding means this alone is not a measured
 heap saving. These measurements compare two fwp implementations, without elapsed
-timing or a C/Rust comparison. Connections and callback graphs still need tracing.
+timing or a C/Rust comparison. At that revision, connections and callback graphs
+still needed tracing; the later ownership measurements below cover their release.
 
 Native controls cover aliases, final owners, completion, reset, connection death,
 sender cancellation, retries, decoder errors and failed allocation. Deliberately
@@ -2314,3 +2315,83 @@ implementation passes it: the focused ARM64 probe records five samples of
 8,136 KiB, and all final production jobs pass. [History](roadmap-history.md) records
 PR #160 acceptance. Short bounded measurements do not prove complete GC removal,
 remote checked ARC, or C/Rust parity.
+
+### Remote services without tracing and with fewer field retains
+
+[The six-host report](measurements/remote-arc-field-moves-2026-10-17.json) records
+`efaab358`, tag `evidence/remote-arc-platform-fixes-20261017`, from
+[all eighteen passing focused jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39037037021).
+The accepted baseline is `8ed65cc7`, retained in the preceding server-borrows
+report. The baseline contains tracing code, disabled for these measurements;
+ARC excludes that code. Both versions physically free released storage.
+
+The comparison uses the same four fwp client/server programs as the accepted
+server-ownership baseline. Counters measure work and managed storage inside the
+server, with the same 1/16/256 calls, three repetitions and
+64-element streams. The new clients and servers are compiled with `--gc arc`;
+actual binaries exclude the scan, mark and sweep routines used by tracing
+collection. The compiler also transfers fields from a uniquely owned record
+when a compiled function can receive those fields directly.
+
+A retain increments a value's owner count. For one greeting, the old entry
+acquired another owner for the name string even though it consumed the record
+holding that string. The new entry moves that owner. A shared record still
+supplies an independent owner so its other users remain valid.
+
+| Workload | Baseline retains per call | ARC with field transfer |
+|---|---:|---:|
+| Greeting | 3 | 2 |
+| Returned stream of 64 integers | 66 | 66 |
+| Received stream of 64 integers | 132 | 132 |
+| Output channel sending 64 texts | 4 | 4 |
+
+Across all 216 memory rows (36 per host), allocation requests, requested bytes,
+peak managed storage and final managed storage match the baseline. The final
+counter is constant at 544 bytes on Linux and zero on macOS/Windows after every
+call count. Every request and connection finalizes.
+
+Both versions also have one retain per connection. At 256 greetings, the count
+falls from 769 to 513. Server allocation requests and requested bytes stay unchanged;
+this saves count operations rather than removing the record or message storage.
+
+The ordinary Linux binaries show the transfer directly. AMD64 keeps the record
+in RBX and the field in R14; ARM64 uses X19 and X20. The unique-record branch clears
+the old field slot and skips the shared-path retain. The compiled function body
+is inlined. Its fixed greeting-entry frame is 184 bytes on AMD64, unchanged from
+the baseline, and 192 on ARM64 instead of 208. AMD64 figures include saved
+registers and exclude the incoming return address; both exclude callee frames.
+The channel loop still borrows its channel throughout its 64 sends. Its fixed
+frame is 264/320 bytes on AMD64/ARM64, 16 fewer than the baseline on each.
+
+Removing tracing does not make these executables smaller:
+
+| Ordinary server | Baseline text bytes | ARC and field transfer text bytes | Baseline file bytes | New file bytes |
+|---|---:|---:|---:|---:|
+| Linux AMD64 | 261,813 | 269,499 | 326,328 | 330,096 |
+| Linux ARM64 | 246,445 | 254,875 | 307,544 | 372,736 |
+
+Text grows by 7,686 bytes (2.9%) on AMD64 and 8,430 bytes (3.4%) on ARM64.
+Some generic function entries inline ownership-contract checks in ARC mode.
+The field-transfer change adds 368/328 text bytes compared with ARC without that
+change. ARM64's larger file-size jump mostly reflects padding: its writable
+segment moves to the next 64 KiB file boundary while retaining the same virtual
+address. The report preserves the actual segment layouts. There is no measured
+speed, total-stack or cache-use benefit implied by these sizes.
+
+The separate Linux 32,000-call resident-memory test keeps its 8 MiB growth bound.
+After warm-up and each 8,000-call batch, AMD64 reports
+[16084, 16084, 16084, 16084, 16084] KiB and ARM64
+[8144, 8144, 8144, 8144, 8144] KiB. These whole-process samples are distinct from
+the managed-storage counters.
+
+Counters begin after listener/routing/root setup and end after disconnect and
+task retirement while the listener remains open. They exclude raw network
+buffers, task-stack pools, allocator/OS/TLS metadata and elapsed time. This is an
+fwp implementation comparison, not an overhead measurement against C or Rust.
+
+The report retains eighteen raw tables, source/binary fingerprints, environment
+records and actual instruction reviews. Separate server/client cleanup jobs,
+real calls, typed iterator-scope checks and deliberate missing-owner controls all
+pass. The split preserves the original 25-minute job limit. The fixture repairs
+exercise a nonblocking accept retry and configure Windows probe output explicitly;
+[the handoff](development-state.md) records full production acceptance separately.

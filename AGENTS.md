@@ -1,5 +1,7 @@
 # Working on fwp
 
+Keep this file under 100 lines; detailed guidance belongs in the linked docs.
+
 ## Start and resume
 
 Read [PLAN.md](PLAN.md), [the handoff](docs/development-state.md) and relevant
@@ -11,9 +13,10 @@ Use [CONTRIBUTING.md](CONTRIBUTING.md) for repository conventions and test locat
 
 ## Language and performance goals
 
-- Remove tracing GC. Prefer compile-time ownership, moves, borrowing, stack
-  storage and unique reuse; reserve ARC for necessary shared ownership.
-  Never substitute tracing or permanent retention for a rejected lifetime proof.
+- Remove tracing garbage collection (GC). Prefer compile-time ownership, moves,
+  borrowing, stack storage and unique reuse; reserve automatic reference
+  counting (ARC) for necessary sharing. Never substitute tracing or permanent
+  retention for a rejected lifetime proof.
 - Preserve simple tacit, curried, data-last pipes, single-argument functions,
   strong ordinary inference, explicit generic signatures and specialization.
   Keep immutable values, tracked effects, checked arithmetic and evaluation/trap

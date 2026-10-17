@@ -365,8 +365,9 @@ ARC executables omit the finalizer-table lookup during socket release because
 they never register these sockets in that table. Tracing programs and unloadable
 libraries keep the lookup so they cannot later finalize reused storage. This
 removes a specific unnecessary operation; it does not remove all count or
-allocator metadata costs. These socket owners support checked ARC; remote
-service graphs still require separate ownership work.
+allocator metadata costs. These socket owners support checked ARC. The
+[gRPC extension](#checked-grpc-clients-and-services) adds separate ownership
+proofs for remote service graphs.
 
 ## Releasing long chains
 
@@ -390,8 +391,8 @@ checks up to 16,384 links, retained aliases at each wrapper and complete physica
 reclamation without tracing. Real source programs match the interpreter and
 also pass GC/reuse stress. Full delivery acceptance remains in the handoff.
 Reference-count operations and the chain's allocations still exist. Native remote
-stream caches use a separate runtime cleanup loop, described below; their
-connection and callback graph still depends on tracing.
+stream caches use a separate runtime cleanup loop; their request and connection
+owners are described [below](#received-iterators-and-remote-call-storage).
 
 ## Checked ARC delivery
 
@@ -1037,10 +1038,11 @@ GPU resource ownership remain separate work.
 
 A split gRPC build can select `--gc arc` for both its client and service entries.
 [The service guide](services.md#building-without-tracing-collection) introduces the
-command and iterator lifetime rules. This extension is implemented in the current
-candidate: Linux AMD64 O1/O2 interpreter comparisons and tracing-free binary
-checks pass; remaining platform and production acceptance is tracked in
-[the handoff](development-state.md). It does not establish complete GC removal.
+command and iterator lifetime rules. All six native hosts pass focused O1/O2
+interpreter comparisons, cleanup controls and tracing-free binary checks. The
+[repeated comparison](benchmarks.md#remote-services-without-tracing-and-with-fewer-field-retains)
+records remaining memory/count costs; [the handoff](development-state.md) tracks
+final production acceptance. This does not establish complete GC removal.
 
 The compiler follows known iterator continuations, including later steps. A
 single-result remote call consumes its input under the caller's current state
@@ -1083,8 +1085,10 @@ fails. The compiled body takes responsibility before it can suspend or trap; the
 entry releases the outer record after the call. Resource-containing records keep
 their existing cleanup rules. Tests cover shared parents, shared fields, failure
 after a partial transfer, cancellation on entry and returned values. The current
-validation status is in [the handoff](development-state.md); this change does not
-eliminate the record allocation or every reference count.
+six-host checks pass, with one fewer retain per measured greeting and unchanged
+allocation requests. The [comparison](benchmarks.md#remote-services-without-tracing-and-with-fewer-field-retains)
+also records code-size and stack costs. Final production acceptance is tracked in
+[the handoff](development-state.md); the record allocation and sharing costs remain.
 
 ### Moving values held by a closure
 
