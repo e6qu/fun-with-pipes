@@ -710,6 +710,7 @@ fn checked_arc_http_matches_interpreter_with_pooled_and_tls_calls() {
         }
         for mode in ["tracing", "arc"] {
             for opt in ["-O1", "-O2"] {
+                eprintln!("Building HTTP {role} {mode} {opt}");
                 let cfile = dir.join(format!("{role}-{mode}{opt}.c"));
                 let binary = dir.join(format!("{role}-{mode}{opt}.exe"));
                 let out = Command::new(fwp())
@@ -769,6 +770,7 @@ fn checked_arc_http_matches_interpreter_with_pooled_and_tls_calls() {
                     .output()
                     .unwrap()
             };
+            eprintln!("Comparing HTTP interpreter client / {backend} server / TLS {tls}");
             let reference = run(Command::new(fwp()).args(["run", "--interp"]).arg(&source));
             assert!(
                 reference.status.success(),
@@ -782,6 +784,7 @@ fn checked_arc_http_matches_interpreter_with_pooled_and_tls_calls() {
                 + "done\n";
             assert_eq!(String::from_utf8_lossy(&reference.stdout), expected);
             for (mode, opt, binary) in &binaries {
+                eprintln!("Comparing HTTP {mode} {opt} client / {backend} server / TLS {tls}");
                 let out = run(Command::new(binary)
                     .env("FWP_GC_STRESS", if *mode == "tracing" { "1" } else { "0" })
                     .env("FWP_GC_VERIFY", if *mode == "tracing" { "1" } else { "0" })

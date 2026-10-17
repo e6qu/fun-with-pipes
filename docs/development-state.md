@@ -9,34 +9,39 @@ production jobs (`39055466891`) and documentation (`39055442588`) passed at
 Duplicate postmerge production `39062147625` is cancelled.
 
 Server preparation `09f9b6ef` and `e5bc8531` is integrated here as `5ad59d96`
-and `75b8c91a`. The subsequent measured code-size change and reports are local.
+and `75b8c91a`. The measured code-size change, scheduler repair and reports are
+published in `cd4f0b06`. Current local edits collect the final evidence/handoff.
 The old `/private/tmp/fwp-http-server-owners` worktree is a preparation copy;
-continue in this root checkout. No new PR is open yet. Publish one substantial
-PR after completing the current audit and evidence, then require all nine
-final-head production jobs and documentation before squash merging.
+continue in this root checkout. [PR #163](https://github.com/e6qu/fun-with-pipes/pull/163)
+is a draft at `cd4f0b06e23d768100f8e5f3cfcf4d9cc0b383a6`. All nine final-head
+production jobs and documentation are required before squash merging.
 
 ## Next action
 
-Next: publish the combined scheduler repair and measured code-placement change,
-then repeat the six-host HTTP and server-memory suites on that exact source.
-Do not raise timeouts, reduce request counts or relax memory bounds. The complete
-preparation audit covers three runner suites at
-`e5bc8531e4d37f16f4471b8954020294a6a85020`:
-[HTTP comparisons](https://github.com/e6qu/fun-with-pipes/actions/runs/39059316627),
-[server memory](https://github.com/e6qu/fun-with-pipes/actions/runs/39059317370)
-and [entry-check costs](https://github.com/e6qu/fun-with-pipes/actions/runs/39059315375).
-The first two cover all six hosts; the code-arrangement experiment uses both Linux
-architectures. All failed jobs and completed targets have now been audited.
-The HTTP run passed all 90 target executions, 15 per host; its complete audit is
-`/private/tmp/fwp-http-server-second-audit.json`. Both code-cost jobs passed.
-Both Linux server-memory jobs passed, with constant final managed storage and
-bounded RSS through 20,480 calls per case. Each additional call uses 899 managed
-allocations and 2,318 retains on both hosts. All four macOS/Windows memory jobs
-hit their fixed 25-minute limit; no completed sample failed its memory bound.
-They completed 27/27/18/18 managed rows and 13/11/10/8 RSS rows respectively
-(macOS ARM/Intel, Windows AMD/ARM), out of 36/20 expected per host. Partial rows
-are not acceptance. `/private/tmp/fwp-server-memory-first-audit.json` records the
-complete six-job audit, with logs/artifacts under `/private/tmp/fwp-server-evidence`.
+Next: rerun the complete Intel macOS HTTP suite with ownership checks and
+HTTP comparisons in separate jobs, preserving the 25-minute limit and every case.
+At `cd4f0b06`, [server memory](https://github.com/e6qu/fun-with-pipes/actions/runs/39063863085)
+passed on all six hosts. [HTTP checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39063860925)
+passed all 17 targets on five hosts. Intel macOS passed its 15 ownership/boundary
+targets and 30 of 40 native comparisons, then hit the job limit before finishing
+comparisons and starting client-memory measurement. No completed target failed.
+The full twelve-job audit is `/private/tmp/fwp-server-repeat-partial-audit.json`;
+logs and artifacts are under `/private/tmp/fwp-server-evidence`. Splitting the two
+independent groups addresses the overloaded job without dropping coverage or
+raising limits. The comparison now logs each build and client/server case.
+
+Collect all six memory reports and inspect actual binaries, then publish the
+final evidence/handoff and run all nine production gates plus documentation.
+Documentation `39063862201` passed; production `39063862325` was skipped for the
+draft PR and is not acceptance. Keep `cd4f0b06` memory evidence distinct from the
+workflow-only repair's source revision. The earlier measured check-placement
+experiment at `e5bc8531` remains recorded in the tracked code-cost report.
+
+An isolated follow-on measurement is being prepared at
+`/private/tmp/fwp-closed-functions`, branch `profile-closed-functions`, based on
+`cd4f0b06`. It counts executed allocations for partial applications that capture
+only known functions. No optimization or second PR is selected. This root checkout
+remains the active delivery; finish its acceptance before another delivery PR.
 
 The underlying scheduler imposed 10 ms sleeps before retrying sockets on macOS
 and Windows, and did not query their readiness during preemption. The repair
@@ -78,7 +83,8 @@ also exercises connection replacement within each batch. Both modes have collect
 off and freeing enabled. Managed counters and resident-memory samples have separate
 scopes; final managed storage must stay constant and RSS growth after warm-up must
 remain below 8 MiB. Source, raw rows and ordinary/instrumented binaries are retained.
-Complete six-host memory evidence is still pending.
+All six hosts completed the unchanged memory workload; the tracked report is
+being assembled. Final production acceptance remains pending.
 
 The entry-check experiment passed on both Linux architectures. Static review of
 20 ordinary binaries finds HTTP client instruction sections 12.6–12.7% smaller
