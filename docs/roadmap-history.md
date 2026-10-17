@@ -48,6 +48,28 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Streamed input cleanup and continuation moves (PR #159)
+
+[PR #159](https://github.com/e6qu/fun-with-pipes/pull/159) merged as `7c463441`
+on 2026-10-17 UTC after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39016595534)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39016595480)
+passed at `91398527`. The tested and merged trees match; its parent is accepted
+#158. Its complete message is `Free streamed inputs after remote calls finish`.
+Duplicate postmerge production `39022161689` is confirmed cancelled.
+
+Client input iterators and finished senders release on completion, failure and
+cancellation. Unique iterator nodes move their continuation; shared nodes preserve
+it for older readers. Request resets and pre-entry cancellation agree with the
+interpreter. [Six-host measurements](benchmarks.md#input-owners-and-moves-bounded-memory-with-measured-count-costs)
+show bounded remaining managed storage across 1/16/256 calls. Complete-input
+allocation counts are unchanged; reference-count increments remain higher than
+the tracing-dependent baseline. Remote checked ARC remains unsupported.
+
+This delivery also retains the six-host server-process baseline, identifying
+remaining storage growth for the next server ownership work. It does not implement
+server ownership or complete any of the seven project work areas.
+
 ## Closed connections and completed I/O tasks (PR #158)
 
 [PR #158](https://github.com/e6qu/fun-with-pipes/pull/158) merged as `a96871c9`

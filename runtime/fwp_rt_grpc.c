@@ -35,6 +35,7 @@ typedef struct {
     const int *schema;
     int req_node, resp_node;
     const fwp_desc *grpc_error;
+    void (*result_drop)(V);    /* complete served result, including Iterator nodes */
 } fwp_rpc;
 
 /* a function served by another process */
@@ -117,18 +118,13 @@ typedef struct g_serving {
     int code;                  /* a status for a cancelled call, or -1 */
     char *msg;
     char *peer;                /* the subject of the client's certificate, or 0 */
-    size_t peer_users;          /* serving task plus detached language senders */
+    size_t peer_users;          /* owners of the enclosing job and peer/status text */
     g_stream *s;               /* the call's stream */
 } g_serving;
 
-static void g_serving_peer_release(g_serving *sv) {
-    if (sv && --sv->peer_users == 0) {
-        fwp_tls_subject_free(sv->peer);
-        sv->peer = 0;
-        free(sv->msg);
-        sv->msg = 0;
-    }
-}
+/* Every released serving context is the first member of its allocated g_job.
+ * The serving task and detached senders share that allocation. */
+static void g_serving_peer_release(g_serving *sv);
 
 /* how a client's calls connect over TLS (`grpc.with-tls`, or the
  * FWP_SERVICE_<M>_CA, ... variables): malloc'ed strings ("" for none);
@@ -262,7 +258,7 @@ static void g_unlink(g_conn *c, g_stream *s) {
         if (*p == s) { *p = s->next; break; }
     s->listed = 0;
     s->next = 0;
-    g_stream_drop(s); /* the active-list owner, when this is an owned client stream */
+    g_stream_drop(s); /* the active-list owner of a counted request */
 }
 
 static void g_stream_discard_input(g_stream *s) {
@@ -337,8 +333,8 @@ static void g_conn_final(void *p) {
     free(c->tlskey);
 }
 
-/* Pool, callers and live I/O tasks share client storage. Transport users
- * separately determine when the socket closes; requests may outlive it. */
+/* Pool, callers, server jobs and live I/O tasks own connection storage.
+ * Transport users determine when the socket closes; callbacks may outlive it. */
 static void g_conn_drop(void *value) {
     g_conn *c = value;
     if (!fwp_rc_release_last(PTR(c))) return;
@@ -429,7 +425,20 @@ static void g_slist_add(g_slist *l, g_stream *s) {
         l->cap = l->cap ? l->cap * 2 : 8;
         l->v = (g_stream **)fwp_mem_realloc(l->v, old * sizeof *l->v, l->cap * sizeof *l->v);
     }
+    /* A later frame in this same input can reset/unlink the request before
+     * the reader starts its serving task. The pending list owns it meanwhile. */
+    fwp_rc_dup(PTR(s));
     l->v[l->n++] = s;
+}
+
+static void g_slist_release(void *arg) {
+    g_slist *list = arg;
+    g_stream **values = list->v;
+    size_t n = list->n;
+    list->v = NULL;
+    list->n = list->cap = 0;
+    for (size_t i = 0; i < n; i++) g_stream_drop(values[i]);
+    fwp_mem_free(values);
 }
 
 static void g_goaway(g_conn *c, uint32_t code, const char *why, char **dead) {
@@ -516,6 +525,9 @@ static void g_header_block(g_conn *c, uint32_t sid, const unsigned char *b, size
         return;
     }
     s = g_stream_new(c, sid);
+#ifdef FWP_RESOURCE_OWNERS
+    fwp_rc_fresh(PTR(s)); /* active connection list */
+#endif
     s->headers = hs;
     s->remote_end = end;
     g_slist_add(fresh, s);
@@ -660,6 +672,7 @@ static void g_process(g_conn *c, const unsigned char *b, size_t n, g_slist *fres
 static void g_conn_dead(g_conn *c, const char *why) {
     if (c->dead) return;
     c->dead = g_copy_text(why);
+    fwp_fd_closing(c->fd); /* wake I/O before shutdown, including polling hosts */
     shutdown(c->fd, SHUT_RDWR);
     g_stream *streams = c->streams;
     c->streams = 0;
@@ -695,6 +708,8 @@ static void g_conn_release(g_conn *c) {
     g_conn_drop(c);
 }
 
+static void g_connect_ref_release(void *arg) { g_conn_release((g_conn *)arg); }
+
 static void g_start_call(g_conn *c, g_stream *s);
 
 static void g_writer(void *arg, int cancelled);
@@ -714,8 +729,13 @@ static void g_reader(void *arg, int cancelled) {
             g_conn_release(c);
             return;
         }
+        fwp_cleanup writer_owner;
+        fwp_rc_dup(PTR(c));
         c->refs++;
-        fwp_spawn_task(0, g_writer, c, 0, 0);
+        fwp_cleanup_push(&writer_owner, g_connect_ref_release, c);
+        fwp_task *writer = fwp_spawn_task(0, g_writer, c, 0, 0);
+        fwp_cleanup_pop(&writer_owner); /* writer takes the reserved reference */
+        fwp_task_own_internal(writer, fwp_cur->scope != NULL);
     }
     unsigned char buf[65536];
     for (;;) {
@@ -724,10 +744,17 @@ static void g_reader(void *arg, int cancelled) {
         ssize_t k = g_io_recv(c, buf, sizeof buf, &ww);
         if (k > 0) {
             g_slist fresh = {0, 0, 0};
+            fwp_cleanup pending_requests;
+            fwp_cleanup_push(&pending_requests, g_slist_release, &fresh);
             char *dead = 0;
             g_process(c, buf, (size_t)k, &fresh, &dead);
-            for (size_t i = 0; i < fresh.n; i++) g_start_call(c, fresh.v[i]);
-            fwp_mem_free(fresh.v);
+            for (size_t i = 0; i < fresh.n; i++) {
+                g_stream *request = fresh.v[i];
+                fresh.v[i] = NULL;
+                g_start_call(c, request); /* move the pending-list owner */
+            }
+            fwp_cleanup_pop(&pending_requests);
+            g_slist_release(&fresh);
             g_wake_conn(c);
             if (dead) {
                 /* send the GOAWAY if it can be sent now */
@@ -1117,7 +1144,6 @@ static int g_same_tls(const g_conn *c, const g_tls *t) {
 }
 
 typedef struct { g_conn *c; fwp_task *reader, *writer; } g_connect_start_owner;
-static void g_connect_ref_release(void *arg) { g_conn_release((g_conn *)arg); }
 static void g_connect_start_abort(void *arg) {
     g_connect_start_owner *owner = (g_connect_start_owner *)arg;
     owner->c->dead = g_connect_start_failed;
@@ -1470,12 +1496,16 @@ typedef struct {
 } g_cell;
 
 /* Exactly one unread position owns the source, request and connection. */
-static void g_incoming_drop(g_incoming *source) {
+static void g_incoming_drop(void *arg) {
+    g_incoming *source = arg;
     g_conn *c = source->c;
     g_stream *s = source->s;
     source->c = 0;
     source->s = 0;
-    g_stream_reader_release(c, s);
+    /* Finishing a server input does not abandon a client response or unlink
+     * the served call before its result/status is sent. */
+    if (source->server) g_stream_drop(s);
+    else g_stream_reader_release(c, s);
     g_conn_drop(c);
 #ifndef FWP_RESOURCE_NO_FREE
     /* Source and position storage have raw runtime layouts, not record headers.
@@ -1541,7 +1571,7 @@ static void g_fail_call(int code, const char *msg) {
     free(sv->msg);
     sv->code = code;
     sv->msg = copy;
-    fwp_cancel_tree(sv->task);
+    if (sv->task) fwp_cancel_tree(sv->task);
     fwp_check_cancel();
     fwp_trap(sv->msg);
 }
@@ -1745,58 +1775,85 @@ static int g_sink_send(void *ctx, V x) {
     return r;
 }
 
+/* The payload is part of its channel allocation. Only independent transport
+ * owners need release; there is no separately allocated callback record. */
+static void g_sink_drop(void *arg) {
+    g_sink *sink = arg;
+    g_stream *stream = sink->s;
+    g_conn *connection = sink->c;
+    sink->s = NULL;
+    sink->c = NULL;
+    g_stream_drop(stream);
+    g_conn_drop(connection);
+}
+
+_Static_assert(_Alignof(fwp_chan) >= _Alignof(g_sink), "channel payload alignment");
+
 static V g_sink_value(g_conn *c, g_stream *s, g_codec enc, int tag) {
-    V ch = fwp_p_channel_make((V)1);
-    fwp_chan *q = (fwp_chan *)(uintptr_t)ch;
-    g_sink *k = (g_sink *)fwp_mem_alloc(sizeof *k);
-    k->c = c;
-    k->s = s;
+    fwp_tasks_init();
+    fwp_chan *q = (fwp_chan *)fwp_mem_alloc(sizeof *q + sizeof(g_sink));
+    g_sink *k = (g_sink *)(q + 1);
+    q->cap = 1;
+    q->sink = g_sink_send;
+    q->owner.sink_drop = g_sink_drop;
+    q->sink_ctx = k;
     k->enc = enc;
     k->tag = tag;
-    q->sink = g_sink_send;
-    q->sink_ctx = k;
+    V ch = PTR(q);
+#ifdef FWP_RESOURCE_OWNERS
+    fwp_rc_fresh(ch);
+    fwp_value_owner building = {ch, fwp_channel_drop};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&building, &cleanup);
+    fwp_rc_dup(PTR(s));
+#endif
+    k->s = s;
+#ifdef FWP_RESOURCE_OWNERS
+    fwp_rc_dup(PTR(c));
+#endif
+    k->c = c;
+#ifdef FWP_RESOURCE_OWNERS
+    ch = fwp_value_finish(&building, &cleanup); /* transfer the whole channel */
+#endif
     return ch;
 }
 
-/* the values of an Iterator, forced one at a time */
-static int g_iter_next(V *cur, V *x) {
-    V v = *cur;
-    if (fwp_tag(v) != 1) return 0;
-    *x = OBJ(v)->f[0];
-    *cur = fwp_apply1(OBJ(v)->f[1], FWP_UNIT);
-    return 1;
-}
+/* A cursor owns its current node and the previous node that keeps an element
+ * alive through lookahead/encoding. Senders embed only these two value words. */
+typedef struct { V cur, pending; } g_cursor;
+/* Stack cleanup carries the concrete iterator destructor. */
+typedef struct { g_cursor cursor; void (*drop)(V); } g_input;
 
-/* A client owns its current iterator node and, during lookahead/encoding,
- * the previous node that keeps the borrowed element alive. No new heap object. */
-typedef struct { V cur, pending; const fwp_remote *remote; } g_input;
-
-static void g_input_release(void *arg) {
-    g_input *input = arg;
+static void g_cursor_release(g_cursor *input, void (*drop)(V)) {
     V cur = input->cur, pending = input->pending;
     input->cur = input->pending = 0;
 #ifdef FWP_RESOURCE_OWNERS
-    input->remote->input_drop(pending);
-    input->remote->input_drop(cur);
+    drop(pending);
+    drop(cur);
 #else
     (void)cur; (void)pending;
 #endif
 }
 
-static void g_input_acquire(g_input *input, V iter) {
+static void g_input_release(void *arg) {
+    g_input *input = arg;
+    g_cursor_release(&input->cursor, input->drop);
+}
+
+static void g_cursor_acquire(g_cursor *input, void (*drop)(V), V iter) {
 #ifdef FWP_RESOURCE_OWNERS
-    if (!input->remote || !input->remote->input_drop)
+    if (!drop)
         fwp_trap("missing client input ownership metadata");
     fwp_rc_dup(iter);
 #endif
     input->cur = iter;
 }
 
-static int g_input_next(g_input *input, V *value) {
+static int g_cursor_next(g_cursor *input, void (*drop)(V), V *value) {
     V previous = input->pending;
     input->pending = 0;
 #ifdef FWP_RESOURCE_OWNERS
-    input->remote->input_drop(previous);
+    drop(previous);
 #else
     (void)previous;
 #endif
@@ -1834,13 +1891,14 @@ static void g_encode_request(const fwp_remote *r, V *vals, h2_buf *out);
 typedef struct {
     g_conn *c;
     g_stream *s;
-    g_input input;
+    g_cursor input;
+    const fwp_remote *remote;
     g_serving *serving;
 } g_sender;
 
 static void g_sender_peer_finish(void *arg) {
     g_sender *x = (g_sender *)arg;
-    g_input_release(&x->input);
+    g_cursor_release(&x->input, x->remote->input_drop);
     g_serving_peer_release(x->serving);
     x->serving = 0;
     g_stream *s = x->s;
@@ -1877,14 +1935,14 @@ static void g_send_all(void *arg, int cancelled) {
     V v;
     for (;;) {
         if (!x->s->listed || x->s->remote_end) break;
-        if (!g_input_next(&x->input, &v)) {
+        if (!g_cursor_next(&x->input, x->remote->input_drop, &v)) {
             g_send_data(x->c, x->s, 0, 0, 1);
             break;
         }
         h2_buf req = {0};
         fwp_cleanup request_buffer;
         fwp_cleanup_push(&request_buffer, g_h2_buffer_release, &req);
-        g_encode_request(x->input.remote, &v, &req);
+        g_encode_request(x->remote, &v, &req);
         int ok = g_send_msg(x->c, x->s, req.d, req.len, 0);
         fwp_cleanup_pop(&request_buffer);
         h2b_free(&req);
@@ -1905,7 +1963,8 @@ static void g_spawn_sender(g_conn *c, g_stream *s, V iter, const fwp_remote *r) 
     g_sender *x = (g_sender *)fwp_alloc(sizeof *x);
     x->c = 0;
     x->s = 0;
-    x->input = (g_input){0, 0, r};
+    x->input = (g_cursor){0, 0};
+    x->remote = r;
     x->serving = 0;
     fwp_cleanup peer_cleanup;
     fwp_cleanup_push(&peer_cleanup, g_sender_peer_finish, x);
@@ -1915,7 +1974,7 @@ static void g_spawn_sender(g_conn *c, g_stream *s, V iter, const fwp_remote *r) 
         serving->peer_users++;
         x->serving = serving;
     }
-    g_input_acquire(&x->input, iter);
+    g_cursor_acquire(&x->input, r->input_drop, iter);
     fwp_rc_dup(PTR(s));
     x->s = s;
     fwp_rc_dup(PTR(c));
@@ -1994,16 +2053,16 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
             /* requests are sent as responses arrive */
             g_spawn_sender(c, s, args[0], r);
         } else {
-            g_input input = {0, 0, r};
+            g_input input = {{0, 0}, r->input_drop};
             fwp_cleanup input_cleanup;
             /* Validate metadata before publishing a cleanup that uses it. */
 #ifdef FWP_RESOURCE_OWNERS
             if (!r->input_drop) fwp_trap("missing client input ownership metadata");
 #endif
             fwp_cleanup_push(&input_cleanup, g_input_release, &input);
-            g_input_acquire(&input, args[0]);
+            g_cursor_acquire(&input.cursor, input.drop, args[0]);
             V x;
-            while (g_input_next(&input, &x)) {
+            while (g_cursor_next(&input.cursor, input.drop, &x)) {
                 h2_buf req = {0};
                 fwp_cleanup client_request;
                 fwp_cleanup_push(&client_request, g_h2_buffer_release, &req);
@@ -2172,18 +2231,47 @@ struct g_server {
 };
 
 typedef struct {
+    g_serving sv;              /* first: a serving owner owns this whole allocation */
     g_conn *c;
     g_stream *s;
     const g_server *srv;
     const g_route *route;
     char what[300];
-    g_serving sv;
     g_ctx ctx;
 } g_job;
 
-/* The serving context is inherited by children; dispose only after their join. */
+static void g_serving_peer_release(g_serving *sv) {
+    if (!sv) return;
+    if (!sv->peer_users) abort();
+    if (--sv->peer_users) return;
+    fwp_tls_subject_free(sv->peer);
+    sv->peer = 0;
+    free(sv->msg);
+    sv->msg = 0;
+    g_job *job = (g_job *)sv;
+    g_stream *request = job->s;
+    g_conn *connection = job->c;
+    job->s = NULL;
+    job->c = NULL;
+    sv->s = NULL;
+    sv->headers = NULL;
+    g_stream_drop(request);
+    g_conn_drop(connection);
+#ifndef FWP_RESOURCE_NO_FREE
+    fwp_mem_free(job);
+#endif
+}
+
+/* Joined children no longer borrow this task. Detached senders retain the job,
+ * but cannot retain a task identity whose scheduler is about to dispose it. */
 static void g_job_peer_finish(void *arg) {
     g_job *j = (g_job *)arg;
+    fwp_task *task = j->sv.task;
+    j->sv.task = 0;
+    if (task) {
+        if (j->s->task == task) j->s->task = 0;
+        if (task->gctx == &j->ctx) task->gctx = 0;
+    }
     g_serving_peer_release(&j->sv);
 }
 
@@ -2230,9 +2318,9 @@ static int64_t g_parse_timeout(const char *t) {
     return ns > (uint64_t)(INT64_MAX - now) ? INT64_MAX : now + (int64_t)ns;
 }
 
+/* Consume the pending-list owner; the job keeps it through task completion. */
 static void g_start_call(g_conn *c, g_stream *s) {
     g_job *j = (g_job *)fwp_mem_alloc(sizeof *j);
-    j->c = c;
     j->s = s;
     j->srv = c->server;
     const char *path = h2_get(&s->headers, ":path");
@@ -2244,16 +2332,21 @@ static void g_start_call(g_conn *c, g_stream *s) {
         snprintf(j->what, sizeof j->what, "%s", path[0] == '/' ? path + 1 : path);
     j->sv.headers = &s->headers;
     j->sv.code = -1;
+    j->sv.task = 0;
+    j->sv.msg = 0;
     j->sv.peer = c->ssl ? fwp_tls_peer_subject(c->ssl) : 0;
     j->sv.peer_users = 1;
     fwp_cleanup peer_cleanup;
     fwp_cleanup_push(&peer_cleanup, g_job_peer_finish, j);
+    fwp_rc_dup(PTR(c));
+    j->c = c; /* publish only after acquisition succeeds */
     j->sv.s = s;
     /* responses are compressed like the requests */
     const char *enc = h2_get(&s->headers, "grpc-encoding");
     s->gzip = enc && strcmp(enc, "gzip") == 0;
     j->ctx.serving = &j->sv;
     s->task = fwp_spawn_task(0, g_handle, j, g_parse_timeout(h2_get(&s->headers, "grpc-timeout")), 0);
+    fwp_task_own_internal(s->task, fwp_cur->scope != NULL);
     j->sv.task = s->task;
     s->task->gctx = &j->ctx;
     s->task->cfinish = g_job_peer_finish;
@@ -2335,7 +2428,7 @@ static g_msg *g_recv_one(g_job *j, int *code, char **msg) {
 
 /* apply a function to the arguments of a call: 0 with the result, 1 with
  * an error, 2 after a trap (its message in fwp_trap_msg) */
-static int g_apply_user(V f, uint32_t n, V *args, V *out, V *err, const fwp_desc **edesc) {
+static int g_apply_user(uint32_t fn, V *args, V *out, V *err, const fwp_desc **edesc) {
     fwp_task *t = fwp_cur;
     jmp_buf *saved = t->trap_jb;
     fwp_cleanup *saved_cleanup = t->trap_cleanup;
@@ -2356,7 +2449,13 @@ static int g_apply_user(V f, uint32_t n, V *args, V *out, V *err, const fwp_desc
     t->trap_cleanup = cleanup_base;
     fwp_handlers = &h;
     if (setjmp(h.jb) == 0) {
-        V r = n ? fwp_apply(f, n, args) : fwp_apply1(f, FWP_UNIT);
+        /* The compiled service signature supplies every argument. No closure
+         * or generic partial-application machinery is needed for this call. */
+#ifdef FWP_RESOURCE_OWNERS
+        V r = fwp_fns[fn].owned->entry(args);
+#else
+        V r = fwp_fns[fn].entry(args);
+#endif
         fwp_handlers = h.prev;
         t->trap_jb = saved;
         t->trap_cleanup = saved_cleanup;
@@ -2403,6 +2502,33 @@ static int g_outcome(g_job *j, int k, V err, const fwp_desc *ed, int *in_respons
     return GRPC_INTERNAL;
 }
 
+/* Pending decoded parameters and returned values stay owned until transferred
+ * into a method or encoded. This stack owner also handles cancellation/traps. */
+typedef struct {
+    const fwp_rpc *method;
+    const fwp_owned_fninfo *types;
+    V *args;
+    uint32_t pending;
+    V result, error;
+    const fwp_desc *error_type;
+} g_method_values;
+
+static void g_method_values_release(void *arg) {
+    g_method_values *values = arg;
+#ifdef FWP_RESOURCE_OWNERS
+    uint32_t pending = values->pending;
+    values->pending = 0;
+    if (pending && values->types->drop_arguments)
+        values->types->drop_arguments(values->args, 0, pending);
+    V result = values->result, error = values->error;
+    values->result = values->error = 0;
+    if (result && values->method->result_drop) values->method->result_drop(result);
+    if (error && values->error_type && values->error_type->drop) values->error_type->drop(error);
+#else
+    (void)values;
+#endif
+}
+
 static int g_run_method(g_job *j, char **msg) {
     const fwp_rpc *m = j->route->m;
     const char *fp = h2_get(&j->s->headers, "fwp-fingerprint");
@@ -2410,12 +2536,25 @@ static int g_run_method(g_job *j, char **msg) {
         *msg = g_strdupf("interface mismatch: the caller of %s was built against a different version of it", j->what);
         return GRPC_FAILED_PRECONDITION;
     }
-    V *args = (V *)fwp_alloc((size_t)(m->nreq + 2) * sizeof(V));
+    /* The method signature fixes this bound. Application copies argument values,
+     * never the temporary array; it can stay on this serving task's stack. */
+    V args[(size_t)m->nreq + 2];
+    memset(args, 0, sizeof args);
+    const fwp_owned_fninfo *types = fwp_fns[m->fn].owned;
+#ifdef FWP_RESOURCE_OWNERS
+    if (!types || !types->entry) fwp_trap("missing served method ownership metadata");
+    if ((m->output == 1 || m->output == 3) && !m->result_drop)
+        fwp_trap("missing served iterator ownership metadata");
+#endif
+    g_method_values values = {m, types, args, 0, 0, 0, 0};
+    fwp_cleanup values_cleanup;
+    fwp_cleanup_push(&values_cleanup, g_method_values_release, &values);
+    int status = -1;
     int na = 0;
     if (m->input == 0) {
         int code;
         g_msg *req = g_recv_one(j, &code, msg);
-        if (!req) return code;
+        if (!req) { status = code; goto done; }
         h2_buf canon = {0};
         fwp_cleanup request_canonical;
         fwp_cleanup_push(&request_canonical, g_h2_buffer_release, &canon);
@@ -2424,45 +2563,55 @@ static int g_run_method(g_job *j, char **msg) {
             h2b_free(&canon);
             free(req);
             *msg = g_copy_text("malformed request message");
-            return GRPC_INVALID_ARGUMENT;
+            status = GRPC_INVALID_ARGUMENT; goto done;
         }
         free(req);
         fwp_rd rd = {canon.d, canon.len, 0};
-        for (int i = 0; i < m->nreq; i++)
-            if (!fwp_decode(&rd, m->req[i], &args[na++])) {
+        for (int i = 0; i < m->nreq; i++) {
+            if (!fwp_decode(&rd, m->req[i], &args[na])) {
                 fwp_cleanup_pop(&request_canonical);
                 h2b_free(&canon);
                 *msg = g_copy_text("malformed request message");
-                return GRPC_INVALID_ARGUMENT;
+                status = GRPC_INVALID_ARGUMENT; goto done;
             }
+            values.pending = (uint32_t)++na;
+        }
         fwp_cleanup_pop(&request_canonical);
         h2b_free(&canon);
     } else {
         g_incoming *src = g_incoming_new(j->what, strlen(j->what));
-        src->c = j->c;
-        src->s = j->s;
         src->server = 1;
+        fwp_cleanup source_cleanup;
+        fwp_cleanup_push(&source_cleanup, g_incoming_drop, src);
+        fwp_rc_dup(PTR(j->s));
+        src->s = j->s;
+        fwp_rc_dup(PTR(j->c));
+        src->c = j->c;
         g_codec d = {0, m->schema, m->req_node, m->req[0], 0};
         src->dec = d;
         g_cell *cell = g_cell_new(src);
+        fwp_cleanup_pop(&source_cleanup); /* unread cell owns the source */
         V function = fwp_rc_fresh(fwp_pap((uint32_t)m->iter_fn, 0, 0));
         V argument = PTR(cell);
         args[na++] = fwp_apply_owned(function, 1, &argument);
+        values.pending = (uint32_t)na;
     }
     g_codec enc = {0, m->schema, m->resp_node, m->resp, 0};
-    if (m->output == 2) args[na++] = g_sink_value(j->c, j->s, enc, m->error != 0);
-    V v = 0, err = 0;
-    const fwp_desc *ed = 0;
-    int k = g_apply_user(fwp_pap((uint32_t)m->fn, 0, 0), (uint32_t)na, args, &v, &err, &ed);
+    if (m->output == 2) {
+        args[na++] = g_sink_value(j->c, j->s, enc, m->error != 0);
+        values.pending = (uint32_t)na;
+    }
+    values.pending = 0; /* the owning entry consumes every supplied argument */
+    int k = g_apply_user((uint32_t)m->fn, args, &values.result, &values.error, &values.error_type);
     int in_response;
-    int code = g_outcome(j, k, err, ed, &in_response, msg);
-    if (code >= 0) return code;
+    int code = g_outcome(j, k, values.error, values.error_type, &in_response, msg);
+    if (code >= 0) { status = code; goto done; }
     if (in_response) {
         fwp_buf canon = {0};
         fwp_cleanup error_canonical;
         fwp_cleanup_push(&error_canonical, fwp_file_buffer_cleanup, &canon);
         buf_putc(&canon, 1);
-        fwp_encode(&canon, err, m->error);
+        fwp_encode(&canon, values.error, m->error);
         h2_buf b = {0};
         fwp_cleanup response_buffer;
         fwp_cleanup_push(&response_buffer, g_h2_buffer_release, &b);
@@ -2475,13 +2624,13 @@ static int g_run_method(g_job *j, char **msg) {
         g_send_msg(j->c, j->s, b.d, b.len, 0);
         fwp_cleanup_pop(&response_buffer);
         h2b_free(&b);
-        return -1;
+        goto done;
     }
     if (m->output == 0) {
         h2_buf b = {0};
         fwp_cleanup response_buffer;
         fwp_cleanup_push(&response_buffer, g_h2_buffer_release, &b);
-        g_encode(&enc, v, m->error != 0, &b);
+        g_encode(&enc, values.result, m->error != 0, &b);
         g_send_msg(j->c, j->s, b.d, b.len, 0);
         fwp_cleanup_pop(&response_buffer);
         h2b_free(&b);
@@ -2491,31 +2640,34 @@ static int g_run_method(g_job *j, char **msg) {
         fwp_cleanup *saved_cleanup = fwp_cur->trap_cleanup;
         fwp_cleanup *cleanup_base = fwp_cleanups;
         jmp_buf tj;
-        volatile V cur = v;
+        g_input output = {{values.result, 0}, m->result_drop};
+        values.result = 0;
         if (setjmp(tj) != 0) {
             fwp_cur->trap_jb = saved;
             fwp_cur->trap_cleanup = saved_cleanup;
             fflush(fwp_prog_out);
             fprintf(stderr, "fwp: trap: %s (in %s)\n", fwp_trap_msg, j->what);
             *msg = g_strdupf("trap: %s", fwp_trap_msg);
-            return GRPC_INTERNAL;
+            status = GRPC_INTERNAL; goto done;
         }
+        fwp_cleanup output_cleanup;
+        fwp_cleanup_push(&output_cleanup, g_input_release, &output);
         for (;;) {
-            V x = 0, next = cur;
+            V x = 0;
             fwp_cur->trap_jb = &tj;
             fwp_cur->trap_cleanup = cleanup_base;
-            int more = g_iter_next(&next, &x);
+            int more = g_cursor_next(&output.cursor, output.drop, &x);
             fwp_cur->trap_jb = saved;
             fwp_cur->trap_cleanup = saved_cleanup;
             if (!more) break;
-            cur = next;
             if (m->output == 3) {
                 /* a stream of results ends at an `Err`, with its status */
                 if (fwp_tag(x) == 1) {
                     V e = OBJ(x)->f[0];
                     int64_t code = (int64_t)OBJ(e)->f[0];
                     *msg = g_copy_text(STR(OBJ(e)->f[1])->d);
-                    return code >= 1 && code <= 16 ? (int)code : GRPC_UNKNOWN;
+                    status = code >= 1 && code <= 16 ? (int)code : GRPC_UNKNOWN;
+                    break;
                 }
                 x = OBJ(x)->f[0];
             }
@@ -2528,8 +2680,13 @@ static int g_run_method(g_job *j, char **msg) {
             h2b_free(&b);
             if (!ok) { fwp_check_cancel(); break; }
         }
+        fwp_cleanup_pop(&output_cleanup);
+        g_input_release(&output);
     }
-    return -1;
+ done:
+    fwp_cleanup_pop(&values_cleanup);
+    g_method_values_release(&values);
+    return status;
 }
 
 static void g_put_bytes(h2_buf *b, uint32_t num, const void *p, size_t n) {
@@ -2738,17 +2895,24 @@ static void g_accept_loop(fwp_socket_t lfd, const g_server *srv) {
             char peer[128];
             fwp_fmt_addr((struct sockaddr *)&ss, peer, sizeof peer);
             g_conn *c = g_conn_new(fd, peer, srv);
+#ifdef FWP_RESOURCE_OWNERS
+            fwp_rc_fresh(PTR(c));
+#endif
+            c->refs = 1; /* startup storage and transport, moved to the reader */
+            fwp_cleanup accepted_owner;
+            fwp_cleanup_push(&accepted_owner, g_connect_ref_release, c);
             if (srv->tls) {
                 c->ssl = (SSL *)fwp_tls_accepted(srv->tls, fd);
                 if (!c->ssl) {
-                    c->fd = FWP_INVALID_SOCKET;
-                    fwp_socket_close(fd);
+                    fwp_cleanup_pop(&accepted_owner);
+                    g_conn_release(c);
                     continue;
                 }
             }
             /* the reader starts the writer (after a TLS handshake) */
-            c->refs = 1;
-            fwp_spawn_task(0, g_reader, c, 0, 0);
+            fwp_task *reader = fwp_spawn_task(0, g_reader, c, 0, 0);
+            fwp_cleanup_pop(&accepted_owner); /* move startup ownership */
+            fwp_task_own_internal(reader, fwp_cur->scope != NULL);
             continue;
         }
         if (fwp_socket_again(errno) || fwp_socket_aborted(errno)) {

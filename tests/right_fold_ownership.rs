@@ -146,7 +146,7 @@ main = (10000, 0) | loop step | echo
                 .strip_prefix("z = ")
                 .and_then(|s| s.strip_suffix(';'))
             {
-                if call.starts_with("fwp_owned_entry") {
+                if call.starts_with("fwp_owned_entry") || call.starts_with("fwp_borrowed_fold") {
                     let indent = &line[..line.len() - line.trim_start().len()];
                     return format!("{indent}z = fwp_rc_shared({call});");
                 }

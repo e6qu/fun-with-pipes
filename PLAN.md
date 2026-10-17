@@ -73,32 +73,32 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #158](https://github.com/e6qu/fun-with-pipes/pull/158) is accepted after all
-nine production jobs and documentation passed. Closed client connections and
-completed I/O tasks now release explicitly; library unload closes idle
-connections before draining their tasks. Earlier deliveries released request
-and stream storage and moved unique fields/closure captures. These changes do
-not complete GC removal; [history](docs/roadmap-history.md) records acceptance.
+[PR #159](https://github.com/e6qu/fun-with-pipes/pull/159) is accepted after all
+nine production jobs and documentation passed. Client input iterators and finished
+senders release on completion, failure and cancellation; unique iterator nodes
+move their continuations. Earlier deliveries freed client requests, closed
+connections and completed I/O tasks. [History](docs/roadmap-history.md) records
+acceptance. These deliveries do not complete GC removal.
 
-The next delivery frees client input iterators and finished sender records,
-including failure and cancellation. Unique iterator nodes transfer the function
-that produces their next value; shared nodes preserve it for older readers.
-All six focused native hosts pass semantic, cleanup, alias and stress/reuse
-checks, with constant remaining storage across 1/16/256 calls. Complete-input
-allocation counts are unchanged. Count traffic falls relative to the first
-ownership probe, but remains higher than the original tracing-dependent version.
-[The comparison](docs/benchmarks.md#input-owners-and-moves-bounded-memory-with-measured-count-costs)
-explains the remaining costs. Full production acceptance is required before merge.
-This delivery also includes the reproducible server baseline below.
+PR #160 now combines server task/job cleanup, stack argument slots, direct method
+calls, typed value cleanup, output channels, request/connection owners and borrowed
+fold callbacks. A capture is a value kept by a function for a later call; borrowing
+it avoids a reference-count update on every loop iteration. Parser lists must
+protect requests reset before their task starts. Connection owners must survive
+closed sockets and retained iterators/channels. The same delivery fixes a Windows
+shutdown wakeup bug exposed by native tests.
 
-The server-process baseline now passes on all six native hosts. Greeting,
-returned-stream, sent-stream and output-channel workloads retain increasing
-managed storage after calls/tasks finish and connections close. Use these
-measurements to establish owners for decoded arguments, returned values,
-retained incoming iterators, callbacks/channels and serving tasks. Cover failure
-and cancellation as well as success, without turning
-borrowed scheduler back-pointers into owning cycles. Remote calls remain excluded
-from checked ARC until their complete lifetimes and cycles are proved.
+The earlier partial implementation passed short six-platform measurements but
+failed the long-running production memory test on Linux ARM64. Its remaining
+240-byte growth per call is not acceptable completion. The combined ownership
+changes are being checked against both the identical four short workloads and
+the unchanged 32,000-call resident-memory limit. Preserve aliases, failure order,
+cancellation and all nine final-head production gates plus documentation before
+merge. Report allocation requests, count costs, managed storage and whole-process
+memory separately. Remote calls remain excluded from checked ARC until their
+complete lifetimes and cycles are proved.
+[The handoff](docs/development-state.md) identifies the exact candidate, checks
+and next action.
 
 Browser/service re-entry, retained host callbacks, remaining numerical and
 networking ownership, derivative scaling, broader applications and the seven

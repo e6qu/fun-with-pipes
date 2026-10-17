@@ -1,0 +1,2187 @@
+{
+  "source_revision": "48ccd3d9965836ac3806ca528b12a893c8672669",
+  "run_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/39020484780",
+  "checks": [
+    "every_kind_of_call",
+    "server_measurement::repeated_server_call_memory",
+    "calls_are_concurrent",
+    "go_client_interoperates",
+    "stream_aliases_are_consistent_across_tasks",
+    "serving_peer_owner_survives_children_and_releases_at_completion",
+    "served_status_messages_release_after_encoding_and_on_cancellation",
+    "served_buffers_release_on_decode_encode_traps_and_cancelled_send",
+    "received_requests_and_statuses_release_on_errors_and_cancelled_waits",
+    "owned_client_streams_release_after_readers_and_senders_finish",
+    "encoded_messages_release_on_cancel_and_preserve_plain_and_gzip_frames",
+    "task_values_and_channel_aliases_under_stress",
+    "deadline_aliases_count_only_owned_types",
+    "deadline_passthrough_preserves_count_reclamation",
+    "served_values_release_on_partial_decode_aliases_errors_and_cancellation",
+    "input_owners_release_after_lookahead_failure_and_sender_cancellation",
+    "client_request_buffers_release_on_encode_trap_and_cancelled_send"
+  ],
+  "coverage": "Linux AMD64 probe only",
+  "comparison_kind": "method-values",
+  "per_call_results": {
+    "unary-strings": 71,
+    "response-stream": 2080,
+    "request-stream": 2080,
+    "channel-output": 439
+  },
+  "sampling": "Native -O2 servers receive 1, 16 or 256 calls over one reused connection, three fresh server processes per case. Counters begin after listener/routing/root setup. Per-call samples follow serving-task removal; final samples require client disconnect and no serving/I/O/other tasks while the listener remains open. A measurement-only wake of the existing listener allows retirement of the final finished task without adding a task or connection.",
+  "limits": "Tracing is disabled and physical freeing enabled. Native clients check matching outputs against interpreted and ordinary native servers. Managed storage and cumulative allocation categories do not identify individual live objects. Raw request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process memory and timing are excluded. Lower retained storage does not establish complete server ownership, checked ARC, lower execution time, zero-cost abstractions or C/Rust parity.",
+  "hosts": [
+    {
+      "host": "ubuntu-latest",
+      "job_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/39020484780/job/117361123844",
+      "rows": [
+        {
+          "mode": "unary-strings",
+          "calls": 1,
+          "repetition": 0,
+          "allocations": 14,
+          "requested_bytes": 6553,
+          "retains": 1,
+          "peak_charged_bytes": 7216,
+          "final_charged_bytes": 1104,
+          "collections": 0,
+          "calls_started": 1,
+          "calls_finished": 1,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 1,
+          "repetition": 1,
+          "allocations": 14,
+          "requested_bytes": 6553,
+          "retains": 1,
+          "peak_charged_bytes": 7216,
+          "final_charged_bytes": 1104,
+          "collections": 0,
+          "calls_started": 1,
+          "calls_finished": 1,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 1,
+          "repetition": 2,
+          "allocations": 14,
+          "requested_bytes": 6553,
+          "retains": 1,
+          "peak_charged_bytes": 7216,
+          "final_charged_bytes": 1104,
+          "collections": 0,
+          "calls_started": 1,
+          "calls_finished": 1,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 16,
+          "repetition": 0,
+          "allocations": 134,
+          "requested_bytes": 44608,
+          "retains": 16,
+          "peak_charged_bytes": 10816,
+          "final_charged_bytes": 4704,
+          "collections": 0,
+          "calls_started": 16,
+          "calls_finished": 16,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 16,
+          "repetition": 1,
+          "allocations": 134,
+          "requested_bytes": 44608,
+          "retains": 16,
+          "peak_charged_bytes": 10816,
+          "final_charged_bytes": 4704,
+          "collections": 0,
+          "calls_started": 16,
+          "calls_finished": 16,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 16,
+          "repetition": 2,
+          "allocations": 134,
+          "requested_bytes": 44608,
+          "retains": 16,
+          "peak_charged_bytes": 10816,
+          "final_charged_bytes": 4704,
+          "collections": 0,
+          "calls_started": 16,
+          "calls_finished": 16,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 256,
+          "repetition": 0,
+          "allocations": 2054,
+          "requested_bytes": 653488,
+          "retains": 256,
+          "peak_charged_bytes": 68416,
+          "final_charged_bytes": 62304,
+          "collections": 0,
+          "calls_started": 256,
+          "calls_finished": 256,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 256,
+          "repetition": 1,
+          "allocations": 2054,
+          "requested_bytes": 653488,
+          "retains": 256,
+          "peak_charged_bytes": 68416,
+          "final_charged_bytes": 62304,
+          "collections": 0,
+          "calls_started": 256,
+          "calls_finished": 256,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 256,
+          "repetition": 2,
+          "allocations": 2054,
+          "requested_bytes": 653488,
+          "retains": 256,
+          "peak_charged_bytes": 68416,
+          "final_charged_bytes": 62304,
+          "collections": 0,
+          "calls_started": 256,
+          "calls_finished": 256,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "response-stream",
+          "calls": 1,
+          "repetition": 0,
+          "allocations": 265,
+          "requested_bytes": 11968,
+          "retains": 64,
+          "peak_charged_bytes": 7216,
+          "final_charged_bytes": 1104,
+          "collections": 0,
+          "calls_started": 1,
+          "calls_finished": 1,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "response-stream",
+          "calls": 1,
+          "repetition": 1,
+          "allocations": 265,
+          "requested_bytes": 11968,
+          "retains": 64,
+          "peak_charged_bytes": 7216,
+          "final_charged_bytes": 1104,
+          "collections": 0,
+          "calls_started": 1,
+          "calls_finished": 1,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "response-stream",
+          "calls": 1,
+          "repetition": 2,
+          "allocations": 265,
+          "requested_bytes": 11968,
+          "retains": 64,
+          "peak_charged_bytes": 7216,
+          "final_charged_bytes": 1104,
+          "collections": 0,
+          "calls_started": 1,
+          "calls_finished": 1,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "response-stream",
+          "calls": 16,
+          "repetition": 0,
+          "allocations": 4150,
+          "requested_bytes": 131248,
+          "retains": 1024,
+          "peak_charged_bytes": 10816,
+          "final_charged_bytes": 4704,
+          "collections": 0,
+          "calls_started": 16,
+          "calls_finished": 16,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "response-stream",
+          "calls": 16,
+          "repetition": 1,
+          "allocations": 4150,
+          "requested_bytes": 131248,
+          "retains": 1024,
+          "peak_charged_bytes": 10816,
+          "final_charged_bytes": 4704,
+          "collections": 0,
+          "calls_started": 16,
+          "calls_finished": 16,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "response-stream",
+          "calls": 16,
+          "repetition": 2,
+          "allocations": 4150,
+          "requested_bytes": 131248,
+          "retains": 1024,
+          "peak_charged_bytes": 10816,
+          "final_charged_bytes": 4704,
+          "collections": 0,
+          "calls_started": 16,
+          "calls_finished": 16,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "response-stream",
+          "calls": 256,
+          "repetition": 0,
+          "allocations": 66310,
+          "requested_bytes": 2039728,
+          "retains": 16384,
+          "peak_charged_bytes": 68416,
+          "final_charged_bytes": 62304,
+          "collections": 0,
+          "calls_started": 256,
+          "calls_finished": 256,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "response-stream",
+          "calls": 256,
+          "repetition": 1,
+          "allocations": 66310,
+          "requested_bytes": 2039728,
+          "retains": 16384,
+          "peak_charged_bytes": 68416,
+          "final_charged_bytes": 62304,
+          "collections": 0,
+          "calls_started": 256,
+          "calls_finished": 256,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "response-stream",
+          "calls": 256,
+          "repetition": 2,
+          "allocations": 66310,
+          "requested_bytes": 2039728,
+          "retains": 16384,
+          "peak_charged_bytes": 68416,
+          "final_charged_bytes": 62304,
+          "collections": 0,
+          "calls_started": 256,
+          "calls_finished": 256,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "request-stream",
+          "calls": 1,
+          "repetition": 0,
+          "allocations": 333,
+          "requested_bytes": 13158,
+          "retains": 128,
+          "peak_charged_bytes": 9280,
+          "final_charged_bytes": 1104,
+          "collections": 0,
+          "calls_started": 1,
+          "calls_finished": 1,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "request-stream",
+          "calls": 1,
+          "repetition": 1,
+          "allocations": 333,
+          "requested_bytes": 13158,
+          "retains": 128,
+          "peak_charged_bytes": 9280,
+          "final_charged_bytes": 1104,
+          "collections": 0,
+          "calls_started": 1,
+          "calls_finished": 1,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "request-stream",
+          "calls": 1,
+          "repetition": 2,
+          "allocations": 333,
+          "requested_bytes": 13158,
+          "retains": 128,
+          "peak_charged_bytes": 9280,
+          "final_charged_bytes": 1104,
+          "collections": 0,
+          "calls_started": 1,
+          "calls_finished": 1,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "request-stream",
+          "calls": 16,
+          "repetition": 0,
+          "allocations": 5238,
+          "requested_bytes": 150288,
+          "retains": 2048,
+          "peak_charged_bytes": 12880,
+          "final_charged_bytes": 4704,
+          "collections": 0,
+          "calls_started": 16,
+          "calls_finished": 16,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "request-stream",
+          "calls": 16,
+          "repetition": 1,
+          "allocations": 5238,
+          "requested_bytes": 150288,
+          "retains": 2048,
+          "peak_charged_bytes": 12880,
+          "final_charged_bytes": 4704,
+          "collections": 0,
+          "calls_started": 16,
+          "calls_finished": 16,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "request-stream",
+          "calls": 16,
+          "repetition": 2,
+          "allocations": 5238,
+          "requested_bytes": 150288,
+          "retains": 2048,
+          "peak_charged_bytes": 12880,
+          "final_charged_bytes": 4704,
+          "collections": 0,
+          "calls_started": 16,
+          "calls_finished": 16,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "request-stream",
+          "calls": 256,
+          "repetition": 0,
+          "allocations": 83718,
+          "requested_bytes": 2344368,
+          "retains": 32768,
+          "peak_charged_bytes": 70480,
+          "final_charged_bytes": 62304,
+          "collections": 0,
+          "calls_started": 256,
+          "calls_finished": 256,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "request-stream",
+          "calls": 256,
+          "repetition": 1,
+          "allocations": 83718,
+          "requested_bytes": 2344368,
+          "retains": 32768,
+          "peak_charged_bytes": 70480,
+          "final_charged_bytes": 62304,
+          "collections": 0,
+          "calls_started": 256,
+          "calls_finished": 256,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "request-stream",
+          "calls": 256,
+          "repetition": 2,
+          "allocations": 83718,
+          "requested_bytes": 2344368,
+          "retains": 32768,
+          "peak_charged_bytes": 70480,
+          "final_charged_bytes": 62304,
+          "collections": 0,
+          "calls_started": 256,
+          "calls_finished": 256,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "channel-output",
+          "calls": 1,
+          "repetition": 0,
+          "allocations": 204,
+          "requested_bytes": 9766,
+          "retains": 0,
+          "peak_charged_bytes": 10272,
+          "final_charged_bytes": 2288,
+          "collections": 0,
+          "calls_started": 1,
+          "calls_finished": 1,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "channel-output",
+          "calls": 1,
+          "repetition": 1,
+          "allocations": 204,
+          "requested_bytes": 9766,
+          "retains": 0,
+          "peak_charged_bytes": 10272,
+          "final_charged_bytes": 2288,
+          "collections": 0,
+          "calls_started": 1,
+          "calls_finished": 1,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "channel-output",
+          "calls": 1,
+          "repetition": 2,
+          "allocations": 204,
+          "requested_bytes": 9766,
+          "retains": 0,
+          "peak_charged_bytes": 10272,
+          "final_charged_bytes": 2288,
+          "collections": 0,
+          "calls_started": 1,
+          "calls_finished": 1,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "channel-output",
+          "calls": 16,
+          "repetition": 0,
+          "allocations": 3174,
+          "requested_bytes": 96016,
+          "retains": 0,
+          "peak_charged_bytes": 31632,
+          "final_charged_bytes": 23648,
+          "collections": 0,
+          "calls_started": 16,
+          "calls_finished": 16,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "channel-output",
+          "calls": 16,
+          "repetition": 1,
+          "allocations": 3174,
+          "requested_bytes": 96016,
+          "retains": 0,
+          "peak_charged_bytes": 31632,
+          "final_charged_bytes": 23648,
+          "collections": 0,
+          "calls_started": 16,
+          "calls_finished": 16,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "channel-output",
+          "calls": 16,
+          "repetition": 2,
+          "allocations": 3174,
+          "requested_bytes": 96016,
+          "retains": 0,
+          "peak_charged_bytes": 31632,
+          "final_charged_bytes": 23648,
+          "collections": 0,
+          "calls_started": 16,
+          "calls_finished": 16,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "channel-output",
+          "calls": 256,
+          "repetition": 0,
+          "allocations": 50694,
+          "requested_bytes": 1476016,
+          "retains": 0,
+          "peak_charged_bytes": 373392,
+          "final_charged_bytes": 365408,
+          "collections": 0,
+          "calls_started": 256,
+          "calls_finished": 256,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "channel-output",
+          "calls": 256,
+          "repetition": 1,
+          "allocations": 50694,
+          "requested_bytes": 1476016,
+          "retains": 0,
+          "peak_charged_bytes": 373392,
+          "final_charged_bytes": 365408,
+          "collections": 0,
+          "calls_started": 256,
+          "calls_finished": 256,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        },
+        {
+          "mode": "channel-output",
+          "calls": 256,
+          "repetition": 2,
+          "allocations": 50694,
+          "requested_bytes": 1476016,
+          "retains": 0,
+          "peak_charged_bytes": 373392,
+          "final_charged_bytes": 365408,
+          "collections": 0,
+          "calls_started": 256,
+          "calls_finished": 256,
+          "connections_created": 1,
+          "connections_closed": 1,
+          "connections_finalized": 0,
+          "streams_finalized": 0,
+          "live_call_tasks": 0,
+          "live_io_tasks": 0,
+          "live_other_tasks": 0
+        }
+      ],
+      "storage_allocations": [
+        {
+          "mode": "unary-strings",
+          "calls": 1,
+          "repetition": 0,
+          "job_requested_bytes": 464,
+          "job_charged_bytes": 512,
+          "task_requested_bytes": 1584,
+          "task_charged_bytes": 1792,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 1,
+          "repetition": 1,
+          "job_requested_bytes": 464,
+          "job_charged_bytes": 512,
+          "task_requested_bytes": 1584,
+          "task_charged_bytes": 1792,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 1,
+          "repetition": 2,
+          "job_requested_bytes": 464,
+          "job_charged_bytes": 512,
+          "task_requested_bytes": 1584,
+          "task_charged_bytes": 1792,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 16,
+          "repetition": 0,
+          "job_requested_bytes": 7424,
+          "job_charged_bytes": 8192,
+          "task_requested_bytes": 25344,
+          "task_charged_bytes": 28672,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 16,
+          "repetition": 1,
+          "job_requested_bytes": 7424,
+          "job_charged_bytes": 8192,
+          "task_requested_bytes": 25344,
+          "task_charged_bytes": 28672,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 16,
+          "repetition": 2,
+          "job_requested_bytes": 7424,
+          "job_charged_bytes": 8192,
+          "task_requested_bytes": 25344,
+          "task_charged_bytes": 28672,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 256,
+          "repetition": 0,
+          "job_requested_bytes": 118784,
+          "job_charged_bytes": 131072,
+          "task_requested_bytes": 405504,
+          "task_charged_bytes": 458752,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 256,
+          "repetition": 1,
+          "job_requested_bytes": 118784,
+          "job_charged_bytes": 131072,
+          "task_requested_bytes": 405504,
+          "task_charged_bytes": 458752,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 256,
+          "repetition": 2,
+          "job_requested_bytes": 118784,
+          "job_charged_bytes": 131072,
+          "task_requested_bytes": 405504,
+          "task_charged_bytes": 458752,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "response-stream",
+          "calls": 1,
+          "repetition": 0,
+          "job_requested_bytes": 464,
+          "job_charged_bytes": 512,
+          "task_requested_bytes": 1584,
+          "task_charged_bytes": 1792,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "response-stream",
+          "calls": 1,
+          "repetition": 1,
+          "job_requested_bytes": 464,
+          "job_charged_bytes": 512,
+          "task_requested_bytes": 1584,
+          "task_charged_bytes": 1792,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "response-stream",
+          "calls": 1,
+          "repetition": 2,
+          "job_requested_bytes": 464,
+          "job_charged_bytes": 512,
+          "task_requested_bytes": 1584,
+          "task_charged_bytes": 1792,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "response-stream",
+          "calls": 16,
+          "repetition": 0,
+          "job_requested_bytes": 7424,
+          "job_charged_bytes": 8192,
+          "task_requested_bytes": 25344,
+          "task_charged_bytes": 28672,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "response-stream",
+          "calls": 16,
+          "repetition": 1,
+          "job_requested_bytes": 7424,
+          "job_charged_bytes": 8192,
+          "task_requested_bytes": 25344,
+          "task_charged_bytes": 28672,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "response-stream",
+          "calls": 16,
+          "repetition": 2,
+          "job_requested_bytes": 7424,
+          "job_charged_bytes": 8192,
+          "task_requested_bytes": 25344,
+          "task_charged_bytes": 28672,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "response-stream",
+          "calls": 256,
+          "repetition": 0,
+          "job_requested_bytes": 118784,
+          "job_charged_bytes": 131072,
+          "task_requested_bytes": 405504,
+          "task_charged_bytes": 458752,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "response-stream",
+          "calls": 256,
+          "repetition": 1,
+          "job_requested_bytes": 118784,
+          "job_charged_bytes": 131072,
+          "task_requested_bytes": 405504,
+          "task_charged_bytes": 458752,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "response-stream",
+          "calls": 256,
+          "repetition": 2,
+          "job_requested_bytes": 118784,
+          "job_charged_bytes": 131072,
+          "task_requested_bytes": 405504,
+          "task_charged_bytes": 458752,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "request-stream",
+          "calls": 1,
+          "repetition": 0,
+          "job_requested_bytes": 464,
+          "job_charged_bytes": 512,
+          "task_requested_bytes": 1584,
+          "task_charged_bytes": 1792,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "request-stream",
+          "calls": 1,
+          "repetition": 1,
+          "job_requested_bytes": 464,
+          "job_charged_bytes": 512,
+          "task_requested_bytes": 1584,
+          "task_charged_bytes": 1792,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "request-stream",
+          "calls": 1,
+          "repetition": 2,
+          "job_requested_bytes": 464,
+          "job_charged_bytes": 512,
+          "task_requested_bytes": 1584,
+          "task_charged_bytes": 1792,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "request-stream",
+          "calls": 16,
+          "repetition": 0,
+          "job_requested_bytes": 7424,
+          "job_charged_bytes": 8192,
+          "task_requested_bytes": 25344,
+          "task_charged_bytes": 28672,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "request-stream",
+          "calls": 16,
+          "repetition": 1,
+          "job_requested_bytes": 7424,
+          "job_charged_bytes": 8192,
+          "task_requested_bytes": 25344,
+          "task_charged_bytes": 28672,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "request-stream",
+          "calls": 16,
+          "repetition": 2,
+          "job_requested_bytes": 7424,
+          "job_charged_bytes": 8192,
+          "task_requested_bytes": 25344,
+          "task_charged_bytes": 28672,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "request-stream",
+          "calls": 256,
+          "repetition": 0,
+          "job_requested_bytes": 118784,
+          "job_charged_bytes": 131072,
+          "task_requested_bytes": 405504,
+          "task_charged_bytes": 458752,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "request-stream",
+          "calls": 256,
+          "repetition": 1,
+          "job_requested_bytes": 118784,
+          "job_charged_bytes": 131072,
+          "task_requested_bytes": 405504,
+          "task_charged_bytes": 458752,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "request-stream",
+          "calls": 256,
+          "repetition": 2,
+          "job_requested_bytes": 118784,
+          "job_charged_bytes": 131072,
+          "task_requested_bytes": 405504,
+          "task_charged_bytes": 458752,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "channel-output",
+          "calls": 1,
+          "repetition": 0,
+          "job_requested_bytes": 464,
+          "job_charged_bytes": 512,
+          "task_requested_bytes": 1584,
+          "task_charged_bytes": 1792,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "channel-output",
+          "calls": 1,
+          "repetition": 1,
+          "job_requested_bytes": 464,
+          "job_charged_bytes": 512,
+          "task_requested_bytes": 1584,
+          "task_charged_bytes": 1792,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "channel-output",
+          "calls": 1,
+          "repetition": 2,
+          "job_requested_bytes": 464,
+          "job_charged_bytes": 512,
+          "task_requested_bytes": 1584,
+          "task_charged_bytes": 1792,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "channel-output",
+          "calls": 16,
+          "repetition": 0,
+          "job_requested_bytes": 7424,
+          "job_charged_bytes": 8192,
+          "task_requested_bytes": 25344,
+          "task_charged_bytes": 28672,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "channel-output",
+          "calls": 16,
+          "repetition": 1,
+          "job_requested_bytes": 7424,
+          "job_charged_bytes": 8192,
+          "task_requested_bytes": 25344,
+          "task_charged_bytes": 28672,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "channel-output",
+          "calls": 16,
+          "repetition": 2,
+          "job_requested_bytes": 7424,
+          "job_charged_bytes": 8192,
+          "task_requested_bytes": 25344,
+          "task_charged_bytes": 28672,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "channel-output",
+          "calls": 256,
+          "repetition": 0,
+          "job_requested_bytes": 118784,
+          "job_charged_bytes": 131072,
+          "task_requested_bytes": 405504,
+          "task_charged_bytes": 458752,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "channel-output",
+          "calls": 256,
+          "repetition": 1,
+          "job_requested_bytes": 118784,
+          "job_charged_bytes": 131072,
+          "task_requested_bytes": 405504,
+          "task_charged_bytes": 458752,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        },
+        {
+          "mode": "channel-output",
+          "calls": 256,
+          "repetition": 2,
+          "job_requested_bytes": 118784,
+          "job_charged_bytes": 131072,
+          "task_requested_bytes": 405504,
+          "task_charged_bytes": 458752,
+          "args_requested_bytes": 0,
+          "args_charged_bytes": 0,
+          "job_header_bytes": 464,
+          "task_header_bytes": 1584,
+          "connection_header_bytes": 272,
+          "stream_header_bytes": 232
+        }
+      ],
+      "raw_tables": {
+        "memory.tsv": {
+          "file": "server-method-values-linux-2026-10-17/ubuntu-latest-memory.tsv",
+          "bytes": 2724,
+          "sha256": "0374f16e35b5bb9ee627b5ede22eda50f3b91a3a8bd8560c7514566a158ff815"
+        },
+        "checkpoints.tsv": {
+          "file": "server-method-values-linux-2026-10-17/ubuntu-latest-checkpoints.tsv",
+          "bytes": 119678,
+          "sha256": "04967a353af501d304555999e6906280ce11c20af2abf68d4a1cf41f909c2a35"
+        },
+        "storage.tsv": {
+          "file": "server-method-values-linux-2026-10-17/ubuntu-latest-storage.tsv",
+          "bytes": 2511,
+          "sha256": "23ccd64f82db16081c52381ad9194bfb94727502aa900c23a853756087349589"
+        }
+      },
+      "comparison": [
+        {
+          "mode": "unary-strings",
+          "calls": 1,
+          "repetition": 0,
+          "change_from_baseline": {
+            "allocations": -1,
+            "requested_bytes": -8,
+            "retains": 1,
+            "peak_charged_bytes": -32,
+            "final_charged_bytes": -224
+          }
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 1,
+          "repetition": 1,
+          "change_from_baseline": {
+            "allocations": -1,
+            "requested_bytes": -8,
+            "retains": 1,
+            "peak_charged_bytes": -32,
+            "final_charged_bytes": -224
+          }
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 1,
+          "repetition": 2,
+          "change_from_baseline": {
+            "allocations": -1,
+            "requested_bytes": -8,
+            "retains": 1,
+            "peak_charged_bytes": -32,
+            "final_charged_bytes": -224
+          }
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 16,
+          "repetition": 0,
+          "change_from_baseline": {
+            "allocations": -16,
+            "requested_bytes": -128,
+            "retains": 16,
+            "peak_charged_bytes": -3392,
+            "final_charged_bytes": -3584
+          }
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 16,
+          "repetition": 1,
+          "change_from_baseline": {
+            "allocations": -16,
+            "requested_bytes": -128,
+            "retains": 16,
+            "peak_charged_bytes": -3392,
+            "final_charged_bytes": -3584
+          }
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 16,
+          "repetition": 2,
+          "change_from_baseline": {
+            "allocations": -16,
+            "requested_bytes": -128,
+            "retains": 16,
+            "peak_charged_bytes": -3392,
+            "final_charged_bytes": -3584
+          }
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 256,
+          "repetition": 0,
+          "change_from_baseline": {
+            "allocations": -256,
+            "requested_bytes": -2048,
+            "retains": 256,
+            "peak_charged_bytes": -57152,
+            "final_charged_bytes": -57344
+          }
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 256,
+          "repetition": 1,
+          "change_from_baseline": {
+            "allocations": -256,
+            "requested_bytes": -2048,
+            "retains": 256,
+            "peak_charged_bytes": -57152,
+            "final_charged_bytes": -57344
+          }
+        },
+        {
+          "mode": "unary-strings",
+          "calls": 256,
+          "repetition": 2,
+          "change_from_baseline": {
+            "allocations": -256,
+            "requested_bytes": -2048,
+            "retains": 256,
+            "peak_charged_bytes": -57152,
+            "final_charged_bytes": -57344
+          }
+        },
+        {
+          "mode": "response-stream",
+          "calls": 1,
+          "repetition": 0,
+          "change_from_baseline": {
+            "allocations": -1,
+            "requested_bytes": -8,
+            "retains": 0,
+            "peak_charged_bytes": -6944,
+            "final_charged_bytes": -7120
+          }
+        },
+        {
+          "mode": "response-stream",
+          "calls": 1,
+          "repetition": 1,
+          "change_from_baseline": {
+            "allocations": -1,
+            "requested_bytes": -8,
+            "retains": 0,
+            "peak_charged_bytes": -6944,
+            "final_charged_bytes": -7120
+          }
+        },
+        {
+          "mode": "response-stream",
+          "calls": 1,
+          "repetition": 2,
+          "change_from_baseline": {
+            "allocations": -1,
+            "requested_bytes": -8,
+            "retains": 0,
+            "peak_charged_bytes": -6944,
+            "final_charged_bytes": -7120
+          }
+        },
+        {
+          "mode": "response-stream",
+          "calls": 16,
+          "repetition": 0,
+          "change_from_baseline": {
+            "allocations": -16,
+            "requested_bytes": -128,
+            "retains": 0,
+            "peak_charged_bytes": -113744,
+            "final_charged_bytes": -113920
+          }
+        },
+        {
+          "mode": "response-stream",
+          "calls": 16,
+          "repetition": 1,
+          "change_from_baseline": {
+            "allocations": -16,
+            "requested_bytes": -128,
+            "retains": 0,
+            "peak_charged_bytes": -113744,
+            "final_charged_bytes": -113920
+          }
+        },
+        {
+          "mode": "response-stream",
+          "calls": 16,
+          "repetition": 2,
+          "change_from_baseline": {
+            "allocations": -16,
+            "requested_bytes": -128,
+            "retains": 0,
+            "peak_charged_bytes": -113744,
+            "final_charged_bytes": -113920
+          }
+        },
+        {
+          "mode": "response-stream",
+          "calls": 256,
+          "repetition": 0,
+          "change_from_baseline": {
+            "allocations": -256,
+            "requested_bytes": -2048,
+            "retains": 0,
+            "peak_charged_bytes": -1822544,
+            "final_charged_bytes": -1822720
+          }
+        },
+        {
+          "mode": "response-stream",
+          "calls": 256,
+          "repetition": 1,
+          "change_from_baseline": {
+            "allocations": -256,
+            "requested_bytes": -2048,
+            "retains": 0,
+            "peak_charged_bytes": -1822544,
+            "final_charged_bytes": -1822720
+          }
+        },
+        {
+          "mode": "response-stream",
+          "calls": 256,
+          "repetition": 2,
+          "change_from_baseline": {
+            "allocations": -256,
+            "requested_bytes": -2048,
+            "retains": 0,
+            "peak_charged_bytes": -1822544,
+            "final_charged_bytes": -1822720
+          }
+        },
+        {
+          "mode": "request-stream",
+          "calls": 1,
+          "repetition": 0,
+          "change_from_baseline": {
+            "allocations": -2,
+            "requested_bytes": -32,
+            "retains": -125,
+            "peak_charged_bytes": -4080,
+            "final_charged_bytes": -4256
+          }
+        },
+        {
+          "mode": "request-stream",
+          "calls": 1,
+          "repetition": 1,
+          "change_from_baseline": {
+            "allocations": -2,
+            "requested_bytes": -32,
+            "retains": -125,
+            "peak_charged_bytes": -4080,
+            "final_charged_bytes": -4256
+          }
+        },
+        {
+          "mode": "request-stream",
+          "calls": 1,
+          "repetition": 2,
+          "change_from_baseline": {
+            "allocations": -2,
+            "requested_bytes": -32,
+            "retains": -125,
+            "peak_charged_bytes": -4080,
+            "final_charged_bytes": -4256
+          }
+        },
+        {
+          "mode": "request-stream",
+          "calls": 16,
+          "repetition": 0,
+          "change_from_baseline": {
+            "allocations": -32,
+            "requested_bytes": -512,
+            "retains": -2000,
+            "peak_charged_bytes": -67920,
+            "final_charged_bytes": -68096
+          }
+        },
+        {
+          "mode": "request-stream",
+          "calls": 16,
+          "repetition": 1,
+          "change_from_baseline": {
+            "allocations": -32,
+            "requested_bytes": -512,
+            "retains": -2000,
+            "peak_charged_bytes": -67920,
+            "final_charged_bytes": -68096
+          }
+        },
+        {
+          "mode": "request-stream",
+          "calls": 16,
+          "repetition": 2,
+          "change_from_baseline": {
+            "allocations": -32,
+            "requested_bytes": -512,
+            "retains": -2000,
+            "peak_charged_bytes": -67920,
+            "final_charged_bytes": -68096
+          }
+        },
+        {
+          "mode": "request-stream",
+          "calls": 256,
+          "repetition": 0,
+          "change_from_baseline": {
+            "allocations": -512,
+            "requested_bytes": -8192,
+            "retains": -32000,
+            "peak_charged_bytes": -1089360,
+            "final_charged_bytes": -1089536
+          }
+        },
+        {
+          "mode": "request-stream",
+          "calls": 256,
+          "repetition": 1,
+          "change_from_baseline": {
+            "allocations": -512,
+            "requested_bytes": -8192,
+            "retains": -32000,
+            "peak_charged_bytes": -1089360,
+            "final_charged_bytes": -1089536
+          }
+        },
+        {
+          "mode": "request-stream",
+          "calls": 256,
+          "repetition": 2,
+          "change_from_baseline": {
+            "allocations": -512,
+            "requested_bytes": -8192,
+            "retains": -32000,
+            "peak_charged_bytes": -1089360,
+            "final_charged_bytes": -1089536
+          }
+        },
+        {
+          "mode": "channel-output",
+          "calls": 1,
+          "repetition": 0,
+          "change_from_baseline": {
+            "allocations": -1,
+            "requested_bytes": -8,
+            "retains": 0,
+            "peak_charged_bytes": -16,
+            "final_charged_bytes": -16
+          }
+        },
+        {
+          "mode": "channel-output",
+          "calls": 1,
+          "repetition": 1,
+          "change_from_baseline": {
+            "allocations": -1,
+            "requested_bytes": -8,
+            "retains": 0,
+            "peak_charged_bytes": -16,
+            "final_charged_bytes": -16
+          }
+        },
+        {
+          "mode": "channel-output",
+          "calls": 1,
+          "repetition": 2,
+          "change_from_baseline": {
+            "allocations": -1,
+            "requested_bytes": -8,
+            "retains": 0,
+            "peak_charged_bytes": -16,
+            "final_charged_bytes": -16
+          }
+        },
+        {
+          "mode": "channel-output",
+          "calls": 16,
+          "repetition": 0,
+          "change_from_baseline": {
+            "allocations": -16,
+            "requested_bytes": -128,
+            "retains": 0,
+            "peak_charged_bytes": -256,
+            "final_charged_bytes": -256
+          }
+        },
+        {
+          "mode": "channel-output",
+          "calls": 16,
+          "repetition": 1,
+          "change_from_baseline": {
+            "allocations": -16,
+            "requested_bytes": -128,
+            "retains": 0,
+            "peak_charged_bytes": -256,
+            "final_charged_bytes": -256
+          }
+        },
+        {
+          "mode": "channel-output",
+          "calls": 16,
+          "repetition": 2,
+          "change_from_baseline": {
+            "allocations": -16,
+            "requested_bytes": -128,
+            "retains": 0,
+            "peak_charged_bytes": -256,
+            "final_charged_bytes": -256
+          }
+        },
+        {
+          "mode": "channel-output",
+          "calls": 256,
+          "repetition": 0,
+          "change_from_baseline": {
+            "allocations": -256,
+            "requested_bytes": -2048,
+            "retains": 0,
+            "peak_charged_bytes": -4096,
+            "final_charged_bytes": -4096
+          }
+        },
+        {
+          "mode": "channel-output",
+          "calls": 256,
+          "repetition": 1,
+          "change_from_baseline": {
+            "allocations": -256,
+            "requested_bytes": -2048,
+            "retains": 0,
+            "peak_charged_bytes": -4096,
+            "final_charged_bytes": -4096
+          }
+        },
+        {
+          "mode": "channel-output",
+          "calls": 256,
+          "repetition": 2,
+          "change_from_baseline": {
+            "allocations": -256,
+            "requested_bytes": -2048,
+            "retains": 0,
+            "peak_charged_bytes": -4096,
+            "final_charged_bytes": -4096
+          }
+        }
+      ],
+      "binary_observations": {
+        "source_revision": "48ccd3d9965836ac3806ca528b12a893c8672669",
+        "tool": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+        "observations": [
+          {
+            "workload": "unary-strings",
+            "source": {
+              "bytes": 1009844,
+              "sha256": "38d32f1737da396131805235b9eea493bf12201ce4c47cd3b05796ae53ea1eba"
+            },
+            "binary": {
+              "bytes": 322016,
+              "sha256": "4008b3cf9b91120535b9471a004667a9a390c730134b542d6dac0323ec31c81e"
+            },
+            "header": "\n/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/unary-strings-server:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000008880\n",
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=g_handle,g_start_call,g_job_peer_finish,g_run_method,g_reader,g_accept_loop,g_serving_peer_release,fwp_task_own_internal,g_apply_user,g_method_values_release,g_cursor_next,g_cursor_release,g_recv_one,g_finish,fwp_free_zombie,fwp_task_dispose,fwp_apply,fwp_apply_owned",
+              "/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/unary-strings-server"
+            ],
+            "assembly": {
+              "file": "unary-strings-server.asm",
+              "bytes": 240198,
+              "sha256": "a09ae69cd8dfaee4f94792312b2a89c8fbdffdfab7a750ecc5616c9174b892b7"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/unary-strings-server': failed to disassemble missing symbol g_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/unary-strings-server': failed to disassemble missing symbol g_start_call\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/unary-strings-server': failed to disassemble missing symbol g_serving_peer_release\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/unary-strings-server': failed to disassemble missing symbol fwp_task_dispose\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/unary-strings-server': failed to disassemble missing symbol g_cursor_next\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/unary-strings-server': failed to disassemble missing symbol g_cursor_release\n"
+          },
+          {
+            "workload": "request-stream",
+            "source": {
+              "bytes": 1009844,
+              "sha256": "38d32f1737da396131805235b9eea493bf12201ce4c47cd3b05796ae53ea1eba"
+            },
+            "binary": {
+              "bytes": 322016,
+              "sha256": "998b6e1b4670df6bd8d4540eca3221df63d96cfd2dd8e0593a06553868b457be"
+            },
+            "header": "\n/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/request-stream-server:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000008880\n",
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=g_handle,g_start_call,g_job_peer_finish,g_run_method,g_reader,g_accept_loop,g_serving_peer_release,fwp_task_own_internal,g_apply_user,g_method_values_release,g_cursor_next,g_cursor_release,g_recv_one,g_finish,fwp_free_zombie,fwp_task_dispose,fwp_apply,fwp_apply_owned",
+              "/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/request-stream-server"
+            ],
+            "assembly": {
+              "file": "request-stream-server.asm",
+              "bytes": 240199,
+              "sha256": "67488b27fe969c8120679e3737cac976e52419bc1cb3bc643c65b34efeecad02"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/request-stream-server': failed to disassemble missing symbol g_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/request-stream-server': failed to disassemble missing symbol g_start_call\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/request-stream-server': failed to disassemble missing symbol g_serving_peer_release\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/request-stream-server': failed to disassemble missing symbol fwp_task_dispose\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/request-stream-server': failed to disassemble missing symbol g_cursor_next\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/request-stream-server': failed to disassemble missing symbol g_cursor_release\n"
+          },
+          {
+            "workload": "channel-output",
+            "source": {
+              "bytes": 1009844,
+              "sha256": "38d32f1737da396131805235b9eea493bf12201ce4c47cd3b05796ae53ea1eba"
+            },
+            "binary": {
+              "bytes": 322016,
+              "sha256": "7375563b805297df99609a379b69952200b8a22d844f0b41aa91caa69c278f31"
+            },
+            "header": "\n/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/channel-output-server:\tfile format elf64-x86-64\narchitecture: x86_64\nstart address: 0x0000000000008880\n",
+            "command": [
+              "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump",
+              "--no-show-raw-insn",
+              "--disassemble-symbols=g_handle,g_start_call,g_job_peer_finish,g_run_method,g_reader,g_accept_loop,g_serving_peer_release,fwp_task_own_internal,g_apply_user,g_method_values_release,g_cursor_next,g_cursor_release,g_recv_one,g_finish,fwp_free_zombie,fwp_task_dispose,fwp_apply,fwp_apply_owned",
+              "/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/channel-output-server"
+            ],
+            "assembly": {
+              "file": "channel-output-server.asm",
+              "bytes": 240199,
+              "sha256": "ea6537838e86646429497bedcc219129a937f2311e69d0f94eba2d79f707ca01"
+            },
+            "diagnostics": "/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/channel-output-server': failed to disassemble missing symbol g_finish\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/channel-output-server': failed to disassemble missing symbol g_start_call\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/channel-output-server': failed to disassemble missing symbol g_serving_peer_release\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/channel-output-server': failed to disassemble missing symbol fwp_task_dispose\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/channel-output-server': failed to disassemble missing symbol g_cursor_next\n/Library/Developer/CommandLineTools/usr/bin/llvm-objdump: warning: '/private/tmp/fwp-server-memory-evidence/39020484780/server-calls-ubuntu-latest/channel-output-server': failed to disassemble missing symbol g_cursor_release\n"
+          }
+        ],
+        "limits": "Static inspection of ordinary native server binaries, without measurement hooks. No downloaded program executed. Inlined helpers may lack standalone symbols; inspect instructions, ownership operations and register/stack use. No timing or zero-overhead claim follows from symbols.",
+        "manual_review": {
+          "source_revision": "48ccd3d9965836ac3806ca528b12a893c8672669",
+          "architecture": "AMD64",
+          "unary-strings": {
+            "observations": [
+              "g_apply_user at 0x33340 reserves 488 bytes plus 48 saved-register bytes (536 total, excluding incoming return address), 16 fewer than storage candidate e6455c0d. It spills method id and argument pointer at rsp+0xc/+0x10 across setjmp. At 0x334b1..0x334cc it loads the function table, indexes its 32-byte entries, loads owning metadata at offset 24, and calls the typed entry directly. This helper has no method-closure allocation or generic application call.",
+              "g_run_method at 0x31b40 uses a 536-byte fixed frame plus aligned argument storage, 32 fixed bytes more than e6455c0d. Measured one-parameter methods use 32 dynamic bytes. At 0x31bea..0x31c10 it sizes/zeros the slots; r14 holds their address and it spills to rbp-0xf0. Typed value cleanup is registered at 0x31c87..0x31cb8 and method dispatch is at 0x32360.",
+              "g_method_values_release at 0x32fc0 uses 24 saved-register bytes. It clears the pending count before typed argument disposal at 0x32fe8, clears result/error words with movups at 0x32ff5, and invokes their concrete destruction functions. It allocates no owner record.",
+              "The output cursor is inlined into g_run_method. It reads runtime allocation metadata to distinguish shared nodes; the unique path clears the continuation field at 0x325d6 and calls fwp_apply_owned at 0x325e6. Shared nodes use fwp_apply_borrowed_prefix at 0x325fa. These ownership checks still cost instructions; the change does not establish zero-cost iteration."
+            ]
+          },
+          "request-stream": {
+            "observations": [
+              "g_apply_user, g_run_method, g_method_values_release and g_job_peer_finish have exactly the same instructions as the reviewed unary-strings binary. Incoming iterator construction still uses generic owned application at 0x320d1."
+            ]
+          },
+          "channel-output": {
+            "observations": [
+              "The four reviewed helpers exactly match the unary-strings binary. Output-channel construction still allocates separate channel/context records and sends still mark values for tracing; the subsequent channel preparation addresses that boundary."
+            ]
+          },
+          "limits": "Static Linux AMD64 review only; no downloaded program executed. Frame sizes exclude callees and are not peak task stack measurements. No timing, complete server ownership or C/Rust parity claim."
+        }
+      },
+      "scope": "# Measuring memory in a server after repeated calls\n\nA remote call runs part of a program in another process. Earlier client\nmeasurements exclude that server process; they cannot prove its values or\nserving tasks are released. This baseline measures the native server itself.\n\nEach client takes a call count on the command line. `I64` is a signed 64-bit\ninteger. `consume : I64 -> I64` takes a call index and returns its numeric result;\nthe channel variant adds `! {Async}` to declare task/channel operations.\n`const` supplies the same input for each call; `step` adds the response to an accumulated total. `curry`\nadapts the tuple-taking body of `step` to the two arguments supplied by fold.\nThe four workloads are:\n\n- `unary-strings`: send a 64-character name and receive a greeting. The server\n  adds the seven characters `hello, `, so each result has length 71.\n- `response-stream`: ask for integers 1 through 64 and sum them, giving 2,080.\n  An iterator produces these values as the caller requests them.\n- `request-stream`: send those 64 integers and receive their sum, 2,080.\n- `channel-output`: ask the server to send `tick 1` through `tick 64` into a\n  channel, a queue used to communicate between tasks. Close and drain the queue\n  after the call, then add the string lengths, giving 439.\n\nEach measured server process receives 1, 16 or 256 sequential calls from one\nclient, with three fresh server processes per case. The client uses ordinary\nconnection reuse. Samples follow serving-task removal from the scheduler;\nphysical task-record freeing is measured separately by the resulting managed\nstorage. The final sample waits for client disconnection and removal of all\nconnection and serving tasks. The server remains alive with its listener open.\n\nGenerated clients and servers use native `-O2`. Collection is disabled and\nphysical freeing enabled. Counters begin after\nlistener, routing and root-task setup. They cover managed allocation requests,\nrequested/charged bytes, reference-count increments and selected allocation\ncategories. Categories count allocations, not identities of remaining objects.\nRaw request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process\nmemory and timing are excluded. Both an interpreted server and ordinary native\nserver provide functional output references. No timing or C/Rust comparison is\nclaimed; the baseline does not establish server ownership or checked ARC.\n\nAn idle scheduler can remain on the last finished task's stack until another\ntask becomes ready. The measurement wakes the existing listener once, after\nthe connection closes and all spawned tasks finish, so the ordinary scheduler\ncan retire that final task before sampling. This adds no task or connection;\ncomparisons must use the same wake and drain boundary.\n",
+      "environment": {
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "c": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+        "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz\nCPU family:                              6\nModel:                                   106\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                6\nCPU(s) scaling MHz:                      119%\nCPU max MHz:                             2800.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                5587.11\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves vnmi avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid fsrm arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2.5 MiB (2 instances)\nL3 cache:                                48 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Vulnerable\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n"
+      },
+      "files": {
+        "source.txt": {
+          "bytes": 41,
+          "sha256": "2322f35c872c3c24f1c9d957eae99d818d5c904d6c9dd7755e4866465f84f07f"
+        },
+        "rust.txt": {
+          "bytes": 196,
+          "sha256": "f22d5e4e9ced367e774ce5bc140d9e6b1235c1882fec80d011044851f3ae6369"
+        },
+        "c.txt": {
+          "bytes": 110,
+          "sha256": "3635b8631d4ebcd8ed7586f4e01e7a6b44407de9d38db6e01daca9c242ed7a53"
+        },
+        "cpu.txt": {
+          "bytes": 3416,
+          "sha256": "0f5a5b7140357d6ffcc18d1cce160621c30dd8367dae55c9b4762604e80ba02b"
+        },
+        "scope.txt": {
+          "bytes": 2793,
+          "sha256": "e5cd2b28991a3efcec89b48b00581daed7ba592d1a599c23bffc9bfb2ee62b86"
+        },
+        "greeter.fwp": {
+          "bytes": 2491,
+          "sha256": "8ed806ce7ae7962bce299eb54b19419eae7f2d4986647056cf1fffc910c10edc"
+        },
+        "primitive-inventory.json": {
+          "bytes": 139698,
+          "sha256": "01822857137f6c5c6103b01e5fcfb6d58b4e2a8bff6da120884203fd29740f58"
+        },
+        "job.log": {
+          "bytes": 45976,
+          "sha256": "05291b453fb15b40d2a19eff8b02128f2071ccee6bb3c22840a5882f558e7068"
+        },
+        "memory.tsv": {
+          "bytes": 2724,
+          "sha256": "0374f16e35b5bb9ee627b5ede22eda50f3b91a3a8bd8560c7514566a158ff815"
+        },
+        "checkpoints.tsv": {
+          "bytes": 119678,
+          "sha256": "04967a353af501d304555999e6906280ce11c20af2abf68d4a1cf41f909c2a35"
+        },
+        "storage.tsv": {
+          "bytes": 2511,
+          "sha256": "23ccd64f82db16081c52381ad9194bfb94727502aa900c23a853756087349589"
+        },
+        "unary-strings.fwp": {
+          "bytes": 456,
+          "sha256": "c195521d35774d41c27b659652d6adb4f01dc1e5fcdc3d4a6b3d30defbf34f4b"
+        },
+        "unary-strings-client.c": {
+          "bytes": 925201,
+          "sha256": "6378f0110d23165c11e86350d964a7a01ba355a2c81607d4ccde20a646f61ae3"
+        },
+        "unary-strings-client": {
+          "bytes": 240160,
+          "sha256": "af98f9e472c19b71809dc90f6cb6c4832cb583f20a1c4ab05abb0c5d4261b292"
+        },
+        "unary-strings-server.c": {
+          "bytes": 1009844,
+          "sha256": "38d32f1737da396131805235b9eea493bf12201ce4c47cd3b05796ae53ea1eba"
+        },
+        "unary-strings-server": {
+          "bytes": 322016,
+          "sha256": "4008b3cf9b91120535b9471a004667a9a390c730134b542d6dac0323ec31c81e"
+        },
+        "unary-strings-server-measured.c": {
+          "bytes": 1016181,
+          "sha256": "11af3e5da22f0f83b0f301eeca648b2721c5fa439e44d3ace00e988ac932c0fb"
+        },
+        "unary-strings-server-measured": {
+          "bytes": 327032,
+          "sha256": "621d7a71f8fd544eac14f50d483977fb64cf9c11efda0b7272bbed04535ba00e"
+        },
+        "unary-strings-1-0.log": {
+          "bytes": 182,
+          "sha256": "51966d9ab90d9d094b197728d973b96d7ce265dfd537a74ddb37fda4eb3596ca"
+        },
+        "unary-strings-1-1.log": {
+          "bytes": 182,
+          "sha256": "6ac48a66564a9f2a11720a59b5fa23d13440f5d2378762e6dfd4610bb82bcb27"
+        },
+        "unary-strings-1-2.log": {
+          "bytes": 182,
+          "sha256": "ac1aa9ce6d8cf97be391d0f5bd364d71fc69a22f58b18eb71fe5021c09c36751"
+        },
+        "unary-strings-16-0.log": {
+          "bytes": 574,
+          "sha256": "363fa48787690495f90f4e9f2b92c9412314503148aebfa1dd76618bebb0647f"
+        },
+        "unary-strings-16-1.log": {
+          "bytes": 574,
+          "sha256": "df6baca8d1ee55d1460d058385d8878c4ee08d750da5ef4663575755890b251c"
+        },
+        "unary-strings-16-2.log": {
+          "bytes": 574,
+          "sha256": "200cc34ace3a94eb7777df35f9892a0d94e1988c1a8751db9f4be96fc43c5874"
+        },
+        "unary-strings-256-0.log": {
+          "bytes": 7217,
+          "sha256": "b22ea93b90d0a9949ce79b202ea87307f54c0b4fa7603d2eb75423b5463b408b"
+        },
+        "unary-strings-256-1.log": {
+          "bytes": 7217,
+          "sha256": "2c98df01aca28065144fff52d8f50ba4b044f32d1b574f7490d7c59eea38a2fc"
+        },
+        "unary-strings-256-2.log": {
+          "bytes": 7217,
+          "sha256": "850ad9de7424445616e0ef5dea094e7cbef14d88a9d2a2011b5560108e523d90"
+        },
+        "response-stream.fwp": {
+          "bytes": 364,
+          "sha256": "6ee4a1d989dc02b68735f0c8a20ccd9cda3cdd8246226cf41688c425d70e642d"
+        },
+        "response-stream-client.c": {
+          "bytes": 948497,
+          "sha256": "998139fd7d1b37a2e5c891f5d41db70fdaf79eec62f15a339964558d3cbccb0a"
+        },
+        "response-stream-client": {
+          "bytes": 259432,
+          "sha256": "439a89aab31828219d5ab98e9dcb93f35c7afbe12ac90af82a09beb19890a6b7"
+        },
+        "response-stream-server.c": {
+          "bytes": 1009844,
+          "sha256": "38d32f1737da396131805235b9eea493bf12201ce4c47cd3b05796ae53ea1eba"
+        },
+        "response-stream-server": {
+          "bytes": 322016,
+          "sha256": "4ef47677b84722e0d926c88fd55706f7d3a02256a7a95a79b4a15c2a2fbc601e"
+        },
+        "response-stream-server-measured.c": {
+          "bytes": 1016181,
+          "sha256": "11af3e5da22f0f83b0f301eeca648b2721c5fa439e44d3ace00e988ac932c0fb"
+        },
+        "response-stream-server-measured": {
+          "bytes": 327032,
+          "sha256": "60a2395dec8c8a462b62c1d4b3e23df961713984437237f9590ac02489eea2d3"
+        },
+        "response-stream-1-0.log": {
+          "bytes": 185,
+          "sha256": "88efdb5df912ceabc04568fc266df689429ae8c9721211fa3bd464998ff7fc8f"
+        },
+        "response-stream-1-1.log": {
+          "bytes": 185,
+          "sha256": "0e7c6dee63baf07e8d234814fb620f54862b6f631cc4f34da5b806803c99c138"
+        },
+        "response-stream-1-2.log": {
+          "bytes": 185,
+          "sha256": "0c084d7fef48ce960bc16ab8911e1e3856dfe3ba30106e2398cdcdb5f8c4075e"
+        },
+        "response-stream-16-0.log": {
+          "bytes": 578,
+          "sha256": "53d2d17a5f3a81490d0746c1fbdfb80a6a7568d6414610671c44c6455c3c9937"
+        },
+        "response-stream-16-1.log": {
+          "bytes": 578,
+          "sha256": "b856c50f8768825c3a759e812b0a9c1077d61a0399412a25bc2b626b9a7710d8"
+        },
+        "response-stream-16-2.log": {
+          "bytes": 578,
+          "sha256": "27fdcc3cc5f5c7589fc73dc92aa84b7fec27e77ec07b0d1d93487b3ff7fc4d4d"
+        },
+        "response-stream-256-0.log": {
+          "bytes": 7221,
+          "sha256": "cb7cb0822b9a19ce8aad03d0cd3f141c86808325ba11bd59f83e89964d24a76e"
+        },
+        "response-stream-256-1.log": {
+          "bytes": 7221,
+          "sha256": "21604a624a880d15ac4410c95e558a69783806c3e91f653d17b3770563684975"
+        },
+        "response-stream-256-2.log": {
+          "bytes": 7221,
+          "sha256": "21da1d1aa1329404d6c93ed348c98fc40d0c143ae0f6ae164ac7c2c0b1505afc"
+        },
+        "request-stream.fwp": {
+          "bytes": 378,
+          "sha256": "5593bab019a9f40d9648a95026fcc20c32bff4a8f86b1461c5ddf501403eaf0d"
+        },
+        "request-stream-client.c": {
+          "bytes": 919816,
+          "sha256": "0d0fb2683583f02e539a5d5bacf4160ee8d39b0759d76a7bb33223a1d69175e8"
+        },
+        "request-stream-client": {
+          "bytes": 235392,
+          "sha256": "2f4365dab06812b69dc4244884cd2995a129322f4f8fb20573944a67dd73081f"
+        },
+        "request-stream-server.c": {
+          "bytes": 1009844,
+          "sha256": "38d32f1737da396131805235b9eea493bf12201ce4c47cd3b05796ae53ea1eba"
+        },
+        "request-stream-server": {
+          "bytes": 322016,
+          "sha256": "998b6e1b4670df6bd8d4540eca3221df63d96cfd2dd8e0593a06553868b457be"
+        },
+        "request-stream-server-measured.c": {
+          "bytes": 1016181,
+          "sha256": "11af3e5da22f0f83b0f301eeca648b2721c5fa439e44d3ace00e988ac932c0fb"
+        },
+        "request-stream-server-measured": {
+          "bytes": 327032,
+          "sha256": "ca455f4ac2db75401eb5680f59a9c0ba9da4a7d4670ebc75691a5e291118e3d8"
+        },
+        "request-stream-1-0.log": {
+          "bytes": 186,
+          "sha256": "d69879c2db524f0e26ea0c87184591a798d79a64771bc4f0129b4cc5749052c8"
+        },
+        "request-stream-1-1.log": {
+          "bytes": 186,
+          "sha256": "2c0a8cddd42760376be0627f5a328579a5bed6e43a5a37f3022f548033416e03"
+        },
+        "request-stream-1-2.log": {
+          "bytes": 186,
+          "sha256": "15d2f47d8c527fc9a5c7e462cf24c22ca95958482e2a6dbe1e0c386b070945f9"
+        },
+        "request-stream-16-0.log": {
+          "bytes": 578,
+          "sha256": "144c46df7eeba563221462c1232b73b78d35cf67fe1373b4ca3c8b07b01d2128"
+        },
+        "request-stream-16-1.log": {
+          "bytes": 578,
+          "sha256": "5ba19ddcf7626d3ba86fb1393fe57e32e2623bcd031474e7023fb2c3e7e60a14"
+        },
+        "request-stream-16-2.log": {
+          "bytes": 578,
+          "sha256": "09bf7abd7fec40dfdf68e56af4b1284c4dcdda5d87585f2382c4a4cd524c7b6b"
+        },
+        "request-stream-256-0.log": {
+          "bytes": 7221,
+          "sha256": "be204be33030fb25bc7d1c0462c2d6560e25413642e863fae95fe2544c3df13d"
+        },
+        "request-stream-256-1.log": {
+          "bytes": 7221,
+          "sha256": "d3d3d84b5a0070f140c2f70b49a4d9d28598141230a4098713f0b4fb1e9a54f3"
+        },
+        "request-stream-256-2.log": {
+          "bytes": 7221,
+          "sha256": "f8bc9b2adfe2c50ce794136b20ab116d086225a44fb3046f258e6bf5c71ef077"
+        },
+        "channel-output.fwp": {
+          "bytes": 443,
+          "sha256": "cc9ec843ffe94be264ed6443977961f07415c85de3b8821fe131fe50daf46ae8"
+        },
+        "channel-output-client.c": {
+          "bytes": 948246,
+          "sha256": "c659bf951847738767dd0ee53619c746173e3b15bb2183b52d60b30ff629df2d"
+        },
+        "channel-output-client": {
+          "bytes": 258872,
+          "sha256": "8ae5fa49d62e04e57025fc03ad01b749b4178806a682fef1bb43e0437d68137f"
+        },
+        "channel-output-server.c": {
+          "bytes": 1009844,
+          "sha256": "38d32f1737da396131805235b9eea493bf12201ce4c47cd3b05796ae53ea1eba"
+        },
+        "channel-output-server": {
+          "bytes": 322016,
+          "sha256": "7375563b805297df99609a379b69952200b8a22d844f0b41aa91caa69c278f31"
+        },
+        "channel-output-server-measured.c": {
+          "bytes": 1016181,
+          "sha256": "11af3e5da22f0f83b0f301eeca648b2721c5fa439e44d3ace00e988ac932c0fb"
+        },
+        "channel-output-server-measured": {
+          "bytes": 327032,
+          "sha256": "c231bb441c6f23b6b21308c778b899147b0b0fe18139796480a21f0818a0b503"
+        },
+        "channel-output-1-0.log": {
+          "bytes": 184,
+          "sha256": "5b81a854963f1804a757992dd8b675371158079c8c246d1a98e60a641225da2b"
+        },
+        "channel-output-1-1.log": {
+          "bytes": 184,
+          "sha256": "4da2a4edf9dfefdf5bc3b06415693d50700e6ff3f4332e2a7ecc13ff65728100"
+        },
+        "channel-output-1-2.log": {
+          "bytes": 184,
+          "sha256": "28227e5643ca8bf850ae941060f1650f52bcc538e8f9ebacf2eafe4bd02ba32a"
+        },
+        "channel-output-16-0.log": {
+          "bytes": 588,
+          "sha256": "d4b58fafbf4677447d47befebc65cb9553fb24a00c44e8c082a9f6547dd01331"
+        },
+        "channel-output-16-1.log": {
+          "bytes": 588,
+          "sha256": "7e9f006edf01b8abafa942293e4edb25bf0b106fa4f46b3e642b17aff2f698df"
+        },
+        "channel-output-16-2.log": {
+          "bytes": 588,
+          "sha256": "1b3b1f7859b02bb4fd362e0b9164d71a0468b7e82f5ad7679ec6781eb30de589"
+        },
+        "channel-output-256-0.log": {
+          "bytes": 7427,
+          "sha256": "14b459fa8a81cb939da2fd96aa0c781ea7e89bae05e4121dbc83410479c44041"
+        },
+        "channel-output-256-1.log": {
+          "bytes": 7427,
+          "sha256": "21c043820d3ce2ddde691646c22a4169a9fab7fb2440dec452c562157d893801"
+        },
+        "channel-output-256-2.log": {
+          "bytes": 7427,
+          "sha256": "d7101b97c2cd3c19effd22f17c31a6fcc5d39de4fbf3c8fc95f5188107be5f2d"
+        },
+        "binary-observations.json": {
+          "bytes": 10822,
+          "sha256": "763d0e77bf866428ed5599e45d1ab18a27255856ef52308157d03cd93dbecb80"
+        },
+        "unary-strings-server.asm": {
+          "bytes": 240198,
+          "sha256": "a09ae69cd8dfaee4f94792312b2a89c8fbdffdfab7a750ecc5616c9174b892b7"
+        },
+        "request-stream-server.asm": {
+          "bytes": 240199,
+          "sha256": "67488b27fe969c8120679e3737cac976e52419bc1cb3bc643c65b34efeecad02"
+        },
+        "channel-output-server.asm": {
+          "bytes": 240199,
+          "sha256": "ea6537838e86646429497bedcc219129a937f2311e69d0f94eba2d79f707ca01"
+        }
+      }
+    }
+  ],
+  "baseline": {
+    "source_revision": "e6455c0ddcf692669af02d1eb67c7600de096977",
+    "run_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/39018276989",
+    "report": "server-call-storage-2026-10-17.json",
+    "bytes": 433543,
+    "sha256": "0aa1060256ed19c31ef8e80220e668870ae95fb89869870960d04dae410e17d4"
+  }
+}

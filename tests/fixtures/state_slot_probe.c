@@ -38,7 +38,8 @@ static V state_entry(V *args) {
     fwp_fail(state_error,0);
     return FWP_UNIT;
 }
-static const fwp_fninfo state_entries[]={{1,state_entry,"State slot probe",NULL}};
+static const fwp_owned_fninfo state_owned={.entry=state_entry};
+static const fwp_fninfo state_entries[]={{1,state_entry,"State slot probe",&state_owned}};
 static fwp_clo state_callback={0,0};
 static void state_task_body(void *arg,int cancelled) {
     if(cancelled) {
@@ -83,7 +84,8 @@ int main(void) {
     fwp_trap_recover=g_trap_recover;
     for(state_mode=2;state_mode<4;state_mode++) {
         V out=0,error=0;const fwp_desc *desc=0;
-        int outcome=g_apply_user(PTR(&state_callback),0,NULL,&out,&error,&desc);
+        V args[]={FWP_UNIT};
+        int outcome=g_apply_user(0,args,&out,&error,&desc);
         if(outcome!=(state_mode==2?2:1) || (state_mode==3 && error!=state_error)) return 110;
         if(fwp_state_len!=1 || fwp_state[0]!=state_outer || !state_empty_from(1) || fwp_handlers) return 110;
         if(state_mode==2 && strcmp(fwp_trap_msg,"state restoration control")) return 110;

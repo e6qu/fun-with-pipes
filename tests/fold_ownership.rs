@@ -146,7 +146,7 @@ main = (10000, 0) | loop step | echo
                 .strip_prefix("z = ")
                 .and_then(|s| s.strip_suffix(';'))
             {
-                if call.starts_with("fwp_owned_entry") {
+                if call.starts_with("fwp_owned_entry") || call.starts_with("fwp_borrowed_fold") {
                     let indent = &line[..line.len() - line.trim_start().len()];
                     return format!("{indent}z = fwp_rc_shared({call});");
                 }
@@ -186,4 +186,111 @@ main = (10000, 0) | loop step | echo
     }
     eprintln!("fold MiB freed by counts: {freed:?}");
     assert!(freed[1] > freed[0] + 0.3, "{freed:?}");
+}
+
+#[test]
+fn known_fold_callbacks_borrow_captures_and_elements_without_retain_traffic() {
+    let dir = Scratch::new("borrowed-parameters");
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    for (fold, ty, body) in [
+        (
+            "fold",
+            "String -> I64 -> String -> I64",
+            "if (fork eq .0 .2) (.1 | add 1) .1",
+        ),
+        (
+            "fold-right",
+            "String -> String -> I64 -> I64",
+            "if (fork eq .0 .1) (.2 | add 1) .2",
+        ),
+    ] {
+        let source = dir.0.join(format!("{fold}.fwp"));
+        // Heap strings prevent literal constants from hiding reference traffic.
+        // The callback only compares its capture/element and updates an integer.
+        std::fs::write(&source, format!(r#"step : {ty}
+step = curry3 ({body})
+count : String -> List[String] -> I64
+count = step | flip {fold} 0
+main = (read-all () | concat "needle!", ["needle", "skip"] | map (concat "!")) | uncurry count | echo
+"#)).unwrap();
+        let reference = checked(
+            Command::new(fwp)
+                .args(["run", "--interp"])
+                .arg(&source)
+                .env("FWP_NO_OPT", "1"),
+        );
+        assert_eq!(reference.stdout, b"1\n");
+        for stack in ["0", "1"] {
+            let cfile = dir.0.join(format!("{fold}-{stack}.c"));
+            checked(
+                Command::new(fwp)
+                    .arg("build")
+                    .arg(&source)
+                    .args(["--emit-c", "-o"])
+                    .arg(&cfile)
+                    .env("FWP_STACK", stack),
+            );
+            let emitted = std::fs::read_to_string(cfile).unwrap();
+            let helpers: Vec<_> = emitted
+                .lines()
+                .filter_map(|line| {
+                    line.strip_prefix("static V fwp_borrowed_fold")
+                        .filter(|line| line.ends_with('{'))
+                        .map(|line| line.split('(').next().unwrap())
+                })
+                .collect();
+            assert!(
+                !helpers.is_empty(),
+                "{fold}: no callback body with borrowed parameters"
+            );
+            let retain = "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {";
+            assert_eq!(emitted.matches(retain).count(), 1);
+            let runtime = emitted
+                .replace(
+                    retain,
+                    &format!("{retain}\n        if (probe_active) probe_retains++;"),
+                )
+                .replace(
+                    "int main(int argc, char **argv)",
+                    "int original_main(int argc, char **argv)",
+                );
+            for broken in [false, true] {
+                let mut runtime = runtime.clone();
+                for id in &helpers {
+                    let call = format!("z = fwp_borrowed_fold{id}(args);");
+                    assert_eq!(runtime.matches(&call).count(), 1);
+                    let extra = if broken {
+                        "fwp_rc_dup(args[0]); fwp_rc_drop(args[0]);"
+                    } else {
+                        ""
+                    };
+                    runtime = runtime.replace(&call, &format!("probe_retains=0; probe_active=1; {extra} {call} probe_active=0; if(probe_retains)_Exit(88); probe_calls++;"));
+                }
+                let code = format!("static unsigned probe_active,probe_retains,probe_calls;\n{runtime}\nint main(int argc,char **argv){{int status=original_main(argc,argv);if(!status && probe_calls!=2)return 89;return status;}}\n");
+                for opt in ["-O1", "-O2"] {
+                    let exe = dir.0.join(format!("borrowed-{fold}-{stack}-{broken}{opt}"));
+                    fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                    for gc in ["off", "on"] {
+                        for poison in ["0", "1"] {
+                            let output = Command::new(&exe)
+                                .env("FWP_GC", gc)
+                                .env("FWP_GC_STRESS", "1")
+                                .env("FWP_GC_VERIFY", "1")
+                                .env("FWP_REUSE_VERIFY", poison)
+                                .output()
+                                .unwrap();
+                            assert_eq!(
+                                output.status.code(),
+                                Some(if broken { 88 } else { 0 }),
+                                "{fold}/{stack}/{opt}/{gc}/{poison}/broken={broken}: {output:?}"
+                            );
+                            if !broken {
+                                assert_eq!(output.stdout, reference.stdout);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

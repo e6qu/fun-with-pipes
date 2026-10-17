@@ -360,6 +360,7 @@ struct RpcSpec {
     iter_fn: Option<FuncId>,
     schema: crate::protobuf::MethodSchema,
     grpc_error: String,
+    result_drop: String,
 }
 
 impl RpcSpec {
@@ -376,7 +377,7 @@ impl RpcSpec {
             }
         );
         let init = format!(
-            "{{{}, {}, {}, {}, {}, {}_p, {}, {}, {}, {}, {}, {}, fwp_pb_schema, {}, {}, {}}}",
+            "{{{}, {}, {}, {}, {}, {}_p, {}, {}, {}, {}, {}, {}, fwp_pb_schema, {}, {}, {}, {}}}",
             c_string_literal(self.name.as_bytes()),
             c_string_literal(self.path.as_bytes()),
             c_string_literal(self.fingerprint.as_bytes()),
@@ -392,6 +393,7 @@ impl RpcSpec {
             offs[self.schema.request],
             offs[self.schema.response],
             self.grpc_error,
+            self.result_drop,
         );
         (def, init)
     }
@@ -558,6 +560,7 @@ impl Gen<'_> {
             &self.prog.funcs[id],
             e,
             &self.prog.funcs[id].locals,
+            &[],
         )
         .expect("invalid ownership before C generation")
     }
@@ -2305,6 +2308,7 @@ fn hof_def(
     loop_ops: Option<&str>,
     map_ops: Option<&str>,
     fold_drop: Option<&str>,
+    borrowed_step: bool,
 ) -> String {
     let caps: String = (0..*k).map(|j| format!("c{}, ", j)).collect();
     // with counted references, what the runtime keeps is shared
@@ -2389,7 +2393,19 @@ fn hof_def(
         let fences = (0..*k)
             .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
             .collect::<String>();
-        return format!("{} {{\n    V source = xs;\n    fwp_value_owner owner = {{z, {drop}}}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    while (xs != 0) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {k});\n        fwp_args{g}(args + {}, {}, 1);\n        owner.value = 0;\n        z = fwp_owned_entry{g}(args);\n        owner.value = z;\n        xs = OBJ(xs)->f[1];\n    }}\n{fences}    FWP_KEEP_ALIVE(source);\n    return fwp_value_finish(&owner, &cleanup);\n}}\n", hof_sig(i, sym, *k), k + 1, k + 1);
+        let (prepare, entry) = if borrowed_step {
+            (String::new(), format!("fwp_borrowed_fold{i}(args)"))
+        } else {
+            (
+                format!(
+                    "        fwp_args{g}(args, 0, {k});\n        fwp_args{g}(args + {}, {}, 1);\n",
+                    k + 1,
+                    k + 1
+                ),
+                format!("fwp_owned_entry{g}(args)"),
+            )
+        };
+        return format!("{} {{\n    V source = xs;\n    fwp_value_owner owner = {{z, {drop}}}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    while (xs != 0) {{\n        V args[] = {{{args}}};\n{prepare}        owner.value = 0;\n        z = {entry};\n        owner.value = z;\n        xs = OBJ(xs)->f[1];\n    }}\n{fences}    FWP_KEEP_ALIVE(source);\n    return fwp_value_finish(&owner, &cleanup);\n}}\n", hof_sig(i, sym, *k));
     }
     if reuse && sym == "zip-with" {
         let ops = map_ops.expect("typed zip-with result operations");
@@ -2413,7 +2429,15 @@ fn hof_def(
         let fences = (0..*k)
             .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
             .collect::<String>();
-        return format!("{} {{\n    fwp_value_owner owner = {{z, {drop}}}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    size_t n;\n    V *a = fwp_map_items(xs, &n);\n    fwp_cleanup scratch_cleanup; fwp_scratch_protect(&a, &scratch_cleanup);\n    for (size_t i = n; i > 0; i--) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        owner.value = 0;\n        z = fwp_owned_entry{g}(args);\n        owner.value = z;\n    }}\n    fwp_scratch_finish(&a, &scratch_cleanup);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return fwp_value_finish(&owner, &cleanup);\n}}\n", hof_sig(i, sym, *k), k + 1);
+        let (prepare, entry) = if borrowed_step {
+            (String::new(), format!("fwp_borrowed_fold{i}(args)"))
+        } else {
+            (
+                format!("        fwp_args{g}(args, 0, {});\n", k + 1),
+                format!("fwp_owned_entry{g}(args)"),
+            )
+        };
+        return format!("{} {{\n    fwp_value_owner owner = {{z, {drop}}}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    size_t n;\n    V *a = fwp_map_items(xs, &n);\n    fwp_cleanup scratch_cleanup; fwp_scratch_protect(&a, &scratch_cleanup);\n    for (size_t i = n; i > 0; i--) {{\n        V args[] = {{{args}}};\n{prepare}        owner.value = 0;\n        z = {entry};\n        owner.value = z;\n    }}\n    fwp_scratch_finish(&a, &scratch_cleanup);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return fwp_value_finish(&owner, &cleanup);\n}}\n", hof_sig(i, sym, *k));
     }
     let body = match sym.as_str() {
         "map" => format!(
@@ -4668,12 +4692,15 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
-    fn entry_tick(&mut self, arity: u32) {
+    fn entry_tick(&mut self, arity: u32, borrowed_parameters: &[Local]) {
         if !self.g.ticks {
             return;
         }
         let owners: Vec<_> = (0..arity)
-            .filter(|l| crate::rc::needs_rc(&self.g.prog.shapes, &self.locals[*l as usize]))
+            .filter(|l| {
+                !borrowed_parameters.contains(l)
+                    && crate::rc::needs_rc(&self.g.prog.shapes, &self.locals[*l as usize])
+            })
             .map(|l| (l, 1))
             .collect();
         let node = self.begin_owners(&owners);
@@ -6584,7 +6611,95 @@ impl<'p> Gen<'p> {
             iter_fn,
             schema,
             grpc_error,
+            result_drop: "NULL".into(),
         })
+    }
+
+    /// A known fold callback can borrow captures and the source element for
+    /// one invocation. Its accumulator still transfers ownership. Lower its
+    /// actual body with those parameter lifetimes: an escaping value acquires
+    /// an owner at the use that needs it, rather than at every callback entry.
+    fn borrowed_fold_step(&mut self, i: usize, hof: &(String, FuncId, usize)) -> Option<String> {
+        let (sym, id, captures) = hof;
+        if !self.reuse || !matches!(sym.as_str(), "fold" | "fold-right") {
+            return None;
+        }
+        let f = self.uncounted.funcs[*id].clone();
+        let Body::Expr(body) = &f.body else {
+            return None;
+        };
+        // Resource scopes keep their own close rules; recursive callbacks keep
+        // their ordinary entry until that calling convention is also proved.
+        fn eligible(e: &Expr, id: FuncId) -> bool {
+            match e {
+                Expr::ResourceRegion { .. } | Expr::Dup(..) | Expr::Drop(..) => false,
+                Expr::Func(g) => *g != id,
+                Expr::Local(_) | Expr::Const(_) => true,
+                Expr::Call(g, xs) => *g != id && xs.iter().all(|e| eligible(e, id)),
+                Expr::Record(xs) | Expr::Construct(_, xs) => xs.iter().all(|e| eligible(e, id)),
+                Expr::Apply(f, xs) => eligible(f, id) && xs.iter().all(|e| eligible(e, id)),
+                Expr::Field(e, _) => eligible(e, id),
+                Expr::SetFields(e, xs) => {
+                    eligible(e, id) && xs.iter().all(|(_, e)| eligible(e, id))
+                }
+                Expr::Let(_, a, b) => eligible(a, id) && eligible(b, id),
+                Expr::Match(e, arms) => {
+                    eligible(e, id) && arms.iter().all(|(_, e)| eligible(e, id))
+                }
+            }
+        }
+        if !eligible(body, *id) || f.arity as usize != captures + 2 {
+            return None;
+        }
+        let accumulator = captures + usize::from(sym == "fold-right");
+        let borrowed: Vec<Local> = (0..f.arity)
+            .filter(|l| *l as usize != accumulator)
+            .collect();
+        if !borrowed
+            .iter()
+            .any(|l| crate::rc::needs_rc(&self.prog.shapes, &f.locals[*l as usize]))
+            || borrowed
+                .iter()
+                .any(|l| self.resource_type(&f.locals[*l as usize]))
+        {
+            return None;
+        }
+        let (body, locals) = crate::rc::insert_function(self.uncounted, &f, &borrowed)?;
+        // This also validates the ownership proof when unwind code is disabled.
+        let live_calls = crate::rc::ownership_liveness(self.prog, &f, &body, &locals, &borrowed)
+            .expect("invalid borrowed fold ownership");
+        let mut out = format!("/* borrowed fold callback for f{id}: borrowed captures/elements, owned accumulator */\nstatic V fwp_borrowed_fold{i}(V *args) {{\n");
+        for l in 0..f.arity {
+            let _ = writeln!(out, "    V l{l} = args[{l}];");
+        }
+        for l in f.arity as usize..locals.len() {
+            let _ = writeln!(out, "    V l{l} = 0;");
+        }
+        let mut fg = FnGen {
+            live_calls,
+            g: self,
+            out: String::new(),
+            tmp: 0,
+            label: 0,
+            indent: 1,
+            in_loop: None,
+            fields: HashMap::new(),
+            locals,
+            known_tag: HashMap::new(),
+            vlocals: HashMap::new(),
+            tokens: Vec::new(),
+            stack_args: Vec::new(),
+            stack_children: HashMap::new(),
+            known_callbacks: HashMap::new(),
+            resource_slots: HashMap::new(),
+            me: *id,
+            tail_calls: tail_calls(&body),
+        };
+        fg.entry_tick(f.arity, &borrowed);
+        let value = fg.expr(&body);
+        out.push_str(&fg.out);
+        let _ = writeln!(out, "    return {value};\n}}\n");
+        Some(out)
     }
 
     /// A `loop` whose step is `step`, as a C loop (see `loop_shape`): the
@@ -6620,7 +6735,7 @@ impl<'p> Gen<'p> {
             if let Some(mut unpacked) =
                 unpack_loop_state(self.uncounted, &self.uncounted.funcs[step])
             {
-                let (body, locals) = crate::rc::insert_function(self.uncounted, &unpacked)
+                let (body, locals) = crate::rc::insert_function(self.uncounted, &unpacked, &[])
                     .expect("expression loop step");
                 unpacked.locals = locals;
                 crate::rc::check(self.prog, &unpacked, &body, &unpacked.locals)
@@ -6686,7 +6801,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             let _ = writeln!(out, "    V l{i} = 0;");
         }
         let live_calls = if self.reuse && self.unwind {
-            crate::rc::ownership_liveness(self.prog, &body_function, e, &body_function.locals)
+            crate::rc::ownership_liveness(self.prog, &body_function, e, &body_function.locals, &[])
                 .expect("invalid loop ownership before C generation")
         } else {
             HashMap::new()
@@ -6711,7 +6826,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             me: step,
             tail_calls: tail_calls(e),
         };
-        fg.entry_tick(body_function.arity);
+        fg.entry_tick(body_function.arity, &[]);
         let r = fg.expr(e);
         out.push_str(&fg.out);
         let _ = writeln!(
@@ -7768,7 +7883,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                     me: id,
                     tail_calls: tail_calls(&e),
                 };
-                fg.entry_tick(fg.g.prog.funcs[fg.me].arity);
+                fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &[]);
                 let r = fg.expr(&e);
                 let body = fg.out;
                 out.push_str(&body);
@@ -7834,7 +7949,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             me: id,
             tail_calls: tail_calls(e),
         };
-        fg.entry_tick(fg.g.prog.funcs[fg.me].arity);
+        fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &[]);
         let ret = match (abi.ret, abi.vret) {
             (Some(n), _) => {
                 let fs = fg.expr_fields(e, n);
@@ -8697,8 +8812,13 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         bodies.push_str(&g.func(id)?);
         bodies.push('\n');
     }
-    for i in 0..g.hofs.len() {
+    let mut i = 0;
+    while i < g.hofs.len() {
         let hof = g.hofs[i].clone();
+        let borrowed_step = g.borrowed_fold_step(i, &hof);
+        if let Some(body) = &borrowed_step {
+            bodies.push_str(body);
+        }
         let loop_ops = if g.reuse && hof.0 == "loop" {
             let step = prog.funcs[hof.1]
                 .ty
@@ -8749,8 +8869,10 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             loop_ops.as_deref(),
             map_ops.as_deref(),
             fold_drop.as_deref(),
+            borrowed_step.is_some(),
         ));
         bodies.push('\n');
+        i += 1;
     }
     // the specialized loops, which may use others
     let mut li = 0;
@@ -9042,6 +9164,14 @@ static const fwp_exec_spec exec_spec{i} = {{
                 m.iter_fn,
             )?;
             spec.fingerprint = svc.fingerprint(prog, m);
+            if g.reuse {
+                let function = &prog.funcs[m.func];
+                let result = function.ty.params(function.arity as usize).1.clone();
+                spec.result_drop = g.value_drop(&result);
+                if function.arity > 0 {
+                    g.used_closures[m.func] = true;
+                }
+            }
             served.push(spec);
         }
     }

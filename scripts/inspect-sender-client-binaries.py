@@ -26,9 +26,9 @@ def main():
         code = source.read_text()
         remotes = re.findall(r'/\* greeter\.(?:total|shout|firsts) :[^\n]*\*/\nstatic V (f\d+)\(', code)
         assert remotes, (source, 'missing generated remote entry')
-        symbols = remotes + ['fwp_remote_call', 'g_iter_next', 'g_send_all', 'g_spawn_sender',
+        symbols = remotes + ['fwp_remote_call', 'g_send_all', 'g_spawn_sender',
             'g_sender_peer_finish', 'g_encode_request', 'fwp_apply', 'fwp_apply_owned',
-            'fwp_free_zombie', 'fwp_task_dispose', 'g_input_next', 'g_input_release']
+            'fwp_free_zombie', 'fwp_task_dispose', 'g_cursor_next', 'g_input_release']
         binaries = [path for path in [args.artifacts / client, args.artifacts / (client + '.exe')]
                     if path.is_file()]
         assert len(binaries) == 1, binaries
