@@ -94,3 +94,11 @@ documentation audit in 2.41s.
 | 5 | In progress | CPU kernels and GPU resource ownership |
 | 6 | In progress | Repeated, comparable performance measurements |
 | 7 | In progress | Larger representative applications |
+
+## Windows validation repair
+
+Six-host run `39026702591` failed the newly enabled client startup fixture on
+Windows: its prepended standard header selected an older Windows API contract.
+The fixture now declares the same Windows 10 contract as the generated runtime
+before including headers. Runtime code is unchanged. Next: publish this repair
+and rerun all six focused hosts; no cross-platform acceptance is claimed yet.
