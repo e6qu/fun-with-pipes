@@ -93,7 +93,11 @@ production gates. One delivery PR at a time.
 ## Next independent measurement
 
 Worktree `/private/tmp/fwp-closed-client-connections`, branch
-`measure-closed-client-connections`, starts at `d7a161d1`. The new measurement is written locally but has not run. It closes connections
+`measure-closed-client-connections`, starts at `d7a161d1`. Linux probe `39002262144` passed at `d802e102`. The final drain leaves
+5,696/64,256/1,001,216 managed bytes after 1/16/256 connections, or 3,904
+additional bytes per connection. Every socket closes and I/O task finishes;
+all requests/messages release, but no connection is finalized. Retained mode
+makes two connections per batch and leaves 2,000,640 bytes after 256 batches. It closes connections
 and drains detached I/O tasks between calls and before the final sample. Preserve the pooled-client comparison
 as a separate workload. Validate output, connection counts and drained task lists;
 record remaining managed/raw storage before choosing the next ownership change.
@@ -105,8 +109,11 @@ each drain. A deliberately omitted drain must exit 213. Retained readers preserv
 cached values across closure. The interpreter/ordinary native outputs use pooling
 and are only functional references; do not claim equivalent transport timing.
 
-Publish this isolated preparation and run `numerics.yml suite=connection-repeat`
-on Linux first; fix failures before freezing or comparing the baseline. The
+The next revision adds separate requested/allocator-charged byte totals for
+connection objects and their two I/O task objects. These are cumulative allocations,
+not live memory. Publish and run the six-platform `connection-repeat` baseline;
+fix failures before freezing or comparing it. The explicit Mac test assignment
+repair is included; runtime behavior remains identical to `d7a161d1`. The
 new suite retains all request/closure/cache controls. No production runtime
 ownership change belongs in this baseline. After validation, measure connection
 and detached-task storage separately before deciding their ownership fix.

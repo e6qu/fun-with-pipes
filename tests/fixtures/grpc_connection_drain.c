@@ -1,5 +1,28 @@
 /* Measurement-only connection churn. These clients have no user-created tasks;
  * only the connection reader/writer may still be running between calls. */
+static uint64_t client_connection_requested,client_connection_charged;
+static uint64_t client_io_task_requested,client_io_task_charged;
+static size_t client_storage_charge(const void *p) {
+    size_t ci;
+    gc_chunk *m=fwp_gc_chunk_of((uintptr_t)p,&ci);
+    if(!m || (m->type!=GC_SMALL && m->type!=GC_BIG))_Exit(217);
+    return m->type==GC_SMALL?m->slot:m->size;
+}
+static void client_note_connection(g_conn *c) {
+    client_connection_requested+=sizeof(*c)+strlen(c->authority)+1;
+    client_connection_charged+=client_storage_charge(c);
+}
+static void client_note_io_task(fwp_task *t) {
+    client_io_task_requested+=sizeof(*t);
+    client_io_task_charged+=client_storage_charge(t);
+}
+static void client_connection_storage(void) {
+    fprintf(stderr,"connection-storage\t%llu\t%llu\t%llu\t%llu\t%zu\t%zu\n",
+        (unsigned long long)client_connection_requested,
+        (unsigned long long)client_connection_charged,
+        (unsigned long long)client_io_task_requested,
+        (unsigned long long)client_io_task_charged,sizeof(g_conn),sizeof(fwp_task));
+}
 static void client_require_drained(void) {
     if (g_pool || fwp_gc_tasks || fwp_zombie ||
         client_connections_closed != client_connections_created) _Exit(213);

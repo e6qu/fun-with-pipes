@@ -605,6 +605,7 @@ fn measure_repeated_remote_calls(close_connections: bool) {
     let mut rows=String::from("mode\tbatches\trepetition\trequests\trequested_bytes\tretains\tpeak_charged_bytes\tfinal_charged_bytes\tcollections\tconnections_created\tconnections_finalized\tstreams_created\tstreams_finalized\tmessages_created\tmessages_freed\tmessage_requested_bytes\tmessage_freed_bytes\tpeak_message_bytes\n");
     let mut checkpoints=String::from("mode\tbatches\trepetition\tprior_streams\tmanaged_charged_bytes\tmessage_bytes\tlive_connections\tlive_streams\n");
     let mut drains=String::from("mode\tbatches\trepetition\tconnections_created\tconnections_closed\tlive_io_tasks\tmanaged_charged_bytes\tunfinalized_connections\tunfinalized_streams\tmessage_bytes\n");
+    let mut storage=String::from("mode\tbatches\trepetition\tconnection_requested_bytes\tconnection_charged_bytes\tio_task_requested_bytes\tio_task_charged_bytes\tconnection_header_bytes\ttask_bytes\n");
     for (mode, consume, per_batch, calls_per_batch) in [
         ("full", "const 64 | greeter.count | iter.fold add 0", 2080, 1),
         ("partial", "const 64 | greeter.count | iter.take 32 | iter.fold add 0", 528, 1),
@@ -640,7 +641,7 @@ fn measure_repeated_remote_calls(close_connections: bool) {
                 let stderr=String::from_utf8(output.stderr).unwrap();
                 if !record {assert!(stderr.is_empty(),"{stderr}");continue;}
                 std::fs::write(artifacts.join(format!("{mode}-{batches}-{repetition}.log")),&stderr).unwrap();
-                let mut memory=None;let mut transport=None;let mut count=0;let mut closed=0;
+                let mut memory=None;let mut transport=None;let mut count=0;let mut closed=0;let mut storage_seen=false;
                 for line in stderr.lines() {
                     if let Some(fields)=line.strip_prefix("client-memory\t") {assert!(memory.replace(fields).is_none());}
                     else if let Some(fields)=line.strip_prefix("transport-memory\t") {assert!(transport.replace(fields).is_none());}
@@ -655,10 +656,17 @@ fn measure_repeated_remote_calls(close_connections: bool) {
                         assert_eq!(values[0],closed);assert_eq!(values[1],closed);assert_eq!(values[2],0);
                         assert_eq!(values[5],0);assert_eq!(values[6],0);
                         drains.push_str(&format!("{mode}\t{batches}\t{repetition}\t{fields}\n"));
+                    } else if let Some(fields)=line.strip_prefix("connection-storage\t") {
+                        assert!(close_connections&&!storage_seen);storage_seen=true;
+                        let values:Vec<u64>=fields.split('\t').map(|v|v.parse().unwrap()).collect();
+                        assert_eq!(values.len(),6);
+                        assert!(values[1]>=values[0]);assert!(values[3]>=values[2]);
+                        assert_eq!(values[2],2*count*values[5]);
+                        storage.push_str(&format!("{mode}\t{batches}\t{repetition}\t{fields}\n"));
                     } else {panic!("unexpected measurement output: {line}");}
                 }
                 assert_eq!(count,batches*calls_per_batch);
-                if close_connections {assert_eq!(closed,count);}
+                if close_connections {assert_eq!(closed,count);assert!(storage_seen);}
                 let memory=memory.unwrap();let transport=transport.unwrap();
                 let m:Vec<u64>=memory.split('\t').map(|v|v.parse().unwrap()).collect();
                 let t:Vec<u64>=transport.split('\t').map(|v|v.parse().unwrap()).collect();
@@ -706,6 +714,7 @@ fn measure_repeated_remote_calls(close_connections: bool) {
     std::fs::write(artifacts.join("checkpoints.tsv"), checkpoints).unwrap();
     if close_connections {
         std::fs::write(artifacts.join("drains.tsv"), drains).unwrap();
+        std::fs::write(artifacts.join("connection-storage.tsv"), storage).unwrap();
     }
     println!("{rows}");
 }
@@ -731,9 +740,14 @@ fn instrument_closed_connections(code: &str) -> String {
     assert_eq!(code.matches(declaration).count(), 1);
     code = code.replacen(
         declaration,
-        &format!("{declaration}\nstatic uint64_t client_connections_closed;"),
+        &format!("{declaration}\nstatic uint64_t client_connections_closed;\nstatic void client_note_connection(g_conn *);\nstatic void client_note_io_task(fwp_task *);"),
         1,
     );
+    for (before,after) in [
+        ("g_conn *c = g_conn_new(fd, given, 0);", "g_conn *c = g_conn_new(fd, given, 0); client_note_connection(c);"),
+        ("startup.reader = fwp_spawn_task(0, g_reader, c, 0, 1);", "startup.reader = fwp_spawn_task(0, g_reader, c, 0, 1); client_note_io_task(startup.reader);"),
+        ("startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1);", "startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1); client_note_io_task(startup.writer);"),
+    ] {assert_eq!(code.matches(before).count(),1);code=code.replacen(before,after,1);}
     let main = code
         .find("static void *fwp_main_thread(void *arg) {")
         .unwrap();
@@ -742,7 +756,7 @@ fn instrument_closed_connections(code: &str) -> String {
     assert_eq!(code.matches(end).count(), 1);
     code.replacen(
         end,
-        &format!("    client_drain_connections();\n    client_require_drained();\n{end}"),
+        &format!("    client_drain_connections();\n    client_require_drained();\n    client_connection_storage();\n{end}"),
         1,
     )
 }

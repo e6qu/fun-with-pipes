@@ -132,6 +132,7 @@
     "bench",
     "borrowed_callbacks",
     "boxed_field_moves",
+    "boxed_projection_ownership",
     "builds",
     "byte_decoder_ownership",
     "cache_lifetime",

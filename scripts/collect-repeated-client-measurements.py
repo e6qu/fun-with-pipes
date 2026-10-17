@@ -40,13 +40,17 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--baseline-report", type=Path, help="Compare owned client streams with the untouched repeated-call baseline")
     parser.add_argument("--projection-moves", action="store_true", help="Compare compiler field transfers with the owned-request baseline")
+    parser.add_argument("--closed-connections", action="store_true", help="Require connection closure and I/O task draining between calls")
     args = parser.parse_args()
     if args.projection_moves:
         assert args.baseline_report, "projection comparison requires a retained baseline report"
     baseline = json.loads(args.baseline_report.read_text()) if args.baseline_report else None
+    assert not (args.closed_connections and args.projection_moves), "select one comparison workload"
     if baseline:
         assert baseline["source_revision"] != args.head
         assert {host["host"] for host in baseline["hosts"]} == HOSTS
+        if args.closed_connections:
+            assert baseline["connection_lifetime"] == "closed_and_drained"
     run = json.loads(subprocess.check_output([
         "gh", "run", "view", args.run, "--repo", REPO,
         "--json", "headSha,status,conclusion,jobs,url"]))
@@ -57,7 +61,9 @@ def main():
               "unique_closure_captures_move_through_partial_calls_and_failures",
               "cache_owners_release_aliases_and_long_chains_without_collection",
               "decoder_callbacks_transfer_values_and_restore_handlers_after_traps"]
-    if baseline:
+    if args.closed_connections:
+        checks[0] = "closed_remote_connection_memory_measurement"
+    if baseline or args.closed_connections:
         checks += ["owned_client_streams_release_after_readers_and_senders_finish",
                    "queued_message_allocation_failure_reports_out_of_memory",
                    "every_kind_of_call", "stream_aliases_are_consistent_across_tasks",
@@ -72,7 +78,7 @@ def main():
     for job in jobs:
         assert job["status"] == "completed" and job["conclusion"] == "success"
         host = job["name"][len("paths ("):-1]
-        folder = args.artifacts / ("repeated-clients-" + host)
+        folder = args.artifacts / (("closed-clients-" if args.closed_connections else "repeated-clients-") + host)
         if not folder.exists():
             subprocess.run(["gh", "run", "download", args.run, "--repo", REPO,
                             "--name", folder.name, "--dir", str(folder)], check=True)
@@ -89,9 +95,15 @@ def main():
         assert inventory["head"] == args.head
         rows = table(folder / "memory.tsv")
         checkpoints = table(folder / "checkpoints.tsv")
+        drains = table(folder / "drains.tsv") if args.closed_connections else None
+        storage = table(folder / "connection-storage.tsv") if args.closed_connections else None
+        drain_summaries = []
         keys = {(mode, batches, repetition) for mode in MODES for batches in BATCHES for repetition in range(3)}
         assert len(rows) == len(keys) == 27
         assert {(r["mode"], r["batches"], r["repetition"]) for r in rows} == keys
+        if storage is not None:
+            assert len(storage) == len(keys)
+            assert {(r["mode"], r["batches"], r["repetition"]) for r in storage} == keys
         summaries = []
         selected_count = 0
         for row in rows:
@@ -102,6 +114,26 @@ def main():
             for kind in ["connections", "streams"]:
                 assert 0 <= row[kind + "_finalized"] <= row[kind + "_created"]
             assert 0 < row["connections_created"] <= calls
+            if drains is not None:
+                assert row["connections_created"] == calls
+                assert row["streams_finalized"] == row["streams_created"]
+                assert row["messages_freed"] == row["messages_created"]
+                assert row["message_freed_bytes"] == row["message_requested_bytes"]
+                allocated = next(s for s in storage if all(s[key] == row[key] for key in ["mode", "batches", "repetition"]))
+                assert allocated["connection_charged_bytes"] >= allocated["connection_requested_bytes"] > calls * allocated["connection_header_bytes"]
+                assert allocated["io_task_charged_bytes"] >= allocated["io_task_requested_bytes"] == 2 * calls * allocated["task_bytes"]
+                drained = [d for d in drains if all(d[key] == row[key] for key in ["mode", "batches", "repetition"])]
+                assert len(drained) == calls
+                for index, sample in enumerate(drained, 1):
+                    assert sample["connections_created"] == sample["connections_closed"] == index
+                    assert sample["live_io_tasks"] == sample["unfinalized_streams"] == sample["message_bytes"] == 0
+                    assert 0 <= sample["unfinalized_connections"] <= index
+                    assert sample["managed_charged_bytes"] >= 0
+                assert drained[-1]["managed_charged_bytes"] == row["final_charged_bytes"]
+                assert drained[-1]["unfinalized_connections"] == calls - row["connections_finalized"]
+                drain_summaries.append({"mode": row["mode"], "batches": row["batches"], "repetition": row["repetition"], "first": drained[0], "last": drained[-1]})
+                if baseline:
+                    assert row["connections_finalized"] == calls
             assert 0 <= row["messages_freed"] <= row["messages_created"]
             assert 0 <= row["message_freed_bytes"] <= row["message_requested_bytes"]
             assert row["peak_message_bytes"] >= row["message_requested_bytes"] - row["message_freed_bytes"]
@@ -117,6 +149,9 @@ def main():
                     key: [min(c[key] for c in group), max(c[key] for c in group)]
                     for key in ["managed_charged_bytes", "message_bytes", "live_connections", "live_streams"]}})
         assert selected_count == len(checkpoints)
+        if drains is not None:
+            assert len(drains) == selected_count
+            assert "--- exit 213\n" in (folder / "missing-connection-drain.log").read_text()
         comparison = None
         if baseline:
             earlier = next(item for item in baseline["hosts"] if item["host"] == host)
@@ -159,11 +194,17 @@ def main():
         names = ["source.txt", "rust.txt", "c.txt", "cpu.txt", "scope.txt", "memory.tsv", "checkpoints.tsv",
                  "greeter.fwp", "job.log", "primitive-inventory.json", "missing-message-release.log",
                  "missing-message-release.c", "missing-message-release" + suffix]
+        raw_drains = None
+        if drains is not None:
+            drain_destination = output_tables / (host + "-drains.tsv")
+            shutil.copyfile(folder / "drains.tsv", drain_destination)
+            raw_drains = {"file": str(drain_destination.relative_to(args.output.parent)), **fingerprint(drain_destination)}
+            names += ["drains.tsv", "connection-storage.tsv", "missing-connection-drain.log", "missing-connection-drain.c", "missing-connection-drain" + suffix]
         for mode in MODES:
             names += [mode + ext for ext in [".fwp", ".c", "-measured.c", suffix, "-measured" + suffix]]
             names += [f"{mode}-{batches}-{repetition}.log" for batches in BATCHES for repetition in range(3)]
         layouts = []
-        if baseline:
+        if baseline or args.closed_connections:
             for opt in ["-O1", "-O2"]:
                 for no_free in ["false", "true"]:
                     layout_name = f"stream-owners/layout{opt}-no-free-{no_free}.tsv"
@@ -181,6 +222,8 @@ def main():
             names.append(observations.name)
         results.append({"host": host, "job_url": job["url"], "rows": rows,
             "checkpoint_summaries": summaries, "comparison": comparison, "request_layouts": layouts,
+            "drain_summaries": drain_summaries, "raw_drains": raw_drains,
+            "connection_storage_allocations": storage,
             "raw_checkpoints": {"file": str(destination.relative_to(args.output.parent)), **fingerprint(destination)},
             "environment": {name: (folder / (name + ".txt")).read_text() for name in ["rust", "c", "cpu"]},
             "scope": (folder / "scope.txt").read_text(),
@@ -202,6 +245,12 @@ def main():
     if args.projection_moves:
         report["comparison_kind"] = "compiler transfer of the only counted field from a consumed boxed record"
         report["limits"] += " This compiler comparison requires fewer retains in every measured case without extra allocation requests or higher final managed storage; shared records keep their existing owners. Dynamic dispatch, record allocations and ownership tests remain."
+    if args.closed_connections:
+        report["connection_lifetime"] = "closed_and_drained"
+        report["sampling"] = "1, 16 or 256 batches, three measured processes per case. Native-only hooks close each connection and drain its reader/writer tasks before the next call and before final sampling. Every drain requires one closed socket per created connection, no pooled connection, no live I/O task and no remaining request/message. Managed charge and unfinalized connection counts are sampled at each drain. Counters start after constant initialization and end after root execution, child joins, cached-value cleanup and the final drain, before runtime shutdown."
+        report["limits"] = "Collection disabled, physical freeing enabled. Raw interpretation and ordinary native output are functional references using their usual connection pooling; their transport work differs from this instrumented churn workload. Ownership revision comparisons must use the same connection-closing hooks. Managed allocation/retain counts, charged storage, connection/request finalization and queued-message bytes are measured. Empty I/O task lists establish completed task execution, not reclaimed task-object storage. Stack pools, other raw buffers, allocator/TLS/OS storage, server/process memory and timing are excluded. This establishes a closed-connection ownership baseline, not zero-cost abstractions, checked ARC or C/Rust parity."
+        if baseline:
+            report["limits"] += " The comparison additionally requires every created connection finalized and constant final managed charge across measured sizes."
     args.output.write_text(json.dumps(report, indent=2) + "\n")
     print(f"Retained six native repeated-call measurements at {args.head}")
 
