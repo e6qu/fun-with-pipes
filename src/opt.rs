@@ -424,6 +424,21 @@ impl<'p> Opt<'p> {
                 a1.extend(args);
                 self.apply(*g, a1, depth)
             }
+            // Applying a function returned through a pure binding keeps that
+            // binding first, then exposes the call in its body. Do not extend
+            // resource lifetimes or move an application into a resource frame.
+            Expr::Let(l, v, b)
+                if self.pure(&v)
+                    && !self.resource_locals.contains(&l)
+                    && !crate::resource::anchored(&b, l)
+                    && !crate::resource::may_hold_resource(
+                        self.shapes,
+                        &self.locals[l as usize],
+                    ) =>
+            {
+                let body = self.apply(*b, args, depth);
+                self.expr(Expr::Let(l, v, Box::new(body)), depth)
+            }
             Expr::Func(id) if self.arity(id) > 0 => {
                 let ar = self.arity(id);
                 if args.len() < ar {
@@ -876,7 +891,19 @@ fn bind_captures(
     bindings: &mut Vec<(Local, Expr)>,
 ) -> Option<Expr> {
     match e {
-        Expr::Local(_) | Expr::Const(_) => Some(e.clone()),
+        Expr::Local(_) => Some(e.clone()),
+        Expr::Const(v)
+            if !matches!(
+                v,
+                crate::value::Value::Data(..)
+                    | crate::value::Value::Record(_)
+                    | crate::value::Value::Array(_)
+                    | crate::value::Value::Map(_)
+                    | crate::value::Value::Closure(_)
+            ) =>
+        {
+            Some(e.clone())
+        }
         Expr::Func(id) if funcs.get(*id)?.arity > 0 => Some(e.clone()),
         Expr::Apply(f, args) => {
             if let Expr::Func(id) = &**f {
@@ -967,13 +994,15 @@ fn rewrite_hofs(
     let Body::Prim(sym) = &prim_f.body else {
         return;
     };
-    // State handlers also benefit from specializing their known callback:
-    // the generated body exposes saturated iterator consumers to fusion.
-    let (callback, n) = if sym == "run-state" {
-        (1, 1)
-    } else {
-        let Some(n) = hof_arity(sym) else { return };
-        (0, n)
+    // Synchronous handlers call their callback once. Specializing its known
+    // body avoids rebuilding nested partial applications on every invocation.
+    let (callback, n) = match sym.as_str() {
+        "run-state" | "grpc.with-tls" | "grpc.with-metadata" | "grpc.with-deadline" => (1, 1),
+        "grpc.with-gzip" | "grpc.with-response-metadata" => (0, 1),
+        _ => {
+            let Some(n) = hof_arity(sym) else { return };
+            (0, n)
+        }
     };
     let Some(fexpr) = args.get(callback) else {
         return;
@@ -998,27 +1027,21 @@ fn rewrite_hofs(
         return;
     }
     let mut bindings = Vec::new();
-    let normalized;
-    let fexpr = if o.pure(fexpr) {
-        fexpr
-    } else {
-        // Only the first argument can be lifted before the call without
-        // crossing earlier arguments (run-state's callback is argument 1).
-        if callback != 0 {
-            return;
-        }
-        let count = locals.len();
-        let Some(value) = bind_captures(fexpr, None, funcs, shapes, locals, &mut bindings) else {
-            locals.truncate(count);
-            return;
-        };
-        if bindings.is_empty() || !o.pure(&value) {
-            locals.truncate(count);
-            return;
-        }
-        normalized = value;
-        &normalized
+    // Bind aggregate captures once, including pure constructions. Otherwise
+    // specialization would reconstruct a captured list on every loop element.
+    // Captures cannot cross an earlier computation or resource lifetime.
+    let count = locals.len();
+    let Some(normalized) = bind_captures(fexpr, None, funcs, shapes, locals, &mut bindings) else {
+        locals.truncate(count);
+        return;
     };
+    if !o.pure(&normalized)
+        || (!bindings.is_empty() && args[..callback].iter().any(|arg| !o.trivial(arg)))
+    {
+        locals.truncate(count);
+        return;
+    }
+    let fexpr = &normalized;
     let mut caps = Vec::new();
     free_locals(fexpr, &mut caps);
     let k = caps.len();
@@ -1048,14 +1071,22 @@ fn rewrite_hofs(
                 body = o.expr(body, 0);
             }
             let h = base + made.len();
+            // Reserve the identity before descending, so a repeated callback
+            // shares this specialization instead of expanding recursively.
             made.push(Func {
                 name: format!("{}-fn", sym),
                 arity: (k + n) as u32,
-                locals: o.locals,
+                locals: Vec::new(),
                 ty,
-                body: Body::Expr(body),
+                body: Body::Expr(Expr::Const(crate::value::Value::unit())),
             });
             seen.push((key, h));
+            // Inlining a state callback can expose another known callback,
+            // such as fold inside each. Specialize it before native lowering
+            // chooses direct calls or runtime function dispatch for the loop.
+            rewrite_hofs(&mut body, funcs, shapes, &mut o.locals, base, made, seen);
+            made[h - base].locals = o.locals;
+            made[h - base].body = Body::Expr(body);
             h
         }
     };

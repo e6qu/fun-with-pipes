@@ -1,0 +1,5035 @@
+{
+  "title": "Memory used by service helpers and list iteration",
+  "source_revision": "20f0f5f091edf7c9b296dbf548309cf68a779e29",
+  "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38973106656",
+  "comparison": "Each fwp service scope versus plain fwp state updates at 1/32/128 calls, O2, collection disabled. Managed requests, requested bytes and final charged storage from constant initialization through main cleanup. Fixed scheduler startup remains included in rows; per-call slopes subtract fixed costs.",
+  "limits": "Service allocation rows exclude raw TLS/capture buffers, allocator metadata, pages and total process memory; they do not measure speed. Separate iteration_timing entries retain elapsed time and peak process memory when present. Neither comparison establishes C/Rust parity. Plain programs omit service fields; their task sizes are not the old service-task baseline. Whole services and remote results remain outside checked ARC support.",
+  "hosts": [
+    {
+      "runner": "macos-15",
+      "iteration": {
+        "rows": [
+          {
+            "implementation": "fold",
+            "iterations": 32,
+            "managed_requests": 35,
+            "requested_bytes": 931,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "fold",
+            "iterations": 128,
+            "managed_requests": 131,
+            "requested_bytes": 3236,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "map",
+            "iterations": 32,
+            "managed_requests": 68,
+            "requested_bytes": 1963,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "map",
+            "iterations": 128,
+            "managed_requests": 260,
+            "requested_bytes": 7340,
+            "dynamic_calls": 2
+          }
+        ],
+        "saved_per_additional_element_between_32_and_128": {
+          "managed_requests": "1",
+          "requested_bytes": "32"
+        },
+        "comparison": "Old map-based each versus fold-based each, identical counting program and input list, O2 with collection disabled. Includes input construction, startup and printing; slope differences cancel fixed costs. Managed allocation requests and requested payload bytes only, not elapsed time or peak/process memory."
+      },
+      "iteration_timing": null,
+      "binary_observations": null,
+      "job": {
+        "name": "paths (macos-15)",
+        "databaseId": 117225350826,
+        "conclusion": "success"
+      },
+      "environment": "Source: 20f0f5f091edf7c9b296dbf548309cf68a779e29\nOS: macos\nArchitecture: aarch64\nC compiler:\nApple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\nRust compiler:\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\nCPU:\nApple M1 (Virtual)\nNative optimization: -O2 measurements; -O1/-O2 lifetime controls\nCompilation flags: fwp::cgen::compile_c at the recorded source revision\n",
+      "primitive_counts": {
+        "contract": 347,
+        "runtime_or_specialization_review": 7,
+        "flat_scalar_signature": 5,
+        "ir_template": 19
+      },
+      "extra_per_call_versus_plain_between_32_and_128": {
+        "gzip": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "deadline": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "metadata": {
+          "managed_requests": "1",
+          "requested_bytes": "40",
+          "final_charged_bytes": "0"
+        },
+        "empty-metadata": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "filtered-metadata": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "capture": {
+          "managed_requests": "1",
+          "requested_bytes": "24",
+          "final_charged_bytes": "0"
+        }
+      },
+      "layouts": {
+        "plain": {
+          "context_bytes": 0,
+          "context_alignment": 0,
+          "task_bytes": 536,
+          "task_alignment": 8
+        },
+        "gzip": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 616,
+          "task_alignment": 8
+        },
+        "deadline": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 616,
+          "task_alignment": 8
+        },
+        "metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 616,
+          "task_alignment": 8
+        },
+        "empty-metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 616,
+          "task_alignment": 8
+        },
+        "filtered-metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 616,
+          "task_alignment": 8
+        },
+        "capture": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 616,
+          "task_alignment": 8
+        }
+      },
+      "rows": [
+        {
+          "case": "plain",
+          "iterations": 1,
+          "managed_requests": 4,
+          "requested_bytes": 186,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 32,
+          "managed_requests": 35,
+          "requested_bytes": 931,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 128,
+          "managed_requests": 131,
+          "requested_bytes": 3236,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 802,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 1547,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 3852,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 802,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 1547,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 3852,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 1,
+          "managed_requests": 8,
+          "requested_bytes": 890,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 32,
+          "managed_requests": 70,
+          "requested_bytes": 2875,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 128,
+          "managed_requests": 262,
+          "requested_bytes": 9020,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 802,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 1547,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 3852,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 1,
+          "managed_requests": 9,
+          "requested_bytes": 898,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 32,
+          "managed_requests": 40,
+          "requested_bytes": 1643,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 128,
+          "managed_requests": 136,
+          "requested_bytes": 3948,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 1,
+          "managed_requests": 6,
+          "requested_bytes": 826,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 32,
+          "managed_requests": 68,
+          "requested_bytes": 2315,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 128,
+          "managed_requests": 260,
+          "requested_bytes": 6924,
+          "final_charged_bytes": 640,
+          "collections": 0
+        }
+      ],
+      "files": {
+        "environment.txt": {
+          "bytes": 667,
+          "sha256": "d670ba045371c721737db47d1925246286604102ac31bd920562f628f6483f14"
+        },
+        "storage.tsv": {
+          "bytes": 634,
+          "sha256": "190a74f434aa86a1ea749fc54b96aef19e2e7721ef8a6d0a1a5a8d6dc34f4dac"
+        },
+        "layout.tsv": {
+          "bytes": 564,
+          "sha256": "a645d68fd1dac303b9b0ffb87bd6cacdd34e647b6d243ba44114b1dc1124d0a6"
+        },
+        "job.log": {
+          "bytes": 57561,
+          "sha256": "97e7d3f984a464dda266dfaa892170633f3813e188a472dc2a147f70a794b560"
+        },
+        "contracts.json": {
+          "bytes": 139620,
+          "sha256": "398aec577f0878a67df12ed5c85767b3e5f76d843aa207218f007dea0e64ebcd"
+        },
+        "plain-128.fwp": {
+          "bytes": 162,
+          "sha256": "f80801a45905bb5e0eb3edab542ff95b4ea5653f3a5a3bf18d2efb9da573c627"
+        },
+        "plain-128.c": {
+          "bytes": 657935,
+          "sha256": "e213fe5b2c05f6bc25e6197fb792b56e786968e24beeb7e55b0c884789cba221"
+        },
+        "plain-128-measured.c": {
+          "bytes": 658749,
+          "sha256": "b25a032f913acbca42e837a8e86cd81686f9787ecc4980ff92ecec0c63e83608"
+        },
+        "gzip-128.fwp": {
+          "bytes": 187,
+          "sha256": "eb998177a93433c8e3a8c967b3bbe560cb31519b9715080df6c1019288245563"
+        },
+        "gzip-128.c": {
+          "bytes": 866196,
+          "sha256": "b7ee5582947982a6eb24bfa59d6e30ac75cccd49c3791b44d8468f4173391877"
+        },
+        "gzip-128-measured.c": {
+          "bytes": 867010,
+          "sha256": "b7132bc6ad44f6e9861ea71ae9325990555a140a77cfce18cf8e1a896425e58e"
+        },
+        "deadline-128.fwp": {
+          "bytes": 194,
+          "sha256": "f04e5f9984616093035e1de55e649529372201ded49b4b865177f3a621008c8f"
+        },
+        "deadline-128.c": {
+          "bytes": 868993,
+          "sha256": "d8d7d42cedc558ca2e794a4565fd09b0e5541dde4eae252c3bd479b048a7d719"
+        },
+        "deadline-128-measured.c": {
+          "bytes": 869807,
+          "sha256": "9200be4eb9b44e1b8021b9aa630c2e38091f9c2b715c03c6105e0d38f840313d"
+        },
+        "metadata-128.fwp": {
+          "bytes": 218,
+          "sha256": "61fffbb3dda8ac2d3059676adb9a3b506df91b91993f08e3637a110560d01a85"
+        },
+        "metadata-128.c": {
+          "bytes": 869985,
+          "sha256": "9ade164866ca27a013cb6a220676ad80277e4a749a78b08b56a3ccb3c4c1ca0b"
+        },
+        "metadata-128-measured.c": {
+          "bytes": 870799,
+          "sha256": "c1608d1aea783eb5a1669b6d57057f59c77a87481057f55dd1eb10d5a298ad46"
+        },
+        "empty-metadata-128.fwp": {
+          "bytes": 194,
+          "sha256": "dd1e2c73b0bf7f75cc4cabc02db725e5bb33e850e415333f2dc3fa6aca35faf4"
+        },
+        "empty-metadata-128.c": {
+          "bytes": 869380,
+          "sha256": "791d822d364966b77ca6807a4d42370779675ad2ebbca5647a4203896d436d19"
+        },
+        "empty-metadata-128-measured.c": {
+          "bytes": 870194,
+          "sha256": "b5275af9db900bea1b9b1b928b2e9fcf6487a65944e1be4c5921d6aa08ae3cb4"
+        },
+        "filtered-metadata-128.fwp": {
+          "bytes": 231,
+          "sha256": "fbf743e5194f575269193bd0cbb9774085c833b38563f2adb771a68071110454"
+        },
+        "filtered-metadata-128.c": {
+          "bytes": 871047,
+          "sha256": "650d7a483c80b4c94274359ab2105478d71aa66c415de66d4a40dd762af09e3f"
+        },
+        "filtered-metadata-128-measured.c": {
+          "bytes": 871861,
+          "sha256": "5b9373037dcb26c54bd0ff2ae00cf28e4136a4ee4700d95576ef62afd8a6bbf7"
+        },
+        "capture-128.fwp": {
+          "bytes": 205,
+          "sha256": "cca089661b3f4e790142240651e856056693c4d707d7c250f69d79b0d759ab1e"
+        },
+        "capture-128.c": {
+          "bytes": 868094,
+          "sha256": "873accd483607a610b599376b0f649b499d898b5598d5d5537b8c218cdd14da9"
+        },
+        "capture-128-measured.c": {
+          "bytes": 868908,
+          "sha256": "eed565cac17ffbeda22e108b6be53847d2682f09f7af90950c70609b7ae5bb06"
+        },
+        "scope-arc.c": {
+          "bytes": 908436,
+          "sha256": "6e1e9cd0523521a0c6952df04b65a397841dd3e04362a94377170921bc2e8da9"
+        },
+        "scope-arc.exe": {
+          "bytes": 128744,
+          "sha256": "dd0938f9e3ee4e7aab5e5e1e6959fc4e10d8c556fb54b1f6e1df129c7aa4a0f1"
+        },
+        "capture-arc.c": {
+          "bytes": 908742,
+          "sha256": "d5a179c0e507c8a4180c5d3591719829d808cbd6e0c5e0aefcfdf25d9ca36b6a"
+        },
+        "capture-arc.exe": {
+          "bytes": 109288,
+          "sha256": "fa215dce20a11c7af1d88fc1e9aa3d6964f2322912388cf9e6dec8f6859fac9e"
+        },
+        "capture-arc.txt": {
+          "bytes": 162,
+          "sha256": "e9d6f5c97c5dfc1134a1710b06414a033041434719f3e56f400d81e6ecad7923"
+        },
+        "scope-tracing.c": {
+          "bytes": 908413,
+          "sha256": "734886b61fd0ae2afaa9b9d56dc0e7e8eb9766a8b807818adafaa75f5b91aecd"
+        },
+        "scope-tracing.exe": {
+          "bytes": 129016,
+          "sha256": "d2b611eb40929ae5b57d0d9d8e1eea937159b66dcb41ca26910b96070bcc3bef"
+        },
+        "capture-tracing.c": {
+          "bytes": 908719,
+          "sha256": "a3992db40a9a7e9ace48b0864e914e585d2de65650524c695760c91c36471d0d"
+        },
+        "capture-tracing.exe": {
+          "bytes": 109640,
+          "sha256": "d6c51d7ac5756d1a5e75015993934d375be51ce72a2a1e707071f3f540706360"
+        },
+        "capture-tracing.txt": {
+          "bytes": 162,
+          "sha256": "e9d6f5c97c5dfc1134a1710b06414a033041434719f3e56f400d81e6ecad7923"
+        },
+        "each-storage.tsv": {
+          "bytes": 146,
+          "sha256": "31bb088455cbc79dbafcf8d60d0e6edb3415cc613e5165bf1734e6a29194ec43"
+        },
+        "each-trap-tracing-O1.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-tracing-O1.c": {
+          "bytes": 654142,
+          "sha256": "0e71f8710a4762f1ff77b681900c7ac1b51c153c57c4c92fcaf0f591b6772b7d"
+        },
+        "each-trap-tracing-O1.exe": {
+          "bytes": 70784,
+          "sha256": "b53960778765ffec8cfec400022896c788dc05f87985b5fcfe7cca51586d27d8"
+        },
+        "each-trap-tracing-O1.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-trap-tracing-O2.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-tracing-O2.c": {
+          "bytes": 654142,
+          "sha256": "0e71f8710a4762f1ff77b681900c7ac1b51c153c57c4c92fcaf0f591b6772b7d"
+        },
+        "each-trap-tracing-O2.exe": {
+          "bytes": 70832,
+          "sha256": "8cfbbdb95c54d0de479d6d6fd80caca421c16b32a05b68d0b9125951fd79550f"
+        },
+        "each-trap-tracing-O2.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-trap-arc-O1.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-arc-O1.c": {
+          "bytes": 654165,
+          "sha256": "4a4dd05f6f457d412b48b7172212c19fb5abc56a85ac99dcd876baee3f42c44e"
+        },
+        "each-trap-arc-O1.exe": {
+          "bytes": 53920,
+          "sha256": "160ea020f131ac946d1bbed3de3b166c1706a8ab12ed4e5e207d0ceb42245e9b"
+        },
+        "each-trap-arc-O1.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-trap-arc-O2.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-arc-O2.c": {
+          "bytes": 654165,
+          "sha256": "4a4dd05f6f457d412b48b7172212c19fb5abc56a85ac99dcd876baee3f42c44e"
+        },
+        "each-trap-arc-O2.exe": {
+          "bytes": 70448,
+          "sha256": "61ccd84321e21692c1c8d2e6e9d639ca2e290703f056507085610866a8a6c4d9"
+        },
+        "each-trap-arc-O2.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-map-32.fwp": {
+          "bytes": 172,
+          "sha256": "ceb88b9badcbec5064c48caf03649abe68fd943ac08bee43576ca9c38692a234"
+        },
+        "each-map-32.c": {
+          "bytes": 658342,
+          "sha256": "9bcf83768c8c746f4528b186e8d8edf7ce2252859f2e73af25d6013c0a7d898f"
+        },
+        "each-map-32.exe": {
+          "bytes": 89416,
+          "sha256": "924ac6147bcb119067ae20f202a75647c9f2767762c6582a2ab1f167273207a0"
+        },
+        "each-map-128.fwp": {
+          "bytes": 173,
+          "sha256": "dd6226ecec9c1c266096f22bd3dc14ee2a888f1ad792a68a885eb1ee80ef2943"
+        },
+        "each-map-128.c": {
+          "bytes": 658343,
+          "sha256": "23025e7a6dc112d5dbdc04feb4a0fb332ec6055c95c7fb3d131df4f2cf0d141a"
+        },
+        "each-map-128.exe": {
+          "bytes": 89416,
+          "sha256": "ea136109c7ce992e58b12f237211c093687d57dacca4d1accb02dbab791b3914"
+        },
+        "each-fold-32.fwp": {
+          "bytes": 165,
+          "sha256": "d7c49a3bbb6d1135e84b35df0f3bd6850019a927b48dd210bfed3170dfa1d791"
+        },
+        "each-fold-32.c": {
+          "bytes": 658205,
+          "sha256": "b14db810a062d3c239686f2abf12091c8d87b85a73d72f62306eea90d9b2786e"
+        },
+        "each-fold-32.exe": {
+          "bytes": 89256,
+          "sha256": "676e80da07836e5f15ac1fb422cedaa39ea8f17e1818a49b4a44b442deddf0e4"
+        },
+        "each-fold-128.fwp": {
+          "bytes": 166,
+          "sha256": "fe864bc66675e468f1476e8fe35a1cf68321d442e070a53a6ab54c9d9598dcc8"
+        },
+        "each-fold-128.c": {
+          "bytes": 658206,
+          "sha256": "29941992b46b6fd384a432475346b63004ba831b35642e06afb981b64b9a92a5"
+        },
+        "each-fold-128.exe": {
+          "bytes": 89264,
+          "sha256": "90674bd99477659c6613f2dd7fe8511392cc7b27a17ba861b8c89883dcb753eb"
+        }
+      },
+      "binaries": {
+        "plain-128.exe": {
+          "bytes": 89312,
+          "sha256": "461521d8485637ddf0c832fddd65cb24dac64d2230bafff7c85decb84c124cb2",
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "gzip-128.exe": {
+          "bytes": 90384,
+          "sha256": "02fb861c2f183ccfb8998e58947527923744aad3cf6ff75333194bf8e58f9e70",
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "deadline-128.exe": {
+          "bytes": 90576,
+          "sha256": "b1cdb1e15ac78c2559d76a2426131f7326a632d5eca7231e353034716ce15227",
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "metadata-128.exe": {
+          "bytes": 90784,
+          "sha256": "1095b18fd48ca752d3ac9ea2ed01729a79dcf689b3c7bad51de39f262079d991",
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "empty-metadata-128.exe": {
+          "bytes": 90680,
+          "sha256": "561f590ffc1f662cab2653b944727a297d0d4b3c467b7812b008c2c8c1c41f9a",
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "filtered-metadata-128.exe": {
+          "bytes": 90920,
+          "sha256": "24e6c43640c42a42de8ff086f2fcd3613a746998b3b48c46e7230931fe0fb2ad",
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "capture-128.exe": {
+          "bytes": 90944,
+          "sha256": "c1a37a58bb26ede7824a2945bff798d4e57c75e875b35cd858070bcab0b3a116",
+          "format": "Mach-O 64-bit executable arm64"
+        }
+      }
+    },
+    {
+      "runner": "macos-15-intel",
+      "iteration": {
+        "rows": [
+          {
+            "implementation": "fold",
+            "iterations": 32,
+            "managed_requests": 35,
+            "requested_bytes": 931,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "fold",
+            "iterations": 128,
+            "managed_requests": 131,
+            "requested_bytes": 3236,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "map",
+            "iterations": 32,
+            "managed_requests": 68,
+            "requested_bytes": 1963,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "map",
+            "iterations": 128,
+            "managed_requests": 260,
+            "requested_bytes": 7340,
+            "dynamic_calls": 2
+          }
+        ],
+        "saved_per_additional_element_between_32_and_128": {
+          "managed_requests": "1",
+          "requested_bytes": "32"
+        },
+        "comparison": "Old map-based each versus fold-based each, identical counting program and input list, O2 with collection disabled. Includes input construction, startup and printing; slope differences cancel fixed costs. Managed allocation requests and requested payload bytes only, not elapsed time or peak/process memory."
+      },
+      "iteration_timing": null,
+      "binary_observations": null,
+      "job": {
+        "name": "paths (macos-15-intel)",
+        "databaseId": 117225357229,
+        "conclusion": "success"
+      },
+      "environment": "Source: 20f0f5f091edf7c9b296dbf548309cf68a779e29\nOS: macos\nArchitecture: x86_64\nC compiler:\nApple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\nRust compiler:\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\nCPU:\nIntel(R) Core(TM) i7-8700B CPU @ 3.20GHz\nNative optimization: -O2 measurements; -O1/-O2 lifetime controls\nCompilation flags: fwp::cgen::compile_c at the recorded source revision\n",
+      "primitive_counts": {
+        "contract": 347,
+        "runtime_or_specialization_review": 7,
+        "flat_scalar_signature": 5,
+        "ir_template": 19
+      },
+      "extra_per_call_versus_plain_between_32_and_128": {
+        "gzip": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "deadline": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "metadata": {
+          "managed_requests": "1",
+          "requested_bytes": "40",
+          "final_charged_bytes": "0"
+        },
+        "empty-metadata": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "filtered-metadata": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "capture": {
+          "managed_requests": "1",
+          "requested_bytes": "24",
+          "final_charged_bytes": "0"
+        }
+      },
+      "layouts": {
+        "plain": {
+          "context_bytes": 0,
+          "context_alignment": 0,
+          "task_bytes": 496,
+          "task_alignment": 8
+        },
+        "gzip": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 576,
+          "task_alignment": 8
+        },
+        "deadline": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 576,
+          "task_alignment": 8
+        },
+        "metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 576,
+          "task_alignment": 8
+        },
+        "empty-metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 576,
+          "task_alignment": 8
+        },
+        "filtered-metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 576,
+          "task_alignment": 8
+        },
+        "capture": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 576,
+          "task_alignment": 8
+        }
+      },
+      "rows": [
+        {
+          "case": "plain",
+          "iterations": 1,
+          "managed_requests": 4,
+          "requested_bytes": 186,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 32,
+          "managed_requests": 35,
+          "requested_bytes": 931,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 128,
+          "managed_requests": 131,
+          "requested_bytes": 3236,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 762,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 1507,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 3812,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 762,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 1507,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 3812,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 1,
+          "managed_requests": 8,
+          "requested_bytes": 850,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 32,
+          "managed_requests": 70,
+          "requested_bytes": 2835,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 128,
+          "managed_requests": 262,
+          "requested_bytes": 8980,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 762,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 1507,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 3812,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 1,
+          "managed_requests": 9,
+          "requested_bytes": 858,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 32,
+          "managed_requests": 40,
+          "requested_bytes": 1603,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 128,
+          "managed_requests": 136,
+          "requested_bytes": 3908,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 1,
+          "managed_requests": 6,
+          "requested_bytes": 786,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 32,
+          "managed_requests": 68,
+          "requested_bytes": 2275,
+          "final_charged_bytes": 640,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 128,
+          "managed_requests": 260,
+          "requested_bytes": 6884,
+          "final_charged_bytes": 640,
+          "collections": 0
+        }
+      ],
+      "files": {
+        "environment.txt": {
+          "bytes": 688,
+          "sha256": "e4578205023dc25cfa4ea472bba260e0c1335c5da59cad20824f0b6b03fe8b6f"
+        },
+        "storage.tsv": {
+          "bytes": 634,
+          "sha256": "d49986a9f2253446447623ca06f50193321bd61fccf826745fbd266289a44673"
+        },
+        "layout.tsv": {
+          "bytes": 564,
+          "sha256": "80907089504b0d87fd240b36112f4d72825b736bef7caa89faedd62658131022"
+        },
+        "job.log": {
+          "bytes": 57562,
+          "sha256": "9e252ad71d997eb715cb484b4529308edd4056166a39a1949b9e18bac9d9bfe0"
+        },
+        "contracts.json": {
+          "bytes": 139620,
+          "sha256": "398aec577f0878a67df12ed5c85767b3e5f76d843aa207218f007dea0e64ebcd"
+        },
+        "plain-128.fwp": {
+          "bytes": 162,
+          "sha256": "f80801a45905bb5e0eb3edab542ff95b4ea5653f3a5a3bf18d2efb9da573c627"
+        },
+        "plain-128.c": {
+          "bytes": 657935,
+          "sha256": "e213fe5b2c05f6bc25e6197fb792b56e786968e24beeb7e55b0c884789cba221"
+        },
+        "plain-128-measured.c": {
+          "bytes": 658749,
+          "sha256": "b25a032f913acbca42e837a8e86cd81686f9787ecc4980ff92ecec0c63e83608"
+        },
+        "gzip-128.fwp": {
+          "bytes": 187,
+          "sha256": "eb998177a93433c8e3a8c967b3bbe560cb31519b9715080df6c1019288245563"
+        },
+        "gzip-128.c": {
+          "bytes": 866196,
+          "sha256": "b7ee5582947982a6eb24bfa59d6e30ac75cccd49c3791b44d8468f4173391877"
+        },
+        "gzip-128-measured.c": {
+          "bytes": 867010,
+          "sha256": "b7132bc6ad44f6e9861ea71ae9325990555a140a77cfce18cf8e1a896425e58e"
+        },
+        "deadline-128.fwp": {
+          "bytes": 194,
+          "sha256": "f04e5f9984616093035e1de55e649529372201ded49b4b865177f3a621008c8f"
+        },
+        "deadline-128.c": {
+          "bytes": 868993,
+          "sha256": "d8d7d42cedc558ca2e794a4565fd09b0e5541dde4eae252c3bd479b048a7d719"
+        },
+        "deadline-128-measured.c": {
+          "bytes": 869807,
+          "sha256": "9200be4eb9b44e1b8021b9aa630c2e38091f9c2b715c03c6105e0d38f840313d"
+        },
+        "metadata-128.fwp": {
+          "bytes": 218,
+          "sha256": "61fffbb3dda8ac2d3059676adb9a3b506df91b91993f08e3637a110560d01a85"
+        },
+        "metadata-128.c": {
+          "bytes": 869985,
+          "sha256": "9ade164866ca27a013cb6a220676ad80277e4a749a78b08b56a3ccb3c4c1ca0b"
+        },
+        "metadata-128-measured.c": {
+          "bytes": 870799,
+          "sha256": "c1608d1aea783eb5a1669b6d57057f59c77a87481057f55dd1eb10d5a298ad46"
+        },
+        "empty-metadata-128.fwp": {
+          "bytes": 194,
+          "sha256": "dd1e2c73b0bf7f75cc4cabc02db725e5bb33e850e415333f2dc3fa6aca35faf4"
+        },
+        "empty-metadata-128.c": {
+          "bytes": 869380,
+          "sha256": "791d822d364966b77ca6807a4d42370779675ad2ebbca5647a4203896d436d19"
+        },
+        "empty-metadata-128-measured.c": {
+          "bytes": 870194,
+          "sha256": "b5275af9db900bea1b9b1b928b2e9fcf6487a65944e1be4c5921d6aa08ae3cb4"
+        },
+        "filtered-metadata-128.fwp": {
+          "bytes": 231,
+          "sha256": "fbf743e5194f575269193bd0cbb9774085c833b38563f2adb771a68071110454"
+        },
+        "filtered-metadata-128.c": {
+          "bytes": 871047,
+          "sha256": "650d7a483c80b4c94274359ab2105478d71aa66c415de66d4a40dd762af09e3f"
+        },
+        "filtered-metadata-128-measured.c": {
+          "bytes": 871861,
+          "sha256": "5b9373037dcb26c54bd0ff2ae00cf28e4136a4ee4700d95576ef62afd8a6bbf7"
+        },
+        "capture-128.fwp": {
+          "bytes": 205,
+          "sha256": "cca089661b3f4e790142240651e856056693c4d707d7c250f69d79b0d759ab1e"
+        },
+        "capture-128.c": {
+          "bytes": 868094,
+          "sha256": "873accd483607a610b599376b0f649b499d898b5598d5d5537b8c218cdd14da9"
+        },
+        "capture-128-measured.c": {
+          "bytes": 868908,
+          "sha256": "eed565cac17ffbeda22e108b6be53847d2682f09f7af90950c70609b7ae5bb06"
+        },
+        "scope-arc.c": {
+          "bytes": 908436,
+          "sha256": "6e1e9cd0523521a0c6952df04b65a397841dd3e04362a94377170921bc2e8da9"
+        },
+        "scope-arc.exe": {
+          "bytes": 111224,
+          "sha256": "e51a5ec298f177096c66a8bcb7dbc13f661a0aea99bc57e11232fd8620695aaa"
+        },
+        "capture-arc.c": {
+          "bytes": 908742,
+          "sha256": "d5a179c0e507c8a4180c5d3591719829d808cbd6e0c5e0aefcfdf25d9ca36b6a"
+        },
+        "capture-arc.exe": {
+          "bytes": 87856,
+          "sha256": "8a0ff152acc299d735f31f2cf3e6fd2e13d219769ddb68a16b77b0db7ee00cb3"
+        },
+        "capture-arc.txt": {
+          "bytes": 162,
+          "sha256": "e9d6f5c97c5dfc1134a1710b06414a033041434719f3e56f400d81e6ecad7923"
+        },
+        "scope-tracing.c": {
+          "bytes": 908413,
+          "sha256": "734886b61fd0ae2afaa9b9d56dc0e7e8eb9766a8b807818adafaa75f5b91aecd"
+        },
+        "scope-tracing.exe": {
+          "bytes": 111504,
+          "sha256": "bf311e33deac4600926cced0b367d6cb34a2fd2c5acb640ca8e610ec8be22327"
+        },
+        "capture-tracing.c": {
+          "bytes": 908719,
+          "sha256": "a3992db40a9a7e9ace48b0864e914e585d2de65650524c695760c91c36471d0d"
+        },
+        "capture-tracing.exe": {
+          "bytes": 88184,
+          "sha256": "35f1a03314d6d036f2841136019fe9da96fb8bf464d6283b2820d65784b8032a"
+        },
+        "capture-tracing.txt": {
+          "bytes": 162,
+          "sha256": "e9d6f5c97c5dfc1134a1710b06414a033041434719f3e56f400d81e6ecad7923"
+        },
+        "each-storage.tsv": {
+          "bytes": 146,
+          "sha256": "31bb088455cbc79dbafcf8d60d0e6edb3415cc613e5165bf1734e6a29194ec43"
+        },
+        "each-trap-tracing-O1.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-tracing-O1.c": {
+          "bytes": 654142,
+          "sha256": "0e71f8710a4762f1ff77b681900c7ac1b51c153c57c4c92fcaf0f591b6772b7d"
+        },
+        "each-trap-tracing-O1.exe": {
+          "bytes": 37336,
+          "sha256": "9e1df998eb028e0b6b6d7a9d53fdbfccd7bf39d1000837900f9d697b4d8b9e47"
+        },
+        "each-trap-tracing-O1.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-trap-tracing-O2.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-tracing-O2.c": {
+          "bytes": 654142,
+          "sha256": "0e71f8710a4762f1ff77b681900c7ac1b51c153c57c4c92fcaf0f591b6772b7d"
+        },
+        "each-trap-tracing-O2.exe": {
+          "bytes": 41464,
+          "sha256": "6fd96db8e057039b87e0129be0757971b7bb753fa943178ebbc15a211502f107"
+        },
+        "each-trap-tracing-O2.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-trap-arc-O1.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-arc-O1.c": {
+          "bytes": 654165,
+          "sha256": "4a4dd05f6f457d412b48b7172212c19fb5abc56a85ac99dcd876baee3f42c44e"
+        },
+        "each-trap-arc-O1.exe": {
+          "bytes": 36968,
+          "sha256": "08b5f62f00ce11b65a713cd9f6d401b1f7e908331feaa87271c3ad0428576193"
+        },
+        "each-trap-arc-O1.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-trap-arc-O2.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-arc-O2.c": {
+          "bytes": 654165,
+          "sha256": "4a4dd05f6f457d412b48b7172212c19fb5abc56a85ac99dcd876baee3f42c44e"
+        },
+        "each-trap-arc-O2.exe": {
+          "bytes": 36976,
+          "sha256": "bfe86184fd5e5e9e3f9a1925aae3f2d5a7b57ea1732a7d6aa597ae04c7801d2e"
+        },
+        "each-trap-arc-O2.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-map-32.fwp": {
+          "bytes": 172,
+          "sha256": "ceb88b9badcbec5064c48caf03649abe68fd943ac08bee43576ca9c38692a234"
+        },
+        "each-map-32.c": {
+          "bytes": 658342,
+          "sha256": "9bcf83768c8c746f4528b186e8d8edf7ce2252859f2e73af25d6013c0a7d898f"
+        },
+        "each-map-32.exe": {
+          "bytes": 64040,
+          "sha256": "4e0581584989d03ad2e4d7394e3f3ae256a01155308355c14e0d8a12ac845b8b"
+        },
+        "each-map-128.fwp": {
+          "bytes": 173,
+          "sha256": "dd6226ecec9c1c266096f22bd3dc14ee2a888f1ad792a68a885eb1ee80ef2943"
+        },
+        "each-map-128.c": {
+          "bytes": 658343,
+          "sha256": "23025e7a6dc112d5dbdc04feb4a0fb332ec6055c95c7fb3d131df4f2cf0d141a"
+        },
+        "each-map-128.exe": {
+          "bytes": 64040,
+          "sha256": "ec2b462fbb93c5886c5116d4f8d3f2ac1d8b2905af79a3e4a2dfed6f536eeb8c"
+        },
+        "each-fold-32.fwp": {
+          "bytes": 165,
+          "sha256": "d7c49a3bbb6d1135e84b35df0f3bd6850019a927b48dd210bfed3170dfa1d791"
+        },
+        "each-fold-32.c": {
+          "bytes": 658205,
+          "sha256": "b14db810a062d3c239686f2abf12091c8d87b85a73d72f62306eea90d9b2786e"
+        },
+        "each-fold-32.exe": {
+          "bytes": 59784,
+          "sha256": "0805476105bbec4d758bb95fba467c5c1128d31149b7be34358bcee3b4cea66c"
+        },
+        "each-fold-128.fwp": {
+          "bytes": 166,
+          "sha256": "fe864bc66675e468f1476e8fe35a1cf68321d442e070a53a6ab54c9d9598dcc8"
+        },
+        "each-fold-128.c": {
+          "bytes": 658206,
+          "sha256": "29941992b46b6fd384a432475346b63004ba831b35642e06afb981b64b9a92a5"
+        },
+        "each-fold-128.exe": {
+          "bytes": 59784,
+          "sha256": "7211f7c9f5e7a86f404493530b462ecc037f23fa9d386a318b518d95b7b567c5"
+        }
+      },
+      "binaries": {
+        "plain-128.exe": {
+          "bytes": 59832,
+          "sha256": "1ad528003fe76f92675e904193ea78579a50fbcc011ebbd74fbe7cee1fd60538",
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "gzip-128.exe": {
+          "bytes": 64992,
+          "sha256": "4b02767957efe57b08a496338e4a01bbc5ad6abedc52b6a9b41921e0352f50bd",
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "deadline-128.exe": {
+          "bytes": 69288,
+          "sha256": "85b62548088f7a763c06e3643b279378a3f8ca0ac29536632062480050530bc5",
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "metadata-128.exe": {
+          "bytes": 69472,
+          "sha256": "abb5ca189ba8469a86eb57804efee1bf4b5f6d7fd33e8787fd2a23ac7d33b0b5",
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "empty-metadata-128.exe": {
+          "bytes": 69376,
+          "sha256": "d7e9485eab855c260c11d4ed55e77acbad93604515e1f40e62aac2bd49fadfee",
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "filtered-metadata-128.exe": {
+          "bytes": 69616,
+          "sha256": "56dc5068b1c9dae8f03b126a793bc8150efb66821847e907171d872ef656df84",
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "capture-128.exe": {
+          "bytes": 69648,
+          "sha256": "0af3c5a8dda8d50175f34fc179b9a3047a0fb51898d53e78b90e59a1b987a761",
+          "format": "Mach-O 64-bit executable x86_64"
+        }
+      }
+    },
+    {
+      "runner": "ubuntu-24.04-arm",
+      "iteration": {
+        "rows": [
+          {
+            "implementation": "fold",
+            "iterations": 32,
+            "managed_requests": 35,
+            "requested_bytes": 931,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "fold",
+            "iterations": 128,
+            "managed_requests": 131,
+            "requested_bytes": 3236,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "map",
+            "iterations": 32,
+            "managed_requests": 68,
+            "requested_bytes": 1963,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "map",
+            "iterations": 128,
+            "managed_requests": 260,
+            "requested_bytes": 7340,
+            "dynamic_calls": 2
+          }
+        ],
+        "saved_per_additional_element_between_32_and_128": {
+          "managed_requests": "1",
+          "requested_bytes": "32"
+        },
+        "comparison": "Old map-based each versus fold-based each, identical counting program and input list, O2 with collection disabled. Includes input construction, startup and printing; slope differences cancel fixed costs. Managed allocation requests and requested payload bytes only, not elapsed time or peak/process memory."
+      },
+      "iteration_timing": {
+        "source_revision": "20f0f5f091edf7c9b296dbf548309cf68a779e29",
+        "comparison": "Current fold-based list each versus its previous map-based definition, built by the same compiler with -O2. Both build the same integer list, update an integer state once per element and print its length. Tracing is disabled; ordinary counted freeing remains enabled.",
+        "timing_scope": "Whole process including input construction, state updates, output and teardown, plus the same GNU time launcher. One unrecorded warmup per binary; seven recorded samples, alternating implementation order. Compilation is timed separately, once per binary: fwp startup/C generation and C compilation are recorded separately with their exact commands.",
+        "limits": "Comparison between fwp implementations, not C/Rust parity. No timing assertion from these noisy samples. Peak RSS includes the whole native process; GNU time rounds CPU times. Allocation counts are measured separately by state_sequence_ownership at 32/128 elements; these uninstrumented binaries contain no allocation counters.",
+        "environment": {
+          "host": {
+            "system": "Linux",
+            "node": "runnervmidgih",
+            "release": "6.17.0-1022-azure",
+            "version": "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+            "machine": "aarch64",
+            "processor": "aarch64"
+          },
+          "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+          "c_compiler": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+          "rust_compiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+          "time": "time (GNU Time) UNKNOWN\nCopyright (C) 2018 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by David Keppel, David MacKenzie, and Assaf Gordon.\n"
+        },
+        "runtime_settings": {
+          "FWP_GC": "off",
+          "FWP_GC_STRESS": "0",
+          "FWP_GC_VERIFY": "0",
+          "FWP_GC_STATS": "0",
+          "FWP_REUSE_VERIFY": "0",
+          "FWP_REUSE": "1",
+          "FWP_FREE": "1"
+        },
+        "compiler_binary": {
+          "bytes": 76463936,
+          "sha256": "e001bae6d6a4694e00dd9c82d43f8e09d3444b703c42362e175fdb08c9520a96"
+        },
+        "programs": {
+          "map-10000": {
+            "source": {
+              "bytes": 175,
+              "sha256": "74cbb8a2b780b02c413250e57cc63b47b694c6f1805441dfb2526fbe33aeaf78"
+            },
+            "generated_c": {
+              "bytes": 658074,
+              "sha256": "1e99ba1cec82f5b89ee82ad7670e31ea3773527aa735deac1f5c6902118e0fdb"
+            },
+            "binary": {
+              "bytes": 84328,
+              "sha256": "dbdac5363b5c497a3576acfb6b49d00f7bf87b49a1039a04b8c49a3a22f68683"
+            },
+            "build_command": [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-10000.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-10000",
+              "-lm",
+              "-lpthread"
+            ],
+            "generate_command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+              "build",
+              "--gc",
+              "tracing",
+              "-O2",
+              "--emit-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-10000.fwp",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-10000.c"
+            ],
+            "generate_wall_ns": 1137908092,
+            "c_build_wall_ns": 758374251,
+            "expected_stdout": "10000\n"
+          },
+          "fold-10000": {
+            "source": {
+              "bytes": 168,
+              "sha256": "75a7f160a5e7055f6b597d8307e257316f8c077a36845f488ee45b31338c0429"
+            },
+            "generated_c": {
+              "bytes": 657937,
+              "sha256": "56bf8d15ad86c7ed5e2e526fe219213aae584206da76356da3a12664aa04599d"
+            },
+            "binary": {
+              "bytes": 84144,
+              "sha256": "0458ad7dfd89e268fec9007fbf089b14702f2ad044293169dc074c329b4767a3"
+            },
+            "build_command": [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-10000.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-10000",
+              "-lm",
+              "-lpthread"
+            ],
+            "generate_command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+              "build",
+              "--gc",
+              "tracing",
+              "-O2",
+              "--emit-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-10000.fwp",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-10000.c"
+            ],
+            "generate_wall_ns": 1132655009,
+            "c_build_wall_ns": 728299742,
+            "expected_stdout": "10000\n"
+          },
+          "map-100000": {
+            "source": {
+              "bytes": 176,
+              "sha256": "b54f08fe89e6e4b4277f4c2b6be15df6ea34064c533b0604275530811dfdfccc"
+            },
+            "generated_c": {
+              "bytes": 658075,
+              "sha256": "2321e1fc14d4017982981f6ccfa0f81b1592eb9f8e1081e4f64b5cdcbba9c576"
+            },
+            "binary": {
+              "bytes": 84328,
+              "sha256": "3de58d042a98e966b6e1597fa58aa6077f5b253cce74f662941330a65d1bb5df"
+            },
+            "build_command": [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-100000.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-100000",
+              "-lm",
+              "-lpthread"
+            ],
+            "generate_command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+              "build",
+              "--gc",
+              "tracing",
+              "-O2",
+              "--emit-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-100000.fwp",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-100000.c"
+            ],
+            "generate_wall_ns": 1132414617,
+            "c_build_wall_ns": 760061079,
+            "expected_stdout": "100000\n"
+          },
+          "fold-100000": {
+            "source": {
+              "bytes": 169,
+              "sha256": "a34c11b21c748004a19920be7283a8e9720e37b6444d4553838b36e045545a38"
+            },
+            "generated_c": {
+              "bytes": 657938,
+              "sha256": "f75469690b007e23552eed82247bf1b438884f918b704311e7a57eda37bc166a"
+            },
+            "binary": {
+              "bytes": 84144,
+              "sha256": "0f1e7d590f611076456da34b9b65630388e3c29f4240b850e35d3f204d104f26"
+            },
+            "build_command": [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-100000.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-100000",
+              "-lm",
+              "-lpthread"
+            ],
+            "generate_command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+              "build",
+              "--gc",
+              "tracing",
+              "-O2",
+              "--emit-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-100000.fwp",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-100000.c"
+            ],
+            "generate_wall_ns": 1135446534,
+            "c_build_wall_ns": 733189946,
+            "expected_stdout": "100000\n"
+          },
+          "map-1000000": {
+            "source": {
+              "bytes": 177,
+              "sha256": "a99803c6360f6057017fd45d49f9162732c352ec7f9e23e25e41c7a27e5de766"
+            },
+            "generated_c": {
+              "bytes": 658076,
+              "sha256": "c030554b1e29920275df8b14ed1d4d8b01aba913cfe980bd521a29e18792af1c"
+            },
+            "binary": {
+              "bytes": 84328,
+              "sha256": "ce7322763e911a38b3fd8d828d53eb3b8828660c16f23f80e8c8e7db9fc41334"
+            },
+            "build_command": [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-1000000.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-1000000",
+              "-lm",
+              "-lpthread"
+            ],
+            "generate_command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+              "build",
+              "--gc",
+              "tracing",
+              "-O2",
+              "--emit-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-1000000.fwp",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-1000000.c"
+            ],
+            "generate_wall_ns": 1136051902,
+            "c_build_wall_ns": 766557723,
+            "expected_stdout": "1000000\n"
+          },
+          "fold-1000000": {
+            "source": {
+              "bytes": 170,
+              "sha256": "b04a4e1ce3416c8a2f020f509f31f08cd1c813843a3625af33358b900fc69387"
+            },
+            "generated_c": {
+              "bytes": 657939,
+              "sha256": "38c5ea6ac09cb767207dee5e9bd7a788a08a0fe45462bced5673de154b65955c"
+            },
+            "binary": {
+              "bytes": 84144,
+              "sha256": "6eea38c8fbf4c10bd5af6dc5ed0eb8a9cba6ede0ad93e8b338a62e0e41d7dd3b"
+            },
+            "build_command": [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-1000000.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-1000000",
+              "-lm",
+              "-lpthread"
+            ],
+            "generate_command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+              "build",
+              "--gc",
+              "tracing",
+              "-O2",
+              "--emit-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-1000000.fwp",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-1000000.c"
+            ],
+            "generate_wall_ns": 1129899337,
+            "c_build_wall_ns": 752430281,
+            "expected_stdout": "1000000\n"
+          }
+        },
+        "rows": [
+          {
+            "elements": 10000,
+            "run_order": [
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold"
+            ],
+            "samples": {
+              "map": [
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 2320,
+                  "process_wall_ns": 20631678
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 2320,
+                  "process_wall_ns": 2229048
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 2188,
+                  "process_wall_ns": 2229568
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 2448,
+                  "process_wall_ns": 2142430
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 2320,
+                  "process_wall_ns": 2150365
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 2184,
+                  "process_wall_ns": 2185835
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 2304,
+                  "process_wall_ns": 2165652
+                }
+              ],
+              "fold": [
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 1804,
+                  "process_wall_ns": 1959017
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 1804,
+                  "process_wall_ns": 1815035
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 1800,
+                  "process_wall_ns": 1853280
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 1932,
+                  "process_wall_ns": 1754431
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 1676,
+                  "process_wall_ns": 1882199
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 1676,
+                  "process_wall_ns": 1793677
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 1788,
+                  "process_wall_ns": 1820627
+                }
+              ]
+            },
+            "median_wall_ns": {
+              "map": 2185835,
+              "fold": 1820627
+            },
+            "fold_over_map_ratio": 0.8329206001367898,
+            "fold_extra_time_percent": -16.70793998632102
+          },
+          {
+            "elements": 100000,
+            "run_order": [
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold"
+            ],
+            "samples": {
+              "map": [
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 9104,
+                  "process_wall_ns": 7775715
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 9040,
+                  "process_wall_ns": 7546721
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 8968,
+                  "process_wall_ns": 7990525
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 9040,
+                  "process_wall_ns": 8071024
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 9096,
+                  "process_wall_ns": 7773459
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 8976,
+                  "process_wall_ns": 7842103
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 9104,
+                  "process_wall_ns": 8197928
+                }
+              ],
+              "fold": [
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4872,
+                  "process_wall_ns": 4468880
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4748,
+                  "process_wall_ns": 4513381
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4876,
+                  "process_wall_ns": 4855376
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4748,
+                  "process_wall_ns": 4402868
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4748,
+                  "process_wall_ns": 4731607
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4876,
+                  "process_wall_ns": 4259486
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4748,
+                  "process_wall_ns": 4783436
+                }
+              ]
+            },
+            "median_wall_ns": {
+              "map": 7842103,
+              "fold": 4513381
+            },
+            "fold_over_map_ratio": 0.5755319714622468,
+            "fold_extra_time_percent": -42.446802853775324
+          },
+          {
+            "elements": 1000000,
+            "run_order": [
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold"
+            ],
+            "samples": {
+              "map": [
+                {
+                  "user_seconds": 0.03,
+                  "system_seconds": 0.02,
+                  "peak_rss_kib": 77624,
+                  "process_wall_ns": 66250597
+                },
+                {
+                  "user_seconds": 0.04,
+                  "system_seconds": 0.02,
+                  "peak_rss_kib": 77496,
+                  "process_wall_ns": 67553137
+                },
+                {
+                  "user_seconds": 0.04,
+                  "system_seconds": 0.02,
+                  "peak_rss_kib": 77496,
+                  "process_wall_ns": 68173713
+                },
+                {
+                  "user_seconds": 0.03,
+                  "system_seconds": 0.02,
+                  "peak_rss_kib": 77624,
+                  "process_wall_ns": 68316511
+                },
+                {
+                  "user_seconds": 0.04,
+                  "system_seconds": 0.02,
+                  "peak_rss_kib": 77496,
+                  "process_wall_ns": 66704215
+                },
+                {
+                  "user_seconds": 0.03,
+                  "system_seconds": 0.02,
+                  "peak_rss_kib": 77624,
+                  "process_wall_ns": 65476302
+                },
+                {
+                  "user_seconds": 0.04,
+                  "system_seconds": 0.02,
+                  "peak_rss_kib": 77496,
+                  "process_wall_ns": 63275213
+                }
+              ],
+              "fold": [
+                {
+                  "user_seconds": 0.02,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 35628,
+                  "process_wall_ns": 31910049
+                },
+                {
+                  "user_seconds": 0.02,
+                  "system_seconds": 0.01,
+                  "peak_rss_kib": 35636,
+                  "process_wall_ns": 32842164
+                },
+                {
+                  "user_seconds": 0.02,
+                  "system_seconds": 0.01,
+                  "peak_rss_kib": 35620,
+                  "process_wall_ns": 32798415
+                },
+                {
+                  "user_seconds": 0.02,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 35636,
+                  "process_wall_ns": 32115099
+                },
+                {
+                  "user_seconds": 0.02,
+                  "system_seconds": 0.01,
+                  "peak_rss_kib": 35620,
+                  "process_wall_ns": 33442974
+                },
+                {
+                  "user_seconds": 0.02,
+                  "system_seconds": 0.01,
+                  "peak_rss_kib": 35636,
+                  "process_wall_ns": 33427670
+                },
+                {
+                  "user_seconds": 0.01,
+                  "system_seconds": 0.01,
+                  "peak_rss_kib": 35632,
+                  "process_wall_ns": 30183888
+                }
+              ]
+            },
+            "median_wall_ns": {
+              "map": 66704215,
+              "fold": 32798415
+            },
+            "fold_over_map_ratio": 0.4916992876687028,
+            "fold_extra_time_percent": -50.83007123312973
+          }
+        ]
+      },
+      "binary_observations": {
+        "source_revision": "20f0f5f091edf7c9b296dbf548309cf68a779e29",
+        "binary": "each-fold-128.exe",
+        "binary_sha256": "00cbed112055de1e8e4d455b3090dd823c9999b89611212cfb6d4cecdf2f6ed4",
+        "assembly": "each-fold-128.asm",
+        "assembly_sha256": "398e79d76242ea738eb8d617d7350d51ea0e809ef97275252b84db29238c9d29",
+        "observations": [
+          "The f18 list loop contains the integer state update directly; no fwp_apply call occurs in it.",
+          "The loop retains checked-overflow branches, state-owner lookup and a conditional state cleanup call; this is not a claim that all state handling is zero-cost.",
+          "Instrumented execution records two runtime dispatch entries for both 32 and 128 elements; dispatch does not grow with input."
+        ]
+      },
+      "job": {
+        "name": "paths (ubuntu-24.04-arm)",
+        "databaseId": 117225363508,
+        "conclusion": "success"
+      },
+      "environment": "Source: 20f0f5f091edf7c9b296dbf548309cf68a779e29\nOS: linux\nArchitecture: aarch64\nC compiler:\nUbuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\nRust compiler:\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\nCPU:\nArchitecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\nNative optimization: -O2 measurements; -O1/-O2 lifetime controls\nCompilation flags: fwp::cgen::compile_c at the recorded source revision\n",
+      "primitive_counts": {
+        "contract": 347,
+        "runtime_or_specialization_review": 7,
+        "flat_scalar_signature": 5,
+        "ir_template": 19
+      },
+      "extra_per_call_versus_plain_between_32_and_128": {
+        "gzip": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "deadline": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "metadata": {
+          "managed_requests": "1",
+          "requested_bytes": "40",
+          "final_charged_bytes": "0"
+        },
+        "empty-metadata": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "filtered-metadata": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "capture": {
+          "managed_requests": "1",
+          "requested_bytes": "24",
+          "final_charged_bytes": "0"
+        }
+      },
+      "layouts": {
+        "plain": {
+          "context_bytes": 0,
+          "context_alignment": 0,
+          "task_bytes": 5216,
+          "task_alignment": 16
+        },
+        "gzip": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 5296,
+          "task_alignment": 16
+        },
+        "deadline": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 5296,
+          "task_alignment": 16
+        },
+        "metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 5296,
+          "task_alignment": 16
+        },
+        "empty-metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 5296,
+          "task_alignment": 16
+        },
+        "filtered-metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 5296,
+          "task_alignment": 16
+        },
+        "capture": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 5296,
+          "task_alignment": 16
+        }
+      },
+      "rows": [
+        {
+          "case": "plain",
+          "iterations": 1,
+          "managed_requests": 4,
+          "requested_bytes": 186,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 32,
+          "managed_requests": 35,
+          "requested_bytes": 931,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 128,
+          "managed_requests": 131,
+          "requested_bytes": 3236,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 5482,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 6227,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 8532,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 5482,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 6227,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 8532,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 1,
+          "managed_requests": 8,
+          "requested_bytes": 5570,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 32,
+          "managed_requests": 70,
+          "requested_bytes": 7555,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 128,
+          "managed_requests": 262,
+          "requested_bytes": 13700,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 5482,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 6227,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 8532,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 1,
+          "managed_requests": 9,
+          "requested_bytes": 5578,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 32,
+          "managed_requests": 40,
+          "requested_bytes": 6323,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 128,
+          "managed_requests": 136,
+          "requested_bytes": 8628,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 1,
+          "managed_requests": 6,
+          "requested_bytes": 5506,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 32,
+          "managed_requests": 68,
+          "requested_bytes": 6995,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 128,
+          "managed_requests": 260,
+          "requested_bytes": 11604,
+          "final_charged_bytes": 6144,
+          "collections": 0
+        }
+      ],
+      "files": {
+        "environment.txt": {
+          "bytes": 2918,
+          "sha256": "67b2f7ecf04fc06c83713c49e309f56e168dc53fbac4fec4bdf4882169ffc62f"
+        },
+        "storage.tsv": {
+          "bytes": 660,
+          "sha256": "f59dd458c1b12cdb2dc5a7d92c013db4f973f1a76c56b99d9c8bd9edcfd4a29c"
+        },
+        "layout.tsv": {
+          "bytes": 606,
+          "sha256": "2564b363c9ba78463789fbf5f7be066395db616728467c0ba4862049cee848ec"
+        },
+        "job.log": {
+          "bytes": 56448,
+          "sha256": "da93e0fca20d7af5aaa6770a56d9f8979131663a9c0a91b68de7499e70a4ab5f"
+        },
+        "contracts.json": {
+          "bytes": 139620,
+          "sha256": "398aec577f0878a67df12ed5c85767b3e5f76d843aa207218f007dea0e64ebcd"
+        },
+        "plain-128.fwp": {
+          "bytes": 162,
+          "sha256": "f80801a45905bb5e0eb3edab542ff95b4ea5653f3a5a3bf18d2efb9da573c627"
+        },
+        "plain-128.c": {
+          "bytes": 657935,
+          "sha256": "e213fe5b2c05f6bc25e6197fb792b56e786968e24beeb7e55b0c884789cba221"
+        },
+        "plain-128-measured.c": {
+          "bytes": 658749,
+          "sha256": "b25a032f913acbca42e837a8e86cd81686f9787ecc4980ff92ecec0c63e83608"
+        },
+        "gzip-128.fwp": {
+          "bytes": 187,
+          "sha256": "eb998177a93433c8e3a8c967b3bbe560cb31519b9715080df6c1019288245563"
+        },
+        "gzip-128.c": {
+          "bytes": 866196,
+          "sha256": "b7ee5582947982a6eb24bfa59d6e30ac75cccd49c3791b44d8468f4173391877"
+        },
+        "gzip-128-measured.c": {
+          "bytes": 867010,
+          "sha256": "b7132bc6ad44f6e9861ea71ae9325990555a140a77cfce18cf8e1a896425e58e"
+        },
+        "deadline-128.fwp": {
+          "bytes": 194,
+          "sha256": "f04e5f9984616093035e1de55e649529372201ded49b4b865177f3a621008c8f"
+        },
+        "deadline-128.c": {
+          "bytes": 868993,
+          "sha256": "d8d7d42cedc558ca2e794a4565fd09b0e5541dde4eae252c3bd479b048a7d719"
+        },
+        "deadline-128-measured.c": {
+          "bytes": 869807,
+          "sha256": "9200be4eb9b44e1b8021b9aa630c2e38091f9c2b715c03c6105e0d38f840313d"
+        },
+        "metadata-128.fwp": {
+          "bytes": 218,
+          "sha256": "61fffbb3dda8ac2d3059676adb9a3b506df91b91993f08e3637a110560d01a85"
+        },
+        "metadata-128.c": {
+          "bytes": 869985,
+          "sha256": "9ade164866ca27a013cb6a220676ad80277e4a749a78b08b56a3ccb3c4c1ca0b"
+        },
+        "metadata-128-measured.c": {
+          "bytes": 870799,
+          "sha256": "c1608d1aea783eb5a1669b6d57057f59c77a87481057f55dd1eb10d5a298ad46"
+        },
+        "empty-metadata-128.fwp": {
+          "bytes": 194,
+          "sha256": "dd1e2c73b0bf7f75cc4cabc02db725e5bb33e850e415333f2dc3fa6aca35faf4"
+        },
+        "empty-metadata-128.c": {
+          "bytes": 869380,
+          "sha256": "791d822d364966b77ca6807a4d42370779675ad2ebbca5647a4203896d436d19"
+        },
+        "empty-metadata-128-measured.c": {
+          "bytes": 870194,
+          "sha256": "b5275af9db900bea1b9b1b928b2e9fcf6487a65944e1be4c5921d6aa08ae3cb4"
+        },
+        "filtered-metadata-128.fwp": {
+          "bytes": 231,
+          "sha256": "fbf743e5194f575269193bd0cbb9774085c833b38563f2adb771a68071110454"
+        },
+        "filtered-metadata-128.c": {
+          "bytes": 871047,
+          "sha256": "650d7a483c80b4c94274359ab2105478d71aa66c415de66d4a40dd762af09e3f"
+        },
+        "filtered-metadata-128-measured.c": {
+          "bytes": 871861,
+          "sha256": "5b9373037dcb26c54bd0ff2ae00cf28e4136a4ee4700d95576ef62afd8a6bbf7"
+        },
+        "capture-128.fwp": {
+          "bytes": 205,
+          "sha256": "cca089661b3f4e790142240651e856056693c4d707d7c250f69d79b0d759ab1e"
+        },
+        "capture-128.c": {
+          "bytes": 868094,
+          "sha256": "873accd483607a610b599376b0f649b499d898b5598d5d5537b8c218cdd14da9"
+        },
+        "capture-128-measured.c": {
+          "bytes": 868908,
+          "sha256": "eed565cac17ffbeda22e108b6be53847d2682f09f7af90950c70609b7ae5bb06"
+        },
+        "scope-arc.c": {
+          "bytes": 908436,
+          "sha256": "6e1e9cd0523521a0c6952df04b65a397841dd3e04362a94377170921bc2e8da9"
+        },
+        "scope-arc.exe": {
+          "bytes": 157448,
+          "sha256": "17c4f3a0a902e41f51843523ed61de6ce50d17395bd38b7464e962255228831b"
+        },
+        "capture-arc.c": {
+          "bytes": 908742,
+          "sha256": "d5a179c0e507c8a4180c5d3591719829d808cbd6e0c5e0aefcfdf25d9ca36b6a"
+        },
+        "capture-arc.exe": {
+          "bytes": 154120,
+          "sha256": "4d05295492283d842b3394a9a68ea879c81f21eed6cc33ffad3839c8c31ac5b1"
+        },
+        "capture-arc.txt": {
+          "bytes": 162,
+          "sha256": "e9d6f5c97c5dfc1134a1710b06414a033041434719f3e56f400d81e6ecad7923"
+        },
+        "scope-tracing.c": {
+          "bytes": 908413,
+          "sha256": "734886b61fd0ae2afaa9b9d56dc0e7e8eb9766a8b807818adafaa75f5b91aecd"
+        },
+        "scope-tracing.exe": {
+          "bytes": 157800,
+          "sha256": "5e14f6360a22686fe75b11add363968e4e7fc3e02ea22890b5a5b65e17701eae"
+        },
+        "capture-tracing.c": {
+          "bytes": 908719,
+          "sha256": "a3992db40a9a7e9ace48b0864e914e585d2de65650524c695760c91c36471d0d"
+        },
+        "capture-tracing.exe": {
+          "bytes": 154440,
+          "sha256": "41944a6b013868535f98eb50e3d65f79485dc08d3bb9422c98dfb8f01ee9970c"
+        },
+        "capture-tracing.txt": {
+          "bytes": 162,
+          "sha256": "e9d6f5c97c5dfc1134a1710b06414a033041434719f3e56f400d81e6ecad7923"
+        },
+        "each-storage.tsv": {
+          "bytes": 146,
+          "sha256": "31bb088455cbc79dbafcf8d60d0e6edb3415cc613e5165bf1734e6a29194ec43"
+        },
+        "each-trap-tracing-O1.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-tracing-O1.c": {
+          "bytes": 654142,
+          "sha256": "0e71f8710a4762f1ff77b681900c7ac1b51c153c57c4c92fcaf0f591b6772b7d"
+        },
+        "each-trap-tracing-O1.exe": {
+          "bytes": 82040,
+          "sha256": "eb1150e002cdd5041fa6492fa40b06bcf7aa065828fe85b889326389b27a5880"
+        },
+        "each-trap-tracing-O1.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-trap-tracing-O2.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-tracing-O2.c": {
+          "bytes": 654142,
+          "sha256": "0e71f8710a4762f1ff77b681900c7ac1b51c153c57c4c92fcaf0f591b6772b7d"
+        },
+        "each-trap-tracing-O2.exe": {
+          "bytes": 82184,
+          "sha256": "b6bf3c7fbcb5e49f6cd809dbf124b121e460f9074b9f75bf8921bce9580baebd"
+        },
+        "each-trap-tracing-O2.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-trap-arc-O1.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-arc-O1.c": {
+          "bytes": 654165,
+          "sha256": "4a4dd05f6f457d412b48b7172212c19fb5abc56a85ac99dcd876baee3f42c44e"
+        },
+        "each-trap-arc-O1.exe": {
+          "bytes": 81624,
+          "sha256": "45a5d483ab8c894219177928353627a6522387c0d7e13e5e6289b320ef46adf0"
+        },
+        "each-trap-arc-O1.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-trap-arc-O2.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-arc-O2.c": {
+          "bytes": 654165,
+          "sha256": "4a4dd05f6f457d412b48b7172212c19fb5abc56a85ac99dcd876baee3f42c44e"
+        },
+        "each-trap-arc-O2.exe": {
+          "bytes": 81696,
+          "sha256": "274949c02a8966cafa3c009eda0d59706639b72e070868190554c259f0314e89"
+        },
+        "each-trap-arc-O2.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-map-32.fwp": {
+          "bytes": 172,
+          "sha256": "ceb88b9badcbec5064c48caf03649abe68fd943ac08bee43576ca9c38692a234"
+        },
+        "each-map-32.c": {
+          "bytes": 658342,
+          "sha256": "9bcf83768c8c746f4528b186e8d8edf7ce2252859f2e73af25d6013c0a7d898f"
+        },
+        "each-map-32.exe": {
+          "bytes": 84432,
+          "sha256": "18fa37e74858d54e91c15b5e09c0e33412f31bdef4714ca4568fee8037350e8a"
+        },
+        "each-map-128.fwp": {
+          "bytes": 173,
+          "sha256": "dd6226ecec9c1c266096f22bd3dc14ee2a888f1ad792a68a885eb1ee80ef2943"
+        },
+        "each-map-128.c": {
+          "bytes": 658343,
+          "sha256": "23025e7a6dc112d5dbdc04feb4a0fb332ec6055c95c7fb3d131df4f2cf0d141a"
+        },
+        "each-map-128.exe": {
+          "bytes": 84440,
+          "sha256": "b9d05efc7c87cc5c0e526c548236312e76064dd72a42c1a0af1353ccb9abcd75"
+        },
+        "each-fold-32.fwp": {
+          "bytes": 165,
+          "sha256": "d7c49a3bbb6d1135e84b35df0f3bd6850019a927b48dd210bfed3170dfa1d791"
+        },
+        "each-fold-32.c": {
+          "bytes": 658205,
+          "sha256": "b14db810a062d3c239686f2abf12091c8d87b85a73d72f62306eea90d9b2786e"
+        },
+        "each-fold-32.exe": {
+          "bytes": 84248,
+          "sha256": "77958727ff021150263010a91e2f3d2aeb8b5f006d1d0969c3642ab86da2bce1"
+        },
+        "each-fold-128.fwp": {
+          "bytes": 166,
+          "sha256": "fe864bc66675e468f1476e8fe35a1cf68321d442e070a53a6ab54c9d9598dcc8"
+        },
+        "each-fold-128.c": {
+          "bytes": 658206,
+          "sha256": "29941992b46b6fd384a432475346b63004ba831b35642e06afb981b64b9a92a5"
+        },
+        "each-fold-128.exe": {
+          "bytes": 84248,
+          "sha256": "00cbed112055de1e8e4d455b3090dd823c9999b89611212cfb6d4cecdf2f6ed4"
+        },
+        "iteration-timing/map-10000.fwp": {
+          "bytes": 175,
+          "sha256": "74cbb8a2b780b02c413250e57cc63b47b694c6f1805441dfb2526fbe33aeaf78"
+        },
+        "iteration-timing/map-10000.c": {
+          "bytes": 658074,
+          "sha256": "1e99ba1cec82f5b89ee82ad7670e31ea3773527aa735deac1f5c6902118e0fdb"
+        },
+        "iteration-timing/map-10000": {
+          "bytes": 84328,
+          "sha256": "dbdac5363b5c497a3576acfb6b49d00f7bf87b49a1039a04b8c49a3a22f68683"
+        },
+        "iteration-timing/fold-10000.fwp": {
+          "bytes": 168,
+          "sha256": "75a7f160a5e7055f6b597d8307e257316f8c077a36845f488ee45b31338c0429"
+        },
+        "iteration-timing/fold-10000.c": {
+          "bytes": 657937,
+          "sha256": "56bf8d15ad86c7ed5e2e526fe219213aae584206da76356da3a12664aa04599d"
+        },
+        "iteration-timing/fold-10000": {
+          "bytes": 84144,
+          "sha256": "0458ad7dfd89e268fec9007fbf089b14702f2ad044293169dc074c329b4767a3"
+        },
+        "iteration-timing/map-100000.fwp": {
+          "bytes": 176,
+          "sha256": "b54f08fe89e6e4b4277f4c2b6be15df6ea34064c533b0604275530811dfdfccc"
+        },
+        "iteration-timing/map-100000.c": {
+          "bytes": 658075,
+          "sha256": "2321e1fc14d4017982981f6ccfa0f81b1592eb9f8e1081e4f64b5cdcbba9c576"
+        },
+        "iteration-timing/map-100000": {
+          "bytes": 84328,
+          "sha256": "3de58d042a98e966b6e1597fa58aa6077f5b253cce74f662941330a65d1bb5df"
+        },
+        "iteration-timing/fold-100000.fwp": {
+          "bytes": 169,
+          "sha256": "a34c11b21c748004a19920be7283a8e9720e37b6444d4553838b36e045545a38"
+        },
+        "iteration-timing/fold-100000.c": {
+          "bytes": 657938,
+          "sha256": "f75469690b007e23552eed82247bf1b438884f918b704311e7a57eda37bc166a"
+        },
+        "iteration-timing/fold-100000": {
+          "bytes": 84144,
+          "sha256": "0f1e7d590f611076456da34b9b65630388e3c29f4240b850e35d3f204d104f26"
+        },
+        "iteration-timing/map-1000000.fwp": {
+          "bytes": 177,
+          "sha256": "a99803c6360f6057017fd45d49f9162732c352ec7f9e23e25e41c7a27e5de766"
+        },
+        "iteration-timing/map-1000000.c": {
+          "bytes": 658076,
+          "sha256": "c030554b1e29920275df8b14ed1d4d8b01aba913cfe980bd521a29e18792af1c"
+        },
+        "iteration-timing/map-1000000": {
+          "bytes": 84328,
+          "sha256": "ce7322763e911a38b3fd8d828d53eb3b8828660c16f23f80e8c8e7db9fc41334"
+        },
+        "iteration-timing/fold-1000000.fwp": {
+          "bytes": 170,
+          "sha256": "b04a4e1ce3416c8a2f020f509f31f08cd1c813843a3625af33358b900fc69387"
+        },
+        "iteration-timing/fold-1000000.c": {
+          "bytes": 657939,
+          "sha256": "38c5ea6ac09cb767207dee5e9bd7a788a08a0fe45462bced5673de154b65955c"
+        },
+        "iteration-timing/fold-1000000": {
+          "bytes": 84144,
+          "sha256": "6eea38c8fbf4c10bd5af6dc5ed0eb8a9cba6ede0ad93e8b338a62e0e41d7dd3b"
+        },
+        "iteration-timing/timings.json": {
+          "bytes": 21726,
+          "sha256": "07280c3e030adff3a71d6cb8e34aa2315b9b3e2d6aefd779c3c784e74b461e15"
+        },
+        "binary-observations.json": {
+          "bytes": 735,
+          "sha256": "edcb6ab969e1ad38640e8b63d22e16c071d0291fd7f9d4c59939cbdb09b8a8e4"
+        },
+        "each-fold-128.asm": {
+          "bytes": 3133,
+          "sha256": "398e79d76242ea738eb8d617d7350d51ea0e809ef97275252b84db29238c9d29"
+        }
+      },
+      "binaries": {
+        "plain-128.exe": {
+          "bytes": 84304,
+          "sha256": "7fb656f4e23db9270626503364143232be3ea9efa947e8292270f1481f78d318",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=864b3f7d01b7254b10dbdfc3fb323343e3212cdd, for GNU/Linux 3.7.0, not stripped"
+        },
+        "gzip-128.exe": {
+          "bytes": 85640,
+          "sha256": "c08f641909177044f02a34d65d4b97f5482efce450313bf15e341086be1da174",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=b80fbcc95bd8d0a754daa989b101b70699294725, for GNU/Linux 3.7.0, not stripped"
+        },
+        "deadline-128.exe": {
+          "bytes": 85912,
+          "sha256": "424c745bdadfe24ef1538b6a0b511f1ef4485b18ac5b04ef4cca7c79ac236099",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=dba3a67f5c118a840fb465b9b197ae48b9193e8a, for GNU/Linux 3.7.0, not stripped"
+        },
+        "metadata-128.exe": {
+          "bytes": 86184,
+          "sha256": "950f772b2674aa3288c9adb7aa1da8e2e853723f944cf880c7aa383d2d216441",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=02072395c3d29722bdcb2e2ecabb8265047f933c, for GNU/Linux 3.7.0, not stripped"
+        },
+        "empty-metadata-128.exe": {
+          "bytes": 86024,
+          "sha256": "b6cad41fe35cff404c77010e161c66533de42e16e524a706480c76ec2bf586ef",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=a80d05754f0c700b33693587510c1536e5058671, for GNU/Linux 3.7.0, not stripped"
+        },
+        "filtered-metadata-128.exe": {
+          "bytes": 86336,
+          "sha256": "ff4118d793a44a1a4d1a33ec6d1be30a8fc5124e1f090c0b206989177908409d",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=4e1f974ca7a6ee109e84d1bd11053ea6980f7989, for GNU/Linux 3.7.0, not stripped"
+        },
+        "capture-128.exe": {
+          "bytes": 86400,
+          "sha256": "3c31bb0ad9d74eda367341cf17cb5ce49c659d225c33e885441c7e5473c01ee5",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=5aae54c8fa1aa407cb12cea466a0667494ecfb6f, for GNU/Linux 3.7.0, not stripped"
+        }
+      }
+    },
+    {
+      "runner": "ubuntu-latest",
+      "iteration": {
+        "rows": [
+          {
+            "implementation": "fold",
+            "iterations": 32,
+            "managed_requests": 35,
+            "requested_bytes": 931,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "fold",
+            "iterations": 128,
+            "managed_requests": 131,
+            "requested_bytes": 3236,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "map",
+            "iterations": 32,
+            "managed_requests": 68,
+            "requested_bytes": 1963,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "map",
+            "iterations": 128,
+            "managed_requests": 260,
+            "requested_bytes": 7340,
+            "dynamic_calls": 2
+          }
+        ],
+        "saved_per_additional_element_between_32_and_128": {
+          "managed_requests": "1",
+          "requested_bytes": "32"
+        },
+        "comparison": "Old map-based each versus fold-based each, identical counting program and input list, O2 with collection disabled. Includes input construction, startup and printing; slope differences cancel fixed costs. Managed allocation requests and requested payload bytes only, not elapsed time or peak/process memory."
+      },
+      "iteration_timing": {
+        "source_revision": "20f0f5f091edf7c9b296dbf548309cf68a779e29",
+        "comparison": "Current fold-based list each versus its previous map-based definition, built by the same compiler with -O2. Both build the same integer list, update an integer state once per element and print its length. Tracing is disabled; ordinary counted freeing remains enabled.",
+        "timing_scope": "Whole process including input construction, state updates, output and teardown, plus the same GNU time launcher. One unrecorded warmup per binary; seven recorded samples, alternating implementation order. Compilation is timed separately, once per binary: fwp startup/C generation and C compilation are recorded separately with their exact commands.",
+        "limits": "Comparison between fwp implementations, not C/Rust parity. No timing assertion from these noisy samples. Peak RSS includes the whole native process; GNU time rounds CPU times. Allocation counts are measured separately by state_sequence_ownership at 32/128 elements; these uninstrumented binaries contain no allocation counters.",
+        "environment": {
+          "host": {
+            "system": "Linux",
+            "node": "runnervm8k3b6",
+            "release": "6.17.0-1022-azure",
+            "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+            "machine": "x86_64",
+            "processor": "x86_64"
+          },
+          "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) 6973P-C\nCPU family:                              6\nModel:                                   173\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nCPU(s) scaling MHz:                      136%\nCPU max MHz:                             2600.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                5199.99\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 vnmi avx512vbmi umip waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid cldemote movdiri movdir64b fsrm serialize tsxldtrk ibt amx_bf16 avx512_fp16 amx_tile amx_int8 arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               128 KiB (2 instances)\nL2 cache:                                4 MiB (2 instances)\nL3 cache:                                480 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Vulnerable\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+          "c_compiler": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+          "rust_compiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+          "time": "time (GNU Time) UNKNOWN\nCopyright (C) 2018 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by David Keppel, David MacKenzie, and Assaf Gordon.\n"
+        },
+        "runtime_settings": {
+          "FWP_GC": "off",
+          "FWP_GC_STRESS": "0",
+          "FWP_GC_VERIFY": "0",
+          "FWP_GC_STATS": "0",
+          "FWP_REUSE_VERIFY": "0",
+          "FWP_REUSE": "1",
+          "FWP_FREE": "1"
+        },
+        "compiler_binary": {
+          "bytes": 78840464,
+          "sha256": "65659d588ce5af46b5f5453de37470e97f96eb39ec70ec13815adc31fb9aafd7"
+        },
+        "programs": {
+          "map-10000": {
+            "source": {
+              "bytes": 175,
+              "sha256": "74cbb8a2b780b02c413250e57cc63b47b694c6f1805441dfb2526fbe33aeaf78"
+            },
+            "generated_c": {
+              "bytes": 658074,
+              "sha256": "1e99ba1cec82f5b89ee82ad7670e31ea3773527aa735deac1f5c6902118e0fdb"
+            },
+            "binary": {
+              "bytes": 70392,
+              "sha256": "a7be1e06081b015bc26e1b9ea14d17b3caa5e17aeaa3c492b1fb1d9a66b4e051"
+            },
+            "build_command": [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-10000.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-10000",
+              "-lm",
+              "-lpthread"
+            ],
+            "generate_command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+              "build",
+              "--gc",
+              "tracing",
+              "-O2",
+              "--emit-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-10000.fwp",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-10000.c"
+            ],
+            "generate_wall_ns": 675723502,
+            "c_build_wall_ns": 581985387,
+            "expected_stdout": "10000\n"
+          },
+          "fold-10000": {
+            "source": {
+              "bytes": 168,
+              "sha256": "75a7f160a5e7055f6b597d8307e257316f8c077a36845f488ee45b31338c0429"
+            },
+            "generated_c": {
+              "bytes": 657937,
+              "sha256": "56bf8d15ad86c7ed5e2e526fe219213aae584206da76356da3a12664aa04599d"
+            },
+            "binary": {
+              "bytes": 70208,
+              "sha256": "67206f12501d8f4a236cf07f6e8b3c540da6c81f5d3c6d94f0eec1bdb3c87472"
+            },
+            "build_command": [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-10000.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-10000",
+              "-lm",
+              "-lpthread"
+            ],
+            "generate_command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+              "build",
+              "--gc",
+              "tracing",
+              "-O2",
+              "--emit-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-10000.fwp",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-10000.c"
+            ],
+            "generate_wall_ns": 671836026,
+            "c_build_wall_ns": 564149772,
+            "expected_stdout": "10000\n"
+          },
+          "map-100000": {
+            "source": {
+              "bytes": 176,
+              "sha256": "b54f08fe89e6e4b4277f4c2b6be15df6ea34064c533b0604275530811dfdfccc"
+            },
+            "generated_c": {
+              "bytes": 658075,
+              "sha256": "2321e1fc14d4017982981f6ccfa0f81b1592eb9f8e1081e4f64b5cdcbba9c576"
+            },
+            "binary": {
+              "bytes": 70392,
+              "sha256": "f08ba22881dcd34ff2d3132a27a0e5b08334e98a8548e4d6d8c56af0e28a64d3"
+            },
+            "build_command": [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-100000.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-100000",
+              "-lm",
+              "-lpthread"
+            ],
+            "generate_command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+              "build",
+              "--gc",
+              "tracing",
+              "-O2",
+              "--emit-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-100000.fwp",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-100000.c"
+            ],
+            "generate_wall_ns": 662866108,
+            "c_build_wall_ns": 582101310,
+            "expected_stdout": "100000\n"
+          },
+          "fold-100000": {
+            "source": {
+              "bytes": 169,
+              "sha256": "a34c11b21c748004a19920be7283a8e9720e37b6444d4553838b36e045545a38"
+            },
+            "generated_c": {
+              "bytes": 657938,
+              "sha256": "f75469690b007e23552eed82247bf1b438884f918b704311e7a57eda37bc166a"
+            },
+            "binary": {
+              "bytes": 70208,
+              "sha256": "7e46ec45a6fa2384e0ca21dffb368f20979b3e49dc9c7c8a0c53028e203d3f33"
+            },
+            "build_command": [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-100000.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-100000",
+              "-lm",
+              "-lpthread"
+            ],
+            "generate_command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+              "build",
+              "--gc",
+              "tracing",
+              "-O2",
+              "--emit-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-100000.fwp",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-100000.c"
+            ],
+            "generate_wall_ns": 670642079,
+            "c_build_wall_ns": 563040280,
+            "expected_stdout": "100000\n"
+          },
+          "map-1000000": {
+            "source": {
+              "bytes": 177,
+              "sha256": "a99803c6360f6057017fd45d49f9162732c352ec7f9e23e25e41c7a27e5de766"
+            },
+            "generated_c": {
+              "bytes": 658076,
+              "sha256": "c030554b1e29920275df8b14ed1d4d8b01aba913cfe980bd521a29e18792af1c"
+            },
+            "binary": {
+              "bytes": 70392,
+              "sha256": "054115fae139669fab08bf86f5e21fe9864de420fc5c0f30cf4873da1a34f615"
+            },
+            "build_command": [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-1000000.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-1000000",
+              "-lm",
+              "-lpthread"
+            ],
+            "generate_command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+              "build",
+              "--gc",
+              "tracing",
+              "-O2",
+              "--emit-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-1000000.fwp",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/map-1000000.c"
+            ],
+            "generate_wall_ns": 666758221,
+            "c_build_wall_ns": 583284392,
+            "expected_stdout": "1000000\n"
+          },
+          "fold-1000000": {
+            "source": {
+              "bytes": 170,
+              "sha256": "b04a4e1ce3416c8a2f020f509f31f08cd1c813843a3625af33358b900fc69387"
+            },
+            "generated_c": {
+              "bytes": 657939,
+              "sha256": "38c5ea6ac09cb767207dee5e9bd7a788a08a0fe45462bced5673de154b65955c"
+            },
+            "binary": {
+              "bytes": 70208,
+              "sha256": "3485355f6f353c5468c7d0b993dbc98ab3d6c0fe2e5c7ee94c696077d3edfd0e"
+            },
+            "build_command": [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-1000000.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-1000000",
+              "-lm",
+              "-lpthread"
+            ],
+            "generate_command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+              "build",
+              "--gc",
+              "tracing",
+              "-O2",
+              "--emit-c",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-1000000.fwp",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/context-evidence/iteration-timing/fold-1000000.c"
+            ],
+            "generate_wall_ns": 752511992,
+            "c_build_wall_ns": 633725797,
+            "expected_stdout": "1000000\n"
+          }
+        },
+        "rows": [
+          {
+            "elements": 10000,
+            "run_order": [
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold"
+            ],
+            "samples": {
+              "map": [
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4516,
+                  "process_wall_ns": 37578089
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4380,
+                  "process_wall_ns": 2435758
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4324,
+                  "process_wall_ns": 2477885
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4372,
+                  "process_wall_ns": 2805793
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4324,
+                  "process_wall_ns": 1995065
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4368,
+                  "process_wall_ns": 2409952
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4452,
+                  "process_wall_ns": 2113279
+                }
+              ],
+              "fold": [
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4288,
+                  "process_wall_ns": 1941251
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4368,
+                  "process_wall_ns": 2199862
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4296,
+                  "process_wall_ns": 1825206
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4244,
+                  "process_wall_ns": 1960024
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4196,
+                  "process_wall_ns": 2048801
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4324,
+                  "process_wall_ns": 1620792
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 4252,
+                  "process_wall_ns": 2021094
+                }
+              ]
+            },
+            "median_wall_ns": {
+              "map": 2435758,
+              "fold": 1960024
+            },
+            "fold_over_map_ratio": 0.8046874935851591,
+            "fold_extra_time_percent": -19.53125064148409
+          },
+          {
+            "elements": 100000,
+            "run_order": [
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold"
+            ],
+            "samples": {
+              "map": [
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 10944,
+                  "process_wall_ns": 6480703
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 10944,
+                  "process_wall_ns": 6462744
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 10900,
+                  "process_wall_ns": 6043286
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 10900,
+                  "process_wall_ns": 5757885
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 11092,
+                  "process_wall_ns": 5104226
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 11028,
+                  "process_wall_ns": 6578442
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 10900,
+                  "process_wall_ns": 5070264
+                }
+              ],
+              "fold": [
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 6516,
+                  "process_wall_ns": 4234609
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 6388,
+                  "process_wall_ns": 4093543
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 6644,
+                  "process_wall_ns": 3092414
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 6436,
+                  "process_wall_ns": 3149119
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 6440,
+                  "process_wall_ns": 3249803
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 6488,
+                  "process_wall_ns": 3324217
+                },
+                {
+                  "user_seconds": 0.0,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 6560,
+                  "process_wall_ns": 3384377
+                }
+              ]
+            },
+            "median_wall_ns": {
+              "map": 6043286,
+              "fold": 3324217
+            },
+            "fold_over_map_ratio": 0.5500677942430657,
+            "fold_extra_time_percent": -44.99322057569343
+          },
+          {
+            "elements": 1000000,
+            "run_order": [
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold",
+              "fold",
+              "map",
+              "map",
+              "fold"
+            ],
+            "samples": {
+              "map": [
+                {
+                  "user_seconds": 0.03,
+                  "system_seconds": 0.02,
+                  "peak_rss_kib": 79208,
+                  "process_wall_ns": 57315787
+                },
+                {
+                  "user_seconds": 0.03,
+                  "system_seconds": 0.01,
+                  "peak_rss_kib": 79168,
+                  "process_wall_ns": 54504711
+                },
+                {
+                  "user_seconds": 0.03,
+                  "system_seconds": 0.02,
+                  "peak_rss_kib": 79288,
+                  "process_wall_ns": 56933123
+                },
+                {
+                  "user_seconds": 0.03,
+                  "system_seconds": 0.01,
+                  "peak_rss_kib": 79312,
+                  "process_wall_ns": 51936089
+                },
+                {
+                  "user_seconds": 0.03,
+                  "system_seconds": 0.01,
+                  "peak_rss_kib": 79388,
+                  "process_wall_ns": 54024127
+                },
+                {
+                  "user_seconds": 0.04,
+                  "system_seconds": 0.01,
+                  "peak_rss_kib": 79216,
+                  "process_wall_ns": 61390513
+                },
+                {
+                  "user_seconds": 0.03,
+                  "system_seconds": 0.01,
+                  "peak_rss_kib": 79212,
+                  "process_wall_ns": 59968134
+                }
+              ],
+              "fold": [
+                {
+                  "user_seconds": 0.01,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 37648,
+                  "process_wall_ns": 23822222
+                },
+                {
+                  "user_seconds": 0.01,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 37552,
+                  "process_wall_ns": 24750914
+                },
+                {
+                  "user_seconds": 0.01,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 37776,
+                  "process_wall_ns": 26742367
+                },
+                {
+                  "user_seconds": 0.01,
+                  "system_seconds": 0.01,
+                  "peak_rss_kib": 37592,
+                  "process_wall_ns": 27295791
+                },
+                {
+                  "user_seconds": 0.01,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 37720,
+                  "process_wall_ns": 27701104
+                },
+                {
+                  "user_seconds": 0.01,
+                  "system_seconds": 0.01,
+                  "peak_rss_kib": 37696,
+                  "process_wall_ns": 29638540
+                },
+                {
+                  "user_seconds": 0.02,
+                  "system_seconds": 0.0,
+                  "peak_rss_kib": 37544,
+                  "process_wall_ns": 34543447
+                }
+              ]
+            },
+            "median_wall_ns": {
+              "map": 56933123,
+              "fold": 27295791
+            },
+            "fold_over_map_ratio": 0.4794360393685061,
+            "fold_extra_time_percent": -52.05639606314939
+          }
+        ]
+      },
+      "binary_observations": {
+        "source_revision": "20f0f5f091edf7c9b296dbf548309cf68a779e29",
+        "binary": "each-fold-128.exe",
+        "binary_sha256": "05309bd055795c9ad491a290db5928456cd11896c899af3590850d4baac56fdc",
+        "assembly": "each-fold-128.asm",
+        "assembly_sha256": "1225ac9fdc9a631082463266b7b597556b806ffab6f22a13fbc649147e016b14",
+        "observations": [
+          "The f18 list loop contains the integer state update directly; no fwp_apply call occurs in it.",
+          "The loop retains checked-overflow branches, state-owner lookup and a conditional state cleanup call; this is not a claim that all state handling is zero-cost.",
+          "Instrumented execution records two runtime dispatch entries for both 32 and 128 elements; dispatch does not grow with input."
+        ]
+      },
+      "job": {
+        "name": "paths (ubuntu-latest)",
+        "databaseId": 117225316969,
+        "conclusion": "success"
+      },
+      "environment": "Source: 20f0f5f091edf7c9b296dbf548309cf68a779e29\nOS: linux\nArchitecture: x86_64\nC compiler:\nUbuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\nRust compiler:\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\nCPU:\nArchitecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) 6973P-C\nCPU family:                              6\nModel:                                   173\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nCPU(s) scaling MHz:                      141%\nCPU max MHz:                             2600.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                5199.99\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 vnmi avx512vbmi umip waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid cldemote movdiri movdir64b fsrm serialize tsxldtrk ibt amx_bf16 avx512_fp16 amx_tile amx_int8 arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               128 KiB (2 instances)\nL2 cache:                                4 MiB (2 instances)\nL3 cache:                                480 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Vulnerable\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\nNative optimization: -O2 measurements; -O1/-O2 lifetime controls\nCompilation flags: fwp::cgen::compile_c at the recorded source revision\n",
+      "primitive_counts": {
+        "contract": 347,
+        "runtime_or_specialization_review": 7,
+        "flat_scalar_signature": 5,
+        "ir_template": 19
+      },
+      "extra_per_call_versus_plain_between_32_and_128": {
+        "gzip": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "deadline": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "metadata": {
+          "managed_requests": "1",
+          "requested_bytes": "40",
+          "final_charged_bytes": "0"
+        },
+        "empty-metadata": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "filtered-metadata": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "capture": {
+          "managed_requests": "1",
+          "requested_bytes": "24",
+          "final_charged_bytes": "0"
+        }
+      },
+      "layouts": {
+        "plain": {
+          "context_bytes": 0,
+          "context_alignment": 0,
+          "task_bytes": 1504,
+          "task_alignment": 8
+        },
+        "gzip": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 1584,
+          "task_alignment": 8
+        },
+        "deadline": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 1584,
+          "task_alignment": 8
+        },
+        "metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 1584,
+          "task_alignment": 8
+        },
+        "empty-metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 1584,
+          "task_alignment": 8
+        },
+        "filtered-metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 1584,
+          "task_alignment": 8
+        },
+        "capture": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 1584,
+          "task_alignment": 8
+        }
+      },
+      "rows": [
+        {
+          "case": "plain",
+          "iterations": 1,
+          "managed_requests": 4,
+          "requested_bytes": 186,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 32,
+          "managed_requests": 35,
+          "requested_bytes": 931,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 128,
+          "managed_requests": 131,
+          "requested_bytes": 3236,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 1770,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 2515,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 4820,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 1770,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 2515,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 4820,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 1,
+          "managed_requests": 8,
+          "requested_bytes": 1858,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 32,
+          "managed_requests": 70,
+          "requested_bytes": 3843,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 128,
+          "managed_requests": 262,
+          "requested_bytes": 9988,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 1770,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 2515,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 4820,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 1,
+          "managed_requests": 9,
+          "requested_bytes": 1866,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 32,
+          "managed_requests": 40,
+          "requested_bytes": 2611,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 128,
+          "managed_requests": 136,
+          "requested_bytes": 4916,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 1,
+          "managed_requests": 6,
+          "requested_bytes": 1794,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 32,
+          "managed_requests": 68,
+          "requested_bytes": 3283,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 128,
+          "managed_requests": 260,
+          "requested_bytes": 7892,
+          "final_charged_bytes": 1792,
+          "collections": 0
+        }
+      ],
+      "files": {
+        "environment.txt": {
+          "bytes": 4014,
+          "sha256": "5046303316d8d0542ee1f74b11d68a5b71ef94e12a8f96fa073ef6f280f354ab"
+        },
+        "storage.tsv": {
+          "bytes": 658,
+          "sha256": "73966c80b38dd01e68406a4bc38d9cd10ea2233d1e2a0c8cefbe8ae1ef5386c7"
+        },
+        "layout.tsv": {
+          "bytes": 585,
+          "sha256": "40b0e8069906b69bb6da79708ebf6fec03c03fc76df6c7071e562642429c9309"
+        },
+        "job.log": {
+          "bytes": 56250,
+          "sha256": "e84ebf428e02aae06886c5734b0fbe920866368bcbe80fc9412cb9c869817028"
+        },
+        "contracts.json": {
+          "bytes": 139620,
+          "sha256": "398aec577f0878a67df12ed5c85767b3e5f76d843aa207218f007dea0e64ebcd"
+        },
+        "plain-128.fwp": {
+          "bytes": 162,
+          "sha256": "f80801a45905bb5e0eb3edab542ff95b4ea5653f3a5a3bf18d2efb9da573c627"
+        },
+        "plain-128.c": {
+          "bytes": 657935,
+          "sha256": "e213fe5b2c05f6bc25e6197fb792b56e786968e24beeb7e55b0c884789cba221"
+        },
+        "plain-128-measured.c": {
+          "bytes": 658749,
+          "sha256": "b25a032f913acbca42e837a8e86cd81686f9787ecc4980ff92ecec0c63e83608"
+        },
+        "gzip-128.fwp": {
+          "bytes": 187,
+          "sha256": "eb998177a93433c8e3a8c967b3bbe560cb31519b9715080df6c1019288245563"
+        },
+        "gzip-128.c": {
+          "bytes": 866196,
+          "sha256": "b7ee5582947982a6eb24bfa59d6e30ac75cccd49c3791b44d8468f4173391877"
+        },
+        "gzip-128-measured.c": {
+          "bytes": 867010,
+          "sha256": "b7132bc6ad44f6e9861ea71ae9325990555a140a77cfce18cf8e1a896425e58e"
+        },
+        "deadline-128.fwp": {
+          "bytes": 194,
+          "sha256": "f04e5f9984616093035e1de55e649529372201ded49b4b865177f3a621008c8f"
+        },
+        "deadline-128.c": {
+          "bytes": 868993,
+          "sha256": "d8d7d42cedc558ca2e794a4565fd09b0e5541dde4eae252c3bd479b048a7d719"
+        },
+        "deadline-128-measured.c": {
+          "bytes": 869807,
+          "sha256": "9200be4eb9b44e1b8021b9aa630c2e38091f9c2b715c03c6105e0d38f840313d"
+        },
+        "metadata-128.fwp": {
+          "bytes": 218,
+          "sha256": "61fffbb3dda8ac2d3059676adb9a3b506df91b91993f08e3637a110560d01a85"
+        },
+        "metadata-128.c": {
+          "bytes": 869985,
+          "sha256": "9ade164866ca27a013cb6a220676ad80277e4a749a78b08b56a3ccb3c4c1ca0b"
+        },
+        "metadata-128-measured.c": {
+          "bytes": 870799,
+          "sha256": "c1608d1aea783eb5a1669b6d57057f59c77a87481057f55dd1eb10d5a298ad46"
+        },
+        "empty-metadata-128.fwp": {
+          "bytes": 194,
+          "sha256": "dd1e2c73b0bf7f75cc4cabc02db725e5bb33e850e415333f2dc3fa6aca35faf4"
+        },
+        "empty-metadata-128.c": {
+          "bytes": 869380,
+          "sha256": "791d822d364966b77ca6807a4d42370779675ad2ebbca5647a4203896d436d19"
+        },
+        "empty-metadata-128-measured.c": {
+          "bytes": 870194,
+          "sha256": "b5275af9db900bea1b9b1b928b2e9fcf6487a65944e1be4c5921d6aa08ae3cb4"
+        },
+        "filtered-metadata-128.fwp": {
+          "bytes": 231,
+          "sha256": "fbf743e5194f575269193bd0cbb9774085c833b38563f2adb771a68071110454"
+        },
+        "filtered-metadata-128.c": {
+          "bytes": 871047,
+          "sha256": "650d7a483c80b4c94274359ab2105478d71aa66c415de66d4a40dd762af09e3f"
+        },
+        "filtered-metadata-128-measured.c": {
+          "bytes": 871861,
+          "sha256": "5b9373037dcb26c54bd0ff2ae00cf28e4136a4ee4700d95576ef62afd8a6bbf7"
+        },
+        "capture-128.fwp": {
+          "bytes": 205,
+          "sha256": "cca089661b3f4e790142240651e856056693c4d707d7c250f69d79b0d759ab1e"
+        },
+        "capture-128.c": {
+          "bytes": 868094,
+          "sha256": "873accd483607a610b599376b0f649b499d898b5598d5d5537b8c218cdd14da9"
+        },
+        "capture-128-measured.c": {
+          "bytes": 868908,
+          "sha256": "eed565cac17ffbeda22e108b6be53847d2682f09f7af90950c70609b7ae5bb06"
+        },
+        "scope-arc.c": {
+          "bytes": 908436,
+          "sha256": "6e1e9cd0523521a0c6952df04b65a397841dd3e04362a94377170921bc2e8da9"
+        },
+        "scope-arc.exe": {
+          "bytes": 139424,
+          "sha256": "b145ba7ff702db84fcb0e888a2fe3c8d3af6688b90b0ec5cf76f2ad41e48256f"
+        },
+        "capture-arc.c": {
+          "bytes": 908742,
+          "sha256": "d5a179c0e507c8a4180c5d3591719829d808cbd6e0c5e0aefcfdf25d9ca36b6a"
+        },
+        "capture-arc.exe": {
+          "bytes": 111512,
+          "sha256": "a45706873d46a2eeba898890cc67bada3fef4c9179fb9d524a3eb70f7a40ba35"
+        },
+        "capture-arc.txt": {
+          "bytes": 162,
+          "sha256": "e9d6f5c97c5dfc1134a1710b06414a033041434719f3e56f400d81e6ecad7923"
+        },
+        "scope-tracing.c": {
+          "bytes": 908413,
+          "sha256": "734886b61fd0ae2afaa9b9d56dc0e7e8eb9766a8b807818adafaa75f5b91aecd"
+        },
+        "scope-tracing.exe": {
+          "bytes": 139736,
+          "sha256": "766b10aefea8380467376d0e7b5433f2fb0634305b223fa5f8077e4e3e06ec4c"
+        },
+        "capture-tracing.c": {
+          "bytes": 908719,
+          "sha256": "a3992db40a9a7e9ace48b0864e914e585d2de65650524c695760c91c36471d0d"
+        },
+        "capture-tracing.exe": {
+          "bytes": 111824,
+          "sha256": "e776c8b710977168e67ad245de46319c2210f8a526f271fde642b68c86f7a6c5"
+        },
+        "capture-tracing.txt": {
+          "bytes": 162,
+          "sha256": "e9d6f5c97c5dfc1134a1710b06414a033041434719f3e56f400d81e6ecad7923"
+        },
+        "each-storage.tsv": {
+          "bytes": 146,
+          "sha256": "31bb088455cbc79dbafcf8d60d0e6edb3415cc613e5165bf1734e6a29194ec43"
+        },
+        "each-trap-tracing-O1.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-tracing-O1.c": {
+          "bytes": 654142,
+          "sha256": "0e71f8710a4762f1ff77b681900c7ac1b51c153c57c4c92fcaf0f591b6772b7d"
+        },
+        "each-trap-tracing-O1.exe": {
+          "bytes": 51872,
+          "sha256": "bc4891eed4c77623e4bda88ed333575c4832fe5e249e715b454cb79ccaaf80a9"
+        },
+        "each-trap-tracing-O1.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-trap-tracing-O2.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-tracing-O2.c": {
+          "bytes": 654142,
+          "sha256": "0e71f8710a4762f1ff77b681900c7ac1b51c153c57c4c92fcaf0f591b6772b7d"
+        },
+        "each-trap-tracing-O2.exe": {
+          "bytes": 51912,
+          "sha256": "98ebee2b06356e8c3fc77b29215e2207bb40e6b8e3d9df857eb8859ef6ad1096"
+        },
+        "each-trap-tracing-O2.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-trap-arc-O1.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-arc-O1.c": {
+          "bytes": 654165,
+          "sha256": "4a4dd05f6f457d412b48b7172212c19fb5abc56a85ac99dcd876baee3f42c44e"
+        },
+        "each-trap-arc-O1.exe": {
+          "bytes": 47312,
+          "sha256": "d761193d2bb0cd15c2777d813bef65b05b8ba2f3dbdadfc2ed4ea9cde777b609"
+        },
+        "each-trap-arc-O1.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-trap-arc-O2.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-arc-O2.c": {
+          "bytes": 654165,
+          "sha256": "4a4dd05f6f457d412b48b7172212c19fb5abc56a85ac99dcd876baee3f42c44e"
+        },
+        "each-trap-arc-O2.exe": {
+          "bytes": 51416,
+          "sha256": "771225d55ecab4aaa9328096c1b2146e3a6012588289380d8b6941846f14689a"
+        },
+        "each-trap-arc-O2.txt": {
+          "bytes": 122,
+          "sha256": "a8a785bcd92a52e48e249d103936ec6db6491c8ca47f9256acad1f9c56a15eaa"
+        },
+        "each-map-32.fwp": {
+          "bytes": 172,
+          "sha256": "ceb88b9badcbec5064c48caf03649abe68fd943ac08bee43576ca9c38692a234"
+        },
+        "each-map-32.c": {
+          "bytes": 658342,
+          "sha256": "9bcf83768c8c746f4528b186e8d8edf7ce2252859f2e73af25d6013c0a7d898f"
+        },
+        "each-map-32.exe": {
+          "bytes": 70504,
+          "sha256": "ae9822978bc0b3b6f51b677f32bddf80944271603ca0e138fa3818a4a549803b"
+        },
+        "each-map-128.fwp": {
+          "bytes": 173,
+          "sha256": "dd6226ecec9c1c266096f22bd3dc14ee2a888f1ad792a68a885eb1ee80ef2943"
+        },
+        "each-map-128.c": {
+          "bytes": 658343,
+          "sha256": "23025e7a6dc112d5dbdc04feb4a0fb332ec6055c95c7fb3d131df4f2cf0d141a"
+        },
+        "each-map-128.exe": {
+          "bytes": 70504,
+          "sha256": "3e400020fd70d51f6aa320be39da753255fb9365a45f1a42ce4181d195577afb"
+        },
+        "each-fold-32.fwp": {
+          "bytes": 165,
+          "sha256": "d7c49a3bbb6d1135e84b35df0f3bd6850019a927b48dd210bfed3170dfa1d791"
+        },
+        "each-fold-32.c": {
+          "bytes": 658205,
+          "sha256": "b14db810a062d3c239686f2abf12091c8d87b85a73d72f62306eea90d9b2786e"
+        },
+        "each-fold-32.exe": {
+          "bytes": 70320,
+          "sha256": "1d900d42de0a476c58deda9717ca38f0728c197bfc984b7f56d897014453d539"
+        },
+        "each-fold-128.fwp": {
+          "bytes": 166,
+          "sha256": "fe864bc66675e468f1476e8fe35a1cf68321d442e070a53a6ab54c9d9598dcc8"
+        },
+        "each-fold-128.c": {
+          "bytes": 658206,
+          "sha256": "29941992b46b6fd384a432475346b63004ba831b35642e06afb981b64b9a92a5"
+        },
+        "each-fold-128.exe": {
+          "bytes": 70320,
+          "sha256": "05309bd055795c9ad491a290db5928456cd11896c899af3590850d4baac56fdc"
+        },
+        "iteration-timing/map-10000.fwp": {
+          "bytes": 175,
+          "sha256": "74cbb8a2b780b02c413250e57cc63b47b694c6f1805441dfb2526fbe33aeaf78"
+        },
+        "iteration-timing/map-10000.c": {
+          "bytes": 658074,
+          "sha256": "1e99ba1cec82f5b89ee82ad7670e31ea3773527aa735deac1f5c6902118e0fdb"
+        },
+        "iteration-timing/map-10000": {
+          "bytes": 70392,
+          "sha256": "a7be1e06081b015bc26e1b9ea14d17b3caa5e17aeaa3c492b1fb1d9a66b4e051"
+        },
+        "iteration-timing/fold-10000.fwp": {
+          "bytes": 168,
+          "sha256": "75a7f160a5e7055f6b597d8307e257316f8c077a36845f488ee45b31338c0429"
+        },
+        "iteration-timing/fold-10000.c": {
+          "bytes": 657937,
+          "sha256": "56bf8d15ad86c7ed5e2e526fe219213aae584206da76356da3a12664aa04599d"
+        },
+        "iteration-timing/fold-10000": {
+          "bytes": 70208,
+          "sha256": "67206f12501d8f4a236cf07f6e8b3c540da6c81f5d3c6d94f0eec1bdb3c87472"
+        },
+        "iteration-timing/map-100000.fwp": {
+          "bytes": 176,
+          "sha256": "b54f08fe89e6e4b4277f4c2b6be15df6ea34064c533b0604275530811dfdfccc"
+        },
+        "iteration-timing/map-100000.c": {
+          "bytes": 658075,
+          "sha256": "2321e1fc14d4017982981f6ccfa0f81b1592eb9f8e1081e4f64b5cdcbba9c576"
+        },
+        "iteration-timing/map-100000": {
+          "bytes": 70392,
+          "sha256": "f08ba22881dcd34ff2d3132a27a0e5b08334e98a8548e4d6d8c56af0e28a64d3"
+        },
+        "iteration-timing/fold-100000.fwp": {
+          "bytes": 169,
+          "sha256": "a34c11b21c748004a19920be7283a8e9720e37b6444d4553838b36e045545a38"
+        },
+        "iteration-timing/fold-100000.c": {
+          "bytes": 657938,
+          "sha256": "f75469690b007e23552eed82247bf1b438884f918b704311e7a57eda37bc166a"
+        },
+        "iteration-timing/fold-100000": {
+          "bytes": 70208,
+          "sha256": "7e46ec45a6fa2384e0ca21dffb368f20979b3e49dc9c7c8a0c53028e203d3f33"
+        },
+        "iteration-timing/map-1000000.fwp": {
+          "bytes": 177,
+          "sha256": "a99803c6360f6057017fd45d49f9162732c352ec7f9e23e25e41c7a27e5de766"
+        },
+        "iteration-timing/map-1000000.c": {
+          "bytes": 658076,
+          "sha256": "c030554b1e29920275df8b14ed1d4d8b01aba913cfe980bd521a29e18792af1c"
+        },
+        "iteration-timing/map-1000000": {
+          "bytes": 70392,
+          "sha256": "054115fae139669fab08bf86f5e21fe9864de420fc5c0f30cf4873da1a34f615"
+        },
+        "iteration-timing/fold-1000000.fwp": {
+          "bytes": 170,
+          "sha256": "b04a4e1ce3416c8a2f020f509f31f08cd1c813843a3625af33358b900fc69387"
+        },
+        "iteration-timing/fold-1000000.c": {
+          "bytes": 657939,
+          "sha256": "38c5ea6ac09cb767207dee5e9bd7a788a08a0fe45462bced5673de154b65955c"
+        },
+        "iteration-timing/fold-1000000": {
+          "bytes": 70208,
+          "sha256": "3485355f6f353c5468c7d0b993dbc98ab3d6c0fe2e5c7ee94c696077d3edfd0e"
+        },
+        "iteration-timing/timings.json": {
+          "bytes": 22826,
+          "sha256": "1998cd75fec12f732b18afa1e60211a6d4df4962e37d0eb02967a96bf00ae80d"
+        },
+        "binary-observations.json": {
+          "bytes": 735,
+          "sha256": "affead74a6073431569822fceddc626403218c561333dca65375eaaead2749e0"
+        },
+        "each-fold-128.asm": {
+          "bytes": 3308,
+          "sha256": "1225ac9fdc9a631082463266b7b597556b806ffab6f22a13fbc649147e016b14"
+        }
+      },
+      "binaries": {
+        "plain-128.exe": {
+          "bytes": 70376,
+          "sha256": "b7c6d6279013d752e602410356da2edb89bfa42d422256e9027e3b4b1777d9e2",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=3aee9f8773322f17bb3be533128a1cc8b5ae801f, for GNU/Linux 3.2.0, not stripped"
+        },
+        "gzip-128.exe": {
+          "bytes": 79904,
+          "sha256": "24ccace7b55564acac36964a6594d9bfe38cfe8e2afe529f7f1a9ce2ea660b2d",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=fbd0469d7d89e2ae9d6c53a0098a7760a58afb68, for GNU/Linux 3.2.0, not stripped"
+        },
+        "deadline-128.exe": {
+          "bytes": 84240,
+          "sha256": "d8741844b3f5b6bde70e6b65c887f585514bb18dfeacafae9aeb24d1dc72f6da",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=3c2f27d8395928f04ee4cf3ad26327d2c2c51e5f, for GNU/Linux 3.2.0, not stripped"
+        },
+        "metadata-128.exe": {
+          "bytes": 84512,
+          "sha256": "cd02db2fb66f1b48e6b088ce347342f918521d1ab9ae136b28e80ab93f0a5855",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=072d082d7fcaf3055ca49f34c50220670899433e, for GNU/Linux 3.2.0, not stripped"
+        },
+        "empty-metadata-128.exe": {
+          "bytes": 84352,
+          "sha256": "69293899a7b678ebf759dd2226496af3b857e59d2412859d330939ed504452e3",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=e5d444bf7ffccd5daa613b9b95cc49ad2021fc3d, for GNU/Linux 3.2.0, not stripped"
+        },
+        "filtered-metadata-128.exe": {
+          "bytes": 84664,
+          "sha256": "c943be893c148d2a8b916e6f0476df22ab9bb1840be7d4ff282200f37de260a8",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=a967474099df0051e27d8278b7dc00ce942d484c, for GNU/Linux 3.2.0, not stripped"
+        },
+        "capture-128.exe": {
+          "bytes": 84728,
+          "sha256": "23cf1a08b4cdd24a02e0af2891821ab024aee92e430773e6d1b1faddf5a198a6",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=19905cb2032d991496f5cb1d1f9199bf9494dfbb, for GNU/Linux 3.2.0, not stripped"
+        }
+      }
+    },
+    {
+      "runner": "windows-11-arm",
+      "iteration": {
+        "rows": [
+          {
+            "implementation": "fold",
+            "iterations": 32,
+            "managed_requests": 35,
+            "requested_bytes": 931,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "fold",
+            "iterations": 128,
+            "managed_requests": 131,
+            "requested_bytes": 3236,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "map",
+            "iterations": 32,
+            "managed_requests": 68,
+            "requested_bytes": 1963,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "map",
+            "iterations": 128,
+            "managed_requests": 260,
+            "requested_bytes": 7340,
+            "dynamic_calls": 2
+          }
+        ],
+        "saved_per_additional_element_between_32_and_128": {
+          "managed_requests": "1",
+          "requested_bytes": "32"
+        },
+        "comparison": "Old map-based each versus fold-based each, identical counting program and input list, O2 with collection disabled. Includes input construction, startup and printing; slope differences cancel fixed costs. Managed allocation requests and requested payload bytes only, not elapsed time or peak/process memory."
+      },
+      "iteration_timing": null,
+      "binary_observations": null,
+      "job": {
+        "name": "paths (windows-11-arm)",
+        "databaseId": 117225316294,
+        "conclusion": "success"
+      },
+      "environment": "Source: 20f0f5f091edf7c9b296dbf548309cf68a779e29\nOS: windows\nArchitecture: aarch64\nC compiler:\nclang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: aarch64-w64-windows-gnu\nThread model: posix\nInstalledDir: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin\nConfiguration file: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin/aarch64-w64-windows-gnu.cfg\nRust compiler:\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\nCPU:\n{\n  \"Name\": \"Cobalt 100\",\n  \"Architecture\": 12,\n  \"NumberOfCores\": 4,\n  \"NumberOfLogicalProcessors\": 4\n}\nNative optimization: -O2 measurements; -O1/-O2 lifetime controls\nCompilation flags: fwp::cgen::compile_c at the recorded source revision\n",
+      "primitive_counts": {
+        "contract": 347,
+        "runtime_or_specialization_review": 7,
+        "flat_scalar_signature": 5,
+        "ir_template": 19
+      },
+      "extra_per_call_versus_plain_between_32_and_128": {
+        "gzip": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "deadline": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "metadata": {
+          "managed_requests": "1",
+          "requested_bytes": "40",
+          "final_charged_bytes": "0"
+        },
+        "empty-metadata": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "filtered-metadata": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "capture": {
+          "managed_requests": "1",
+          "requested_bytes": "24",
+          "final_charged_bytes": "0"
+        }
+      },
+      "layouts": {
+        "plain": {
+          "context_bytes": 0,
+          "context_alignment": 0,
+          "task_bytes": 752,
+          "task_alignment": 8
+        },
+        "gzip": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 832,
+          "task_alignment": 8
+        },
+        "deadline": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 832,
+          "task_alignment": 8
+        },
+        "metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 832,
+          "task_alignment": 8
+        },
+        "empty-metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 832,
+          "task_alignment": 8
+        },
+        "filtered-metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 832,
+          "task_alignment": 8
+        },
+        "capture": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 832,
+          "task_alignment": 8
+        }
+      },
+      "rows": [
+        {
+          "case": "plain",
+          "iterations": 1,
+          "managed_requests": 4,
+          "requested_bytes": 186,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 32,
+          "managed_requests": 35,
+          "requested_bytes": 931,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 128,
+          "managed_requests": 131,
+          "requested_bytes": 3236,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 1018,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 1763,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 4068,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 1018,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 1763,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 4068,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 1,
+          "managed_requests": 8,
+          "requested_bytes": 1106,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 32,
+          "managed_requests": 70,
+          "requested_bytes": 3091,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 128,
+          "managed_requests": 262,
+          "requested_bytes": 9236,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 1018,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 1763,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 4068,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 1,
+          "managed_requests": 9,
+          "requested_bytes": 1114,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 32,
+          "managed_requests": 40,
+          "requested_bytes": 1859,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 128,
+          "managed_requests": 136,
+          "requested_bytes": 4164,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 1,
+          "managed_requests": 6,
+          "requested_bytes": 1042,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 32,
+          "managed_requests": 68,
+          "requested_bytes": 2531,
+          "final_charged_bytes": 896,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 128,
+          "managed_requests": 260,
+          "requested_bytes": 7140,
+          "final_charged_bytes": 896,
+          "collections": 0
+        }
+      ],
+      "files": {
+        "environment.txt": {
+          "bytes": 873,
+          "sha256": "c784f601d05ed1a80d969bca04ac40846aeaaa03b2abcc24d563cfa4dd36caa0"
+        },
+        "storage.tsv": {
+          "bytes": 640,
+          "sha256": "5a2c3d4c90c924a3761537f1ea6f7f917244babc7d5e0c61e2805a5d8fba366e"
+        },
+        "layout.tsv": {
+          "bytes": 564,
+          "sha256": "3df1c1034f47e969d915187316aa1d6aa95f1b0295f983de8b08de14bdd93e8d"
+        },
+        "job.log": {
+          "bytes": 66837,
+          "sha256": "df76009387f3ed28f7b82c8a3fdb936885507c9526fc8baa96611c1d22353a9d"
+        },
+        "contracts.json": {
+          "bytes": 143404,
+          "sha256": "baf3cca288d97c27c6a345f86fc90b1f4f132712f58e23fa2800e2dbc0d024e1"
+        },
+        "plain-128.fwp": {
+          "bytes": 162,
+          "sha256": "f80801a45905bb5e0eb3edab542ff95b4ea5653f3a5a3bf18d2efb9da573c627"
+        },
+        "plain-128.c": {
+          "bytes": 657935,
+          "sha256": "e213fe5b2c05f6bc25e6197fb792b56e786968e24beeb7e55b0c884789cba221"
+        },
+        "plain-128-measured.c": {
+          "bytes": 658749,
+          "sha256": "b25a032f913acbca42e837a8e86cd81686f9787ecc4980ff92ecec0c63e83608"
+        },
+        "gzip-128.fwp": {
+          "bytes": 187,
+          "sha256": "eb998177a93433c8e3a8c967b3bbe560cb31519b9715080df6c1019288245563"
+        },
+        "gzip-128.c": {
+          "bytes": 866196,
+          "sha256": "b7ee5582947982a6eb24bfa59d6e30ac75cccd49c3791b44d8468f4173391877"
+        },
+        "gzip-128-measured.c": {
+          "bytes": 867010,
+          "sha256": "b7132bc6ad44f6e9861ea71ae9325990555a140a77cfce18cf8e1a896425e58e"
+        },
+        "deadline-128.fwp": {
+          "bytes": 194,
+          "sha256": "f04e5f9984616093035e1de55e649529372201ded49b4b865177f3a621008c8f"
+        },
+        "deadline-128.c": {
+          "bytes": 868993,
+          "sha256": "d8d7d42cedc558ca2e794a4565fd09b0e5541dde4eae252c3bd479b048a7d719"
+        },
+        "deadline-128-measured.c": {
+          "bytes": 869807,
+          "sha256": "9200be4eb9b44e1b8021b9aa630c2e38091f9c2b715c03c6105e0d38f840313d"
+        },
+        "metadata-128.fwp": {
+          "bytes": 218,
+          "sha256": "61fffbb3dda8ac2d3059676adb9a3b506df91b91993f08e3637a110560d01a85"
+        },
+        "metadata-128.c": {
+          "bytes": 869985,
+          "sha256": "9ade164866ca27a013cb6a220676ad80277e4a749a78b08b56a3ccb3c4c1ca0b"
+        },
+        "metadata-128-measured.c": {
+          "bytes": 870799,
+          "sha256": "c1608d1aea783eb5a1669b6d57057f59c77a87481057f55dd1eb10d5a298ad46"
+        },
+        "empty-metadata-128.fwp": {
+          "bytes": 194,
+          "sha256": "dd1e2c73b0bf7f75cc4cabc02db725e5bb33e850e415333f2dc3fa6aca35faf4"
+        },
+        "empty-metadata-128.c": {
+          "bytes": 869380,
+          "sha256": "791d822d364966b77ca6807a4d42370779675ad2ebbca5647a4203896d436d19"
+        },
+        "empty-metadata-128-measured.c": {
+          "bytes": 870194,
+          "sha256": "b5275af9db900bea1b9b1b928b2e9fcf6487a65944e1be4c5921d6aa08ae3cb4"
+        },
+        "filtered-metadata-128.fwp": {
+          "bytes": 231,
+          "sha256": "fbf743e5194f575269193bd0cbb9774085c833b38563f2adb771a68071110454"
+        },
+        "filtered-metadata-128.c": {
+          "bytes": 871047,
+          "sha256": "650d7a483c80b4c94274359ab2105478d71aa66c415de66d4a40dd762af09e3f"
+        },
+        "filtered-metadata-128-measured.c": {
+          "bytes": 871861,
+          "sha256": "5b9373037dcb26c54bd0ff2ae00cf28e4136a4ee4700d95576ef62afd8a6bbf7"
+        },
+        "capture-128.fwp": {
+          "bytes": 205,
+          "sha256": "cca089661b3f4e790142240651e856056693c4d707d7c250f69d79b0d759ab1e"
+        },
+        "capture-128.c": {
+          "bytes": 868094,
+          "sha256": "873accd483607a610b599376b0f649b499d898b5598d5d5537b8c218cdd14da9"
+        },
+        "capture-128-measured.c": {
+          "bytes": 868908,
+          "sha256": "eed565cac17ffbeda22e108b6be53847d2682f09f7af90950c70609b7ae5bb06"
+        },
+        "scope-arc.c": {
+          "bytes": 908436,
+          "sha256": "6e1e9cd0523521a0c6952df04b65a397841dd3e04362a94377170921bc2e8da9"
+        },
+        "scope-arc.exe": {
+          "bytes": 163840,
+          "sha256": "ec9a5e3ccc5d779d5f93594c90ed1880c5fb1f4bbe4561cddf8bb479a2045cba"
+        },
+        "capture-arc.c": {
+          "bytes": 908742,
+          "sha256": "d5a179c0e507c8a4180c5d3591719829d808cbd6e0c5e0aefcfdf25d9ca36b6a"
+        },
+        "capture-arc.exe": {
+          "bytes": 147968,
+          "sha256": "4d89de46b103b6da4fecf309fd1602b1e29b235ecb19290a7cb48414825978f1"
+        },
+        "capture-arc.txt": {
+          "bytes": 164,
+          "sha256": "4b5abb41669f7b24fae7001a6e3382e6374302c83773aa50e0e9b255890d1dd3"
+        },
+        "scope-tracing.c": {
+          "bytes": 908413,
+          "sha256": "734886b61fd0ae2afaa9b9d56dc0e7e8eb9766a8b807818adafaa75f5b91aecd"
+        },
+        "scope-tracing.exe": {
+          "bytes": 163328,
+          "sha256": "15ee7a839eaaf630f978bf821be572a92f385f2842885481c4c6b2c138e9b0e3"
+        },
+        "capture-tracing.c": {
+          "bytes": 908719,
+          "sha256": "a3992db40a9a7e9ace48b0864e914e585d2de65650524c695760c91c36471d0d"
+        },
+        "capture-tracing.exe": {
+          "bytes": 147456,
+          "sha256": "4c6e9737f663c269d8a5f58be6b2f7b3bfe8adf7e37c0861d679bcc4b4f8c3da"
+        },
+        "capture-tracing.txt": {
+          "bytes": 164,
+          "sha256": "4b5abb41669f7b24fae7001a6e3382e6374302c83773aa50e0e9b255890d1dd3"
+        },
+        "each-storage.tsv": {
+          "bytes": 146,
+          "sha256": "31bb088455cbc79dbafcf8d60d0e6edb3415cc613e5165bf1734e6a29194ec43"
+        },
+        "each-trap-tracing-O1.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-tracing-O1.c": {
+          "bytes": 654142,
+          "sha256": "0e71f8710a4762f1ff77b681900c7ac1b51c153c57c4c92fcaf0f591b6772b7d"
+        },
+        "each-trap-tracing-O1.exe": {
+          "bytes": 94208,
+          "sha256": "fb89431f736512d1762dd87526735e58155a130a66cef725d0ad0df42a4e1129"
+        },
+        "each-trap-tracing-O1.txt": {
+          "bytes": 114,
+          "sha256": "73ab1bca6fb055fb39f45fec65c60bd18c2d079d0746cab71084b0c77e9e937d"
+        },
+        "each-trap-tracing-O2.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-tracing-O2.c": {
+          "bytes": 654142,
+          "sha256": "0e71f8710a4762f1ff77b681900c7ac1b51c153c57c4c92fcaf0f591b6772b7d"
+        },
+        "each-trap-tracing-O2.exe": {
+          "bytes": 95744,
+          "sha256": "7050c4dfa416c56be703c7fe0ebd6a319db43c6fc68044e30dbbd41046c98b4b"
+        },
+        "each-trap-tracing-O2.txt": {
+          "bytes": 114,
+          "sha256": "73ab1bca6fb055fb39f45fec65c60bd18c2d079d0746cab71084b0c77e9e937d"
+        },
+        "each-trap-arc-O1.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-arc-O1.c": {
+          "bytes": 654165,
+          "sha256": "4a4dd05f6f457d412b48b7172212c19fb5abc56a85ac99dcd876baee3f42c44e"
+        },
+        "each-trap-arc-O1.exe": {
+          "bytes": 90112,
+          "sha256": "40c2a2f811905130a30e32bcc603d9ef7dbc89119bc454cedaca426e77bca941"
+        },
+        "each-trap-arc-O1.txt": {
+          "bytes": 114,
+          "sha256": "73ab1bca6fb055fb39f45fec65c60bd18c2d079d0746cab71084b0c77e9e937d"
+        },
+        "each-trap-arc-O2.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-arc-O2.c": {
+          "bytes": 654165,
+          "sha256": "4a4dd05f6f457d412b48b7172212c19fb5abc56a85ac99dcd876baee3f42c44e"
+        },
+        "each-trap-arc-O2.exe": {
+          "bytes": 91136,
+          "sha256": "00f2bf6ad4241311e76a5ccc9302428b4da647ec2657448c88f013a6a995e065"
+        },
+        "each-trap-arc-O2.txt": {
+          "bytes": 114,
+          "sha256": "73ab1bca6fb055fb39f45fec65c60bd18c2d079d0746cab71084b0c77e9e937d"
+        },
+        "each-map-32.fwp": {
+          "bytes": 172,
+          "sha256": "ceb88b9badcbec5064c48caf03649abe68fd943ac08bee43576ca9c38692a234"
+        },
+        "each-map-32.c": {
+          "bytes": 658342,
+          "sha256": "9bcf83768c8c746f4528b186e8d8edf7ce2252859f2e73af25d6013c0a7d898f"
+        },
+        "each-map-32.exe": {
+          "bytes": 115712,
+          "sha256": "813d97a4ae3b3d0b80ac318dcfc456ce87b1c510e05df219612b79d0ec659858"
+        },
+        "each-map-128.fwp": {
+          "bytes": 173,
+          "sha256": "dd6226ecec9c1c266096f22bd3dc14ee2a888f1ad792a68a885eb1ee80ef2943"
+        },
+        "each-map-128.c": {
+          "bytes": 658343,
+          "sha256": "23025e7a6dc112d5dbdc04feb4a0fb332ec6055c95c7fb3d131df4f2cf0d141a"
+        },
+        "each-map-128.exe": {
+          "bytes": 115712,
+          "sha256": "0e7b8e8f2ace2b5dc416265e97e7d757380ef6de7ac953051e8312cd7359894c"
+        },
+        "each-fold-32.fwp": {
+          "bytes": 165,
+          "sha256": "d7c49a3bbb6d1135e84b35df0f3bd6850019a927b48dd210bfed3170dfa1d791"
+        },
+        "each-fold-32.c": {
+          "bytes": 658205,
+          "sha256": "b14db810a062d3c239686f2abf12091c8d87b85a73d72f62306eea90d9b2786e"
+        },
+        "each-fold-32.exe": {
+          "bytes": 114688,
+          "sha256": "f7adc7d1f43b18e1a19e1c1e3899dc49eb84eaebaafea76684b75a9c72232232"
+        },
+        "each-fold-128.fwp": {
+          "bytes": 166,
+          "sha256": "fe864bc66675e468f1476e8fe35a1cf68321d442e070a53a6ab54c9d9598dcc8"
+        },
+        "each-fold-128.c": {
+          "bytes": 658206,
+          "sha256": "29941992b46b6fd384a432475346b63004ba831b35642e06afb981b64b9a92a5"
+        },
+        "each-fold-128.exe": {
+          "bytes": 114688,
+          "sha256": "cb638b4ab722be9d6ef65d4a0d77cf7d8ddcb398ecbb89888af11550130b70c9"
+        }
+      },
+      "binaries": {
+        "plain-128.exe": {
+          "bytes": 114688,
+          "sha256": "b3d5d1b3003e4da61553c2a259f0a3ce9fca2e877e4e853683e36f3f07e31d5b",
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "gzip-128.exe": {
+          "bytes": 121856,
+          "sha256": "fecc3e8b00f1ae4f2f8ba12858a67138b7a22b466f873ca58f05ad5b58c847fd",
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "deadline-128.exe": {
+          "bytes": 125440,
+          "sha256": "2c64d2e62a8771bd4c989ea9f0e94191f26c00566ef789b70df6d521b35a42c3",
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "metadata-128.exe": {
+          "bytes": 125440,
+          "sha256": "35084cce2c8181e984069504474eae9b9d3eea8ccb9ae80a591814ea16a98d83",
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "empty-metadata-128.exe": {
+          "bytes": 124928,
+          "sha256": "e68be085a703d9f745693831b4b2ec170b2c8f0d5cc3bf1ba4b3a249ef816e08",
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "filtered-metadata-128.exe": {
+          "bytes": 125952,
+          "sha256": "3419991456c63d0108101e31c8071c6b044713b2c19de8d12c72e52dc0915562",
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "capture-128.exe": {
+          "bytes": 126976,
+          "sha256": "fb29bf8af47210189205e8bd8c93937a36afc73bb37735c1bc308b5fed68fa02",
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        }
+      }
+    },
+    {
+      "runner": "windows-2025",
+      "iteration": {
+        "rows": [
+          {
+            "implementation": "fold",
+            "iterations": 32,
+            "managed_requests": 35,
+            "requested_bytes": 931,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "fold",
+            "iterations": 128,
+            "managed_requests": 131,
+            "requested_bytes": 3236,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "map",
+            "iterations": 32,
+            "managed_requests": 68,
+            "requested_bytes": 1963,
+            "dynamic_calls": 2
+          },
+          {
+            "implementation": "map",
+            "iterations": 128,
+            "managed_requests": 260,
+            "requested_bytes": 7340,
+            "dynamic_calls": 2
+          }
+        ],
+        "saved_per_additional_element_between_32_and_128": {
+          "managed_requests": "1",
+          "requested_bytes": "32"
+        },
+        "comparison": "Old map-based each versus fold-based each, identical counting program and input list, O2 with collection disabled. Includes input construction, startup and printing; slope differences cancel fixed costs. Managed allocation requests and requested payload bytes only, not elapsed time or peak/process memory."
+      },
+      "iteration_timing": null,
+      "binary_observations": null,
+      "job": {
+        "name": "paths (windows-2025)",
+        "databaseId": 117225317390,
+        "conclusion": "success"
+      },
+      "environment": "Source: 20f0f5f091edf7c9b296dbf548309cf68a779e29\nOS: windows\nArchitecture: x86_64\nC compiler:\nclang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin\nConfiguration file: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin/x86_64-w64-windows-gnu.cfg\nRust compiler:\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\nCPU:\n{\n  \"Name\": \"AMD EPYC 7763 64-Core Processor                \",\n  \"Architecture\": 9,\n  \"NumberOfCores\": 2,\n  \"NumberOfLogicalProcessors\": 4\n}\nNative optimization: -O2 measurements; -O1/-O2 lifetime controls\nCompilation flags: fwp::cgen::compile_c at the recorded source revision\n",
+      "primitive_counts": {
+        "contract": 347,
+        "runtime_or_specialization_review": 7,
+        "flat_scalar_signature": 5,
+        "ir_template": 19
+      },
+      "extra_per_call_versus_plain_between_32_and_128": {
+        "gzip": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "deadline": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "metadata": {
+          "managed_requests": "1",
+          "requested_bytes": "40",
+          "final_charged_bytes": "0"
+        },
+        "empty-metadata": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "filtered-metadata": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "capture": {
+          "managed_requests": "1",
+          "requested_bytes": "24",
+          "final_charged_bytes": "0"
+        }
+      },
+      "layouts": {
+        "plain": {
+          "context_bytes": 0,
+          "context_alignment": 0,
+          "task_bytes": 912,
+          "task_alignment": 16
+        },
+        "gzip": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 992,
+          "task_alignment": 16
+        },
+        "deadline": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 992,
+          "task_alignment": 16
+        },
+        "metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 992,
+          "task_alignment": 16
+        },
+        "empty-metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 992,
+          "task_alignment": 16
+        },
+        "filtered-metadata": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 992,
+          "task_alignment": 16
+        },
+        "capture": {
+          "context_bytes": 72,
+          "context_alignment": 8,
+          "task_bytes": 992,
+          "task_alignment": 16
+        }
+      },
+      "rows": [
+        {
+          "case": "plain",
+          "iterations": 1,
+          "managed_requests": 4,
+          "requested_bytes": 186,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 32,
+          "managed_requests": 35,
+          "requested_bytes": 931,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 128,
+          "managed_requests": 131,
+          "requested_bytes": 3236,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 1178,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 1923,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 4228,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 1178,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 1923,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 4228,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 1,
+          "managed_requests": 8,
+          "requested_bytes": 1266,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 32,
+          "managed_requests": 70,
+          "requested_bytes": 3251,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 128,
+          "managed_requests": 262,
+          "requested_bytes": 9396,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 1,
+          "managed_requests": 5,
+          "requested_bytes": 1178,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 32,
+          "managed_requests": 36,
+          "requested_bytes": 1923,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "empty-metadata",
+          "iterations": 128,
+          "managed_requests": 132,
+          "requested_bytes": 4228,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 1,
+          "managed_requests": 9,
+          "requested_bytes": 1274,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 32,
+          "managed_requests": 40,
+          "requested_bytes": 2019,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "filtered-metadata",
+          "iterations": 128,
+          "managed_requests": 136,
+          "requested_bytes": 4324,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 1,
+          "managed_requests": 6,
+          "requested_bytes": 1202,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 32,
+          "managed_requests": 68,
+          "requested_bytes": 2691,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 128,
+          "managed_requests": 260,
+          "requested_bytes": 7300,
+          "final_charged_bytes": 1024,
+          "collections": 0
+        }
+      ],
+      "files": {
+        "environment.txt": {
+          "bytes": 903,
+          "sha256": "9767a5af272287d2fdf2cc7a6db765c55dc53d5a72734bc7f2efe75d93399bf1"
+        },
+        "storage.tsv": {
+          "bytes": 658,
+          "sha256": "d2a93892898d8cd15bec817e8ded7f7f6aeb08cf037cdb5a90b9929666ce13cb"
+        },
+        "layout.tsv": {
+          "bytes": 585,
+          "sha256": "41b142cbdc4e0ef8bb453d5f07fb78beaf18db6fb0ce26daa273687229d97852"
+        },
+        "job.log": {
+          "bytes": 88188,
+          "sha256": "3bbe5fe5abde3e2b5e9232e606aa4d198ee23fe90dd994df0df15a4a7b645a53"
+        },
+        "contracts.json": {
+          "bytes": 143404,
+          "sha256": "baf3cca288d97c27c6a345f86fc90b1f4f132712f58e23fa2800e2dbc0d024e1"
+        },
+        "plain-128.fwp": {
+          "bytes": 162,
+          "sha256": "f80801a45905bb5e0eb3edab542ff95b4ea5653f3a5a3bf18d2efb9da573c627"
+        },
+        "plain-128.c": {
+          "bytes": 657935,
+          "sha256": "e213fe5b2c05f6bc25e6197fb792b56e786968e24beeb7e55b0c884789cba221"
+        },
+        "plain-128-measured.c": {
+          "bytes": 658749,
+          "sha256": "b25a032f913acbca42e837a8e86cd81686f9787ecc4980ff92ecec0c63e83608"
+        },
+        "gzip-128.fwp": {
+          "bytes": 187,
+          "sha256": "eb998177a93433c8e3a8c967b3bbe560cb31519b9715080df6c1019288245563"
+        },
+        "gzip-128.c": {
+          "bytes": 866196,
+          "sha256": "b7ee5582947982a6eb24bfa59d6e30ac75cccd49c3791b44d8468f4173391877"
+        },
+        "gzip-128-measured.c": {
+          "bytes": 867010,
+          "sha256": "b7132bc6ad44f6e9861ea71ae9325990555a140a77cfce18cf8e1a896425e58e"
+        },
+        "deadline-128.fwp": {
+          "bytes": 194,
+          "sha256": "f04e5f9984616093035e1de55e649529372201ded49b4b865177f3a621008c8f"
+        },
+        "deadline-128.c": {
+          "bytes": 868993,
+          "sha256": "d8d7d42cedc558ca2e794a4565fd09b0e5541dde4eae252c3bd479b048a7d719"
+        },
+        "deadline-128-measured.c": {
+          "bytes": 869807,
+          "sha256": "9200be4eb9b44e1b8021b9aa630c2e38091f9c2b715c03c6105e0d38f840313d"
+        },
+        "metadata-128.fwp": {
+          "bytes": 218,
+          "sha256": "61fffbb3dda8ac2d3059676adb9a3b506df91b91993f08e3637a110560d01a85"
+        },
+        "metadata-128.c": {
+          "bytes": 869985,
+          "sha256": "9ade164866ca27a013cb6a220676ad80277e4a749a78b08b56a3ccb3c4c1ca0b"
+        },
+        "metadata-128-measured.c": {
+          "bytes": 870799,
+          "sha256": "c1608d1aea783eb5a1669b6d57057f59c77a87481057f55dd1eb10d5a298ad46"
+        },
+        "empty-metadata-128.fwp": {
+          "bytes": 194,
+          "sha256": "dd1e2c73b0bf7f75cc4cabc02db725e5bb33e850e415333f2dc3fa6aca35faf4"
+        },
+        "empty-metadata-128.c": {
+          "bytes": 869380,
+          "sha256": "791d822d364966b77ca6807a4d42370779675ad2ebbca5647a4203896d436d19"
+        },
+        "empty-metadata-128-measured.c": {
+          "bytes": 870194,
+          "sha256": "b5275af9db900bea1b9b1b928b2e9fcf6487a65944e1be4c5921d6aa08ae3cb4"
+        },
+        "filtered-metadata-128.fwp": {
+          "bytes": 231,
+          "sha256": "fbf743e5194f575269193bd0cbb9774085c833b38563f2adb771a68071110454"
+        },
+        "filtered-metadata-128.c": {
+          "bytes": 871047,
+          "sha256": "650d7a483c80b4c94274359ab2105478d71aa66c415de66d4a40dd762af09e3f"
+        },
+        "filtered-metadata-128-measured.c": {
+          "bytes": 871861,
+          "sha256": "5b9373037dcb26c54bd0ff2ae00cf28e4136a4ee4700d95576ef62afd8a6bbf7"
+        },
+        "capture-128.fwp": {
+          "bytes": 205,
+          "sha256": "cca089661b3f4e790142240651e856056693c4d707d7c250f69d79b0d759ab1e"
+        },
+        "capture-128.c": {
+          "bytes": 868094,
+          "sha256": "873accd483607a610b599376b0f649b499d898b5598d5d5537b8c218cdd14da9"
+        },
+        "capture-128-measured.c": {
+          "bytes": 868908,
+          "sha256": "eed565cac17ffbeda22e108b6be53847d2682f09f7af90950c70609b7ae5bb06"
+        },
+        "scope-arc.c": {
+          "bytes": 908436,
+          "sha256": "6e1e9cd0523521a0c6952df04b65a397841dd3e04362a94377170921bc2e8da9"
+        },
+        "scope-arc.exe": {
+          "bytes": 178688,
+          "sha256": "99c0fc60cbfeed848ae9dcdaa154dac1c129e75de0ba6cf8c8713afe9960cb0a"
+        },
+        "capture-arc.c": {
+          "bytes": 908742,
+          "sha256": "d5a179c0e507c8a4180c5d3591719829d808cbd6e0c5e0aefcfdf25d9ca36b6a"
+        },
+        "capture-arc.exe": {
+          "bytes": 159232,
+          "sha256": "8ca3e586a92ffdfb9a7a0f794b79bf1843763b18a43eab74ab21edbe2b38ff25"
+        },
+        "capture-arc.txt": {
+          "bytes": 164,
+          "sha256": "4b5abb41669f7b24fae7001a6e3382e6374302c83773aa50e0e9b255890d1dd3"
+        },
+        "scope-tracing.c": {
+          "bytes": 908413,
+          "sha256": "734886b61fd0ae2afaa9b9d56dc0e7e8eb9766a8b807818adafaa75f5b91aecd"
+        },
+        "scope-tracing.exe": {
+          "bytes": 178176,
+          "sha256": "6819a2ffb4abe2d71e1acc301ec4e56d041c4e18b12aeceffb56ef556fa17f7d"
+        },
+        "capture-tracing.c": {
+          "bytes": 908719,
+          "sha256": "a3992db40a9a7e9ace48b0864e914e585d2de65650524c695760c91c36471d0d"
+        },
+        "capture-tracing.exe": {
+          "bytes": 158208,
+          "sha256": "832c8dfdb2edc6eaf5044891114949714963ba49b8559e207cf1c3c073db1d85"
+        },
+        "capture-tracing.txt": {
+          "bytes": 164,
+          "sha256": "4b5abb41669f7b24fae7001a6e3382e6374302c83773aa50e0e9b255890d1dd3"
+        },
+        "each-storage.tsv": {
+          "bytes": 146,
+          "sha256": "31bb088455cbc79dbafcf8d60d0e6edb3415cc613e5165bf1734e6a29194ec43"
+        },
+        "each-trap-tracing-O1.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-tracing-O1.c": {
+          "bytes": 654142,
+          "sha256": "0e71f8710a4762f1ff77b681900c7ac1b51c153c57c4c92fcaf0f591b6772b7d"
+        },
+        "each-trap-tracing-O1.exe": {
+          "bytes": 99328,
+          "sha256": "5ccdd61569ce3f752a6241eff262015e88fd13efd352daaebea3b5c25312234b"
+        },
+        "each-trap-tracing-O1.txt": {
+          "bytes": 114,
+          "sha256": "73ab1bca6fb055fb39f45fec65c60bd18c2d079d0746cab71084b0c77e9e937d"
+        },
+        "each-trap-tracing-O2.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-tracing-O2.c": {
+          "bytes": 654142,
+          "sha256": "0e71f8710a4762f1ff77b681900c7ac1b51c153c57c4c92fcaf0f591b6772b7d"
+        },
+        "each-trap-tracing-O2.exe": {
+          "bytes": 101888,
+          "sha256": "17185effce6ec85cc5011ae318231a3d54f3dbbae7cc02c8b5d6687d0834f2e3"
+        },
+        "each-trap-tracing-O2.txt": {
+          "bytes": 114,
+          "sha256": "73ab1bca6fb055fb39f45fec65c60bd18c2d079d0746cab71084b0c77e9e937d"
+        },
+        "each-trap-arc-O1.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-arc-O1.c": {
+          "bytes": 654165,
+          "sha256": "4a4dd05f6f457d412b48b7172212c19fb5abc56a85ac99dcd876baee3f42c44e"
+        },
+        "each-trap-arc-O1.exe": {
+          "bytes": 94208,
+          "sha256": "c3176ccaf11a5f9a43d4c202260eacb888025e3c9d75fec7fac09b8e9bf71798"
+        },
+        "each-trap-arc-O1.txt": {
+          "bytes": 114,
+          "sha256": "73ab1bca6fb055fb39f45fec65c60bd18c2d079d0746cab71084b0c77e9e937d"
+        },
+        "each-trap-arc-O2.fwp": {
+          "bytes": 68,
+          "sha256": "d4310f4ac0dc101f41b916bb0c7def1a4a9a2c6484bfe29236236e51d2183239"
+        },
+        "each-trap-arc-O2.c": {
+          "bytes": 654165,
+          "sha256": "4a4dd05f6f457d412b48b7172212c19fb5abc56a85ac99dcd876baee3f42c44e"
+        },
+        "each-trap-arc-O2.exe": {
+          "bytes": 96256,
+          "sha256": "50a021ab92f6d2d9732f37720fba2b1758158c5c95485c4d690870f03768d406"
+        },
+        "each-trap-arc-O2.txt": {
+          "bytes": 114,
+          "sha256": "73ab1bca6fb055fb39f45fec65c60bd18c2d079d0746cab71084b0c77e9e937d"
+        },
+        "each-map-32.fwp": {
+          "bytes": 172,
+          "sha256": "ceb88b9badcbec5064c48caf03649abe68fd943ac08bee43576ca9c38692a234"
+        },
+        "each-map-32.c": {
+          "bytes": 658342,
+          "sha256": "9bcf83768c8c746f4528b186e8d8edf7ce2252859f2e73af25d6013c0a7d898f"
+        },
+        "each-map-32.exe": {
+          "bytes": 124928,
+          "sha256": "497bdb4bbd598a0ce6e4d6f0c7a8454b4e1afaf25682a8dd903322410f4a380e"
+        },
+        "each-map-128.fwp": {
+          "bytes": 173,
+          "sha256": "dd6226ecec9c1c266096f22bd3dc14ee2a888f1ad792a68a885eb1ee80ef2943"
+        },
+        "each-map-128.c": {
+          "bytes": 658343,
+          "sha256": "23025e7a6dc112d5dbdc04feb4a0fb332ec6055c95c7fb3d131df4f2cf0d141a"
+        },
+        "each-map-128.exe": {
+          "bytes": 124928,
+          "sha256": "acafd5394938f000d3d9837ec8794aedc6b61154464246f933b8eabed9e6578b"
+        },
+        "each-fold-32.fwp": {
+          "bytes": 165,
+          "sha256": "d7c49a3bbb6d1135e84b35df0f3bd6850019a927b48dd210bfed3170dfa1d791"
+        },
+        "each-fold-32.c": {
+          "bytes": 658205,
+          "sha256": "b14db810a062d3c239686f2abf12091c8d87b85a73d72f62306eea90d9b2786e"
+        },
+        "each-fold-32.exe": {
+          "bytes": 122880,
+          "sha256": "e8264632e3e7fa71efe8ce849507e6c2abec4bdcac7b0c11ab4598adc78448e9"
+        },
+        "each-fold-128.fwp": {
+          "bytes": 166,
+          "sha256": "fe864bc66675e468f1476e8fe35a1cf68321d442e070a53a6ab54c9d9598dcc8"
+        },
+        "each-fold-128.c": {
+          "bytes": 658206,
+          "sha256": "29941992b46b6fd384a432475346b63004ba831b35642e06afb981b64b9a92a5"
+        },
+        "each-fold-128.exe": {
+          "bytes": 122880,
+          "sha256": "c97a5ce3ffee7b1072f5f9b6629a5b82d63321e604b30d0fa53ee9b312c81ca5"
+        }
+      },
+      "binaries": {
+        "plain-128.exe": {
+          "bytes": 123392,
+          "sha256": "577fe3932545e84dd1b2b86d11568f54884522665c3218f9761bba3dd8dfe991",
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "gzip-128.exe": {
+          "bytes": 130560,
+          "sha256": "45149d3089f9f2ad84bd0d5b4d9e94d01187c47e199221744f945092e088ceda",
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "deadline-128.exe": {
+          "bytes": 134656,
+          "sha256": "47d7ea69b7b0eb6bf5d5c4393cd317f68a62303ff42dd4c67f733f7bce0ce881",
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "metadata-128.exe": {
+          "bytes": 135168,
+          "sha256": "d82fd65f18d9c429c8c847f1ffc539663d8544a83010b2170ed64694ebe5d15d",
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "empty-metadata-128.exe": {
+          "bytes": 134656,
+          "sha256": "97da25cf9d887e8b4656958cdece958db158d5a886fce75fd169f804524db970",
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "filtered-metadata-128.exe": {
+          "bytes": 135680,
+          "sha256": "28041fa4b95f7fe6a06025134b4bbfdf0029a6afb3d132124c5b50bf29633a9d",
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "capture-128.exe": {
+          "bytes": 136704,
+          "sha256": "32a926888aafa7cf03cbd0edaafbbdf4229d5dadc7817b1155d15e4dafd77ef0",
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        }
+      }
+    }
+  ]
+}

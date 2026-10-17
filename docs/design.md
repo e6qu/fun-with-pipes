@@ -148,7 +148,15 @@ adds no syntax or implicit conversion. A known callback's eager captures are
 bound once in their original left-to-right order before input evaluation; the
 existing specialization then sees direct calls. Capture bindings stay outside
 the fused loop and cannot cross effectful or trapping consumer arguments.
-Resource-bearing captures keep their original frames. The handoff separates
+Resource-bearing captures keep their original frames. A pure binding that returns
+an immediately applied function can expose that call while keeping the binding
+first; bindings that may contain resources retain their original boundary.
+Specializing a known state callback also examines newly exposed callbacks, so a
+fold inside that callback can call its known function directly. The same applies
+to known callbacks of synchronous service helpers. Aggregate captures, including
+purely constructed header lists, are bound once before the callback; specializing
+a loop must not rebuild them on each element. Repeated callback
+bodies share a specialization rather than expanding recursively. The handoff separates
 implementation, focused checks and full acceptance; benchmarks retain the
 unfused baseline.
 
@@ -309,6 +317,25 @@ its existing child-owner rules. The accepted tests include aliases, pointer-like
 scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
 count operations; they do not prove every record or call allocation-free.
 
+A function that only forwards a callback's tuple can keep its existing storage.
+A callback is a function supplied by the caller; its concrete target may be
+unknown during compilation. Such calls return a boxed tuple. Unpacking that
+tuple into separate C fields and immediately boxing it again adds an allocation
+without changing the value. The prepared compiler change avoids this conversion
+when every return path forwards a callback result, including through local names
+or branches. Functions that build records or make known direct calls retain their
+existing choices. Alias, failure-cleanup and allocation checks must pass before
+acceptance; the [handoff](development-state.md) records current evidence.
+
+List `each` runs a callback from first to last and returns unit, written `()`.
+Its prepared definition, `const | flip fold ()`, uses unit as the running value
+of `fold`. Here `const` ignores that running value and selects the supplied
+callback; `fold` applies it to the next element. This replaces mapping to a list
+of unit results and immediately discarding that list. It adds no primitive or
+syntax. Tests compare output, aliases, state updates and early failures, and
+measure allocations against the previous mapping definition. Native verification
+is still required before claiming the allocation saving.
+
 A closure contains a function and its already supplied arguments. Generated
 calls retain/release captured values according to their types. Shared top-level
 computed values have cached owners, released during teardown. A type descriptor
@@ -323,7 +350,10 @@ immutable allocations must not acquire untracked links to younger objects.
 [Ownership](ownership.md) explains these obligations and checked ARC mode.
 
 Linux, macOS and Windows find roots through their platform's executable-image
-and task-stack mechanisms. WebAssembly cannot scan hidden host locals, and a
+and task-stack mechanisms. Native entry uses the operating system's thread-stack
+limit. A frame pointer is a compiler's marker inside a function's stack storage;
+it can lie below live temporary values and is not a safe limit for scanning.
+WebAssembly cannot scan hidden host locals, and a
 native library cannot discover arbitrary host roots. Those modes free counted
 owners but retain unproved shared graphs. Disabling collection is not a lifetime
 proof. Resource cleanup also runs on failure, traps and task cancellation.

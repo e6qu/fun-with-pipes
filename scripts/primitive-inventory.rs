@@ -69,7 +69,10 @@ fn visit(root: &Path, dir: &Path, lowered: &BTreeSet<&str>) {
             };
             println!(
                 "{}\t{}\t{}\t{}\t{}\t{:?}\t{}",
-                path.strip_prefix(root).unwrap().display(),
+                path.strip_prefix(root)
+                    .unwrap()
+                    .to_string_lossy()
+                    .replace('\\', "/"),
                 declared,
                 symbol,
                 aliased,

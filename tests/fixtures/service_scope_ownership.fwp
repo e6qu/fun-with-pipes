@@ -1,0 +1,32 @@
+# A scope calls its unit-taking function before returning. `const` captures a
+# value in a function which ignores its input. Each keep-* therefore returns
+# the original string through a service callback; both keeps an alias beside it.
+keep-gzip : String -> String ! {Network}
+keep-gzip = const | grpc.with-gzip
+keep-deadline : String -> String ! {Network}
+keep-deadline = const | grpc.with-deadline 1s
+keep-metadata : String -> String ! {Network}
+keep-metadata = const | grpc.with-metadata [("X-Name", "one\r\ntwo")]
+keep-tls : String -> String ! {Network}
+keep-tls = const | grpc.with-tls tls.options
+capture : String -> (String, List[(String, String)]) ! {Network}
+capture = const | grpc.with-response-metadata
+# Return a function and its captured string together from the callback.
+# The function must remain valid after the service scope returns. first applies
+# apply () to the first tuple field, calling the function with unit.
+defer : String -> (() -> String, String) ! {Network}
+defer = both const id | const | grpc.with-gzip
+# A typed failure leaves the scope through attempt's error handler. Its string
+# must survive that transfer while the scope's header storage is released.
+fail-scoped : String -> String ! {Network, Error[String]}
+fail-scoped = const | flip compose fail | grpc.with-metadata [("X-Failure", "active")]
+main = [
+    range 0 16 | map (show | both id keep-gzip) | echo,
+    "deadline" | both keep-deadline id | echo,
+    "headers" | both keep-metadata id | echo,
+    "secure" | both keep-tls id | echo,
+    "capture" | both capture id | echo,
+    "later" | defer | first (apply ()) | echo,
+    range 0 4 | map (show | attempt fail-scoped) | echo,
+    "nested" | keep-gzip | keep-metadata | keep-deadline | keep-tls | capture | echo,
+] | ignore

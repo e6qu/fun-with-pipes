@@ -61,7 +61,7 @@ files.extend(path for path in sorted((root / 'runtime').rglob('*'))
              if path.is_file() and path.suffix in {'.c', '.h', '.S'})
 files.extend(sorted((root / 'lib').rglob('*.fwp')))
 files.extend([Path(__file__).resolve(), root / 'scripts/primitive-inventory.rs'])
-source_hashes = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+source_hashes = {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
                  for path in files}
 observed = dict(head=head, baselineHead=baseline['head'], baselineSha256=baseline_hash,
                 declarations=len(rows), distinctSymbols=len({row['symbol'] for row in rows}),
@@ -81,6 +81,13 @@ owned_tapes = {
     'ad.tape-owned': (2, 'Shared', '(t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]'),
     'ad.push-owned': (1, 'Shared', '(I64, t, I64, t) -> I64 where Dup[t]'),
     'ad.backward-owned': (3, 'OwnedTree', 'I64 -> List[I64] -> List[t] -> List[t] where Dup[t]'),
+}
+service_scopes = {
+    'grpc.with-gzip': (1, 'OwnedCallback', 0),
+    'grpc.with-deadline': (2, 'OwnedCallback', 1),
+    'grpc.with-metadata': (2, 'OwnedCallback', 1),
+    'grpc.with-tls': (2, 'OwnedCallback', 1),
+    'grpc.with-response-metadata': (1, 'OwnedTree', 0),
 }
 new_keys = scope_keys | {('lib/autodiff.fwp', name) for name in owned_tapes}
 leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.help', 'zlib.gzip', 'zlib.gzip-chunk', 'zlib.deflate', 'ws.accept', 'ws.deflate', 'ws.key', 'zlib.gzip-end', 'ws.close-payload', 'ws.frame'}
@@ -106,6 +113,7 @@ for symbol in ['grpc.set-header', 'grpc.set-trailer']:
 bundle_contracts['http2.body'] = (3, 'OwnedTree', [])
 for symbol in ['http2.request', 'grpc.metadata', 'grpc.peer-subject']:
     bundle_contracts[symbol] = (1, 'OwnedTree', [])
+bundle_contracts['exit'] = (1, 'Never', [])
 bundle_contracts['udp.bind'] = (1, 'OwnedResource', [])
 bundle_contracts['udp.local-addr'] = (1, 'FreshLeaf', [])
 bundle_contracts['udp.send-to'] = (3, 'Shared', [])
@@ -206,6 +214,17 @@ for row in rows:
             contract='Some(Contract { arguments: ' + arguments + ', result: OwnedCallback, callback: Some(Borrowed(0)), aliases: ' + aliases + ' })')
         continue
     before = baseline_rows[key]
+    if row['symbol'] in service_scopes:
+        assert before['contract'] == 'None' and before['bucket'] == 'runtime_or_specialization_review'
+        assert row['bucket'] == 'contract'
+        assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
+        arity, result, callback = service_scopes[row['symbol']]
+        arguments = '[' + ', '.join(['Borrow'] * arity) + ']'
+        expected = f'Some(Contract {{ arguments: {arguments}, result: {result}, callback: Some(Borrowed({callback})), aliases: [{callback}] }})'
+        assert row['contract'] == expected, (row, expected)
+        promoted.append(before)
+        changed_symbols.add(row['symbol'])
+        continue
     if row['symbol'] in {'map.empty', 'set.empty'}:
         assert before['contract'] == 'Some(Contract { arguments: [], result: Shared, callback: None, aliases: [] })'
         assert all(row[name] == before[name] for name in fields if name != 'contract')
@@ -288,7 +307,7 @@ for row in rows:
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | {'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
+assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | set(service_scopes) | {'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
 expected_counts = dict(baseline['counts'])
 expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes)
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22

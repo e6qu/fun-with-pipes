@@ -48,6 +48,30 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Owned decoded values and network resources (PR #153)
+
+[PR #153](https://github.com/e6qu/fun-with-pipes/pull/153) merged as `9bf203d7`
+on 2026-10-16 after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/38958379514)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/38955543617)
+passed at `f6dc9940`. The merged files match that head, its parent is accepted
+#152, and its entire message is `Reduce temporary memory and clean up network resources`.
+Duplicate postmerge production run `38971260589` was canceled.
+
+Decoded byte/text results, copied service headers/bodies and UDP/TCP/TLS handles
+now have explicit owners and cleanup. Socket captures keep handles alive; the
+last owner closes them. Tests cover partial allocation failures, shared inputs,
+size overflow, error order and deliberately omitted cleanup. The numerical
+8,193-number case reduces one worker's temporary storage from 69,648 to 4,104
+bytes while its result still needs 65,552 bytes. These are memory measurements
+against earlier fwp, not speed or C/Rust parity. Whole services and retained
+external callbacks still need ownership work before tracing can be removed.
+
+The [service report](measurements/service-values-2026-10-16.json) retains the
+focused measurements and native binary evidence. Windows TLS parsing setup and
+allocation-failure probes were repaired before final acceptance. Mac test
+scheduling preserves coverage; this delivery makes no measured total-CI speed claim.
+
 ## Less temporary memory in hashing and numerics (PR #152)
 
 [PR #152](https://github.com/e6qu/fun-with-pipes/pull/152) merged as `1fa0fec6`

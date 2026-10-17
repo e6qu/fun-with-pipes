@@ -689,3 +689,114 @@ The instrumented ARM64 metadata, certificate, request and body functions use
 448, 272, 624 and 288-byte stack frames respectively, including saved registers.
 These are test-binary observations, not bounds on an ordinary server's total
 stack use. The report retains the instructions used to read those sizes.
+
+### Service settings, outgoing headers and callback results
+
+Helpers such as `grpc.with-gzip` and `grpc.with-metadata` run a callback with
+temporary settings for its service calls. A callback is the function supplied
+to the helper. The settings must stay valid while it runs, and a child task
+must keep its inherited settings after the callback returns. See
+[service scopes](services.md#settings-for-a-group-of-calls) for examples.
+
+The [earlier baseline](measurements/service-context-baseline-2026-10-16.json)
+and [owned-scope and forwarding measurements](measurements/service-context-forwarded-2026-10-16.json)
+compare each service scope with plain fwp state updates at 1, 32 and 128 calls.
+Every call increments the same state. These are extra costs per call, calculated
+from the difference between 32 and 128 calls with collection disabled. Each
+cell shows **earlier → owned scopes**:
+
+| Scope | Allocation requests | Requested bytes | Bytes still charged after return |
+|---|---:|---:|---:|
+| Compression setting | 1 → 0 | 64 → 0 | 64 → 0 |
+| Deadline setting | 1 → 0 | 64 → 0 | 64 → 0 |
+| One outgoing header | 5 → 1 | 128 → 40 | 144 → 0 |
+| Response-header capture | 4 → 1 | 120 → 24 | 112 → 0 |
+
+The earlier numbers are Linux AMD64 only. The new numbers match on Linux,
+macOS and Windows, each on ARM64 and AMD64, at source `8684127d`, with all six
+focused jobs passing in `38958562126`. Empty and ignored header lists add no
+per-call allocation. Requested bytes are allocator inputs; charged bytes include
+size rounding and explicit releases. Fixed scheduler startup remains in the raw
+rows and is excluded from the per-call difference. Raw TLS/capture allocations,
+allocator pages and total process memory are outside these counts. This compares
+fwp with earlier fwp, not with C or Rust, and does not measure speed.
+
+Settings now live on the stack during a callback. A child copies them into its
+existing task record. This costs space per task: the Linux AMD64 service task
+grows from 1,512 bytes in the baseline to 1,584 bytes. Programs without service
+support omit the settings fields. The report records all six layouts, compiler
+versions, CPU details and actual ELF, Mach-O or PE binaries. The older baseline
+did not record its exact CPU model or C compiler version.
+
+Synchronous scopes borrow existing TLS/capture owners. Only independently live
+children retain shared owners. Outgoing headers use one owned block for pointers
+and copied text; empty or ignored lists borrow the previous settings. Overflow
+is checked before allocation. Scope return, error and cancellation release
+completed owners. Deliberately omitted inheritance, copying, release and child
+retention must fail the tests.
+
+The five helpers borrow their callback function and own its returned value.
+Response capture builds an owned tuple with that value and copied header pairs.
+It builds the list backwards to preserve order without a temporary pointer
+array. Allocation failure releases every completed field. Tests compare raw and
+optimized interpretation with native tracing/ARC execution, retain caller aliases
+and returned functions, check typed failures, and inspect ARC binaries for
+tracing functions. Capture controls cover 13/14 allocation-failure positions.
+Temporary decoding bytes also release on client result and served-request traps.
+These checks pass on all six native hosts at the source above. Final production
+acceptance remains separate; see the [handoff](development-state.md).
+
+Actual Linux ARM64 instructions copy the 72-byte settings through four 16-byte
+registers and one eight-byte register onto the stack. That wrapper reserves
+144 stack bytes; its separate error handler reserves 464. These are instrumented
+O2 observations, not a whole-program stack bound. The wrapper still calls the
+callback helper, so fewer allocations do not prove that all call overhead is gone.
+
+The earlier [owned-scope report](measurements/service-context-owned-2026-10-16.json)
+still had two allocations for response capture. A forwarding function unpacked
+its callback's tuple and allocated an identical tuple. The compiler now preserves
+that returned owner when every return path forwards a dynamic callback result.
+Aliases, failure cleanup and a deliberately reintroduced extra allocation are
+checked on all six hosts. Actual O2 instructions return that owner directly in
+`x0` on ARM64 and `rax` on AMD64. The forwarding function's stack use falls from
+192 to 144 bytes on ARM64 and from 184 to 120 bytes on AMD64, excluding AMD64's
+incoming return address. These are instrumented binary observations, not timing
+measurements or whole-program stack bounds.
+
+List `each` now avoids its discarded result list. The [current six-host report](measurements/service-context-iteration-2026-10-16.json)
+at `20f0f5f0` verifies ordered calls, shared inputs, captured values and failures,
+along with all the service allocation limits above. It saves one allocation and
+32 requested bytes per element. The compiler makes known calls direct inside
+state and service helpers without rebuilding captured lists on each iteration.
+[Repeated timings and binary observations](benchmarks.md#list-iteration-compared-with-its-previous-definition)
+record the improvement and the remaining state bookkeeping. Full production
+acceptance is tracked separately in the handoff.
+
+The [intermediate stack-copy report](measurements/service-context-stack-2026-10-16.json)
+preserves the earlier representation tradeoff. It predates packed headers and
+owned callback results, and its Windows fixtures failed before later repairs.
+Whole remote calls, service entry points and retained request contexts still
+need ownership work; these scope changes do not remove tracing from a server.
+
+### What remains before remote calls can use ARC
+
+A lazy stream receives an element only when the program asks for it. fwp caches
+that element so asking through another reference to the same position does not
+receive a second message. The cache can hold both a value and the next stream
+position. Owning the copied result alone therefore does not settle the lifetime
+of the stream, its connection or the task receiving messages.
+
+The next service-memory work must establish these facts before removing its
+current collector requirement:
+
+| Work | Evidence required |
+|---|---|
+| Measure repeated calls and stream consumption | Count live connection, stream, message and cached-value storage for 1, 32 and 128 elements, including full consumption, early stop and retained earlier positions. Separate reusable connection-pool storage from per-call growth. |
+| Own each cached result | Repeated reads return the same value without receiving again. Releasing one iterator preserves other references; releasing the last reference releases its cached value and continuation. Partially constructed results release on failure. |
+| Keep connections and requests alive for their users | Sending, receiving and detached tasks remain valid after their creating scope returns. Completion, failure and cancellation release each acquired owner exactly once. |
+| Prevent ownership cycles | Identify which component owns each task, stream and connection. A pointer back to an owner must not silently become another owning reference. Any shared cycle needs an explicit policy and a test that drops every external reference. |
+| Admit supported remote calls without tracing | Compare interpreter/native values, errors and receive order; run stress and deliberate missing-cleanup controls; inspect actual binaries and repeat calls with collection disabled. |
+
+These are acceptance requirements, not implemented stream ownership. Keep the
+ordinary immutable iterator behavior and existing syntax while proving them.
+HTTP/2 server operations and GPU resource ownership also remain separate work.

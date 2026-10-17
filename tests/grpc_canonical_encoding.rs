@@ -49,6 +49,11 @@ fn canonical_encoding_scratch_releases_on_partial_and_transcoder_failure() {
         generated = generated.replacen(before, after, 1);
     }
     let hooks = r#"
+#ifdef _WIN32
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0a00
+#endif
+#endif
 #include <stdlib.h>
 static int stage,canonical_frees;
 static void *watched_canon;
@@ -97,6 +102,124 @@ int main(void){
         fwp::cgen::compile_c(&format!("{hooks}\n{omitted}\n{fixture}"), &exe, opt).unwrap();
         let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
         assert_eq!(out.status.code(), Some(1), "omitted cleanup: {out:?}");
+        fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
+        for gc in ["off", "on"] {
+            for poison in ["0", "1"] {
+                let out = Command::new(&exe)
+                    .env("FWP_GC", gc)
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
+                assert!(out.status.success(), "{opt}/{gc}/{poison}: {out:?}");
+            }
+        }
+    }
+}
+
+#[test]
+fn canonical_decoding_scratch_releases_on_malformed_values_and_allocation_traps() {
+    let unit = MT::unit();
+    let program = Program {
+        funcs: vec![
+            Func {
+                name: "available".into(),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: MT::Fun(Box::new(unit.clone()), Box::new(MT::con("std::Bool"))),
+                body: Body::Prim("tls.available".into()),
+            },
+            Func {
+                name: "web".into(),
+                arity: 0,
+                locals: vec![],
+                ty: unit,
+                body: Body::Prim("http2.connect".into()),
+            },
+        ],
+        exports: vec![("available".into(), 0)],
+        ..Program::default()
+    };
+    let (mut generated, _) = fwp::cgen::generate_library(&program, "grpc_decode").unwrap();
+    for (before, after) in [
+        (
+            "pb_decode(k->schema, k->node, msg, n, &canon)",
+            "observed_decode(k->schema, k->node, msg, n, &canon)",
+        ),
+        (
+            "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
+            "static inline void *fwp_gc_alloc(size_t n, int leaf) { if(decode_fail && leaf) fwp_trap(\"decode allocation failure\");",
+        ),
+    ] {
+        assert_eq!(generated.matches(before).count(), 1, "{before}");
+        generated = generated.replacen(before, after, 1);
+    }
+    let hooks = r#"
+#ifdef _WIN32
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0a00
+#endif
+#endif
+#include <stdlib.h>
+static void *decode_buffer;
+static int decode_frees,decode_fail,decode_result;
+static void decode_free(void *);
+static void no_decode_release(void *);
+#define free(p) decode_free(p)
+#define observed_decode(s,node,msg,n,out) (decode_result=pb_decode(s,node,msg,n,out),decode_buffer=(out)->d,decode_result)
+"#;
+    let fixture = r#"
+#undef free
+static void decode_free(void *p){if(p && p==decode_buffer){decode_frees++;decode_buffer=0;}free(p);}
+static void no_decode_release(void *p){(void)p;}
+static int decode_recover(void){return 1;}
+static jmp_buf decode_jump;
+int main(void){
+ fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
+ const fwp_desc text={.kind=K_STR,.name="String"};
+ const int plain[]={PB_MSG,1,1,4,PB_STR},tagged[]={PB_ONEOF,2,4,4,PB_STR};
+ const int partial[]={PB_MSG,2,1,6,2,6,PB_STR},bytes[]={PB_MSG,1,1,4,PB_BYTES},empty[]={PB_MSG,0};
+ const unsigned char good[]={10,3,'a','b','c'},error[]={18,3,'a','b','c'};
+ const unsigned char bad_wire[]={10,3,'a','b','c',16,1},bad_utf8[]={10,1,255};
+ for(int kind=0;kind<6;kind++)for(int failure=0;failure<(kind<3?2:1);failure++){
+  g_codec codec={0};codec.ty=&text;codec.error=(kind==1||kind==2||kind==5)?&text:0;
+  codec.schema=kind==0?plain:kind<3?tagged:kind==3?partial:kind==4?bytes:empty;
+  const unsigned char *input=kind==2?error:kind==3?bad_wire:kind==4?bad_utf8:good;
+  size_t size=kind==3?sizeof bad_wire:kind==4?sizeof bad_utf8:kind==5?0:sizeof good;
+  decode_buffer=0;decode_frees=0;decode_fail=failure;volatile int trapped=0;
+  fwp_trap_recover=decode_recover;fwp_trap_jb=&decode_jump;fwp_trap_cleanup=0;
+  if(!setjmp(decode_jump)){
+   V result=0;char *why=0;int status=g_decode(&codec,input,size,&result,&why);
+   if(failure)_Exit(43);
+   if(kind<3){
+    if(status!=(kind==2?G_DEC_ERROR:G_DEC_OK)||why||STR(result)->len!=3||memcmp(STR(result)->d,"abc",3))_Exit(44);
+    fwp_rc_free_obj(result);
+   }else{
+    if(status!=G_DEC_BAD||!why||strcmp(why,"malformed message"))_Exit(45);
+    free(why);
+   }
+  }else trapped=1;
+  decode_fail=0;fwp_trap_recover=0;fwp_trap_jb=0;
+  if(decode_frees!=(kind==5?0:1)||decode_buffer||fwp_cleanups)_Exit(42);
+  if(trapped!=failure||(trapped&&strcmp(fwp_trap_msg,"decode allocation failure")))_Exit(46);
+ }
+ fwp_lib_finish();return 0;
+}
+"#;
+    let cleanup = "fwp_cleanup_push(&decoded_canonical, g_h2_buffer_release, &canon);";
+    assert_eq!(generated.matches(cleanup).count(), 1);
+    let broken = generated.replacen(
+        cleanup,
+        "fwp_cleanup_push(&decoded_canonical, no_decode_release, &canon);",
+        1,
+    );
+    let dir = fwp::cgen::TempDir::new("grpc-canonical-decoding").unwrap();
+    let exe = dir.join("probe.exe");
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, opt).unwrap();
+        let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
+        assert_eq!(out.status.code(), Some(42), "omitted cleanup: {out:?}");
         fwp::cgen::compile_c(&format!("{hooks}\n{generated}\n{fixture}"), &exe, opt).unwrap();
         for gc in ["off", "on"] {
             for poison in ["0", "1"] {

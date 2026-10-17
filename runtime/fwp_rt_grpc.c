@@ -131,27 +131,16 @@ static void g_serving_peer_release(g_serving *sv) {
 /* how a client's calls connect over TLS (`grpc.with-tls`, or the
  * FWP_SERVICE_<M>_CA, ... variables): malloc'ed strings ("" for none);
  * `key` tells connections with these options apart in the pool */
-typedef struct {
+typedef struct g_tls {
     char *ca, *name, *cert, *keyfile, *key;
     int insecure;
     size_t key_len;
     size_t users;              /* SIZE_MAX for read-once environment caches */
 } g_tls;
 
-typedef struct { h2_hdrs headers; size_t users; } g_capture;
-
-/* a task's gRPC context: metadata and deadline of the calls it makes, and
- * the call it serves */
-typedef struct {
-    const char **kv;
-    size_t n;
-    int64_t deadline;
-    g_serving *serving;
-    const g_tls *tls;
-    h2_hdrs *capture;          /* response metadata collected, or 0 */
-    g_capture *capture_owner; /* retained by dynamic scopes and inheriting tasks */
-    int gzip;                  /* the calls made compress their requests */
-} g_ctx;
+typedef struct g_capture { h2_hdrs headers; size_t users; } g_capture;
+/* One allocation contains the pointer table and all outgoing header text. */
+typedef struct g_metadata { size_t users; const char *kv[]; } g_metadata;
 
 static g_ctx g_empty_ctx;
 static g_conn *g_pool = 0;
@@ -171,23 +160,33 @@ static void g_capture_release(void *arg) {
     if (--cap->users == 0) { h2_hdrs_free(&cap->headers); free(cap); }
 }
 
+static void g_metadata_release(void *arg) {
+    g_metadata *md = (g_metadata *)arg;
+    if (!md->users) abort();
+    if (--md->users == 0) fwp_mem_free(md);
+}
+
 static void *g_context_acquire(void *arg) {
     g_ctx *ctx = (g_ctx *)arg;
     g_tls *tls = ctx ? (g_tls *)ctx->tls : 0;
     g_capture *cap = ctx ? ctx->capture_owner : 0;
+    g_metadata *md = ctx ? ctx->metadata_owner : 0;
     int own_tls = tls && tls->users != SIZE_MAX;
-    /* Validate both counters before changing either, so acquisition is atomic. */
+    /* Validate every counter before changing any, so acquisition is atomic. */
     if (own_tls && tls->users == SIZE_MAX - 1) fwp_trap("too many TLS option owners");
     if (cap && cap->users == SIZE_MAX) fwp_trap("too many metadata capture owners");
+    if (md && md->users == SIZE_MAX) fwp_trap("too many outgoing metadata owners");
     if (own_tls) tls->users++;
     if (cap) cap->users++;
-    return own_tls || cap ? ctx : 0;
+    if (md) md->users++;
+    return own_tls || cap || md ? ctx : 0;
 }
 
 static void g_context_release(void *arg) {
     g_ctx *ctx = (g_ctx *)arg;
     if (ctx->tls && ctx->tls->users != SIZE_MAX) g_tls_release((void *)ctx->tls);
     if (ctx->capture_owner) g_capture_release(ctx->capture_owner);
+    if (ctx->metadata_owner) g_metadata_release(ctx->metadata_owner);
 }
 
 static g_ctx *g_ctx_of(void) {
@@ -868,7 +867,6 @@ static int g_not_response_metadata(const char *k) {
     return 0;
 }
 
-static V g_pairs_value(const h2_hdrs *h);
 
 /* the metadata of a response (headers, then trailers) added to `out` */
 static void g_metadata_into(const g_stream *s, h2_hdrs *out) {
@@ -1238,26 +1236,27 @@ static int g_decode(const g_codec *k, const unsigned char *msg, size_t n, V *out
     /* the details of malformed messages differ between the backends: a
      * message names none */
     h2_buf canon = {0};
-    if (!pb_decode(k->schema, k->node, msg, n, &canon)) {
-        h2b_free(&canon);
-        *why = strdup("malformed message");
-        return G_DEC_BAD;
-    }
+    fwp_cleanup decoded_canonical;
+    fwp_cleanup_push(&decoded_canonical, g_h2_buffer_release, &canon);
+    int status = G_DEC_BAD;
+    if (!pb_decode(k->schema, k->node, msg, n, &canon)) goto done;
     fwp_rd rd = {canon.d, canon.len, 0};
+    const fwp_desc *type = k->ty;
+    status = G_DEC_OK;
     if (k->error) {
         uint64_t tag;
-        if (!rd_leb(&rd, &tag)) { h2b_free(&canon); *why = strdup("malformed message"); return G_DEC_BAD; }
+        if (!rd_leb(&rd, &tag)) { status = G_DEC_BAD; goto done; }
         if (tag == 1) {
-            int ok = fwp_decode(&rd, k->error, out);
-            h2b_free(&canon);
-            if (!ok) { *why = strdup("malformed message"); return G_DEC_BAD; }
-            return G_DEC_ERROR;
+            type = k->error;
+            status = G_DEC_ERROR;
         }
     }
-    int ok = fwp_decode(&rd, k->ty, out);
+    if (!fwp_decode(&rd, type, out)) status = G_DEC_BAD;
+ done:
+    fwp_cleanup_pop(&decoded_canonical);
     h2b_free(&canon);
-    if (!ok) { *why = strdup("malformed message"); return G_DEC_BAD; }
-    return G_DEC_OK;
+    if (status == G_DEC_BAD) *why = strdup("malformed message");
+    return status;
 }
 
 /* encode a message (with the oneof tag of `value` when `tag`) */
@@ -1445,8 +1444,11 @@ typedef struct {
 static int g_sink_send(void *ctx, V x) {
     g_sink *k = (g_sink *)ctx;
     h2_buf b = {0};
+    fwp_cleanup sink_buffer;
+    fwp_cleanup_push(&sink_buffer, g_h2_buffer_release, &b);
     g_encode(&k->enc, x, k->tag, &b);
     int r = g_send_msg(k->c, k->s, b.d, b.len, 0);
+    fwp_cleanup_pop(&sink_buffer);
     h2b_free(&b);
     return r;
 }
@@ -2008,7 +2010,10 @@ static int g_run_method(g_job *j, char **msg) {
         g_msg *req = g_recv_one(j, &code, msg);
         if (!req) return code;
         h2_buf canon = {0};
+        fwp_cleanup request_canonical;
+        fwp_cleanup_push(&request_canonical, g_h2_buffer_release, &canon);
         if (!pb_decode(m->schema, m->req_node, req->d, req->n, &canon)) {
+            fwp_cleanup_pop(&request_canonical);
             h2b_free(&canon);
             free(req);
             *msg = strdup("malformed request message");
@@ -2018,10 +2023,12 @@ static int g_run_method(g_job *j, char **msg) {
         fwp_rd rd = {canon.d, canon.len, 0};
         for (int i = 0; i < m->nreq; i++)
             if (!fwp_decode(&rd, m->req[i], &args[na++])) {
+                fwp_cleanup_pop(&request_canonical);
                 h2b_free(&canon);
                 *msg = strdup("malformed request message");
                 return GRPC_INVALID_ARGUMENT;
             }
+        fwp_cleanup_pop(&request_canonical);
         h2b_free(&canon);
     } else {
         g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src);
@@ -2248,11 +2255,19 @@ static int g_reflect(g_job *j, char **msg) {
             *msg = g.text;
             return GRPC_INVALID_ARGUMENT;
         }
+        fwp_cleanup reflection_request;
+        fwp_cleanup_push(&reflection_request, g_got_release, &g);
         h2_buf out = {0};
+        fwp_cleanup reflection_buffer;
+        fwp_cleanup_push(&reflection_buffer, g_h2_buffer_release, &out);
         g_reflection_response(j->srv, g.m->d, g.m->n, &out);
         free(g.m);
+        g.m = 0;
         g_send_msg(j->c, j->s, out.d, out.len, 0);
+        fwp_cleanup_pop(&reflection_buffer);
         h2b_free(&out);
+        fwp_cleanup_pop(&reflection_request);
+        g_got_release(&g);
     }
 }
 
@@ -2529,18 +2544,18 @@ static V fwp_p_grpc_metadata(const fwp_desc *list_type) {
     return fwp_value_finish(&result, &cleanup);
 }
 
-typedef struct { fwp_task *task; void *saved, *held; } g_context_owner;
+typedef struct { fwp_task *task; void *saved; } g_context_owner;
 static void g_context_restore(void *arg) {
     g_context_owner *owner = (g_context_owner *)arg;
-    if (owner->held) { g_context_release(owner->held); owner->held = 0; }
     owner->task->gctx = owner->saved;
 }
 
-/* run `f` with a context, restoring the task's afterwards */
+/* Scope constructors keep their resource owners alive until this call returns
+ * or unwinds. Borrow them here; only inheriting child tasks need extra owners. */
 static V g_with_ctx(g_ctx *ctx, V f) {
     fwp_task *t = fwp_cur;
     void *saved = t->gctx;
-    g_context_owner owner = {t, saved, g_context_acquire(ctx)};
+    g_context_owner owner = {t, saved};
     fwp_cleanup context_cleanup;
     fwp_cleanup_push(&context_cleanup, g_context_restore, &owner);
     t->gctx = ctx;
@@ -2550,7 +2565,8 @@ static V g_with_ctx(g_ctx *ctx, V f) {
     h.cleanup = fwp_cleanups;
     fwp_handlers = &h;
     if (setjmp(h.jb) == 0) {
-        V r = fwp_apply1(f, FWP_UNIT);
+        V unit = FWP_UNIT;
+        V r = fwp_apply_borrowed(f, 1, &unit);
         fwp_handlers = h.prev;
         fwp_cleanup_pop(&context_cleanup);
         g_context_restore(&owner);
@@ -2566,34 +2582,67 @@ static V g_with_ctx(g_ctx *ctx, V f) {
 
 static V fwp_p_grpc_with_metadata(V md, V f) {
     g_ctx *cur = g_ctx_of();
-    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
-    *ctx = *cur;
-    size_t n;
-    V *items = fwp_list_items(md, &n);
-    ctx->kv = (const char **)fwp_alloc((cur->n + n + 1) * 2 * sizeof(char *));
-    if (cur->n) memcpy(ctx->kv, cur->kv, cur->n * 2 * sizeof(char *));
-    size_t k = cur->n;
-    for (size_t i = 0; i < n; i++) {
-        V kv = items[i];
+    g_ctx scope = *cur, *ctx = &scope;
+    size_t n = cur->n, text = 0;
+    for (V xs = md; xs; xs = OBJ(xs)->f[1]) {
+        V kv = OBJ(xs)->f[0];
         fwp_str *key = STR(OBJ(kv)->f[0]), *val = STR(OBJ(kv)->f[1]);
         if (key->len == 0 || key->d[0] == ':') continue;
-        char *lk = (char *)fwp_alloc_leaf(key->len + 1), *lv = (char *)fwp_alloc_leaf(val->len + 1);
+        if (n == SIZE_MAX) fwp_trap("outgoing metadata too large");
+        n++;
+        size_t sizes[2] = {key->len, val->len};
+        for (int i = 0; i < 2; i++) {
+            if (sizes[i] == SIZE_MAX || sizes[i] + 1 > SIZE_MAX - text)
+                fwp_trap("outgoing metadata too large");
+            text += sizes[i] + 1;
+        }
+    }
+    /* No new headers means the existing owner can be borrowed unchanged. */
+    if (n == cur->n) return g_with_ctx(ctx, f);
+    if (n > (SIZE_MAX - sizeof(g_metadata)) / 2 / sizeof(char *))
+        fwp_trap("outgoing metadata too large");
+    size_t prefix = sizeof(g_metadata) + n * 2 * sizeof(char *);
+    for (size_t i = 0; i < cur->n * 2; i++) {
+        size_t len = strlen(cur->kv[i]);
+        if (len == SIZE_MAX || len + 1 > SIZE_MAX - text)
+            fwp_trap("outgoing metadata too large");
+        text += len + 1;
+    }
+    if (text > SIZE_MAX - prefix) fwp_trap("outgoing metadata too large");
+    g_metadata *owner = (g_metadata *)fwp_alloc_leaf(prefix + text);
+    owner->users = 1;
+    char *next = (char *)owner + prefix;
+    for (size_t i = 0; i < cur->n * 2; i++) {
+        size_t len = strlen(cur->kv[i]) + 1;
+        owner->kv[i] = next;
+        memcpy(next, cur->kv[i], len);
+        next += len;
+    }
+    size_t k = cur->n;
+    for (V xs = md; xs; xs = OBJ(xs)->f[1]) {
+        V kv = OBJ(xs)->f[0];
+        fwp_str *key = STR(OBJ(kv)->f[0]), *val = STR(OBJ(kv)->f[1]);
+        if (key->len == 0 || key->d[0] == ':') continue;
+        char *lk = next, *lv = lk + key->len + 1;
+        next = lv + val->len + 1;
         for (size_t c = 0; c < key->len; c++) lk[c] = (char)tolower((unsigned char)key->d[c]);
         lk[key->len] = 0;
         for (size_t c = 0; c < val->len; c++) lv[c] = val->d[c] == '\r' || val->d[c] == '\n' ? ' ' : val->d[c];
         lv[val->len] = 0;
-        ctx->kv[2 * k] = lk;
-        ctx->kv[2 * k + 1] = lv;
+        owner->kv[2 * k] = lk;
+        owner->kv[2 * k + 1] = lv;
         k++;
     }
-    ctx->n = k;
-    return g_with_ctx(ctx, f);
-}
-
-static V g_pairs_value(const h2_hdrs *h) {
-    V *items = (V *)fwp_alloc((h->n + 1) * sizeof(V));
-    for (size_t i = 0; i < h->n; i++) items[i] = fwp_tuple2(fwp_cstr(h->v[i].name), fwp_cstr(h->v[i].value));
-    return fwp_list_from(items, h->n);
+    ctx->n = n;
+    ctx->kv = owner->kv;
+    ctx->metadata_owner = owner;
+    fwp_cleanup metadata_cleanup;
+    fwp_cleanup_push(&metadata_cleanup, g_metadata_release, owner);
+    V result = g_with_ctx(ctx, f);
+    fwp_cleanup_pop(&metadata_cleanup);
+    g_metadata_release(owner);
+    FWP_KEEP_ALIVE(md);
+    return result;
 }
 
 /* a response header (0) or trailer (1) of the call the task serves */
@@ -2612,16 +2661,14 @@ static V fwp_p_grpc_set_meta(int trailer, V name, V value) {
 
 static V fwp_p_grpc_with_gzip(V f) {
     g_ctx *cur = g_ctx_of();
-    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
-    *ctx = *cur;
+    g_ctx scope = *cur, *ctx = &scope;
     ctx->gzip = 1;
     return g_with_ctx(ctx, f);
 }
 
-static V fwp_p_grpc_with_response_metadata(V f) {
+static V fwp_p_grpc_with_response_metadata(V f, const fwp_desc *result_type) {
     g_ctx *cur = g_ctx_of();
-    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
-    *ctx = *cur;
+    g_ctx scope = *cur, *ctx = &scope;
     g_capture *owner = (g_capture *)calloc(1, sizeof *owner);
     if (!owner) fwp_trap("cannot allocate response metadata capture");
     owner->users = 1;
@@ -2630,16 +2677,30 @@ static V fwp_p_grpc_with_response_metadata(V f) {
     h2_hdrs *cap = &owner->headers;
     ctx->capture = cap;
     ctx->capture_owner = owner;
-    V r = g_with_ctx(ctx, f);
+    fwp_decode_fields result;
+    fwp_decode_fields_begin(&result, 2, result_type->fields, 2, NULL);
+    result.values[0] = g_with_ctx(ctx, f);
     if (cur->capture)
         for (size_t i = 0; i < cap->n; i++)
             h2_hdrs_add(cur->capture, cap->v[i].name, strlen(cap->v[i].name), cap->v[i].value,
                         strlen(cap->v[i].value));
-    V md = g_pairs_value(cap);
-    V result = fwp_tuple2(r, md);
+    const fwp_desc *list_type = result_type->fields[1];
+    /* Reverse construction preserves response order without a scratch array. */
+    for (size_t i = cap->n; i > 0; i--) {
+        const h2_hdr *header = &cap->v[i - 1];
+        fwp_decode_fields fields;
+        fwp_decode_fields_begin(&fields, 2, list_type->elem->fields, 2, NULL);
+        fields.values[0] = fwp_rc_fresh(fwp_cstr(header->name));
+        fields.values[1] = fwp_rc_fresh(fwp_cstr(header->value));
+        fwp_value_owner pair = {fwp_decode_record(&fields), list_type->elem->drop};
+        fwp_cleanup pair_cleanup; fwp_value_protect(&pair, &pair_cleanup);
+        result.values[1] = fwp_rc_fresh(fwp_cons(pair.value, result.values[1]));
+        fwp_value_finish(&pair, &pair_cleanup);
+    }
+    V value = fwp_decode_record(&result);
     fwp_cleanup_pop(&capture_cleanup);
     g_capture_release(owner);
-    return result;
+    return value;
 }
 
 static V fwp_p_grpc_peer_subject(const fwp_desc *option_type) {
@@ -2660,8 +2721,7 @@ static const char *g_opt_text(V o) { return o == FWP_NONE ? "" : STR(OBJ(o)->f[0
  * server-name, cert-file and key-file */
 static V fwp_p_grpc_with_tls(V o, V f, int ica, int iins, int iname, int icert, int ikey) {
     g_ctx *cur = g_ctx_of();
-    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
-    *ctx = *cur;
+    g_ctx scope = *cur, *ctx = &scope;
     V *fs = OBJ(o)->f;
     ctx->tls = g_tls_new(g_opt_text(fs[ica]), fs[iins] == FWP_TRUE, g_opt_text(fs[iname]), g_opt_text(fs[icert]),
                          g_opt_text(fs[ikey]));
@@ -2676,8 +2736,7 @@ static V fwp_p_grpc_with_tls(V o, V f, int ica, int iins, int iname, int icert, 
 
 static V fwp_p_grpc_with_deadline(V d, V f) {
     g_ctx *cur = g_ctx_of();
-    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
-    *ctx = *cur;
+    g_ctx scope = *cur, *ctx = &scope;
     ctx->deadline = g_earliest(cur->deadline, fwp_after(d));
     return g_with_ctx(ctx, f);
 }

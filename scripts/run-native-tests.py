@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Partition Cargo's test targets across the two required macOS jobs."""
+"""Run all native Cargo test targets or one explicit macOS shard."""
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
@@ -56,17 +56,21 @@ def command(metadata, shard, schedule):
     if missing or obsolete:
         raise ValueError(f"update scripts/macos-test-shards.json: "
                          f"unassigned={sorted(missing)}, obsolete={sorted(obsolete)}")
-    selected = sorted(schedule[shard])
+    selected = sorted(names if shard == "all" else schedule[shard])
     if not selected:
         raise ValueError(f"empty integration test shard: {shard}")
     args = ["cargo", "test", "--no-fail-fast"]
-    # Unit, example and benchmark targets run once in the regular job.
-    if shard == "regular":
-        args += ["--lib", "--bins", "--examples", "--benches"]
-    for name in selected:
-        args += ["--test", name]
-    # The gc job runs this test separately, exactly once, before its shard.
-    args += ["--", "--skip", "golden_programs_under_gc_stress"]
+    if shard == "all":
+        # Linux retains Cargo's complete target selection and every stress test.
+        args += ["--all-targets", "--"]
+    else:
+        # Mac unit, example and benchmark targets run once in the regular job.
+        if shard == "regular":
+            args += ["--lib", "--bins", "--examples", "--benches"]
+        for name in selected:
+            args += ["--test", name]
+        # The Mac GC job runs this test separately before its shard.
+        args += ["--", "--skip", "golden_programs_under_gc_stress"]
     return args, sorted(names), selected
 
 
@@ -75,7 +79,7 @@ def test_executables(output, metadata, shard, selected):
                    if Path(package["manifest_path"]).resolve() == ROOT / "Cargo.toml")
     expected = {(target["kind"][0], target["name"]) for target in package["targets"]
                 if (target["kind"] == ["test"] and target["name"] in selected)
-                or (shard == "regular" and len(target["kind"]) == 1
+                or (shard in {"regular", "all"} and len(target["kind"]) == 1
                     and target["kind"][0] in UNIT_TARGETS)}
     executables = {}
     for line in output.splitlines():
@@ -125,13 +129,16 @@ def run_tests(executables, test_args, logs):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--shard", choices=SHARDS, required=True)
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument("--shard", choices=SHARDS)
+    selection.add_argument("--all", action="store_true")
     parser.add_argument("--logs", type=Path, required=True)
     options = parser.parse_args()
     metadata = json.loads(subprocess.check_output(
         ["cargo", "metadata", "--no-deps", "--format-version", "1"], cwd=ROOT))
-    args, all_targets, selected = command(metadata, options.shard, assignment(SCHEDULE))
-    print(f"macOS {options.shard}: {len(selected)}/{len(all_targets)} "
+    selected_group = "all" if options.all else options.shard
+    args, all_targets, selected = command(metadata, selected_group, assignment(SCHEDULE))
+    print(f"Native {selected_group}: {len(selected)}/{len(all_targets)} "
           "integration targets", flush=True)
     print("\n".join(selected), flush=True)
     split = args.index("--")
@@ -141,7 +148,7 @@ def main():
     if built.returncode:
         print(built.stdout, end="", file=sys.stderr)
         built.check_returncode()
-    executables = test_executables(built.stdout, metadata, options.shard, selected)
+    executables = test_executables(built.stdout, metadata, selected_group, selected)
     return run_tests(executables, args[split + 1:], options.logs)
 
 

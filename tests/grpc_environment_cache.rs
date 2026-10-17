@@ -28,6 +28,9 @@ fn environment_tls_cache_releases_after_task_and_finalizer_teardown() {
     let (generated, _) = fwp::cgen::generate_library(&program, "grpc_environment").unwrap();
     assert!(generated.contains("#define FWP_GCTX_OWNERS 1"));
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 static void *owned[16];static int nowned,frees,entered,cancelled,finalized,order_error;
 static const char *expected;
@@ -37,6 +40,14 @@ static void observe_free(void *);
     let fixture = r#"
 #undef free
 static void observe_free(void *p){if(p)for(int i=0;i<nowned;i++)if(owned[i]==p){owned[i]=0;frees++;break;}free(p);}
+// Use each platform's environment API; empty values remove variables here.
+static void set_environment(const char *name,const char *value){
+#ifdef _WIN32
+ if(_putenv_s(name,value))_Exit(10);
+#else
+ if(value[0]?setenv(name,value,1):unsetenv(name))_Exit(10);
+#endif
+}
 static void observe_cache(void){
  nowned=0;for(g_env_options *k=g_env_options_known;k;k=k->next){
   owned[nowned++]=k;owned[nowned++]=(void*)k->var;
@@ -50,15 +61,15 @@ static void blocked(void *p,int stop){
 }
 int main(void){
  const char *const suffixes[]={"CA","INSECURE","SERVER_NAME","CERT","KEY"};
- for(int i=0;i<5;i++){char name[100];snprintf(name,sizeof name,"FWP_SERVICE_EMPTY_%s",suffixes[i]);unsetenv(name);snprintf(name,sizeof name,"FWP_SERVICE_CACHE_%s",suffixes[i]);unsetenv(name);}
- setenv("FWP_SERVICE_CACHE_CA","first",1);
+ for(int i=0;i<5;i++){char name[100];snprintf(name,sizeof name,"FWP_SERVICE_EMPTY_%s",suffixes[i]);set_environment(name,"");snprintf(name,sizeof name,"FWP_SERVICE_CACHE_%s",suffixes[i]);set_environment(name,"");}
+ set_environment("FWP_SERVICE_CACHE_CA","first");
  for(int round=0;round<2;round++){
   expected=round?"second":"first";frees=entered=cancelled=finalized=order_error=0;memset(owned,0,sizeof owned);
   fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
   const g_tls *tls=g_env_tls("FWP_SERVICE_CACHE");if(!tls||strcmp(tls->ca,expected)||tls->users!=SIZE_MAX)return 4;
   if(g_env_tls("FWP_SERVICE_EMPTY"))return 5;
   observe_cache();if(nowned!=5)return 6;
-  setenv("FWP_SERVICE_CACHE_CA",round?"third":"second",1);
+  set_environment("FWP_SERVICE_CACHE_CA",round?"third":"second");
   if(g_env_tls("FWP_SERVICE_CACHE")!=tls||strcmp(tls->ca,expected)||frees)return 7;
   g_ctx context={0};context.tls=tls;g_ctx_of();fwp_cur->gctx=&context;
   fwp_task *task=fwp_spawn_task(0,blocked,0,0,1);fwp_cur->gctx=0;fwp_p_task_yield();
@@ -69,7 +80,7 @@ int main(void){
   fwp_lib_finish();if(frees!=nowned)return 9;
   FWP_KEEP_ALIVE(value);
  }
- unsetenv("FWP_SERVICE_CACHE_CA");return 0;
+ set_environment("FWP_SERVICE_CACHE_CA","");return 0;
 }
 "#;
     let cleanup = "    g_environment_finish();";

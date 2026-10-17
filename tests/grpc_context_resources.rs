@@ -44,7 +44,7 @@ fn scoped_tls_options_release_after_callbacks_and_escaped_tasks() {
             .find("\nstatic V fwp_p_grpc_with_metadata")
             .unwrap();
     let method = generated[start..end].replace(
-        "V r = fwp_apply1(f, FWP_UNIT);",
+        "V r = fwp_apply_borrowed(f, 1, &unit);",
         "V r = observed_callback(f);",
     );
     generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
@@ -52,9 +52,12 @@ fn scoped_tls_options_release_after_callbacks_and_escaped_tasks() {
     assert_eq!(generated.matches(prepare).count(), 1);
     generated=generated.replacen(prepare,"    if(fail_spawn&&t->cfn==child){fail_spawn=0;fwp_trap(\"child prepare trap\");}\n    fwp_scope *s = detached ? 0 : fwp_cur->scope;",1);
     let hooks = r#"
+#if defined(_WIN32) && !defined(_WIN32_WINNT)
+#define _WIN32_WINNT 0x0a00
+#endif
 #include <stdlib.h>
 #include <stdint.h>
-static int stage,frees,entered,cancelled,trapped,typed,scope_returned,fail_spawn;
+static int stage,frees,entered,cancelled,trapped,typed,scope_returned,fail_spawn,borrow_depth;
 static void *owned[1],*watched_tls,*spawned;
 static void remember_tls(void *);
 static void observed_free(void *);
@@ -69,8 +72,8 @@ static const fwp_desc string_descriptor={.kind=K_STR,.name="String"};
 static void no_release(void *p){(void)p;}
 static void remember_tls(void *p){g_tls *t=p;watched_tls=t;owned[0]=t;}
 static void observed_free(void *p){if(p)for(int i=0;i<1;i++)if(owned[i]==p){owned[i]=0;frees++;break;}free(p);}
-static void check_options(void){const g_tls *t=g_ctx_of()->tls;if(t!=watched_tls||strcmp(t->ca,"ca")||strcmp(t->name,"name")||strcmp(t->cert,"cert")||strcmp(t->keyfile,"key")||!t->insecure||frees)_Exit(10);}
-static void overflow_restore(void *p){g_tls *t=p;if(t->users!=SIZE_MAX-1)_Exit(11);t->users=2;}
+static void check_options(void){const g_tls *t=g_ctx_of()->tls;if(t!=watched_tls||strcmp(t->ca,"ca")||strcmp(t->name,"name")||strcmp(t->cert,"cert")||strcmp(t->keyfile,"key")||!t->insecure||frees||(t->users!=1&&t->users!=SIZE_MAX))_Exit(10);}
+static void overflow_restore(void *p){g_tls *t=p;if(t->users!=SIZE_MAX-1)_Exit(11);t->users=1;}
 static void child(void *arg,int stop){
  if(stop){cancelled++;return;}
  check_options();if(!scope_returned)_Exit(12);
@@ -79,6 +82,7 @@ static void child(void *arg,int stop){
 }
 static uintptr_t observed_callback(uintptr_t f){
  check_options();
+ if(stage==9&&!borrow_depth){borrow_depth=1;V r=fwp_p_grpc_with_gzip(0);borrow_depth=0;return r;}
  if(stage==1)fwp_fail(fwp_cstr("TLS typed failure"),&string_descriptor);
  if(stage==2)fwp_trap("TLS scope trap");
  if(stage==3){entered=1;fwp_park(0,0);fwp_check_cancel();_Exit(13);}
@@ -105,8 +109,8 @@ static void call(void *arg,int stop){
 }
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();fwp_trap_recover=g_trap_recover;
- for(stage=0;stage<9;stage++){
-  frees=entered=cancelled=trapped=typed=scope_returned=fail_spawn=0;memset(owned,0,sizeof owned);watched_tls=spawned=0;
+ for(stage=0;stage<10;stage++){
+  frees=entered=cancelled=trapped=typed=scope_returned=fail_spawn=borrow_depth=0;memset(owned,0,sizeof owned);watched_tls=spawned=0;
   V fields[5];fields[0]=fwp_some(fwp_cstr("ca"));fields[1]=FWP_TRUE;fields[2]=fwp_some(fwp_cstr("name"));fields[3]=fwp_some(fwp_cstr("cert"));fields[4]=fwp_some(fwp_cstr("key"));V options=fwp_record(5,fields);
   fwp_task *task=fwp_spawn_task(0,call,(void*)(uintptr_t)options,0,0);
   if(stage==3){fwp_p_task_yield();if(!entered||task->done||frees)return 2;fwp_p_task_cancel(PTR(task));}
@@ -116,7 +120,7 @@ int main(void){
   FWP_KEEP_ALIVE(options);FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(spawned));
  }
  // Read-once cache options retain their original cache lifetime.
- stage=9;frees=0;g_ctx context={0};context.tls=g_tls_new("ca",1,"name","cert","key");
+ stage=10;frees=0;g_ctx context={0};context.tls=g_tls_new("ca",1,"name","cert","key");
  if(g_with_ctx(&context,0)!=42||frees||context.tls->users!=SIZE_MAX||g_context_acquire(&context))return 4;
  g_tls *cached=(g_tls*)context.tls;observed_free(cached);if(frees!=1)return 5;
  fwp_lib_finish();return 0;
@@ -128,14 +132,18 @@ int main(void){
     assert_eq!(generated.matches(finish).count(), 1);
     let pending = "fwp_gctx_release(*held);";
     assert_eq!(generated.matches(pending).count(), 1);
-    let scope = "if (owner->held) { g_context_release(owner->held); owner->held = 0; }";
-    assert_eq!(generated.matches(scope).count(), 1);
+    let release = "    g_tls_release((void *)ctx->tls);";
+    let unwind = "fwp_cleanup_push(&tls_cleanup, g_tls_release, (void *)ctx->tls);";
+    for needle in [release, unwind] {
+        assert_eq!(generated.matches(needle).count(), 1);
+    }
     let controls = [
         generated.replacen(finish, "no_release(held);", 1),
         generated.replacen(pending, "no_release(*held);", 1),
+        generated.replacen(release, "    no_release((void *)ctx->tls);", 1),
         generated.replacen(
-            scope,
-            "if(owner->held){no_release(owner->held);owner->held=0;}",
+            unwind,
+            "fwp_cleanup_push(&tls_cleanup, no_release, (void *)ctx->tls);",
             1,
         ),
     ];

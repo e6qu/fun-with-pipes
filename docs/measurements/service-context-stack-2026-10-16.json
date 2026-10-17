@@ -1,0 +1,1681 @@
+{
+  "title": "Stack settings remove repeated context allocation; tasks carry an inline copy",
+  "source_revision": "ad77934c83c78e905a0a033120dc796152084de1",
+  "run": "https://github.com/e6qu/fun-with-pipes/actions/runs/38943086313",
+  "scope": "Intermediate stack-copy implementation, not the later packed-header or owned-callback changes. All six ordinary allocation tests passed; complete Windows jobs failed in separate C fixture compilation. Not acceptance of the current branch.",
+  "comparison": "Each fwp service scope versus a plain fwp state update at matching 1/32/128 calls, O2, collection disabled. The saved 64-byte request versus the earlier Linux AMD64 baseline applies to gzip and deadline calls. No elapsed-time or C/Rust comparison.",
+  "limits": "Managed allocation requests, requested bytes, and final charged storage only; not peak/process memory. Raw buffers, allocator metadata and pages are excluded. Plain programs omit the service-owner fields; their task sizes are not the old service task size. The old service task was 1512 bytes on Linux AMD64; this revision measures 1576, a 64-byte increase.",
+  "hosts": [
+    {
+      "runner": "macos-15",
+      "job": {
+        "name": "paths (macos-15)",
+        "databaseId": 117115350000,
+        "conclusion": "success"
+      },
+      "ordinary_program_measurement": "passed",
+      "detached_child_lifetime": "passed",
+      "environment": "Source: ad77934c83c78e905a0a033120dc796152084de1\nOS: macos\nArchitecture: aarch64\nC compiler:\nApple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\nRust compiler:\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\nCPU:\nApple M1 (Virtual)\nNative optimization: -O2 measurements; -O1/-O2 lifetime controls\nCompilation flags: fwp::cgen::compile_c at the recorded source revision\n",
+      "extra_per_call_versus_plain_between_32_and_128": {
+        "gzip": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "deadline": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "metadata": {
+          "managed_requests": "4",
+          "requested_bytes": "64",
+          "final_charged_bytes": "80"
+        },
+        "capture": {
+          "managed_requests": "3",
+          "requested_bytes": "56",
+          "final_charged_bytes": "48"
+        }
+      },
+      "layouts": {
+        "plain": {
+          "context_bytes": 0,
+          "context_alignment": 0,
+          "task_bytes": 536,
+          "task_alignment": 8
+        },
+        "gzip": {
+          "context_bytes": 64,
+          "context_alignment": 8,
+          "task_bytes": 608,
+          "task_alignment": 8
+        }
+      },
+      "rows": [
+        {
+          "case": "plain",
+          "iterations": 1,
+          "managed_requests": 8,
+          "requested_bytes": 258,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 32,
+          "managed_requests": 70,
+          "requested_bytes": 1995,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 128,
+          "managed_requests": 262,
+          "requested_bytes": 7372,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 1,
+          "managed_requests": 11,
+          "requested_bytes": 906,
+          "final_charged_bytes": 704,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 32,
+          "managed_requests": 73,
+          "requested_bytes": 2643,
+          "final_charged_bytes": 704,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 128,
+          "managed_requests": 265,
+          "requested_bytes": 8020,
+          "final_charged_bytes": 704,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 1,
+          "managed_requests": 12,
+          "requested_bytes": 922,
+          "final_charged_bytes": 704,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 32,
+          "managed_requests": 74,
+          "requested_bytes": 2659,
+          "final_charged_bytes": 704,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 128,
+          "managed_requests": 266,
+          "requested_bytes": 8036,
+          "final_charged_bytes": 704,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 1,
+          "managed_requests": 18,
+          "requested_bytes": 1034,
+          "final_charged_bytes": 848,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 32,
+          "managed_requests": 204,
+          "requested_bytes": 4755,
+          "final_charged_bytes": 3328,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 128,
+          "managed_requests": 780,
+          "requested_bytes": 16276,
+          "final_charged_bytes": 11008,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 1,
+          "managed_requests": 15,
+          "requested_bytes": 986,
+          "final_charged_bytes": 752,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 32,
+          "managed_requests": 170,
+          "requested_bytes": 4459,
+          "final_charged_bytes": 2240,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 128,
+          "managed_requests": 650,
+          "requested_bytes": 15212,
+          "final_charged_bytes": 6848,
+          "collections": 0
+        }
+      ],
+      "files": {
+        "environment.txt": {
+          "bytes": 667,
+          "sha256": "4e42df6f87f6302f4495b0521c7b553a8f14e1368a859107c41936786b348908"
+        },
+        "storage.tsv": {
+          "bytes": 450,
+          "sha256": "5d01651f82a0c706d65b1a5c114b1d1dcdae555edb6690a410f7c055b06e0cfc"
+        },
+        "layout.tsv": {
+          "bytes": 381,
+          "sha256": "53dcc23b94ccaf4d362fe54c0c37ae117f353a8c03d3190069424c523ff64b88"
+        },
+        "job.log": {
+          "bytes": 46342,
+          "sha256": "2c9c7d49cbb42fdb347f135a974748bcbd251611d27980ccd484dad9cbd6add7"
+        },
+        "plain-128.fwp": {
+          "bytes": 162,
+          "sha256": "f80801a45905bb5e0eb3edab542ff95b4ea5653f3a5a3bf18d2efb9da573c627"
+        },
+        "plain-128.c": {
+          "bytes": 662198,
+          "sha256": "f528eb07bf11c07324ecfa3b86e3048f093797cf34f97116059a0d3d813b9ab2"
+        },
+        "plain-128-measured.c": {
+          "bytes": 663012,
+          "sha256": "1a8f28cbc6f2155d2df57cf6066cb4e256e047c541185503c59c45c5d7650224"
+        },
+        "gzip-128.fwp": {
+          "bytes": 187,
+          "sha256": "eb998177a93433c8e3a8c967b3bbe560cb31519b9715080df6c1019288245563"
+        },
+        "gzip-128.c": {
+          "bytes": 872347,
+          "sha256": "c9bb70aec5d4408d51cb0b800caceb58e4a717bd79c450c6c6e41764a7c94322"
+        },
+        "gzip-128-measured.c": {
+          "bytes": 873161,
+          "sha256": "189470a8b4b95667a74457abc73714463cb828c065ced94f638363d0741d93d0"
+        },
+        "deadline-128.fwp": {
+          "bytes": 194,
+          "sha256": "f04e5f9984616093035e1de55e649529372201ded49b4b865177f3a621008c8f"
+        },
+        "deadline-128.c": {
+          "bytes": 873582,
+          "sha256": "41e1433d2532fcbf9df3a8d4d892dcdfbbecd373892a4b4c7768658e3239bed6"
+        },
+        "deadline-128-measured.c": {
+          "bytes": 874396,
+          "sha256": "58d6e566216501d825e9f1d955e39e7542dd4846fd081601571dda877c0c633a"
+        },
+        "metadata-128.fwp": {
+          "bytes": 218,
+          "sha256": "61fffbb3dda8ac2d3059676adb9a3b506df91b91993f08e3637a110560d01a85"
+        },
+        "metadata-128.c": {
+          "bytes": 875143,
+          "sha256": "cd4f6a58cb3ad52b5ddd60a9013e5b9d05cb19ea000ed36b110453b4726c2d7d"
+        },
+        "metadata-128-measured.c": {
+          "bytes": 875957,
+          "sha256": "73c36d95dbe43774919e59661e7bc1f562a9b72e495a0f5b5a2c3711ffff711f"
+        },
+        "capture-128.fwp": {
+          "bytes": 205,
+          "sha256": "cca089661b3f4e790142240651e856056693c4d707d7c250f69d79b0d759ab1e"
+        },
+        "capture-128.c": {
+          "bytes": 879551,
+          "sha256": "d4ff66cd24ef7de3bc940209e66c94a69d0fdf7579e80131d6f41ef7ce004097"
+        },
+        "capture-128-measured.c": {
+          "bytes": 880365,
+          "sha256": "56fb1412ebdc682bb3e2ca003a39cd1ca44c098adfed383b4a227fba45fa7199"
+        }
+      },
+      "binaries": {
+        "plain-128.exe": {
+          "bytes": 89920,
+          "sha256": "0022ec61746196071cfce7357570bc124bc6f852612fc6050f49116ebd115e43",
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "gzip-128.exe": {
+          "bytes": 91792,
+          "sha256": "afd10a015e5d1e9356450d78dad90b15aac858d3c1902f24d426da885bec08b5",
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "deadline-128.exe": {
+          "bytes": 108368,
+          "sha256": "1d610233b8b37aa67763d9d526716e909e95fee59253141d6ea78bf39d3ef20d",
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "metadata-128.exe": {
+          "bytes": 108608,
+          "sha256": "3a8f4535c0d3dc2fb886701b5f79c3d2d6812b5fe8d52513aecbb03e8c0283e6",
+          "format": "Mach-O 64-bit executable arm64"
+        },
+        "capture-128.exe": {
+          "bytes": 109232,
+          "sha256": "cc4bfc1d6bedd74f2f8d8a2c89a0011e9cd7d4e085160bc31af3e697c29c3f29",
+          "format": "Mach-O 64-bit executable arm64"
+        }
+      }
+    },
+    {
+      "runner": "macos-15-intel",
+      "job": {
+        "name": "paths (macos-15-intel)",
+        "databaseId": 117115349645,
+        "conclusion": "success"
+      },
+      "ordinary_program_measurement": "passed",
+      "detached_child_lifetime": "passed",
+      "environment": "Source: ad77934c83c78e905a0a033120dc796152084de1\nOS: macos\nArchitecture: x86_64\nC compiler:\nApple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\nRust compiler:\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1\nCPU:\nIntel(R) Core(TM) i7-8700B CPU @ 3.20GHz\nNative optimization: -O2 measurements; -O1/-O2 lifetime controls\nCompilation flags: fwp::cgen::compile_c at the recorded source revision\n",
+      "extra_per_call_versus_plain_between_32_and_128": {
+        "gzip": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "deadline": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "metadata": {
+          "managed_requests": "4",
+          "requested_bytes": "64",
+          "final_charged_bytes": "80"
+        },
+        "capture": {
+          "managed_requests": "3",
+          "requested_bytes": "56",
+          "final_charged_bytes": "48"
+        }
+      },
+      "layouts": {
+        "plain": {
+          "context_bytes": 0,
+          "context_alignment": 0,
+          "task_bytes": 496,
+          "task_alignment": 8
+        },
+        "gzip": {
+          "context_bytes": 64,
+          "context_alignment": 8,
+          "task_bytes": 568,
+          "task_alignment": 8
+        }
+      },
+      "rows": [
+        {
+          "case": "plain",
+          "iterations": 1,
+          "managed_requests": 8,
+          "requested_bytes": 258,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 32,
+          "managed_requests": 70,
+          "requested_bytes": 1995,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 128,
+          "managed_requests": 262,
+          "requested_bytes": 7372,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 1,
+          "managed_requests": 11,
+          "requested_bytes": 866,
+          "final_charged_bytes": 704,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 32,
+          "managed_requests": 73,
+          "requested_bytes": 2603,
+          "final_charged_bytes": 704,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 128,
+          "managed_requests": 265,
+          "requested_bytes": 7980,
+          "final_charged_bytes": 704,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 1,
+          "managed_requests": 12,
+          "requested_bytes": 882,
+          "final_charged_bytes": 704,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 32,
+          "managed_requests": 74,
+          "requested_bytes": 2619,
+          "final_charged_bytes": 704,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 128,
+          "managed_requests": 266,
+          "requested_bytes": 7996,
+          "final_charged_bytes": 704,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 1,
+          "managed_requests": 18,
+          "requested_bytes": 994,
+          "final_charged_bytes": 848,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 32,
+          "managed_requests": 204,
+          "requested_bytes": 4715,
+          "final_charged_bytes": 3328,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 128,
+          "managed_requests": 780,
+          "requested_bytes": 16236,
+          "final_charged_bytes": 11008,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 1,
+          "managed_requests": 15,
+          "requested_bytes": 946,
+          "final_charged_bytes": 752,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 32,
+          "managed_requests": 170,
+          "requested_bytes": 4419,
+          "final_charged_bytes": 2240,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 128,
+          "managed_requests": 650,
+          "requested_bytes": 15172,
+          "final_charged_bytes": 6848,
+          "collections": 0
+        }
+      ],
+      "files": {
+        "environment.txt": {
+          "bytes": 688,
+          "sha256": "b8870afef0b83fe9a3124faf0901484b8e365d80415d189e3b42cb5052a6051f"
+        },
+        "storage.tsv": {
+          "bytes": 449,
+          "sha256": "6cdaca55b09e87368d72312385dbaefe14971ad63f418d8e936cb2bb494f35e2"
+        },
+        "layout.tsv": {
+          "bytes": 381,
+          "sha256": "3d6463b2a07a694954e1161cabfa5285679ca14e19edf840d8dfeee98cfcc43c"
+        },
+        "job.log": {
+          "bytes": 48935,
+          "sha256": "35d5614331e226ba02064697c6fefbe07008f5b44322c8c85a4b9b3cc3541033"
+        },
+        "plain-128.fwp": {
+          "bytes": 162,
+          "sha256": "f80801a45905bb5e0eb3edab542ff95b4ea5653f3a5a3bf18d2efb9da573c627"
+        },
+        "plain-128.c": {
+          "bytes": 662198,
+          "sha256": "f528eb07bf11c07324ecfa3b86e3048f093797cf34f97116059a0d3d813b9ab2"
+        },
+        "plain-128-measured.c": {
+          "bytes": 663012,
+          "sha256": "1a8f28cbc6f2155d2df57cf6066cb4e256e047c541185503c59c45c5d7650224"
+        },
+        "gzip-128.fwp": {
+          "bytes": 187,
+          "sha256": "eb998177a93433c8e3a8c967b3bbe560cb31519b9715080df6c1019288245563"
+        },
+        "gzip-128.c": {
+          "bytes": 872347,
+          "sha256": "c9bb70aec5d4408d51cb0b800caceb58e4a717bd79c450c6c6e41764a7c94322"
+        },
+        "gzip-128-measured.c": {
+          "bytes": 873161,
+          "sha256": "189470a8b4b95667a74457abc73714463cb828c065ced94f638363d0741d93d0"
+        },
+        "deadline-128.fwp": {
+          "bytes": 194,
+          "sha256": "f04e5f9984616093035e1de55e649529372201ded49b4b865177f3a621008c8f"
+        },
+        "deadline-128.c": {
+          "bytes": 873582,
+          "sha256": "41e1433d2532fcbf9df3a8d4d892dcdfbbecd373892a4b4c7768658e3239bed6"
+        },
+        "deadline-128-measured.c": {
+          "bytes": 874396,
+          "sha256": "58d6e566216501d825e9f1d955e39e7542dd4846fd081601571dda877c0c633a"
+        },
+        "metadata-128.fwp": {
+          "bytes": 218,
+          "sha256": "61fffbb3dda8ac2d3059676adb9a3b506df91b91993f08e3637a110560d01a85"
+        },
+        "metadata-128.c": {
+          "bytes": 875143,
+          "sha256": "cd4f6a58cb3ad52b5ddd60a9013e5b9d05cb19ea000ed36b110453b4726c2d7d"
+        },
+        "metadata-128-measured.c": {
+          "bytes": 875957,
+          "sha256": "73c36d95dbe43774919e59661e7bc1f562a9b72e495a0f5b5a2c3711ffff711f"
+        },
+        "capture-128.fwp": {
+          "bytes": 205,
+          "sha256": "cca089661b3f4e790142240651e856056693c4d707d7c250f69d79b0d759ab1e"
+        },
+        "capture-128.c": {
+          "bytes": 879551,
+          "sha256": "d4ff66cd24ef7de3bc940209e66c94a69d0fdf7579e80131d6f41ef7ce004097"
+        },
+        "capture-128-measured.c": {
+          "bytes": 880365,
+          "sha256": "56fb1412ebdc682bb3e2ca003a39cd1ca44c098adfed383b4a227fba45fa7199"
+        }
+      },
+      "binaries": {
+        "plain-128.exe": {
+          "bytes": 64536,
+          "sha256": "828a15b436516b77094029a9ff720d62c427c42f0bfe0d3b43ae300d560dd79f",
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "gzip-128.exe": {
+          "bytes": 74560,
+          "sha256": "61655584569a1f612cbc8b105bbb6786104ced77954eb1aa027897a60cfb55be",
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "deadline-128.exe": {
+          "bytes": 78712,
+          "sha256": "28140fdf375440c783b6538b98ee1082739655e5a14ab84a5aaa586c5cd8f292",
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "metadata-128.exe": {
+          "bytes": 78952,
+          "sha256": "09e8c5daafa538e7d3f3d4f2a42465c3d01774b44887540b6df50886f73c3ee0",
+          "format": "Mach-O 64-bit executable x86_64"
+        },
+        "capture-128.exe": {
+          "bytes": 83680,
+          "sha256": "fb53fcd971921d3b6e135f57385fe799da8436f93174b59b2ae3361e59984ca6",
+          "format": "Mach-O 64-bit executable x86_64"
+        }
+      }
+    },
+    {
+      "runner": "ubuntu-24.04-arm",
+      "job": {
+        "name": "paths (ubuntu-24.04-arm)",
+        "databaseId": 117115350065,
+        "conclusion": "success"
+      },
+      "ordinary_program_measurement": "passed",
+      "detached_child_lifetime": "passed",
+      "environment": "Source: ad77934c83c78e905a0a033120dc796152084de1\nOS: linux\nArchitecture: aarch64\nC compiler:\nUbuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\nRust compiler:\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\nCPU:\nArchitecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\nNative optimization: -O2 measurements; -O1/-O2 lifetime controls\nCompilation flags: fwp::cgen::compile_c at the recorded source revision\n",
+      "extra_per_call_versus_plain_between_32_and_128": {
+        "gzip": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "deadline": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "metadata": {
+          "managed_requests": "4",
+          "requested_bytes": "64",
+          "final_charged_bytes": "80"
+        },
+        "capture": {
+          "managed_requests": "3",
+          "requested_bytes": "56",
+          "final_charged_bytes": "48"
+        }
+      },
+      "layouts": {
+        "plain": {
+          "context_bytes": 0,
+          "context_alignment": 0,
+          "task_bytes": 5216,
+          "task_alignment": 16
+        },
+        "gzip": {
+          "context_bytes": 64,
+          "context_alignment": 8,
+          "task_bytes": 5296,
+          "task_alignment": 16
+        }
+      },
+      "rows": [
+        {
+          "case": "plain",
+          "iterations": 1,
+          "managed_requests": 8,
+          "requested_bytes": 258,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 32,
+          "managed_requests": 70,
+          "requested_bytes": 1995,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 128,
+          "managed_requests": 262,
+          "requested_bytes": 7372,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 1,
+          "managed_requests": 11,
+          "requested_bytes": 5594,
+          "final_charged_bytes": 6208,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 32,
+          "managed_requests": 73,
+          "requested_bytes": 7331,
+          "final_charged_bytes": 6208,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 128,
+          "managed_requests": 265,
+          "requested_bytes": 12708,
+          "final_charged_bytes": 6208,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 1,
+          "managed_requests": 12,
+          "requested_bytes": 5610,
+          "final_charged_bytes": 6208,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 32,
+          "managed_requests": 74,
+          "requested_bytes": 7347,
+          "final_charged_bytes": 6208,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 128,
+          "managed_requests": 266,
+          "requested_bytes": 12724,
+          "final_charged_bytes": 6208,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 1,
+          "managed_requests": 18,
+          "requested_bytes": 5722,
+          "final_charged_bytes": 6352,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 32,
+          "managed_requests": 204,
+          "requested_bytes": 9443,
+          "final_charged_bytes": 8832,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 128,
+          "managed_requests": 780,
+          "requested_bytes": 20964,
+          "final_charged_bytes": 16512,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 1,
+          "managed_requests": 15,
+          "requested_bytes": 5674,
+          "final_charged_bytes": 6256,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 32,
+          "managed_requests": 170,
+          "requested_bytes": 9147,
+          "final_charged_bytes": 7744,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 128,
+          "managed_requests": 650,
+          "requested_bytes": 19900,
+          "final_charged_bytes": 12352,
+          "collections": 0
+        }
+      ],
+      "files": {
+        "environment.txt": {
+          "bytes": 2918,
+          "sha256": "054ddfb9e2371df493e7a01b3c444934906c3b756c34fd4cc3f03cc5c60ccd22"
+        },
+        "storage.tsv": {
+          "bytes": 464,
+          "sha256": "274d4b2e316bc2adb7a26d70313cad1088cfba3ec4156cd8c753845f49dfcf04"
+        },
+        "layout.tsv": {
+          "bytes": 411,
+          "sha256": "184eb326949704d66db7497cf6ae99ef0a12c27181f4c1a30276bec0413c833a"
+        },
+        "job.log": {
+          "bytes": 44386,
+          "sha256": "cee901d0cd031e3e0983cb74222f2a482a6590f0af8fe2f50e5a2e3a57cc68f5"
+        },
+        "plain-128.fwp": {
+          "bytes": 162,
+          "sha256": "f80801a45905bb5e0eb3edab542ff95b4ea5653f3a5a3bf18d2efb9da573c627"
+        },
+        "plain-128.c": {
+          "bytes": 662198,
+          "sha256": "f528eb07bf11c07324ecfa3b86e3048f093797cf34f97116059a0d3d813b9ab2"
+        },
+        "plain-128-measured.c": {
+          "bytes": 663012,
+          "sha256": "1a8f28cbc6f2155d2df57cf6066cb4e256e047c541185503c59c45c5d7650224"
+        },
+        "gzip-128.fwp": {
+          "bytes": 187,
+          "sha256": "eb998177a93433c8e3a8c967b3bbe560cb31519b9715080df6c1019288245563"
+        },
+        "gzip-128.c": {
+          "bytes": 872347,
+          "sha256": "c9bb70aec5d4408d51cb0b800caceb58e4a717bd79c450c6c6e41764a7c94322"
+        },
+        "gzip-128-measured.c": {
+          "bytes": 873161,
+          "sha256": "189470a8b4b95667a74457abc73714463cb828c065ced94f638363d0741d93d0"
+        },
+        "deadline-128.fwp": {
+          "bytes": 194,
+          "sha256": "f04e5f9984616093035e1de55e649529372201ded49b4b865177f3a621008c8f"
+        },
+        "deadline-128.c": {
+          "bytes": 873582,
+          "sha256": "41e1433d2532fcbf9df3a8d4d892dcdfbbecd373892a4b4c7768658e3239bed6"
+        },
+        "deadline-128-measured.c": {
+          "bytes": 874396,
+          "sha256": "58d6e566216501d825e9f1d955e39e7542dd4846fd081601571dda877c0c633a"
+        },
+        "metadata-128.fwp": {
+          "bytes": 218,
+          "sha256": "61fffbb3dda8ac2d3059676adb9a3b506df91b91993f08e3637a110560d01a85"
+        },
+        "metadata-128.c": {
+          "bytes": 875143,
+          "sha256": "cd4f6a58cb3ad52b5ddd60a9013e5b9d05cb19ea000ed36b110453b4726c2d7d"
+        },
+        "metadata-128-measured.c": {
+          "bytes": 875957,
+          "sha256": "73c36d95dbe43774919e59661e7bc1f562a9b72e495a0f5b5a2c3711ffff711f"
+        },
+        "capture-128.fwp": {
+          "bytes": 205,
+          "sha256": "cca089661b3f4e790142240651e856056693c4d707d7c250f69d79b0d759ab1e"
+        },
+        "capture-128.c": {
+          "bytes": 879551,
+          "sha256": "d4ff66cd24ef7de3bc940209e66c94a69d0fdf7579e80131d6f41ef7ce004097"
+        },
+        "capture-128-measured.c": {
+          "bytes": 880365,
+          "sha256": "56fb1412ebdc682bb3e2ca003a39cd1ca44c098adfed383b4a227fba45fa7199"
+        }
+      },
+      "binaries": {
+        "plain-128.exe": {
+          "bytes": 84984,
+          "sha256": "af853c1930eb84edba47784cb484f9fde8e5177d6fb9c7934c10dc0eac950baa",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=122518a7686a9829e5c93cad444ba3e77606edd5, for GNU/Linux 3.7.0, not stripped"
+        },
+        "gzip-128.exe": {
+          "bytes": 87192,
+          "sha256": "9b2d764ce75f7f07500c13507b76f95d9081af3ad20bb4577aeeb8fcb072fe23",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=553ff7f7c25ff9944e997513ac6e25a456c94a16, for GNU/Linux 3.7.0, not stripped"
+        },
+        "deadline-128.exe": {
+          "bytes": 87264,
+          "sha256": "14a51f26fb30ea74f3a3a0a042e201d2c38340d8c89aad7e720e40154b4eee79",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=ea73223c4da4b7ce25a3f5112c68ce4f2147c294, for GNU/Linux 3.7.0, not stripped"
+        },
+        "metadata-128.exe": {
+          "bytes": 87584,
+          "sha256": "14f635186759aadf031153d431f091c9bc5a05ce6bd17b7e408ed950ae31b608",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=c067c175b1ac27d78c3eb81e9f7e565162b7ab8d, for GNU/Linux 3.7.0, not stripped"
+        },
+        "capture-128.exe": {
+          "bytes": 153824,
+          "sha256": "7d39e29f9168cd43cd6e4e205275add2ba3536561f323c10271f120c20cd15b7",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=23b11ff760dcb674f2b0a614fd15aafe6636a1d4, for GNU/Linux 3.7.0, not stripped"
+        }
+      }
+    },
+    {
+      "runner": "ubuntu-latest",
+      "job": {
+        "name": "paths (ubuntu-latest)",
+        "databaseId": 117115349984,
+        "conclusion": "success"
+      },
+      "ordinary_program_measurement": "passed",
+      "detached_child_lifetime": "passed",
+      "environment": "Source: ad77934c83c78e905a0a033120dc796152084de1\nOS: linux\nArchitecture: x86_64\nC compiler:\nUbuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\nRust compiler:\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\nCPU:\nArchitecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.19\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\nNative optimization: -O2 measurements; -O1/-O2 lifetime controls\nCompilation flags: fwp::cgen::compile_c at the recorded source revision\n",
+      "extra_per_call_versus_plain_between_32_and_128": {
+        "gzip": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "deadline": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "metadata": {
+          "managed_requests": "4",
+          "requested_bytes": "64",
+          "final_charged_bytes": "80"
+        },
+        "capture": {
+          "managed_requests": "3",
+          "requested_bytes": "56",
+          "final_charged_bytes": "48"
+        }
+      },
+      "layouts": {
+        "plain": {
+          "context_bytes": 0,
+          "context_alignment": 0,
+          "task_bytes": 1504,
+          "task_alignment": 8
+        },
+        "gzip": {
+          "context_bytes": 64,
+          "context_alignment": 8,
+          "task_bytes": 1576,
+          "task_alignment": 8
+        }
+      },
+      "rows": [
+        {
+          "case": "plain",
+          "iterations": 1,
+          "managed_requests": 8,
+          "requested_bytes": 258,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 32,
+          "managed_requests": 70,
+          "requested_bytes": 1995,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 128,
+          "managed_requests": 262,
+          "requested_bytes": 7372,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 1,
+          "managed_requests": 11,
+          "requested_bytes": 1874,
+          "final_charged_bytes": 1856,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 32,
+          "managed_requests": 73,
+          "requested_bytes": 3611,
+          "final_charged_bytes": 1856,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 128,
+          "managed_requests": 265,
+          "requested_bytes": 8988,
+          "final_charged_bytes": 1856,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 1,
+          "managed_requests": 12,
+          "requested_bytes": 1890,
+          "final_charged_bytes": 1856,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 32,
+          "managed_requests": 74,
+          "requested_bytes": 3627,
+          "final_charged_bytes": 1856,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 128,
+          "managed_requests": 266,
+          "requested_bytes": 9004,
+          "final_charged_bytes": 1856,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 1,
+          "managed_requests": 18,
+          "requested_bytes": 2002,
+          "final_charged_bytes": 2000,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 32,
+          "managed_requests": 204,
+          "requested_bytes": 5723,
+          "final_charged_bytes": 4480,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 128,
+          "managed_requests": 780,
+          "requested_bytes": 17244,
+          "final_charged_bytes": 12160,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 1,
+          "managed_requests": 15,
+          "requested_bytes": 1954,
+          "final_charged_bytes": 1904,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 32,
+          "managed_requests": 170,
+          "requested_bytes": 5427,
+          "final_charged_bytes": 3392,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 128,
+          "managed_requests": 650,
+          "requested_bytes": 16180,
+          "final_charged_bytes": 8000,
+          "collections": 0
+        }
+      ],
+      "files": {
+        "environment.txt": {
+          "bytes": 3917,
+          "sha256": "8da4810197d9a7c175cd4f1277784a697b4a74d5daadc2645be13323a304a186"
+        },
+        "storage.tsv": {
+          "bytes": 461,
+          "sha256": "990a2913725b6c542adae1a7a3ac954bb0a21ad0662545ab04d1435e7b410d6b"
+        },
+        "layout.tsv": {
+          "bytes": 396,
+          "sha256": "5edd62151f2ff5e20a7c64296c14a945680e58e152d5a80ae7e633626c4fe5ea"
+        },
+        "job.log": {
+          "bytes": 44192,
+          "sha256": "f7fc28fb9f9ddf2b77ecb6816ee6b96e1db4cacc5c53c9c9a5edd6dc6405c977"
+        },
+        "plain-128.fwp": {
+          "bytes": 162,
+          "sha256": "f80801a45905bb5e0eb3edab542ff95b4ea5653f3a5a3bf18d2efb9da573c627"
+        },
+        "plain-128.c": {
+          "bytes": 662198,
+          "sha256": "f528eb07bf11c07324ecfa3b86e3048f093797cf34f97116059a0d3d813b9ab2"
+        },
+        "plain-128-measured.c": {
+          "bytes": 663012,
+          "sha256": "1a8f28cbc6f2155d2df57cf6066cb4e256e047c541185503c59c45c5d7650224"
+        },
+        "gzip-128.fwp": {
+          "bytes": 187,
+          "sha256": "eb998177a93433c8e3a8c967b3bbe560cb31519b9715080df6c1019288245563"
+        },
+        "gzip-128.c": {
+          "bytes": 872347,
+          "sha256": "c9bb70aec5d4408d51cb0b800caceb58e4a717bd79c450c6c6e41764a7c94322"
+        },
+        "gzip-128-measured.c": {
+          "bytes": 873161,
+          "sha256": "189470a8b4b95667a74457abc73714463cb828c065ced94f638363d0741d93d0"
+        },
+        "deadline-128.fwp": {
+          "bytes": 194,
+          "sha256": "f04e5f9984616093035e1de55e649529372201ded49b4b865177f3a621008c8f"
+        },
+        "deadline-128.c": {
+          "bytes": 873582,
+          "sha256": "41e1433d2532fcbf9df3a8d4d892dcdfbbecd373892a4b4c7768658e3239bed6"
+        },
+        "deadline-128-measured.c": {
+          "bytes": 874396,
+          "sha256": "58d6e566216501d825e9f1d955e39e7542dd4846fd081601571dda877c0c633a"
+        },
+        "metadata-128.fwp": {
+          "bytes": 218,
+          "sha256": "61fffbb3dda8ac2d3059676adb9a3b506df91b91993f08e3637a110560d01a85"
+        },
+        "metadata-128.c": {
+          "bytes": 875143,
+          "sha256": "cd4f6a58cb3ad52b5ddd60a9013e5b9d05cb19ea000ed36b110453b4726c2d7d"
+        },
+        "metadata-128-measured.c": {
+          "bytes": 875957,
+          "sha256": "73c36d95dbe43774919e59661e7bc1f562a9b72e495a0f5b5a2c3711ffff711f"
+        },
+        "capture-128.fwp": {
+          "bytes": 205,
+          "sha256": "cca089661b3f4e790142240651e856056693c4d707d7c250f69d79b0d759ab1e"
+        },
+        "capture-128.c": {
+          "bytes": 879551,
+          "sha256": "d4ff66cd24ef7de3bc940209e66c94a69d0fdf7579e80131d6f41ef7ce004097"
+        },
+        "capture-128-measured.c": {
+          "bytes": 880365,
+          "sha256": "56fb1412ebdc682bb3e2ca003a39cd1ca44c098adfed383b4a227fba45fa7199"
+        }
+      },
+      "binaries": {
+        "plain-128.exe": {
+          "bytes": 79216,
+          "sha256": "cddfd4f4376e4e84ca2bacb5c38d21f7b9580fb205e6299ed6e5861415fb5a78",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=7eba0f1989114f46d1f6943f0c76960673683f7a, for GNU/Linux 3.2.0, not stripped"
+        },
+        "gzip-128.exe": {
+          "bytes": 89608,
+          "sha256": "770a20df5d7f5cc4f9c1d0bde042c1c182dc84b7049be121c13337948cd21b5c",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=7bbf8f8cf7e1d99f46a4eda697863e23e97865ff, for GNU/Linux 3.2.0, not stripped"
+        },
+        "deadline-128.exe": {
+          "bytes": 89688,
+          "sha256": "e98678778f5c8a388aebfb99a0109e2f292f3820adf57382a65d403c1596b44d",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=9743a45e94ea6f260646b472276467b2c109426e, for GNU/Linux 3.2.0, not stripped"
+        },
+        "metadata-128.exe": {
+          "bytes": 90008,
+          "sha256": "871819a1a8faa65448f5fdd0299ef417bed979a460668b70b137b964303d7d49",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=f080bbeb884d4b53337e7b067187d8ca5bea7c7b, for GNU/Linux 3.2.0, not stripped"
+        },
+        "capture-128.exe": {
+          "bytes": 94808,
+          "sha256": "3224c21e2dd34ff718e8d65e007ee5db8212ce25ae950f65befb33013f8daf7b",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=331b56ed6776a8bbb2bc93a446acc844a4ae94d0, for GNU/Linux 3.2.0, not stripped"
+        }
+      }
+    },
+    {
+      "runner": "windows-11-arm",
+      "job": {
+        "name": "paths (windows-11-arm)",
+        "databaseId": 117115350068,
+        "conclusion": "failure"
+      },
+      "ordinary_program_measurement": "passed",
+      "detached_child_lifetime": "failed to compile Windows fixture; fixed in later source, still requires native verification",
+      "environment": "Source: ad77934c83c78e905a0a033120dc796152084de1\nOS: windows\nArchitecture: aarch64\nC compiler:\nclang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: aarch64-w64-windows-gnu\nThread model: posix\nInstalledDir: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin\nConfiguration file: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin/aarch64-w64-windows-gnu.cfg\nRust compiler:\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\nCPU:\n{\n  \"Name\": \"Cobalt 100\",\n  \"Architecture\": 12,\n  \"NumberOfCores\": 4,\n  \"NumberOfLogicalProcessors\": 4\n}\nNative optimization: -O2 measurements; -O1/-O2 lifetime controls\nCompilation flags: fwp::cgen::compile_c at the recorded source revision\n",
+      "extra_per_call_versus_plain_between_32_and_128": {
+        "gzip": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "deadline": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "metadata": {
+          "managed_requests": "4",
+          "requested_bytes": "64",
+          "final_charged_bytes": "80"
+        },
+        "capture": {
+          "managed_requests": "3",
+          "requested_bytes": "56",
+          "final_charged_bytes": "48"
+        }
+      },
+      "layouts": {
+        "plain": {
+          "context_bytes": 0,
+          "context_alignment": 0,
+          "task_bytes": 752,
+          "task_alignment": 8
+        },
+        "gzip": {
+          "context_bytes": 64,
+          "context_alignment": 8,
+          "task_bytes": 824,
+          "task_alignment": 8
+        }
+      },
+      "rows": [
+        {
+          "case": "plain",
+          "iterations": 1,
+          "managed_requests": 8,
+          "requested_bytes": 258,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 32,
+          "managed_requests": 70,
+          "requested_bytes": 1995,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 128,
+          "managed_requests": 262,
+          "requested_bytes": 7372,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 1,
+          "managed_requests": 11,
+          "requested_bytes": 1122,
+          "final_charged_bytes": 960,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 32,
+          "managed_requests": 73,
+          "requested_bytes": 2859,
+          "final_charged_bytes": 960,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 128,
+          "managed_requests": 265,
+          "requested_bytes": 8236,
+          "final_charged_bytes": 960,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 1,
+          "managed_requests": 12,
+          "requested_bytes": 1138,
+          "final_charged_bytes": 960,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 32,
+          "managed_requests": 74,
+          "requested_bytes": 2875,
+          "final_charged_bytes": 960,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 128,
+          "managed_requests": 266,
+          "requested_bytes": 8252,
+          "final_charged_bytes": 960,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 1,
+          "managed_requests": 18,
+          "requested_bytes": 1250,
+          "final_charged_bytes": 1104,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 32,
+          "managed_requests": 204,
+          "requested_bytes": 4971,
+          "final_charged_bytes": 3584,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 128,
+          "managed_requests": 780,
+          "requested_bytes": 16492,
+          "final_charged_bytes": 11264,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 1,
+          "managed_requests": 15,
+          "requested_bytes": 1202,
+          "final_charged_bytes": 1008,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 32,
+          "managed_requests": 170,
+          "requested_bytes": 4675,
+          "final_charged_bytes": 2496,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 128,
+          "managed_requests": 650,
+          "requested_bytes": 15428,
+          "final_charged_bytes": 7104,
+          "collections": 0
+        }
+      ],
+      "files": {
+        "environment.txt": {
+          "bytes": 873,
+          "sha256": "bca8dc278afed92cd404588b35f4a228d6beb62bfb214854b7f76e7f0a0448cc"
+        },
+        "storage.tsv": {
+          "bytes": 455,
+          "sha256": "828169a1f4f3b6c28c3dbb7399f745f0b922bc92e3ed38b0023ed54a590b06fc"
+        },
+        "layout.tsv": {
+          "bytes": 381,
+          "sha256": "04ecba22d8dc01bf93ac0068b6a8574260f4bfc240d765104b1a2528da48c24f"
+        },
+        "job.log": {
+          "bytes": 86044,
+          "sha256": "8c4c5a104c038a85a3187a2986e168f099b2413d95dd9ca2b4fd3239409ac763"
+        },
+        "plain-128.fwp": {
+          "bytes": 162,
+          "sha256": "f80801a45905bb5e0eb3edab542ff95b4ea5653f3a5a3bf18d2efb9da573c627"
+        },
+        "plain-128.c": {
+          "bytes": 662198,
+          "sha256": "f528eb07bf11c07324ecfa3b86e3048f093797cf34f97116059a0d3d813b9ab2"
+        },
+        "plain-128-measured.c": {
+          "bytes": 663012,
+          "sha256": "1a8f28cbc6f2155d2df57cf6066cb4e256e047c541185503c59c45c5d7650224"
+        },
+        "gzip-128.fwp": {
+          "bytes": 187,
+          "sha256": "eb998177a93433c8e3a8c967b3bbe560cb31519b9715080df6c1019288245563"
+        },
+        "gzip-128.c": {
+          "bytes": 872347,
+          "sha256": "c9bb70aec5d4408d51cb0b800caceb58e4a717bd79c450c6c6e41764a7c94322"
+        },
+        "gzip-128-measured.c": {
+          "bytes": 873161,
+          "sha256": "189470a8b4b95667a74457abc73714463cb828c065ced94f638363d0741d93d0"
+        },
+        "deadline-128.fwp": {
+          "bytes": 194,
+          "sha256": "f04e5f9984616093035e1de55e649529372201ded49b4b865177f3a621008c8f"
+        },
+        "deadline-128.c": {
+          "bytes": 873582,
+          "sha256": "41e1433d2532fcbf9df3a8d4d892dcdfbbecd373892a4b4c7768658e3239bed6"
+        },
+        "deadline-128-measured.c": {
+          "bytes": 874396,
+          "sha256": "58d6e566216501d825e9f1d955e39e7542dd4846fd081601571dda877c0c633a"
+        },
+        "metadata-128.fwp": {
+          "bytes": 218,
+          "sha256": "61fffbb3dda8ac2d3059676adb9a3b506df91b91993f08e3637a110560d01a85"
+        },
+        "metadata-128.c": {
+          "bytes": 875143,
+          "sha256": "cd4f6a58cb3ad52b5ddd60a9013e5b9d05cb19ea000ed36b110453b4726c2d7d"
+        },
+        "metadata-128-measured.c": {
+          "bytes": 875957,
+          "sha256": "73c36d95dbe43774919e59661e7bc1f562a9b72e495a0f5b5a2c3711ffff711f"
+        },
+        "capture-128.fwp": {
+          "bytes": 205,
+          "sha256": "cca089661b3f4e790142240651e856056693c4d707d7c250f69d79b0d759ab1e"
+        },
+        "capture-128.c": {
+          "bytes": 879551,
+          "sha256": "d4ff66cd24ef7de3bc940209e66c94a69d0fdf7579e80131d6f41ef7ce004097"
+        },
+        "capture-128-measured.c": {
+          "bytes": 880365,
+          "sha256": "56fb1412ebdc682bb3e2ca003a39cd1ca44c098adfed383b4a227fba45fa7199"
+        }
+      },
+      "binaries": {
+        "plain-128.exe": {
+          "bytes": 119296,
+          "sha256": "a934f218b705844e01bec6026342515e13a3fdd75225e184575c80a836b4c543",
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "gzip-128.exe": {
+          "bytes": 130560,
+          "sha256": "7104b11ca8b274e72d91504277e37b7a850123a9be2830f24b17b034ff58abb2",
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "deadline-128.exe": {
+          "bytes": 132096,
+          "sha256": "0d595df0fc1709e705ab0fa80c187649c70304674d22b6c54aca1f73655484db",
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "metadata-128.exe": {
+          "bytes": 135168,
+          "sha256": "217b7394cd0a79095f548b1f379e2a133d81dba65992bff82fa3b9cd30fcc9f4",
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        },
+        "capture-128.exe": {
+          "bytes": 137216,
+          "sha256": "e7a8bef382cbf56da537396ba741e04b6cea432701c69dbdbdf290fb75d27c96",
+          "format": "PE32+ executable (console) Aarch64, for MS Windows"
+        }
+      }
+    },
+    {
+      "runner": "windows-2025",
+      "job": {
+        "name": "paths (windows-2025)",
+        "databaseId": 117115350005,
+        "conclusion": "failure"
+      },
+      "ordinary_program_measurement": "passed",
+      "detached_child_lifetime": "failed to compile Windows fixture; fixed in later source, still requires native verification",
+      "environment": "Source: ad77934c83c78e905a0a033120dc796152084de1\nOS: windows\nArchitecture: x86_64\nC compiler:\nclang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin\nConfiguration file: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin/x86_64-w64-windows-gnu.cfg\nRust compiler:\nrustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1\nCPU:\n{\n  \"Name\": \"AMD EPYC 9V74 80-Core Processor                \",\n  \"Architecture\": 9,\n  \"NumberOfCores\": 2,\n  \"NumberOfLogicalProcessors\": 4\n}\nNative optimization: -O2 measurements; -O1/-O2 lifetime controls\nCompilation flags: fwp::cgen::compile_c at the recorded source revision\n",
+      "extra_per_call_versus_plain_between_32_and_128": {
+        "gzip": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "deadline": {
+          "managed_requests": "0",
+          "requested_bytes": "0",
+          "final_charged_bytes": "0"
+        },
+        "metadata": {
+          "managed_requests": "4",
+          "requested_bytes": "64",
+          "final_charged_bytes": "80"
+        },
+        "capture": {
+          "managed_requests": "3",
+          "requested_bytes": "56",
+          "final_charged_bytes": "48"
+        }
+      },
+      "layouts": {
+        "plain": {
+          "context_bytes": 0,
+          "context_alignment": 0,
+          "task_bytes": 912,
+          "task_alignment": 16
+        },
+        "gzip": {
+          "context_bytes": 64,
+          "context_alignment": 8,
+          "task_bytes": 976,
+          "task_alignment": 16
+        }
+      },
+      "rows": [
+        {
+          "case": "plain",
+          "iterations": 1,
+          "managed_requests": 8,
+          "requested_bytes": 258,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 32,
+          "managed_requests": 70,
+          "requested_bytes": 1995,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "plain",
+          "iterations": 128,
+          "managed_requests": 262,
+          "requested_bytes": 7372,
+          "final_charged_bytes": 0,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 1,
+          "managed_requests": 11,
+          "requested_bytes": 1274,
+          "final_charged_bytes": 1088,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 32,
+          "managed_requests": 73,
+          "requested_bytes": 3011,
+          "final_charged_bytes": 1088,
+          "collections": 0
+        },
+        {
+          "case": "gzip",
+          "iterations": 128,
+          "managed_requests": 265,
+          "requested_bytes": 8388,
+          "final_charged_bytes": 1088,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 1,
+          "managed_requests": 12,
+          "requested_bytes": 1290,
+          "final_charged_bytes": 1088,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 32,
+          "managed_requests": 74,
+          "requested_bytes": 3027,
+          "final_charged_bytes": 1088,
+          "collections": 0
+        },
+        {
+          "case": "deadline",
+          "iterations": 128,
+          "managed_requests": 266,
+          "requested_bytes": 8404,
+          "final_charged_bytes": 1088,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 1,
+          "managed_requests": 18,
+          "requested_bytes": 1402,
+          "final_charged_bytes": 1232,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 32,
+          "managed_requests": 204,
+          "requested_bytes": 5123,
+          "final_charged_bytes": 3712,
+          "collections": 0
+        },
+        {
+          "case": "metadata",
+          "iterations": 128,
+          "managed_requests": 780,
+          "requested_bytes": 16644,
+          "final_charged_bytes": 11392,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 1,
+          "managed_requests": 15,
+          "requested_bytes": 1354,
+          "final_charged_bytes": 1136,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 32,
+          "managed_requests": 170,
+          "requested_bytes": 4827,
+          "final_charged_bytes": 2624,
+          "collections": 0
+        },
+        {
+          "case": "capture",
+          "iterations": 128,
+          "managed_requests": 650,
+          "requested_bytes": 15580,
+          "final_charged_bytes": 7232,
+          "collections": 0
+        }
+      ],
+      "files": {
+        "environment.txt": {
+          "bytes": 903,
+          "sha256": "f5702385e43e435efa399f176d927f391eea8adba502ffea14e6a03e8952e6b8"
+        },
+        "storage.tsv": {
+          "bytes": 461,
+          "sha256": "81510e9eba0d1034749df435d1bec539eb1d9fa77e7626b9db8adc19f7ae65a4"
+        },
+        "layout.tsv": {
+          "bytes": 396,
+          "sha256": "7256d39833676fdd5c4ce6babbaad06539c9b1ebc41d4e55fa5d1e29d348e46d"
+        },
+        "job.log": {
+          "bytes": 86018,
+          "sha256": "b6f9604a94547e96f486cae41651c95ca7479fcfc4943e1eea36febe01007a10"
+        },
+        "plain-128.fwp": {
+          "bytes": 162,
+          "sha256": "f80801a45905bb5e0eb3edab542ff95b4ea5653f3a5a3bf18d2efb9da573c627"
+        },
+        "plain-128.c": {
+          "bytes": 662198,
+          "sha256": "f528eb07bf11c07324ecfa3b86e3048f093797cf34f97116059a0d3d813b9ab2"
+        },
+        "plain-128-measured.c": {
+          "bytes": 663012,
+          "sha256": "1a8f28cbc6f2155d2df57cf6066cb4e256e047c541185503c59c45c5d7650224"
+        },
+        "gzip-128.fwp": {
+          "bytes": 187,
+          "sha256": "eb998177a93433c8e3a8c967b3bbe560cb31519b9715080df6c1019288245563"
+        },
+        "gzip-128.c": {
+          "bytes": 872347,
+          "sha256": "c9bb70aec5d4408d51cb0b800caceb58e4a717bd79c450c6c6e41764a7c94322"
+        },
+        "gzip-128-measured.c": {
+          "bytes": 873161,
+          "sha256": "189470a8b4b95667a74457abc73714463cb828c065ced94f638363d0741d93d0"
+        },
+        "deadline-128.fwp": {
+          "bytes": 194,
+          "sha256": "f04e5f9984616093035e1de55e649529372201ded49b4b865177f3a621008c8f"
+        },
+        "deadline-128.c": {
+          "bytes": 873582,
+          "sha256": "41e1433d2532fcbf9df3a8d4d892dcdfbbecd373892a4b4c7768658e3239bed6"
+        },
+        "deadline-128-measured.c": {
+          "bytes": 874396,
+          "sha256": "58d6e566216501d825e9f1d955e39e7542dd4846fd081601571dda877c0c633a"
+        },
+        "metadata-128.fwp": {
+          "bytes": 218,
+          "sha256": "61fffbb3dda8ac2d3059676adb9a3b506df91b91993f08e3637a110560d01a85"
+        },
+        "metadata-128.c": {
+          "bytes": 875143,
+          "sha256": "cd4f6a58cb3ad52b5ddd60a9013e5b9d05cb19ea000ed36b110453b4726c2d7d"
+        },
+        "metadata-128-measured.c": {
+          "bytes": 875957,
+          "sha256": "73c36d95dbe43774919e59661e7bc1f562a9b72e495a0f5b5a2c3711ffff711f"
+        },
+        "capture-128.fwp": {
+          "bytes": 205,
+          "sha256": "cca089661b3f4e790142240651e856056693c4d707d7c250f69d79b0d759ab1e"
+        },
+        "capture-128.c": {
+          "bytes": 879551,
+          "sha256": "d4ff66cd24ef7de3bc940209e66c94a69d0fdf7579e80131d6f41ef7ce004097"
+        },
+        "capture-128-measured.c": {
+          "bytes": 880365,
+          "sha256": "56fb1412ebdc682bb3e2ca003a39cd1ca44c098adfed383b4a227fba45fa7199"
+        }
+      },
+      "binaries": {
+        "plain-128.exe": {
+          "bytes": 129024,
+          "sha256": "ce8a9cab519ad4a2b1d6602a2093e271075fcbf1128fa6842a81ebdc351f1e88",
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "gzip-128.exe": {
+          "bytes": 139776,
+          "sha256": "beb5a617f7241c549635b2966e25a781266aead45909aa7f52c5626cc25e4fb8",
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "deadline-128.exe": {
+          "bytes": 142336,
+          "sha256": "0f6345a1c82b5680b36c9afe35171cffafc18b98a8a8c32388a593eb17eeb02a",
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "metadata-128.exe": {
+          "bytes": 144896,
+          "sha256": "4ec0c89f75fc2f0ba2fdbf54bfb1e198380689d0d635e4268b9b4562b61af402",
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        },
+        "capture-128.exe": {
+          "bytes": 147456,
+          "sha256": "1709b1955edf50cbf10aa39d3093698a380a00a17df1938292ef7ffb113f6c2e",
+          "format": "PE32+ executable (console) x86-64, for MS Windows"
+        }
+      }
+    }
+  ],
+  "binary_observations": {
+    "scope": "Existing instrumented O2 binaries; not uninstrumented performance or a whole-stack bound.",
+    "linux_amd64": {
+      "function": "f9",
+      "address": "0xb4e0",
+      "context_copy": "Four movups 16-byte loads at 0xb520..0xb52b and movaps stores to stack at 0xb52f..0xb53e; the context reserves 64 stack bytes at 0xb4e5.",
+      "task_allocation": "Only lazy root-task creation allocates in this function: size 0x628 (1576) at 0xb580/0xb5e3, published as fwp_root at 0xb626. The per-call 64-byte scope allocation in the old baseline is absent."
+    },
+    "macos_arm64": {
+      "function": "_f9",
+      "address": "0x100008dec",
+      "frame_bytes": 128,
+      "context_copy": "Two paired 128-bit loads at 0x100008e74/0x100008e78 and paired stores at 0x100008e7c/0x100008e80 copy 64 bytes to the stack.",
+      "task_allocation": "Lazy root-task allocation requests 608 bytes at 0x100008e24; ordinary repeated scope calls skip it.",
+      "nested_handler_frame_bytes": 352
+    },
+    "assembly_files": {
+      "ubuntu-latest": {
+        "bytes": 720472,
+        "sha256": "e5be869b8064deab0a7d765c9b85b1312f035abfd91257e12a88236a6069341b"
+      },
+      "macos-15": {
+        "bytes": 533535,
+        "sha256": "0a6881c55bcd954a182bab2a9fe2fcb759f3c1d5c29e4be571971efb6ac743e8"
+      }
+    }
+  }
+}

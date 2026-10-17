@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, iteration, autodiff, performance, syntax, library, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, macos-shards, ci-profile]
         default: numerical
       source_revision:
         description: Full source commit for the CI profile comparison
@@ -18,11 +18,11 @@ on:
         type: string
 jobs:
   paths:
-    if: inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+    if: inputs.suite == 'context-owners' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
     strategy:
       fail-fast: false
       matrix:
-        runner: ${{ fromJSON(inputs.suite == 'service-values-linux' && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows' || inputs.suite == 'tcp-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
+        runner: ${{ fromJSON((inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux') && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows' || inputs.suite == 'tcp-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
@@ -40,16 +40,16 @@ jobs:
         run: ./scripts/setup-windows.ps1
       - uses: actions/cache/restore@v4
         id: decoder_tls_cache
-        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values')
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners')
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
       - name: Native Windows TLS dependencies
-        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values')
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners')
         shell: pwsh
         run: ./scripts/setup-windows-tls.ps1
       - uses: actions/cache/save@v4
-        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values') && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
+        if: runner.os == 'Windows' && (inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'service-values' || inputs.suite == 'context-owners') && env.FWP_WINDOWS_DEPS_READY == '1' && steps.decoder_tls_cache.outputs.cache-hit != 'true'
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
@@ -68,7 +68,7 @@ jobs:
         if: inputs.suite == 'paths' || inputs.suite == 'filesystem'
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
       - name: Retrieve immutable CPU kernel baseline
-        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        if: inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders'
         run: |
           git fetch --no-tags --depth=1 origin 21a621c699d11a84c05f955935dc95dcfb8adbf2
           git show 21a621c699d11a84c05f955935dc95dcfb8adbf2:runtime/fwp_rt_kernel.c > kernel-baseline.c
@@ -83,6 +83,31 @@ jobs:
           name: udp-${{ matrix.runner }}
           path: udp-evidence/
           if-no-files-found: ignore
+      - name: Service scope ownership contract inventory
+        if: inputs.suite == 'context-storage' || inputs.suite == 'context-owners'
+        run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output context-evidence/contracts.json
+      - name: Functional allocation and ownership
+        if: inputs.suite == 'context-storage' || inputs.suite == 'context-owners'
+        env:
+          FWP_CONTEXT_ARTIFACTS: context-evidence
+        run: cargo test --no-fail-fast --test unboxed_worker_locals --test state_sequence_ownership --test fold_unwind_ownership --test native_allocator -- --nocapture
+      - name: Repeated service context storage
+        if: inputs.suite == 'context-storage' || inputs.suite == 'context-owners'
+        env:
+          FWP_CONTEXT_ARTIFACTS: context-evidence
+        run: cargo test --no-fail-fast --test record_conversion_ownership --test process_exit_ownership --test grpc_canonical_encoding --test grpc_response_encoding --test service_scope_ownership --test service_context_storage --test grpc_context_restore --test grpc_context_resources --test grpc_capture_resources --test grpc_packed_options --test grpc_environment_cache --test grpc_peer_completion --test http2_peer_cleanup --test library_unload --test arc_tasks --test stdlib_doc -- --nocapture
+      - name: Compare old and current list iteration timing
+        if: runner.os == 'Linux' && (inputs.suite == 'context-storage' || inputs.suite == 'context-owners')
+        run: python3 scripts/measure-list-each.py --compiler target/debug/fwp --output context-evidence/iteration-timing
+      - uses: actions/upload-artifact@v7
+        if: always() && (inputs.suite == 'context-storage' || inputs.suite == 'context-owners')
+        with:
+          name: context-storage-${{ matrix.runner }}
+          path: context-evidence/
+          if-no-files-found: error
+      - name: Service scopes through actual interpreted and native calls
+        if: inputs.suite == 'context-storage' || inputs.suite == 'context-owners'
+        run: cargo test --test grpc every_kind_of_call -- --exact
       - name: Copied service result ownership
         if: inputs.suite == 'service-values' || inputs.suite == 'service-values-linux'
         env:
@@ -148,22 +173,22 @@ jobs:
           path: decoder-evidence/
           if-no-files-found: ignore
       - name: CPU kernel ownership
-        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        if: inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders'
         env:
           FWP_KERNEL_ARTIFACTS: kernel-evidence
           FWP_KERNEL_BASELINE: kernel-baseline.c
         run: cargo test --no-fail-fast --test cpu_kernel_ownership --test stdlib_doc
       - name: CPU kernel size validation order
-        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        if: inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders'
         run: cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact
       - name: Interpreter final reduction block
-        if: inputs.suite == 'kernels' || inputs.suite == 'decoders'
+        if: inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders'
         run: cargo test --lib numerics::kernel_boundary_tests::final_reduction_block_does_not_wrap_at_the_address_limit -- --exact
       - name: CPU kernel sanitized size and cleanup controls
-        if: (inputs.suite == 'kernels' || inputs.suite == 'decoders') && runner.os != 'Windows'
+        if: (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && runner.os != 'Windows'
         run: cargo test --test device_bounds device_allocations_are_bounded_and_cleanup_controls_detect_omissions -- --exact
       - uses: actions/upload-artifact@v7
-        if: always() && (inputs.suite == 'kernels' || inputs.suite == 'decoders')
+        if: always() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders')
         with:
           name: kernels-${{ matrix.runner }}
           path: kernel-evidence/
@@ -979,7 +1004,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
       - name: Checked WASI ownership and physical storage
         if: inputs.suite == 'wasi-arc'
-        run: cargo test --no-fail-fast --test wasm_arc --test arc_execution --test wasm_resource_counts
+        run: cargo test --no-fail-fast --test wasm_arc --test process_exit_ownership --test arc_execution --test wasm_resource_counts
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'wasi-arc'
         with:
@@ -997,7 +1022,7 @@ jobs:
         run: cargo test --test wasm_resource_counts --test softfloat_core --test float_math --test array_size_limits
       - name: Actual WASI semantic agreement
         if: ${{ !cancelled() && inputs.suite == 'wasm' }}
-        run: cargo test --no-fail-fast --test wasm --test browser --test exec_invocation_ownership
+        run: cargo test --no-fail-fast --test wasm --test browser --test exec_invocation_ownership --test process_exit_ownership
 
   ci_profile:
     if: inputs.suite == 'ci-profile'
@@ -1059,13 +1084,13 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - name: Coverage and failure propagation
-        run: python3 scripts/test-macos-test-shards.py
+        run: python3 scripts/test-native-test-runner.py
       - name: Real Cargo test artifacts and concurrent execution
         run: |
           python3 - <<'PYTHON'
           import importlib.util, json, os, subprocess
           from pathlib import Path
-          spec = importlib.util.spec_from_file_location('shards', 'scripts/run-macos-test-shard.py')
+          spec = importlib.util.spec_from_file_location('shards', 'scripts/run-native-tests.py')
           shards = importlib.util.module_from_spec(spec)
           spec.loader.exec_module(shards)
           metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--no-deps', '--format-version', '1']))
