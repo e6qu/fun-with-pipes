@@ -2935,9 +2935,9 @@ the input count. The mapped function takes each integer modulo 257, producing
 at most 257 distinct keys. The set prints its size; the map stores the original
 integers as values and prints the last value for key 5.
 
-The [direct-callback six-host report](measurements/collection-build-direct-2026-10-18.json)
-uses source `c34ca8e340c6f3dbb6251729553e1a8dbf513903`, preserved as
-`evidence/collection-direct-sets-20261018`. It compares the **same fwp program and
+The [current six-host report](measurements/collection-joined-storage-2026-10-18.json)
+uses source `b87009905b26071be33b93c4ecf3277265a52488` and successful evidence run
+`39108116774`. It compares the **same fwp program and
 compiler**, with numeric construction combining enabled and disabled through
 `FWP_MAP_BUILD`. The optimized path removes the range list, mapped list and
 eligible key/value tuples, and calls known functions directly. These are fwp
@@ -2954,32 +2954,31 @@ For 65,536 inputs, the observed medians are:
 
 | Native host | Set: ordinary / optimized ms | Time ratio | Map: ordinary / optimized ms | Time ratio |
 |---|---:|---:|---:|---:|
-| Linux AMD64 | 7.332 / 4.139 | 0.564 | 9.692 / 4.362 | 0.450 |
-| Linux ARM64 | 6.373 / 2.710 | 0.425 | 9.573 / 3.442 | 0.360 |
-| macOS ARM64 | 12.353 / 8.645 | 0.700 | 9.130 / 6.165 | 0.675 |
-| macOS AMD64 | 17.009 / 9.287 | 0.546 | 19.726 / 9.998 | 0.507 |
-| Windows AMD64 | 15.526 / 12.127 | 0.781 | 18.081 / 12.907 | 0.714 |
-| Windows ARM64 | 10.970 / 8.981 | 0.819 | 12.531 / 9.207 | 0.735 |
+| Linux AMD64 | 7.319 / 3.788 | 0.518 | 9.512 / 3.983 | 0.419 |
+| Linux ARM64 | 6.728 / 2.950 | 0.438 | 9.481 / 3.334 | 0.352 |
+| macOS ARM64 | 9.646 / 6.677 | 0.692 | 10.402 / 8.009 | 0.770 |
+| macOS AMD64 | 16.093 / 9.119 | 0.567 | 22.236 / 11.269 | 0.507 |
+| Windows AMD64 | 17.129 / 13.772 | 0.804 | 20.067 / 14.200 | 0.708 |
+| Windows ARM64 | 18.052 / 14.649 | 0.812 | 19.769 / 15.203 | 0.769 |
 
-The ratio is optimized time divided by ordinary time: 0.564 means about 43.6%
-less elapsed time in that run. At 32 inputs, ratios range from 0.817 to 1.073;
+The ratio is optimized time divided by ordinary time: 0.518 means about 48.2%
+less elapsed time in that run. At 32 inputs, ratios range from 0.861 to 1.078;
 every paired sample range overlaps, including apparent slowdowns. There is no
-consistent small-input gain. Some Windows samples take more than twice their
-median. Startup was not timed separately, and these shared-runner measurements
+consistent small-input gain. Startup was not timed separately, and these shared-runner measurements
 do not establish a universal performance threshold.
 
 At 65,536 inputs, set allocation requests fall from 131,077 to four and map
-requests from 196,616 to seven. All cases have zero retains, final counted bytes
+requests from 196,614 to five. All cases have zero retains, final counted bytes
 and collections. On every host, peak counted storage falls from 4,718,600 to
-1,053,712 bytes for sets and from 6,815,752 to 2,102,304 for maps. These counters
+1,053,696 bytes for sets and from 6,815,752 to 2,102,272 for maps. These counters
 measure managed storage, excluding allocator capacity and process resident
 memory. Sets still store unused value slots in their final container; small
 integers occupy full words, and temporary storage grows with input length.
 
 All 78 focused tests pass without skips. The report inspects 120 actual binaries,
 including deliberately broken cleanup controls. Eight generated builders undergo
-all 56 allocation failure points and 64 callback error/cancellation exits per
-configuration, while independent input aliases survive. A
+all 48 allocation failure points and 64 callback error/cancellation exits per
+configuration, while independent input aliases survive. A historical
 [focused machine-code review](measurements/collection-set-code-2026-10-18.json)
 compares the actual Linux set executables before and after direct calls.
 The old loops invoke general function dispatch and access stack slots per item.
@@ -3004,7 +3003,9 @@ from six to four and peak counted storage from 2,102,304 to 1,053,712 bytes.
 It still uses general set callback dispatch. Each earlier report separately
 passes 78 tests and inspects 120 binaries. Different runs use different machines
 and conditions; their absolute timings do not isolate either follow-up's speed
-benefit. The final same-source comparison above measures the combined behavior.
+benefit. The current same-source comparison above includes joined map buffers and complete
+byte-count guards. The [earlier direct-call report](measurements/collection-build-direct-2026-10-18.json)
+preserves the source of the historical loop inspection.
 
 ### Larger maps exposed a storage-layout problem
 
@@ -3068,7 +3069,19 @@ stable, but its full-work ratios are 0.951 tracing and 1.069 ARC. ARC ranges ove
 widely; 14 of 24 paired rounds are slower and the median paired ratio is 1.020.
 Its measured query intervals range roughly 421–502 ms. All sixteen ordinary timed
 binaries, generated inputs and profiles match the earlier run byte for byte.
-Keep these slower samples and the Xeon concern; additional AMD64 evidence is pending.
+[Two further AMD64 repeats](measurements/large-map-storage-repeats-2026-10-18.json)
+preserve another 92 audited binaries and all ordinary/phase samples. On EPYC 7763,
+full-work ratios are 0.920 tracing / 0.840 ARC and construction 0.196/0.187; old
+sorting again stalls while joined sorting does not. EPYC 9V45 has fast sorting
+for both layouts: full-work ratios 1.007/0.990 have overlapping ranges, and
+construction ratios are 0.861/0.877. Neither host answers the Xeon question.
+The `map-replay` evidence suite repeats the verified executables on four AMD64
+runners without rebuilding them. It checks source, hashes and architecture first,
+records each actual CPU and keeps separate ordinary and diagnostic samples.
+The [first four replays](measurements/large-map-replay-2026-10-18.json) all pass:
+three use EPYC 7763 and one EPYC 9V74. Full-work joined/separate ratios range
+0.761–0.929 in tracing and 0.770–0.928 in ARC. They confirm construction gains
+on these hosts, without resolving the Xeon result.
 
 For the complete workload, the same-run fwp/C ratios are 0.918 tracing and 0.954
 ARC on EPYC, and 0.992/0.962 on ARM64. Against Rust, the ratios are 1.110/1.154
@@ -3091,7 +3104,10 @@ The measurement job now selects the compiler already built by its integration
 tests and records its exact path/hash alongside source identity. It still builds
 the measured programs at native O2; compiler generation/startup time is outside
 those program timings. The 30-minute limit and all test/cost cases remain.
-A complete replacement run is required before accepting the six-host report.
+Replacement run `39108116774` passes all six hosts and 78 tests. Its
+[report](measurements/collection-joined-storage-2026-10-18.json), collected by
+`39109026750`, verifies all 120 actual binaries and allocation/cleanup counts.
+The failed run remains recorded; the replacement does not relabel its result.
 
 Two other candidates were rejected: moving integer equality outside the search
 is 8–9% slower on ARM64, and separating cached initialization shows no clear

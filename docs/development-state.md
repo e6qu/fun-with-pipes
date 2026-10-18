@@ -2,15 +2,15 @@
 
 ## Next action
 
-Finish the map-construction repair in [PR #166](https://github.com/e6qu/fun-with-pipes/pull/166).
+Next: integrate the verified map-construction repair in [PR #166](https://github.com/e6qu/fun-with-pipes/pull/166).
 The timeout and failure-artifact repairs are published; six-host
 replacement `39108116774` at `b8700990` passes all 78 tests and its report
-`39109026750` passes. Download and record its 120-binary report. Joining related buffers fixes sorting
+`39109026750` passes. Its 120-binary report is verified and recorded. Joining related buffers fixes sorting
 on both measured EPYC models. Investigate the separate Xeon slowdown using
 AMD64 repeats: `39106417923` landed on EPYC 7763 and `39107501057` on EPYC 9V45;
 both pass but neither answers the Xeon-specific question.
-Audit the jobs, generate the corrected six-host report, then integrate
-the preparation into this same PR. Require all nine production jobs, docs and
+Integrate the preparation into this same PR and start full final-head validation
+while investigating the unresolved Xeon-specific timing result. Require all nine production jobs, docs and
 affected evidence for the final PR commit before merging. Fix every encountered
 issue, including unrelated/pre-existing failures; do not hide or defer fixes.
 
@@ -25,7 +25,7 @@ Queued CI gates merging, not independent work. Keep one active delivery PR.
   `7f782388270b5d73a60eaf3c253a6f9a6e680e95`. Only this handoff is uncommitted.
 - Preparation `/private/tmp/fwp-collection-runtime-costs`, branch
   `collection-runtime-costs`, published head
-  `b87009905b26071be33b93c4ecf3277265a52488`. No second PR.
+  `fe78f7000a17e4a1ba417d823ad9f39407838667`. No second PR.
 - Repair compiler/runtime/tests: `725e2198d721e835be282e2032d99ac5f10b4605`.
   Later preparation commits change measurement/report tools and docs only;
   `git diff` verifies compiler/runtime/test identity.
@@ -57,7 +57,8 @@ Focused prefixes: `collection-joined`, `map-storage`, `storage-diagnostics`,
 
 The failed report must not be relabeled or accepted. Replacement report
 `39109026750` succeeds at `b8700990`, using successful run `39108116774`.
-Download and audit its artifacts before committing the result. The collector requires five fused-map requests,
+Its artifact audit passes: six hosts, 78 tests and 120 binaries; compiler paths
+and hashes are retained in `collection-joined-storage-2026-10-18.json`. The collector requires five fused-map requests,
 `3*n+6` ordinary-map requests, 48 allocation failures, 64 callback exits and two
 deliberately leaked allocations in broken controls. Require all 120 binaries and
 six hosts. Original report record: `/private/tmp/fwp-joined-report-publication.json`.
@@ -139,22 +140,25 @@ preparation as `docs/measurements/large-map-storage-2026-10-18.json`.
 The full diagnostic report is committed in preparation,
 as `docs/measurements/large-map-storage-phases-2026-10-18.json` (2.82 s guarded).
 All sixteen timed-binary/source/profile identities match the earlier run exactly;
-the different CPU and timing distributions are not compiler changes. Record the
-AMD64 repeats after their audits. The measured compiler and diagnostic sources
+the different CPU and timing distributions are not compiler changes. The AMD64 repeats are recorded in `large-map-storage-repeats-2026-10-18.json`. The measured compiler and diagnostic sources
 are preserved as `evidence/collection-joined-buffers-20261018` and
 `evidence/map-storage-probes-20261018`; these are evidence anchors, not acceptance
 of the incomplete collection workflow.
 
 ## Fast performance repeats
 
-The new `map-replay` workflow repeats 16 verified ordinary/diagnostic binaries
+Run `39109230202` at `fe78f700` uses the new `map-replay` workflow repeats 16 verified ordinary/diagnostic binaries
 from successful run `39106005017`, source `93cb93a0`, on four independent AMD64
 runners. It verifies run success, source, architecture, executable size/hash and
 generated-source hash before any execution. No compiler or native build is
 repeated. Reports retain original evidence, current CPU identity, 24 balanced
 ordinary samples and 16 separate phase samples. Four rejection regressions and
-validation of all 16 actual files pass locally without executing them. The
-Xeon-specific question remains open; do not claim another CPU answers it.
+validation of all 16 actual files pass locally without executing them (5.28 s
+guarded). A later documentation check caught the streamlined handoff missing
+its required seven-row roadmap table and `Next:` marker; both are restored. All four jobs pass and all 64 replayed binary identities are audited (24.46 s
+guarded). Three use EPYC 7763 and one EPYC 9V74; full ratios range 0.761–0.929
+tracing and 0.770–0.928 ARC. `large-map-replay-2026-10-18.json` retains all samples.
+The Xeon-specific question remains open; do not claim another CPU answers it.
 
 ## Local validation and tool repairs
 
@@ -209,14 +213,26 @@ Original large-map control: `9f0632f9`, run `39102838322`, tag
 Neither was adopted. The longer previous handoff is saved at
 `/private/tmp/fwp-handoff-before-storage-streamline.md`; it is not a second plan.
 
-After resolving the timing question and completing focused reports, preserve
-this authoritative handoff and squash preparation into the existing PR branch.
+Preserve this authoritative handoff and squash preparation into the existing
+PR branch. Full validation can run while the timing investigation continues;
+the unresolved Xeon result must stay visible and is not claimed fixed.
 Update the description around the final change, then require all final-head
 gates. Squash-merge with explicit one-line subject, at most 80 characters, empty
 body, no trailers/attribution. Verify complete message, parent and identical
 tested/merged tree; cancel duplicate post-merge production and continue.
 
 ## Roadmap status
+
+| Step | Status | Remaining focus |
+|---|---|---|
+| 1 | In progress | Ownership and tracing removal |
+| 2 | In progress | Functional intermediates, copies and unnecessary counts |
+| 3 | In progress | Controlled C/Rust gaps and actual machine code |
+| 4 | In progress | Differentiation precision, speed and memory |
+| 5 | In progress | CPU kernels and GPU resource ownership |
+| 6 | In progress | Repeated, equivalent-work comparisons |
+| 7 | In progress | Representative applications and browser execution |
+
 
 All seven [PLAN.md](../PLAN.md) areas remain open: ownership/GC removal;
 functional costs; machine performance; differentiation; numerical kernels;

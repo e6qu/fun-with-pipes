@@ -93,10 +93,12 @@ The current delivery removes intermediate lists and numeric result tuples from
 map/set construction. Immediate ranges provide values directly; known callbacks
 use direct calls. Sets use two temporary key arrays instead of four key/value
 arrays. Order, duplicates, aliases, arithmetic and failure behavior stay unchanged.
-All three focused runs pass 78 tests on six native hosts, with 120 actual
-binaries inspected per report. Direct known-set loops avoid per-item dispatch
+The latest focused run passes 78 tests on six native hosts, with 120 actual
+binaries inspected. Joined key/value buffers remove two more map allocations;
+size guards and failure cleanup are verified. Large-map measurements expose
+CPU-dependent costs, so a remaining Xeon slowdown is still under investigation. Direct known-set loops avoid per-item dispatch
 and stack access in the inspected Linux AMD64/ARM64 binaries. Set peak counted storage at 65,536
-inputs falls from 2,102,304 to 1,053,712 bytes after removing the unused buffers.
+inputs falls from 2,102,304 to 1,053,696 bytes after removing the unused buffers and sentinel word.
 [Measurements](docs/benchmarks.md#building-numeric-maps-and-sets-without-temporary-lists)
 identify the exact comparisons and their limits. The [handoff](docs/development-state.md)
 tracks the next PR's full production acceptance. The C/Rust benchmark now keeps
