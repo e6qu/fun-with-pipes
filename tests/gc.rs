@@ -97,7 +97,9 @@ fn status_detail(status: std::process::ExitStatus) -> String {
 
 fn retain_stress_failure(path: &Path, dir: &Path, want: &str, got: &str) {
     let stem = path.file_stem().unwrap();
-    let exe = dir.join(stem);
+    let exe = dir
+        .join(stem)
+        .with_extension(std::env::consts::EXE_EXTENSION);
     let retained = std::env::temp_dir().join(format!(
         "fwp-golden-gc-{}-{}",
         std::process::id(),
@@ -139,7 +141,9 @@ fn stressed(path: &Path, dir: &Path) -> String {
 }
 
 fn stressed_with_env(path: &Path, dir: &Path, env: &[(&str, &str)]) -> String {
-    let exe = dir.join(path.file_stem().unwrap());
+    let exe = dir
+        .join(path.file_stem().unwrap())
+        .with_extension(std::env::consts::EXE_EXTENSION);
     let b = Command::new(fwp())
         .arg("build")
         .arg(path.file_name().unwrap())
@@ -235,6 +239,51 @@ fn golden_programs_under_gc_stress() {
     });
     let failures = failures.into_inner().unwrap();
     assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[test]
+fn gc_failure_artifacts_retain_the_native_executable() {
+    assert!(have_cc(), "native artifact verification needs a C compiler");
+    let dir = TempDir::new("native-artifact");
+    let source = dir.0.join("native-artifact.fwp");
+    std::fs::write(&source, "main = \"saved\" | string.repeat 2 | echo\n").unwrap();
+    let output = stressed(&source, &dir.0);
+    assert_eq!(output, "savedsaved\n");
+    // Exercise failure retention with a deliberate snapshot mismatch, keeping
+    // the native executable, its exact output/status and generated C together.
+    retain_stress_failure(&source, &dir.0, "deliberate artifact control\n", &output);
+    let executable = dir
+        .0
+        .join("native-artifact")
+        .with_extension(std::env::consts::EXE_EXTENSION);
+    let retained = std::env::temp_dir().join(format!(
+        "fwp-golden-gc-{}-native-artifact",
+        std::process::id()
+    ));
+    let binary = std::fs::read(&executable).unwrap();
+    assert_eq!(std::fs::read(&retained).unwrap(), binary);
+    if cfg!(windows) {
+        assert!(binary.starts_with(b"MZ"));
+    }
+    let status = std::fs::read_to_string(retained.with_extension("status")).unwrap();
+    assert!(status.contains("run FWP_GC_STRESS=1 FWP_GC_VERIFY=1: code=Some(0)"));
+    assert!(retained.with_extension("c").is_file());
+    if let Some(destination) = std::env::var_os("FWP_GC_DIAGNOSTICS_ARTIFACTS") {
+        let destination = PathBuf::from(destination);
+        std::fs::create_dir_all(&destination).unwrap();
+        std::fs::write(destination.join("native.bin"), &binary).unwrap();
+        for extension in ["c", "status", "report"] {
+            std::fs::copy(
+                retained.with_extension(extension),
+                destination.join(format!("native.{extension}")),
+            )
+            .unwrap();
+        }
+    }
+    std::fs::remove_file(&retained).unwrap();
+    for extension in ["c", "status", "report"] {
+        std::fs::remove_file(retained.with_extension(extension)).unwrap();
+    }
 }
 
 #[cfg(unix)]

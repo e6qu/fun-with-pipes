@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, map-storage, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -27,6 +27,60 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  artifact_paths:
+    if: inputs.suite == 'artifact-paths'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_LIST_AP_ARTIFACTS: artifact-path-evidence/list
+      FWP_TYPED_STATE_ARTIFACTS: artifact-path-evidence/state
+      FWP_AD_SCOPE_ARTIFACTS: artifact-path-evidence/ad
+      FWP_CODEC_ARTIFACTS: artifact-path-evidence/codecs
+      FWP_ARRAY_SIZE_ARTIFACTS: artifact-path-evidence/arrays
+      FWP_DEVICE_BOUNDS_ARTIFACTS: artifact-path-evidence/device
+      FWP_GC_DIAGNOSTICS_ARTIFACTS: artifact-path-evidence/gc
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Native Windows toolchain
+        shell: pwsh
+        run: ./scripts/setup-windows.ps1
+      - name: Record source and tools
+        shell: bash
+        run: |
+          mkdir -p artifact-path-evidence
+          git rev-parse HEAD > artifact-path-evidence/source.txt
+          rustc --version > artifact-path-evidence/rustc.txt
+          clang --version > artifact-path-evidence/clang.txt
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --lib --bin fwp --test list_applicative_ownership --test typed_state_ownership --test ad_tape_scopes --test serializer_leaf_ownership --test array_size_limits --test device_bounds --test gc -- -D warnings
+      - name: Native ownership checks with artifact writing enabled
+        if: ${{ !cancelled() }}
+        run: cargo test --no-fail-fast --test list_applicative_ownership --test typed_state_ownership --test ad_tape_scopes --test serializer_leaf_ownership -- --nocapture
+      - name: Array bounds through generated native programs
+        if: ${{ !cancelled() }}
+        run: cargo test --test array_size_limits array_size_limits_agree_with_raw_interpreter_and_generic_wrappers -- --exact --nocapture
+      - name: Device validation without a GPU or sanitizer toolchain
+        if: ${{ !cancelled() }}
+        run: cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact --nocapture
+      - name: Retain the actual executable after a snapshot mismatch
+        if: ${{ !cancelled() }}
+        run: cargo test --test gc gc_failure_artifacts_retain_the_native_executable -- --exact --nocapture
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: artifact-paths-${{ matrix.runner }}
+          path: artifact-path-evidence/
+          if-no-files-found: error
   map_storage:
     if: inputs.suite == 'map-storage'
     strategy:

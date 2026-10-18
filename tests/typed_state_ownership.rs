@@ -119,7 +119,10 @@ main = [
     for opt in ["-O1", "-O2"] {
         for (label, source, expected) in &variants {
             let code = format!("{source}\n{probe}");
-            let executable = scratch.0.join(format!("{label}{opt}"));
+            let executable = scratch
+                .0
+                .join(format!("{label}{opt}"))
+                .with_extension(std::env::consts::EXE_EXTENSION);
             if let Some(directory) = std::env::var_os("FWP_TYPED_STATE_ARTIFACTS") {
                 let directory = PathBuf::from(directory);
                 std::fs::create_dir_all(&directory).unwrap();
@@ -201,7 +204,10 @@ main = [
     );
     for opt in ["-O1", "-O2"] {
         for stack in ["0", "1"] {
-            let executable = scratch.0.join(format!("semantics{opt}-stack{stack}"));
+            let executable = scratch
+                .0
+                .join(format!("semantics{opt}-stack{stack}"))
+                .with_extension(std::env::consts::EXE_EXTENSION);
             if let Some(directory) = std::env::var_os("FWP_TYPED_STATE_ARTIFACTS") {
                 let cfile = PathBuf::from(directory).join(format!("semantics{opt}-stack{stack}.c"));
                 checked(
