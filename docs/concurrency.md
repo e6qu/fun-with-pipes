@@ -67,8 +67,9 @@ checking each socket. Task preemption also checks sockets without waiting, so
 ready network work can run alongside computation. Closing a local socket wakes
 its waiters explicitly; cancellation removes a task's wait record before its
 stack unwinds. On macOS and Windows, a reusable event array grows with concurrent
-waiters and is freed when the last waiter leaves. This change is under platform
-validation in [the current delivery](development-state.md).
+waiters and is freed when the last waiter leaves.
+[PR #163's accepted evidence](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163)
+records the native checks and memory costs.
 
 ### Preemption
 

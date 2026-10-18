@@ -2916,3 +2916,66 @@ No C/Rust timing comparison or claim of free reference counting follows from
 these cleanup checks. Reproduce the data-only inspection with
 `scripts/summarize-map-failures.py --artifacts DIR --audit AUDIT --head SOURCE
 --llvm-bin DIR --output FILE`; it never executes downloaded programs.
+
+## Building numeric maps and sets without temporary lists
+
+A set stores distinct keys. A map stores a value for each key; when input keys
+repeat, the last value survives. For this measurement, a range supplies integers
+from zero up to the chosen input count. The callback takes each integer modulo
+257, producing at most 257 distinct keys. The set prints its size; the map stores
+the original integers as values and prints the last value for key 5.
+
+The [initial six-host report](measurements/collection-build-baseline-2026-10-18.json)
+uses source `488d182203605870ab34d5f431c62f5d58a2a7b1`, preserved as
+`evidence/collection-build-20261018`. It compares the **same fwp program and
+compiler**, with numeric construction combining enabled and disabled through
+`FWP_MAP_BUILD`. The optimized path removes the range list, mapped list and
+eligible key/value tuples. These are fwp comparisons, not C/Rust overhead.
+
+All programs use checked ARC, native O2 and disabled tracing/reuse poisoning.
+Inputs are compiled constants. Time includes process startup, construction,
+callbacks, sorting, deduplication, the final query and output; compilation is
+recorded separately. Eight samples per variant use recorded randomized order.
+The report retains hardware, compiler settings, all 576 elapsed samples,
+allocation counts, charged storage and actual executable sizes.
+
+For 65,536 inputs, the observed medians are:
+
+| Native host | Set: ordinary / optimized ms | Time ratio | Map: ordinary / optimized ms | Time ratio |
+|---|---:|---:|---:|---:|
+| Linux AMD64 | 7.534 / 5.162 | 0.685 | 9.948 / 4.216 | 0.424 |
+| Linux ARM64 | 7.391 / 4.198 | 0.568 | 10.350 / 3.712 | 0.359 |
+| macOS ARM64 | 6.058 / 4.435 | 0.732 | 7.359 / 4.324 | 0.588 |
+| macOS AMD64 | 21.573 / 13.393 | 0.621 | 25.262 / 13.578 | 0.537 |
+| Windows AMD64 | 18.030 / 14.631 | 0.811 | 19.677 / 13.851 | 0.704 |
+| Windows ARM64 | 16.462 / 13.845 | 0.841 | 17.916 / 13.500 | 0.754 |
+
+The ratio is optimized time divided by ordinary time: 0.685 means about 31.5%
+less elapsed time in that run. At 32 inputs, ratios range from 0.953 to 1.043;
+the samples overlap and give no consistent speed improvement. Some Windows
+samples are much slower than their median. Startup was not timed separately,
+and these runner measurements do not establish a universal performance threshold.
+
+At 65,536 inputs, set allocation requests fall from 131,079 to six and map
+requests from 196,616 to seven. All cases have zero retains, final counted bytes
+and collections. On Apple Silicon, peak charged storage falls from 4,718,600 to
+2,102,304 bytes for sets and from 6,815,752 to 2,102,304 for maps. Charged storage
+excludes allocator capacity and process resident memory. This baseline still
+uses four temporary arrays for sets. The following keys-only buffer reduction
+requires its own native measurements, tracked in the [handoff](development-state.md).
+
+All 78 focused tests pass without skips. The report inspects 120 actual binaries,
+including deliberately broken cleanup controls. A
+[focused machine-code review](measurements/collection-build-code-2026-10-18.json)
+checks the actual Linux map executables at 65,536 inputs. AMD64 contains a
+four-item SIMD loop, which computes several values with one vector instruction,
+and a scalar loop selected according to buffer separation. ARM64 uses a scalar
+loop. Both keep loop values in registers and store directly into output buffers,
+with no per-element calls or stack accesses inside the inspected loops.
+
+The complete entry-function stack frame falls from 248 to 216 bytes on AMD64
+and from 304 to 272 on ARM64. These frames include startup and output work,
+exclude callees and the AMD64 return address, and do not bound total stack use.
+The corresponding executable files shrink by 296 bytes on each Linux host.
+These observations apply to these constant-input programs; sorting, final
+container storage, runtime startup and other calls still have costs.

@@ -107,7 +107,7 @@ def main():
                 counters = variant['counters']
                 assert counters['retains'] == counters['finalChargedBytes'] == counters['collections'] == 0
                 count = case['inputs']
-                expected = (6 if fused == '1' else 2 * count + 7) if case['kind'] == 'set' else (7 if fused == '1' else 3 * count + 8)
+                expected = (4 if fused == '1' else 2 * count + 5) if case['kind'] == 'set' else (7 if fused == '1' else 3 * count + 8)
                 assert counters['requests'] == expected, (host, case['kind'], count, fused, counters)
                 assert len(variant['processWallNs']) == 8 and min(variant['processWallNs']) > 0
                 assert variant['medianProcessWallNs'] == statistics.median(variant['processWallNs'])
@@ -126,9 +126,9 @@ def main():
             for opt in ['-O1', '-O2']:
                 for reuse in (['0'] if mode == 'arc' else ['0', '1']):
                     text = (checks / f'failures-{mode}{opt}-reuse-{reuse}.txt').read_text()
-                    assert text == '6 builders: 54 allocation failures and 48 callback exits cleaned; aliases preserved\n', text
+                    assert text == '6 builders: 50 allocation failures and 48 callback exits cleaned; aliases preserved\n', text
                     exits.append({'mode': mode, 'optimization': opt, 'reuseVerification': reuse == '1',
-                                  'allocationFailures': 54, 'callbackExits': 48})
+                                  'allocationFailures': 50, 'callbackExits': 48})
                 broken = (checks / f'missing-cleanup-{mode}{opt}.txt').read_text()
                 assert 'collection live allocations: 4' in broken, broken
                 for kind in ['failures', 'missing-cleanup']:
@@ -140,7 +140,9 @@ def main():
         print(host, '13 tests, 20 actual binaries, six cost cases verified', flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps({
-        'source': args.head, 'run': args.run, 'completeNativeMatrix': True,
+        'source': args.head, 'run': args.run,
+        'collectorSource': command('git', 'rev-parse', 'HEAD').strip(),
+        'completeNativeMatrix': True,
         'scope': 'Actual binaries are inspected as data, never executed by this collector. '
                  'Each host has 13 focused tests, six failure configurations, four deliberately '
                  'broken cleanup controls and six paired cost cases. Timing compares fused and '
