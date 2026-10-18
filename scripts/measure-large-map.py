@@ -143,7 +143,8 @@ def main():
         'hardware': platform.uname()._asdict(), 'cpu': run(['lscpu'], env).stdout,
         'compiler': run([cc, '--version'], env).stdout,
         'rustc': run(['rustc', '-vV'], env).stdout,
-        'scope': 'Maintained map benchmark: build 500,000 sorted key/value pairs and perform '
+        'scope': 'Maintained map benchmark: generate 500,000 pairs with scrambled distinct keys, '
+                 'sort them during map construction, and perform '
                  '2,000,000 lookups. C/Rust outputs agree with every fwp variant. Same runner, '
                  'compiler and fwp source; compare numeric construction fusion on/off in both '
                  'default tracing and checked ARC. Separate construction-only fwp programs print '

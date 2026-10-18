@@ -2,6 +2,7 @@
   "source": "9f0632f9c1abf4f067fa659f1d95c5768cb8a965",
   "run": 39102838322,
   "status": "Both native jobs and artifact audit pass; AMD64 timing instability remains unresolved.",
+  "descriptionCorrection": "The raw reports below say sorted key/value pairs. The input pairs have scrambled distinct keys, computed as (index * 7919) modulo 1000003; map construction sorts them. Raw timing data and original report text are preserved. The program constructs and prints the table size before its query loop.",
   "scope": "Controlled optimization-on/off comparison; compiler/runtime identical to PR 166 head 7f782388270b5d73a60eaf3c253a6f9a6e680e95. Raw reports retained without relabeling. Allocation reduction is not acceptance of the observed AMD64 slowdown.",
   "hosts": {
     "large-map-ubuntu-24.04-arm": {

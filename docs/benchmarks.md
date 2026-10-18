@@ -3010,7 +3010,12 @@ benefit. The final same-source comparison above measures the combined behavior.
 
 The small construction comparison above has at most 257 distinct keys. The
 maintained `map` benchmark instead constructs 500,000 distinct entries and makes
-two million lookups. Its [controlled report](measurements/large-map-construction-2026-10-18.json)
+two million lookups. Keys are `(index * 7919) modulo 1000003`; input pairs are
+scrambled, and construction sorts them. The program prints the completed map's
+size before starting queries. The original raw report's description of "sorted
+key/value pairs" refers to the resulting map, not already sorted input; its
+correction is recorded alongside the preserved samples.
+Its [controlled report](measurements/large-map-construction-2026-10-18.json)
 compares construction combining on/off with the same compiler and runner, in
 both default tracing and checked ARC. It retains all samples and actual binaries;
 C and Rust run alongside complete fwp programs. Construction-only fwp programs
@@ -3036,10 +3041,18 @@ The repair joins related key/value lanes under one allocation owner, also for
 sort scratch, without arbitrary padding. It removes two allocation requests and
 keeps sorting, duplicate handling and callback order. Eight focused local tests
 pass, including all allocation failures, cancellation, aliases and size-overflow
-guards. Full native and controlled timing checks remain pending. The new
+guards. The first joined-layout performance run passes both Linux jobs and all
+76 actual binary/sample audits. However, its AMD64 host is Intel Xeon 8573C,
+whereas the original slow sorting was on AMD EPYC 9V74. Both layouts sort quickly
+on this Xeon, so it cannot establish that the EPYC problem is fixed. Its full-work
+tracing median is 4.6% slower with joined storage, despite construction-only
+medians improving. This also remains under investigation. The new
 same-run comparison reconstructs the original separate-buffer layout explicitly;
 its results must justify the repair before merge. Older tables above describe
 their recorded sources and must not be relabeled as measurements of this change.
+Separate diagnostics compare sorting phases for both layouts and measure actual
+construction and query intervals in the same full program. They preserve
+evaluation order and do not infer query time by subtracting unrelated processes.
 
 Two other candidates were rejected: moving integer equality outside the search
 is 8–9% slower on ARM64, and separating cached initialization shows no clear

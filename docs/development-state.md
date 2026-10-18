@@ -2,10 +2,14 @@
 
 ## Next action
 
-Next: audit joined-buffer source `725e2198d721e835be282e2032d99ac5f10b4605`: Linux
-performance run `39104667835` and six-host correctness run `39104669727`. Publish
-the report-collector/doc corrections separately; their code does not alter the
-measured compiler. Once all six hosts pass, collect their report with the new
+Next: publish and run the additional storage-phase diagnostics. Performance run
+`39104667835` passes both jobs and all 76 binary/sample checks, but does not prove
+the repair: its AMD64 host is Intel Xeon 8573C, while the original slow sorting
+was on AMD EPYC 9V74. Both old/new layouts are fast on this Xeon. Full-work
+tracing is 4.6% slower with joined storage, despite faster construction-only
+medians. Resolve both questions before integration. Compiler/runtime remain
+identical to `725e2198d721e835be282e2032d99ac5f10b4605`; six-host correctness run
+`39104669727` is still in progress. Once all six hosts pass, collect their report with the new
 collector and explicit measured source/run inputs. No second PR. The authoritative live
 handoff is `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
 PR #166 remains at `7f782388270b5d73a60eaf3c253a6f9a6e680e95` while production runs.
@@ -78,6 +82,16 @@ full suites, full benchmarks and large reports remain on GitHub.
 - Shared root `target/debug/fwp` now contains the joined-buffer
   compiler at source `725e2198`. It is no longer the published PR #166 compiler. Root CI auditing
   remains data-only; run candidate checks from this preparation worktree.
+- New storage-phase diagnostics pass eight tiny compiled/interpreter comparisons
+  (8.92 s guarded), covering both layouts and both memory modes. The first probe
+  incorrectly assumed construction happened inside queries and failed locally;
+  it now measures the actual earlier construction and subsequent loop separately,
+  verifies one construction before queries and none during them, and preserves
+  evaluation order. Sub-microsecond tiny loops may measure zero on macOS; full
+  runner measurements require positive durations. No full benchmark ran locally.
+- The report description now explains that input keys are scrambled, not already
+  sorted. Historical raw reports retain their text with an explicit correction;
+  samples, source IDs and binary hashes are unchanged.
 
 The old phase/lookup source is preserved as `evidence/large-map-phases-20261018`;
 its unused candidate scripts are removed. The report collector previously expected 56 allocation failures and four leaked
