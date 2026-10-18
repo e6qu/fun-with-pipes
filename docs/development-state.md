@@ -2,7 +2,7 @@
 
 ## Next action
 
-Next: finish auditing the two Intel macOS jobs in production run
+Next: finish auditing the last Intel macOS GC job in production run
 `39080534474`, then publish one combined
 repair of [PR #164](https://github.com/e6qu/fun-with-pipes/pull/164). Keep all known
 fixes together. Do not cancel healthy remaining jobs or merge a failing head.
@@ -32,7 +32,7 @@ covers publication, fixes and merge after acceptance; no repeated permission.
 
 | Run / source | Result and required action |
 |---|---|
-| Production `39080534474` / `6b504c2e` | Benchmarks, macOS ARM GC and both Windows hosts pass. Both Linux hosts complete 241 targets each and regular macOS ARM completes 119; each finds only the same two client goldens. Two Intel macOS jobs remain running; audit all before the combined repair push. |
+| Production `39080534474` / `6b504c2e` | Benchmarks, macOS ARM GC and both Windows hosts pass. Both Linux hosts complete 241 targets each and both regular macOS jobs complete 119 each; each finds only the same two client goldens. Intel macOS GC remains running; audit all before the combined repair push. |
 | Documentation `39080534747` / `6b504c2e` | Passes for the original head only. |
 | Original focused `39080530770` / `6b504c2e` | Five hosts pass. Intel reaches 25 minutes in the last API test; all logs audited: 125 passed, zero failed, 12 ignored memory entries exercised separately. |
 | Split Intel `39082660292` / workflow `1682ff88`, checked-out source `6b504c2e` | Attempt 2 passes all 21 tests and artifact upload; both logs audited. Attempt 1 passed tests but failed artifact upload with GitHub DNS `ENOTFOUND`. Preserve both attempts and the checked-out source. |
@@ -114,6 +114,16 @@ Two further audit repairs are included:
   collector search. Rerun artifacts record actual toolchain versions. Browser
   tutorial guidance and the playground's unsupported “a fifth larger and slower”
   claim are corrected; measurements must identify their program and host.
+
+The macOS test lists now specify execution priority as well as assignment.
+Long targets start early using recorded target times; two workers, one harness
+thread, every target and the separate GC stress invocation remain unchanged.
+The [scheduling estimate](measurements/ci-scheduling-2026-10-18.json) simulates
+about 4.3 minutes less waiting in the regular Intel shard and 2.4 minutes in the
+ARM GC shard. These are estimates using old durations, not measured speedups;
+repaired client halves add work. Eight runner tests pass (1.01 s), including
+complete coverage, explicit ordering, two-worker overlap and failure propagation.
+Final CI will exercise the new order.
 
 ## Measurements and focused verification
 

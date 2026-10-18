@@ -121,6 +121,10 @@ coverage, not a measured speedup.
 
 For each macOS architecture, the two jobs use the explicit integration-target
 lists in `scripts/macos-test-shards.json`, read by `scripts/run-native-tests.py`.
+List order is execution priority: long targets start early so one worker is less
+likely to wait for the other's final target. The ordering comes from recorded
+CI target times; [the scheduling estimate](docs/measurements/ci-scheduling-2026-10-18.json)
+is a simulation using those times, not a measured speedup for the new order.
 New targets must be assigned deliberately; adding one must not move unrelated
 tests between jobs. Remove obsolete entries when deleting targets. The runner
 rejects missing, duplicate, obsolete or unknown targets. Unit, example and
