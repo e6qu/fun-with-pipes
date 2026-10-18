@@ -49,6 +49,22 @@ def inspect(binary, host, mode, llvm):
             'internalRuntimeSymbols': len(runtime)}
 
 
+def audit_tests(log):
+    """Require every named target to finish, with its complete expected tests."""
+    log = re.sub(r'\x1b\[[0-9;]*[A-Za-z]', '', log)
+    expected = {'collection_construction': 3, 'map_set_ownership': 5,
+                'mapped_array_construction': 3, 'numeric_array_fusion': 2}
+    # Cargo's target headers use stderr; harness summaries use stdout. GitHub
+    # can place the next header before the preceding summary, so audit the two
+    # ordered streams separately instead of splitting on headers.
+    targets = re.findall(r'Running tests[/\\]([a-z_]+)\.rs', log)
+    assert targets == list(expected), targets
+    summaries = re.findall(r'test result: (ok|FAILED)\. (\d+) passed; (\d+) failed; (\d+) ignored;', log)
+    assert summaries == [('ok', str(count), '0', '0') for count in expected.values()], summaries
+    assert 'panicked at' not in log
+    return expected
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run', required=True, type=int)
@@ -73,10 +89,7 @@ def main():
         assert not any(step['conclusion'] == 'failure' for step in job['steps'])
         log = command('gh', 'api', f'repos/{REPO}/actions/jobs/{job["databaseId"]}/logs', '--allow-escape-sequences')
         (args.artifacts / f'{host}.log').write_text(log)
-        summaries = re.findall(r'test result: (ok|FAILED)\. (\d+) passed; (\d+) failed; (\d+) ignored;', log)
-        assert len(summaries) == 4 and sum(int(row[1]) for row in summaries) == 13, (host, summaries)
-        assert all(row[0] == 'ok' and row[2:] == ('0', '0') for row in summaries)
-        assert 'panicked at' not in log
+        completed_tests = audit_tests(log)
         directory = args.artifacts / f'collection-build-{host}'
         command('gh', 'run', 'download', args.run, '--repo', REPO, '--name', directory.name, '--dir', directory)
         assert (directory / 'source.txt').read_text().strip() == args.head
@@ -121,6 +134,7 @@ def main():
                 for kind in ['failures', 'missing-cleanup']:
                     binaries.append(inspect(checks / f'{kind}-{mode}{opt}.bin', host, mode, args.llvm_bin))
         rows.append({'host': host, 'job': job['databaseId'], 'passedTests': 13,
+                     'completedTargets': completed_tests,
                      'failureConfigurations': exits, 'cleanupControls': 4,
                      'failureBinaries': binaries, 'measurements': report})
         print(host, '13 tests, 20 actual binaries, six cost cases verified', flush=True)

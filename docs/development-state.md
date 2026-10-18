@@ -126,6 +126,12 @@ builds, gates and large measurements on CI; local checks use the root guard.
 
 ## Collection repair verification
 
+Repair `488d182203605870ab34d5f431c62f5d58a2a7b1` is published on `collection-build-storage`.
+New six-host run `39098119495` is queued/running. Audit using
+`/private/tmp/fwp-audit-collection-repair.py`; results and logs use the separate
+`fwp166-collection-repair-*` prefix. Keep original run `39096618831` unchanged.
+
+
 All three focused collection tests, formatting and Clippy pass after the NaN
 fixture repair (34.11 s guarded). The test covers parsed F32/F64 NaNs of both
 signs and duplicate keys while retaining exact interpreter/native comparisons.
@@ -135,6 +141,17 @@ pass (7.58 s guarded). Commands: root `scripts/local-guard.py python3
 both from the preparation worktree. The authenticated Windows download still
 requires native CI verification. Every known failing collection target was audited
 before publication; original failed logs remain separate.
+
+The collection report now requires all four named targets and their individual
+expected test counts. Its first parser split on Cargo stderr headers, but GitHub
+can print the next header before the previous stdout summary; the audit now checks
+those ordered streams independently. A matcher escaping mistake was also fixed.
+The repaired audit accepts both complete original ARM hosts and rejects all four
+failed hosts plus four incomplete/wrong-target controls (0.15 s guarded).
+`scripts/test-collection-evidence.py` passes three regressions (0.15 s guarded),
+covering interleaving, Windows ANSI paths, missing/duplicate targets, failures,
+ignored tests and incomplete summaries. These are report-tool changes only;
+measured compiler source and the six-host repair run remain unchanged.
 
 ## Roadmap status
 
