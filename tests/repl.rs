@@ -159,6 +159,36 @@ fn closures_containers_imports_and_named_types_survive_later_cells() {
 }
 
 #[test]
+fn changed_import_layout_cannot_reinterpret_stored_values() {
+    fwp::driver::with_big_stack(|| {
+        let dir = fwp::cgen::TempDir::new("repl-layout").unwrap();
+        let path = dir.join("boxes.fwp");
+        let original = "Box = { value: I64 }\nexport boxed : Box\nboxed = Box { value = 7 }\n";
+        std::fs::write(&path, original).unwrap();
+        let mut session = Session::new(dir.join(".")).unwrap();
+        let mut output = Vec::new();
+        session.submit("import boxes", &mut output).unwrap();
+        session.submit("boxes.boxed", &mut output).unwrap();
+        std::fs::write(
+            &path,
+            "Box = { value: String }\nexport boxed : Box\nboxed = Box { value = \"new\" }\n",
+        )
+        .unwrap();
+        let error = session.submit("out2 | .value", &mut output).unwrap_err();
+        assert!(error.contains(":reset"), "{error}");
+        std::fs::write(&path, original).unwrap();
+        assert_eq!(
+            session
+                .submit("out2 | .value", &mut output)
+                .unwrap()
+                .value
+                .as_deref(),
+            Some("7")
+        );
+    });
+}
+
+#[test]
 fn multiline_and_scripted_terminal_commands() {
     for input in [
         "2 +",

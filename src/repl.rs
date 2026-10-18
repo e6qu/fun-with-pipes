@@ -296,6 +296,24 @@ impl Session {
         c: &Compilation,
         versions: &HashMap<String, u64>,
     ) -> Result<FuncId, String> {
+        // Imported files can change outside the session. Never reinterpret an
+        // existing value or captured function using a different named layout.
+        for (ty, shape) in &fresh.shapes {
+            if self.program.shapes.get(ty).is_some_and(|old| old != shape) {
+                return Err(format!("type {ty} changed in an imported module; use :reset before loading its new representation"));
+            }
+        }
+        for (old, new) in [
+            (&self.program.field_order, &fresh.field_order),
+            (&self.program.repr_c, &fresh.repr_c),
+        ] {
+            if new
+                .iter()
+                .any(|(name, fields)| old.get(name).is_some_and(|previous| previous != fields))
+            {
+                return Err("imported record field order changed; use :reset before loading its new representation".into());
+            }
+        }
         let mut ids = Vec::with_capacity(fresh.funcs.len());
         let mut additions = Vec::new();
         for (index, function) in fresh.funcs.iter().enumerate() {

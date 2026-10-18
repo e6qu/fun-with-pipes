@@ -35,22 +35,31 @@ warnings. SDK tests inspect native AMD64/cross ARM64 objects at O0/O1/O2/O3 with
 C line mappings; cross objects are not executed. Actual desktop/mobile screenshots
 were reviewed: readable cells, no horizontal overflow, safe Markdown as text.
 
-The source-stepping compiler failures from `ec02ea2b` are repaired and verified.
-New local changes extend coverage to tutorial semantics, real POSIX terminal
-completion/history/multiline/interrupts, notebook stop/restart and rejected input,
-and native SDK execution on the six production hosts. A stopped notebook run now
-cannot silently start a replacement interpreter to execute its remaining cells.
-Checkpoint `7b941c70` failed before tests: the terminal stop display borrowed an
-event after moving it into its JSON envelope. Both the focused run `39128156407`
-and all five measurement jobs `39128158656` report this same compiler error.
-Every job log was audited; SDK/browser failures followed from the missing binary.
-The display now runs before the move, without adding a clone. A separate SDK
-regression preserves compiler diagnostics when debugger startup fails.
-SDK documentation links were corrected; all 59 Markdown link sets and tutorial
-copies pass (`/private/tmp/fwp-doc-audit.py`, guarded, 0.39 s). Guarded formatter
-passed in 1.40 s and Python syntax in 0.22 s. Next: publish this coverage batch,
-run the focused suite and a fresh five-host map measurement, fix every issue,
-then run all final-head production gates. Full acceptance is still pending.
+At `e1fb8ba3`, focused run `39128514387` passed formatting, Clippy, 21 Rust
+checks (including the expanded native scalar-math ABI probe), eight SDK tests and
+the real browser test, including stop/restart and origin rejection. Debugger output
+matches five existing tutorials under raw interpretation. One POSIX terminal test
+failed: it sent several commands before the next paste prompt was ready. The
+harness now waits for each accepted line/prompt; completion, history and multiline
+entry had already passed, but execution interruption remains unverified.
+
+Review also found that changing an imported named type could reinterpret stored
+REPL values. Linking now rejects changed layouts/field order before mutating the
+session and asks for `:reset`; a regression restores the old module and confirms
+its stored value remains usable. This repair is not yet compiled remotely.
+
+Next: publish the terminal-harness and imported-layout repairs, run focused
+checks, audit all five jobs of measurement run `39128516933`, then start the nine
+production gates and documentation on the final head. Keep all failures visible.
+The focused runner does not require WASI headers; passing its float helper does
+not establish WASI execution. The full Linux gates require the actual WASI probe.
+
+Local guarded checks: formatter PASS (1.38 s), all 59 Markdown link sets/tutorial
+copies PASS (0.39 s), 106 immutable preparation anchors/seven roadmap steps/commit
+subjects PASS (2.70 s), primitive inventory PASS (1.39 s), Python syntax PASS
+(0.22 s), JavaScript syntax PASS (0.33 s). Limits were unchanged. The two failed
+`7b941c70` runs were audited in full: all six jobs had the same moved-event build
+error, repaired in `e1fb8ba3`; downstream SDK/browser failures had no compiler.
 
 The notebook uses the explicitly installed Python package: `fwp notebook` launches
 it, and `fwp repl --json` supplies the checked session. Runtime stdout/stderr are

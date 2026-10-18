@@ -66,7 +66,9 @@ later cell prints only the REPL's result line, without repeating `echo`.
 
 Redefining a name affects subsequent uses; stored results and captured functions
 keep their earlier values. Types with live values cannot be redefined: use
-`:reset` first. External actions already performed by a failed cell, such as a
+`:reset` first. The same rule applies when an imported file changes a named
+type's fields or variants; stored values keep their original representation.
+External actions already performed by a failed cell, such as a
 file write, cannot be undone by recovering from the error.
 
 Results remain reachable through their `outN` names until `:reset` or exit. The

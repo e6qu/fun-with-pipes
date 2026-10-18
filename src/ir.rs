@@ -342,7 +342,7 @@ pub fn type_of<'a>(
 }
 
 /// Information about named types needed at runtime (display, encoding).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TypeShape {
     /// Variant names and field types (with the type's parameters
     /// substituted).
