@@ -43,6 +43,9 @@ main = [
     ["a", "héllo", ""] | both (map string-pair | map.from-list | map.to-list) id | echo,
     range 0 4 | map (captured-pair ("prefix" | concat "!")) | map.from-list | map.to-list | echo,
     range 0 4 | map (choose (read-all () | string.length | eq 0)) | map.from-list | map.to-list | echo,
+    range (0 | tap echo) (4 | tap echo) | map (captured-pair ("capture" | tap echo)) | map.from-list | map.to-list | echo,
+    range (3 | tap echo) (3 | tap echo) | map (captured-pair ("empty capture" | tap echo)) | map.from-list | map.to-list | echo,
+    range (0 | tap echo) (4 | tap echo) | map (add (1 | tap echo)) | set.from-list | set.to-list | echo,
     range 0 4 | map (tap echo | key) | set.from-list | set.to-list | echo,
     range 0 4 | map (tap echo | pair) | map.from-list | map.to-list | echo
 ] | ignore
@@ -128,8 +131,10 @@ fn failed_numeric_collection_callbacks_release_storage() {
         }
     }
     source.push_str("captured : String -> I64 -> (I64, I64) ! {Error[String]}\ncaptured = curry (if (.1 | eq 2) (.0 | fail) (fork (curry id) (.0 | string.length) .1))\n");
+    cases.push("4 | range 0 | attempt (map pair2 | map.from-list) | echo".into());
+    cases.push("4 | range 0 | attempt (map step2 | array.from-list) | echo".into());
     for _ in 0..4 {
-        cases.push("4 | attempt (range 0 | map (captured (\"callback\" | concat \" failure\")) | map.from-list) | echo".into());
+        cases.push("4 | attempt (range 0 | map (captured (read-all () | concat \"callback failure\")) | map.from-list) | echo".into());
     }
     source.push_str(&format!("main = [{}] | ignore\n", cases.join(",\n")));
     std::fs::write(&input, source).unwrap();

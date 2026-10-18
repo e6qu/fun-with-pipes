@@ -97,6 +97,12 @@ preflight passes (6.89 s), including all eight native-runner checks. One invocat
 used the root directory by mistake and found no prototype script; rerunning in
 this worktree resolved that command error.
 
+Additional checks pass for side effects in both range bounds and callback
+captures, including empty ranges (15.57 s guarded). Caught failures with
+dynamically produced input lists and runtime-read captured strings also pass
+(12.76 s), including the neighboring mapped-array path. These strengthen tests
+after the measured source; compiler and runtime code are unchanged.
+
 Preserve callback and capture evaluation order, empty/reversed ranges, checked
 arithmetic, first-key/last-value duplicate behavior and floating-key ordering.
 Check aliases, traps at multiple callback positions, captured values, cancellation
