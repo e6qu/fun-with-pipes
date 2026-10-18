@@ -2,12 +2,21 @@
 
 ## Next action
 
-Next: finish the complete [PR #165](https://github.com/e6qu/fun-with-pipes/pull/165)
-production audit before publishing one combined repair. The PR still points to
+Next: publish the combined PR #165 repair and its current benchmark evidence,
+then require all nine final-head production jobs and documentation before merge.
+All known failures are repaired and focused native checks pass. CI has no
+cancel-on-push concurrency rule: keep the original production run running and
+continue its complete audit alongside the final-head gates. Waiting for still-running
+original jobs is not required to publish these already-audited fixes. The PR still points to
 `7c2b5638881cea6b476997b333aa61006dba1381`; production `39092728270` has its
-benchmark gate passing and eight jobs running. Documentation `39092728362`
+benchmark and regular ARM macOS gates passing, with seven jobs running.
+The macOS job completed all 119 scheduled targets (451 tests, no failures/skips). Documentation `39092728362`
 passes. Use `/private/tmp/fwp-audit-165.py` to retain every completed job/target
-and failure. Queued or running CI does not prevent independent repair work.
+and failure. Already-published step logs are also audited in
+`/private/tmp/fwp165-production-step-audit.json`: each Windows native phase has
+111 passes and the same three map failures now fixed in the six-host diagnostic;
+both macOS sampled-GC steps pass. These partial logs do not replace full-job
+acceptance. Queued or running CI does not prevent independent repair work.
 
 The original map run `39092741368` is fully audited: four hosts pass; both
 Windows hosts have the same six failures (four C stdout newline mismatches and
@@ -35,8 +44,12 @@ production runs list/State/codec checks after its existing TLS setup. A duplicat
 derivative-scope invocation was removed while preserving its existing later
 coverage. Additional derivative and kernel executable artifact paths are explicit.
 The compiler now gives Windows OpenSSL setup advice rather than Linux package
-instructions. Native verification of this grouped repair is next; local passing
-checks alone do not establish Windows support.
+instructions. Commit `463c00bfddf8824b88dc953acd2f192c3acb4dcd` is published on
+`cancellation-probe-repair`; run `39094282067` passes both Windows hosts:
+52 tests, 22 summaries, zero failures/skips. All expanded ownership, array/device
+bounds and failure-artifact checks pass. Audit it with `/private/tmp/fwp-audit-cancellation165.py`, preserving separate
+`fwp165-artifact-repair-*` logs and JSON. Its native result establishes this repair; it does not replace full production
+acceptance.
 
 Require all nine exact-head production jobs, documentation and complete focused
 map/artifact evidence before authorized squash merge. Use one subject of at most
@@ -57,8 +70,8 @@ Merge record: `/private/tmp/fwp164-merge-record.json`; final target audit:
 ## Current batch: C result owners and failed map cleanup
 
 The root workspace holds branch `library-result-owners` at local repair
-`99410a01`, two commits ahead of PR #165, with the grouped fixture/workflow
-repair pending commit. It is based on accepted #164. The old preparation worktree
+`463c00bf`, three commits ahead of PR #165. The grouped fixture/workflow
+repair passes on both Windows hosts on a separate diagnostic ref. It is based on accepted #164. The old preparation worktree
 `/private/tmp/fwp-library-result-owners` is detached at PR head `7c2b5638` and
 inactive. Its only root handoff edit was backed up before checkout to
 `/private/tmp/fwp165-root-handoff-before-checkout.md`. Rebase tree identity and
@@ -167,6 +180,8 @@ All checks below used the root guard, serially:
   installed headers were not configured; that failure was fixed, not skipped.
 - Cancellation formatting/Clippy/workflow checks pass (3.77 s), then pass after
   TLS ordering and Windows diagnostic repairs (8.56 s).
+- Documentation validation passes (2.65 s): 52 link sets, 106 immutable
+  preparation pairs, seven roadmap steps and commit messages.
 - Kernel executable-path sanitizer/omission check passes (18.50 s including
   compiler rebuild).
 - Six-host map artifact download passes (13.99 s). Repository report collector
@@ -201,6 +216,19 @@ path, producing inconsistent injection counts. It now instruments both allocator
 entry points exactly once. No runtime failure was hidden by that test correction.
 A prior free-disk guard refusal was resolved by deleting only a redundant,
 verified remote-backed artifact download; no guard limit was changed.
+
+## Current C/Rust timing baseline
+
+The passing production benchmark at `7c2b5638` now replaces the obsolete
+shortest-of-three example in [benchmarks](benchmarks.md#recorded-example-and-overhead).
+[Saved data](measurements/complete-programs-2026-10-18.json) contains all 90 elapsed
+samples, 15 compilation times and 15 binary sizes, with CPU/compiler/flags and
+scope. All three maps use sorted pairs. fwp takes 10.7% longer than C and 35.8%
+longer than Rust in this whole-program run; sorting and construction differ.
+No allocation or peak-memory counters were collected, and pipeline samples are
+noisy. This selects investigation, not a cross-revision regression or speedup claim.
+Original report: `/private/tmp/fwp165-benchmarks/bench.md`; validation driver:
+`/private/tmp/fwp-record-current-bench.py` (0.15 s guarded, no benchmark rerun).
 
 ## Independent next preparation
 

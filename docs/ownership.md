@@ -308,7 +308,7 @@ uses a separate 64-bit logical owner count for descriptors, and owns both fields
 received `(Bytes, String)` pair while constructing it. The socket count is aligned
 in the common header. TCP/TLS stream handles keep UDP headers the same
 size while giving stream handles a separate TLS field when needed. Failure releases completed
-fields and receive scratch storage. Closing a Linux descriptor wakes its waiting
+fields and temporary receive buffers. Closing a Linux descriptor wakes its waiting
 tasks and releases its polling records; synchronization after wake does not
 recreate a closed descriptor's record. Disabling physical frees still closes the
 socket when its logical owners finish. Library teardown closes retained sockets
@@ -407,7 +407,7 @@ fields still need owners: catching the error must release them without changing
 an independently retained input map.
 
 The current repair registers cleanup for partial maps, lists, pending fields and
-scratch arrays. Insert, remove and update consume their map argument, including
+temporary arrays. Insert, remove and update consume their map argument, including
 on failure; decoding transfers that owner before insertion. A partial map records
 each acquired key before acquiring its value. Result cleanup uses the output
 value type, so mapping strings to integers never treats integer bits as pointers.
@@ -596,7 +596,7 @@ Other unreviewed IO primitives remain outside checked ARC.
 The six dense F64 linear-algebra primitives borrow their input arrays and return
 independently owned results. Scratch pointers and partially constructed output
 arrays are tracked in one stack record. Normal completion, singular-result exits
-and unwinding release scratch explicitly; outputs transfer to the returned value
+and unwinding release temporary storage explicitly; outputs transfer to the returned value
 only after its container exists. No input retain or hidden managed workspace
 owner is needed. QR checks its square output size separately from input shape.
 See [numerical storage costs](numerics.md#dense-f64-solvers) and
@@ -622,8 +622,8 @@ workspace reuse is bounded and counted separately from returned gradient arrays.
 
 Decoded JSON/text/binary/CSV trees have typed ownership, including partially
 constructed fields and displaced map values. CLI parsing owns defaults, repeated
-flags, diagnostics and results. Temporary decoder scratch has its own cleanup;
-freeing scratch alone would not prove ownership of the resulting tree.
+flags, diagnostics and results. Temporary decoder storage has its own cleanup;
+freeing that storage alone would not prove ownership of the resulting tree.
 
 Acceptance tests check physical reclamation at O1/O2 with stack placement both
 on and off, inspect native symbols/instructions for absent tracing, and require
@@ -658,7 +658,7 @@ an immediate status number. A nonzero child exit status is a result, whereas a
 failure to start or communicate with the child raises `Error[IoError]` of kind
 `spawn`. Arguments containing a zero byte are rejected before any OS call.
 
-The process owner releases argument scratch, pipe endpoints and capture buffers.
+The process owner releases temporary argument storage, pipe endpoints and capture buffers.
 It also reaps the child on POSIX and closes Windows process/thread handles. If
 execution unwinds before the child finishes, cleanup terminates and waits for
 that child. Captured strings stay protected while the result record is being
@@ -761,7 +761,7 @@ cleanup. Both actual WASI jobs pass common-helper regressions; they do not test
 DNS. The earlier owned-values/kernel report does not cover DNS. Retained
 networking callbacks still need separate ownership work. This does not add WASI networking or prove faster DNS lookups.
 
-TCP/UDP receive scratch and UDP-send resolver entries are also registered on the
+TCP/UDP receive buffers and UDP-send resolver entries are also registered on the
 runtime cleanup stack so cancellation and result-allocation failure can release
 them. Failed native receive allocation traps before the buffer is used. These
 repairs pass all six focused native hosts in `38898918147` at `7224b3de` and do

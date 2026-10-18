@@ -95,7 +95,7 @@ including repaired Windows DLL exports and Rust interop. The
 input copies and necessary reference-count costs, without a timing-parity claim.
 
 This delivery also repairs leaks when a map callback or allocation fails.
-Protect partial map/set results, scratch arrays, list conversions and consumed
+Protect partial map/set results, temporary arrays, list conversions and consumed
 inputs, including decoder insertion. Test each allocation/retain failure,
 surviving aliases and callbacks whose output type differs from their input.
 Require interpreter agreement, zero-byte ARC shutdown, stressed tracing/reuse

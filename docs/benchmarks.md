@@ -52,39 +52,43 @@ The timing runner does not measure those costs separately.
 
 ### Recorded example and overhead
 
-This accepted [PR #141 benchmark job](https://github.com/e6qu/fun-with-pipes/actions/runs/38728631817/job/116400593825)
-ran on Linux AMD64 on 2026-10-15 at `f31f7b66`. Its old output rounded times to
-whole milliseconds and did not record CPU/compiler versions or raw samples.
-The percentages below are therefore **approximate**, calculated from those
-rounded times. Treat them as an example of how to read a comparison, not a
-precise hardware baseline.
-
-That historical Rust map used `BTreeMap`. The current benchmark uses sorted
-pairs to match C and fwp; do not attribute differences from this old table solely
-to compiler improvements.
+The [2026-10-18 report](measurements/complete-programs-2026-10-18.json) records
+source `7c2b5638881cea6b476997b333aa61006dba1381` and this passing
+[benchmark job](https://github.com/e6qu/fun-with-pipes/actions/runs/39092728270/job/117572692192).
+It ran on a Linux AMD64 runner with four logical CPUs reporting an AMD EPYC 7763,
+GCC 13.3.0 and Rust 1.99.1. All three map implementations use sorted pairs.
+These are six-run medians, with samples rounded to 0.001 ms in the saved report.
+This benchmark gate passes independently of the delivery's remaining checks.
 
 | Program | C | Rust | fwp | Extra fwp time versus C | Extra fwp time versus Rust |
 |---|---:|---:|---:|---:|---:|
-| `fib` | 15 ms | 25 ms | 11 ms | −27% | −56% |
-| `loop` | 83 ms | 110 ms | 111 ms | +34% | +1% |
-| `map` | 315 ms | 251 ms | 361 ms | +15% | +44% |
-| `pipeline` | 28 ms | 12 ms | 13 ms | −54% | +8% |
-| `strings` | 110 ms | 129 ms | 166 ms | +51% | +29% |
+| `fib` | 20.310 ms | 29.174 ms | 13.427 ms | −33.9% | −54.0% |
+| `loop` | 94.445 ms | 125.738 ms | 127.146 ms | +34.6% | +1.1% |
+| `map` | 382.480 ms | 311.772 ms | 423.266 ms | +10.7% | +35.8% |
+| `pipeline` | 27.546 ms | 15.063 ms | 24.033 ms | −12.8% | +59.6% |
+| `strings` | 167.595 ms | 166.028 ms | 198.031 ms | +18.2% | +19.3% |
 
-Use `(fwp time / baseline time − 1) × 100%`. For example, `111 / 83` is about
-`1.34×`, or 34% longer than the C loop. A negative percentage means less elapsed
-time. Always name the baseline: that same fwp loop is only about 1% longer than
-the Rust result in this run. Do not average these percentages into a language-wide
-score: the programs do different work and have different comparison limitations.
+Use `(fwp time / baseline time − 1) × 100%`. For example, `127.146 / 94.445`
+is about `1.346×`, or 34.6% longer than the C loop. A negative percentage means
+less elapsed time. Always name the baseline: the same fwp loop is only about
+1.1% longer than Rust in this run. Do not average these into a language-wide
+score: each program has the comparison limits described above.
+
+The map gap includes constructing and sorting its input, as well as lookups;
+it cannot identify how much time comes from temporary lists or reference counts.
+The pipeline's fwp samples range from 20.737 to 36.057 ms, so its median is not a
+stable regression threshold. The report retains all 90 elapsed samples, 15
+compilation times and 15 binary sizes. It has no allocation or memory-use counts,
+and does not measure checked ARC. Separate ownership reports below provide those
+measurements for their stated workloads. No speedup over an older fwp revision
+is claimed from this single runner's comparison.
 
 The runner writes `target/bench.md`, the GitHub job summary and a downloadable
 `benchmarks` artifact. It reports both ratios and percentages, all six samples,
 the source commit, OS/architecture, compiler versions and Linux/macOS CPU details.
 Rotating order reduces systematic order bias, but shared-runner load still
-affects results. The historical table above used the older shortest-of-three
-method; it has not been relabeled as a new measurement.
-Timing is reported, not used as a pass/fail
-threshold. Output disagreement is a failure.
+affects results. Timing is reported, not used as a pass/fail threshold. Output
+disagreement is a failure.
 
 ## Numerical workloads compared with C and Rust
 
