@@ -93,7 +93,10 @@ main = [
     );
     for opt in ["-O1", "-O2"] {
         for stack in ["0", "1"] {
-            let exe = dir.0.join(format!("aliases{opt}-{stack}"));
+            let exe = dir
+                .0
+                .join(format!("aliases{opt}-{stack}"))
+                .with_extension(std::env::consts::EXE_EXTENSION);
             checked(
                 Command::new(fwp)
                     .arg("build")
@@ -117,7 +120,10 @@ main = [
         }
     }
     for flag in ["FWP_REUSE", "FWP_FREE"] {
-        let exe = dir.0.join(flag);
+        let exe = dir
+            .0
+            .join(flag)
+            .with_extension(std::env::consts::EXE_EXTENSION);
         checked(
             Command::new(fwp)
                 .arg("build")
@@ -217,7 +223,10 @@ main = (10000, 0) | loop step | echo
     assert_ne!(shared, owned);
     let mut freed = Vec::new();
     for (name, code) in [("shared", &shared), ("owned", &owned)] {
-        let exe = dir.0.join(name);
+        let exe = dir
+            .0
+            .join(name)
+            .with_extension(std::env::consts::EXE_EXTENSION);
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
         let out = checked(
             Command::new(&exe)
@@ -271,6 +280,10 @@ main = [
     let emitted = std::fs::read_to_string(cfile).unwrap();
     let mut probe = r#"
 int main(void) {
+#ifdef _WIN32
+    /* Preserve exact test output bytes on native Windows too. */
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0));
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));
     V input = fwp_cons(fwp_tuple2(bits, bits), 0);
@@ -357,7 +370,10 @@ int main(void) {
     );
     let source = format!("{runtime}\n{probe}");
     for opt in ["-O1", "-O2"] {
-        let exe = dir.0.join(opt);
+        let exe = dir
+            .0
+            .join(opt)
+            .with_extension(std::env::consts::EXE_EXTENSION);
         fwp::cgen::compile_c(&source, &exe, opt).unwrap();
         assert_eq!(
             checked(&mut Command::new(&exe)).stdout,
@@ -510,7 +526,10 @@ fn map_set_failures_release_partial_storage_and_preserve_aliases() {
         let source = map_failure_probe(&emitted);
         save_map_evidence(&format!("faults-{mode}.c"), source.as_bytes());
         for opt in ["-O1", "-O2"] {
-            let exe = dir.0.join(format!("failures-{mode}{opt}"));
+            let exe = dir
+                .0
+                .join(format!("failures-{mode}{opt}"))
+                .with_extension(std::env::consts::EXE_EXTENSION);
             fwp::cgen::compile_c(&source, &exe, opt).unwrap();
             save_map_evidence(
                 &format!("faults-{mode}{opt}.bin"),
@@ -555,7 +574,10 @@ fn map_set_failures_release_partial_storage_and_preserve_aliases() {
             );
             assert_ne!(body, source[start..end]);
             broken.replace_range(start..end, &body);
-            let exe = dir.0.join("missing-owner");
+            let exe = dir
+                .0
+                .join("missing-owner")
+                .with_extension(std::env::consts::EXE_EXTENSION);
             fwp::cgen::compile_c(&broken, &exe, "-O1").unwrap();
             let out = Command::new(exe)
                 .env_remove("FWP_GC")
@@ -582,7 +604,10 @@ fn map_set_failures_release_partial_storage_and_preserve_aliases() {
             assert_ne!(body, source[start..end]);
             let mut broken = source.clone();
             broken.replace_range(start..end, &body);
-            let exe = dir.0.join("missing-scratch-owner");
+            let exe = dir
+                .0
+                .join("missing-scratch-owner")
+                .with_extension(std::env::consts::EXE_EXTENSION);
             fwp::cgen::compile_c(&broken, &exe, "-O1").unwrap();
             let out = Command::new(exe)
                 .env_remove("FWP_GC")
@@ -623,7 +648,10 @@ fn map_callbacks_can_change_value_types_and_fail_without_leaking() {
         }
         save_map_evidence(&format!("callbacks-{mode}.c"), emitted.as_bytes());
         for opt in ["-O1", "-O2"] {
-            let exe = dir.0.join(format!("callbacks-{mode}{opt}"));
+            let exe = dir
+                .0
+                .join(format!("callbacks-{mode}{opt}"))
+                .with_extension(std::env::consts::EXE_EXTENSION);
             fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
             save_map_evidence(
                 &format!("callbacks-{mode}{opt}.bin"),
