@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Runner evidence for checked wide scalar/record workers and boxed boundaries."""
+import argparse
 import hashlib
 import importlib.util
 import json
@@ -18,7 +19,6 @@ run = iteration.run
 
 
 def main():
-    import argparse
     assert os.environ.get('GITHUB_ACTIONS') == 'true', 'full evidence runs on GitHub'
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)

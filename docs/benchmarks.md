@@ -1900,5 +1900,51 @@ and on Xeon 6973P-C from 405.236 to 379.191 ms. Retains again fall from
 2,000,001 to 1, with unchanged allocation requests, peak charged memory and
 zero final charge. Separate-layout tracing borrowing is slower on both Intel
 samples and one EPYC sample. Count savings therefore do not establish a general
-timing win. The original Xeon 8573C slowdown still needs a matching-host result;
-these other Intel models do not close that investigation.
+timing win. That run did not include the original Xeon 8573C. The matching-host result
+below completes this specific comparison.
+
+
+### Rechecking the original Xeon slowdown
+
+[Run 39128516933](https://github.com/e6qu/fun-with-pipes/actions/runs/39128516933)
+measured actual compiler `e1fb8ba3` with the same program, toolchain flags,
+24-sample rotating order, timing boundary and saved baseline described above.
+The [raw reports](measurements/cached-map-xeon-2026-10-18.json) retain all samples,
+binary/source hashes, compiler commands, section sizes and allocation profiles.
+All five jobs passed 12 focused checks each; 80 ordinary/profile binaries were
+audited. This run includes the **Xeon Platinum 8573C** from the original regression.
+
+On that processor, retained joined storage took **392.915 ms** versus
+**376.889 ms** for retained separate storage: the old slowdown reproduced at
+**4.25%**. Compiler-proved borrowing with joined storage took **366.810 ms**:
+**6.64% less time** than retained joined storage and **2.67% less** than the old
+separate-storage baseline. This resolves the measured full-map regression for
+this program on the named model. It does not prove every map shape or processor
+benefits, nor identify a single microarchitectural cause for the old penalty.
+
+The same ratios used in the preceding table remain below 1 when faster:
+
+| CPU / sample | Tracing joined | ARC joined | Tracing combined | ARC combined | Tracing separate | ARC separate |
+|---|---:|---:|---:|---:|---:|---:|
+| AMD EPYC 7763 64-Core Processor / 1 | 0.9607 | 0.9650 | 0.7349 | 0.8797 | 0.8118 | 1.1570 |
+| AMD EPYC 7763 64-Core Processor / 4 | 0.9689 | 0.9619 | 0.7341 | 0.8967 | 0.8879 | 0.9855 |
+| AMD EPYC 9V45 96-Core Processor / 3 | 0.9639 | 0.9738 | 0.9664 | 0.9528 | 0.9842 | 0.9555 |
+| INTEL(R) XEON(R) PLATINUM 8573C / 2 | 0.9336 | 0.9288 | 0.9733 | 0.9336 | 1.0468 | 0.9461 |
+| Neoverse-N2 / 1 | 0.9849 | 0.9864 | 0.9880 | 1.0174 | 0.9566 | 1.0313 |
+
+Borrowing improves the maintained joined layout in both memory modes on every
+host in this run. Some comparisons with the older separate layout are slower:
+Xeon separate/tracing is 4.68% slower, one EPYC separate/ARC sample is 15.70%
+slower, and Neoverse combined/ARC is 1.74% slower. Preserve those distinctions:
+the change removes repeated ownership bookkeeping, not every layout/cache cost.
+Retains fall from 2,000,001 to 1 with unchanged allocations, peak charged bytes,
+and zero final charge. These are fwp revision comparisons; they say nothing by
+themselves about remaining overhead against equivalent C or Rust.
+
+Resampling the same 24 Xeon rounds 10,000 times gives a 95% percentile interval
+of **0.9659–0.9882** for the combined new/old median-time ratio. Each resample
+keeps the paired variants from a round together. This estimates uncertainty
+within this runner's sample; it does not cover differences between machines or
+future runs. The raw report records the seed, method and intervals for all three
+Xeon comparisons. The old slowdown's interval remains above one, and the new
+program's interval below one.

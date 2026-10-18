@@ -54,12 +54,13 @@ jobs:
       - if: ${{ !cancelled() }}
         name: Real notebook browser
         env:
-          PYTHONPATH: sdk/python
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
         run: |
-          python3 -m pip install -r sdk/python/browser/requirements.txt
-          python3 -m playwright install --with-deps chromium
-          python3 sdk/python/browser/check_notebook.py
+          python3 -m venv "$RUNNER_TEMP/fwp-tools-env"
+          "$RUNNER_TEMP/fwp-tools-env/bin/python" -m pip install ./sdk/python -r sdk/python/browser/requirements.txt
+          "$RUNNER_TEMP/fwp-tools-env/bin/python" -m playwright install --with-deps chromium
+          "$FWP_TEST_BIN" notebook --python "$RUNNER_TEMP/fwp-tools-env/bin/python" --help
+          "$RUNNER_TEMP/fwp-tools-env/bin/python" sdk/python/browser/check_notebook.py
       - uses: actions/upload-artifact@v7
         if: always()
         with:

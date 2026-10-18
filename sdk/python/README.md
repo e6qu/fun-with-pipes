@@ -17,7 +17,8 @@ comparisons. Read the [notebook guide](../../docs/notebooks.md) for cell semanti
 launching the browser UI, dependencies and saved files.
 
 ```python
-from fwp_tools import Debugger, Disassembler
+from fwp_tools.debugger import Debugger
+from fwp_tools.disassembler import Disassembler
 
 with Debugger("program.fwp", fwp="fwp") as debug:
     debug.on("output", lambda event: print(event["text"], end=""))

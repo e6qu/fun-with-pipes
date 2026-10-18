@@ -63,6 +63,9 @@ implementation of currently supported external protocols.
   trailers, AI attribution, `Co-authored-by` or `Authored-by`. Use ordinary author
   metadata. Squash-merge with an explicit subject and empty body; verify the result.
 - Package one binary per OS/architecture. Universal binaries are not a goal.
+- Keep Python `__init__.py` files empty; do not add or modify `__all__`.
+  Import from defining modules. Keep imports at the top of files, never inside
+  functions or methods; platform-specific imports belong in the top import block.
 
 ## Protect local interactivity
 

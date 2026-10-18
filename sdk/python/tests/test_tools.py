@@ -4,7 +4,8 @@ import tempfile
 import subprocess
 import unittest
 
-from fwp_tools import Debugger, DebuggerError, Disassembler, Target
+from fwp_tools.debugger import Debugger, DebuggerError
+from fwp_tools.disassembler import Disassembler, Target
 from fwp_tools.notebook import Kernel
 
 FWP = os.environ["FWP_TEST_BIN"]

@@ -65,7 +65,7 @@ From the repository root, install the SDK into your Python environment with
 `fwp` executable. There are no runtime Python package dependencies.
 
 ```python
-from fwp_tools import Debugger
+from fwp_tools.debugger import Debugger
 
 values = []
 with Debugger("square.fwp", fwp="./target/debug/fwp") as debug:
@@ -137,7 +137,7 @@ of bytes in memory order.
 ## Compare C with machine code across targets and optimization levels
 
 ```python
-from fwp_tools import Disassembler, Target
+from fwp_tools.disassembler import Disassembler, Target
 
 tool = Disassembler(
     fwp="./target/debug/fwp",

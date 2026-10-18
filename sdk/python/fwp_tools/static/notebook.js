@@ -2,7 +2,7 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const make = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node; };
 const newCell = (kind, source = '') => ({id: crypto.randomUUID(), kind, source});
 let notebook = {format: 'fwp-notebook', version: 1, title: 'A calculation in pipes', cells: [
-  newCell('markdown', '# Distance, one pipe at a time\nA scalar is one number. `hypot` computes the distance from two coordinates without overflowing merely because their squares are too large.\n\nChange either coordinate below, then run the result cell. `x | hypot y` passes x as the final argument.'),
+  newCell('markdown', '# Distance, one pipe at a time\nA scalar is one number. `hypot` computes the distance from two coordinates without overflowing merely because their squares are too large.\n\nChange either coordinate below, then run the result cell. `x | hypot y` passes x as the final argument. After running the definitions, `x : F64` means x is a 64-bit floating-point number.'),
   newCell('code', 'x = 3.0\ny = 4.0'),
   newCell('code', 'x | hypot y'),
   newCell('markdown', '## A check we can read\n`==` compares two values and returns `True` or `False`. Arithmetic binds more tightly than comparison, so the next cell checks that two squared coordinates sum to 25.'),
@@ -86,7 +86,8 @@ function render() {
       panel.append(make('div', 'dependencies', `Uses definitions or context from cells ${indexes.join(', ')}`));
     }
     card.append(panel); $('#cells').append(card);
-    const link = make('a', '', `${i + 1} · ${cell.source.split('\n').find(s => s.trim())?.replace(/^#+\s*/, '').slice(0, 26) || 'Empty cell'}`);
+    const title = cell.source.split('\n').find(s => s.trim())?.replace(/^#+\s*/, '') || 'Empty cell';
+    const link = make('a', '', `${i + 1} · ${title.length > 34 ? title.slice(0, 34) + '…' : title}`);
     link.href = `#${cell.id}`; link.dataset.cell = cell.id; $('#outline').append(link);
   });
   refreshStatuses(); setBusy(busy);

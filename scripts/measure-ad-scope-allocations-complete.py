@@ -1,6 +1,7 @@
 """Runner-only equivalent gradient allocation evidence; exact source and flags retained."""
 from pathlib import Path
 import hashlib,json,os,re,subprocess
+import shutil
 assert os.environ.get("GITHUB_ACTIONS")=="true"
 ROOT=Path.cwd();OUT=Path(os.environ['FWP_AD_ALLOCATION_ARTIFACTS']);OUT.mkdir(parents=True,exist_ok=True)
 BASE='602e076604d3dd759c47b396c10cf848dd9dbb61'
@@ -120,7 +121,6 @@ for label,head in [('baseline',BASE),('candidate',CANDIDATE)]:
   results[label+opt]=dict(head=head,opt=opt,**data)
   print(label,opt,json.dumps(data),flush=True)
  # Build intermediates are not artifacts; emitted source and native binaries are.
- import shutil
  shutil.rmtree(target)
 report=dict(baseline=BASE,candidate=CANDIDATE,results=results,
  sourceHashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in OUT.iterdir() if p.is_file() and (p.suffix in {'.c','.fwp','.rs'} or p.name.endswith(('-O1','-O2')))},

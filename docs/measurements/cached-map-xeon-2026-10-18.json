@@ -1,0 +1,4239 @@
+{
+  "source": "e1fb8ba3375f5765ef1448ed5c58fa1322d37c1f",
+  "run": "39128516933",
+  "baseline_source": "93cb93a0f717b317814ecfc162de0c2f516dbfbd",
+  "baseline_run": "39106005017",
+  "scope": "Actual compiler, including the matched Xeon 8573C. Whole-process fwp revision comparison, not C/Rust parity. Separate-layout comparison cells include slower results; see docs/benchmarks.md.",
+  "audit": [
+    {
+      "host": "ubuntu-latest",
+      "sample": "3",
+      "cpu": "AMD EPYC 9V45 96-Core Processor",
+      "binaries": 16,
+      "summary": {
+        "tracing-separate": {
+          "ratio": 0.9841517382819971,
+          "oldMs": 268.639525,
+          "newMs": 264.3820555
+        },
+        "tracing-joined": {
+          "ratio": 0.9639020545293941,
+          "oldMs": 269.3352315,
+          "newMs": 259.612783
+        },
+        "tracing-combinedRatio": 0.9663983101518662,
+        "arc-separate": {
+          "ratio": 0.9554700095808605,
+          "oldMs": 280.498814,
+          "newMs": 268.0082045
+        },
+        "arc-joined": {
+          "ratio": 0.9738297929910541,
+          "oldMs": 274.4294685,
+          "newMs": 267.2475925
+        },
+        "arc-combinedRatio": 0.9527583688820873
+      }
+    },
+    {
+      "host": "ubuntu-latest",
+      "sample": "4",
+      "cpu": "AMD EPYC 7763 64-Core Processor",
+      "binaries": 16,
+      "summary": {
+        "tracing-separate": {
+          "ratio": 0.8878522403373198,
+          "oldMs": 456.229087,
+          "newMs": 405.064017
+        },
+        "tracing-joined": {
+          "ratio": 0.9688743328209019,
+          "oldMs": 345.680044,
+          "newMs": 334.920522
+        },
+        "tracing-combinedRatio": 0.7341060259930337,
+        "arc-separate": {
+          "ratio": 0.9855057753453264,
+          "oldMs": 371.91196,
+          "newMs": 366.5213845
+        },
+        "arc-joined": {
+          "ratio": 0.9618693203895675,
+          "oldMs": 346.725475,
+          "newMs": 333.504597
+        },
+        "arc-combinedRatio": 0.896729959961492
+      }
+    },
+    {
+      "host": "ubuntu-latest",
+      "sample": "1",
+      "cpu": "AMD EPYC 7763 64-Core Processor",
+      "binaries": 16,
+      "summary": {
+        "tracing-separate": {
+          "ratio": 0.8118044947644474,
+          "oldMs": 446.88215,
+          "newMs": 362.780938
+        },
+        "tracing-joined": {
+          "ratio": 0.9607203146389324,
+          "oldMs": 341.8611905,
+          "newMs": 328.4329905
+        },
+        "tracing-combinedRatio": 0.7349431846852688,
+        "arc-separate": {
+          "ratio": 1.157041285280623,
+          "oldMs": 375.5050775,
+          "newMs": 434.4748775
+        },
+        "arc-joined": {
+          "ratio": 0.9650386733469738,
+          "oldMs": 342.292846,
+          "newMs": 330.325834
+        },
+        "arc-combinedRatio": 0.879684067654185
+      }
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "sample": "1",
+      "cpu": "Neoverse-N2",
+      "binaries": 16,
+      "summary": {
+        "tracing-separate": {
+          "ratio": 0.9566187157305309,
+          "oldMs": 489.0908685,
+          "newMs": 467.8734785
+        },
+        "tracing-joined": {
+          "ratio": 0.9849471931095318,
+          "oldMs": 490.5856465,
+          "newMs": 483.2009555
+        },
+        "tracing-combinedRatio": 0.9879574259522288,
+        "arc-separate": {
+          "ratio": 1.03133813535422,
+          "oldMs": 472.0028755,
+          "newMs": 486.7945655
+        },
+        "arc-joined": {
+          "ratio": 0.9863880961519728,
+          "oldMs": 486.8514775,
+          "newMs": 480.224502
+        },
+        "arc-combinedRatio": 1.0174185940949845
+      }
+    },
+    {
+      "host": "ubuntu-latest",
+      "sample": "2",
+      "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+      "binaries": 16,
+      "summary": {
+        "tracing-separate": {
+          "ratio": 1.046840375344258,
+          "oldMs": 376.888675,
+          "newMs": 394.542282
+        },
+        "tracing-joined": {
+          "ratio": 0.933562092101279,
+          "oldMs": 392.91463,
+          "newMs": 366.810204
+        },
+        "tracing-combinedRatio": 0.9732587587037472,
+        "arc-separate": {
+          "ratio": 0.946146688651441,
+          "oldMs": 390.353183,
+          "newMs": 369.3313715
+        },
+        "arc-joined": {
+          "ratio": 0.9287503215157467,
+          "oldMs": 392.3933005,
+          "newMs": 364.435404
+        },
+        "arc-combinedRatio": 0.9336042842002392
+      }
+    }
+  ],
+  "focused_tests": [
+    {
+      "job": "map_borrow (ubuntu-latest, 3)",
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "job": "map_borrow (ubuntu-latest, 4)",
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "job": "map_borrow (ubuntu-latest, 1)",
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "job": "map_borrow (ubuntu-24.04-arm, 1)",
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "job": "map_borrow (ubuntu-latest, 2)",
+      "passed": 12,
+      "failed": 0
+    }
+  ],
+  "reports": [
+    {
+      "host": "ubuntu-latest",
+      "sample": "3",
+      "report": {
+        "source": "e1fb8ba3375f5765ef1448ed5c58fa1322d37c1f",
+        "programSource": "93cb93a0f717b317814ecfc162de0c2f516dbfbd",
+        "programRun": "39106005017",
+        "fwpCompiler": "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "fwpCompilerSha256": "5acd49500006a5200cadbb94a84f2c1e56b2f41956784ddad9fc9ae149ba404a",
+        "programSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+        "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.24\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "hardware": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "expected": "500000\n249999500000\n",
+        "variants": {
+          "tracing-separate-retained": {
+            "binary": "tracing-separate-retained",
+            "binaryBytes": 74672,
+            "binarySha256": "112bab8de54f5d66cbb9837155cebc823704df37136fa827600669adf8bce00a",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "eb57dd3dbd25e614844b6f901324cdfcea3651cfb1ddf5a0123dc59161cfe50c",
+            "profileSha256": "8684acf57a3ae9f9f9e4d1869f318b91194818362385021af76c0b7adfe2e683",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 2000001,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 2
+            },
+            "processWallNs": [
+              267691197,
+              274568800,
+              267534281,
+              293640399,
+              264792020,
+              270799047,
+              258494541,
+              269587853,
+              276850869,
+              276785149,
+              261337588,
+              259776920,
+              263406890,
+              266126294,
+              266905841,
+              269843093,
+              264524474,
+              261151873,
+              265400483,
+              274041236,
+              271721419,
+              271744980,
+              280415407,
+              277034375
+            ],
+            "medianProcessWallNs": 268639525.0
+          },
+          "tracing-separate-borrowed": {
+            "binary": "tracing-separate-borrowed",
+            "binaryBytes": 74680,
+            "binarySha256": "490bc7a0ef8c27bcb4196e69a7cfcb501f78dc1af85a4b44b85302c043c5af8c",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "2af10a58e66cf30ea8d78e212b49c315770e2ac135dd5d6f227a74b4ff92feda",
+            "profileSha256": "646cbe5d764f34fac5a044b33b8544b45f27b8a453ac172ee454132b83ad2362",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 1,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 2
+            },
+            "processWallNs": [
+              267827994,
+              266086675,
+              263468873,
+              263856833,
+              261375016,
+              266040955,
+              262881600,
+              264588340,
+              258953395,
+              258758595,
+              272577431,
+              272096686,
+              259887557,
+              264175771,
+              266107577,
+              263832750,
+              265048266,
+              263640000,
+              266907043,
+              272389774,
+              271116191,
+              257001910,
+              275610466,
+              263324158
+            ],
+            "medianProcessWallNs": 264382055.5
+          },
+          "tracing-joined-retained": {
+            "binary": "tracing-joined-retained",
+            "binaryBytes": 70576,
+            "binarySha256": "ee6b52c13ec0a31f62b38dbc47f489ea05313b430ad49db427f74334e1ce7b11",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "f7593605e0af55ce644f7c639522110a63733939fbc58b119606def40d139499",
+            "profileSha256": "7edffbd491f78e0ca103e646dbd8342a800dfca940133f32355c9453a44d0b9c",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 2000001,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 1
+            },
+            "processWallNs": [
+              291702392,
+              275041103,
+              275997633,
+              267580654,
+              271466866,
+              269054283,
+              270133197,
+              266973663,
+              272005498,
+              265844463,
+              271239652,
+              275298238,
+              265493740,
+              266954505,
+              264815654,
+              269328246,
+              266843865,
+              271687447,
+              269342217,
+              272134533,
+              267843150,
+              266531150,
+              277706017,
+              267376505
+            ],
+            "medianProcessWallNs": 269335231.5
+          },
+          "tracing-joined-borrowed": {
+            "binary": "tracing-joined-borrowed",
+            "binaryBytes": 74680,
+            "binarySha256": "9d7eae3f135b05671e5c94e40ad2b9482b823e1458f20a60936805c29c6c3b72",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "a536c97e1c7ec47e16d0eef68b0e0890798be18c770b086f294a633f140151ae",
+            "profileSha256": "d8862d2093143a94b2d46419ac762e5e36bc96838aea6d4c3e74a0607d0f50c8",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 1,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 1
+            },
+            "processWallNs": [
+              279530296,
+              259490652,
+              251407595,
+              258446145,
+              258584754,
+              251456572,
+              258856223,
+              258218284,
+              269682292,
+              255680889,
+              265943191,
+              264415853,
+              260227090,
+              258410097,
+              249283229,
+              259734914,
+              259421672,
+              263923999,
+              265446831,
+              270466921,
+              284281284,
+              256118862,
+              263868850,
+              264708938
+            ],
+            "medianProcessWallNs": 259612783.0
+          },
+          "arc-separate-retained": {
+            "binary": "arc-separate-retained",
+            "binaryBytes": 61856,
+            "binarySha256": "3e5a75d8fb7cdb7666106d43be8189f8fa201d29cf385add0acc5ebed4868ca1",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "d8585e96765214814357150abb08ea1dc4ee50d3396b112a0d5817258c6ba155",
+            "profileSha256": "8fea40b424223c39eb987b97dfd19ce3bc0dff89e9299101d00a46076b4f6b20",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 2000001,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              280397490,
+              277862367,
+              278137087,
+              302349556,
+              275866313,
+              280600138,
+              276294349,
+              279787321,
+              276527450,
+              281374213,
+              284740444,
+              282980143,
+              280724269,
+              275112969,
+              275992035,
+              280067998,
+              285689633,
+              274424579,
+              280609962,
+              289850776,
+              281246173,
+              276663913,
+              285371980,
+              285602558
+            ],
+            "medianProcessWallNs": 280498814.0
+          },
+          "arc-separate-borrowed": {
+            "binary": "arc-separate-borrowed",
+            "binaryBytes": 61864,
+            "binarySha256": "a79d46630a85a69e69f86f40219b9870730aec7b8b3bf46eb696315562483032",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "a6367b72280ee0e172a6721eac6e11edcacb386c4d0f82dfa4b9ff0e631b392b",
+            "profileSha256": "f62400b9e97c289f70acb3f23cd5ec1621b8bd6dfb76879e523b7cc251741779",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 1,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              266831885,
+              271279936,
+              263828857,
+              264013247,
+              260512824,
+              263019317,
+              266735198,
+              269403281,
+              275376007,
+              262811424,
+              278517084,
+              269603874,
+              267319104,
+              268697305,
+              265631977,
+              275193919,
+              273134212,
+              271286251,
+              261409302,
+              270682161,
+              266162729,
+              265733336,
+              278443741,
+              268786673
+            ],
+            "medianProcessWallNs": 268008204.5
+          },
+          "arc-joined-retained": {
+            "binary": "arc-joined-retained",
+            "binaryBytes": 61856,
+            "binarySha256": "54d7dd2284e1f1b3c30b519cb51b3032f03b343f099a0496cb12af4d2e158843",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "103d2f550fb3a74ff14b37d54ef6400081e0af2d50c0beec336d28a252c0e6c3",
+            "profileSha256": "b6a9c0c862291ee1f450c82d313150d45fbc544e40c6911e65d1c81fca3c3a0c",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 2000001,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              269432186,
+              273406956,
+              274275047,
+              271839964,
+              271313765,
+              267551860,
+              272321942,
+              271805076,
+              270698996,
+              285406865,
+              279722323,
+              275981390,
+              272111369,
+              274583890,
+              276893606,
+              280939172,
+              278712992,
+              277873765,
+              273834785,
+              278878293,
+              275662909,
+              280794480,
+              271911210,
+              274957238
+            ],
+            "medianProcessWallNs": 274429468.5
+          },
+          "arc-joined-borrowed": {
+            "binary": "arc-joined-borrowed",
+            "binaryBytes": 61864,
+            "binarySha256": "abb9be1b6b81fb9fe49279a522ef6eac6bab53ed2ca7fedca5857144c3faa41d",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "d165e385f42d1ed18855975072d2d4c37a48f5fc5351722ae5eda6cbb0c5656f",
+            "profileSha256": "259684276d8b85de5c03e29eb7862fbee4e404c752bbab5497fdf691b112cd27",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 1,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              276320735,
+              271561030,
+              264885983,
+              262556129,
+              306689590,
+              261114027,
+              262767373,
+              263003930,
+              273751013,
+              271526851,
+              266564799,
+              255864555,
+              266471716,
+              285131721,
+              262920796,
+              269491793,
+              267930386,
+              258859283,
+              262983474,
+              271665576,
+              277119599,
+              272192065,
+              256497372,
+              275175949
+            ],
+            "medianProcessWallNs": 267247592.5
+          }
+        },
+        "executionOrder": [
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ],
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ],
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ]
+        ],
+        "scope": "Actual compiler output for the maintained map program: 500,000 scrambled distinct entries and 2,000,000 numeric queries. Retained variants use saved C output from the earlier compiler; borrowed variants use the current compiler, which proves a non-suspending read span and preserves first-use initialization. Both key/value layouts are compiled on the same host with the same C compiler. Separate storage is an explicit old-layout measurement fixture. Whole-process time includes startup, construction, queries, output and teardown; compiler build time is excluded. This measures compiler revisions, not a hand-edited borrow or universal language overhead. Twenty-four balanced fresh-process samples per variant; separate profiles are excluded from timing."
+      }
+    },
+    {
+      "host": "ubuntu-latest",
+      "sample": "4",
+      "report": {
+        "source": "e1fb8ba3375f5765ef1448ed5c58fa1322d37c1f",
+        "programSource": "93cb93a0f717b317814ecfc162de0c2f516dbfbd",
+        "programRun": "39106005017",
+        "fwpCompiler": "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "fwpCompilerSha256": "5acd49500006a5200cadbb94a84f2c1e56b2f41956784ddad9fc9ae149ba404a",
+        "programSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+        "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "hardware": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "expected": "500000\n249999500000\n",
+        "variants": {
+          "tracing-separate-retained": {
+            "binary": "tracing-separate-retained",
+            "binaryBytes": 74672,
+            "binarySha256": "112bab8de54f5d66cbb9837155cebc823704df37136fa827600669adf8bce00a",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "eb57dd3dbd25e614844b6f901324cdfcea3651cfb1ddf5a0123dc59161cfe50c",
+            "profileSha256": "8684acf57a3ae9f9f9e4d1869f318b91194818362385021af76c0b7adfe2e683",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 2000001,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 2
+            },
+            "processWallNs": [
+              461744188,
+              463614116,
+              462242272,
+              459093033,
+              375235743,
+              374107917,
+              463746525,
+              477636855,
+              362607399,
+              468631678,
+              454249319,
+              456509377,
+              369614813,
+              384292604,
+              369916172,
+              371207725,
+              457028479,
+              453171547,
+              455948797,
+              465627708,
+              463073807,
+              463644672,
+              372037336,
+              371442145
+            ],
+            "medianProcessWallNs": 456229087.0
+          },
+          "tracing-separate-borrowed": {
+            "binary": "tracing-separate-borrowed",
+            "binaryBytes": 74680,
+            "binarySha256": "490bc7a0ef8c27bcb4196e69a7cfcb501f78dc1af85a4b44b85302c043c5af8c",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "2af10a58e66cf30ea8d78e212b49c315770e2ac135dd5d6f227a74b4ff92feda",
+            "profileSha256": "646cbe5d764f34fac5a044b33b8544b45f27b8a453ac172ee454132b83ad2362",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 1,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 2
+            },
+            "processWallNs": [
+              358763377,
+              445707623,
+              354512548,
+              370056006,
+              440072028,
+              443299628,
+              360843975,
+              356177778,
+              451887779,
+              450935498,
+              355864148,
+              347488608,
+              442176170,
+              440888555,
+              359160959,
+              450120272,
+              364094607,
+              356838906,
+              349731115,
+              444594853,
+              366644611,
+              441604527,
+              454626062,
+              453416361
+            ],
+            "medianProcessWallNs": 405064017.0
+          },
+          "tracing-joined-retained": {
+            "binary": "tracing-joined-retained",
+            "binaryBytes": 70576,
+            "binarySha256": "ee6b52c13ec0a31f62b38dbc47f489ea05313b430ad49db427f74334e1ce7b11",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "f7593605e0af55ce644f7c639522110a63733939fbc58b119606def40d139499",
+            "profileSha256": "7edffbd491f78e0ca103e646dbd8342a800dfca940133f32355c9453a44d0b9c",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 2000001,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 1
+            },
+            "processWallNs": [
+              364462591,
+              342824083,
+              345304766,
+              344869714,
+              362600038,
+              344097281,
+              352644857,
+              345252475,
+              348918414,
+              352587306,
+              343850976,
+              341199859,
+              351779143,
+              344478774,
+              346281507,
+              343470736,
+              348387452,
+              345363804,
+              342910801,
+              368341141,
+              355154144,
+              345996284,
+              343232425,
+              350813107
+            ],
+            "medianProcessWallNs": 345680044.0
+          },
+          "tracing-joined-borrowed": {
+            "binary": "tracing-joined-borrowed",
+            "binaryBytes": 74680,
+            "binarySha256": "9d7eae3f135b05671e5c94e40ad2b9482b823e1458f20a60936805c29c6c3b72",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "a536c97e1c7ec47e16d0eef68b0e0890798be18c770b086f294a633f140151ae",
+            "profileSha256": "d8862d2093143a94b2d46419ac762e5e36bc96838aea6d4c3e74a0607d0f50c8",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 1,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 1
+            },
+            "processWallNs": [
+              349454138,
+              338616814,
+              339940526,
+              330419960,
+              344449188,
+              329995818,
+              333036152,
+              330850419,
+              331989597,
+              335097783,
+              333584535,
+              329147747,
+              347336063,
+              338883132,
+              346398405,
+              328741718,
+              334743261,
+              344722887,
+              330503177,
+              341050273,
+              328821317,
+              331510311,
+              335705426,
+              335537321
+            ],
+            "medianProcessWallNs": 334920522.0
+          },
+          "arc-separate-retained": {
+            "binary": "arc-separate-retained",
+            "binaryBytes": 61856,
+            "binarySha256": "3e5a75d8fb7cdb7666106d43be8189f8fa201d29cf385add0acc5ebed4868ca1",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "d8585e96765214814357150abb08ea1dc4ee50d3396b112a0d5817258c6ba155",
+            "profileSha256": "8fea40b424223c39eb987b97dfd19ce3bc0dff89e9299101d00a46076b4f6b20",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 2000001,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              461146291,
+              370478595,
+              359301936,
+              452641957,
+              453239518,
+              463979441,
+              370093356,
+              371402732,
+              451513340,
+              371570790,
+              360654097,
+              371669325,
+              373354419,
+              459376644,
+              372154595,
+              370483352,
+              363292458,
+              369308355,
+              372992919,
+              371054138,
+              459651782,
+              378462210,
+              360749008,
+              463090975
+            ],
+            "medianProcessWallNs": 371911960.0
+          },
+          "arc-separate-borrowed": {
+            "binary": "arc-separate-borrowed",
+            "binaryBytes": 61864,
+            "binarySha256": "a79d46630a85a69e69f86f40219b9870730aec7b8b3bf46eb696315562483032",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "a6367b72280ee0e172a6721eac6e11edcacb386c4d0f82dfa4b9ff0e631b392b",
+            "profileSha256": "f62400b9e97c289f70acb3f23cd5ec1621b8bd6dfb76879e523b7cc251741779",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 1,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              367224491,
+              451232866,
+              355562370,
+              362470855,
+              355365783,
+              448601062,
+              448903082,
+              344331796,
+              365818278,
+              361934358,
+              355636172,
+              448188666,
+              441557345,
+              360367287,
+              449282819,
+              448433511,
+              446850795,
+              362790587,
+              350139187,
+              444078757,
+              447958337,
+              362936624,
+              364473396,
+              440232723
+            ],
+            "medianProcessWallNs": 366521384.5
+          },
+          "arc-joined-retained": {
+            "binary": "arc-joined-retained",
+            "binaryBytes": 61856,
+            "binarySha256": "54d7dd2284e1f1b3c30b519cb51b3032f03b343f099a0496cb12af4d2e158843",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "103d2f550fb3a74ff14b37d54ef6400081e0af2d50c0beec336d28a252c0e6c3",
+            "profileSha256": "b6a9c0c862291ee1f450c82d313150d45fbc544e40c6911e65d1c81fca3c3a0c",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 2000001,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              346760112,
+              350168924,
+              353818203,
+              348722567,
+              344117620,
+              345681682,
+              355897266,
+              352922135,
+              346220332,
+              344511941,
+              345485018,
+              345494515,
+              348133252,
+              359829512,
+              346690838,
+              357737649,
+              347604125,
+              344171928,
+              351453004,
+              345646713,
+              343935393,
+              345459762,
+              344930984,
+              361115553
+            ],
+            "medianProcessWallNs": 346725475.0
+          },
+          "arc-joined-borrowed": {
+            "binary": "arc-joined-borrowed",
+            "binaryBytes": 61864,
+            "binarySha256": "abb9be1b6b81fb9fe49279a522ef6eac6bab53ed2ca7fedca5857144c3faa41d",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "d165e385f42d1ed18855975072d2d4c37a48f5fc5351722ae5eda6cbb0c5656f",
+            "profileSha256": "259684276d8b85de5c03e29eb7862fbee4e404c752bbab5497fdf691b112cd27",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 1,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              329764987,
+              330793097,
+              350790656,
+              332246061,
+              333093465,
+              332268934,
+              348084277,
+              332780335,
+              337647927,
+              336644011,
+              332365117,
+              334608495,
+              339112600,
+              338234650,
+              332742838,
+              335248775,
+              332127623,
+              338975228,
+              331640812,
+              332778998,
+              333701714,
+              344537930,
+              333307480,
+              354543475
+            ],
+            "medianProcessWallNs": 333504597.0
+          }
+        },
+        "executionOrder": [
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ],
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ],
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ]
+        ],
+        "scope": "Actual compiler output for the maintained map program: 500,000 scrambled distinct entries and 2,000,000 numeric queries. Retained variants use saved C output from the earlier compiler; borrowed variants use the current compiler, which proves a non-suspending read span and preserves first-use initialization. Both key/value layouts are compiled on the same host with the same C compiler. Separate storage is an explicit old-layout measurement fixture. Whole-process time includes startup, construction, queries, output and teardown; compiler build time is excluded. This measures compiler revisions, not a hand-edited borrow or universal language overhead. Twenty-four balanced fresh-process samples per variant; separate profiles are excluded from timing."
+      }
+    },
+    {
+      "host": "ubuntu-latest",
+      "sample": "1",
+      "report": {
+        "source": "e1fb8ba3375f5765ef1448ed5c58fa1322d37c1f",
+        "programSource": "93cb93a0f717b317814ecfc162de0c2f516dbfbd",
+        "programRun": "39106005017",
+        "fwpCompiler": "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "fwpCompilerSha256": "5acd49500006a5200cadbb94a84f2c1e56b2f41956784ddad9fc9ae149ba404a",
+        "programSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+        "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.86\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "hardware": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "expected": "500000\n249999500000\n",
+        "variants": {
+          "tracing-separate-retained": {
+            "binary": "tracing-separate-retained",
+            "binaryBytes": 74672,
+            "binarySha256": "112bab8de54f5d66cbb9837155cebc823704df37136fa827600669adf8bce00a",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "eb57dd3dbd25e614844b6f901324cdfcea3651cfb1ddf5a0123dc59161cfe50c",
+            "profileSha256": "8684acf57a3ae9f9f9e4d1869f318b91194818362385021af76c0b7adfe2e683",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 2000001,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 2
+            },
+            "processWallNs": [
+              365048310,
+              447414646,
+              367223613,
+              364279586,
+              457041739,
+              450321231,
+              454261935,
+              367750282,
+              455459052,
+              364363325,
+              456177672,
+              448430163,
+              373298945,
+              354076155,
+              354535389,
+              451359139,
+              456363495,
+              454607562,
+              446349654,
+              371024567,
+              450353996,
+              372744424,
+              365500978,
+              448559552
+            ],
+            "medianProcessWallNs": 446882150.0
+          },
+          "tracing-separate-borrowed": {
+            "binary": "tracing-separate-borrowed",
+            "binaryBytes": 74680,
+            "binarySha256": "490bc7a0ef8c27bcb4196e69a7cfcb501f78dc1af85a4b44b85302c043c5af8c",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "2af10a58e66cf30ea8d78e212b49c315770e2ac135dd5d6f227a74b4ff92feda",
+            "profileSha256": "646cbe5d764f34fac5a044b33b8544b45f27b8a453ac172ee454132b83ad2362",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 1,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 2
+            },
+            "processWallNs": [
+              438607986,
+              443281351,
+              359265121,
+              354997551,
+              359043781,
+              359817520,
+              444726703,
+              353143194,
+              351603907,
+              354411161,
+              365744356,
+              353637703,
+              355095424,
+              442289810,
+              433756667,
+              437263437,
+              444404682,
+              359081668,
+              445585799,
+              434289673,
+              368843031,
+              442622967,
+              351152245,
+              358817135
+            ],
+            "medianProcessWallNs": 362780938.0
+          },
+          "tracing-joined-retained": {
+            "binary": "tracing-joined-retained",
+            "binaryBytes": 70576,
+            "binarySha256": "ee6b52c13ec0a31f62b38dbc47f489ea05313b430ad49db427f74334e1ce7b11",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "f7593605e0af55ce644f7c639522110a63733939fbc58b119606def40d139499",
+            "profileSha256": "7edffbd491f78e0ca103e646dbd8342a800dfca940133f32355c9453a44d0b9c",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 2000001,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 1
+            },
+            "processWallNs": [
+              338191774,
+              343789469,
+              341301818,
+              354461722,
+              339273093,
+              340506028,
+              355480122,
+              337889303,
+              341171171,
+              354977295,
+              339315220,
+              339912341,
+              341967476,
+              346970548,
+              341929610,
+              349048394,
+              342224673,
+              340569535,
+              342986089,
+              341513853,
+              355810886,
+              343854411,
+              341233240,
+              341792771
+            ],
+            "medianProcessWallNs": 341861190.5
+          },
+          "tracing-joined-borrowed": {
+            "binary": "tracing-joined-borrowed",
+            "binaryBytes": 74680,
+            "binarySha256": "9d7eae3f135b05671e5c94e40ad2b9482b823e1458f20a60936805c29c6c3b72",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "a536c97e1c7ec47e16d0eef68b0e0890798be18c770b086f294a633f140151ae",
+            "profileSha256": "d8862d2093143a94b2d46419ac762e5e36bc96838aea6d4c3e74a0607d0f50c8",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 1,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 1
+            },
+            "processWallNs": [
+              327830166,
+              342415701,
+              328942204,
+              329477251,
+              327959755,
+              326628298,
+              325398075,
+              327295795,
+              342904678,
+              334443102,
+              333588238,
+              325822193,
+              326430877,
+              327848527,
+              326071395,
+              327005744,
+              328043346,
+              327852019,
+              334624494,
+              328822635,
+              329431826,
+              340906421,
+              328978093,
+              351546301
+            ],
+            "medianProcessWallNs": 328432990.5
+          },
+          "arc-separate-retained": {
+            "binary": "arc-separate-retained",
+            "binaryBytes": 61856,
+            "binarySha256": "3e5a75d8fb7cdb7666106d43be8189f8fa201d29cf385add0acc5ebed4868ca1",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "d8585e96765214814357150abb08ea1dc4ee50d3396b112a0d5817258c6ba155",
+            "profileSha256": "8fea40b424223c39eb987b97dfd19ce3bc0dff89e9299101d00a46076b4f6b20",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 2000001,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              460294630,
+              452742861,
+              363010832,
+              375313118,
+              453258937,
+              375192798,
+              455933945,
+              453402762,
+              446218833,
+              375249184,
+              369927140,
+              365433528,
+              454914419,
+              360662596,
+              370935445,
+              452342969,
+              448662487,
+              363644860,
+              362664787,
+              450518110,
+              366317160,
+              361131450,
+              375697037,
+              449019016
+            ],
+            "medianProcessWallNs": 375505077.5
+          },
+          "arc-separate-borrowed": {
+            "binary": "arc-separate-borrowed",
+            "binaryBytes": 61864,
+            "binarySha256": "a79d46630a85a69e69f86f40219b9870730aec7b8b3bf46eb696315562483032",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "a6367b72280ee0e172a6721eac6e11edcacb386c4d0f82dfa4b9ff0e631b392b",
+            "profileSha256": "f62400b9e97c289f70acb3f23cd5ec1621b8bd6dfb76879e523b7cc251741779",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 1,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              442422093,
+              437348179,
+              351690984,
+              432881776,
+              439464964,
+              434777800,
+              441432745,
+              442036600,
+              358795044,
+              358915854,
+              441547865,
+              440337770,
+              440448921,
+              353343700,
+              355958728,
+              434171955,
+              440044106,
+              360801116,
+              435468869,
+              341694735,
+              343079488,
+              440000433,
+              352571783,
+              360637572
+            ],
+            "medianProcessWallNs": 434474877.5
+          },
+          "arc-joined-retained": {
+            "binary": "arc-joined-retained",
+            "binaryBytes": 61856,
+            "binarySha256": "54d7dd2284e1f1b3c30b519cb51b3032f03b343f099a0496cb12af4d2e158843",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "103d2f550fb3a74ff14b37d54ef6400081e0af2d50c0beec336d28a252c0e6c3",
+            "profileSha256": "b6a9c0c862291ee1f450c82d313150d45fbc544e40c6911e65d1c81fca3c3a0c",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 2000001,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              339750704,
+              367559980,
+              340389811,
+              346031742,
+              342380116,
+              340681755,
+              340573415,
+              338637956,
+              356593959,
+              339862349,
+              342082892,
+              340275587,
+              339727027,
+              355947520,
+              344066491,
+              346363928,
+              345407337,
+              342205576,
+              343057622,
+              343259267,
+              341349869,
+              353758797,
+              342515055,
+              339477512
+            ],
+            "medianProcessWallNs": 342292846.0
+          },
+          "arc-joined-borrowed": {
+            "binary": "arc-joined-borrowed",
+            "binaryBytes": 61864,
+            "binarySha256": "abb9be1b6b81fb9fe49279a522ef6eac6bab53ed2ca7fedca5857144c3faa41d",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "d165e385f42d1ed18855975072d2d4c37a48f5fc5351722ae5eda6cbb0c5656f",
+            "profileSha256": "259684276d8b85de5c03e29eb7862fbee4e404c752bbab5497fdf691b112cd27",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 1,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              328277789,
+              329940613,
+              338420074,
+              330747805,
+              330743316,
+              330277288,
+              327961519,
+              330298744,
+              339788586,
+              335723795,
+              329883455,
+              330349061,
+              327858515,
+              335859465,
+              328114053,
+              329321011,
+              326905698,
+              339584416,
+              339933467,
+              330460712,
+              330302607,
+              329313664,
+              340579416,
+              341967964
+            ],
+            "medianProcessWallNs": 330325834.0
+          }
+        },
+        "executionOrder": [
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ],
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ],
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ]
+        ],
+        "scope": "Actual compiler output for the maintained map program: 500,000 scrambled distinct entries and 2,000,000 numeric queries. Retained variants use saved C output from the earlier compiler; borrowed variants use the current compiler, which proves a non-suspending read span and preserves first-use initialization. Both key/value layouts are compiled on the same host with the same C compiler. Separate storage is an explicit old-layout measurement fixture. Whole-process time includes startup, construction, queries, output and teardown; compiler build time is excluded. This measures compiler revisions, not a hand-edited borrow or universal language overhead. Twenty-four balanced fresh-process samples per variant; separate profiles are excluded from timing."
+      }
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "sample": "1",
+      "report": {
+        "source": "e1fb8ba3375f5765ef1448ed5c58fa1322d37c1f",
+        "programSource": "93cb93a0f717b317814ecfc162de0c2f516dbfbd",
+        "programRun": "39106005017",
+        "fwpCompiler": "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "fwpCompilerSha256": "be841868c42b5f19562e53360010e151eee5d9fe05d9678fd943d6b4f098aedb",
+        "programSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+        "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "hardware": "Linux-6.17.0-1022-azure-aarch64-with-glibc2.39",
+        "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "expected": "500000\n249999500000\n",
+        "variants": {
+          "tracing-separate-retained": {
+            "binary": "tracing-separate-retained",
+            "binaryBytes": 84048,
+            "binarySha256": "3fc17af6c0eae2aad49d0873c9895f0dcf086cda39d19a3ee5ecf8b089ed9b59",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "eb57dd3dbd25e614844b6f901324cdfcea3651cfb1ddf5a0123dc59161cfe50c",
+            "profileSha256": "14b67b46be1a12515d300f56b575f13d880b13419dd3bfb034c8fa03821b9673",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 2000001,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 2
+            },
+            "processWallNs": [
+              506019061,
+              511703540,
+              490528792,
+              478909461,
+              466774040,
+              515416444,
+              505270212,
+              494134624,
+              505353162,
+              524633540,
+              494051659,
+              504911928,
+              476150290,
+              501289671,
+              487652945,
+              478451334,
+              480930394,
+              468544806,
+              480975006,
+              466798740,
+              475561240,
+              483951122,
+              503137382,
+              480677396
+            ],
+            "medianProcessWallNs": 489090868.5
+          },
+          "tracing-separate-borrowed": {
+            "binary": "tracing-separate-borrowed",
+            "binaryBytes": 84064,
+            "binarySha256": "6f11e05f6d106f3161af223200717ecce290bfe844ff074c0f3e09bf3f25531e",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "2af10a58e66cf30ea8d78e212b49c315770e2ac135dd5d6f227a74b4ff92feda",
+            "profileSha256": "018cc98a0b95c34c7ee6078c8b11ac5fb24231ed2688090ee1322bbcdd5b2570",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 1,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 2
+            },
+            "processWallNs": [
+              489527079,
+              475637033,
+              441368520,
+              441069951,
+              484665519,
+              471083678,
+              447066113,
+              464748921,
+              460681712,
+              460167569,
+              444055282,
+              468446076,
+              439777342,
+              461757445,
+              468628926,
+              472882297,
+              472350433,
+              467300881,
+              454443447,
+              471130915,
+              473666152,
+              444191130,
+              473750426,
+              481296542
+            ],
+            "medianProcessWallNs": 467873478.5
+          },
+          "tracing-joined-retained": {
+            "binary": "tracing-joined-retained",
+            "binaryBytes": 84048,
+            "binarySha256": "fe683749f9b04cef5a7ce3f1c9e3a1b1557c58fb56752c3d97efc4723c5f3d7b",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "f7593605e0af55ce644f7c639522110a63733939fbc58b119606def40d139499",
+            "profileSha256": "21203f2214af6c31a89433fc2245add50f4901227ce70ad7fae9cdcd1ba49616",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 2000001,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 1
+            },
+            "processWallNs": [
+              466546140,
+              510337286,
+              494545147,
+              502117627,
+              472151542,
+              476563608,
+              485094649,
+              482471131,
+              497495159,
+              469689870,
+              487162631,
+              494280042,
+              496403597,
+              494008662,
+              513447628,
+              507723867,
+              504697274,
+              485050511,
+              512789013,
+              475277574,
+              498880862,
+              473590549,
+              477084330,
+              465635714
+            ],
+            "medianProcessWallNs": 490585646.5
+          },
+          "tracing-joined-borrowed": {
+            "binary": "tracing-joined-borrowed",
+            "binaryBytes": 84056,
+            "binarySha256": "01a05e6174c3c89e18520eee9388fbe3686584cdeef112bba651d4c12f37052f",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "a536c97e1c7ec47e16d0eef68b0e0890798be18c770b086f294a633f140151ae",
+            "profileSha256": "4337668070060f2b14aee0d028617b6f8e4f583b8868b267f2e70fc87af30eaf",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 1,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 1
+            },
+            "processWallNs": [
+              497575019,
+              500248094,
+              448835221,
+              480633422,
+              480312143,
+              484030677,
+              457989631,
+              480691174,
+              482371234,
+              500214560,
+              496545414,
+              486795474,
+              484251164,
+              485107996,
+              484934813,
+              461971722,
+              458170162,
+              477231632,
+              462315166,
+              484802694,
+              487565662,
+              485455191,
+              468877387,
+              450096185
+            ],
+            "medianProcessWallNs": 483200955.5
+          },
+          "arc-separate-retained": {
+            "binary": "arc-separate-retained",
+            "binaryBytes": 83608,
+            "binarySha256": "adc05861a3e645093f0e7bb4651063b132765edf52460b41355793a90f0daaea",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "d8585e96765214814357150abb08ea1dc4ee50d3396b112a0d5817258c6ba155",
+            "profileSha256": "c218d664c7ef84bdecc7e27612bfd6a1fd534b5a89ce97fe446976dd8a3530ce",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 2000001,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              467253668,
+              506028332,
+              495149236,
+              455941935,
+              508820841,
+              467746759,
+              468401263,
+              467777011,
+              497354611,
+              471898544,
+              470538147,
+              464166452,
+              465457410,
+              495760265,
+              481845734,
+              493604832,
+              466180656,
+              472107207,
+              478222481,
+              472621632,
+              487252030,
+              468613241,
+              468248160,
+              486840156
+            ],
+            "medianProcessWallNs": 472002875.5
+          },
+          "arc-separate-borrowed": {
+            "binary": "arc-separate-borrowed",
+            "binaryBytes": 83616,
+            "binarySha256": "141e7e9cdb94cc630782283c5f372497a0455a83c5252ac782b9ceac4af4965f",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "a6367b72280ee0e172a6721eac6e11edcacb386c4d0f82dfa4b9ff0e631b392b",
+            "profileSha256": "73cde601e2e10b3ed9d4811952129df7fdda1b1980e0d347ad87f8dafda2a1de",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 1,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              460597608,
+              477792762,
+              455338262,
+              496491819,
+              486689227,
+              480041151,
+              495546441,
+              486899904,
+              464063702,
+              491689465,
+              504085224,
+              484694099,
+              483565927,
+              451027765,
+              496207953,
+              458160748,
+              487493888,
+              489552317,
+              462921953,
+              453371231,
+              487090394,
+              497797623,
+              495683821,
+              490670287
+            ],
+            "medianProcessWallNs": 486794565.5
+          },
+          "arc-joined-retained": {
+            "binary": "arc-joined-retained",
+            "binaryBytes": 83608,
+            "binarySha256": "cf72237bde94ebca140867a29148e8505b39601435604c5194131e727920ab97",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "103d2f550fb3a74ff14b37d54ef6400081e0af2d50c0beec336d28a252c0e6c3",
+            "profileSha256": "1a95e1bb06fa780213a27a59e3dbe0d408ce90817c86b5b8bf1a47caa4ec0a08",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 2000001,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              464685580,
+              496206362,
+              492968430,
+              504255152,
+              472885988,
+              463909378,
+              465937333,
+              487080857,
+              503211770,
+              466253775,
+              467274489,
+              504058135,
+              493961500,
+              486622098,
+              466620094,
+              504819835,
+              478434467,
+              509964610,
+              502506984,
+              494026511,
+              471540528,
+              470243305,
+              511749174,
+              461977140
+            ],
+            "medianProcessWallNs": 486851477.5
+          },
+          "arc-joined-borrowed": {
+            "binary": "arc-joined-borrowed",
+            "binaryBytes": 83616,
+            "binarySha256": "83ca92041052421a094678f97120ba9b171802751a1058db0735b2acdb0bca8b",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "d165e385f42d1ed18855975072d2d4c37a48f5fc5351722ae5eda6cbb0c5656f",
+            "profileSha256": "469d0d205a39ff2215f3236fb902056f4601ca6303b7173779ce3c5fe02faa41",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 1,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              456593429,
+              446816451,
+              458867571,
+              457842477,
+              476639970,
+              451310462,
+              501293190,
+              449825051,
+              482647754,
+              476830212,
+              480661490,
+              496759996,
+              480864606,
+              483485244,
+              494301222,
+              483474792,
+              480897628,
+              479082039,
+              485614039,
+              479787514,
+              481353971,
+              475320449,
+              496359916,
+              470001837
+            ],
+            "medianProcessWallNs": 480224502.0
+          }
+        },
+        "executionOrder": [
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ],
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ],
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ]
+        ],
+        "scope": "Actual compiler output for the maintained map program: 500,000 scrambled distinct entries and 2,000,000 numeric queries. Retained variants use saved C output from the earlier compiler; borrowed variants use the current compiler, which proves a non-suspending read span and preserves first-use initialization. Both key/value layouts are compiled on the same host with the same C compiler. Separate storage is an explicit old-layout measurement fixture. Whole-process time includes startup, construction, queries, output and teardown; compiler build time is excluded. This measures compiler revisions, not a hand-edited borrow or universal language overhead. Twenty-four balanced fresh-process samples per variant; separate profiles are excluded from timing."
+      }
+    },
+    {
+      "host": "ubuntu-latest",
+      "sample": "2",
+      "report": {
+        "source": "e1fb8ba3375f5765ef1448ed5c58fa1322d37c1f",
+        "programSource": "93cb93a0f717b317814ecfc162de0c2f516dbfbd",
+        "programRun": "39106005017",
+        "fwpCompiler": "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "fwpCompilerSha256": "5acd49500006a5200cadbb94a84f2c1e56b2f41956784ddad9fc9ae149ba404a",
+        "programSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+        "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              INTEL(R) XEON(R) PLATINUM 8573C\nCPU family:                              6\nModel:                                   207\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                2\nCPU(s) scaling MHz:                      126%\nCPU max MHz:                             2300.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                4599.99\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 vnmi avx512vbmi umip waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid cldemote movdiri movdir64b fsrm serialize tsxldtrk ibt amx_bf16 avx512_fp16 amx_tile amx_int8 arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                4 MiB (2 instances)\nL3 cache:                                260 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Vulnerable\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "hardware": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "expected": "500000\n249999500000\n",
+        "variants": {
+          "tracing-separate-retained": {
+            "binary": "tracing-separate-retained",
+            "binaryBytes": 74672,
+            "binarySha256": "112bab8de54f5d66cbb9837155cebc823704df37136fa827600669adf8bce00a",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "eb57dd3dbd25e614844b6f901324cdfcea3651cfb1ddf5a0123dc59161cfe50c",
+            "profileSha256": "8684acf57a3ae9f9f9e4d1869f318b91194818362385021af76c0b7adfe2e683",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 2000001,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 2
+            },
+            "processWallNs": [
+              366205374,
+              380240773,
+              376882959,
+              390209149,
+              381208409,
+              386086676,
+              373020251,
+              371644623,
+              377125326,
+              379464644,
+              382885506,
+              373664412,
+              369673597,
+              378896977,
+              386625266,
+              378126374,
+              371811811,
+              379520292,
+              375341175,
+              368293979,
+              376894391,
+              375070938,
+              362406120,
+              367937826
+            ],
+            "medianProcessWallNs": 376888675.0
+          },
+          "tracing-separate-borrowed": {
+            "binary": "tracing-separate-borrowed",
+            "binaryBytes": 74680,
+            "binarySha256": "490bc7a0ef8c27bcb4196e69a7cfcb501f78dc1af85a4b44b85302c043c5af8c",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-separate-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "2af10a58e66cf30ea8d78e212b49c315770e2ac135dd5d6f227a74b4ff92feda",
+            "profileSha256": "646cbe5d764f34fac5a044b33b8544b45f27b8a453ac172ee454132b83ad2362",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 1,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 2
+            },
+            "processWallNs": [
+              378510807,
+              392731375,
+              394885984,
+              402098522,
+              400386120,
+              404859013,
+              388535697,
+              386793208,
+              396957568,
+              396810960,
+              411017787,
+              392648331,
+              391045154,
+              387196449,
+              402961426,
+              394198580,
+              386159863,
+              391664012,
+              404207476,
+              383713064,
+              396308881,
+              401913704,
+              397183898,
+              387341318
+            ],
+            "medianProcessWallNs": 394542282.0
+          },
+          "tracing-joined-retained": {
+            "binary": "tracing-joined-retained",
+            "binaryBytes": 70576,
+            "binarySha256": "ee6b52c13ec0a31f62b38dbc47f489ea05313b430ad49db427f74334e1ce7b11",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "f7593605e0af55ce644f7c639522110a63733939fbc58b119606def40d139499",
+            "profileSha256": "7edffbd491f78e0ca103e646dbd8342a800dfca940133f32355c9453a44d0b9c",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 2000001,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 1
+            },
+            "processWallNs": [
+              381347564,
+              391246041,
+              400899305,
+              401018402,
+              400183065,
+              404673116,
+              391403274,
+              384418996,
+              397581560,
+              392044391,
+              397825487,
+              396273793,
+              392004103,
+              383902783,
+              393784869,
+              395741215,
+              389574386,
+              395695624,
+              384226707,
+              373776239,
+              395023479,
+              398160736,
+              385113578,
+              388892678
+            ],
+            "medianProcessWallNs": 392914630.0
+          },
+          "tracing-joined-borrowed": {
+            "binary": "tracing-joined-borrowed",
+            "binaryBytes": 74680,
+            "binarySha256": "9d7eae3f135b05671e5c94e40ad2b9482b823e1458f20a60936805c29c6c3b72",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/tracing-joined-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "a536c97e1c7ec47e16d0eef68b0e0890798be18c770b086f294a633f140151ae",
+            "profileSha256": "d8862d2093143a94b2d46419ac762e5e36bc96838aea6d4c3e74a0607d0f50c8",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 1,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 1
+            },
+            "processWallNs": [
+              369116704,
+              372266014,
+              371598056,
+              374653281,
+              367199764,
+              370614192,
+              363307368,
+              370880387,
+              365953325,
+              378990991,
+              370711657,
+              362239637,
+              364646000,
+              382173965,
+              365304961,
+              361568275,
+              359302894,
+              364437155,
+              357218661,
+              387484100,
+              366420644,
+              371034616,
+              358602906,
+              356709990
+            ],
+            "medianProcessWallNs": 366810204.0
+          },
+          "arc-separate-retained": {
+            "binary": "arc-separate-retained",
+            "binaryBytes": 61856,
+            "binarySha256": "3e5a75d8fb7cdb7666106d43be8189f8fa201d29cf385add0acc5ebed4868ca1",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "d8585e96765214814357150abb08ea1dc4ee50d3396b112a0d5817258c6ba155",
+            "profileSha256": "8fea40b424223c39eb987b97dfd19ce3bc0dff89e9299101d00a46076b4f6b20",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 2000001,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              381280232,
+              381419149,
+              399136596,
+              398519933,
+              406957958,
+              402776574,
+              388221185,
+              389467032,
+              394324108,
+              402017248,
+              403166834,
+              388628527,
+              391045954,
+              386718736,
+              393964077,
+              383099310,
+              391130311,
+              388352198,
+              380744156,
+              389660412,
+              393636077,
+              392594730,
+              385003871,
+              385013245
+            ],
+            "medianProcessWallNs": 390353183.0
+          },
+          "arc-separate-borrowed": {
+            "binary": "arc-separate-borrowed",
+            "binaryBytes": 61864,
+            "binarySha256": "a79d46630a85a69e69f86f40219b9870730aec7b8b3bf46eb696315562483032",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-separate-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "a6367b72280ee0e172a6721eac6e11edcacb386c4d0f82dfa4b9ff0e631b392b",
+            "profileSha256": "f62400b9e97c289f70acb3f23cd5ec1621b8bd6dfb76879e523b7cc251741779",
+            "counters": {
+              "requests": 8,
+              "requestedBytes": 24000100,
+              "retains": 1,
+              "peakChargedBytes": 24000040,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              359908794,
+              373320448,
+              374558127,
+              375667953,
+              375658638,
+              384903985,
+              366094954,
+              369145295,
+              385611669,
+              375843073,
+              391068592,
+              369174340,
+              367272486,
+              367960689,
+              366469086,
+              365465940,
+              367188524,
+              369906909,
+              369760860,
+              352794975,
+              368892973,
+              370085175,
+              369488403,
+              365622459
+            ],
+            "medianProcessWallNs": 369331371.5
+          },
+          "arc-joined-retained": {
+            "binary": "arc-joined-retained",
+            "binaryBytes": 61856,
+            "binarySha256": "54d7dd2284e1f1b3c30b519cb51b3032f03b343f099a0496cb12af4d2e158843",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-retained-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "103d2f550fb3a74ff14b37d54ef6400081e0af2d50c0beec336d28a252c0e6c3",
+            "profileSha256": "b6a9c0c862291ee1f450c82d313150d45fbc544e40c6911e65d1c81fca3c3a0c",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 2000001,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              389937842,
+              405198235,
+              395323880,
+              413115321,
+              402635216,
+              406242425,
+              393509131,
+              391968875,
+              414083485,
+              396235994,
+              396343542,
+              388527592,
+              389961496,
+              388664570,
+              388606712,
+              391315875,
+              398860305,
+              393281307,
+              388494129,
+              375682796,
+              392817726,
+              391636484,
+              385992275,
+              389883645
+            ],
+            "medianProcessWallNs": 392393300.5
+          },
+          "arc-joined-borrowed": {
+            "binary": "arc-joined-borrowed",
+            "binaryBytes": 61864,
+            "binarySha256": "abb9be1b6b81fb9fe49279a522ef6eac6bab53ed2ca7fedca5857144c3faa41d",
+            "commands": [
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed",
+                "-lm",
+                "-lpthread"
+              ],
+              [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/map-borrow-evidence/arc-joined-borrowed-profile",
+                "-lm",
+                "-lpthread"
+              ]
+            ],
+            "generatedSha256": "d165e385f42d1ed18855975072d2d4c37a48f5fc5351722ae5eda6cbb0c5656f",
+            "profileSha256": "259684276d8b85de5c03e29eb7862fbee4e404c752bbab5497fdf691b112cd27",
+            "counters": {
+              "requests": 6,
+              "requestedBytes": 24000068,
+              "retains": 1,
+              "peakChargedBytes": 24000008,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "processWallNs": [
+              359103214,
+              368334680,
+              364632814,
+              376470993,
+              369133767,
+              383772256,
+              376837638,
+              366125482,
+              366302680,
+              364237994,
+              378222818,
+              359088058,
+              369653918,
+              372023762,
+              359111395,
+              371625742,
+              361037976,
+              357905233,
+              362470666,
+              347576306,
+              359923457,
+              356970883,
+              355627662,
+              361583329
+            ],
+            "medianProcessWallNs": 364435404.0
+          }
+        },
+        "executionOrder": [
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ],
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ],
+          [
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed"
+          ],
+          [
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained"
+          ],
+          [
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed"
+          ],
+          [
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained"
+          ],
+          [
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed"
+          ],
+          [
+            "arc-separate-borrowed",
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained"
+          ],
+          [
+            "arc-joined-retained",
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed"
+          ],
+          [
+            "arc-joined-borrowed",
+            "tracing-separate-retained",
+            "tracing-separate-borrowed",
+            "tracing-joined-retained",
+            "tracing-joined-borrowed",
+            "arc-separate-retained",
+            "arc-separate-borrowed",
+            "arc-joined-retained"
+          ]
+        ],
+        "scope": "Actual compiler output for the maintained map program: 500,000 scrambled distinct entries and 2,000,000 numeric queries. Retained variants use saved C output from the earlier compiler; borrowed variants use the current compiler, which proves a non-suspending read span and preserves first-use initialization. Both key/value layouts are compiled on the same host with the same C compiler. Separate storage is an explicit old-layout measurement fixture. Whole-process time includes startup, construction, queries, output and teardown; compiler build time is excluded. This measures compiler revisions, not a hand-edited borrow or universal language overhead. Twenty-four balanced fresh-process samples per variant; separate profiles are excluded from timing."
+      }
+    }
+  ],
+  "xeon_uncertainty": {
+    "method": "10,000 bootstrap resamples of the 24 whole-round pairs; ratio of medians; Python Random(0), sequential old_layout/borrow/combined comparisons; percentile endpoints at sorted indices 249 and 9749. Describes sampling uncertainty within this runner, not uncertainty across machines or future runs.",
+    "comparisons": {
+      "old_layout": {
+        "ratio_of_medians": 1.042521720770729,
+        "bootstrap_95_percentile_interval": [
+          1.0346460140799698,
+          1.053520910960061
+        ]
+      },
+      "borrow": {
+        "ratio_of_medians": 0.933562092101279,
+        "bootstrap_95_percentile_interval": [
+          0.9231968686113142,
+          0.9475012889231188
+        ]
+      },
+      "combined": {
+        "ratio_of_medians": 0.9732587587037472,
+        "bootstrap_95_percentile_interval": [
+          0.9659377283485845,
+          0.9882463664335867
+        ]
+      }
+    }
+  }
+}

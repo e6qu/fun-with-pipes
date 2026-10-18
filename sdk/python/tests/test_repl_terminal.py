@@ -2,21 +2,23 @@
 import os
 from pathlib import Path
 import re
+import select
 import signal
+import struct
 import tempfile
 import time
 import unittest
+
+# These standard-library modules exist only on POSIX hosts.
+if os.name == "posix":
+    import fcntl
+    import pty
+    import termios
 
 
 @unittest.skipUnless(os.name == "posix", "this terminal harness uses POSIX PTYs")
 class Terminal(unittest.TestCase):
     def test_completion_history_multiline_and_interrupt(self):
-        import fcntl
-        import pty
-        import select
-        import struct
-        import termios
-
         self.assertTrue(Path(os.environ["FWP_TEST_BIN"]).is_file(), "build fwp before terminal checks")
         with tempfile.TemporaryDirectory() as directory:
             history = Path(directory) / "history"

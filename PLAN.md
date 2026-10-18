@@ -88,12 +88,13 @@ outside the benchmark suite.
 
 ### Immediate priorities
 
-1. Finish cached-map borrowing and investigate the reproduced Xeon map slowdown.
-   A proof should keep the cached map alive without acquiring another owner on
-   each read. The compiler is integrated into PR #167, including a repair that keeps tuple
-   and variant results in direct fields. The [handoff](docs/development-state.md)
-   records actual measurements and missing Intel/full-production acceptance. Fewer
-   allocations or retains alone do not settle a timing regression.
+1. Complete acceptance of the current compiler and interactive-tool PR.
+   Cached-map borrowing now has matching Xeon 8573C evidence: the old layout
+   slowdown reproduces, and the new joined/borrowed program is 2.67% faster than
+   the old separate-layout baseline. [Measurements](docs/benchmarks.md#rechecking-the-original-xeon-slowdown)
+   retain all faster and slower comparisons. The compiler, math, REPL, notebook
+   and debugger/SDK still require final-head production acceptance; see the
+   [handoff](docs/development-state.md).
 2. Specify and test [cycle-safe ownership contracts](docs/ownership.md#proposed-cycle-policy)
    against subscriptions, channel workers, cancelled tasks and cyclic data graphs.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
