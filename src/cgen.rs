@@ -4902,6 +4902,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         | "array._map-list"
                         | "map._map-list"
                         | "map._map-range"
+                        | "set._map-list"
+                        | "set._map-range"
                         | "filter"
                         | "fold"
                         | "fold-right"
@@ -4934,22 +4936,35 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return None;
         }
         self.g.used_closures[g] = true;
-        if matches!(sym.as_str(), "map._map-list" | "map._map-range") {
+        if matches!(
+            sym.as_str(),
+            "map._map-list" | "map._map-range" | "set._map-list" | "set._map-range"
+        ) {
+            let paired = sym.starts_with("map.");
             // Expression workers own their arguments and return the two
             // numeric fields directly. Primitive entry cleanup must not be
             // bypassed, and flattened record parameters need a separate proof.
-            if !matches!(self.g.prog.funcs[g].body, Body::Expr(_)) {
-                return None;
-            }
-            let abi = self.g.abis[g]
-                .as_ref()
-                .filter(|abi| abi.ret == Some(2) && abi.params.iter().all(Option::is_none))?
-                .clone();
+            // Sets use the existing owned entry, including primitive cleanup.
+            let abi = if paired {
+                if !matches!(self.g.prog.funcs[g].body, Body::Expr(_)) {
+                    return None;
+                }
+                Some(
+                    self.g.abis[g]
+                        .as_ref()
+                        .filter(|abi| abi.ret == Some(2) && abi.params.iter().all(Option::is_none))?
+                        .clone(),
+                )
+            } else {
+                None
+            };
             let result_type = self.g.prog.funcs[id].ty.params(args.len()).1.clone();
             let MT::Con(name, fields) = result_type else {
                 return None;
             };
-            if name != "std::Map" || fields.len() != 2 || fields.iter().any(|t| scalar(t).is_none())
+            if name != if paired { "std::Map" } else { "std::Set" }
+                || fields.len() != if paired { 2 } else { 1 }
+                || fields.iter().any(|t| scalar(t).is_none())
             {
                 return None;
             }
@@ -4982,26 +4997,36 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 .cloned()
                 .chain(["input".into()])
                 .collect::<Vec<_>>();
-            let arguments = abi.args_decode_words(
-                self.g.prog,
-                g,
-                (0..words.len())
-                    .map(|j| format!("arguments[{j}]"))
-                    .collect(),
+            let prepare = format!(
+                "V arguments[] = {{{}}}; fwp_args{g}(arguments, 0, {});",
+                words.join(", "),
+                words.len()
             );
-            let values = abi.result_words(self.g.prog, g, "pair");
-            let callback = format!("V arguments[] = {{{}}}; fwp_args{g}(arguments, 0, {});\n            fwp_wr{g} pair = w{g}({});\n            keys[i] = {}; vals[i] = {};", words.join(", "), words.len(), arguments.join(", "), values[0], values[1]);
+            let (marker, callback) = if let Some(abi) = abi {
+                let arguments = abi.args_decode_words(
+                    self.g.prog,
+                    g,
+                    (0..words.len())
+                        .map(|j| format!("arguments[{j}]"))
+                        .collect(),
+                );
+                let values = abi.result_words(self.g.prog, g, "pair");
+                ("numeric map: direct callback fields", format!("{prepare}\n            fwp_wr{g} pair = w{g}({});\n            keys[i] = {}; vals[i] = {};", arguments.join(", "), values[0], values[1]))
+            } else {
+                (
+                    "numeric set: direct callback",
+                    format!("{prepare}\n            keys[i] = fwp_owned_entry{g}(arguments);"),
+                )
+            };
             let result = self.fresh();
-            self.line(&format!(
-                "V {result};\n{{ /* numeric map: direct callback fields */"
-            ));
+            self.line(&format!("V {result};\n{{ /* {marker} */"));
             self.line(&numeric_collection_body(
                 &count,
                 &iterator,
                 &input,
                 &callback,
                 &descriptor,
-                true,
+                paired,
             ));
             self.line(&format!("{result} = result;\n}}"));
             for value in captures.iter().chain(source.iter()) {
