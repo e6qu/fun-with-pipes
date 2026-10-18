@@ -68,6 +68,23 @@ fn session_preserves_values_redefinition_and_recovers_from_errors() {
         assert_eq!(session.type_of("value == 20").unwrap(), "Bool");
         assert!(session.names.contains(&"hypot".into()));
         assert!(session.submit("it = 0", &mut output).is_err());
+        assert!(session.submit("out2 : I64", &mut output).is_err());
+        session
+            .submit("value = \"changed type\"", &mut output)
+            .unwrap();
+        assert_eq!(
+            session
+                .submit("out2 + 1", &mut output)
+                .unwrap()
+                .value
+                .as_deref(),
+            Some("9")
+        );
+        assert_eq!(session.type_of("value").unwrap(), "String");
+        let resource = session
+            .submit("\"must-not-create\" | file.create", &mut output)
+            .unwrap_err();
+        assert!(resource.contains("REPL results are reusable"), "{resource}");
     });
 }
 

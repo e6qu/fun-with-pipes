@@ -39,6 +39,51 @@ list. The reverse example deliberately uses only the first input. `xs` in the
 last row is a placeholder for the vector from tutorial 20, not a global library
 variable.
 
+## Scalar math
+
+A scalar is one number, rather than a vector or matrix. The following functions
+accept and return the same floating format: `F16`, `BF16`, `F32`, `F64` or `F128`.
+`Float[a]` selects these concrete formats; it does not supply derivative rules
+for the `Dual`/reverse-mode types accepted by some `Floating` operations.
+
+| Functions | Calculation and domain |
+|---|---|
+| `asin`, `acos`, `atan` | Inverse sine, cosine and tangent, with results in radians; `asin`/`acos` take inputs in [−1, 1]. |
+| `atan2 x y` | Angle of the point `(x, y)` in radians, using both signs to choose the quadrant. |
+| `sinh`, `cosh`, `tanh` | Hyperbolic sine, cosine and tangent. |
+| `asinh`, `acosh`, `atanh` | Their inverses; real `acosh` needs x ≥ 1 and finite `atanh` needs −1 < x < 1. |
+| `log2`, `log10` | Base-two and base-ten logarithms; positive inputs give finite results. |
+| `log1p` | Natural logarithm of 1 + x, avoiding the loss of tiny x when forming that sum first. |
+| `exp2` | 2 raised to the input. |
+| `expm1` | exp(x) − 1, avoiding cancellation for small x. |
+| `hypot x y` | Distance √(x² + y²), without overflowing merely because the intermediate squares are too large. |
+
+For example:
+
+```fwp
+main = [
+    3.0 | hypot 4.0 | echo,
+    8.0 | log2 | echo,
+    0.0 | atan2 -1.0 | gt 3.0 | echo,
+    1e-100f64 | log1p | eq 1e-100f64 | echo,
+] | ignore
+```
+
+The output is `5.0`, `3.0`, `True`, `True`, on separate lines. The first result
+is the 3–4–5 triangle's distance. The second follows from 2³ = 8. The third
+angle is π radians, greater than three. The last input is so small that
+`1.0 + 1e-100f64` rounds to `1.0`; `log1p` preserves the small result instead.
+In a pipe the transformed value comes last: `y | atan2 x` means the conventional
+atan2(y, x), and `y | hypot x` computes the distance.
+
+Out-of-domain real inputs produce NaN (not-a-number); logarithms at zero and
+some endpoints produce infinity. These follow floating-point rules, not checked
+integer traps. Rounding still applies. F32/F64 call the host math library;
+F16/BF16/F128 use the bundled fixed-storage implementation without narrowing to
+F64. This extension does not add complex or automatic-differentiation overloads.
+[Format tests](float-formats.md) describe representation and precision checks;
+[benchmarks](benchmarks.md) explain why a correctness test is not a speed claim.
+
 ## Fixed-size lane operations
 
 Use `Vec[N, T]` when an operation acts on a fixed number of values independently.

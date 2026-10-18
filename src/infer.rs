@@ -813,18 +813,31 @@ impl<'a> Infer<'a> {
         }
         for &i in group {
             let b = &self.env.bindings[i];
+            let binding_span = b.span;
             let t = match &self.env.globals[&b.name].scheme {
                 Some(s) if b.annotated => s.ty.clone(),
                 _ => self.group.get(&b.name).cloned().unwrap_or(Type::unit()),
             };
             let mut t = self.env.table.resolve(&t);
+            if self.env.interactive_root.as_deref() == Some(b.name.as_str())
+                && b.name != "main::repl-query"
+            {
+                let span = binding_span;
+                let predicate = Pred {
+                    trait_name: "std::Dup".into(),
+                    args: vec![t.clone()],
+                };
+                self.solve(vec![(predicate, span)], &[]).map_err(|error| {
+                    error.with_note("REPL results are reusable; consume resources in the same cell instead of storing them")
+                })?;
+            }
             while let Type::Fun(_, r, e) = t.clone() {
                 let r = self.env.table.resolve(&r);
                 if matches!(r, Type::Fun(..)) {
                     let labels = self.effect_labels(&e);
                     if !labels.is_empty() {
                         return Err(Diagnostic::error(
-                            b.span,
+                            binding_span,
                             format!(
                                 "`{}` performs effects ({}) before receiving all of its arguments",
                                 display_name(&b.name),

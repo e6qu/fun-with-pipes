@@ -134,6 +134,9 @@ impl Session {
                     let declared_name = match declaration {
                         Decl::Bind(binding) | Decl::Macro(binding) => Some(binding.name.as_str()),
                         Decl::Sig { sig, .. } => Some(sig.name.as_str()),
+                        Decl::Foreign { name, .. } | Decl::Export { name, .. } => {
+                            Some(name.as_str())
+                        }
                         _ => None,
                     };
                     if declared_name.is_some_and(reserved) {
@@ -469,7 +472,7 @@ pub fn incomplete(text: &str) -> bool {
     if last.is_some_and(|t| {
         matches!(
             t.tok,
-            Tok::Kw(crate::lexer::Kw::Match)
+            Tok::Keyword(crate::lexer::Kw::Match)
                 | Tok::Sym(
                     Sym::Eq
                         | Sym::Arrow

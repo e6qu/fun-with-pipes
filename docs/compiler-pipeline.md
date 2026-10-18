@@ -37,7 +37,7 @@ values rather than executing the generated C reference-count machinery.
 
 fwp has a **hand-written, top-down recursive-descent parser** with a separate
 lexer, a column-based layout rule, and **precedence climbing** for infix
-arithmetic. Recursive descent means Rust functions recognize language constructs
+arithmetic and comparisons. Recursive descent means Rust functions recognize language constructs
 by calling functions for their smaller parts. Precedence climbing decides which
 operator binds its operands first.
 
@@ -47,7 +47,7 @@ operator binds its operands first.
 | Not a claimed LL(1) grammar | The implementation uses more than one token of lookahead and auxiliary layout/declaration state. No formal FIRST/FOLLOW proof or complete LL(k) grammar is maintained. |
 | Not LR/LALR | There are no generated shift/reduce tables. Those are bottom-up parsing methods. |
 | Not PEG/packrat | Successful parsing does not explore competing alternatives by backtracking, and there is no memoized parsing table. |
-| Precedence climbing, not a general Pratt framework | Arithmetic recurses with a minimum precedence; calls and atoms use dedicated functions rather than per-token prefix/infix handlers. |
+| Precedence climbing, not a general Pratt framework | Operators recurse with a minimum precedence; calls and atoms use dedicated functions rather than per-token prefix/infix handlers. |
 | Layout-sensitive | Token columns and line starts delimit selected blocks. No lexer-generated INDENT/DEDENT tokens are used. |
 
 In LL terminology, the first L means reading left to right and the second means
@@ -96,8 +96,8 @@ The expression parser follows this simplified structure; it is not the complete
 grammar for patterns, declarations, types or `comptime`:
 
 ```text
-expression   := arithmetic ("|" arithmetic)*
-arithmetic   := application followed by operators at the allowed precedence
+expression   := operators ("|" operators)*
+operators    := application followed by operators at the allowed precedence
 application  := atom atom* | "-" application
 atom         := name | literal | selector | grouped expression | collection
                 | match | quote | other fixed keyword forms
@@ -109,12 +109,17 @@ atom         := name | literal | selector | grouped expression | collection
 | Unary negation: `-x` | Prefix; calls bind inside it |
 | `* / %` | Left |
 | `+ -` | Left |
+| `== != < <= > >=` | Parentheses required for successive comparisons |
 | Pipe: `a \| b` | Left |
 
 `2 + 3 * 4 | echo` groups as `(2 + (3 * 4)) | echo` and prints `14`.
 `20 - 6 - 2` groups as `(20 - 6) - 2` and gives `12`. In
-`arithmetic(min_precedence)`, the right operand uses `precedence + 1`; that is
-what makes equal-precedence arithmetic associate left.
+`operator_expr(min_precedence)`, the right operand uses `precedence + 1`; that is
+what makes equal-precedence arithmetic associate left. At the comparison level,
+a second comparison produces a diagnostic unless parentheses already grouped
+an operand. Thus `1 + 2 == 3 | echo` prints `True`, but `1 < 2 < 3` is rejected.
+This adds a fixed precedence level and six tokens; no backtracking or type-driven
+parsing is introduced.
 
 Lexical distinctions matter before precedence: `count-long` is one name,
 `add -1` supplies a negative literal, `x -1` is application, and `x - 1` is
@@ -130,8 +135,8 @@ does this at several stages, not in one universal desugaring pass.
 | Source form | Implemented treatment |
 |---|---|
 | Parenthesized expression | Parser returns its inner AST; tuples/unit remain distinct forms. |
-| `a - b` | Parser builds an arithmetic node around `flip sub`, with `a` then `b` as operands. This preserves left-to-right evaluation despite data-last `sub`. |
-| Arithmetic notation | Retained in the AST for formatting/quoting; inference and lowering use ordinary trait operations. |
+| `a - b` | Parser builds an operator node around `flip sub`, with `a` then `b` as operands. This preserves left-to-right evaluation despite data-last `sub`. |
+| Arithmetic and comparison notation | Retained in the AST for formatting/quoting; inference and lowering use ordinary trait operations. |
 | `a \| b` | Parsed as a pipe node. Inference decides application versus composition from types; syntax parsing does not guess the function's type. |
 | `.name`, `make`, `update`, `match`, tuples and lists | Kept as source forms, checked, then lowered to field access, calls, records, constructors and branches. |
 | `name!(...)` | Macro expansion substitutes an expression AST before final program checking. |

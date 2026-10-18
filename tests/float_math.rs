@@ -12,7 +12,13 @@ const PROBE: &str = r#"
 typedef struct { uint64_t words[2]; } Quad;
 #define DECLARE(prefix, Bits) \
 Bits prefix##_exp(Bits); Bits prefix##_ln(Bits); Bits prefix##_sin(Bits); \
-Bits prefix##_cos(Bits); Bits prefix##_tan(Bits); Bits prefix##_pow(Bits, Bits); Bits prefix##_rem(Bits, Bits);
+Bits prefix##_cos(Bits); Bits prefix##_tan(Bits); Bits prefix##_pow(Bits, Bits); Bits prefix##_rem(Bits, Bits); \
+Bits prefix##_asin(Bits); Bits prefix##_acos(Bits); Bits prefix##_atan(Bits); \
+Bits prefix##_sinh(Bits); Bits prefix##_cosh(Bits); Bits prefix##_tanh(Bits); \
+Bits prefix##_asinh(Bits); Bits prefix##_acosh(Bits); Bits prefix##_atanh(Bits); \
+Bits prefix##_log2(Bits); Bits prefix##_log10(Bits); Bits prefix##_log1p(Bits); \
+Bits prefix##_exp2(Bits); Bits prefix##_expm1(Bits); \
+Bits prefix##_atan2(Bits, Bits); Bits prefix##_hypot(Bits, Bits);
 DECLARE(fwp_f16, uint16_t)
 DECLARE(fwp_bf16, uint16_t)
 DECLARE(fwp_f128, Quad)
@@ -46,6 +52,29 @@ int main(void) {
     /* big is 2^100 + 2^-12: distinguish full quad mantissa from host double. */
     x = fwp_f128_rem(big, three);
     if (x.words[0] || x.words[1] != UINT64_C(0x3fff001000000000)) return 24;
+    /* Smallest quad subnormal must survive the compensated functions. */
+    x = fwp_f128_log1p(tiny);
+    if (x.words[0] != 1 || x.words[1]) return 25;
+    x = fwp_f128_expm1(tiny);
+    if (x.words[0] != 1 || x.words[1]) return 26;
+    x = fwp_f128_atan(minus_zero);
+    if (x.words[0] || x.words[1] != minus_zero.words[1]) return 27;
+    Quad four = {{0, UINT64_C(0x4001000000000000)}};
+    x = fwp_f128_hypot(three, four);
+    if (x.words[0] || x.words[1] != UINT64_C(0x4001400000000000)) return 28;
+    x = fwp_f128_atan2(minus_zero, one);
+    if (x.words[0] || x.words[1] != minus_zero.words[1]) return 29;
+    if (fwp_f16_asin(0x8000) != 0x8000 || fwp_bf16_asin(0x8000) != 0x8000) return 30;
+    if (fwp_f16_acos(0x3c00) || fwp_bf16_acos(0x3f80)) return 31;
+    if (fwp_f16_sinh(0x8000) != 0x8000 || fwp_bf16_sinh(0x8000) != 0x8000) return 32;
+    if (fwp_f16_cosh(0) != 0x3c00 || fwp_bf16_cosh(0) != 0x3f80) return 33;
+    if (fwp_f16_tanh(0x8000) != 0x8000 || fwp_bf16_tanh(0x8000) != 0x8000) return 34;
+    if (fwp_f16_asinh(0x8000) != 0x8000 || fwp_bf16_asinh(0x8000) != 0x8000) return 35;
+    if (fwp_f16_acosh(0x3c00) || fwp_bf16_acosh(0x3f80)) return 36;
+    if (fwp_f16_atanh(0x8000) != 0x8000 || fwp_bf16_atanh(0x8000) != 0x8000) return 37;
+    if (fwp_f16_log2(0x3c00) || fwp_bf16_log2(0x3f80)) return 38;
+    if (fwp_f16_log10(0x3c00) || fwp_bf16_log10(0x3f80)) return 39;
+    if (fwp_f16_exp2(0x4200) != 0x4800 || fwp_bf16_exp2(0x4040) != 0x4100) return 40;
     return 0;
 }
 "#;

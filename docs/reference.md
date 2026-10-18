@@ -98,6 +98,7 @@ imported under the same name.
 |---|---|
 | `f x y` | successive single-argument applications: `(f x) y` |
 | `a + b`, `a - b`, `a * b`, `a / b`, `a % b` | arithmetic with fixed precedence; `%` is remainder |
+| `a == b`, `a != b`, `a < b`, `a <= b`, `a > b`, `a >= b` | equality and ordering; result is `Bool` |
 | `x \| f` | `f x` when `x` is a value; composition when `x` is a function |
 | `[a, b]`, `(a, b)`, `()` | list, tuple, unit (tuples are records with fields `.0`, `.1`, ...) |
 | `{ x = 1, y = 2 }` | record (structural; unifies with nominal records) |
@@ -124,7 +125,7 @@ evaluation. See [tail calls and recursion](design.md#tail-calls-and-recursion).
 The data being transformed comes last: `sub 1` subtracts one, `div 2` halves, `lt 0` tests
 `x < 0`, and `concat "!"` appends.
 
-### Arithmetic and precedence
+### Arithmetic, comparisons and precedence
 
 From tightest to loosest:
 
@@ -134,7 +135,8 @@ From tightest to loosest:
 | 2 | Unary negation: `-(x + y)` | Negates the following application |
 | 3 | `*`, `/`, `%` | Left to right |
 | 4 | `+`, `-` | Left to right |
-| 5 | Pipe: `\|` | Left to right |
+| 5 | `==`, `!=`, `<`, `<=`, `>`, `>=` | No chaining without parentheses |
+| 6 | Pipe: `\|` | Left to right |
 
 `2 + 3 * 4` gives `14`; `(2 + 3) * 4` gives `20`.
 `20 - 6 - 2` means `(20 - 6) - 2`, giving `12`.
@@ -156,8 +158,21 @@ one. Consequently, `x -1` is application, while `x - 1` is subtraction.
 `10-3` is also subtraction because the minus immediately follows its operand.
 Use `f (-x)` to pass a negated expression to a function.
 
-Exponentiation remains an explicit library call; there is no infix power,
-comparison or user-defined operator syntax.
+Comparisons use `eq`, `ne`, `lt`, `le`, `gt` and `ge` for types supporting those
+operations. `2 + 3 == 5 | echo` prints `True`: arithmetic happens before the
+comparison, then the result enters the pipe. `=` remains a declaration marker.
+Strings and collections use their existing equality/ordering rules; unrelated
+types are not coerced into comparable values.
+
+Write `x | both (ge 0) (lt 10) | uncurry and` to test a range using the same input.
+`0 <= x < 10` is rejected: it must not silently compare a Boolean with a number.
+Parentheses make an intentional Boolean comparison explicit: `(1 < 2) == True`.
+All six comparisons share one precedence level. `3 | lt 4` and `3 < 4` both
+produce `True`; prefix calls remain useful for composing functions.
+
+Exponentiation remains the explicit `pow` library call; there is no infix power
+or user-defined operator syntax. [Scalar math](numerics.md#scalar-math) describes
+the trigonometric, logarithmic and related functions.
 
 Every function still takes one argument, including a tuple-taking function.
 `curry` and `uncurry` explicitly convert between a pair-taking function and

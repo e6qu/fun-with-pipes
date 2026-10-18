@@ -18,14 +18,24 @@ then audit every final-head job and squash merge only after passing acceptance:
 4. Add an interpreter REPL inspired by IPython: persistent definitions/imports,
    multiline entry, history, completion, type inspection and session reset.
    No JIT, and no replay of earlier effects when evaluating another cell.
-5. Keep tutorials, parser/compiler docs, benchmark methods and the live plan
+5. Add a notebook UI with code/Markdown cells, dependency tracking and explicit
+   handling of stale results and effectful reruns. The user also requested an
+   ipdb-style interactive debugger and native disassembler, in this same PR.
+   Add a scriptable debugger protocol and a Python SDK for execution events,
+   breakpoints/stepping, frames/values and trace collection. Share this with the
+   terminal debugger/notebook; document instrumentation boundaries precisely.
+   Browser-only versus Jupyter-kernel integration is awaiting an optional reply.
+6. Keep tutorials, parser/compiler docs, benchmark methods and the live plan
    aligned; verify semantic changes against raw interpretation and native code.
 
 Checkpoint `f440c903` is published on the same PR. Focused run `39124618102`
 failed in C++ compilation: the vendored `hypot` is a hidden friend found through
 argument-dependent lookup, not qualified namespace lookup. All three format
 diagnostics have the same cause; the call is repaired. Rust/tests were not reached.
-The next focused dispatch must check the repair and the remaining implementation.
+Run `39124700912` then compiled C++ and reported a Rust token-name error in
+REPL continuation detection (`Tok::Kw` versus `Tok::Keyword`); repaired locally.
+The next focused dispatch must check this repair and the remaining implementation.
+Notebook/debugger/disassembler work has not yet been implemented.
 The previous documentation-only head `8060075e` has passing docs, benchmarks and
 both ARM macOS jobs; the other six production jobs were still running without a
 reported failure at the last audit. Its production run is `39120276898` and docs

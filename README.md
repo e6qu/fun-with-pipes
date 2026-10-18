@@ -100,12 +100,17 @@ or `./hello.exe` on Windows. `fwp run --interp examples/hello.fwp` uses the
 interpreter instead: it evaluates the compiler's checked program directly.
 The test suite compares both execution methods.
 
+Run `fwp repl` to try expressions without creating a file. The
+[interactive guide](docs/repl.md) explains numbered results, multiline input,
+history, type inspection and how to save definitions.
+
 ## Where to go next
 
 | If you want to… | Read |
 |---|---|
 | Learn the language with explained, runnable examples | [Tutorials](docs/tutorials/README.md) |
 | Find an example application and its prerequisites | [Example applications](examples/README.md) |
+| Try expressions interactively | [REPL guide](docs/repl.md) |
 | Look up syntax or a compiler command | [Language reference](docs/reference.md) |
 | Look up a library function or read a type signature | [Standard library](docs/stdlib.md) |
 | Understand a performance comparison | [Benchmarks and overhead](docs/benchmarks.md) |

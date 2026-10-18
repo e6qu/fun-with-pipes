@@ -41,7 +41,8 @@ jobs:
           components: rustfmt, clippy
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
-      - run: cargo test --no-fail-fast --test infix --test repl --test scalar_math --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test stdlib_doc -- --nocapture
+      - if: ${{ !cancelled() }}
+        run: cargo test --no-fail-fast --test infix --test repl --test scalar_math --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test stdlib_doc -- --nocapture
   artifact_paths:
     if: inputs.suite == 'artifact-paths'
     strategy:
