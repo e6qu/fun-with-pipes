@@ -10205,7 +10205,8 @@ pub(crate) fn preprocess_linked_sources(
     command
         .arg(opt)
         .args(parallel_codegen(&cc.0, opt, c_source))
-        .args(["-std=gnu11", "-ffp-contract=off", "-w", "-E", "-P"])
+        // Keep line markers: they distinguish includes and translation units.
+        .args(["-std=gnu11", "-ffp-contract=off", "-w", "-E"])
         .args(inputs);
     let output = command
         .output()
