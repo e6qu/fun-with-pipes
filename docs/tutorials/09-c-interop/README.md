@@ -56,6 +56,15 @@ On macOS the shared-library form (`--cdylib`) uses `.dylib` and the
 interpreter loads a Darwin FFI shim. Native portability and verification
 are tracked in [the session handoff](../../development-state.md).
 
+On Windows, generated libraries use LLVM-MinGW and the Universal C Runtime
+(UCRT). A Rust caller must use the matching native
+[`x86_64-pc-windows-gnullvm` or `aarch64-pc-windows-gnullvm` target](https://doc.rust-lang.org/rustc/platform-support/windows-gnullvm.html)
+and LLVM-MinGW linker. These targets make the Rust caller and generated library
+agree on the C calling convention and runtime libraries. The repository setup
+script installs that Rust target for its Windows interop checks. Generated DLLs
+explicitly export their declared functions and result releases, so a name also
+used by the Windows runtime cannot silently disappear from the DLL interface.
+
 ## Reading the example
 
 The first four outputs come from standard C functions: `strlen` counts the five

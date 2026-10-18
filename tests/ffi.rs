@@ -41,6 +41,20 @@ fn scratch(name: &str) -> PathBuf {
     d
 }
 
+fn retain_interop(dir: &Path, kind: &str, output: &str) {
+    if let Some(root) = std::env::var_os("FWP_LIBRARY_RESULT_ARTIFACTS") {
+        let artifacts = PathBuf::from(root).join("interop").join(kind);
+        std::fs::create_dir_all(&artifacts).unwrap();
+        for entry in std::fs::read_dir(dir).unwrap() {
+            let entry = entry.unwrap();
+            if entry.file_type().unwrap().is_file() {
+                std::fs::copy(entry.path(), artifacts.join(entry.file_name())).unwrap();
+            }
+        }
+        std::fs::write(artifacts.join("host.stdout"), output).unwrap();
+    }
+}
+
 const VEC_OUT: &str = "Vec2 {x = 11.0, y = 22.0}
 11.0
 63
@@ -285,7 +299,9 @@ fn static_library_from_rust() {
             .args(["-l", "ws2_32", "-l", "shell32"]);
     }
     stdout(rustc);
-    assert_eq!(stdout(Command::new(&exe)), GEOM_OUT.replace("LANG", "rust"));
+    let output = stdout(Command::new(&exe));
+    retain_interop(&d, "static-rust", &output);
+    assert_eq!(output, GEOM_OUT.replace("LANG", "rust"));
     let _ = std::fs::remove_dir_all(&d);
 }
 
@@ -303,6 +319,30 @@ fn shared_library_from_c() {
         .arg("-o")
         .arg(d.join(format!("libgeom.{}", fwp::cgen::shared_library_extension())));
     stdout(build);
+    if cfg!(windows) {
+        // An internal COFF symbol is not proof of a public DLL export. In
+        // particular automatic exports used to omit `norm`, letting the host
+        // silently bind to the unrelated CRT function with the same name.
+        let mut inspect = Command::new("llvm-objdump");
+        inspect.arg("-p").arg(d.join("libgeom.dll"));
+        let image = stdout(inspect);
+        let exports = image.split("Export Table:").nth(1).unwrap();
+        for name in [
+            "norm",
+            "scale",
+            "add_ints",
+            "greet",
+            "fwp_release_greet",
+            "word_count",
+        ] {
+            assert!(
+                exports
+                    .lines()
+                    .any(|line| line.split_whitespace().last() == Some(name)),
+                "missing public DLL export {name}: {exports}"
+            );
+        }
+    }
     let exe = d.join("geom-c");
     let mut c = Command::new(cc());
     c.arg("-I")
@@ -315,11 +355,10 @@ fn shared_library_from_c() {
         .arg("-o")
         .arg(&exe);
     stdout(c);
+    let output = stdout(Command::new(&exe));
+    retain_interop(&d, "shared-c", &output);
     // This external C host uses the platform text stream convention.
-    assert_eq!(
-        stdout(Command::new(&exe)).replace("\r\n", "\n"),
-        GEOM_OUT.replace("LANG", "c")
-    );
+    assert_eq!(output.replace("\r\n", "\n"), GEOM_OUT.replace("LANG", "c"));
     let _ = std::fs::remove_dir_all(&d);
 }
 

@@ -9026,6 +9026,10 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     }
     let mut lib_defs = String::new();
     if let Mode::Library = mode {
+        // Windows automatic exports omit names also present in import
+        // libraries (for example CRT `norm`). Export the language interface
+        // explicitly, including its ownership release functions.
+        let export_attribute = "#ifdef _WIN32\n__declspec(dllexport)\n#endif\n";
         // Register exit cleanup before runtime dependencies can be loaded.
         // Darwin terminates dlopened images before archive destructors. The
         // guarded finish also runs at dynamic unload; repeated calls are safe.
@@ -9051,7 +9055,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             };
             let _ = writeln!(
                 lib_defs,
-                "{} {}({}) {{\n    fwp_lib_init();",
+                "{export_attribute}{} {}({}) {{\n    fwp_lib_init();",
                 crate::ffi::c_name(&r),
                 cname,
                 if decl.is_empty() {
@@ -9209,7 +9213,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             if library_result_needs_release(&r) {
                 let _ = writeln!(
                     lib_defs,
-                    "void fwp_release_{cname}({} result) {{",
+                    "{export_attribute}void fwp_release_{cname}({} result) {{",
                     crate::ffi::c_name(&r)
                 );
                 if g.reuse {

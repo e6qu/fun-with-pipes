@@ -1,4 +1,7 @@
 /* All three descriptors must remain live until this library unloads. */
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
 void setup(uintptr_t *descriptors) {
     fwp_lib_init(); fwp_tasks_init();
     intptr_t budget=fwp_gc.budget;

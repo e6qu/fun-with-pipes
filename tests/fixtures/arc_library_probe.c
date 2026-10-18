@@ -27,6 +27,9 @@ static int arc_library_call(void) {
     return 0;
 }
 
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
 int fwp_test_probe(void) {
 #ifdef _WIN32
     /* Test output uses the same exact bytes as the interpreter. */
