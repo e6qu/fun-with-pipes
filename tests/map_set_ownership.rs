@@ -266,6 +266,7 @@ main = [
     [(1, 2)] | map.from-list | map.get 1 | echo,
     [1] | set.from-list | set.insert 2 | set.remove 1 | set.to-list | echo,
     [("a", "first"), ("a", "last")] | map.from-list | map.insert "a" "new" | map.to-list | echo,
+    ["a", "a"] | set.from-list | set.to-list | echo,
 ] | ignore
 "#,
     )
@@ -317,6 +318,13 @@ int main(void) {
     DROP_REF_MAP(owned);
     if (*fwp_rc_slot(first_key) != 1 || *fwp_rc_slot(later_key) != 1 ||
         *fwp_rc_slot(replacement) != 1) return 5;
+    V keys = fwp_cons(first_key, fwp_cons(later_key, 0));
+    V owned_set = REF_SET_FROM(keys);
+    if (MAP(owned_set)->len != 1 || MAP(owned_set)->d[0] != first_key ||
+        MAP(owned_set)->d[1] != 0 || *fwp_rc_slot(first_key) != 2 ||
+        *fwp_rc_slot(later_key) != 1) return 6;
+    DROP_REF_SET(owned_set);
+    if (*fwp_rc_slot(first_key) != 1 || *fwp_rc_slot(later_key) != 1) return 7;
     puts("typed map/set native ownership preserved");
     return 0;
 }
@@ -332,8 +340,11 @@ int main(void) {
         ("set_remove", "NUM_SET_REMOVE", false, None),
         ("map_from_list", "REF_FROM", true, None),
         ("map_insert", "REF_INSERT", true, Some("DROP_REF_MAP")),
+        ("set_from_list", "REF_SET_FROM", true, Some("DROP_REF_SET")),
     ] {
-        let marker = if references {
+        let marker = if references && symbol.starts_with("set_") {
+            "fwp_map_ops){fwp_rc_dup, NULL,"
+        } else if references {
             "fwp_map_ops){fwp_rc_dup, fwp_rc_dup,"
         } else {
             "fwp_map_ops){NULL, NULL,"

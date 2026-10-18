@@ -1069,14 +1069,24 @@ impl NativeNumber {
 }
 
 // Both dynamic callbacks and direct workers use the same protected numeric
-// buffers. `callback` writes keys[i] and vals[i]; all fields are unboxed.
+// buffers. `callback` writes keys[i] and, for maps, vals[i]; fields are unboxed.
 fn numeric_collection_body(
     count: &str,
     iterator: &str,
     input: &str,
     callback: &str,
     descriptor: &str,
+    paired: bool,
 ) -> String {
+    let (values, value_argument, finish_values) = if paired {
+        (
+            "V *vals = (V *)fwp_mem_alloc((n + 1) * sizeof(V));\n        fwp_cleanup vals_cleanup;\n        fwp_scratch_protect(&vals, &vals_cleanup);",
+            "vals",
+            "fwp_scratch_finish(&vals, &vals_cleanup);",
+        )
+    } else {
+        ("", "NULL", "")
+    };
     format!(
         r#"uint64_t count = {count};
     if (count >= SIZE_MAX / sizeof(V)) fwp_trap("map too large");
@@ -1084,18 +1094,17 @@ fn numeric_collection_body(
     if (count) {{
         size_t n = (size_t)count;
         V *keys = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-        fwp_cleanup keys_cleanup, vals_cleanup;
+        fwp_cleanup keys_cleanup;
         fwp_scratch_protect(&keys, &keys_cleanup);
-        V *vals = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-        fwp_scratch_protect(&vals, &vals_cleanup);
+        {values}
         {iterator}
         for (size_t i = 0; i < n; i++) {{
             {input}
             {callback}
         }}
         const fwp_map_ops ops = {{NULL, NULL, NULL, NULL, fwp_rc_free_obj, NULL}};
-        result = fwp_map_build_typed(keys, vals, n, &ops, {descriptor});
-        fwp_scratch_finish(&vals, &vals_cleanup);
+        result = fwp_map_build_typed(keys, {value_argument}, n, &ops, {descriptor});
+        {finish_values}
         fwp_scratch_finish(&keys, &keys_cleanup);
     }}"#
     )
@@ -4992,6 +5001,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 &input,
                 &callback,
                 &descriptor,
+                true,
             ));
             self.line(&format!("{result} = result;\n}}"));
             for value in captures.iter().chain(source.iter()) {
@@ -5940,10 +5950,11 @@ impl<'p> Gen<'p> {
             let store = if paired {
                 "keys[i] = OBJ(value)->f[0]; vals[i] = OBJ(value)->f[1]; fwp_rc_free_obj(value);"
             } else {
-                "keys[i] = value; vals[i] = 0;"
+                "keys[i] = value;"
             };
             let callback = format!("V value = fwp_apply_borrowed(l0, 1, &input);\n        {store}");
-            let body = numeric_collection_body(count, iterator, input, &callback, &descriptor);
+            let body =
+                numeric_collection_body(count, iterator, input, &callback, &descriptor, paired);
             return Ok(format!(
                 "{body}\n    FWP_KEEP_ALIVE(l0); FWP_KEEP_ALIVE(l1);\n    return result;"
             ));

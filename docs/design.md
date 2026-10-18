@@ -282,12 +282,23 @@ they share the same protected buffer construction. Errors and task
 cancellation release unfinished buffers. Empty or reversed ranges call no
 callbacks; duplicate handling and floating-key ordering remain unchanged.
 
+Map construction still uses four temporary arrays of machine words; set
+construction uses two, sharing the sorter's key/value lanes rather than storing
+unused values. The sorter copies shared output lanes once. Ordinary set
+construction uses the same keys-only storage. Both forms allocate the final
+owned container after sorting. Peak storage grows with input length even when
+most keys are duplicates. Small integer fields occupy full words, and sets currently
+share the map representation's value slots. These remain memory costs to measure
+and reduce; the optimization removes intermediate list nodes and eligible tuples.
+
 `FWP_MAP_BUILD=0` disables this transformation for controlled comparisons.
 Focused local checks cover raw/optimized interpretation, native O1/O2, ARC,
 stressed tracing, aliases, every injected allocation failure and cancellation.
-Six-host evidence and full production acceptance are still pending in the
-[handoff](development-state.md). Reduced allocation counts alone do not establish
-a timing improvement or parity with C/Rust.
+The [initial six-host measurements](benchmarks.md#building-numeric-maps-and-sets-without-temporary-lists)
+verify construction combining before the additional set-buffer reduction.
+The [handoff](development-state.md) tracks that follow-up and production acceptance.
+Reduced allocation counts alone do not establish a timing improvement or parity
+with C/Rust.
 
 ### Numeric pairs immediately mapped
 
