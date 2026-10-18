@@ -119,6 +119,12 @@ jobs:
         run: cargo build --release --bin fwp
       - name: Compare complete map work with construction fusion on and off
         run: python3 scripts/measure-large-map.py --output large-map-evidence
+      - name: Locate variable large-map construction costs
+        run: python3 scripts/measure-map-phases.py --input large-map-evidence --output large-map-evidence/phases
+      - name: Verify integer search and compare cached-value code arrangement
+        run: |
+          python3 scripts/test-map-lookup-evidence.py
+          python3 scripts/measure-map-lookup.py --input large-map-evidence --output large-map-evidence/lookup
       - uses: actions/upload-artifact@v7
         if: always()
         with:
