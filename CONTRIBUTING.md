@@ -135,9 +135,12 @@ executables once, verifies Cargo produced every requested target, then runs two
 executables concurrently with one harness thread each. Tests keep their existing
 internal workers. Every executable gets a separate uploaded log; any failed test
 fails the job after the remaining targets run. This avoids leaving the runner
-idle between the many single-test executables. The 90-minute limits and target
-assignments are unchanged. PR #154 passed the complete acceptance matrix with
-this scheduling; every later delivery still requires its own passing matrix.
+idle between the many single-test executables. Target assignments stay fixed.
+The macOS CI deadline is 150 minutes: the original PR #164 Intel GC job reached
+90 minutes with 82 of 122 targets complete, two interrupted and 38 unstarted.
+The larger deadline prevents losing another full run on a slow host; it does
+not make tests faster or relax any assertion. Local resource limits remain
+unchanged. Every delivery still requires its own complete passing matrix.
 
 The documentation job verifies the real Cargo target set, artifact coverage,
 assignment stability, concurrent execution and failure propagation. The stress

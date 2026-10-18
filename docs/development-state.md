@@ -2,18 +2,20 @@
 
 ## Next action
 
-Next: finish auditing the last Intel macOS GC job in production run
-`39080534474`, then publish one combined
-repair of [PR #164](https://github.com/e6qu/fun-with-pipes/pull/164). Keep all known
-fixes together. Do not cancel healthy remaining jobs or merge a failing head.
+Next: publish the combined repair of [PR #164](https://github.com/e6qu/fun-with-pipes/pull/164),
+then audit all nine production jobs and documentation for that exact final head.
+All nine original jobs and every completed target have now been audited. The
+final six-host cache checks pass. Keep all known repairs in one push.
 
-The root checkout, branch `server-entry-delivery`, remains published at
-`6b504c2e333f9c89725db714aed1440b79eab178`. It has uncommitted handoff updates and
-two repaired client goldens. Prepare the combined change in
-`/private/tmp/fwp-wasm-host-ownership`, branch `wasm-host-ownership`, based on that
-head and published through `dfde1e2fa6ba2157c3a6b29ae19580b8926fa956`. Preserve the
-root edits when transferring the preparation. Its matching golden changes are
-already committed. Other server/HTTP preparation worktrees are inactive.
+The root branch `server-entry-delivery` is still published at
+`6b504c2e333f9c89725db714aed1440b79eab178`. The combined work is prepared in
+`/private/tmp/fwp-wasm-host-ownership`, branch `wasm-host-ownership`. Root edits
+are the mirrored handoff and two client goldens already repaired in preparation.
+Commit the remaining preparation changes, then use
+`/private/tmp/fwp-combine-164.py`: it verifies and backs up those edits, checks
+that the original nine-job audit is complete, and fast-forwards the root to the
+identical prepared tree. Push `server-entry-delivery` and update the PR from
+`/private/tmp/fwp-server-entry-pr.md`. Other server/HTTP worktrees are inactive.
 
 The shared root `target/debug/fwp` now comes from the preparation worktree.
 Rebuild before treating it as evidence for another source. All local checks use
@@ -22,17 +24,19 @@ Full builds, suites, native server compiles and large regeneration stay on CI.
 
 Before merging, require nine production jobs and documentation on the new final
 commit, plus affected functional and actual-Wasm evidence. The old helper
-`/private/tmp/fwp-merge-164.py` is tied to failing `6b504c2e`; rewrite its expected
-head/run checks after publication. Use one squash subject of at most 80
-characters and an empty body. Verify the entire message, sole parent and tested
-versus merged tree, then cancel duplicate production. Standing authorization
+`/private/tmp/fwp-merge-164.py` is tied to failing `6b504c2e`. The new
+`/private/tmp/fwp-merge-164-combined.py` requires explicit final head, production
+run, docs run and audit. It also checks the audited six-host cache run
+`39086209307`. It performs no merge unless all gates pass and `--merge` is supplied.
+Use one squash subject of at most 80 characters and an empty body. Verify the
+entire message, sole parent and tested versus merged tree, then cancel duplicate production. Standing authorization
 covers publication, fixes and merge after acceptance; no repeated permission.
 
 ## Current CI and repairs
 
 | Run / source | Result and required action |
 |---|---|
-| Production `39080534474` / `6b504c2e` | Benchmarks, macOS ARM GC and both Windows hosts pass. Both Linux hosts complete 241 targets each and both regular macOS jobs complete 119 each; each finds only the same two client goldens. Intel macOS GC remains running; audit all before the combined repair push. |
+| Production `39080534474` / `6b504c2e` | All nine jobs audited. Benchmarks, macOS ARM GC and both Windows hosts pass. Both Linux hosts complete 241 targets each and both regular macOS jobs complete 119 each, finding only the same two client goldens. Intel GC times out after 82 of 122 targets complete; its separate stress suite passes. All 84 individual logs were also audited, including two interrupted targets. No other test failure appears. |
 | Documentation `39080534747` / `6b504c2e` | Passes for the original head only. |
 | Original focused `39080530770` / `6b504c2e` | Five hosts pass. Intel reaches 25 minutes in the last API test; all logs audited: 125 passed, zero failed, 12 ignored memory entries exercised separately. |
 | Split Intel `39082660292` / workflow `1682ff88`, checked-out source `6b504c2e` | Attempt 2 passes all 21 tests and artifact upload; both logs audited. Attempt 1 passed tests but failed artifact upload with GitHub DNS `ENOTFOUND`. Preserve both attempts and the checked-out source. |
@@ -40,6 +44,7 @@ covers publication, fixes and merge after acceptance; no repeated permission.
 | Original Wasm execution `39082338822` / `0a3b9fdf` | Both Linux hosts pass six Rust tests and the loader exception check. Allocation/output evidence passes; Asyncify strips internal names, so its name search does not independently establish absence of tracing. |
 | Wasm name repair `39084443415` / `2e47a412` | Both jobs pass; all 12 Rust summaries and both loader checks audited. All 72 saved modules independently inspected with internal names present, no named tracing functions and matching binaries across hosts. All 32 leak controls verified. |
 | Cache repair `39085202140` / `dfde1e2f` | All six hosts pass four tests each: 24 passed, no failures/skips; every log audited. Checks cover paths, edits, include flags, missing headers/compilers and exact-arithmetic archive identity/concurrent publication/eviction. |
+| Final cache source `39086209307` / `d4f43f3c` | All six hosts pass after preserving preprocessor source-file markers: 24 tests, no failures/skips; every log audited. The local regression passes (23.97 s). |
 
 The production failures are `forms_client_round_trip` and `swagger_documents`:
 `tests/rest/formsroundtrip.out` and `swaggerroundtrip.out` still expected
@@ -66,8 +71,9 @@ Audit tools and results in `/private/tmp`:
 - `fwp-wasm-repaired-audit.json` and `fwp-wasm-repaired-JOB.log` preserve the
   original passing execution run. `fwp-audit-wasm-final164.py` writes the new
   `fwp-wasm-final164-audit.json`; `fwp-audit-cache-164.py` writes
-  `fwp164-cache-audit.json`. A remote status watcher is
-  `/private/tmp/fwp-watch-delivery164.py` (session `29130`); it does not mutate CI.
+  `fwp164-cache-audit.json`. The final cache audit is
+  `fwp-audit-cache-final-164.py` → `fwp164-cache-final-audit.json`. The original
+  remote watcher has completed; replace it with final-head run IDs after publication.
 
 ## Combined implementation
 
@@ -123,7 +129,20 @@ about 4.3 minutes less waiting in the regular Intel shard and 2.4 minutes in the
 ARM GC shard. These are estimates using old durations, not measured speedups;
 repaired client halves add work. Eight runner tests pass (1.01 s), including
 complete coverage, explicit ordering, two-worker overlap and failure propagation.
-Final CI will exercise the new order.
+The original Intel GC job then hit its 90-minute deadline: 82 of 122 targets
+completed, two were interrupted and 38 never started. All 84 individual logs
+were downloaded and audited (1.49 s guarded download): 171 passed, no failures,
+nine ignored; the two partial logs have no failure or panic. The separate stress
+suite passed in 2,087.69 s. Across all nine original logs there are 1,206 summaries,
+3,439 passed, eight failures (the two client goldens on four hosts), and 66 ignored.
+Interrupted/unstarted work is not a pass. The report lists every affected target.
+
+Ordering alone cannot recover all that missing capacity. Both macOS CI jobs now
+allow 150 minutes to finish the expanded suite on slow hosts. This changes only
+the remote deadline, not assertions, target coverage, worker counts or local
+resource limits. It prevents discarding another 90-minute run; it is not a speed
+improvement. Production workflow lint passes (0.20 s guarded); the documentation
+audit passes. Final CI must verify both the new order and complete acceptance.
 
 ## Measurements and focused verification
 
