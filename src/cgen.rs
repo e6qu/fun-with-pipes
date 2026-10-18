@@ -1078,22 +1078,18 @@ fn numeric_collection_body(
     descriptor: &str,
     paired: bool,
 ) -> String {
-    let (values, value_argument, finish_values) = if paired {
-        (
-            "V *vals = (V *)fwp_mem_alloc((n + 1) * sizeof(V));\n        fwp_cleanup vals_cleanup;\n        fwp_scratch_protect(&vals, &vals_cleanup);",
-            "vals",
-            "fwp_scratch_finish(&vals, &vals_cleanup);",
-        )
+    let (lanes, values, value_argument) = if paired {
+        (2, "V *vals = keys + n;", "vals")
     } else {
-        ("", "NULL", "")
+        (1, "", "NULL")
     };
     format!(
         r#"uint64_t count = {count};
-    if (count >= SIZE_MAX / sizeof(V)) fwp_trap("map too large");
+    if (count > SIZE_MAX / ({lanes} * sizeof(V))) fwp_trap("map too large");
     V result = FWP_EMPTY_MAP;
     if (count) {{
         size_t n = (size_t)count;
-        V *keys = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+        V *keys = (V *)fwp_mem_alloc({lanes} * n * sizeof(V));
         fwp_cleanup keys_cleanup;
         fwp_scratch_protect(&keys, &keys_cleanup);
         {values}
@@ -1104,7 +1100,6 @@ fn numeric_collection_body(
         }}
         const fwp_map_ops ops = {{NULL, NULL, NULL, NULL, fwp_rc_free_obj, NULL}};
         result = fwp_map_build_typed(keys, {value_argument}, n, &ops, {descriptor});
-        {finish_values}
         fwp_scratch_finish(&keys, &keys_cleanup);
     }}"#
     )

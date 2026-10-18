@@ -1,73 +1,89 @@
-# Preparation handoff: controlled large-map comparison
+# Preparation handoff: repair variable map construction time
 
 ## Next action
 
-Next: publish the phase and lookup experiments, rerun `large-map` on both native
-Linux architectures and diagnose the AMD64 construction slowdown before accepting
-PR #166. Do not open a second PR. The authoritative live handoff is
-`/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`; PR #166 remains
-at `7f782388270b5d73a60eaf3c253a6f9a6e680e95` while its production gate runs.
+Next: finish the tiny comparison preflight, publish the joined-buffer repair on
+`collection-runtime-costs`, then run `large-map` on Linux AMD64/ARM64 and
+`collection-build` on all six native hosts. No second PR. The authoritative live
+handoff is `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
+PR #166 remains at `7f782388270b5d73a60eaf3c253a6f9a6e680e95` while production runs.
+Do not merge it before fixing the observed AMD64 performance issue.
 
-## Why this measurement comes first
+## What the measurements established
 
-The passing PR #166 benchmark reports fwp map time 505.247 ms, C 410.488 ms and
-Rust 338.542 ms: 23.1% and 49.2% more time. Its retained artifacts pass inspection:
-15 actual measured ELF AMD64 executables, 15 exact source inputs, five generated
-C files and matching reports. Data-only artifacts are `/private/tmp/fwp166-benchmarks`;
-no downloaded executable was run. The map source visibly contains direct numeric
-construction. Older measurements used different runs, so they cannot establish
-whether this change caused a regression.
+Source `9f0632f9c1abf4f067fa659f1d95c5768cb8a965`, run `39102838322`, passes both
+Linux hosts; 36 actual binaries, raw samples, counters and hashes are audited.
+It is preserved as `evidence/large-map-baseline-20261018`. Its raw reports are
+`docs/measurements/large-map-construction-2026-10-18.json` (currently uncommitted).
+The maintained program builds 500,000 entries and performs two million lookups.
+Optimization cuts full-work requests from 1,500,009 to eight and peak counted
+bytes from 56,000,040 to 24,000,040, but still performs 2,000,001 retains.
 
-This branch changes no compiler/runtime code. It compares the maintained
-500,000-entry map and 2,000,000 lookups with construction fusion enabled/disabled,
-in both default tracing and checked ARC, on the same runner and compiler.
-C and Rust run alongside the full fwp programs. Separate construction-only fwp
-programs help distinguish workloads; do not subtract their medians as if that
-directly measured lookup time. Every variant occupies each timing position twice
-following warmup. Separate instrumented programs count allocations, retains and
-counted storage; actual binaries and disassembly are retained. Full measurements
-and builds run on GitHub only.
+ARM64 improves. AMD64 optimized construction alternates between fast and much
+slower processes, including checked ARC. These samples cannot be dismissed as
+ordinary noise or cleared by allocation savings. Preserve the original failures.
 
-Audit all results, including any apparent slowdowns. If the new optimization
-causes a reproducible regression, fix its cause before accepting PR #166. If it
-does not, use the measured remaining work and actual instructions to choose the
-next substantial optimization. A plain range-to-set probe was considered but no
-measurement or compiler change was started; this observed map gap takes priority.
+Follow-up source `f01f50bfc346a7e848a95b12dcbe380fd3c6c462`, run `39103286520`,
+passes both hosts. Data-only artifacts and full audit are in
+`/private/tmp/fwp-map-followup`; original data is `/private/tmp/fwp-large-map-baseline`.
+Separate phase probes identify sorting as the variable cost: roughly 19–35 ms
+versus 100–109 ms in all 32 optimized AMD64 samples. Their slow/fast grouping
+correlates exactly with virtual address bit 22. Record:
+`/private/tmp/fwp-map-layout-correlation.json`. This does not prove a particular
+cache or TLB mechanism. Allocation and cleanup remain fast; occasional slow
+sorting also occurs with ordinary construction. All 116 original AMD64 sort
+instructions match after normalizing addresses. Do not add arbitrary padding.
 
-## First controlled result
+Rejected lookup experiments: lower-bound integer search is 8–9% slower on ARM64;
+separating cached-value producers shows no clear ARM64 benefit and increases code
+size. AMD64 samples remain confounded by the construction issue. Neither proposal
+changes compiler/runtime source. Preserve their evidence at the measured source,
+and remove their unused scripts from the eventual delivery.
 
-Exact source `9f0632f9c1abf4f067fa659f1d95c5768cb8a965`, run `39102838322`,
-passes both Linux hosts. Artifact audit verifies all 36 binaries, hashes, raw
-samples, output, code markers and ARC cleanup (3.66 s guarded). Data remains in
-`/private/tmp/fwp-large-map-baseline`; audit is
-`/private/tmp/fwp-large-map-baseline-audit.json`.
+## Current repair
 
-Optimization-enabled/disabled median ratios: ARM64 complete work 0.904 tracing,
-0.874 ARC; construction-only 0.327/0.369. AMD64 complete work 1.083 tracing,
-0.928 ARC; construction-only 1.364/0.720. AMD64 optimized construction is bimodal:
-roughly 40–59 ms versus 131–141 ms, also under ARC. Do not dismiss it as general
-runner noise: C/Rust and unoptimized full-work samples are much more stable.
-The existing optimization still needs a diagnosed, tested repair if reproducible.
+Uncommitted compiler/runtime changes join related key/value lanes into one owned
+allocation, both for generated numeric builders and ordinary typed maps. Sort
+scratch uses the same layout. No unused sentinel word or allocator-sized gap;
+sets keep one lane. The final exact-size container and stable duplicate handling
+remain unchanged. Empty ordinary maps avoid unnecessary scratch allocations.
+Explicit size guards check the complete storage multiplication before allocation.
+Cleanup releases each allocation once, including errors and cancellation.
 
-Separate phase probes record sorting, allocation, deduplication, materialization
-and cleanup durations plus allocation addresses. Their instrumented timings are
-not ordinary benchmark timings. Independent lookup candidates compare lower-bound
-integer search and keeping one-time producers out of the cached-read body; neither
-removes ownership checks. Original and experimental search agree with 56,772
-independent hit/miss/insertion checks including signed/unsigned limits. No compiler
-or runtime change is accepted from these experiments alone.
+`scripts/measure-map-storage.py` reconstructs the original separate-buffer layout
+from an explicit measurement fixture, preserving callbacks and sorting. Twenty-four
+fresh processes per variant rotate order on the same runner; full and
+construction-only work, both memory modes, counters, actual binaries and hashes
+are retained. The control is never part of production runtime code. Ordinary
+C/Rust comparison and separate phase probes also rerun. No speed claim yet.
 
-## Local checks
+## Validation and publication
 
-Use the root `scripts/local-guard.py`, serially and with unchanged resource limits.
-Only script syntax, workflow validation and documentation checks belong locally;
-no full benchmark or release build. Guarded script syntax, actionlint, roadmap
-and whitespace checks passed in 5.64 seconds using
-`python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py python3 /private/tmp/fwp-large-map-preflight.py`.
+Use the root `scripts/local-guard.py` with unchanged fixed limits. All builds,
+full suites, full benchmarks and large reports remain on GitHub.
 
-Lookup/script/workflow checks pass in 4.98 s guarded. Phase-probe C syntax and
-final workflow/documentation checks pass in 5.58 s guarded; no large benchmark
-ran locally. Command: root guard with `/private/tmp/fwp-map-phase-preflight.py`.
+- Formatting, focused Clippy and three collection tests pass (74.75 s guarded).
+- Eight collection/map ownership tests pass after adding two size-overflow guards
+  (65.01 s). Eight actual builders cover 48 allocation failures and 64 callback
+  exits per configuration; 22 managed-map operations cover 104/106 injected
+  failures. Raw interpreter, native O1/O2, ARC, stressed tracing, reuse poisoning,
+  aliases and deliberately missing cleanup are covered. No failures or skips.
+- Tiny comparison preflight passes (10.63 s guarded), using root guard and
+  `/private/tmp/fwp-map-storage-preflight.py`: eight entries, sixteen lookups,
+  independent interpreter output, two layouts, both modes, zero final charge,
+  requests 8 → 6, unchanged 17 retains, phase-probe syntax and workflow/docs.
+  Peak counted storage is 464 → 400 bytes; both modes finish at zero charge.
+- Shared root `target/debug/fwp` now contains this uncommitted joined-buffer
+  compiler. It is no longer the published PR #166 compiler. Root CI auditing
+  remains data-only; run candidate checks from this preparation worktree.
+
+Before publishing, record the exact source and focused results, preserve the
+finished phase/lookup source with an immutable evidence tag, and audit every
+failed production job before one coherent PR repair push. Final acceptance needs
+all nine production jobs, documentation and relevant focused evidence for the
+actual PR commit. Commit/squash messages: one line, at most 80 characters, no
+body, trailers or attribution. Standing authorization covers publication and
+squash merge after acceptance.
 
 ## Roadmap status
 

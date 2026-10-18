@@ -121,10 +121,8 @@ jobs:
         run: python3 scripts/measure-large-map.py --output large-map-evidence
       - name: Locate variable large-map construction costs
         run: python3 scripts/measure-map-phases.py --input large-map-evidence --output large-map-evidence/phases
-      - name: Verify integer search and compare cached-value code arrangement
-        run: |
-          python3 scripts/test-map-lookup-evidence.py
-          python3 scripts/measure-map-lookup.py --input large-map-evidence --output large-map-evidence/lookup
+      - name: Compare joined map buffers with the original layout
+        run: python3 scripts/measure-map-storage.py --input large-map-evidence --output large-map-evidence/storage
       - uses: actions/upload-artifact@v7
         if: always()
         with:

@@ -90,12 +90,34 @@ static int build_case(int op, int failure, int callback, int cancel, int *steps)
 #endif
     return 0;
 }
+/* Size arithmetic must fail before allocating or touching caller storage. */
+static int build_bounds(void) {
+    V keys[] = {7}, values[] = {11};
+    const fwp_desc key = {.kind = K_I64};
+    const fwp_map_ops ops = {NULL, NULL, NULL, NULL, fwp_rc_free_obj, NULL};
+    for (int lanes = 1; lanes <= 2; lanes++) {
+        fwp_cleanup *boundary = fwp_cleanups;
+        build_armed = 1; build_failure = build_step = 0;
+        fwp_trap_recover = build_recover; fwp_trap_jb = &build_jump;
+        fwp_trap_cleanup = boundary;
+        if (!setjmp(build_jump)) {
+            (void)fwp_map_build_typed(keys, lanes == 2 ? values : NULL,
+                SIZE_MAX / ((size_t)lanes * sizeof(V)) + 1, &ops, &key);
+            return 221;
+        }
+        build_armed = 0; fwp_trap_recover = NULL; fwp_trap_jb = NULL;
+        if (build_step || build_live || fwp_cleanups != boundary || keys[0] != 7 || values[0] != 11)
+            return 222;
+    }
+    return 0;
+}
 int main(void) {
 #ifdef _WIN32
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     for (V i = 4; i; i--) build_input = fwp_rc_fresh(fwp_cons(i - 1, build_input));
+    int bounds = build_bounds(); if (bounds) return bounds;
     int failures = 0, callbacks = 0;
     for (int op = 0; op < 8; op++) {
         int steps = 0, observed = 0, result = build_case(op, 0, 0, 0, &steps);
