@@ -635,8 +635,9 @@ are described in the [ownership guide](ownership.md#checked-arc-delivery).
 by value. A `String -> String` export is rejected because the existing C ABI
 returns a pointer with no host release operation. Records follow these rules
 field by field. Host calls must be serialized and finish before library unload.
-The mode rejects unproved ownership or cycles, browser execution and asynchronous
-WASI host tasks. Generated REST and MCP entries now use the ordinary checks;
+The mode rejects unproved ownership or cycles and browser execution. A prepared
+WASI task extension is awaiting real JSPI and Asyncify ownership validation; see
+the handoff for acceptance. Generated REST and MCP entries use ordinary checks;
 their platform and repeated-request acceptance is tracked in the handoff.
 Channels are eligible when their payload contains no functions, tasks, HTTP stream
 handles or channels:

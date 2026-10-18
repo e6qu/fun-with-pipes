@@ -410,7 +410,10 @@ All 18 repeated-request memory jobs pass across the six native hosts. The
 bounded storage and actual binaries without tracing, and records the substantial
 allocation/count costs that remain. Functional repair checks and final production
 acceptance are still required before these entries are accepted.
-Browser and asynchronous WASI host tasks remain outside this mode. The
+Browser execution remains excluded. The prepared asynchronous WASI extension
+uses ordinary checked task/channel ownership and command-end scheduler cleanup.
+It is not accepted support until real JSPI and Asyncify runs demonstrate storage
+reclamation, correct results and tracing-free modules. The
 [gRPC extension](#checked-grpc-clients-and-services) adds checked client/service
 entries and has separate platform acceptance. Focused checks and final delivery acceptance are distinguished
 in [the handoff](development-state.md).

@@ -4,13 +4,46 @@
 
 Next: complete final verification of [PR #164](https://github.com/e6qu/fun-with-pipes/pull/164)
 on `server-entry-delivery`. The implementation/evidence commit is `7c750b75`;
-this tracking update changes documentation only. Run the six affected functional
-jobs with `server_entry_part=checks` and the full production matrix on the final
-head. Audit all completed results before a repair push. Require all six focused
+this tracking update changes documentation only. Final head `6b504c2e` has six
+affected functional jobs in run `39080530770` (`server_entry_part=checks`), nine
+production jobs in `39080534474`, and documentation in `39080534747`.
+Their exact source was verified; they are queued/running, with no reported failure
+at this checkpoint. Audit all completed results before a repair push. Require all six focused
 jobs, nine production jobs and documentation before the authorized squash merge.
 Use an explicit one-line subject of at most 80 characters and an empty body;
 verify the complete message, parent and tested/merged tree, then cancel duplicate
 postmerge production. Keep one delivery PR and preserve passing heads.
+
+Independent preparation is in `/private/tmp/fwp-wasm-host-ownership`, branch
+`wasm-host-ownership`, based on `6b504c2e`. It investigates WebAssembly task/host
+ownership and cleanup. Its WASI task extension is unaccepted preparation;
+browser ARC remains excluded and no new support is claimed. Keep the delivery head stable; carry this local tracking update into
+the next delivery unless a CI repair requires another push.
+
+## Independent WASI task preparation
+
+Worktree `/private/tmp/fwp-wasm-host-ownership`, branch `wasm-host-ownership`,
+is based on the unchanged PR #164 head `6b504c2e`. Do not open a second PR or
+merge this preparation before #164 passes and merges. Its runtime extension
+removes the WASI task exclusion only on this preparation branch. Browser ARC
+remains excluded; no new support is accepted yet.
+
+The command-end cleanup frees finished tasks' pooled linear-memory stacks and
+the root scheduler record after children finish and language values release.
+The existing native task/channel ownership fixture is shared with an actual WASI
+check: 16 repetitions cover captured strings, repeated awaits, task results,
+scoped errors, queued values, cancelled receivers/senders, state and task maps.
+Ordinary and instrumented O1/O2 modules run through JSPI and Asyncify, match raw
+interpretation and save binaries/symbols. An omitted-cleanup control must fail
+the physical-allocation ledger at shutdown. Dispatch `suite=wasm-hosts` for two
+Linux-hosted actual-Wasm jobs; these are Wasm execution evidence, not native
+platform acceptance.
+
+Guarded local preparation checks: Rust formatting passes (1.21 s), focused
+Clippy passes (13.58 s), and the shared native task/channel test with ownership
+failure controls passes (35.70 s including rebuild). The shared root compiler
+binary now comes from this worktree; rebuild the root source before using it as
+PR #164 evidence. Do not run full suites or install a local Wasm toolchain.
 
 ## Accepted foundation
 

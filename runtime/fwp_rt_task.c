@@ -1198,6 +1198,24 @@ static void fwp_tasks_finish(void) {
     }
 }
 
+#ifdef FWP_FIBERS
+/* The command has joined its children and released language values. The host
+ * resumes no finished child: it only receives this root's final return. Release
+ * its allocator-owned scheduler storage while the instance is still alive. */
+static void fwp_fiber_tasks_finish(void) {
+    if (fwp_cur != fwp_root) abort();
+    fwp_free_zombie();
+    if (fwp_gc_tasks || fwp_ready_head || fwp_timers) abort();
+    while (fwp_stack_pool_n) free(fwp_stack_pool[--fwp_stack_pool_n]);
+    if (fwp_root) {
+        if (fwp_root->first_child || fwp_root->st || fwp_state_len || fwp_state_owners)
+            abort();
+        fwp_mem_free(fwp_root);
+    }
+    fwp_root = fwp_cur = 0;
+}
+#endif
+
 /* a root function failed: cancel its tasks and wait for them */
 static void fwp_tasks_abort(void) {
     if (!fwp_cur) return;

@@ -548,7 +548,10 @@ their native execution and memory acceptance are being established in the
 and encode results using ordinary typed fwp code. A returned alias must retain
 its input storage until encoding finishes; a failed call must release decoded
 input. HTTP modes also depend on the connection/task owners described above.
-Browser re-entry and WASI host fibers remain excluded.
+Browser re-entry remains excluded. A prepared WASI task extension uses the same
+checked task/channel owners and frees scheduler records and pooled linear-memory
+stacks when the command returns. JSPI and Asyncify execution, cleanup controls
+and actual-module inspection are required before acceptance; see the handoff.
 HTTP stream handles cannot be queued through a channel in checked ARC: their
 connection retains the handler, whose captures could contain that same channel.
 The allocators still use metadata;
