@@ -2,15 +2,17 @@
 
 ## Next action
 
-[PR #167](https://github.com/e6qu/fun-with-pipes/pull/167) repair checkpoint
-`763e245b` is published with `[skip ci]`; the preceding production run
-`39129847428` at `f957980acfb93e3699e55085def1ffd70f4c18b4` remains intact.
-Focused terminal run `39132990289` passes on both Linux architectures; macOS
-ARM64 exposed the terminal-drain defect described below. Language/SDK/browser
-run `39132992668` checks the updated package. The next repair preserves the
-production run while focused probes validate signal handling.
-Next: publish and test the terminal repairs, audit every remaining production
-job, then publish the complete repair without skipping CI. Squash merge only after
+[PR #167](https://github.com/e6qu/fun-with-pipes/pull/167) is ready for its final
+acceptance run after repair checkpoint `94420ae2`. All currently reported
+failures are repaired; remaining old-head jobs must still be audited.
+Production run `39129847428` at
+`f957980acfb93e3699e55085def1ffd70f4c18b4` remains intact.
+Focused terminal run `39132990289` passes on both Linux architectures; both
+Mac architectures expose the terminal-drain defect described below.
+Language/SDK/browser run `39132992668` passes, including the UTF-8 repair.
+New terminal run `39133970673` and language run `39133975063` check `94420ae2`.
+Next: audit the repaired terminal probes and all nine production jobs plus docs
+at the final PR head; fix any new failures in this PR. Squash merge only after
 all final-head gates pass, with one subject of at most 80 characters and an empty body.
 
 Docs run `39129847367` failed because the handoff cleanup removed the required
@@ -19,15 +21,16 @@ The restored roadmap audit passes (3.01 s), as do tutorial/library documentation
 harnesses (1.08 s) and eight native-runner scheduling checks (1.08 s).
 SDK review also found locale-dependent text reads in C/disassembly reports:
 the published repair explicitly uses UTF-8 and adds Unicode source to the existing
-real-object comparison test. It needs the next focused/native acceptance run.
+real-object comparison test. The updated focused suite passes; final production
+acceptance still needs a new run.
 Focused run `39129853485` now passes: 22 Rust checks, nine Python tests and the
 installed-package browser test, with clean logs and reviewed desktop/mobile images.
-Benchmark, ARM64 macOS GC and Windows AMD64 gates pass; five production jobs
-remain running and regular ARM64 macOS failed. The Mac GC log has 293 passed,
+Benchmark, ARM64 macOS GC and Windows AMD64 gates pass; four production jobs
+remain running and both regular macOS jobs failed. The Mac GC log has 293 passed,
 zero failed and 15 ignored checks. Windows AMD64 has 363 passed, zero failed
 and six ignored checks. Audit logs and metadata are in `/private/tmp/fwp-final-f957`.
-Regular ARM64 macOS now fails only its terminal interruption test: 468 Rust
-checks and the other eight Python tests pass. The test sent SIGINT after a fixed
+Each regular macOS job fails only its terminal interruption test: 468 Rust
+checks and the other eight Python tests pass on each host. The test sent SIGINT after a fixed
 0.3-second delay. Waiting for actual program output fixes interruption in the
 native Mac probe. Its next failure, waiting for exit, had the same cause: macOS
 waits for the PTY peer to consume output before restoring terminal mode.
@@ -38,11 +41,14 @@ reaping fixes the test against the unchanged CI-built compiler (guarded PASS,
 The expanded test separately reproduces a real bug: querying
 `signal.shutdown-requested` replaces the REPL's interrupt handler. The old CI
 compiler fails after the second loop starts (guarded negative control, 23.33 s).
-The pending repair routes Ctrl-C to the active terminal session and preserves
+The published repair routes Ctrl-C to the active terminal session and preserves
 standalone graceful shutdown. A scope guard clears terminal state on exit.
 This Rust repair still needs remote compilation and the full enhanced test.
 Focused terminal jobs use the production O1 profile on Linux/macOS ARM64/AMD64
 and preserve failed compilers for diagnosis.
+An additional standalone test checks normal cleanup after both SIGINT and
+SIGTERM. It passes against the old CI-built Mac compiler (0.51 s under the
+guard); the final run must preserve that behavior with the signal repair.
 
 Python initializers are empty and imports stay at the top, using defining
 modules directly; [AGENTS.md](../AGENTS.md) records these rules. The installed

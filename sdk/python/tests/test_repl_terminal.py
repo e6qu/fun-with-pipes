@@ -6,6 +6,7 @@ import re
 import select
 import signal
 import struct
+import subprocess
 import tempfile
 import time
 import unittest
@@ -19,6 +20,42 @@ if os.name == "posix":
 
 @unittest.skipUnless(os.name == "posix", "this terminal harness uses POSIX PTYs")
 class Terminal(unittest.TestCase):
+    def test_standalone_signals_allow_graceful_shutdown(self):
+        # The REPL handler must not turn ordinary shutdown polling into a trap.
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "shutdown.fwp"
+            source.write_text('''main =
+    signal.shutdown-requested ()
+    | const ()
+    | tap (const "ready" | eprint)
+    | loop (if signal.shutdown-requested (const (Stop ())) (const (Again ())))
+    | const "stopped"
+    | echo
+''', encoding="utf-8")
+            for requested in (signal.SIGINT, signal.SIGTERM):
+                with self.subTest(signal=requested):
+                    with subprocess.Popen(
+                        [os.environ["FWP_TEST_BIN"], "run", "--interp", str(source)],
+                        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                    ) as process:
+                        try:
+                            self.assertTrue(select.select([process.stderr], [], [], 20)[0],
+                                            "shutdown program did not start")
+                            ready = process.stderr.readline()
+                            if not ready:
+                                _, errors = process.communicate(timeout=20)
+                                self.fail(f"shutdown program exited before readiness: {errors.decode()}")
+                            self.assertEqual(ready, b"ready\n")
+                            process.send_signal(requested)
+                            output, errors = process.communicate(timeout=20)
+                            self.assertEqual(process.returncode, 0, errors.decode())
+                            self.assertEqual((output, errors), (b"stopped\n", b""))
+                        finally:
+                            if process.poll() is None:
+                                process.kill()
+                                process.communicate()
+
     def test_completion_history_multiline_and_interrupt(self):
         self.assertTrue(Path(os.environ["FWP_TEST_BIN"]).is_file(), "build fwp before terminal checks")
         with tempfile.TemporaryDirectory() as directory:
