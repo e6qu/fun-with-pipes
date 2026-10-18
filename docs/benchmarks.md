@@ -3041,7 +3041,8 @@ The repair joins related key/value lanes under one allocation owner, also for
 sort scratch, without arbitrary padding. It removes two allocation requests and
 keeps sorting, duplicate handling and callback order. Eight focused local tests
 pass, including all allocation failures, cancellation, aliases and size-overflow
-guards. The first joined-layout performance run passes both Linux jobs and all
+guards. The [first joined-layout performance run](measurements/large-map-storage-2026-10-18.json)
+passes both Linux jobs and all
 76 actual binary/sample audits. However, its AMD64 host is Intel Xeon 8573C,
 whereas the original slow sorting was on AMD EPYC 9V74. Both layouts sort quickly
 on this Xeon, so it cannot establish that the EPYC problem is fixed. Its full-work
@@ -3053,6 +3054,24 @@ their recorded sources and must not be relabeled as measurements of this change.
 Separate diagnostics compare sorting phases for both layouts and measure actual
 construction and query intervals in the same full program. They preserve
 evaluation order and do not infer query time by subtracting unrelated processes.
+
+The [follow-up](https://github.com/e6qu/fun-with-pipes/actions/runs/39106005017)
+reproduces the slow original layout on AMD EPYC 9V74 and verifies that the joined
+layout removes those slow sorting cases. The old layout's slow samples take
+roughly 99–108 ms; joined samples take 14–22 ms, covering both address-bit values.
+Full-work joined/separate medians are 0.905 in tracing and 0.768 in ARC; construction
+ratios are 0.394/0.174. Query intervals remain near 273–279 ms and still include
+the same reference-count requests. This isolates the large gain to construction;
+it is not evidence that query overhead or the separate Xeon regression is fixed.
+The full ARM64 follow-up and an additional AMD64 run remain under audit.
+
+Independent inspection of the actual AMD64 executables finds identical query and
+sorting instructions after resolving address differences. Joined storage removes
+384 bytes of machine code in each memory mode; the tracing cached-table frame
+falls from 104 to 88 bytes, while the ARC frame remains 88 bytes. On ARM64 ARC,
+code shrinks by 416 bytes and the cached-table frame falls from 112 to 96 bytes.
+These are local frame sizes, not whole-program stack bounds. Code identity does
+not imply identical cache placement or elapsed time.
 
 Two other candidates were rejected: moving integer equality outside the search
 is 8–9% slower on ARM64, and separating cached initialization shows no clear

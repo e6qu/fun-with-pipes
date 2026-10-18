@@ -107,7 +107,7 @@ def main():
                 counters = variant['counters']
                 assert counters['retains'] == counters['finalChargedBytes'] == counters['collections'] == 0
                 count = case['inputs']
-                expected = (4 if fused == '1' else 2 * count + 5) if case['kind'] == 'set' else (7 if fused == '1' else 3 * count + 8)
+                expected = (4 if fused == '1' else 2 * count + 5) if case['kind'] == 'set' else (5 if fused == '1' else 3 * count + 6)
                 assert counters['requests'] == expected, (host, case['kind'], count, fused, counters)
                 assert len(variant['processWallNs']) == 8 and min(variant['processWallNs']) > 0
                 assert variant['medianProcessWallNs'] == statistics.median(variant['processWallNs'])

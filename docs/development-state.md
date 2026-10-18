@@ -2,7 +2,13 @@
 
 ## Next action
 
-Next: publish and run the additional storage-phase diagnostics. Performance run
+Next: finish auditing storage-phase run `39106005017` at `93cb93a0`, and AMD64-only
+repeat `39106417923` at the same source. The EPYC job now reproduces the old slow
+sorting and verifies the joined-layout repair: old slow cases 99–108 ms versus
+14–22 ms joined, both address-bit values covered. Full-work ratios are 0.905
+tracing / 0.768 ARC; construction ratios 0.394/0.174. All 46 binaries/samples pass.
+ARM64 follow-up is still running; the separate Xeon question remains open.
+Performance run
 `39104667835` passes both jobs and all 76 binary/sample checks, but does not prove
 the repair: its AMD64 host is Intel Xeon 8573C, while the original slow sorting
 was on AMD EPYC 9V74. Both old/new layouts are fast on this Xeon. Full-work
@@ -92,6 +98,17 @@ full suites, full benchmarks and large reports remain on GitHub.
 - The report description now explains that input keys are scrambled, not already
   sorted. Historical raw reports retain their text with an explicit correction;
   samples, source IDs and binary hashes are unchanged.
+- A second collector assumption still expected seven fused-map allocations and
+  `3*n+8` ordinary-map allocations. Corrected to five and `3*n+6`, matching joined
+  input/scratch owners. All twelve actual ARM64 cost rows pass the real collector
+  assertions; twelve deliberately wrong counts are rejected. Three log-audit
+  regressions and docs checks pass (2.89 s guarded). Sets remain unchanged.
+- Initial joined-layout reports and independent actual-code checks are recorded
+  in `docs/measurements/large-map-storage-2026-10-18.json` (2.76 s guarded).
+  AMD64 query/sort instructions match after address normalization; machine code
+  is 384 bytes smaller. Cached-table frames are 104 → 88 tracing, 88 → 88 ARC.
+  The first local disassembly parser assumed an eight-line prologue and failed
+  on the sorter; it now reads through the first call and passes (0.15 s guarded).
 
 The old phase/lookup source is preserved as `evidence/large-map-phases-20261018`;
 its unused candidate scripts are removed. The report collector previously expected 56 allocation failures and four leaked
