@@ -68,8 +68,10 @@ class Terminal(unittest.TestCase):
                     expect("...:")
                 send(":end\r")
                 expect("In [7]:")
-                send("0 | forever\r")
-                time.sleep(0.3)
+                # Wait for actual evaluation, not a guessed delay after input.
+                # Interrupting editing/checking exercises a different path.
+                send('0 | tap (const "loop started" | echo) | forever\r')
+                expect("\r\nloop started\r\n")
                 os.kill(pid, signal.SIGINT)
                 expect("interrupted")
                 expect("In [8]:")

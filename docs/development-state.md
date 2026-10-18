@@ -2,14 +2,40 @@
 
 ## Next action
 
-Publish the final combined [PR #167](https://github.com/e6qu/fun-with-pipes/pull/167)
-head without skipping CI. Run the nine production gates, documentation audit,
-`numerics.yml` suite `language`, and suite `map-borrow` (baseline run
-`39106005017`, baseline source `93cb93a0f717b317814ecfc162de0c2f516dbfbd`).
-Audit every job and fix all failures together. Squash merge only after all
-final-head gates pass, with one subject of at most 80 characters and an empty body.
+Final combined [PR #167](https://github.com/e6qu/fun-with-pipes/pull/167) head
+`f957980acfb93e3699e55085def1ffd70f4c18b4` is published. Production run
+`39129847428`, docs `39129847367`, language `39129853485` and map-borrow
+`39129855448` are queued/running. The map baseline is run `39106005017`, source
+`93cb93a0f717b317814ecfc162de0c2f516dbfbd`.
+Next: publish the prepared repair checkpoint with `[skip ci]` so the current
+production run can finish; dispatch `numerics.yml` suite `repl-terminal` on all
+four POSIX hosts. Audit every remaining job, then publish the complete repair
+without skipping CI. Squash merge only after all final-head gates pass, with
+one subject of at most 80 characters and an empty body.
 
-The latest published checkpoint is `63a0b99b`; focused run
+Docs failed because the handoff cleanup removed the required roadmap-status
+table and `Next:` marker. Both are restored locally; the audit must pass before
+publishing the combined repair. Other final-head jobs are still running/queued.
+The restored roadmap audit passes (3.01 s), as do tutorial/library documentation
+harnesses (1.08 s) and eight native-runner scheduling checks (1.08 s).
+SDK review also found locale-dependent text reads in C/disassembly reports:
+the local repair explicitly uses UTF-8 and adds Unicode source to the existing
+real-object comparison test. It needs the next focused/native acceptance run.
+Focused run `39129853485` now passes: 22 Rust checks, nine Python tests and the
+installed-package browser test, with clean logs and reviewed desktop/mobile images.
+Benchmark and ARM64 macOS GC gates pass; seven production jobs remain. The Mac GC
+log has 293 passed, zero failed and 15 ignored checks. Initial Windows artifacts
+have 135 passed, zero failed/ignored checks on each architecture; later groups
+are still running. Audit logs and metadata are in `/private/tmp/fwp-final-f957`.
+Regular ARM64 macOS now fails only its terminal interruption test: 468 Rust
+checks and the other eight Python tests pass. The test sent SIGINT after a fixed
+0.3-second delay. Its repair waits for actual program output before signalling,
+so the probe can distinguish an input/checking race from runtime interruption.
+This hypothesis still needs native verification; no timeout or assertion is
+weakened. The new focused terminal workflow uses the production compiler's O1
+profile on Linux/macOS ARM64/AMD64 and preserves failed compilers for diagnosis.
+
+The preceding checkpoint is `63a0b99b`; focused run
 [39129005531](https://github.com/e6qu/fun-with-pipes/actions/runs/39129005531)
 passed formatting, all-target Clippy, 22 Rust checks, nine Python integration
 tests and real Chromium notebook execution. Its complete log was audited:
@@ -18,7 +44,7 @@ multiline entry and execution interruption pass. Imported type changes are
 rejected before they can reinterpret stored REPL values; restoring the old module
 leaves those values usable.
 
-Local changes since that checkpoint empty Python package initializers, use direct
+Published changes since that checkpoint empty Python package initializers, use direct
 module imports, and move all imports to the top of files. These rules are in
 [AGENTS.md](../AGENTS.md). The browser workflow now installs the actual Python
 package in a virtual environment, testing packaged assets and the launcher.
@@ -62,6 +88,18 @@ execution on that target.
   Examples introduce notation and show why their output follows. Proposed weak
   references and guaranteed tail recursion are not presented as implemented APIs.
 
+## Roadmap status
+
+| Step | Status | Remaining focus |
+|---|---|---|
+| 1 | In progress | Ownership/cycle contracts, tracing removal and limited ARC |
+| 2 | In progress | Functional intermediates, copies and eligible tail recursion |
+| 3 | In progress | Equivalent-work C/Rust gaps and machine-code costs |
+| 4 | In progress | Derivative precision, speed and storage |
+| 5 | In progress | CPU kernels and ahead-of-time device execution |
+| 6 | In progress | Reproducible comparisons and regression budgets |
+| 7 | In progress | Representative larger applications |
+
 The seven project work areas in [PLAN.md](../PLAN.md) remain open. Default tracing
 removal is unfinished. JIT is excluded. After this delivery, the next substantial
 work is cycle-safe ownership contracts and eligible tail-recursion elimination,
@@ -93,9 +131,13 @@ not all layout or performance goals.
 
 Earlier integrated run `39125883230` at `085626f3` also passed all five jobs,
 80 binary/source/profile records and 60 checks, including Intel 8370C/6973P-C.
-The final-head audit should compare emitted C and actual binary hashes against
-`e1fb8ba3` to establish whether its matching-Xeon measurement still describes
-identical emitted programs. Do not infer that from source intent alone.
+Repeat run `39129855448` at `f957980a` passes all five jobs and 60 checks.
+Audit verified all 80 binaries/profiles and generated C; all match earlier
+same-architecture artifacts byte for byte. Two more Xeon samples give combined
+tracing ratios 0.9731 and 0.9702. All raw faster/slower results are retained in
+[the repeat report](measurements/cached-map-repeat-2026-10-18.json).
+Audits `/private/tmp/fwp-audit-map-borrow-f957.py` (31.90 s) and
+`/private/tmp/fwp-compare-map-programs.py` (0.15 s) pass through the unchanged guard.
 
 ## Local evidence and workspaces
 

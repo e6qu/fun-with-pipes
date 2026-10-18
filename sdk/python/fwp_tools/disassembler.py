@@ -65,7 +65,7 @@ class Disassembler:
         source = Path(source).resolve()
         directory = Path(directory).resolve()
         directory.mkdir(parents=True, exist_ok=False)
-        report = {"source": str(source), "source_text": source.read_text(),
+        report = {"source": str(source), "source_text": source.read_text(encoding="utf-8"),
                   "executed": False, "kind": "relocatable objects", "targets": [], "variants": []}
         for target in targets:
             generated = directory / f"{target.name}.c"
@@ -73,7 +73,7 @@ class Disassembler:
                             str(source), "-o", str(generated)]
             emitted = self._run_result(emit_command)
             report["targets"].append({"name": target.name, "fwp_target": target.fwp_target,
-                "generated_c": generated.read_text(), "c_file": str(generated),
+                "generated_c": generated.read_text(encoding="utf-8"), "c_file": str(generated),
                 "c_sha256": hashlib.sha256(generated.read_bytes()).hexdigest(),
                 "emit_command": emit_command, "emit_stdout": emitted.stdout, "emit_stderr": emitted.stderr})
             version = self._run([target.compiler, "--version"])
@@ -92,5 +92,5 @@ class Disassembler:
                                            "compiler_stdout": compiled.stdout, "compiler_stderr": compiled.stderr,
                                            "command": command, "binary_sha256": hashlib.sha256(binary.read_bytes()).hexdigest(),
                                            **listing})
-                (directory / "report.json").write_text(json.dumps(report, indent=2) + "\n")
+                (directory / "report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         return report

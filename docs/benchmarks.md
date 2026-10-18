@@ -1948,3 +1948,14 @@ within this runner's sample; it does not cover differences between machines or
 future runs. The raw report records the seed, method and intervals for all three
 Xeon comparisons. The old slowdown's interval remains above one, and the new
 program's interval below one.
+
+A repeat at `f957980a`, [run 39129855448](https://github.com/e6qu/fun-with-pipes/actions/runs/39129855448),
+passed all five jobs and 60 focused checks. All 80 ordinary/profile binaries and
+their generated C match the earlier same-architecture artifacts byte for byte.
+Two further Xeon 8573C samples put the joined-borrowed/old-separate tracing ratio
+at **0.9731** and **0.9702**: 2.69% and 2.98% less process time. This repeats the
+named repair with identical machine code, rather than measuring another compiler
+optimization. [All repeat samples and profiles](measurements/cached-map-repeat-2026-10-18.json)
+are retained. Joined borrowing is faster in both modes on all five samples;
+separate-layout borrowing remains slower on both Xeon tracing samples (4.83%
+and 3.65%) and EPYC 9V74 tracing/ARC (8.29% and 4.65%).
