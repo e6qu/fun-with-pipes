@@ -74,3 +74,7 @@ pub mod web;
 pub mod yaml;
 
 pub(crate) mod resource;
+
+pub mod disassemble;
+
+pub mod debugger;

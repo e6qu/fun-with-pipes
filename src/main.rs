@@ -89,6 +89,8 @@ usage:
   fwp test --std                 run the standard library's tests
   fwp check <file.fwp>           type-check a file and print inferred types
   fwp check --parse <file.fwp>   parse a file and print its syntax tree
+  fwp debug [--json] FILE       interactive interpreter debugger
+  fwp disassemble [--json] [--tool PATH] BINARY  inspect native instructions
   fwp repl [--no-history | --history PATH]  interactive interpreted session
   fwp fmt [--check] [paths...]   format files in place (directories are
                                  searched for .fwp files; default: .);
@@ -197,6 +199,12 @@ fn main() -> ExitCode {
         return not_in_wasm("`--link` (C code for foreign functions)");
     }
     match args.first().map(String::as_str) {
+        Some("debug") => {
+            let options = args[1..].to_vec();
+            ExitCode::from(fwp::driver::with_big_stack(move || fwp::debugger::run(&options)) as u8)
+        }
+        Some("disassemble") if IN_WASM => not_in_wasm("`fwp disassemble` (it needs LLVM tools)"),
+        Some("disassemble") => ExitCode::from(fwp::disassemble::run(&args[1..]) as u8),
         Some("repl") => {
             let options = args[1..].to_vec();
             ExitCode::from(fwp::driver::with_big_stack(move || fwp::repl::run(&options)) as u8)

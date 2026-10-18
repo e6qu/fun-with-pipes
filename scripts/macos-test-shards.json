@@ -120,7 +120,8 @@
     "pipe_ownership",
     "c-interop",
     "repl",
-    "scalar_math"
+    "scalar_math",
+    "debugger"
   ],
   "gc": [
     "web",

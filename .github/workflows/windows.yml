@@ -56,7 +56,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --lib sys::tty::tests::native_console -- --exact 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --test softfloat_core --test float_math --test scalar_math --test repl --test infix -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          cargo test --test softfloat_core --test float_math --test scalar_math --test repl --test debugger --test infix -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --test compiler_options --test native_allocator --test windows_context --test native_sockets --test library_unload -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

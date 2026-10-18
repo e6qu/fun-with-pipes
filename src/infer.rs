@@ -814,13 +814,14 @@ impl<'a> Infer<'a> {
         for &i in group {
             let b = &self.env.bindings[i];
             let binding_span = b.span;
+            let binding_name = b.name.clone();
             let t = match &self.env.globals[&b.name].scheme {
                 Some(s) if b.annotated => s.ty.clone(),
                 _ => self.group.get(&b.name).cloned().unwrap_or(Type::unit()),
             };
             let mut t = self.env.table.resolve(&t);
-            if self.env.interactive_root.as_deref() == Some(b.name.as_str())
-                && b.name != "main::repl-query"
+            if self.env.interactive_root.as_deref() == Some(binding_name.as_str())
+                && binding_name != "main::repl-query"
             {
                 let span = binding_span;
                 let predicate = Pred {
@@ -840,7 +841,7 @@ impl<'a> Infer<'a> {
                             binding_span,
                             format!(
                                 "`{}` performs effects ({}) before receiving all of its arguments",
-                                display_name(&b.name),
+                                display_name(&binding_name),
                                 labels.join(", ")
                             ),
                         )

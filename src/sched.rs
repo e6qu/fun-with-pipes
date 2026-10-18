@@ -791,6 +791,7 @@ impl<'p> Interp<'p> {
         }
         let child = Interp {
             prog: self.prog,
+            debugger: self.debugger.clone(),
             cafs: self.cafs.clone(),
             state: Vec::new(),
             rng: self.rng ^ (Arc::as_ptr(&task) as u64).rotate_left(17),

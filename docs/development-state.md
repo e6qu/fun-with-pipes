@@ -35,7 +35,15 @@ diagnostics have the same cause; the call is repaired. Rust/tests were not reach
 Run `39124700912` then compiled C++ and reported a Rust token-name error in
 REPL continuation detection (`Tok::Kw` versus `Tok::Keyword`); repaired locally.
 The next focused dispatch must check this repair and the remaining implementation.
-Notebook/debugger/disassembler work has not yet been implemented.
+Run `39125003915` reported a borrow-check error in the new REPL resource check;
+locally repaired by ending the binding borrow before solving its Dup constraint.
+The debugger now has initial call/expression/binding/return/error hooks, per-task
+frames, function breakpoints, typed snapshots and JSON control. Initial native
+disassembly parsing is implemented. Both remain unverified. Notebook, Python SDK,
+source-level debugger sites and C/target/optimization comparisons remain in progress.
+The obsolete documentation-head production run was audited (no failed jobs;
+Windows AMD64, both ARM macOS jobs and benchmarks passed) and cancelled to avoid
+wasting runners. Full final-head acceptance remains mandatory.
 The previous documentation-only head `8060075e` has passing docs, benchmarks and
 both ARM macOS jobs; the other six production jobs were still running without a
 reported failure at the last audit. Its production run is `39120276898` and docs

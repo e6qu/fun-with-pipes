@@ -65,6 +65,7 @@ pub(crate) fn set_raw_stack_limit(limit: usize) {
 
 pub struct Interp<'p> {
     pub prog: &'p Program,
+    pub(crate) debugger: Option<crate::debugger::Shared>,
     /// Values of argument-less functions, shared by all tasks.
     pub(crate) cafs: Rc<RefCell<Vec<Option<Value>>>>,
     pub(crate) state: Vec<Value>,
@@ -98,6 +99,7 @@ impl<'p> Interp<'p> {
         let root_out: *mut (dyn Write + 'p) = &mut *out;
         Interp {
             prog,
+            debugger: None,
             cafs: Rc::new(RefCell::new(vec![None; prog.funcs.len()])),
             state: Vec::new(),
             rng: seed | 1,
@@ -128,6 +130,17 @@ impl<'p> Interp<'p> {
     }
 
     pub fn call(&mut self, id: FuncId, args: Vec<Value>) -> R<Value> {
+        let Some(debugger) = self.debugger.clone() else {
+            return self.call_inner(id, args);
+        };
+        let task = std::sync::Arc::as_ptr(&self.task) as usize;
+        debugger.borrow_mut().enter(self.prog, task, id, &args)?;
+        let result = self.call_inner(id, args);
+        debugger.borrow_mut().leave(self.prog, task, id, &result)?;
+        result
+    }
+
+    fn call_inner(&mut self, id: FuncId, args: Vec<Value>) -> R<Value> {
         if crate::repl::interrupted() {
             return Err(Ctl::Cancelled);
         }
@@ -203,6 +216,13 @@ impl<'p> Interp<'p> {
     }
 
     pub fn eval(&mut self, e: &Expr, locals: &mut Vec<Value>) -> R<Value> {
+        if let Some(debugger) = &self.debugger {
+            debugger.borrow_mut().expression(
+                self.prog,
+                std::sync::Arc::as_ptr(&self.task) as usize,
+                e,
+            )?;
+        }
         match e {
             Expr::ResourceRegion {
                 parameters,
@@ -269,23 +289,54 @@ impl<'p> Interp<'p> {
             Expr::BorrowGlobal(l, global, body) => {
                 let value = self.func_value(*global)?;
                 locals[*l as usize] = value;
+                self.debug_binding(*l, &locals[*l as usize])?;
                 self.eval(body, locals)
             }
             Expr::Let(l, v, body) => {
                 let x = self.eval(v, locals)?;
                 locals[*l as usize] = x;
+                self.debug_binding(*l, &locals[*l as usize])?;
                 self.eval(body, locals)
             }
             Expr::Match(scrut, arms) => {
                 let v = self.eval(scrut, locals)?;
                 for (p, body) in arms {
                     if bind(p, &v, locals) {
+                        self.debug_pattern(p, locals)?;
                         return self.eval(body, locals);
                     }
                 }
                 trap("internal: no match arm applies")
             }
         }
+    }
+
+    fn debug_binding(&self, slot: u32, value: &Value) -> R<()> {
+        if let Some(debugger) = &self.debugger {
+            debugger.borrow_mut().bind(
+                self.prog,
+                std::sync::Arc::as_ptr(&self.task) as usize,
+                slot,
+                value,
+            )?;
+        }
+        Ok(())
+    }
+
+    fn debug_pattern(&self, pattern: &Pat, locals: &[Value]) -> R<()> {
+        if self.debugger.is_none() {
+            return Ok(());
+        }
+        match pattern {
+            Pat::Bind(slot) => self.debug_binding(*slot, &locals[*slot as usize])?,
+            Pat::Construct(_, patterns) | Pat::Record(patterns) => {
+                for pattern in patterns {
+                    self.debug_pattern(pattern, locals)?;
+                }
+            }
+            _ => {}
+        }
+        Ok(())
     }
 
     // ----- primitives ------------------------------------------------------------
@@ -329,6 +380,39 @@ impl<'p> Interp<'p> {
     }
 
     fn prim(&mut self, id: FuncId, sym: &str, mut a: Vec<Value>) -> R<Value> {
+        if let Some(debugger) = &self.debugger {
+            if matches!(sym, "read-line" | "read-all" | "read-lines") {
+                let mut bytes = debugger.borrow_mut().read_input(sym == "read-line")?;
+                return Ok(if sym == "read-line" {
+                    if bytes.is_empty() {
+                        Value::nullary(0)
+                    } else {
+                        if bytes.ends_with(b"\n") {
+                            bytes.pop();
+                            if bytes.ends_with(b"\r") {
+                                bytes.pop();
+                            }
+                        }
+                        Value::data(1, vec![Value::str(&String::from_utf8_lossy(&bytes))])
+                    }
+                } else {
+                    let text = String::from_utf8_lossy(&bytes);
+                    if sym == "read-all" {
+                        Value::str(&text)
+                    } else {
+                        Value::list(
+                            crate::prims_std::split_lines(&text)
+                                .iter()
+                                .map(|s| Value::str(s))
+                                .collect(),
+                        )
+                    }
+                });
+            }
+            if sym == "term.read-secret" {
+                return trap("secret terminal input is unavailable in debugger sessions; pass program data through --input FILE");
+            }
+        }
         let (params, result) = self.sig(id);
         match sym {
             "ad.scope" | "ad.scope2" => {
