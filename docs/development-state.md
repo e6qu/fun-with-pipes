@@ -2,54 +2,52 @@
 
 ## Next action
 
-Final combined [PR #167](https://github.com/e6qu/fun-with-pipes/pull/167) head
-`f957980acfb93e3699e55085def1ffd70f4c18b4` is published. Production run
-`39129847428`, docs `39129847367`, language `39129853485` and map-borrow
-`39129855448` are queued/running. The map baseline is run `39106005017`, source
-`93cb93a0f717b317814ecfc162de0c2f516dbfbd`.
-Next: publish the prepared repair checkpoint with `[skip ci]` so the current
-production run can finish; dispatch `numerics.yml` suite `repl-terminal` on all
-four POSIX hosts. Audit every remaining job, then publish the complete repair
-without skipping CI. Squash merge only after all final-head gates pass, with
-one subject of at most 80 characters and an empty body.
+[PR #167](https://github.com/e6qu/fun-with-pipes/pull/167) repair checkpoint
+`763e245b` is published with `[skip ci]`; the preceding production run
+`39129847428` at `f957980acfb93e3699e55085def1ffd70f4c18b4` remains intact.
+Focused terminal run `39132990289` passes on both Linux architectures; macOS
+ARM64 exposed the terminal-drain defect described below. Language/SDK/browser
+run `39132992668` checks the updated package. The next repair preserves the
+production run while focused probes validate signal handling.
+Next: publish and test the terminal repairs, audit every remaining production
+job, then publish the complete repair without skipping CI. Squash merge only after
+all final-head gates pass, with one subject of at most 80 characters and an empty body.
 
-Docs failed because the handoff cleanup removed the required roadmap-status
-table and `Next:` marker. Both are restored locally; the audit must pass before
-publishing the combined repair. Other final-head jobs are still running/queued.
+Docs run `39129847367` failed because the handoff cleanup removed the required
+roadmap-status table and `Next:` marker. Both are restored in `763e245b`.
 The restored roadmap audit passes (3.01 s), as do tutorial/library documentation
 harnesses (1.08 s) and eight native-runner scheduling checks (1.08 s).
 SDK review also found locale-dependent text reads in C/disassembly reports:
-the local repair explicitly uses UTF-8 and adds Unicode source to the existing
+the published repair explicitly uses UTF-8 and adds Unicode source to the existing
 real-object comparison test. It needs the next focused/native acceptance run.
 Focused run `39129853485` now passes: 22 Rust checks, nine Python tests and the
 installed-package browser test, with clean logs and reviewed desktop/mobile images.
-Benchmark and ARM64 macOS GC gates pass; seven production jobs remain. The Mac GC
-log has 293 passed, zero failed and 15 ignored checks. Initial Windows artifacts
-have 135 passed, zero failed/ignored checks on each architecture; later groups
-are still running. Audit logs and metadata are in `/private/tmp/fwp-final-f957`.
+Benchmark, ARM64 macOS GC and Windows AMD64 gates pass; five production jobs
+remain running and regular ARM64 macOS failed. The Mac GC log has 293 passed,
+zero failed and 15 ignored checks. Windows AMD64 has 363 passed, zero failed
+and six ignored checks. Audit logs and metadata are in `/private/tmp/fwp-final-f957`.
 Regular ARM64 macOS now fails only its terminal interruption test: 468 Rust
 checks and the other eight Python tests pass. The test sent SIGINT after a fixed
-0.3-second delay. Its repair waits for actual program output before signalling,
-so the probe can distinguish an input/checking race from runtime interruption.
-This hypothesis still needs native verification; no timeout or assertion is
-weakened. The new focused terminal workflow uses the production compiler's O1
-profile on Linux/macOS ARM64/AMD64 and preserves failed compilers for diagnosis.
+0.3-second delay. Waiting for actual program output fixes interruption in the
+native Mac probe. Its next failure, waiting for exit, had the same cause: macOS
+waits for the PTY peer to consume output before restoring terminal mode.
+A native stack sample confirms `tcsetattr`/`TCSADRAIN`; draining output while
+reaping fixes the test against the unchanged CI-built compiler (guarded PASS,
+2.82 s). No timeout or assertion was weakened.
 
-The preceding checkpoint is `63a0b99b`; focused run
-[39129005531](https://github.com/e6qu/fun-with-pipes/actions/runs/39129005531)
-passed formatting, all-target Clippy, 22 Rust checks, nine Python integration
-tests and real Chromium notebook execution. Its complete log was audited:
-no failures or resource/leaked-process warnings. Terminal completion, history,
-multiline entry and execution interruption pass. Imported type changes are
-rejected before they can reinterpret stored REPL values; restoring the old module
-leaves those values usable.
+The expanded test separately reproduces a real bug: querying
+`signal.shutdown-requested` replaces the REPL's interrupt handler. The old CI
+compiler fails after the second loop starts (guarded negative control, 23.33 s).
+The pending repair routes Ctrl-C to the active terminal session and preserves
+standalone graceful shutdown. A scope guard clears terminal state on exit.
+This Rust repair still needs remote compilation and the full enhanced test.
+Focused terminal jobs use the production O1 profile on Linux/macOS ARM64/AMD64
+and preserve failed compilers for diagnosis.
 
-Published changes since that checkpoint empty Python package initializers, use direct
-module imports, and move all imports to the top of files. These rules are in
-[AGENTS.md](../AGENTS.md). The browser workflow now installs the actual Python
-package in a virtual environment, testing packaged assets and the launcher.
-It also includes the matching Xeon measurements below and clearer notebook text.
-Those final changes still need remote acceptance.
+Python initializers are empty and imports stay at the top, using defining
+modules directly; [AGENTS.md](../AGENTS.md) records these rules. The installed
+package's browser assets and launcher pass the `f957980a` focused run. These
+results do not replace final-head production acceptance.
 
 Do not restart passing CI solely to record run IDs: fold bookkeeping into a
 necessary repair or retain the local handoff until acceptance. Full Linux gates

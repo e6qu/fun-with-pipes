@@ -1,4 +1,5 @@
 """Real terminal editing checks on POSIX; Windows SDK tests remain native."""
+import errno
 import os
 from pathlib import Path
 import re
@@ -75,9 +76,19 @@ class Terminal(unittest.TestCase):
                 os.kill(pid, signal.SIGINT)
                 expect("interrupted")
                 expect("In [8]:")
-                send("1 + 2\r")
-                expect("Out[8]: 3")
+                # The shutdown API installs its own handler. It must not disable
+                # interruption of later REPL evaluations.
+                send("signal.shutdown-requested ()\r")
+                expect("Out[8]: False")
                 expect("In [9]:")
+                send('0 | tap (const "loop started" | echo) | forever\r')
+                expect("\r\nloop started\r\n")
+                os.kill(pid, signal.SIGINT)
+                expect("interrupted")
+                expect("In [10]:")
+                send("1 + 2\r")
+                expect("Out[10]: 3")
+                expect("In [11]:")
                 send(":quit\r")
                 # Reap with a deadline: a terminal cleanup bug must fail, not hang.
                 end = time.monotonic() + 10
@@ -88,7 +99,14 @@ class Terminal(unittest.TestCase):
                         self.assertEqual(os.waitstatus_to_exitcode(status), 0)
                         break
                     self.assertLess(time.monotonic(), end, "REPL did not exit")
-                    time.sleep(0.02)
+                    # macOS TCSADRAIN waits for the PTY peer to consume output
+                    # before restoring terminal mode. Keep reading while reaping.
+                    if select.select([terminal], [], [], 0.02)[0]:
+                        try:
+                            os.read(terminal, 65536)
+                        except OSError as error:
+                            if error.errno != errno.EIO:  # Linux PTY end-of-file.
+                                raise
                 self.assertIn("alpha = 7", history.read_text())
                 self.assertIn("alpha | add 1", history.read_text())
             finally:

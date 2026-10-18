@@ -402,8 +402,11 @@ static SHUTDOWN: AtomicBool = AtomicBool::new(false);
 static SIGNALS: std::sync::Once = std::sync::Once::new();
 
 #[cfg(all(not(target_family = "wasm"), not(windows)))]
-extern "C" fn on_signal(_: i32) {
+extern "C" fn on_signal(signal: i32) {
     SHUTDOWN.store(true, AO::SeqCst);
+    if signal == 2 {
+        crate::repl::interrupt_from_signal();
+    }
 }
 
 #[cfg(windows)]
@@ -412,6 +415,9 @@ extern "system" fn on_console_signal(signal: u32) -> i32 {
         return 0;
     }
     SHUTDOWN.store(true, AO::SeqCst);
+    if signal <= 1 {
+        crate::repl::interrupt_from_signal();
+    }
     1
 }
 

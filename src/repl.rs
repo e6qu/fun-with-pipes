@@ -17,8 +17,20 @@ use crate::ir::{Body, Expr, FuncId, Program, MT};
 use crate::value::{Closure, Value};
 
 static INTERRUPTED: AtomicBool = AtomicBool::new(false);
+static TERMINAL_ACTIVE: AtomicBool = AtomicBool::new(false);
+
+/// Shutdown-status queries can install another process signal handler. That
+/// handler must still interrupt an active terminal session, without changing
+/// graceful shutdown into cancellation for standalone interpreted programs.
+#[cfg(not(target_family = "wasm"))]
+pub(crate) fn interrupt_from_signal() {
+    if TERMINAL_ACTIVE.load(Ordering::Relaxed) {
+        INTERRUPTED.store(true, Ordering::Relaxed);
+    }
+}
+
 pub(crate) fn interrupted() -> bool {
-    INTERRUPTED.load(Ordering::Relaxed)
+    TERMINAL_ACTIVE.load(Ordering::Relaxed) && INTERRUPTED.load(Ordering::Relaxed)
 }
 
 const HELP: &str = "Enter expressions or ordinary fwp declarations. No JIT is used.

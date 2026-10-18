@@ -52,6 +52,9 @@ Use `:paste` / `:end` for a block containing several declarations.
 Tab completes names and commands. Arrow keys move through previous entries;
 Ctrl-R searches them. Ctrl-C discards unfinished input or interrupts interpreted
 calls. Blocking I/O can finish before the interpreter sees the interruption.
+In this terminal session, Ctrl-C also interrupts code that polls
+`signal.shutdown-requested`. Standalone programs keep that API's graceful
+shutdown behavior.
 Ctrl-D on empty input or `:quit` exits. A type error or runtime trap leaves the
 session open; a failed redefinition leaves the prior definition available.
 

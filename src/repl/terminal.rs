@@ -10,6 +10,14 @@ use rustyline::validate::{ValidationContext, ValidationResult, Validator};
 use rustyline::{CompletionType, Config, Context, Editor, Helper};
 use std::borrow::Cow;
 
+struct TerminalSignals;
+impl Drop for TerminalSignals {
+    fn drop(&mut self) {
+        TERMINAL_ACTIVE.store(false, Ordering::Relaxed);
+        INTERRUPTED.store(false, Ordering::Relaxed);
+    }
+}
+
 struct InputHelper {
     names: Vec<String>,
     brackets: MatchingBracketHighlighter,
@@ -91,7 +99,9 @@ pub(super) fn run(
     history: Option<PathBuf>,
     no_history: bool,
 ) -> Result<(), String> {
-    ctrlc::set_handler(|| INTERRUPTED.store(true, Ordering::Relaxed)).map_err(|e| e.to_string())?;
+    ctrlc::set_handler(interrupt_from_signal).map_err(|e| e.to_string())?;
+    TERMINAL_ACTIVE.store(true, Ordering::Relaxed);
+    let _signals = TerminalSignals;
     let mut session = Session::new(directory)?;
     let config = Config::builder()
         .completion_type(CompletionType::List)
