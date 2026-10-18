@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -95,6 +95,33 @@ jobs:
         with:
           name: artifact-paths-${{ matrix.runner }}
           path: artifact-path-evidence/
+          if-no-files-found: error
+  collection_report:
+    if: inputs.suite == 'collection-report'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_HEAD: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install binary inspection tools
+        run: sudo apt-get update && sudo apt-get install -y llvm
+      - name: Audit all hosts and inspect their saved binaries
+        run: python3 scripts/summarize-collection-build.py --run "$EVIDENCE_RUN" --head "$EVIDENCE_HEAD" --artifacts collection-report/artifacts --llvm-bin /usr/bin --output collection-report/report.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: collection-build-report
+          path: |
+            collection-report/report.json
+            collection-report/artifacts/*.log
+            collection-report/artifacts/**/*.disassembly.txt
+            collection-report/artifacts/**/*.symbols.txt
           if-no-files-found: error
   collection_build:
     if: inputs.suite == 'collection-build'

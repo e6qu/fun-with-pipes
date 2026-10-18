@@ -7,7 +7,14 @@ while finishing active PR #165 from the root workspace. Do not open another PR
 until #165 is accepted. Fix every failed check before delivery.
 The authoritative delivery handoff is
 `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
-This worktree prepares numeric collection construction and has no active PR. Its base is repaired PR head `836f39b3`;
+This worktree prepares numeric collection construction and has no active PR.
+Measured source is `cf2fb20c1cf3326187b998789bc31990cfcbcf65`; six-host run
+`39096618831` is queued/running. Audit via `/private/tmp/fwp-audit-collection-build.py`.
+After all six jobs pass, dispatch `collection-report` with `evidence_run=39096618831`
+and `source_revision=cf2fb20c1cf3326187b998789bc31990cfcbcf65`. It audits all four
+test targets, verifies raw counters/timings and inspects 120 actual binaries as
+data on GitHub, retaining disassembly and section sizes. It does not execute
+downloaded artifacts. This avoids large local evidence processing. Its base is repaired PR head `836f39b3`;
 rebase onto the accepted #165 tree before opening its delivery PR. Do not carry this
 preparation-only handoff into the delivered branch.
 
@@ -84,7 +91,8 @@ randomized order, allocation counts, compiler commands, code size and assembly.
 It does not compare C/Rust; the production benchmark remains that comparison.
 Windows production and the regular macOS schedule include the new target.
 The first docs preflight caught the missing seven-step table in this preparation
-handoff; the table is restored before publication. The corrected docs/workflow/fixture
+handoff; the table is restored before publication. Report-tool syntax and workflow checks
+also pass (7.34 s guarded). The corrected docs/workflow/fixture
 preflight passes (6.89 s), including all eight native-runner checks. One invocation
 used the root directory by mistake and found no prototype script; rerunning in
 this worktree resolved that command error.
