@@ -265,15 +265,17 @@ the callback produces `0, 1, 2, 0`, and the set removes the duplicate zero.
 When map input contains duplicate keys, the first key and last value survive.
 
 The compiler now combines `map f | map.from-list` or `map f | set.from-list`
-when the stored fields are inline integers, F32 or F64. It runs every callback
+when the stored fields are integers, F32 or F64 held directly in machine words
+rather than separate heap objects. It runs every callback
 in input order, writes the numeric fields into temporary buffers, then sorts
 and removes duplicates. An immediate I64 `range` can supply numbers directly,
 without allocating its input list. Other list sources remain borrowed, so their
 aliases stay alive. Boxed numbers and managed result fields keep their existing
 construction rules. This changes no language notation or inference rule.
 
-Known expression callbacks whose worker returns two fields can write map keys
-and values directly, avoiding temporary tuples. Captured values still use the
+When an ordinary callback is known at compile time, its generated function can
+return the two numeric fields directly, avoiding temporary tuples. This uses
+the compiler's existing field-return calling convention. Captured values still use the
 ordinary argument ownership rules. Dynamic callbacks use their normal call
 convention and share the same protected buffer construction. Errors and task
 cancellation release unfinished buffers. Empty or reversed ranges call no
