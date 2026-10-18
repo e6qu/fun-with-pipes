@@ -1068,6 +1068,39 @@ impl NativeNumber {
     }
 }
 
+// Both dynamic callbacks and direct workers use the same protected numeric
+// buffers. `callback` writes keys[i] and vals[i]; all fields are unboxed.
+fn numeric_collection_body(
+    count: &str,
+    iterator: &str,
+    input: &str,
+    callback: &str,
+    descriptor: &str,
+) -> String {
+    format!(
+        r#"uint64_t count = {count};
+    if (count >= SIZE_MAX / sizeof(V)) fwp_trap("map too large");
+    V result = FWP_EMPTY_MAP;
+    if (count) {{
+        size_t n = (size_t)count;
+        V *keys = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+        fwp_cleanup keys_cleanup, vals_cleanup;
+        fwp_scratch_protect(&keys, &keys_cleanup);
+        V *vals = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+        fwp_scratch_protect(&vals, &vals_cleanup);
+        {iterator}
+        for (size_t i = 0; i < n; i++) {{
+            {input}
+            {callback}
+        }}
+        const fwp_map_ops ops = {{NULL, NULL, NULL, NULL, fwp_rc_free_obj, NULL}};
+        result = fwp_map_build_typed(keys, vals, n, &ops, {descriptor});
+        fwp_scratch_finish(&vals, &vals_cleanup);
+        fwp_scratch_finish(&keys, &keys_cleanup);
+    }}"#
+    )
+}
+
 impl Abi {
     fn param_numbers(&self, prog: &Program, id: FuncId) -> Vec<Option<NativeNumber>> {
         let f = &prog.funcs[id];
@@ -4858,6 +4891,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     s.as_str(),
                     "map"
                         | "array._map-list"
+                        | "map._map-list"
+                        | "map._map-range"
                         | "filter"
                         | "fold"
                         | "fold-right"
@@ -4890,6 +4925,80 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return None;
         }
         self.g.used_closures[g] = true;
+        if matches!(sym.as_str(), "map._map-list" | "map._map-range") {
+            // Expression workers own their arguments and return the two
+            // numeric fields directly. Primitive entry cleanup must not be
+            // bypassed, and flattened record parameters need a separate proof.
+            if !matches!(self.g.prog.funcs[g].body, Body::Expr(_)) {
+                return None;
+            }
+            let abi = self.g.abis[g]
+                .as_ref()
+                .filter(|abi| abi.ret == Some(2) && abi.params.iter().all(Option::is_none))?
+                .clone();
+            let result_type = self.g.prog.funcs[id].ty.params(args.len()).1.clone();
+            let MT::Con(name, fields) = result_type else {
+                return None;
+            };
+            if name != "std::Map" || fields.len() != 2 || fields.iter().any(|t| scalar(t).is_none())
+            {
+                return None;
+            }
+            let descriptor = self.g.desc(&fields[0]);
+            let captures = match &args[0] {
+                Expr::Func(_) => Vec::new(),
+                Expr::Local(l) => (0..n).map(|j| format!("CLO(l{l})->a[{j}]")).collect(),
+                Expr::Apply(_, captures) => self.args(captures),
+                _ => return None,
+            };
+            let source = self.args(&args[1..]);
+            let (count, iterator, input) = if sym.ends_with("-range") {
+                (
+                    format!(
+                        "(int64_t){} <= (int64_t){} ? 0 : (uint64_t){} - (uint64_t){}",
+                        source[1], source[0], source[1], source[0]
+                    ),
+                    String::new(),
+                    format!("V input = (uint64_t){} + (uint64_t)i;", source[0]),
+                )
+            } else {
+                (
+                    format!("fwp_list_len({})", source[0]),
+                    format!("V xs = {};", source[0]),
+                    "V input = OBJ(xs)->f[0]; xs = OBJ(xs)->f[1];".into(),
+                )
+            };
+            let words = captures
+                .iter()
+                .cloned()
+                .chain(["input".into()])
+                .collect::<Vec<_>>();
+            let arguments = abi.args_decode_words(
+                self.g.prog,
+                g,
+                (0..words.len())
+                    .map(|j| format!("arguments[{j}]"))
+                    .collect(),
+            );
+            let values = abi.result_words(self.g.prog, g, "pair");
+            let callback = format!("V arguments[] = {{{}}}; fwp_args{g}(arguments, 0, {});\n            fwp_wr{g} pair = w{g}({});\n            keys[i] = {}; vals[i] = {};", words.join(", "), words.len(), arguments.join(", "), values[0], values[1]);
+            let result = self.fresh();
+            self.line(&format!(
+                "V {result};\n{{ /* numeric map: direct callback fields */"
+            ));
+            self.line(&numeric_collection_body(
+                &count,
+                &iterator,
+                &input,
+                &callback,
+                &descriptor,
+            ));
+            self.line(&format!("{result} = result;\n}}"));
+            for value in captures.iter().chain(source.iter()) {
+                self.line(&format!("FWP_KEEP_ALIVE({value});"));
+            }
+            return Some(result);
+        }
         if sym == "array._map-list" {
             let result_type = self.g.prog.funcs[g].ty.params(n + 1).1.clone();
             scalar(&result_type)?;
@@ -5800,6 +5909,46 @@ impl<'p> Gen<'p> {
             let descriptor = self.desc(&elements[0]);
             return Ok(format!("return fwp_p_array_range(l0, l1, {descriptor});"));
         }
+        if matches!(
+            sym,
+            "map._map-list" | "set._map-list" | "map._map-range" | "set._map-range"
+        ) {
+            let MT::Con(name, fields) = &result else {
+                return Err("numeric collection construction has no field types".into());
+            };
+            let paired = match (name.as_str(), fields.len()) {
+                ("std::Map", 2) => true,
+                ("std::Set", 1) => false,
+                _ => return Err("numeric collection construction requires Map or Set".into()),
+            };
+            if fields.iter().any(|field| scalar(field).is_none()) {
+                return Err("numeric collection construction requires inline fields".into());
+            }
+            let descriptor = self.desc(&fields[0]);
+            let ranged = sym.ends_with("-range");
+            let count = if ranged {
+                "(int64_t)l2 <= (int64_t)l1 ? 0 : (uint64_t)l2 - (uint64_t)l1"
+            } else {
+                "fwp_list_len(l1)"
+            };
+            let iterator = if ranged { "" } else { "V xs = l1;" };
+            let input = if ranged {
+                "V input = (uint64_t)l1 + (uint64_t)i;"
+            } else {
+                "V input = OBJ(xs)->f[0]; xs = OBJ(xs)->f[1];"
+            };
+            let store = if paired {
+                "keys[i] = OBJ(value)->f[0]; vals[i] = OBJ(value)->f[1]; fwp_rc_free_obj(value);"
+            } else {
+                "keys[i] = value; vals[i] = 0;"
+            };
+            let callback = format!("V value = fwp_apply_borrowed(l0, 1, &input);\n        {store}");
+            let body = numeric_collection_body(count, iterator, input, &callback, &descriptor);
+            return Ok(format!(
+                "{body}\n    FWP_KEEP_ALIVE(l0); FWP_KEEP_ALIVE(l1);\n    return result;"
+            ));
+        }
+
         if sym == "array._map-list" {
             let MT::Con(name, elements) = &result else {
                 return Err("numeric mapped array result has no element type".into());

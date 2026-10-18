@@ -803,6 +803,34 @@ impl<'p> Interp<'p> {
                         .map(|(k, v)| Value::tuple(vec![k.clone(), v.clone()]))
                         .collect(),
                 ),
+                "map._map-list" | "set._map-list" | "map._map-range" | "set._map-range" => {
+                    let callback = a[0].clone();
+                    let mut values = Vec::new();
+                    // Keep sorting/comparison after all original callbacks.
+                    if sym.ends_with("-range") {
+                        let (lo, hi) = (int(&a[1]), int(&a[2]));
+                        let count = (hi as i128 - lo as i128).max(0) as u128;
+                        if count >= (usize::MAX / std::mem::size_of::<u64>()) as u128 {
+                            return trap("map too large");
+                        }
+                        for input in lo..hi {
+                            values.push(self.apply(callback.clone(), vec![Value::I64(input)])?);
+                        }
+                    } else {
+                        for input in a[1].list_items() {
+                            values.push(self.apply(callback.clone(), vec![input])?);
+                        }
+                    }
+                    let mut result = BTreeMap::new();
+                    for value in values {
+                        if sym.starts_with("set.") {
+                            result.insert(value, Value::unit());
+                        } else if let Value::Record(fields) = &value {
+                            result.insert(fields[0].clone(), fields[1].clone());
+                        }
+                    }
+                    Value::Map(Rc::new(result))
+                }
                 "map.from-list" => {
                     let mut m = BTreeMap::new();
                     for p in a[0].list_items() {

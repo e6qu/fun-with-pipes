@@ -1,0 +1,18 @@
+key : I64 -> I64
+key = rem 3
+pair : I64 -> (I64, I64)
+pair = fork (curry id) key id
+build-map : I64 -> Map[I64, I64]
+build-map = range 0 | map pair | map.from-list
+build-set : I64 -> Set[I64]
+build-set = range 0 | map key | set.from-list
+build-list-map : List[I64] -> Map[I64, I64]
+build-list-map = map pair | map.from-list
+build-list-set : List[I64] -> Set[I64]
+build-list-set = map key | set.from-list
+main = [
+    4 | build-map | ignore,
+    4 | build-set | ignore,
+    [0, 1, 2, 3] | build-list-map | ignore,
+    [0, 1, 2, 3] | build-list-set | ignore,
+] | ignore

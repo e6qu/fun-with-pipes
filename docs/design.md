@@ -257,6 +257,35 @@ Semantic and cleanup checks passed on all six native hosts and in the full
 [PR #149 gate](roadmap-history.md#owned-processes-and-numeric-mapped-arrays-pr-149); [benchmarks](benchmarks.md#building-numeric-arrays-without-temporary-list-nodes)
 records the measured gains and limits.
 
+### Building numeric maps and sets without temporary lists
+
+A map stores one value for each key; a set stores distinct keys. For example,
+`range 0 4 | map (rem 3) | set.from-list | set.to-list` produces `[0, 1, 2]`:
+the callback produces `0, 1, 2, 0`, and the set removes the duplicate zero.
+When map input contains duplicate keys, the first key and last value survive.
+
+The compiler now combines `map f | map.from-list` or `map f | set.from-list`
+when the stored fields are inline integers, F32 or F64. It runs every callback
+in input order, writes the numeric fields into temporary buffers, then sorts
+and removes duplicates. An immediate I64 `range` can supply numbers directly,
+without allocating its input list. Other list sources remain borrowed, so their
+aliases stay alive. Boxed numbers and managed result fields keep their existing
+construction rules. This changes no language notation or inference rule.
+
+Known expression callbacks whose worker returns two fields can write map keys
+and values directly, avoiding temporary tuples. Captured values still use the
+ordinary argument ownership rules. Dynamic callbacks use their normal call
+convention and share the same protected buffer construction. Errors and task
+cancellation release unfinished buffers. Empty or reversed ranges call no
+callbacks; duplicate handling and floating-key ordering remain unchanged.
+
+`FWP_MAP_BUILD=0` disables this transformation for controlled comparisons.
+Focused local checks cover raw/optimized interpretation, native O1/O2, ARC,
+stressed tracing, aliases, every injected allocation failure and cancellation.
+Six-host evidence and full production acceptance are still pending in the
+[handoff](development-state.md). Reduced allocation counts alone do not establish
+a timing improvement or parity with C/Rust.
+
 ### Numeric pairs immediately mapped
 
 `xs | zip ys` pairs each `x` with the corresponding `y`, stopping when either
