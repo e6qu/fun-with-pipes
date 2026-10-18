@@ -1,0 +1,4 @@
+before
+--- stderr
+fwp: trap: invalid JSON number
+--- exit 101

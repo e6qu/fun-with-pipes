@@ -54,6 +54,9 @@ value has a statically known lifetime. WebAssembly and native libraries release
 typed counted owners but retain unproved shared graphs: they cannot scan arbitrary
 host roots. Checked ARC admits native executables, synchronous WASI executables,
 and C libraries with checked copying boundaries, described below.
+The browser-loader and asynchronous WASI extensions also use these ownership
+checks; their focused evidence and pending production acceptance are recorded
+under [checked ARC delivery](#checked-arc-delivery).
 
 The compiler first tries to eliminate temporary objects, keep fields as scalars,
 and place eligible values on the stack. Values that still need shared storage
@@ -390,7 +393,8 @@ Existing direct list-tail handling and `FWP_FREE=0` count-only behavior remain.
 [The six-platform comparison](benchmarks.md#stack-use-when-releasing-wrapped-chains)
 checks up to 16,384 links, retained aliases at each wrapper and complete physical
 reclamation without tracing. Real source programs match the interpreter and
-also pass GC/reuse stress. Full delivery acceptance remains in the handoff.
+also pass GC/reuse stress. [PR #155](roadmap-history.md#shared-remote-reads-and-bounded-chain-cleanup-pr-155)
+records production acceptance.
 Reference-count operations and the chain's allocations still exist. Native remote
 stream caches use a separate runtime cleanup loop; their request and connection
 owners are described [below](#received-iterators-and-remote-call-storage).
@@ -401,8 +405,25 @@ owners are described [below](#received-iterators-and-remote-call-storage).
 Supported native entries include `main`, exported function executables and CLI
 commands and native C libraries with copied inputs and pointer-free results.
 Each entry starts without assuming an existing state or derivative scope.
-Synchronous WASI main/function/CLI entries also use these checks. Browser,
-asynchronous WASI host tasks, REST and MCP remain outside this mode. The
+Synchronous WASI main/function/CLI entries also use these checks. Generated REST
+and MCP entries are being validated with the same checks, including returned
+aliases, caught errors, malformed messages, disconnects and normal shutdown.
+All 18 repeated-request memory jobs pass across the six native hosts. The
+[measurement report](benchmarks.md#generated-rest-and-mcp-server-memory) verifies
+bounded storage and actual binaries without tracing, and records the substantial
+allocation/count costs that remain. Functional repair checks and final production
+acceptance are still required before these entries are accepted.
+The prepared browser/asynchronous WASI extension
+uses ordinary checked task/channel ownership and command-end scheduler cleanup.
+Both actual-Wasm jobs now pass JSPI and Asyncify execution, storage reclamation
+and exact-result checks; the [report](benchmarks.md#webassembly-task-and-browser-loader-ownership)
+retains all modules and deliberately leaking controls. Final production
+acceptance remains required. Browser-loader evidence
+under Node does not establish coverage in a browser engine. Host callbacks receive
+copied output strings; each invocation owns a separate module instance. These
+checks cover values inside the compiled module. The JavaScript engine still owns
+instances, promises and copied strings; removing fwp tracing does not remove
+that host engine's garbage collector. The
 [gRPC extension](#checked-grpc-clients-and-services) adds checked client/service
 entries and has separate platform acceptance. Focused checks and final delivery acceptance are distinguished
 in [the handoff](development-state.md).
@@ -421,7 +442,8 @@ temporary buffer. The [HTTP measurements](benchmarks.md#http-clients-without-tra
 record constant managed storage, remaining allocation/count traffic and larger
 ARC code sections; raw transport/process memory and timing are excluded.
 
-The HTTP server extension is in preparation. A stream handle owns request and
+HTTP server ownership is accepted in
+[PR #163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163). A stream handle owns request and
 connection storage; it can survive completion of its handler task without keeping
 that task identity alive. The same allocation carries the task payload, removing
 a separate job record. Connection startup, the inline reader and the writer have
@@ -440,9 +462,9 @@ locally. All six native server-memory jobs pass, with constant final managed
 storage and bounded sampled process memory; the [report](benchmarks.md#http-server-ownership-and-memory)
 explains the workload and remaining allocation costs. All six platform HTTP suites
 pass. Intel macOS passed separate ownership and comparison jobs after the combined
-job reached its time limit; every case and the same limit were preserved. Full
-production acceptance remains pending in the handoff. This does not establish
-REST/MCP entry support or GPU ownership.
+job reached its time limit; every case and the same limit were preserved. All
+nine production gates and docs passed for PR #163. REST/MCP entry acceptance
+and GPU ownership remain separate work.
 
 WASI supplies standard streams and file access to a WebAssembly module. Build a
 supported program with `fwp build --gc arc --target wasm32-wasi app.fwp -o app.wasm`
@@ -809,14 +831,14 @@ optimized interpretation with native tracing/ARC execution, retain caller aliase
 and returned functions, check typed failures, and inspect ARC binaries for
 tracing functions. Capture controls cover 13/14 allocation-failure positions.
 Temporary decoding bytes also release on client result and served-request traps.
-These checks pass on all six native hosts at the source above. Final production
-acceptance remains separate; see the [handoff](development-state.md).
+These checks pass on all six native hosts at the source above. Production acceptance is recorded in
+[PR #154](roadmap-history.md#service-settings-and-iteration-storage-pr-154).
 
 A service's TLS settings, used for encrypted connections, are read from
 environment variables once per runtime instance. The cache must survive tasks
 and resource finalizers that still use those settings. Library teardown releases
-it after both have finished. The current delivery stores each entry and its name
-in one allocation instead of two, with enough room to look up complete variable
+it after both have finished. Each entry and its name are stored
+in one allocation, with enough room to look up complete variable
 names. It removes the old 300-byte truncation. A construction guard frees an
 unpublished entry if allocating the TLS settings fails, allowing a later retry.
 Tests inject failure at both allocations and check long names, repeated reads
@@ -840,14 +862,14 @@ checked on all six hosts. Actual O2 instructions return that owner directly in
 incoming return address. These are instrumented binary observations, not timing
 measurements or whole-program stack bounds.
 
-List `each` now avoids its discarded result list. The [current six-host report](measurements/service-context-iteration-2026-10-16.json)
+List `each` now avoids its discarded result list. The [six-host report](measurements/service-context-iteration-2026-10-16.json)
 at `20f0f5f0` verifies ordered calls, shared inputs, captured values and failures,
 along with all the service allocation limits above. It saves one allocation and
 32 requested bytes per element. The compiler makes known calls direct inside
 state and service helpers without rebuilding captured lists on each iteration.
 [Repeated timings and binary observations](benchmarks.md#list-iteration-compared-with-its-previous-definition)
-record the improvement and the remaining state bookkeeping. Full production
-acceptance is tracked separately in the handoff.
+record the improvement and the remaining state bookkeeping. Production acceptance is recorded in
+[PR #154](roadmap-history.md#service-settings-and-iteration-storage-pr-154).
 
 The [intermediate stack-copy report](measurements/service-context-stack-2026-10-16.json)
 preserves the earlier representation tradeoff. It predates packed headers and
@@ -902,8 +924,8 @@ releases request storage. All six focused native jobs verify complete request
 and message release across 1/16/256 batches, with constant final managed storage.
 [The comparison](benchmarks.md#memory-left-behind-by-repeated-remote-calls) records
 the remaining allocations and reduced reference-count traffic. Infinitely many unfinished operations can still require
-unbounded storage. [The handoff](development-state.md) records native validation
-and full delivery acceptance; implemented cleanup alone does not establish them.
+unbounded storage. [PR #157](roadmap-history.md#freed-requests-and-transferred-selected-fields-pr-157)
+records native validation and full production acceptance.
 
 The connection change separates an open socket from the information
 kept about it. Each connection has two background tasks: one reads incoming
@@ -919,8 +941,8 @@ The request record does not gain an owning back-pointer to the connection.
 Client I/O task records have only the scheduler, which runs ready tasks, as owner.
 Their storage releases after their stack and scheduler links are removed, without
 task reference-count updates. Language task handles can have independent aliases and retain their
-shared policy. Server task ownership is described below; the HTTP server
-extension above is under validation.
+shared policy. Server task ownership is described below; the HTTP extension
+is accepted in PR #163.
 Library teardown first shuts down connections used by live I/O tasks, then waits
 for those tasks to finish. This includes connections removed from the reuse pool:
 canceling a task alone is insufficient while it defers cancellation to protect
@@ -932,9 +954,9 @@ and constant final managed storage across the measured call counts. The
 the added connection count operations and remaining allocations. PR #158 passed
 full production acceptance; [history](roadmap-history.md) records its merge.
 
-The remaining relationships need separate checks:
+Preserve these ownership relationships and their regression checks:
 
-| Storage | Who currently keeps it alive | Work still needed |
+| Storage | Who keeps it alive | Accepted behavior and checks to preserve |
 |---|---|---|
 | Client request | The active connection list, receive source and detached sender hold references. | Accepted in PR #157; preserve completion, failure, cancellation and repeated-call checks. |
 | Connection | The pool, readers/writers and callers hold separate storage owners; the socket has its own reader/writer use count. | Accepted in PR #158; closing a socket alone does not finish every borrow. Preserve the lifecycle checks. |
@@ -1070,8 +1092,8 @@ Scoped failure cleanup and deliberate missing-reset tests enforce that distincti
 
 Keep the cache, shared-reader and decoder failure controls while extending these
 owners. Test partial construction and every last-owner case; retain deliberately
-broken variants to prove that missing cleanup is detected. HTTP/2 handler
-acceptance and GPU resource ownership remain separate work.
+broken variants to prove that missing cleanup is detected. HTTP/2 handlers are
+accepted in PR #163; GPU resource ownership remains work.
 
 ### Checked gRPC clients and services
 

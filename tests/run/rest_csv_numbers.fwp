@@ -1,0 +1,8 @@
+# REST CSV uses the typed numeric spelling, including digits beyond F64 precision.
+Row = { integer: I64, floating: F64, precise: F128 }
+
+main = Row {
+    integer = 9007199254740993,
+    floating = 12.0,
+    precise = 1.0000000000000000000000000000007889f128,
+} | singleton | rest.csv ["integer", "floating", "precise"] | print

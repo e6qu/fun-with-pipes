@@ -519,7 +519,7 @@ fwp build file.fwp [options]                  compile
                      with the arguments after `--` (stdin from
                      --pgo-input F, or empty), then build with the profile
                      (needs GCC)
-    --gc arc         checked native/WASI executables and native C libraries;
+    --gc arc         checked native/WebAssembly executables and native C libraries;
                      unsupported value/runtime boundaries diagnose
     --gc tracing     tracing collection mode (the default)
     --memory static  bounded runtime storage and stacks at startup, with
@@ -569,10 +569,13 @@ and `--mcp`) and the stages of `fwp pipe` compile the program to a native
 executable through C, as `fwp build` would, and run it in place of `fwp`
 (on Unix the executable replaces the `fwp` process, so it has its process
 id, signals and exit status). The executable is cached under the hash of
-its C source, the C compiler and its options, the files given to `--link`
-and the version of fwp, so a program is compiled once and runs at native
-speed after that; the type checker still runs on every start, so errors
-and warnings are reported as before.
+its C source, C compiler identity and options, header-search environment, files
+given to `--link` and the version of fwp. Linked C and preprocessed assembly
+sources are expanded before lookup, so edited or missing included headers cannot
+silently reuse an old executable. Exact-float programs also include their C++
+compiler identity; integer-only programs do not require C++. Cache hits avoid
+native recompilation. The type checker and dependency checks still run on every
+start, so startup is separate from the compiled program's execution time.
 
 | | |
 |---|---|
@@ -582,7 +585,7 @@ and warnings are reported as before.
 | `FWP_CACHE_MAX` | how many executables it keeps (256; minimum 1, including when set to 0); pruning preserves the current executable |
 | `fwp cache dir`, `fwp cache clean` | print its directory, remove its executables |
 | `CC` | the C compiler (`cc`) |
-| `FWP_LTO` | with GCC, a large program (over 1 MB of C, such as a REST or HTTP server with its standard library) is compiled with `-flto=auto`, which generates its code on all cores: a REST server's first start takes about half as long on four. `FWP_LTO=0` compiles it as one unit, `FWP_LTO=1` uses LTO for any size |
+| `FWP_LTO` | with GCC, programs over 1 MB of generated C use `-flto=auto` to permit parallel code generation. `FWP_LTO=0` disables it; `FWP_LTO=1` enables it for any size. Compilation-time effects depend on the program and available CPU/memory. This setting participates in the executable cache key. |
 
 Without a C compiler a program is interpreted, with a note on standard
 error (none when `FWP_RUN` is set). The WebAssembly build of fwp always
@@ -625,16 +628,23 @@ The `--gc arc` mode checks memory ownership and excludes tracing collection.
 Supported entries include native main/CLI/function executables, synchronous WASI
 executables, and C libraries whose inputs are copied and whose results contain
 no managed pointers. The [gRPC extension](services.md#building-without-tracing-collection)
-adds checked split clients and services; its platform acceptance is recorded in
-[the handoff](development-state.md).
+adds checked split clients and services, accepted in
+[PR #161](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161).
+HTTP clients and servers are accepted in PRs #162/#163; their ownership contracts
+are described in the [ownership guide](ownership.md#checked-arc-delivery).
 
 `fwp build --gc arc --staticlib stats.fwp -o libstats.a` can export a
 `String -> I64` function: it copies the input for the call and returns the count
 by value. A `String -> String` export is rejected because the existing C ABI
 returns a pointer with no host release operation. Records follow these rules
 field by field. Host calls must be serialized and finish before library unload.
-The mode rejects unproved ownership or cycles, browser execution, asynchronous
-WASI host tasks, REST and MCP boundaries.
+The mode rejects unproved ownership or cycles. Browser-loader and WASI task
+extensions pass actual-module JSPI and Asyncify cleanup checks on both Linux
+hosts; [the measurements](benchmarks.md#webassembly-task-and-browser-loader-ownership)
+record their scope and remaining costs. Final production acceptance is tracked
+in the handoff. Generated REST and MCP entries use ordinary checks; their six-host
+functional and repeated-request checks pass, with final production acceptance
+also pending.
 Channels are eligible when their payload contains no functions, tasks, HTTP stream
 handles or channels:
 `Channel[String]` is eligible; `Channel[Task[String]]` is not, since the task
@@ -869,7 +879,7 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_NO_OPT=1` | disables the IR optimizer (inlining, specialization, fusion) |
 | `FWP_ARRAY_FUSION=0` | when compiling: retain separate numeric Array map/fold/length stages for comparison; normal fusion requires pure terminating callbacks with compatible trap behavior |
 | `FWP_MATRIX_BLOCKING=0` | when compiling: retain the library F64 matrix implementation for comparison; specialization checks runtime shape and preserves ascending inner-index arithmetic |
-| `FWP_AD_WORKSPACE=0` | interpreter and native programs: release detached tape capacity instead of retaining the single bounded512KiB workspace; tape identity and scope lifetimes are unchanged |
+| `FWP_AD_WORKSPACE=0` | interpreter and native programs: release detached tape capacity instead of retaining the single bounded 512 KiB workspace; tape identity and scope lifetimes are unchanged |
 | `FWP_DUMP_IR=1` | prints the program's own functions in optimized IR to stderr when it is compiled (`all`: the standard library's too; `rc`: with their references counted) |
 | `FWP_REUSE=0` | when compiling: native code does not count references, so it copies every record it updates. By default it counts references to the records and variants it allocates, updates a unique record in place (`{r with ...}` where `r` is not used again), and builds a new variant in the cell of a unique one it no longer uses (a tree or list rebuilt by a recursive function); the collector still frees memory |
 | `FWP_REUSE_VERIFY=1` | native programs: a value judged unique is copied and the original poisoned instead of reused, so that a wrong judgment shows (for testing) |

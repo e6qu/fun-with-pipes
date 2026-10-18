@@ -10,9 +10,10 @@
 //! and aliases (`&name`, `*name`, and `<<` merge keys), tags (ignored,
 //! except `!!str`), and `---` and `...` around a single document. Plain
 //! scalars follow the core schema: `null`, `~`, booleans, integers
-//! (decimal, `0x`, `0o`), floats (`.inf`, `.nan`) and strings; mapping
+//! (decimal, `0x`, `0o`), finite floats and strings; mapping
 //! keys are always strings. Complex keys (`? `), several documents and
-//! directives other than `%YAML` are rejected.
+//! directives other than `%YAML` are rejected. Non-finite numbers cannot be
+//! represented as JSON and are rejected; hexadecimal/octal integers must fit U128.
 
 use std::collections::HashMap;
 
@@ -246,7 +247,7 @@ impl Parser {
                         self.pos = start;
                         self.mapping(c, None)?
                     } else {
-                        self.resolve(s, tag.as_deref())
+                        self.resolve(s, tag.as_deref())?
                     }
                 }
             }
@@ -272,11 +273,11 @@ impl Parser {
         self.peek() == Some(':') && Self::blank(self.at(1))
     }
 
-    fn resolve(&self, s: Scalar, tag: Option<&str>) -> Json {
+    fn resolve(&self, s: Scalar, tag: Option<&str>) -> Result<Json, String> {
         match s {
-            Scalar::Quoted(t) => Json::Str(t),
-            Scalar::Plain(t) if tag == Some("!!str") => Json::Str(t),
-            Scalar::Plain(t) => plain_value(&t),
+            Scalar::Quoted(t) => Ok(Json::Str(t)),
+            Scalar::Plain(t) if tag == Some("!!str") => Ok(Json::Str(t)),
+            Scalar::Plain(t) => plain_value(&t).or_else(|message| self.err(message)),
         }
     }
 
@@ -877,7 +878,7 @@ impl Parser {
                         self.peek().map(String::from).unwrap_or_default()
                     ));
                 }
-                self.resolve(Scalar::Plain(out), tag.as_deref())
+                self.resolve(Scalar::Plain(out), tag.as_deref())?
             }
         };
         if let Some(a) = anchor {
@@ -898,37 +899,68 @@ fn scalar_text(v: &Json) -> String {
     }
 }
 
+// YAML permits a leading plus, leading zeroes, `.5` and `1.`. Normalize
+// their spelling to JSON grammar without rounding through a machine float.
+fn decimal_json_number(text: &str) -> String {
+    let negative = text.starts_with('-');
+    let body = text.trim_start_matches(['-', '+']);
+    let (mantissa, exponent) = match body.find(['e', 'E']) {
+        Some(index) => (&body[..index], &body[index..]),
+        None => (body, ""),
+    };
+    let (integer, fraction) = match mantissa.split_once('.') {
+        Some((integer, fraction)) => (integer, Some(fraction)),
+        None => (mantissa, None),
+    };
+    let integer = integer.trim_start_matches('0');
+    let mut out = String::new();
+    if negative {
+        out.push('-');
+    }
+    out.push_str(if integer.is_empty() { "0" } else { integer });
+    if let Some(fraction) = fraction {
+        out.push('.');
+        out.push_str(if fraction.is_empty() { "0" } else { fraction });
+    }
+    out.push_str(exponent);
+    out
+}
+
 /// A plain scalar by the core schema.
-fn plain_value(t: &str) -> Json {
+fn plain_value(t: &str) -> Result<Json, String> {
     match t {
-        "" | "~" | "null" | "Null" | "NULL" => return Json::Null,
-        "true" | "True" | "TRUE" => return Json::Bool(true),
-        "false" | "False" | "FALSE" => return Json::Bool(false),
-        ".inf" | ".Inf" | ".INF" | "+.inf" | "+.Inf" | "+.INF" => return Json::Num(f64::INFINITY),
-        "-.inf" | "-.Inf" | "-.INF" => return Json::Num(f64::NEG_INFINITY),
-        ".nan" | ".NaN" | ".NAN" => return Json::Num(f64::NAN),
+        "" | "~" | "null" | "Null" | "NULL" => return Ok(Json::Null),
+        "true" | "True" | "TRUE" => return Ok(Json::Bool(true)),
+        "false" | "False" | "FALSE" => return Ok(Json::Bool(false)),
+        ".inf" | ".Inf" | ".INF" | "+.inf" | "+.Inf" | "+.INF" => {
+            return Err("non-finite YAML numbers cannot be represented as JSON".into())
+        }
+        "-.inf" | "-.Inf" | "-.INF" => {
+            return Err("non-finite YAML numbers cannot be represented as JSON".into())
+        }
+        ".nan" | ".NaN" | ".NAN" => {
+            return Err("non-finite YAML numbers cannot be represented as JSON".into())
+        }
         _ => {}
     }
     let digits = |s: &str, radix: u32| !s.is_empty() && s.chars().all(|c| c.is_digit(radix));
     if let Some(h) = t.strip_prefix("0x") {
         if digits(h, 16) {
-            if let Ok(n) = u64::from_str_radix(h, 16) {
-                return Json::Num(n as f64);
-            }
+            return u128::from_str_radix(h, 16)
+                .map(|n| Json::Num(n.to_string()))
+                .map_err(|_| "hexadecimal/octal YAML integer exceeds U128".into());
         }
     }
     if let Some(o) = t.strip_prefix("0o") {
         if digits(o, 8) {
-            if let Ok(n) = u64::from_str_radix(o, 8) {
-                return Json::Num(n as f64);
-            }
+            return u128::from_str_radix(o, 8)
+                .map(|n| Json::Num(n.to_string()))
+                .map_err(|_| "hexadecimal/octal YAML integer exceeds U128".into());
         }
     }
     let body = t.strip_prefix(['-', '+']).unwrap_or(t);
     if digits(body, 10) {
-        if let Ok(n) = t.parse::<f64>() {
-            return Json::Num(n);
-        }
+        return Ok(Json::Num(decimal_json_number(t)));
     }
     // [-+]? ( \. [0-9]+ | [0-9]+ ( \. [0-9]* )? ) ( [eE] [-+]? [0-9]+ )?
     let (mantissa, exp) = match body.find(['e', 'E']) {
@@ -943,11 +975,9 @@ fn plain_value(t: &str) -> Json {
     };
     let exp_ok = exp.is_none_or(|e| digits(e.strip_prefix(['-', '+']).unwrap_or(e), 10));
     if mant_ok && exp_ok && (mantissa.contains('.') || exp.is_some()) {
-        if let Ok(n) = t.parse::<f64>() {
-            return Json::Num(n);
-        }
+        return Ok(Json::Num(decimal_json_number(t)));
     }
-    Json::Str(t.to_string())
+    Ok(Json::Str(t.to_string()))
 }
 
 #[cfg(test)]
@@ -960,6 +990,26 @@ mod tests {
 
     fn j(s: &str) -> Json {
         Json::parse(s).unwrap()
+    }
+
+    #[test]
+    fn numeric_text_keeps_integer_and_decimal_precision() {
+        for (yaml, json) in [
+            ("9007199254740993", "9007199254740993"),
+            ("+00018446744073709551615", "18446744073709551615"),
+            (
+                "0xffffffffffffffffffffffffffffffff",
+                "340282366920938463463374607431768211455",
+            ),
+            (
+                ".0000000000000000000000000001",
+                "0.0000000000000000000000000001",
+            ),
+            ("+001.2300e+9999", "1.2300e+9999"),
+            ("-0.", "-0.0"),
+        ] {
+            assert_eq!(y(yaml).to_string(), json);
+        }
     }
 
     #[test]
@@ -987,8 +1037,8 @@ mod tests {
     #[test]
     fn scalars() {
         assert_eq!(
-            y("[1, -2.5, 0x1f, 1e3, .inf, true, null, 3.0.1, '1', \"a\\tb\\u00e9\", x: y]"),
-            j(r#"[1,-2.5,31,1000,1e999,true,null,"3.0.1","1","a\tbé",{"x":"y"}]"#)
+            y("[1, -2.5, 0x1f, 1e3, true, null, 3.0.1, '1', \"a\\tb\\u00e9\", x: y]"),
+            j(r#"[1,-2.5,31,1e3,true,null,"3.0.1","1","a\tbé",{"x":"y"}]"#)
         );
         assert_eq!(
             y("a: 'it''s\n  here'\nb: \"one\n\n  two\"\nc: plain\n  continued\n"),
@@ -999,6 +1049,22 @@ mod tests {
             j(r#"{"u":"http://x.y/z#a","t":"a"}"#)
         );
         assert_eq!(y("v: !!str 1.0\n"), j(r#"{"v":"1.0"}"#));
+    }
+
+    #[test]
+    fn unsupported_yaml_numbers_report_errors_instead_of_changing_values() {
+        for text in [".inf", "+.INF", "-.Inf", ".NaN"] {
+            assert_eq!(
+                parse(text).unwrap_err(),
+                "line 1: non-finite YAML numbers cannot be represented as JSON"
+            );
+        }
+        assert_eq!(
+            parse("0x100000000000000000000000000000000").unwrap_err(),
+            "line 1: hexadecimal/octal YAML integer exceeds U128"
+        );
+        assert_eq!(y("!!str .inf"), Json::Str(".inf".into()));
+        assert_eq!(y("'.nan'"), Json::Str(".nan".into()));
     }
 
     #[test]

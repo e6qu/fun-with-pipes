@@ -40,19 +40,26 @@ export async function run(opts = {}) {
   let memory;
   const pending = { 1: [], 2: [] };
   const decoder = new TextDecoder();
+  let outputFailed = false;
   const emit = (fd, final) => {
-    const buf = pending[fd];
-    let start = 0;
-    for (let i = 0; i < buf.length; i++) {
-      if (buf[i] === 10) {
-        sinks[fd](decoder.decode(new Uint8Array(buf.slice(start, i))));
-        start = i + 1;
+    try {
+      const buf = pending[fd];
+      let start = 0;
+      for (let i = 0; i < buf.length; i++) {
+        if (buf[i] === 10) {
+          sinks[fd](decoder.decode(new Uint8Array(buf.slice(start, i))));
+          start = i + 1;
+        }
       }
-    }
-    pending[fd] = buf.slice(start);
-    if (final && pending[fd].length) {
-      sinks[fd](decoder.decode(new Uint8Array(pending[fd])));
-      pending[fd] = [];
+      pending[fd] = buf.slice(start);
+      if (final && pending[fd].length) {
+        sinks[fd](decoder.decode(new Uint8Array(pending[fd])));
+        pending[fd] = [];
+      }
+    } catch (error) {
+      // A host callback's RangeError is not a WebAssembly stack overflow.
+      outputFailed = true;
+      throw error;
     }
   };
   const view = () => new DataView(memory.buffer);
@@ -151,6 +158,7 @@ export async function run(opts = {}) {
   try {
     await start();
   } catch (e) {
+    if (outputFailed) throw e;
     if (e instanceof RangeError) {
       // the engine's stack ran out: a trap, as in native programs
       instance.exports.fwp_fiber_flush?.();

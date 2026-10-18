@@ -17,7 +17,7 @@ use crate::jsontype::{self, Shape};
 use crate::rest::{Api, Auth, Endpoint, FieldKind, Outcome, Place, Source};
 
 fn num(x: i64) -> Json {
-    Json::Num(x as f64)
+    Json::Num(x.to_string())
 }
 
 fn obj(fields: Vec<(&str, Json)>) -> Json {
@@ -308,8 +308,8 @@ impl Gen<'_> {
                 let max = (3i128.pow(w.min(40) as u32) - 1) / 2;
                 obj(vec![
                     ("type", Json::str("integer")),
-                    ("minimum", Json::Num(-(max as f64))),
-                    ("maximum", Json::Num(max as f64)),
+                    ("minimum", Json::Num((-max).to_string())),
+                    ("maximum", Json::Num(max.to_string())),
                 ])
             }
             Shape::Trit => Self::int("int32", Some((-1, 1))),
@@ -1093,11 +1093,7 @@ fn yaml_scalar(v: &Json) -> String {
     match v {
         Json::Null => "null".into(),
         Json::Bool(b) => b.to_string(),
-        Json::Num(x) => {
-            let mut s = String::new();
-            crate::json::number(*x, &mut s);
-            s
-        }
+        Json::Num(x) => x.clone(),
         Json::Str(s) => yaml_string(s),
         Json::Arr(_) => "[]".into(),
         Json::Obj(_) => "{}".into(),

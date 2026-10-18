@@ -38,10 +38,14 @@ fn cxx(cc: &(String, Vec<String>), wasm: bool) -> String {
 }
 
 /// The compiler/target identity participates in the executable cache too.
-pub fn compiler_identity(cc: &(String, Vec<String>), wasm: bool) -> Result<Vec<u8>, String> {
-    let cpp = cxx(cc, wasm);
+pub fn compiler_identity(
+    cc: &(String, Vec<String>),
+    wasm: bool,
+    exact_float: bool,
+) -> Result<Vec<u8>, String> {
+    let cpp = exact_float.then(|| cxx(cc, wasm));
     let mut result = format!("{:?}\0{:?}\0{wasm}\0", cc, cpp).into_bytes();
-    for compiler in [&cc.0, &cpp] {
+    for compiler in std::iter::once(&cc.0).chain(cpp.iter()) {
         for query in ["--version", "-dumpmachine"] {
             result.extend(run(Command::new(compiler).args(&cc.1).arg(query))?);
             result.push(0);
@@ -101,7 +105,7 @@ pub fn link_archives(
     if !source.contains(MARK) {
         return Ok(Vec::new());
     }
-    let mut key = compiler_identity(cc, wasm)?;
+    let mut key = compiler_identity(cc, wasm, true)?;
     key.extend_from_slice(
         format!(
             "{}\0{opt}\0{FLAGS:?}\0c11,c++20,no-exceptions,no-rtti,sjlj-v1",

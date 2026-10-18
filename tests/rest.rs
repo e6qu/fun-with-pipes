@@ -85,12 +85,12 @@ fn interpreted(file: &Path) -> Server {
     start(cmd)
 }
 
-fn native(file: &Path, dir: &Path) -> Server {
+fn native(file: &Path, dir: &Path, mode: &str, stress: bool) -> Server {
     let exe = dir.join("server");
     let out = Command::new(fwp())
         .arg("build")
         .arg(file)
-        .args(["--rest", "-O1", "-o"])
+        .args(["--rest", "--gc", mode, "-O1", "-o"])
         .arg(&exe)
         .output()
         .unwrap();
@@ -100,7 +100,8 @@ fn native(file: &Path, dir: &Path) -> Server {
         String::from_utf8_lossy(&out.stderr)
     );
     let mut cmd = Command::new(exe);
-    cmd.args(["--listen", "127.0.0.1:0"]);
+    cmd.args(["--listen", "127.0.0.1:0"])
+        .env("FWP_GC_STRESS", if stress { "16" } else { "0" });
     start(cmd)
 }
 
@@ -412,7 +413,7 @@ fn api_native() {
         return;
     }
     let dir = temp_dir("api-native");
-    exercise_api(&native(&fixture("api.fwp"), &dir));
+    exercise_api(&native(&fixture("api.fwp"), &dir, "tracing", false));
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -486,7 +487,7 @@ fn books_example() {
     exercise_books(&interpreted(&file));
     if have_cc() {
         let dir = temp_dir("books-native");
-        exercise_books(&native(&file, &dir));
+        exercise_books(&native(&file, &dir, "tracing", false));
         let _ = std::fs::remove_dir_all(dir);
     }
 }
@@ -784,7 +785,7 @@ fn secure_native() {
         return;
     }
     let dir = temp_dir("secure-native");
-    exercise_secure(&native(&fixture("secure.fwp"), &dir));
+    exercise_secure(&native(&fixture("secure.fwp"), &dir, "tracing", false));
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -896,6 +897,38 @@ fn openapi_golden() {
     golden(
         &fixture("forms.openapi.json"),
         &openapi_text(&fixture("forms.fwp")),
+    );
+}
+
+#[test]
+fn openapi_balanced_integer_limits_are_exact() {
+    use fwp::json::Json;
+    let dir = fwp::cgen::TempDir::new("openapi-exact-number").unwrap();
+    let source = dir.join("exact.fwp");
+    std::fs::write(
+        &source,
+        "# expose: rest\nexport keep : TInt[40] -> TInt[40]\nkeep = id\n",
+    )
+    .unwrap();
+    let document = Json::parse(&openapi_text(&source)).unwrap();
+    let schema = document
+        .at(&[
+            "paths",
+            "/keep",
+            "post",
+            "requestBody",
+            "content",
+            "application/json",
+            "schema",
+        ])
+        .unwrap();
+    assert_eq!(
+        schema.get("minimum"),
+        Some(&Json::Num("-6078832729528464400".into()))
+    );
+    assert_eq!(
+        schema.get("maximum"),
+        Some(&Json::Num("6078832729528464400".into()))
     );
 }
 
@@ -1396,7 +1429,7 @@ fn client_round_trip() {
     }
     drop(srv);
     if have_cc() {
-        let srv = native(&fixture("api.fwp"), &dir);
+        let srv = native(&fixture("api.fwp"), &dir, "tracing", false);
         let exe = dir.join("roundtrip");
         let b = Command::new(fwp())
             .arg("build")
@@ -1452,7 +1485,7 @@ fn secure_client_round_trip() {
     golden(&fixture("secureroundtrip.out"), &got);
     drop(srv);
     if have_cc() {
-        let srv = native(&fixture("secure.fwp"), &dir);
+        let srv = native(&fixture("secure.fwp"), &dir, "tracing", false);
         let exe = dir.join("secureroundtrip");
         let b = Command::new(fwp())
             .arg("build")
@@ -1893,7 +1926,7 @@ fn forms_requests() -> Vec<FormCase> {
             Some("text/csv"),
             200,
             "text/csv; charset=utf-8",
-            "id,title,price,note\n1,Dune,9.5,\n2,\"Odes, \"\"selected\"\"\",12,used\n",
+            "id,title,price,note\n1,Dune,9.5,\n2,\"Odes, \"\"selected\"\"\",12.0,used\n",
         ),
         (
             "GET",
@@ -2060,32 +2093,13 @@ fn exercise_forms(srv: &Server) {
         );
         assert_eq!(
             curl(&["-H", "accept: text/csv", &format!("{}/books", url)]),
-            "id,title,price,note\n1,Dune,9.5,\n2,\"Odes, \"\"selected\"\"\",12,used\n"
+            "id,title,price,note\n1,Dune,9.5,\n2,\"Odes, \"\"selected\"\"\",12.0,used\n"
         );
         let _ = std::fs::remove_dir_all(dir);
     }
 }
 
 /// A native server with the collector running at every 16th allocation.
-fn native_stressed(file: &Path, dir: &Path) -> Server {
-    let exe = dir.join("server");
-    let out = Command::new(fwp())
-        .arg("build")
-        .arg(file)
-        .args(["--rest", "-O1", "-o"])
-        .arg(&exe)
-        .output()
-        .unwrap();
-    assert!(
-        out.status.success(),
-        "build failed: {}",
-        String::from_utf8_lossy(&out.stderr)
-    );
-    let mut cmd = Command::new(exe);
-    cmd.args(["--listen", "127.0.0.1:0"])
-        .env("FWP_GC_STRESS", "16");
-    start(cmd)
-}
 
 #[test]
 fn forms_and_formats_interpreted() {
@@ -2099,7 +2113,7 @@ fn forms_and_formats_native() {
         return;
     }
     let dir = temp_dir("forms-native");
-    exercise_forms(&native_stressed(&fixture("forms.fwp"), &dir));
+    exercise_forms(&native(&fixture("forms.fwp"), &dir, "tracing", true));
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -2216,7 +2230,7 @@ fn client_runs(server: &Path, client_dir: &Path, program: &str, golden_out: &Pat
     golden(golden_out, &got);
     drop(srv);
     if have_cc() {
-        let srv = native_stressed(server, client_dir);
+        let srv = native(server, client_dir, "tracing", true);
         let exe = client_dir.join("client");
         let b = Command::new(fwp())
             .arg("build")
@@ -2401,4 +2415,12 @@ fn uploads_example() {
         b,
         "name,message,stars\nAda,hello,5\nAlan,\"a, b, \"\"c\"\"\",\n"
     );
+}
+
+#[test]
+fn checked_arc_rest_preserves_api_authentication_and_form_results() {
+    let dir = fwp::cgen::TempDir::new("rest-arc").unwrap();
+    exercise_api(&native(&fixture("api.fwp"), dir.path(), "arc", false));
+    exercise_secure(&native(&fixture("secure.fwp"), dir.path(), "arc", false));
+    exercise_forms(&native(&fixture("forms.fwp"), dir.path(), "arc", false));
 }

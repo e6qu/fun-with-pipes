@@ -67,6 +67,19 @@ production job must pass before merge. Draft skips are never acceptance gates. F
 early native probe in `numerics.yml`, `native_runner` selects one runner instead
 of the suite's matrix. Use `all` for complete evidence; report collectors still
 require every expected native host. This does not change production acceptance.
+For the `server-entries` suite, `server_entry_part=all` runs five parts on
+each selected host. An explicit `checks` selection runs two jobs: entry/codec
+checks and the larger REST API checks. Splitting them keeps the existing
+25-minute limit without dropping tests. `api` runs only that API job. Neither
+selection repeats unchanged memory measurements. Retain their original source
+and verify that compiler/runtime/library and measurement behavior still match;
+this selector does not reduce the required production matrix.
+A `server-recheck` requires the full 40-character `source_revision`. It runs both
+functional parts from that exact checkout and records it separately from the
+workflow revision. Use it to repair a focused job's scheduling while preserving
+a healthy production head. Audit both replacement jobs; a cancelled original
+job is not a pass. All nine production jobs and docs still require the actual
+PR head.
 
 Windows dependency setup uses an exact cache key for each architecture and setup
 script. The [dependency-only workflow](.github/workflows/windows-dependencies.yml)
@@ -108,6 +121,10 @@ coverage, not a measured speedup.
 
 For each macOS architecture, the two jobs use the explicit integration-target
 lists in `scripts/macos-test-shards.json`, read by `scripts/run-native-tests.py`.
+List order is execution priority: long targets start early so one worker is less
+likely to wait for the other's final target. The ordering comes from recorded
+CI target times; [the scheduling estimate](docs/measurements/ci-scheduling-2026-10-18.json)
+is a simulation using those times, not a measured speedup for the new order.
 New targets must be assigned deliberately; adding one must not move unrelated
 tests between jobs. Remove obsolete entries when deleting targets. The runner
 rejects missing, duplicate, obsolete or unknown targets. Unit, example and
@@ -118,9 +135,12 @@ executables once, verifies Cargo produced every requested target, then runs two
 executables concurrently with one harness thread each. Tests keep their existing
 internal workers. Every executable gets a separate uploaded log; any failed test
 fails the job after the remaining targets run. This avoids leaving the runner
-idle between the many single-test executables. The 90-minute limits and target
-assignments are unchanged. PR #154 passed the complete acceptance matrix with
-this scheduling; every later delivery still requires its own passing matrix.
+idle between the many single-test executables. Target assignments stay fixed.
+The macOS CI deadline is 150 minutes: the original PR #164 Intel GC job reached
+90 minutes with 82 of 122 targets complete, two interrupted and 38 unstarted.
+The larger deadline prevents losing another full run on a slow host; it does
+not make tests faster or relax any assertion. Local resource limits remain
+unchanged. Every delivery still requires its own complete passing matrix.
 
 The documentation job verifies the real Cargo target set, artifact coverage,
 assignment stability, concurrent execution and failure propagation. The stress

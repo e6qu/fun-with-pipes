@@ -1,0 +1,138 @@
+value : String -> () -> String
+value = const
+sleeping : String -> () -> String ! {Async}
+sleeping = curry (.0 | tap (const 1h | task.sleep))
+awaiting : Task[String] -> () -> Option[String] ! {Async}
+awaiting = curry (.0 | task.await)
+start-sleeping : String -> Task[String] ! {Async}
+start-sleeping = compose sleeping task.spawn
+start-value : String -> Task[String] ! {Async}
+start-value = compose value task.spawn
+own-state : () -> String
+own-state = run-state "initial" (const "owned" | tap put | const () | get) | .0
+scope-failure : () -> () ! {Async, Error[String]}
+scope-failure =
+    tap (const "scope" | string.repeat 2 | start-sleeping | ignore)
+    | const "expected"
+    | fail
+text-channel : I64 -> Channel[String] ! {Async}
+text-channel = channel.make
+Data =
+    | End
+    | Cell String Data
+data-channel : I64 -> Channel[Data] ! {Async}
+data-channel = channel.make
+receive : Channel[String] -> () -> Option[String] ! {Async}
+receive = curry (.0 | channel.recv)
+send : Channel[String] -> () -> Bool ! {Async}
+send = curry (.0 | flip channel.send ("pending" | string.repeat 2))
+start-receive : Channel[String] -> Task[Option[String]] ! {Async}
+start-receive = compose receive task.spawn
+start-send : Channel[String] -> Task[Bool] ! {Async}
+start-send = compose send task.spawn
+undrained : I64 -> () ! {Async}
+undrained =
+    text-channel
+    | tap (flip channel.send ("queued" | string.repeat 2))
+    | tap channel.close
+    | ignore
+queue-failure : I64 -> () ! {Async, Error[String]}
+queue-failure =
+    text-channel
+    | tap (flip channel.send ("failed" | string.repeat 2))
+    | const "expected"
+    | fail
+round : () -> () ! {Async, IO}
+round =
+    const "input"
+    | string.repeat 2
+    | value
+    | task.spawn
+    | both task.await task.await
+    | echo
+    | const "early"
+    | string.repeat 2
+    | sleeping
+    | task.spawn
+    | tap task.cancel
+    | task.await
+    | echo
+    | const "entered"
+    | string.repeat 2
+    | sleeping
+    | task.spawn
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
+    | echo
+    | const "within"
+    | string.repeat 2
+    | value
+    | task.within 1h
+    | echo
+    | const "older"
+    | string.repeat 2
+    | value
+    | task.spawn
+    | awaiting
+    | task.spawn
+    | task.await
+    | echo
+    | const own-state
+    | task.spawn
+    | task.await
+    | echo
+    | const ()
+    | attempt (const scope-failure | task.scope)
+    | echo
+    | const (const "joined" | string.repeat 2 | start-value | ignore)
+    | task.scope
+    | const 0
+    | flip range 65
+    | map show
+    | task.map (string.repeat 3)
+    | length
+    | echo
+    | const 2
+    | text-channel
+    | tap (flip channel.send ("kept" | string.repeat 2))
+    | tap channel.close
+    | channel.recv
+    | echo
+    | const 1
+    | text-channel
+    | channel.recv-for 0ns
+    | echo
+    | const 1
+    | text-channel
+    | tap channel.close
+    | flip channel.send "rejected"
+    | echo
+    | const 1
+    | data-channel
+    | tap (flip channel.send (Cell ("data" | string.repeat 2) End))
+    | tap channel.close
+    | channel.recv
+    | echo
+    | const 1
+    | text-channel
+    | start-receive
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
+    | echo
+    | const 1
+    | text-channel
+    | tap (flip channel.send ("full" | string.repeat 2))
+    | start-send
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
+    | echo
+    | const 1
+    | flip range 65
+    | each undrained
+    | const 1
+    | attempt queue-failure
+    | echo
+main = () | round

@@ -56,7 +56,7 @@ def command(metadata, shard, schedule):
     if missing or obsolete:
         raise ValueError(f"update scripts/macos-test-shards.json: "
                          f"unassigned={sorted(missing)}, obsolete={sorted(obsolete)}")
-    selected = sorted(names if shard == "all" else schedule[shard])
+    selected = sorted(names) if shard == "all" else list(schedule[shard])
     if not selected:
         raise ValueError(f"empty integration test shard: {shard}")
     args = ["cargo", "test", "--no-fail-fast"]
@@ -101,7 +101,9 @@ def test_executables(output, metadata, shard, selected):
         raise ValueError(f"missing test executables: {sorted(expected - set(executables))}")
     if len(set(executables.values())) != len(executables):
         raise ValueError("test targets share an executable path")
-    return sorted(executables.items())
+    order = {name: index for index, name in enumerate(selected)}
+    return sorted(executables.items(), key=lambda item:
+                  (1, order[item[0][1]]) if item[0][0] == "test" else (0, *item[0]))
 
 
 def run_tests(executables, test_args, logs):

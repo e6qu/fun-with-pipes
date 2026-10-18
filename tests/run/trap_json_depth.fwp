@@ -1,0 +1,9 @@
+# Conversion through JSON must report its nesting limit rather than substitute
+# Null for a value that is too deeply nested for the parser.
+wrap : Json -> Json
+wrap = singleton | Json.Arr
+
+# fold supplies the current JSON value, then a counter. wrap | const wraps the
+# current value and returns a function that ignores that counter.
+
+main = range 0 513 | fold (wrap | const) Json.Null | json.encode-value | echo

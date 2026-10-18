@@ -65,10 +65,10 @@ usage:
                                  the tools of a stateless MCP server, on
                                  stdin and stdout or, with --listen, over
                                  HTTP (see docs/mcp.md)
-                                 (every `fwp serve`, and the servers that
-                                 --rest and --service build, take
+                                 (REST and split-service servers take
                                  --tls-cert file --tls-key file to serve
-                                 over TLS; see docs/tls.md)
+                                 over TLS; see docs/tls.md; generated MCP
+                                 servers use plain HTTP or standard input)
   fwp proto <file.fwp> [--service m]...
                                  print the .proto file of the services
   fwp openapi [--yaml] <file.fwp>
@@ -656,10 +656,6 @@ fn build(args: &[String]) -> ExitCode {
     }
     if lib.is_some() && target.is_wasm() {
         eprintln!("fwp build: --staticlib/--cdylib require a native target");
-        return ExitCode::from(2);
-    }
-    if arc && (target == fwp::cgen::Target::Browser || rest || mcp) {
-        eprintln!("fwp build: --gc arc requires a checked executable or C library; browser, REST and MCP boundaries are not yet eligible");
         return ExitCode::from(2);
     }
     fwp::cgen::set_native_options(fwp::cgen::NativeOptions {

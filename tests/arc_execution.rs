@@ -246,19 +246,6 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
     }
     let input = dir.join("valid.fwp");
     std::fs::write(&input, "main = 42 | echo\n").unwrap();
-    for boundary in [&["--target", "wasm32-browser"][..], &["--rest"]] {
-        let out = Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["build", "--gc=arc", "--emit-c"])
-            .args(boundary)
-            .arg(&input)
-            .arg("-o")
-            .arg(dir.join("boundary.c"))
-            .output()
-            .unwrap();
-        assert!(!out.status.success());
-        assert!(String::from_utf8_lossy(&out.stderr)
-            .contains("--gc arc requires a checked executable or C library"));
-    }
     for flag in ["FWP_FREE", "FWP_REUSE"] {
         let out = Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env(flag, "0")

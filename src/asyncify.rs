@@ -56,6 +56,8 @@ pub fn apply(path: &Path, opt: &str) -> Result<(), String> {
     let mut cmd = Command::new(&exe);
     cmd.arg(path)
         .arg("--asyncify")
+        // Keep function names for stack traces and post-transform binary audits.
+        .arg("--debuginfo")
         .arg("--pass-arg=asyncify-imports@fwp.none");
     if opt != "-O0" {
         cmd.arg(opt);

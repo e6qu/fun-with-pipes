@@ -81,6 +81,21 @@ class Coverage(unittest.TestCase):
             new = SHARDS.command(metadata(["a", "b", "z", "new"]), shard, after)[2]
             self.assertEqual(old, [name for name in new if name != "new"])
 
+    def test_explicit_order_survives_cargo_artifact_order(self):
+        value = metadata(["a", "b", "z"])
+        schedule = {"regular": ["b"], "gc": ["z", "a"]}
+        args, _, selected = SHARDS.command(value, "gc", schedule)
+        self.assertEqual(selected, ["z", "a"])
+        self.assertEqual([args[i + 1] for i, arg in enumerate(args) if arg == "--test"],
+                         ["z", "a"])
+        messages = [{"reason": "compiler-artifact", "package_id": "root",
+                     "target": {"kind": ["test"], "name": name},
+                     "profile": {"test": True}, "executable": f"/{name}"}
+                    for name in ["a", "z"]]
+        result = SHARDS.test_executables("\n".join(json.dumps(row) for row in messages),
+                                        value, "gc", selected)
+        self.assertEqual([key[1] for key, _ in result], ["z", "a"])
+
     def test_unassigned_obsolete_duplicate_and_unknown_targets_fail(self):
         schedule = {"regular": ["a"], "gc": ["b"]}
         invalid = metadata(["a", "b"])

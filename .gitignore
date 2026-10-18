@@ -3,3 +3,4 @@
 /out
 /web/fwp.wasm
 /web/examples/
+__pycache__/

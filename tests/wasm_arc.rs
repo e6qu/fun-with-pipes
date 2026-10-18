@@ -45,17 +45,10 @@ fn wasi(binary: &Path, root: &Path) -> Command {
         .env("FWP_REUSE_VERIFY", "0");
     command
 }
-fn emit(source: &Path, cfile: &Path, entry: &[&str]) -> String {
+fn emit(source: &Path, cfile: &Path, entry: &[&str], target: &str) -> String {
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args([
-                "build",
-                "--gc",
-                "arc",
-                "--target",
-                "wasm32-wasi",
-                "--emit-c",
-            ])
+            .args(["build", "--gc", "arc", "--target", target, "--emit-c"])
             .args(entry)
             .arg(source)
             .arg("-o")
@@ -69,7 +62,8 @@ fn emit(source: &Path, cfile: &Path, entry: &[&str]) -> String {
 }
 
 fn allocator_source(source: &Path, cfile: &Path) -> String {
-    let code = emit(source, cfile, &[]).replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");
+    let code = emit(source, cfile, &[], "wasm32-wasi")
+        .replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");
     let fixture = include_str!("fixtures/wasm_arc_counts.c");
     let split = fixture.find("static int wasm_arc_recover").unwrap();
     format!(
@@ -147,11 +141,6 @@ fn wasi_arc_rejects_unproved_entries_and_native_library_flags() {
     let dir = fwp::cgen::TempDir::new("wasi-arc-reject").unwrap();
     let source = dir.join("main.fwp");
     for (program, extra, reason) in [
-        (
-            "main = task.yield ()\n",
-            vec![],
-            "WASI host fibers have no checked retention contract",
-        ),
         (
             "main = 42 | echo\n",
             vec!["--staticlib"],
@@ -245,7 +234,7 @@ main = [
                 .arg(&source)
                 .current_dir(dir.path()),
         );
-        let code = emit(&source, &dir.join("program.c"), &[]);
+        let code = emit(&source, &dir.join("program.c"), &[], "wasm32-wasi");
         let instrumented = measured_program(&code);
         let needle = "    free((void *)(uintptr_t)value);";
         assert_eq!(instrumented.matches(needle).count(), 1);
@@ -374,7 +363,7 @@ fn wasi_function_and_cli_entries_reclaim_inputs_and_results() {
         }
         command.arg(&source).arg("repeat-text").args(["32", "λ"]);
         let reference = checked(&mut command);
-        let code = measured_program(&emit(&source, &dir.join("entry.c"), &entry));
+        let code = measured_program(&emit(&source, &dir.join("entry.c"), &entry, "wasm32-wasi"));
         for opt in ["-O1", "-O2"] {
             let binary = dir.join("entry.wasm");
             fwp::cgen::compile_for(
@@ -396,7 +385,7 @@ fn wasi_function_and_cli_entries_reclaim_inputs_and_results() {
             let symbols = checked(Command::new("wasm-objdump").arg("--details").arg(&binary));
             let symbols = String::from_utf8_lossy(&symbols.stdout);
             assert!(
-                symbols.contains("<_start>"),
+                symbols.contains("<_start>") && symbols.contains("<fwp_"),
                 "module symbols missing: {symbols}"
             );
             for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
@@ -427,7 +416,7 @@ fn wasi_hash_borrows_values_without_allocating() {
     let dir = fwp::cgen::TempDir::new("wasi-hash-counts").unwrap();
     let source = dir.join("main.fwp");
     std::fs::write(&source, "main = 1.0f128 | echo\n").unwrap();
-    let code = emit(&source, &dir.join("hash.c"), &[]);
+    let code = emit(&source, &dir.join("hash.c"), &[], "wasm32-wasi");
     let code = &code[..code.find("int main(").unwrap()];
     let old=code.replace("return fwp_hash_value(0xcbf29ce484222325ULL, v, d);",
         "fwp_buf b={0};fwp_encode(&b,v,d);uint64_t h=0xcbf29ce484222325ULL;for(size_t i=0;i<b.len;i++){h^=(unsigned char)b.d[i];h*=0x100000001b3ULL;}free(b.d);return h;");
@@ -464,7 +453,7 @@ fn wasi_range_array_rejects_length_before_32_bit_truncation() {
         "main = range 0 4294967296 | array.from-list | array.length | echo\n",
     )
     .unwrap();
-    let code = emit(&source, &dir.join("main.c"), &[]);
+    let code = emit(&source, &dir.join("main.c"), &[], "wasm32-wasi");
     assert!(code.contains("return fwp_p_array_range(l0, l1,"));
     let guard =
         "    if (count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"array too large\");";
@@ -499,7 +488,7 @@ fn wasi_cpu_kernel_final_reduction_block_does_not_wrap() {
     let dir = fwp::cgen::TempDir::new("wasi-kernel-final-block").unwrap();
     let input = dir.join("main.fwp");
     std::fs::write(&input, "main = ()\n").unwrap();
-    let code = emit(&input, &dir.join("main.c"), &[]);
+    let code = emit(&input, &dir.join("main.c"), &[], "wasm32-wasi");
     let probe = r#"
 int main(void) {
     const int64_t code[] = {FWP_K_CONST};
@@ -546,7 +535,7 @@ fn wasi_cpu_kernels_check_counts_before_32_bit_truncation() {
     ] {
         let input = dir.join("main.fwp");
         std::fs::write(&input,format!("main = device.{operation} 1 4294967296 ([1] | array.from-list) ([2.5] | array.from-list) [] | {} | echo\n",if operation=="run" {"array.length"}else{"id"})).unwrap();
-        let code = emit(&input, &dir.join("main.c"), &[]);
+        let code = emit(&input, &dir.join("main.c"), &[], "wasm32-wasi");
         let start = code.find(signature).unwrap();
         let end = start + code[start..].find("\n}").unwrap() + 2;
         assert_eq!(code[start..end].matches(guard).count(), 1);
@@ -591,7 +580,7 @@ fn fixed_function_captures_initialize_in_wasi() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let source = root.join("tests/run/static_functions.fwp");
     let cfile = dir.join("fixed.c");
-    let code = emit(&source, &cfile, &[]);
+    let code = emit(&source, &cfile, &[], "wasm32-wasi");
     assert!(code.contains("static fwp_clo fwp_static_function"));
     for opt in ["-O1", "-O2"] {
         let binary = dir.join(format!("fixed{opt}.wasm"));
@@ -602,4 +591,239 @@ fn fixed_function_captures_initialize_in_wasi() {
             include_str!("run/static_functions.out").as_bytes()
         );
     }
+}
+
+#[test]
+fn wasm_entries_keep_cycle_checks_for_browser_and_wasi() {
+    let dir = fwp::cgen::TempDir::new("wasm-entry-checks").unwrap();
+    let source = dir.join("entry.fwp");
+    for target in ["wasm32-wasi", "wasm32-browser"] {
+        std::fs::write(&source, "main = 42 | echo\n").unwrap();
+        emit(&source, &dir.join("entry.c"), &[], target);
+        std::fs::write(&source, "functions : I64 -> Channel[() -> String] ! {Async}\nfunctions = channel.make\nmain = functions 1 | channel.close\n").unwrap();
+        let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--gc", "arc", "--emit-c", "--target", target])
+            .arg(&source)
+            .arg("-o")
+            .arg(dir.join("rejected.c"))
+            .output()
+            .unwrap();
+        assert!(!output.status.success(), "{target}: {output:?}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains("channel payloads cannot contain"),
+            "{target}: {output:?}"
+        );
+    }
+}
+
+#[test]
+fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
+    if !available() {
+        return;
+    }
+    let have_asyncify = fwp::asyncify::wasm_opt().is_some();
+    assert!(
+        have_asyncify || std::env::var_os("FWP_REQUIRE_WASI_ARC").is_none(),
+        "required Asyncify toolchain unavailable"
+    );
+    let dir = fwp::cgen::TempDir::new("wasi-task-owners").unwrap();
+    let source = dir.join("tasks.fwp");
+    let program = include_str!("fixtures/task_channel_ownership.fwp").replace(
+        "main = () | round",
+        "main = range 0 16 | each (const () | round)",
+    );
+    std::fs::write(&source, program).unwrap();
+    let reference = checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["run", "--interp"])
+            .env("FWP_NO_OPT", "1")
+            .arg(&source),
+    );
+    assert_eq!(
+        reference.stdout,
+        include_bytes!("fixtures/task_channel_ownership.out").repeat(16)
+    );
+    let mut failures = Vec::new();
+    for target in [fwp::cgen::Target::Wasi, fwp::cgen::Target::Browser] {
+        let target_name = if target == fwp::cgen::Target::Wasi {
+            "wasm32-wasi"
+        } else {
+            "wasm32-browser"
+        };
+        let ordinary = emit(&source, &dir.join("tasks.c"), &[], target_name);
+        let measured = measured_program(&ordinary);
+        let release = "    fwp_fiber_tasks_finish();";
+        assert_eq!(measured.matches(release).count(), 1);
+        let omitted = measured.replace(release, "    /* omit scheduler shutdown */");
+        let snapshot = "            fwp_leave(t); /* completed fiber storage */";
+        assert_eq!(measured.matches(snapshot).count(), 1);
+        let missing_state =
+            measured.replace(snapshot, "            /* omit finished state owner */");
+        for asyncify in [false, true] {
+            if asyncify && !have_asyncify {
+                continue;
+            }
+            let mode = if asyncify { "asyncify" } else { "jspi" };
+            for opt in ["-O1", "-O2"] {
+                for (label, candidate, status) in [
+                    ("ordinary", &ordinary, 0),
+                    ("measured", &measured, 0),
+                    ("omitted", &omitted, 244),
+                    ("missing-state", &missing_state, 244),
+                ] {
+                    let mut code = if label == "ordinary" {
+                        candidate.clone()
+                    } else {
+                        format!(
+                            "{}\n{candidate}",
+                            include_str!("fixtures/wasm_arc_allocations.c")
+                        )
+                    };
+                    if asyncify {
+                        code = format!("{}{code}", fwp::asyncify::ASYNCIFY_MARK);
+                    }
+                    let binary = dir.join("tasks.wasm");
+                    fwp::cgen::compile_for(&code, &binary, opt, target).unwrap();
+                    if asyncify {
+                        fwp::asyncify::apply(&binary, opt).unwrap();
+                    }
+                    let mut command = wasi(&binary, dir.path());
+                    if target == fwp::cgen::Target::Browser {
+                        command = Command::new("node");
+                        command
+                            .arg("--no-warnings")
+                            .arg(
+                                Path::new(env!("CARGO_MANIFEST_DIR"))
+                                    .join("tests/wasm/browser-run.mjs"),
+                            )
+                            .arg(binary.with_extension("js"))
+                            .env("FWP_GC", "off")
+                            .env("FWP_GC_STRESS", "0")
+                            .env("FWP_GC_VERIFY", "0")
+                            .env("FWP_REUSE_VERIFY", "0");
+                    }
+                    if asyncify {
+                        command.env("FWP_NO_JSPI", "1");
+                    }
+                    let output = command.output().unwrap();
+                    let name = format!("tasks-{target:?}-{mode}-{label}{opt}");
+                    if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                        let path = std::path::PathBuf::from(path);
+                        std::fs::create_dir_all(&path).unwrap();
+                        std::fs::write(path.join(format!("{name}.c")), &code).unwrap();
+                        std::fs::copy(&binary, path.join(format!("{name}.wasm"))).unwrap();
+                        std::fs::write(path.join(format!("{name}.stdout")), &output.stdout)
+                            .unwrap();
+                        std::fs::write(path.join(format!("{name}.stderr")), &output.stderr)
+                            .unwrap();
+                    }
+                    if output.status.code() != Some(status)
+                        || output.stdout != reference.stdout
+                        || (status == 0 && output.stderr != reference.stderr)
+                    {
+                        failures.push(format!("{name}: status {:?}, expected {status}; stdout matches: {}; stderr: {}",
+                            output.status.code(), output.stdout == reference.stdout, String::from_utf8_lossy(&output.stderr)));
+                        continue;
+                    }
+                    if status == 0 {
+                        let symbols =
+                            checked(Command::new("wasm-objdump").arg("--details").arg(&binary));
+                        let symbols = String::from_utf8_lossy(&symbols.stdout);
+                        if !symbols.contains("<_start>") || !symbols.contains("<fwp_") {
+                            failures.push(format!("{name}: runtime function names missing"));
+                        }
+                        for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                            if symbols.contains(collector) {
+                                failures.push(format!("{name}: {collector} remains"));
+                            }
+                        }
+                        if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                            let path = std::path::PathBuf::from(path);
+                            std::fs::create_dir_all(&path).unwrap();
+                            std::fs::write(
+                                path.join(format!("{name}.symbols")),
+                                symbols.as_bytes(),
+                            )
+                            .unwrap();
+                        }
+                    }
+                }
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[test]
+fn browser_entries_isolate_outputs_reentrant_calls_and_host_errors() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("browser-host-owners").unwrap();
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    for source in [
+        root.join("tests/run/json_exact_numbers.fwp"),
+        root.join("tests/fixtures/browser_host_task.fwp"),
+    ] {
+        let fixture = source.file_stem().unwrap().to_str().unwrap();
+        let ordinary = emit(&source, &dir.join("numbers.c"), &[], "wasm32-browser");
+        let measured = measured_program(&ordinary);
+        for (name, code) in [
+            ("ordinary", ordinary),
+            (
+                "measured",
+                format!(
+                    "{}\n{measured}",
+                    include_str!("fixtures/wasm_arc_allocations.c")
+                ),
+            ),
+        ] {
+            let binary = dir.join(format!("{name}.wasm"));
+            fwp::cgen::compile_for(&code, &binary, "-O2", fwp::cgen::Target::Browser).unwrap();
+            let result = checked(
+                Command::new("node")
+                    .arg("--no-warnings")
+                    .arg(root.join("tests/wasm/browser-owners.mjs"))
+                    .arg(binary.with_extension("js"))
+                    .arg(source.with_extension("out")),
+            );
+            assert_eq!(
+                result.stdout,
+                b"sequential, concurrent, reentrant and throwing sinks pass\n"
+            );
+            assert!(result.stderr.is_empty(), "{result:?}");
+            if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                let path = std::path::PathBuf::from(path);
+                std::fs::create_dir_all(&path).unwrap();
+                std::fs::copy(&binary, path.join(format!("browser-{fixture}-{name}.wasm")))
+                    .unwrap();
+                std::fs::write(path.join(format!("browser-{fixture}-{name}.c")), code).unwrap();
+            }
+        }
+    }
+}
+
+#[test]
+fn browser_loader_preserves_host_errors_and_engine_stack_traps() {
+    let have_node = Command::new("node")
+        .arg("--version")
+        .output()
+        .is_ok_and(|output| output.status.success());
+    if !have_node {
+        assert!(
+            std::env::var_os("FWP_REQUIRE_WASI_ARC").is_none(),
+            "required Node unavailable"
+        );
+        eprintln!("skipping loader exception execution: Node unavailable");
+        return;
+    }
+    let result = checked(
+        Command::new("node")
+            .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/wasm/loader-errors.mjs")),
+    );
+    assert_eq!(
+        result.stdout,
+        b"host exceptions and actual WebAssembly stack overflow stay distinct\n"
+    );
+    assert!(result.stderr.is_empty(), "{result:?}");
 }

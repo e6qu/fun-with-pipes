@@ -1,0 +1,40 @@
+# Untyped JSON preserves numeric text. Converting through Json must not round
+# typed values through F64, including numbers nested in records and lists.
+
+Numbers = {
+    signed: List[I64],
+    unsigned: U64,
+    wide: I128,
+    u-wide: U128,
+    precise: F128,
+    precise-near-one: F128,
+}
+
+numbers : Numbers
+numbers = Numbers {
+    signed = [9007199254740993, -9223372036854775808],
+    unsigned = 18446744073709551615u64,
+    wide = -170141183460469231731687303715884105728i128,
+    u-wide = 340282366920938463463374607431768211455u128,
+    precise = 9007199254740993.0f128,
+    precise-near-one =
+        1.0000000000000000000000000000007888609052210118054117285652827862296732064351090230047702789306640625f128,
+}
+
+read-numbers : Json -> Result[Numbers, String]
+read-numbers = json.decode
+
+round-trip : String -> Bool
+round-trip = fork eq Ok (json.parse | result.map json.encode)
+
+main = [
+    numbers | json.encode-value | read-numbers | eq (Ok numbers) | echo,
+    ["9007199254740993", "18446744073709551615", "1.2300e+9999", "-0.00"]
+    | map round-trip
+    | echo,
+    9007199254740993 | json.int | json.encode | eq "9007199254740993" | echo,
+    numbers
+    | json.encode-value
+    | both (json.encode | print) (json.encode | print)
+    | ignore,
+] | ignore

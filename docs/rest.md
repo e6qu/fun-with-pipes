@@ -52,6 +52,12 @@ calls it with `curl` and a generated client.
 | `fwp openapi app.fwp` | the OpenAPI document of the endpoints, as JSON (`--yaml`: as YAML) |
 | `fwp openapi --import spec.json [-o client.fwp]` | an fwp client module of an API (JSON or YAML; OpenAPI 3.0, 3.1 or Swagger 2.0) |
 
+`fwp build app.fwp --rest --gc arc -o server` applies the compiler's ownership
+checks to the generated server and excludes tracing garbage collection. The
+checks reject unsupported lifetimes; they do not silently enable tracing.
+This entry mode is under validation: [the handoff](development-state.md) records
+which execution, cleanup and platform checks have passed.
+
 A server takes `--listen host:port` (default: `FWP_REST_ADDR`, else
 `127.0.0.1:8080`; port 0 picks a free port), `--tls-cert file` and
 `--tls-key file` (default: `FWP_TLS_CERT` and `FWP_TLS_KEY`; with both,
@@ -486,8 +492,16 @@ optional fields and variants, rather than relying on a client to guess their sha
 The codec is `json.write : a -> String where Encode[a]` and
 `json.read : String -> Result[a, String] where Decode[a]` in the standard
 library ([stdlib.md](stdlib.md#json)), with `json.encode-value` and
-`json.decode` for `Json` values. Any value that can be sent to a service
-can be written, in both backends, identically:
+`json.decode` for `Json` values.
+
+`Json.Num` stores numeric text, so passing through `Json` preserves integer and
+F128 precision. Use `json.encode-value` to construct JSON from a typed value and
+`json.decode` to recover the chosen type. `json.as-number` explicitly converts to
+F64 and has F64 rounding. Different number spellings remain distinct JSON values.
+REST CSV responses also retain the typed numeric spelling: an F64 value of twelve
+is written as `12.0`, and large integers are not rounded through F64.
+
+The interpreter and native programs use the same encodings:
 
 | fwp | JSON |
 |---|---|
@@ -654,6 +668,9 @@ main = 1 | bookclient.book "http://127.0.0.1:8080" | option.map .title | echo
 * **YAML and Swagger 2.0.** YAML documents are read by a YAML 1.2 reader
   of fwp's own (`src/yaml.rs`: block and flow collections, the quoting
   styles, block scalars, comments, anchors, aliases and merge keys).
+  Decimal number text is retained exactly. Hexadecimal/octal integers must fit
+  U128; larger ones are reported as errors. Non-finite YAML numbers such as
+  `.inf` are rejected because JSON has no such numeric values.
   Swagger 2.0 documents are converted to OpenAPI 3 first
   (`src/swagger.rs`): `definitions` are the component schemas, a `body`
   parameter the request body with the media types of `consumes`,

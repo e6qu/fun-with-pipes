@@ -9925,6 +9925,9 @@ static void *fwp_main_thread(void *arg) {{
 {run}
     fwp_caf_finish();
     fwp_cl_finish();
+#ifdef FWP_FIBERS
+    fwp_fiber_tasks_finish();
+#endif
     fflush(stdout);
     return 0;
 }}
@@ -10090,16 +10093,6 @@ pub fn check_target(prog: &Program, target: Target) -> Result<(), String> {
     if !target.is_wasm() {
         return Ok(());
     }
-    if target == Target::Wasi && native_options().arc {
-        if let Some(symbol) = prog.funcs.iter().find_map(|function| match &function.body {
-            Body::Prim(symbol) if symbol.starts_with("task.") || symbol.starts_with("channel.") => {
-                Some(symbol)
-            }
-            _ => None,
-        }) {
-            return Err(format!("--gc arc: WASI host fibers have no checked retention contract (used by `{symbol}`)"));
-        }
-    }
     if uses_services(prog) {
         return Err("services (gRPC calls) need the native target".into());
     }
@@ -10200,6 +10193,33 @@ pub fn compile_c(c_source: &str, output: &std::path::Path, opt: &str) -> Result<
     compile_for(c_source, output, opt, Target::Native)
 }
 
+/// Expand linked C/assembly sources with the same preprocessing options as the
+/// native build. Cache lookups must observe included header edits and errors too.
+pub(crate) fn preprocess_linked_sources(
+    inputs: &[String],
+    c_source: &str,
+    opt: &str,
+) -> Result<Vec<u8>, String> {
+    let cc = c_compiler()?;
+    let mut command = cc_command(&cc);
+    command
+        .arg(opt)
+        .args(parallel_codegen(&cc.0, opt, c_source))
+        // Keep line markers: they distinguish includes and translation units.
+        .args(["-std=gnu11", "-ffp-contract=off", "-w", "-E"])
+        .args(inputs);
+    let output = command
+        .output()
+        .map_err(|e| format!("cannot preprocess linked sources: {e}"))?;
+    if !output.status.success() {
+        return Err(compiler_failure(
+            "cannot preprocess linked sources",
+            &output,
+        ));
+    }
+    Ok(output.stdout)
+}
+
 /// Preserve failed compiler output and termination details for native and FFI builds.
 pub(crate) fn compiler_failure(context: &str, output: &std::process::Output) -> String {
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -10279,8 +10299,7 @@ pub fn is_gcc(cc: &str) -> bool {
 }
 
 /// GCC options that generate the code of a large program in parallel:
-/// link-time optimization splits it into partitions, compiled on all the
-/// cores (a REST server's 75 000 lines of C take half the time on four).
+/// link-time optimization splits it into partitions for parallel compilation.
 /// Small programs, `-O0`, other compilers and `FWP_LTO=0` compile as one
 /// unit; `FWP_LTO=1` asks for it whatever the size.
 fn parallel_codegen(cc: &str, opt: &str, c_source: &str) -> &'static [&'static str] {
