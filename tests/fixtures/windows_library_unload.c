@@ -53,7 +53,7 @@ static void finalize(void *p) {
  observed->finalized++;
  if(observed->static_exit)puts(observed->order_error?"bad finalization":"finalized");
 }
-void setup(struct snapshot *s) {
+__declspec(dllexport) void setup(struct snapshot *s) {
  fwp_lib_init();observed=s;
  s->heap=fwp_gc.reservation;s->meta=fwp_gc.meta;
  V wide=fwp_rc_fresh(fwp_str_new("wide",4));

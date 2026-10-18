@@ -58,10 +58,13 @@ jobs:
           clang --version > library-result-evidence/clang.txt
           printf '%s\n' 'OS=${{ runner.os }}' 'architecture=${{ runner.arch }}' 'runner=${{ matrix.runner }}' 'generated source: build --gc arc --staticlib --emit-c; FWP_STACK=0' 'native libraries: -O1/-O2 -std=gnu11 -ffp-contract=off -fPIC; shared flag depends on host' 'FWP_AD_WORKSPACE=0/1; one static execution or three dynamic unload rounds' '256 repeated calls after warmup; zero counted bytes at shutdown; no timing comparison' > library-result-evidence/settings.txt
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --lib --bin fwp --test arc_library --test library_input_ownership --test library_result_ownership --test library_unload -- -D warnings
+      - run: cargo clippy --lib --bin fwp --test arc_library --test library_input_ownership --test library_result_ownership --test library_unload --test ffi -- -D warnings
       - name: Static and shared results, aliases, release controls and unload
         if: ${{ !cancelled() }}
         run: cargo test --no-fail-fast --test arc_library --test library_input_ownership --test library_result_ownership --test library_unload --test ffi -- --nocapture
+      - name: TCP and UDP library unload
+        if: ${{ !cancelled() }}
+        run: cargo test --test udp_ownership socket_library_unload_closes_retained_handles_and_preserves_host_socket -- --exact --nocapture
       - name: Preserve C and Rust interop diagnostics
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: python

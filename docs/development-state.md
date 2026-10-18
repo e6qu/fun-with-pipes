@@ -65,7 +65,7 @@ that record. It passes locally (7.16 s). A tiny allocation probe then found
 `hold`: zero record boxes/one input string, and `duplicate`: one record box/one
 input string (1.10 s guarded). `/private/tmp/fwp-library-box-counts/` preserves
 the baseline source and counts; the probe script is `fwp-library-box-counts.py`.
-An uncommitted optimization now uses existing worker result fields directly for
+Preparation `e1e8e84b264ba3025d7843b2ac6b26bf1e7f8ec2` now uses existing worker result fields directly for
 C record exports whose parameters use the ordinary word convention. It avoids
 boxing/unpacking that result while preserving typed cleanup during conversion.
 The same probe now reports zero boxes/one string for both calls (1.22 s).
@@ -77,16 +77,55 @@ The six-host run has finished: Linux and macOS pass; both Windows hosts fail
 only `shared_library_from_c` and `static_library_from_rust`. All 30 test summaries
 are audited: 80 passed, four failures, no skips. Audit and logs:
 `/private/tmp/fwp-audit-library-results.py`, `fwp-library-results-audit.json`.
-The C host returns `norm = 25` where `5` is required, plus ordinary Windows text
-line endings. The Rust host uses MSVC to link a generated LLVM-MinGW archive and
-asks for Unix `m.lib`. The prepared repair installs/uses the matching native
-Rust `*-pc-windows-gnullvm` target and explicitly selects the LLVM-MinGW linker.
-The C host assertion normalizes only its platform text line endings; the wrong
-numeric result remains unresolved. Retain generated C, libraries, executables,
-symbols and disassembly in the next Windows-only `library-results` probe to find
-its cause. Do not weaken the expected number or claim this run passed.
+The diagnostic run `39089692041` at `e1e8e84b` is complete: 13 passed,
+one failed, no skips. Rust static interop now passes using the matching
+`*-pc-windows-gnullvm` target and LLVM-MinGW linker. C text line endings are
+normalized, but the shared-library number still fails unchanged.
+
+Actual DLL inspection found the root cause: `norm` exists in the internal COFF
+symbols and contains the correct call to `hypot`, but is absent from the DLL
+export table. The host instead imports `norm` from
+`api-ms-win-crt-math-l1-1-0.dll`. The Windows linker's automatic export rules
+omit names found in import libraries. The repair explicitly marks every generated
+language export and result release with `__declspec(dllexport)` on Windows.
+The C-host regression now checks the actual export table, not only `nm` symbols.
+Explicit exports also disable automatic exporting of test hooks; all dynamic
+unload/probe hooks for ARC, Windows cleanup, TCP, UDP and TLS resources are now
+explicitly exported. No function is renamed and the expected numerical result
+remains 5. A temporary math-only probe passed locally (4.22 s); it was not kept
+because the demonstrated defect is export selection, not arithmetic.
+
+Diagnostic artifacts are at `/private/tmp/fwp-library-windows-diagnostic/39089692041`
+(2.41 s guarded download), with both DLL and host import/export tables and
+assembly. They were inspected as data only. The audit is
+`/private/tmp/fwp-library-windows-diagnostic-audit.json`. Publish the complete
+repair and rerun all six focused hosts before opening the next delivery PR.
+The rerun also checks TCP/UDP library unload and retains successful C/Rust host
+binaries and output, allowing inspection of the repaired import/export tables.
+
+Artifact collection: baseline run `39088723884` is downloaded to
+`/private/tmp/fwp-library-result-evidence/39088723884` (6.10 s guarded).
+`scripts/summarize-library-results.py --artifacts DIR --audit AUDIT --llvm-bin DIR
+--record-results boxed --output FILE` verifies all 24 actual libraries, 48
+execution configurations and 18 failure controls as data. The saved executions
+report zero counted shutdown bytes and zero collections; exported release
+functions exist and tracing functions are absent. The baseline report is
+`/private/tmp/fwp-library-results-baseline.json` (0.75 s). It explicitly records
+the two failing Windows jobs, rather than calling the whole run successful.
+The first collector attempt used an unsupported Mach-O archive header mode;
+format verification now reads the successful disassembly header on every host.
+Downloaded code was never executed.
 
 Guarded checks from this worktree:
+
+- Export repair Clippy including all changed unload targets passes (5.83 s).
+  Serial formatting, workflow lint, documentation and strengthened artifact
+  collection pass (6.55 s); the collector now verifies actual Windows DLL
+  exports and requires internal runtime symbol names on every host.
+
+- Explicit export repair: `cargo test --no-fail-fast --test ffi --test arc_library
+  --test library_unload -- --nocapture`: ten passed (53.74 s including rebuild).
+  The Windows-only export-table assertion still requires native CI.
 
 - Final focused Clippy passes (5.84 s); formatting passes (1.09 s); both
   changed workflows pass actionlint (1.65 s).

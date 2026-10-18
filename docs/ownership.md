@@ -502,9 +502,11 @@ use a released result, or keep results past library unload. Serialize host
 calls and releases; concurrent host entry remains outside this contract.
 
 A unique returned string transfers its existing owner without another copy,
-allocation or retain. A uniquely owned record transfers its string fields and
-releases its box and remaining fields. Shared records retain the string owners
-that C now needs. Conversion finishes before any owner transfers: an embedded
+allocation or retain. For record returns with an existing worker that returns
+fields and accepts ordinary word arguments, those fields transfer directly into
+the C result; no intermediate record is allocated. Other record results transfer
+their string fields and release the temporary box and remaining fields when
+uniquely owned. Shared records retain the string owners that C now needs. Conversion finishes before any owner transfers: an embedded
 NUL still traps rather than silently truncating a C string, and a failed field
 conversion releases the full temporary result. Raw pointers and retained foreign
 callbacks still require separate lifetime contracts. Every export is checked

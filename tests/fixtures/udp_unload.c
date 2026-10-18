@@ -1,4 +1,7 @@
 /* Host calls finish only after all library calls have returned. */
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
 void setup(uintptr_t *descriptor) {
     fwp_lib_init();
     intptr_t budget=fwp_gc.budget;

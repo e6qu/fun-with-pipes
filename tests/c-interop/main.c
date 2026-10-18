@@ -1,4 +1,4 @@
-/* A C program using the fwp-built shared library libgeom.so. */
+/* A C program using the fwp-built shared library and its generated header. */
 #include <stdio.h>
 #include "libgeom.h"
 
