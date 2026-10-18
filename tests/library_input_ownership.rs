@@ -197,17 +197,17 @@ int main(void){
  if(!fwp_reuse_verify&&fwp_gc.freed<=freed)return 1;
  reset(); if(wrapped("héllo")!=5||ns!=1||!strings_released_once())return 2;
  reset(); const char *held=identity("host");
- if(strcmp(held,"host")||ns!=1||*fwp_rc_slot(strings[0])!=0)return 3;
+ if(strcmp(held,"host")||ns!=1||*fwp_rc_slot(strings[0])!=1)return 3;
  struct fwp_c_Input input={.word=(int64_t)bits,.p=(void *)(uintptr_t)bits,.s="first",.t="second"};
  reset(); if(record_length(input)!=5||ns!=2||nd!=2||!data_released())return 4;
  for(int i=0;i<ns;i++)if(!dead_string(strings[i]))return 4;
  if(*fwp_rc_slot(bits)!=1)return 5;
  reset(); struct fwp_c_Input alias=record_alias(input);
  if(alias.word!=(int64_t)bits||alias.p!=(void *)(uintptr_t)bits||strcmp(alias.s,"first")||strcmp(alias.t,"second")||ns!=2||nd!=3||!data_released())return 6;
- for(int i=0;i<ns;i++)if(*fwp_rc_slot(strings[i])!=0)return 6;
+ for(int i=0;i<ns;i++)if(*fwp_rc_slot(strings[i])!=1)return 6;
  if(*fwp_rc_slot(bits)!=1)return 5;
  reset(); const char *second_host=second("first","second");
- if(strcmp(second_host,"second")||ns!=2||!dead_string(strings[0])||drops[0]!=1||*fwp_rc_slot(strings[1])!=0)return 7;
+ if(strcmp(second_host,"second")||ns!=2||!dead_string(strings[0])||drops[0]!=1||*fwp_rc_slot(strings[1])!=1)return 7;
  reset(); const char *grown=repeat(2,"hi");
  if(strcmp(grown,"hihi")||ns!=2||!dead_string(strings[0])||drops[0]!=1)return 8;
  reset(); if(prepare("prior",input)!=42||ns!=3||nd!=2||!data_released())return 9;
@@ -237,6 +237,9 @@ int main(void){
  reset(); discard("discard");if(ns!=1||!strings_released_once())return 18;
  reset(); print_line("unit");if(ns!=1||!strings_released_once())return 19;
  if(strcmp(held,"host")||strcmp(second_host,"second")||strcmp(alias.s,"first")||strcmp(alias.t,"second")||fwp_gc.armed||fwp_gc.ncollect)return 16;
+ fwp_release_identity(held); fwp_release_second(second_host);
+ fwp_release_record_alias(alias); fwp_release_repeat(grown);
+ fwp_rc_free_obj(bits);
  return 0;
 }
 "#;

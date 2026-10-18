@@ -2,22 +2,27 @@
 
 ## Next action
 
-Next: publish the combined repair of [PR #164](https://github.com/e6qu/fun-with-pipes/pull/164),
-then audit all nine production jobs and documentation for that exact final head.
-All nine original jobs and every completed target have now been audited. The
-final six-host cache checks pass. Keep all known repairs in one push.
+Next: audit all nine production jobs in run `39087594221` for combined PR #164
+head `a845e0c5e9a37dad185c99566ddc6ce413b4293b`. Documentation run `39087594154`
+already passes. Preserve this final head while its gates run; fix every new
+failure. Squash-merge only after complete acceptance, then continue the roadmap.
 
-The root branch `server-entry-delivery` is still published at
-`6b504c2e333f9c89725db714aed1440b79eab178`. The combined work is prepared in
-`/private/tmp/fwp-wasm-host-ownership`, branch `wasm-host-ownership`. Root edits
-are the mirrored handoff and two client goldens already repaired in preparation.
-Commit the remaining preparation changes, then use
-`/private/tmp/fwp-combine-164.py`: it verifies and backs up those edits, checks
-that the original nine-job audit is complete, and fast-forwards the root to the
-identical prepared tree. Push `server-entry-delivery` and update the PR from
-`/private/tmp/fwp-server-entry-pr.md`. Other server/HTTP worktrees are inactive.
+The root branch `server-entry-delivery` now publishes the complete repair.
+Existing root edits were byte-verified and backed up to
+`/private/tmp/fwp164-root-before-combine` before a fast-forward to the identical
+prepared tree. The PR title and description now cover servers, exact JSON,
+WebAssembly tasks, cache repairs and CI scheduling in plain language. The
+`/private/tmp/fwp-wasm-host-ownership` preparation is complete and inactive.
 
-The shared root `target/debug/fwp` now comes from the preparation worktree.
+Use `/private/tmp/fwp-audit-combined-164.py` for the final production run;
+`/private/tmp/fwp164-combined-audit.json` and separate job logs preserve its
+results without overwriting the original failure audit. The merge helper takes
+`--head a845e0c5e9a37dad185c99566ddc6ce413b4293b --production-run 39087594221
+--documentation-run 39087594154 --audit /private/tmp/fwp164-combined-audit.json`.
+Add `--merge` only when all gates pass. Current handoff edits are local to avoid
+restarting healthy production jobs solely to record their run IDs.
+
+The shared root `target/debug/fwp` now comes from the library-result preparation.
 Rebuild before treating it as evidence for another source. All local checks use
 `python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py COMMAND...`.
 Full builds, suites, native server compiles and large regeneration stay on CI.
@@ -31,6 +36,48 @@ run, docs run and audit. It also checks the audited six-host cache run
 Use one squash subject of at most 80 characters and an empty body. Verify the
 entire message, sole parent and tested versus merged tree, then cancel duplicate production. Standing authorization
 covers publication, fixes and merge after acceptance; no repeated permission.
+
+## Independent next batch: C library result owners
+
+Worktree `/private/tmp/fwp-library-result-owners`, branch `library-result-owners`,
+is based on final PR #164 head `a845e0c5`. Keep this separate until that PR is
+accepted. No second PR is open. The current change gives returned strings and
+flat records explicit `fwp_release_NAME(result)` functions, without a new heap
+handle. Unique strings/record fields move; shared record fields retain only the
+owners the host needs. Raw pointers remain rejected by checked ARC. C callers
+must release each unchanged result exactly once before library unload and
+serialize calls. Tracing libraries use the same interface; there is no old-ABI
+adapter. Input-copy and embedded-NUL conversion semantics remain unchanged.
+
+Updated C/Rust examples and unload callers use the matching release. Generated
+headers, reference and tutorial introduce the ownership obligation. Tests cover
+aliases, repeated results, shared cached records, partial conversion failures,
+name collisions, ordinary tracing/verification and static/shared ARC libraries.
+The extended ARC probe asserts zero retains for returned input identity and one
+necessary retain for two fields sharing a string. Failure controls remove box
+or host releases and force redundant retains. Six-host `library-results` CI is
+prepared; binaries, source, headers, symbols, outputs and shutdown counts will
+be retained. Publish this preparation branch and dispatch `library-results`;
+record its exact source and run ID without opening another PR.
+
+Guarded checks from this worktree:
+
+- `cargo test --test arc_library --test library_result_ownership -- --nocapture`:
+  four passed (15.60 s), including partial-retain failure, generated name
+  collisions and rejection of unproved pointer/state/derivative lifetimes.
+  The new collision fixture initially used map insertion on the IR export
+  vector; corrected to vector insertion before the passing rerun.
+- `cargo test --test library_input_ownership -- --nocapture`: two passed (6.40 s).
+- `cargo test --test library_unload -- --nocapture`: passed (8.88 s).
+- `cargo test --test ffi library_from -- --nocapture`: C shared and Rust static
+  callers both passed (3.28 s).
+- Focused Clippy passes (0.15 s after removing a redundant artifact-directory
+  operation). Formatting passes. The earlier explicit retain-control run passed
+  in 7.37 s; the final four-test run includes the stronger failure case.
+
+Workflow lint passes (0.15 s), and the documentation/roadmap audit passes.
+Publish this preparation for native evidence while preserving PR #164's final head. Before
+its own PR, rebase onto the verified squash commit and update accepted status.
 
 ## Current CI and repairs
 

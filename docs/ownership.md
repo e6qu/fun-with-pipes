@@ -403,7 +403,8 @@ owners are described [below](#received-iterators-and-remote-call-storage).
 
 `fwp build --gc arc` excludes tracing code and rejects unsupported ownership.
 Supported native entries include `main`, exported function executables and CLI
-commands and native C libraries with copied inputs and pointer-free results.
+commands and native C libraries with copied inputs. The prepared owned-result
+extension below adds explicitly released strings; final acceptance is pending.
 Each entry starts without assuming an existing state or derivative scope.
 Synchronous WASI main/function/CLI entries also use these checks. Generated REST
 and MCP entries are being validated with the same checks, including returned
@@ -486,19 +487,35 @@ rejected instead of silently building a native library.
 
 For a static or shared C library, scalar inputs are copied by value and string
 inputs are copied into owned language storage during the call. Records can
-contain these input types. Results must be scalars or records of scalars: C
-receives all their bits before the temporary language value is released.
-Returned strings and raw pointers are rejected because the current ABI (the C
-calling convention and generated declarations) has no way for the host to
-release managed storage. Each exported function is checked independently, even
-if another export uses it under a state or derivative handler. Serialize host
-calls and finish them before unloading; concurrent host entry is not supported
-by this contract. The generated header states these obligations.
+contain these input types. Scalar results copy all their bits before temporary
+language storage is released. The prepared result-ownership extension adds
+returned strings and flat records containing strings; see the
+[handoff](development-state.md) for verification and remaining acceptance.
 
-This extends the existing copying ABI without introducing a handle or release
-wrapper. Ordinary tracing libraries keep their existing behavior. Proving these
-boundaries does not make every library eligible for ARC, or eliminate the
-necessary copy of a string that the host can later change.
+An export named `greet` that returns a string also declares
+`fwp_release_greet(result)` in its generated C header. The caller owns that
+result until it calls the matching release function exactly once. A record's
+release function releases all its string fields, including fields that share
+one allocation. Pass the complete unchanged record. Copying pointer bits does
+not create another owner. Do not use C's `free`, modify returned string bytes,
+use a released result, or keep results past library unload. Serialize host
+calls and releases; concurrent host entry remains outside this contract.
+
+A unique returned string transfers its existing owner without another copy,
+allocation or retain. A uniquely owned record transfers its string fields and
+releases its box and remaining fields. Shared records retain the string owners
+that C now needs. Conversion finishes before any owner transfers: an embedded
+NUL still traps rather than silently truncating a C string, and a failed field
+conversion releases the full temporary result. Raw pointers and retained foreign
+callbacks still require separate lifetime contracts. Every export is checked
+independently, even if another export calls it inside a state or derivative scope.
+
+The same release interface applies to ordinary tracing libraries. This changes
+the old retain-until-unload contract; rebuild libraries and callers together.
+There is no extra allocated result handle or compatibility adapter. Counting and
+freeing disabled for diagnostic controls still deliberately retain storage;
+checked ARC requires both enabled. Input strings still require a copy because
+the C host can change its original buffer after returning.
 
 List transposition also has a checked copying contract. It creates new list
 nodes, retains the original elements as typed aliases and releases temporary

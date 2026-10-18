@@ -542,8 +542,11 @@ proved derivative scopes, selected retained tasks, channels carrying data withou
 functions, tasks, HTTP stream handles or channels, and scoped C calls. Mutable
 cycles, raw pointers and unproved external callbacks remain excluded.
 Checked ARC supports native main and function executables,
-including CLI commands, and C libraries with copied inputs and pointer-free
-results. Every library export is checked as a separate entry. Synchronous WASI
+including CLI commands, and C libraries with copied inputs. A prepared C-result
+extension transfers owned strings and record string fields to the host, with
+explicit per-export release functions. It avoids an extra heap handle; unique
+owners move and shared fields retain only the necessary owners. Raw pointers
+remain excluded. Verification is tracked in the handoff. Every library export is checked as a separate entry. Synchronous WASI
 main/function/CLI entries use the same ownership checks and free counted storage
 through their existing external count table. Checked gRPC clients and service
 methods additionally prove when sent and received iterator steps run; the

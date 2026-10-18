@@ -469,8 +469,12 @@ pointer element widths use the same representation (2/2/16 bytes).
 - `fwp build --staticlib` or `--cdylib` turns the exported functions into
   a C library with a header. Any language with a C FFI can call it; see
   `tests/c-interop/main.rs` for Rust.
-  Returned strings and string fields of returned structs borrow library storage
-  and remain valid while the library is loaded; the host must not free them.
+  A returned string or a returned struct containing strings transfers ownership
+  to the caller. For an export named `greet`, call `fwp_release_greet(result)`
+  exactly once after using the result. Do not call C's `free`, change string
+  bytes, or release both an original result and a copy of its pointer bits.
+  Release every result before unloading the library. The generated header
+  declares the matching release functions; scalar-only results need none.
   Native teardown cancels library tasks and releases cached values and
   runtime regions at unload (or static-archive process exit). The host must finish
   all calls before unloading; see [ownership coverage](ownership.md#ownership-coverage)
@@ -627,7 +631,7 @@ from a misspelled option.
 The `--gc arc` mode checks memory ownership and excludes tracing collection.
 Supported entries include native main/CLI/function executables, synchronous WASI
 executables, and C libraries whose inputs are copied and whose results contain
-no managed pointers. The [gRPC extension](services.md#building-without-tracing-collection)
+scalars or explicitly released strings. The [gRPC extension](services.md#building-without-tracing-collection)
 adds checked split clients and services, accepted in
 [PR #161](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161).
 HTTP clients and servers are accepted in PRs #162/#163; their ownership contracts
@@ -635,9 +639,12 @@ are described in the [ownership guide](ownership.md#checked-arc-delivery).
 
 `fwp build --gc arc --staticlib stats.fwp -o libstats.a` can export a
 `String -> I64` function: it copies the input for the call and returns the count
-by value. A `String -> String` export is rejected because the existing C ABI
-returns a pointer with no host release operation. Records follow these rules
-field by field. Host calls must be serialized and finish before library unload.
+by value. A `String -> String` export returns an owned string with a matching
+`fwp_release_NAME` function. Records may contain scalars and owned strings;
+release the complete unchanged record once. Raw pointers remain outside checked
+ownership. Serialize host calls, including releases, and release every result
+before library unload. This extension is being verified in the
+[handoff](development-state.md); implementation alone is not platform acceptance.
 The mode rejects unproved ownership or cycles. Browser-loader and WASI task
 extensions pass actual-module JSPI and Asyncify cleanup checks on both Linux
 hosts; [the measurements](benchmarks.md#webassembly-task-and-browser-loader-ownership)
