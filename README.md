@@ -56,6 +56,9 @@ collection and less reference-counting overhead through compile-time ownership,
 borrowing and storage reuse. It also covers measured CPU performance,
 differentiation, numerical kernels and larger example applications. These are
 active goals; the capabilities and limitations above describe today's compiler.
+The [design limits](docs/design-limits.md) explain achievable guarantees and
+tradeoffs. General cycle prevention and guaranteed tail recursion remain design
+work; use existing checked ARC contracts and `loop` today.
 
 ## Supported platforms
 
@@ -97,12 +100,20 @@ or `./hello.exe` on Windows. `fwp run --interp examples/hello.fwp` uses the
 interpreter instead: it evaluates the compiler's checked program directly.
 The test suite compares both execution methods.
 
+Run `fwp repl --no-history` to try expressions without creating a file. The
+[interactive guide](docs/repl.md) explains numbered results, multiline input,
+history, type inspection and how to save definitions.
+For code and explanations in cells, use the [local notebook](docs/notebooks.md).
+The [debugging guide](docs/debugging.md) covers breakpoints, Python instrumentation,
+generated C and machine instructions across architectures and optimization levels.
+
 ## Where to go next
 
 | If you want to… | Read |
 |---|---|
 | Learn the language with explained, runnable examples | [Tutorials](docs/tutorials/README.md) |
 | Find an example application and its prerequisites | [Example applications](examples/README.md) |
+| Try expressions interactively | [REPL guide](docs/repl.md) |
 | Look up syntax or a compiler command | [Language reference](docs/reference.md) |
 | Look up a library function or read a type signature | [Standard library](docs/stdlib.md) |
 | Understand a performance comparison | [Benchmarks and overhead](docs/benchmarks.md) |
@@ -114,6 +125,7 @@ The test suite compares both execution methods.
 | Split a program into communicating processes | [Services guide](docs/services.md) |
 | Compute derivatives or run array calculations | [Numerical guide](docs/numerics.md) |
 | Understand memory management | [Memory and ownership](docs/ownership.md) |
+| Understand parsing, desugaring and macro expansion | [Compiler pipeline](docs/compiler-pipeline.md) |
 | Work on the compiler | [Design](docs/design.md) and [Contributing](CONTRIBUTING.md) |
 | Find completed work and the current task | [Plan](PLAN.md) and [session handoff](docs/development-state.md) |
 

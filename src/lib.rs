@@ -54,6 +54,7 @@ pub mod prims_std;
 pub mod proto;
 pub mod protobuf;
 pub mod rc;
+pub mod repl;
 pub mod rest;
 pub mod rpc;
 pub mod sched;
@@ -73,3 +74,7 @@ pub mod web;
 pub mod yaml;
 
 pub(crate) mod resource;
+
+pub mod disassemble;
+
+pub mod debugger;

@@ -2,234 +2,197 @@
 
 ## Next action
 
-Next: audit every job for the updated [PR #166](https://github.com/e6qu/fun-with-pipes/pull/166)
-and its exact final commit. The map buffer, timeout and evidence-report repairs
-are integrated. Require all nine production jobs, documentation and affected
-collection evidence before merge. Investigate the remaining Xeon-specific
-4.6% timing regression while those checks run; it has not been claimed fixed.
-Fix every encountered failure, including unrelated/pre-existing issues. Check
-all failed/cancelled jobs and all completed targets before a coherent repair.
-Queued CI gates merging, not independent work. Keep one active delivery PR.
+[PR #167](https://github.com/e6qu/fun-with-pipes/pull/167) is still open.
+Published acceptance head: `2f3e87cd26e0b28225fcb60faa1473a3e8ac8478`.
+The user then requested explicit settings and no compatibility machinery.
+The working tree applies that requirement to the new tools:
 
-## Workspaces and sources
+- SDK callers supply compiler/tool paths, input choice, timeout, target settings
+  and optimization levels. Two internal forwarding helpers are removed.
+- Notebook startup requires Python, working directory and port; port 0 explicitly
+  requests an available port. The browser test now uses the actual fwp launcher.
+- REPL users select terminal history, no history, scripted input or JSON mode.
+  No environment-derived history path or silent terminal-to-stream conversion.
+  JSON requests require command/source fields; malformed requests cannot run code.
+- A dead notebook interpreter reports failure; another explicit cell run starts
+  a fresh session. Effects are never automatically retried.
+- Examples, tests, CI toolchain settings, PLAN and AGENTS match these interfaces.
+  Backward compatibility remains unnecessary; no adapters are included.
 
-- Root branch `collection-build-storage` carries the integrated PR. The publication
-  record `/private/tmp/fwp166-integrated-publication.json` identifies its commit
-  and dispatched evidence run. Refresh audits for that commit, not the old PR head.
-- Preparation `/private/tmp/fwp-collection-runtime-costs`, branch
-  `collection-runtime-costs`, ends at `119ecea3`; no second PR. Its handoff is
-  historical preparation; this root file is authoritative.
-- Compiler/runtime/tests match measured repair source
-  `725e2198d721e835be282e2032d99ac5f10b4605`; later changes affect measurements,
-  workflows, reports and documentation. Verify identity rather than relabel sources.
-- Diagnostic source: `93cb93a0f717b317814ecfc162de0c2f516dbfbd`.
-  Successful six-host source/report collector: `b8700990`.
-- Shared root `target/debug/fwp` contains the repair compiler. Downloaded
-  executables are data only; never execute them locally.
-- Original-root live handoff is backed up at
-  `/private/tmp/fwp-live-handoff-before-166-integration.md`.
+Next: complete focused validation of these changes, publish one combined commit,
+then require all nine production jobs, docs, terminal probes and tools/browser
+checks at that new exact head before squash merge. Use one commit subject of at
+most 80 characters and an empty body. Keep the earlier run intact for its results.
 
-## Current checks
+### Current evidence
 
-| Check | Run | Latest audited result |
-|---|---|---|
-| Original PR production, `7f782388` | `39102055758` | All nine jobs pass: 1,270 summaries, 3,670 passed, zero failed, 72 ignored. |
-| Original PR docs | `39102055788` | Pass |
-| Repair correctness/costs, `725e2198` | `39104669727` | **Workflow failed.** All 78 tests passed, but Intel macOS timed out building the release compiler; costs never ran there. Five complete jobs pass. |
-| Collection report, collector `934517ff` | `39107047829` | Failed: correctly rejected the failed evidence run; upload also failed because no early metadata artifact existed. Both causes audited. |
-| Replacement collection workflow, `b8700990` | `39108116774` | All six jobs pass: 78 tests, no failures/skips; all costs complete within the unchanged limit. |
-| First repair performance, `725e2198` | `39104667835` | Both hosts and 76 actual binary/sample audits pass; Xeon timing concern remains. |
-| Construction/query diagnostics, `93cb93a0` | `39106005017` | Both hosts and 92 binary/sample audits pass; EPYC reproduces the old problem and verifies the repair. |
-| AMD64 repeat, `93cb93a0` | `39106417923` | Pass, 46 audited binaries. EPYC 7763: full ratios 0.920/0.840; construction 0.196/0.187, queries essentially unchanged. |
-| Further AMD64 repeat, same immutable source | `39107501057` | Pass, 46 audited binaries. EPYC 9V45: full ratios 1.007/0.990 with overlapping ranges; construction 0.861/0.877. |
+At `2f3e87cd`, production run `39134575726` has eight passing jobs; Linux AMD64
+is still running. Linux ARM64 reports 756 Rust passes, zero failures and 15 ignored
+checks. Each regular Mac reports 468 Rust passes and ten Python passes, with no
+failures/skips. Each Mac GC job reports 293 passes and 15 ignored checks. Windows
+ARM64/AMD64 each report 363 Rust passes and six ignored checks; eight Python tests
+run and two POSIX terminal tests are skipped. Packaging and binary evidence pass.
+Documentation `39134575677`, all four terminal jobs `39134597819`, and the tools/
+package/browser job `39134602773` pass. The latter runs 22 Rust and ten Python
+checks, native/cross-target O0–O3 disassembly and actual Chromium. All terminal
+probes run both interruption/recovery and standalone shutdown tests with no skips.
+These results precede the explicit-settings changes; they do not verify them.
 
-Ignored/skipped tests do not establish support. Focused jobs do not replace final
-production acceptance. Original logs/audits: `/private/tmp/fwp166-final-*`.
-Focused prefixes: `collection-joined`, `map-storage`, `storage-diagnostics`,
-`storage-repeat`.
+The earlier full run at `f957980a` is completely audited: seven jobs passed;
+both regular Mac jobs failed only the repaired terminal test. Across platforms,
+3,762 Rust test executions passed, none failed, and 72 were ignored. Local logs:
+`/private/tmp/fwp-final-f957` and `/private/tmp/fwp-final-2f3e`.
 
-The failed report must not be relabeled or accepted. Replacement report
-`39109026750` succeeds at `b8700990`, using successful run `39108116774`.
-Its artifact audit passes: six hosts, 78 tests and 120 binaries; compiler paths
-and hashes are retained in `collection-joined-storage-2026-10-18.json`. The collector requires five fused-map requests,
-`3*n+6` ordinary-map requests, 48 allocation failures, 64 callback exits and two
-deliberately leaked allocations in broken controls. Require all 120 binaries and
-six hosts. Original report record: `/private/tmp/fwp-joined-report-publication.json`.
+Repairs already verified remotely: restore the handoff's required status table
+and Next marker; wait for real terminal output before sending SIGINT and drain
+the PTY while waiting for exit; route scheduler SIGINT to the active REPL after
+`signal.shutdown-requested` installs its handler; use UTF-8 for disassembly reports.
+The enhanced terminal test reproduces the signal bug on the old compiler and
+passes on all four native Linux/Mac targets after repair. Standalone SIGINT and
+SIGTERM still clean up normally.
 
-The previous handoff incorrectly called six completed jobs successful: the
-temporary refresh display showed test totals and only highlighted `failure`,
-missing `cancelled`. It now prints every unsuccessful job, explicit successful
-job counts and overall run failure. The collector correctly rejected the run.
-The Intel log and annotation show a 30-minute timeout during the extra release
-build after all 13 tests passed. Repair: use the dev compiler already built by
-the integration tests, selected explicitly by `--compiler`; native programs
-still compile at O2 and only their execution is timed. Compiler path and hash
-are recorded alongside source identity. The 30-minute limit stays unchanged. This removes redundant
-compilation rather than reducing coverage. Collector request/run JSON is now
-written before acceptance checks and uploaded even on early failure. Four
-regressions cover rejected/incomplete/cancelled runs and retained metadata;
-focused syntax/workflow/docs checks pass. A local preflight also caught an
-unsupported compiler `--version` request in the new metadata code; source and
-executable hash identify the compiler directly, with bounded-memory hashing.
-The corrected preflight passes (5.18 s guarded); publication is `b8700990`
-(4.13 s guarded). Record `/private/tmp/fwp-collection-workflow-repair-publication.json`.
+Focused local checks for the explicit-settings changes use the fixed guard:
 
-## Change and limits
+- `python3 scripts/local-guard.py cargo fmt --all`: pass, 1.55 seconds.
+- `python3 scripts/local-guard.py python3 /private/tmp/fwp-python-import-audit.py`:
+  pass, 0.27 seconds; 71 Python files, top-level imports, empty initializers and
+  AGENTS under 100 lines.
+- `python3 scripts/local-guard.py env PYTHONDONTWRITEBYTECODE=1
+  PYTHONPATH=sdk/python:sdk/python/tests
+  FWP_TEST_BIN=/private/tmp/fwp-terminal-763-mac/fwp python3
+  -W error::ResourceWarning -m unittest
+  test_tools.Tools.test_dead_notebook_process_requires_an_explicit_new_run
+  test_tools.Tools.test_notebook_replaces_definitions_and_never_replays_other_expressions
+  test_tools.Tools.test_notebook_input_cannot_consume_protocol_and_errors_leave_session_usable
+  test_tools.Tools.test_debugger_controls_typed_values_and_streams_events -v`:
+  four passes, 7.96 seconds. This uses the earlier CI-built compiler to check
+  Python changes; it does not validate new Rust code. No local compiler rebuild.
+- The same guarded SDK invocation with explicit `CC=cc` and
+  `FWP_OBJDUMP=/Library/Developer/CommandLineTools/usr/bin/llvm-objdump`, selecting
+  `test_tools.Tools.test_disassembly_compares_c_and_instruction_encodings_at_four_levels`:
+  pass, 1.46 seconds; actual ARM64 C/object instructions at O0/O1/O2/O3.
+- Guarded `scripts/check-roadmap.py`: pass, 3.01 seconds; 59 link sets, 106
+  preparation anchors and seven work areas. Guarded `/private/tmp/fwp-doc-audit.py`:
+  pass, 0.38 seconds; all tutorial copies/outputs and historical evidence links.
 
-Numeric map/set construction avoids intermediate lists, immediate range lists,
-eligible numeric tuples and known-callback dispatch. Sets avoid unused temporary
-value buffers. Dynamic map callbacks can still box results; managed captures
-can still need counts. Evaluation order, duplicates, floating-key order, aliases,
-traps and cancellation remain tested observable behavior.
+Full Linux acceptance must execute the WASI float probe. Cross-target disassembly
+establishes binary inspection, never native execution. Do not restart passing CI
+solely for bookkeeping; fold it into required repairs or keep a local handoff.
 
-The repair joins map key/value lanes into one allocation, including sort scratch.
-Each allocation has one owner, with complete byte-count guards and no arbitrary
-padding or sentinel word. Empty ordinary maps avoid scratch storage. Final
-containers remain exact-size allocations; sets retain unused final value slots,
-small numbers occupy words, and temporary storage grows with input length.
+## What this PR implements
 
-## Performance evidence and remaining question
-
-The maintained program builds 500,000 entries from scrambled distinct keys
-`(index * 7919) modulo 1000003`, prints map size, then makes two million lookups.
-Construction sorts the input. C/Rust have different sorts/overflow guarantees;
-equal output does not establish universal language overhead. Profiles are separate
-from ordinary timed binaries. The guide names hardware, work and limitations.
-
-Original construction combining cut requests from 1,500,009 to eight but worsened
-AMD64 tracing medians 8.3% for full work and 36.4% for construction. The small
-65,536-input/257-key comparison missed this. EPYC phase probes found sorting near
-19–35 or 100–109 ms, correlated with address bit 22; no cache/TLB mechanism proven.
-
-The first joined-layout run used Intel Xeon 8573C, where both layouts sort quickly.
-Its joined tracing full-work median is 419.958 versus 401.488 ms, 4.6% slower;
-all 24 paired rounds are slower despite faster construction. Do not dismiss this
-as fixed by the EPYC result. The repeat separates construction/query intervals.
-
-The diagnostic run returns to AMD EPYC 9V74: old slow sorting 99–108 ms versus
-joined 14–22 ms, both address-bit values covered. Full joined/separate ratios
-are 0.905 tracing and 0.768 ARC; construction ratios 0.394/0.174. All 24 full-work
-paired rounds improve in both modes. Queries remain near 273–279 ms: this proves
-the construction repair, not elimination of query overhead.
-
-ARM64 construction stays stable. First full-work ratios are 0.988/0.994; repeat
-ratios are 0.951/1.069. ARC ranges overlap widely, 14/24 paired rounds are slower,
-and the median paired ratio is 1.020. Query intervals vary roughly 421–502 ms.
-Preserve slower samples and do not claim a universal full-program speedup.
-
-Joined full work has six requests versus eight, unchanged 2,000,001 retain
-requests, peak counted bytes 24,000,008 versus 24,000,040 and zero final charge.
-Tracing collections fall two to one; ARC has none. Counts exclude allocator
-overhead and process resident memory. Actual AMD64 query/sort instructions match
-after address normalization; code shrinks 384 bytes in each mode. Cached-table
-frames: 104 → 88 bytes tracing, 88 unchanged ARC. ARM64 ARC code shrinks 416 bytes
-and its frame 112 → 96. These are scoped frames, not whole-program stack bounds.
-
-Artifacts/audits: `/private/tmp/fwp-joined-storage`, `fwp-storage-diagnostics`,
-`fwp-storage-repeat`. Run `/private/tmp/fwp-audit-joined-storage.py` under root
-guard; later runs take explicit run, source, directory and `--diagnostics`
-(or `--diagnostics-amd64`). Initial reports/code inspections are committed in
-preparation as `docs/measurements/large-map-storage-2026-10-18.json`.
-The full diagnostic report is committed in preparation,
-as `docs/measurements/large-map-storage-phases-2026-10-18.json` (2.82 s guarded).
-All sixteen timed-binary/source/profile identities match the earlier run exactly;
-the different CPU and timing distributions are not compiler changes. The AMD64 repeats are recorded in `large-map-storage-repeats-2026-10-18.json`. The measured compiler and diagnostic sources
-are preserved as `evidence/collection-joined-buffers-20261018` and
-`evidence/map-storage-probes-20261018`; these are evidence anchors, not acceptance
-of the incomplete collection workflow.
-
-## Fast performance repeats
-
-Run `39109230202` at `fe78f700` uses the new `map-replay` workflow repeats 16 verified ordinary/diagnostic binaries
-from successful run `39106005017`, source `93cb93a0`, on four independent AMD64
-runners. It verifies run success, source, architecture, executable size/hash and
-generated-source hash before any execution. No compiler or native build is
-repeated. Reports retain original evidence, current CPU identity, 24 balanced
-ordinary samples and 16 separate phase samples. Four rejection regressions and
-validation of all 16 actual files pass locally without executing them (5.28 s
-guarded). A later documentation check caught the streamlined handoff missing
-its required seven-row roadmap table and `Next:` marker; both are restored. All four jobs pass and all 64 replayed binary identities are audited (24.46 s
-guarded). Three use EPYC 7763 and one EPYC 9V74; full ratios range 0.761–0.929
-tracing and 0.770–0.928 ARC. `large-map-replay-2026-10-18.json` retains all samples.
-The Xeon-specific question remains open; do not claim another CPU answers it.
-
-## Local validation and tool repairs
-
-All checks use the unchanged root resource guard, serially:
-
-- Repair formatting/Clippy and three collection tests: pass, 74.75 s.
-- Eight collection/map ownership tests after overflow guards: pass, 65.01 s.
-  Raw/native O1/O2, ARC, stressed tracing, reuse, aliases, 48 allocation failures,
-  64 callback exits and 104/106 managed-operation failures; no failures/skips.
-- Tiny old/new storage comparison: pass, 10.63 s; interpreter agreement,
-  requests 8 → 6, unchanged 17 retains, zero final charge/collections.
-- Eight tiny phase probes: pass, 8.92 s. The first incorrectly assumed construction
-  happened inside queries and failed. The corrected probe preserves earlier
-  construction, verifies one before queries and none inside, and requires positive
-  full-work runner durations. Raw report wording about sorted input is corrected
-  explicitly without altering samples or source IDs.
-- Collector counter fixes: twelve actual ARM64 rows pass, twelve deliberately
-  wrong counts rejected, three log-audit regressions/docs pass, 2.89 s. Earlier
-  failure/leak expectation fix passes, 3.39 s. Exact checks are retained.
-- Independent ARM64/AMD64 binary inspection: pass, 0.21/0.15 s. The first AMD64
-  parser stopped at eight prologue lines and failed; reading through the first
-  call fixes it. An earlier name-only audit mistook ARC's deliberate collection
-  trap for tracing; actual trap instructions and absent scan/mark/sweep routines,
-  with positive tracing controls, correct that audit error.
-- Initial evidence recording: pass, 2.76 s. Collector publication checks: pass,
-  6.14 s, including empty compiler/runtime/test diff against measured source.
-
-Full builds, suites, benchmarks and large generation stay on GitHub. Preserve
-64 GiB free disk, target below 2 GiB, sampled workload RSS below 1 GiB and the
-180-second guard deadline. Never raise or bypass limits.
-
-## Earlier evidence and delivery
-
-PR #165 is accepted as `695907781c5efff02e0f202f8b7fa99283df5ef4` after nine jobs
-and docs passed for `836f39b3`: 964 targets, 3,652 passed, zero failed, 72 ignored.
-Message/tree/parent verified; duplicate `39101178854` cancelled.
-[History](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165) preserves
-the contracts and failure audits; record `/private/tmp/fwp165-merge-record.json`.
-
-Earlier PR #166 stages each pass 78 native tests and 120 binary inspections:
-`488d1822`, `8fcd7486`, `c34ca8e3`, preserved by the `evidence/collection-build-20261018`,
-`collection-set-storage-20261018`, `collection-direct-sets-20261018` tags and
-committed reports. The first run's 16 failures were repaired: three NaN-sign
-fixture assumptions and 13 Windows ARM64 tests using the wrong compiler after
-a forbidden download. Authenticated/checksummed downloads and setup guards fix
-the cause. Do not relabel original failures as passing evidence.
-
-Original large-map control: `9f0632f9`, run `39102838322`, tag
-`evidence/large-map-baseline-20261018`; phase experiments: `f01f50bf`, run
-`39103286520`, tag `evidence/large-map-phases-20261018`. Lower-bound search was
-8–9% slower on ARM64; separate initialization had no clear gain and larger code.
-Neither was adopted. The longer previous handoff is saved at
-`/private/tmp/fwp-handoff-before-storage-streamline.md`; it is not a second plan.
-
-Preparation is integrated into the existing PR branch. Full validation runs
-while the timing investigation continues;
-the unresolved Xeon result must stay visible and is not claimed fixed.
-The PR description names the final change and remaining limits. Require all
-final-head gates. Squash-merge with explicit one-line subject, at most 80 characters, empty
-body, no trailers/attribution. Verify complete message, parent and identical
-tested/merged tree; cancel duplicate post-merge production and continue.
+- Cached numeric-map borrowing across proven non-suspending reads, eliminating
+  repeated retain/release operations. Unknown calls, escaping values and reentrant
+  destruction remain checked. Initializer timing and cleanup are preserved.
+  Direct tuple/variant results retain their correct representation.
+- Infix `==`, `!=`, `<`, `<=`, `>` and `>=`, below arithmetic and above pipes.
+  Operands evaluate left to right; ambiguous comparison chains are rejected.
+- Inverse trig, hyperbolic functions, logarithm/exponential variants, `atan2` and
+  `hypot` across the existing float formats without narrowing. These are scalar
+  operations; they do not extend the differentiation traits.
+- A persistent interpreter [REPL](repl.md): history, completion, multiline input,
+  type inspection, loading/saving, interruption and reset, without replaying old
+  effects. JSON protocol input stays separate from program input, including tasks.
+- A local browser [notebook](notebooks.md): code/Markdown cells, dependencies,
+  stale-result tracking, explicit reruns, interruption and source-only save/open.
+  Tests use actual Chromium on desktop/mobile layouts. The package must be
+  installed explicitly. No Jupyter kernel or automatic replay is implemented.
+- An interpreter [debugger and Python SDK](debugging.md): function/source-line
+  breakpoints, stepping, frames, typed values, raw float bits, events and input
+  files. Tutorial output matches raw interpretation. Inspection is read-only;
+  native-process debugging and foreign-C stepping are not implemented.
+- C/machine-code comparison through the same SDK, with explicit targets and
+  O0/O1/O2/O3 (optional Os/Oz/Og). Reports retain generated C, source locations,
+  actual instruction encodings, compiler commands/versions and binary hashes.
+  Focused CI inspects native AMD64 and cross ARM64 objects at all four levels.
+- Revised tutorials, [parser/compiler guide](compiler-pipeline.md), ownership and
+  tail-recursion proposals, benchmark methods and historical explanations.
+  Examples introduce notation and show why their output follows. Proposed weak
+  references and guaranteed tail recursion are not presented as implemented APIs.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
-| 1 | In progress | Ownership and tracing removal |
-| 2 | In progress | Functional intermediates, copies and unnecessary counts |
-| 3 | In progress | Controlled C/Rust gaps and actual machine code |
-| 4 | In progress | Differentiation precision, speed and memory |
-| 5 | In progress | CPU kernels and GPU resource ownership |
-| 6 | In progress | Repeated, equivalent-work comparisons |
-| 7 | In progress | Representative applications and browser execution |
+| 1 | In progress | Ownership/cycle contracts, tracing removal and limited ARC |
+| 2 | In progress | Functional intermediates, copies and eligible tail recursion |
+| 3 | In progress | Equivalent-work C/Rust gaps and machine-code costs |
+| 4 | In progress | Derivative precision, speed and storage |
+| 5 | In progress | CPU kernels and ahead-of-time device execution |
+| 6 | In progress | Reproducible comparisons and regression budgets |
+| 7 | In progress | Representative larger applications |
 
+The seven project work areas in [PLAN.md](../PLAN.md) remain open. Default tracing
+removal is unfinished. JIT is excluded. After this delivery, the next substantial
+work is cycle-safe ownership contracts and eligible tail-recursion elimination,
+selected and checked against representative programs.
 
-All seven [PLAN.md](../PLAN.md) areas remain open: ownership/GC removal;
-functional costs; machine performance; differentiation; numerical kernels;
-dependable measurement; larger programs. Cached-value retain requests are measured
-remaining work; removing them needs a lifetime proof preserving reentrant
-initialization and failure order. JIT is excluded, not deferred. A completed
-delivery does not complete the language's memory or performance goals.
+## Cached-map measurements
+
+The workload builds 500,000 entries and makes two million queries. Eight variants
+compare retained/borrowed access, joined/separate map storage and tracing/ARC.
+Each has 24 fresh-process samples in balanced rotating order. Timing includes
+startup, map construction, lookups, output and teardown; profiling is separate.
+This compares fwp revisions, not fwp with C/Rust.
+
+[Run 39128516933](https://github.com/e6qu/fun-with-pipes/actions/runs/39128516933)
+at `e1fb8ba3375f5765ef1448ed5c58fa1322d37c1f` passed all five jobs. Audit checked
+80 actual ELF/source/profile records and 60 focused tests. On the original
+Xeon 8573C, the retained joined layout reproduces the old slowdown: 1.0425 times
+the separate-layout time. Joined borrowing takes 0.9336 times the retained joined
+time, and 0.9733 times the old separate-layout time: 2.67% faster overall.
+The paired-bootstrap 95% interval for that overall ratio is 0.9659–0.9882.
+
+Retains fall from 2,000,001 to one; allocation/live-byte counts are unchanged,
+and final charged bytes are zero. Joined borrowing improves both modes on every
+measured host. Preserve the slower comparisons too: separate-layout borrowing
+has slower cells, and Neoverse N2's combined ARC comparison is 1.0174.
+[The benchmark guide](benchmarks.md#rechecking-the-original-xeon-slowdown) explains
+all comparisons and links raw reports. This settles the named map regression,
+not all layout or performance goals.
+
+Earlier integrated run `39125883230` at `085626f3` also passed all five jobs,
+80 binary/source/profile records and 60 checks, including Intel 8370C/6973P-C.
+Repeat run `39129855448` at `f957980a` passes all five jobs and 60 checks.
+Audit verified all 80 binaries/profiles and generated C; all match earlier
+same-architecture artifacts byte for byte. Two more Xeon samples give combined
+tracing ratios 0.9731 and 0.9702. All raw faster/slower results are retained in
+[the repeat report](measurements/cached-map-repeat-2026-10-18.json).
+Audits `/private/tmp/fwp-audit-map-borrow-f957.py` (31.90 s) and
+`/private/tmp/fwp-compare-map-programs.py` (0.15 s) pass through the unchanged guard.
+
+## Local evidence and workspaces
+
+Root `/Users/zardoz/projects/fun-with-pipes`, branch `clarify-docs-and-benchmarks`,
+is based on accepted PR #166 merge `de678a7d42af803948835cfbc43b4862b63164da`.
+[History](roadmap-history.md#numeric-map-and-set-construction-pr-166) records its
+nine production jobs and docs: 3,670 passed, zero failed, 72 ignored. This PR has
+not merged. The shared local `target/debug/fwp` is the older preparation compiler
+`774d838c8afccddf01cb2d3c0de498857c0d6f86`, not the current branch compiler.
+
+All local checks use `python3 scripts/local-guard.py COMMAND...`, serially,
+with unchanged limits. Recent results:
+
+- `python3 /private/tmp/fwp-python-import-audit.py`: 71 Python files compile,
+  imports at the top, empty initializers, AGENTS under 100 lines; PASS, 0.33 s.
+- `python3 /private/tmp/fwp-audit-map-borrow-e1.py`: actual map evidence audit;
+  PASS, 35.83 s. Raw artifacts: `/private/tmp/fwp-map-borrow-e1`.
+- `python3 /private/tmp/fwp-xeon-confidence.py`: paired-bootstrap calculation
+  from retained samples; PASS, 0.26 s. No new benchmark execution locally.
+- `cargo fmt --all -- --check`: PASS, 1.38 s.
+- `python3 /private/tmp/fwp-doc-audit.py`: Markdown links/tutorial copies;
+  PASS, 0.39 s. `scripts/check-roadmap.py`: 106 immutable preparation anchors,
+  seven roadmap areas and commit subjects; PASS, 2.70 s.
+- `python3 scripts/check-primitive-inventory.py`: PASS, 1.39 s; 394 declarations,
+  371 contracts, 19 IR templates, three flat scalars and one reviewed symbol.
+- JavaScript syntax: PASS, 0.21 s. `git diff --check` passes.
+
+Earlier guarded tutorial/native checks used the explicitly identified preparation
+compiler; remote focused checks above validate the integrated compiler. Earlier
+build, terminal-harness and process-cleanup failures were repaired and rerun;
+there is no known outstanding failure at `63a0b99b`.
+
+Full builds, tests and benchmarks belong on GitHub. A prior guard permission error
+passed unchanged on retry; do not bypass enforcement. A prior disk refusal was
+resolved by deleting verified regenerable disassembly while retaining binaries,
+sources and reports; manifest `/private/tmp/fwp-regenerable-disassembly-cleanup.json`.

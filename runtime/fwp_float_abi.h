@@ -19,6 +19,22 @@ void fwp_decimal_set_allocator(void *(*)(size_t), void (*)(void *));
 #define FWP_DECLARE_MATH(prefix, Bits) \
 Bits prefix##_exp(Bits); Bits prefix##_ln(Bits); Bits prefix##_sin(Bits); \
 Bits prefix##_cos(Bits); Bits prefix##_tan(Bits); \
+Bits prefix##_asin(Bits); \
+Bits prefix##_acos(Bits); \
+Bits prefix##_atan(Bits); \
+Bits prefix##_sinh(Bits); \
+Bits prefix##_cosh(Bits); \
+Bits prefix##_tanh(Bits); \
+Bits prefix##_asinh(Bits); \
+Bits prefix##_acosh(Bits); \
+Bits prefix##_atanh(Bits); \
+Bits prefix##_log2(Bits); \
+Bits prefix##_log10(Bits); \
+Bits prefix##_log1p(Bits); \
+Bits prefix##_exp2(Bits); \
+Bits prefix##_expm1(Bits); \
+Bits prefix##_atan2(Bits, Bits); \
+Bits prefix##_hypot(Bits, Bits); \
 Bits prefix##_pow(Bits, Bits); Bits prefix##_rem(Bits, Bits);
 FWP_DECLARE_MATH(fwp_f16, uint16_t)
 FWP_DECLARE_MATH(fwp_bf16, uint16_t)

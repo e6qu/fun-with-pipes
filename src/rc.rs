@@ -143,6 +143,207 @@ pub fn prim_fresh(sym: &str) -> bool {
     })
 }
 
+fn immediate_number(ty: &MT) -> bool {
+    matches!(ty, MT::Con(name, args) if args.is_empty() && matches!(name.as_str(),
+        "std::I8" | "std::I16" | "std::I32" | "std::I64" | "std::ISize" |
+        "std::U8" | "std::U16" | "std::U32" | "std::U64" | "std::USize" |
+        "std::F32" | "std::F64"))
+}
+
+/// Numeric cached-map borrows cannot cross a scheduler handoff or an unknown
+/// callback. Check both the original span and its ownership-lowered form.
+/// Initializing the cache happens before this span and retains normal effects.
+fn cached_map_span(
+    funcs: &[Func],
+    shapes: &Shapes,
+    locals: &[MT],
+    local: Local,
+    global: FuncId,
+    body: &Expr,
+) -> bool {
+    let Some(function) = funcs.get(global) else {
+        return false;
+    };
+    if function.arity != 0
+        || locals.get(local as usize) != Some(&function.ty)
+        || !matches!(&function.ty, MT::Con(name, fields)
+            if name == "std::Map" && fields.len() == 2 && fields.iter().all(immediate_number))
+    {
+        return false;
+    }
+    // Lowering inserts releases between source expressions. Exclude resource,
+    // task, closure and unknown destruction, not only explicit source effects.
+    // Recursive destruction is not proved by this deliberately limited check.
+    fn ordinary_drop(shapes: &Shapes, ty: &MT, visiting: &mut BTreeSet<MT>) -> bool {
+        if !needs_rc(shapes, ty) {
+            return true;
+        }
+        if !visiting.insert(ty.clone()) {
+            return false;
+        }
+        let result = match ty {
+            MT::Con(name, args)
+                if matches!(name.as_str(), "std::Map" | "std::Set" | "std::Array") =>
+            {
+                args.iter().all(|ty| ordinary_drop(shapes, ty, visiting))
+            }
+            MT::Con(name, _)
+                if matches!(
+                    name.as_str(),
+                    "std::String" | "std::Bytes" | "std::I128" | "std::U128" | "std::F128"
+                ) =>
+            {
+                true
+            }
+            MT::Record(fields) => fields
+                .iter()
+                .all(|(_, ty)| ordinary_drop(shapes, ty, visiting)),
+            MT::Con(..) => match shapes.get(ty) {
+                Some(TypeShape::Record(fields)) => fields
+                    .iter()
+                    .all(|(_, ty)| ordinary_drop(shapes, ty, visiting)),
+                Some(TypeShape::Adt(variants)) => variants
+                    .iter()
+                    .all(|(_, fields)| fields.iter().all(|ty| ordinary_drop(shapes, ty, visiting))),
+                None | Some(TypeShape::Opaque) => false,
+            },
+            _ => false,
+        };
+        visiting.remove(ty);
+        result
+    }
+    fn mentioned(e: &Expr, out: &mut Set) {
+        match e {
+            Expr::Trace(_, body) => mentioned(body, out),
+            Expr::Local(local) => {
+                out.insert(*local);
+            }
+            Expr::Const(_) | Expr::Func(_) => {}
+            Expr::Let(local, value, body) => {
+                out.insert(*local);
+                mentioned(value, out);
+                mentioned(body, out);
+            }
+            Expr::BorrowGlobal(local, _, body)
+            | Expr::Dup(local, body)
+            | Expr::Drop(local, body) => {
+                out.insert(*local);
+                mentioned(body, out);
+            }
+            Expr::Call(_, args) | Expr::Construct(_, args) | Expr::Record(args) => {
+                for arg in args {
+                    mentioned(arg, out);
+                }
+            }
+            Expr::Apply(function, args) => {
+                mentioned(function, out);
+                for arg in args {
+                    mentioned(arg, out);
+                }
+            }
+            Expr::Field(base, _) => mentioned(base, out),
+            Expr::SetFields(base, fields) => {
+                mentioned(base, out);
+                for (_, value) in fields {
+                    mentioned(value, out);
+                }
+            }
+            Expr::Match(value, arms) => {
+                mentioned(value, out);
+                for (pattern, body) in arms {
+                    let mut bindings = Vec::new();
+                    pat_binds(pattern, &mut bindings);
+                    out.extend(bindings);
+                    mentioned(body, out);
+                }
+            }
+            Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body,
+            } => {
+                out.extend(parameters);
+                out.extend(bindings);
+                mentioned(body, out);
+            }
+        }
+    }
+    // Inlining leaves unused type slots behind. They cannot create a cleanup
+    // action. Inspect actual reads and binders, including inserted releases.
+    let mut relevant = Set::new();
+    mentioned(body, &mut relevant);
+    if !relevant.iter().all(|local| {
+        locals
+            .get(*local as usize)
+            .is_some_and(|ty| ordinary_drop(shapes, ty, &mut BTreeSet::new()))
+    }) {
+        return false;
+    }
+    fn uses(e: &Expr, local: Local) -> bool {
+        let mut found = Set::new();
+        free(e, &mut found);
+        found.contains(&local)
+    }
+    fn calculation(funcs: &[Func], e: &Expr) -> bool {
+        match e {
+            Expr::Local(_) | Expr::Const(_) => true,
+            Expr::Field(base, _) => calculation(funcs, base),
+            Expr::Let(_, value, body) => calculation(funcs, value) && calculation(funcs, body),
+            Expr::Trace(_, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => {
+                calculation(funcs, body)
+            }
+            Expr::Call(id, args) => {
+                let f = &funcs[*id];
+                let (parameters, result) = f.ty.params(args.len());
+                matches!(&f.body, Body::Prim(symbol) if matches!(symbol.as_str(),
+                    "prim.add" | "prim.sub" | "prim.mul" | "prim.div" | "prim.rem" | "prim.neg" |
+                    "wrapping.add" | "wrapping.sub" | "wrapping.mul" |
+                    "eq" | "lt" | "le" | "gt" | "ge"))
+                    && parameters.iter().all(|ty| immediate_number(ty))
+                    && (immediate_number(result) || *result == MT::con("std::Bool"))
+                    && args.iter().all(|arg| calculation(funcs, arg))
+            }
+            _ => false,
+        }
+    }
+    fn read(funcs: &[Func], e: &Expr, local: Local) -> bool {
+        let Expr::Call(id, args) = e else {
+            return false;
+        };
+        let Body::Prim(symbol) = &funcs[*id].body else {
+            return false;
+        };
+        let position = match symbol.as_str() {
+            "map.get" if args.len() == 2 => 1,
+            "map.size" if args.len() == 1 => 0,
+            _ => return false,
+        };
+        matches!(args[position], Expr::Local(value) if value == local)
+            && args.iter().enumerate().all(|(index, arg)| {
+                index == position || (!uses(arg, local) && calculation(funcs, arg))
+            })
+    }
+    fn span(funcs: &[Func], e: &Expr, local: Local, alive_after: bool) -> bool {
+        if !uses(e, local) {
+            return !alive_after || calculation(funcs, e);
+        }
+        match e {
+            Expr::Let(_, value, tail) => {
+                // A nested value may read the cache and then do more work.
+                // That remaining work must also stay non-suspending whenever
+                // the enclosing continuation will read the cache again.
+                span(funcs, value, local, alive_after || uses(tail, local))
+                    && span(funcs, tail, local, alive_after)
+            }
+            Expr::Dup(other, tail) | Expr::Drop(other, tail) if *other != local => {
+                span(funcs, tail, local, alive_after)
+            }
+            _ => read(funcs, e, local),
+        }
+    }
+    uses(body, local) && span(funcs, body, local, false)
+}
+
 struct Pass<'a> {
     funcs: &'a [Func],
     shapes: &'a Shapes,
@@ -344,6 +545,19 @@ impl Pass<'_> {
                 }
             }
             Expr::Let(x, v, b) => {
+                let global = match &**v {
+                    Expr::Func(id) => Some(*id),
+                    Expr::Call(id, args) if args.is_empty() => Some(*id),
+                    _ => None,
+                };
+                if let Some(id) = global
+                    .filter(|id| cached_map_span(self.funcs, self.shapes, &self.locals, *x, *id, b))
+                {
+                    let mut scope = borrowed.clone();
+                    scope.insert(*x);
+                    let body = self.conv_typed(b, owned, &scope, expected);
+                    return Expr::BorrowGlobal(*x, id, Box::new(body));
+                }
                 if self.counted(*x) && Self::plain_read(v) {
                     if let Some(exposed) = self.forward_hash_field(*x, v, b) {
                         return self.conv_typed(&exposed, owned, borrowed, expected);
@@ -460,7 +674,13 @@ impl Pass<'_> {
                 bindings: bindings.clone(),
                 body: Box::new(self.conv_typed(body, owned, borrowed, expected)),
             },
-            Expr::Dup(..) | Expr::Drop(..) => unreachable!("reference counting runs once"),
+            Expr::Trace(span, body) => Expr::Trace(
+                span.clone(),
+                Box::new(self.conv_typed(body, owned, borrowed, expected)),
+            ),
+            Expr::Dup(..) | Expr::Drop(..) | Expr::BorrowGlobal(..) => {
+                unreachable!("reference counting runs once")
+            }
         }
     }
 
@@ -735,6 +955,10 @@ fn free_in(e: &Expr, bound: &mut Set, out: &mut Set) {
             bound.insert(*l);
             free_in(b, bound, out);
         }
+        Expr::BorrowGlobal(l, _, b) => {
+            bound.insert(*l);
+            free_in(b, bound, out);
+        }
         Expr::Match(s, arms) => {
             free_in(s, bound, out);
             for (p, b) in arms {
@@ -752,6 +976,7 @@ fn free_in(e: &Expr, bound: &mut Set, out: &mut Set) {
             out.extend(parameters.iter().filter(|l| !bound.contains(l)).copied());
             free_in(body, bound, out);
         }
+        Expr::Trace(_, body) => free_in(body, bound, out),
         Expr::Dup(l, b) | Expr::Drop(l, b) => {
             if !bound.contains(l) {
                 out.insert(*l);
@@ -816,6 +1041,7 @@ enum Held {
     From(Local),
 }
 
+#[derive(Clone, Copy)]
 struct Checker<'a> {
     /// The caller keeps these parameters alive, independently of local copies.
     borrowed_parameters: &'a [Local],
@@ -1018,6 +1244,24 @@ impl Checker<'_> {
                 }
                 self.expr(b, st, consume)
             }
+            Expr::BorrowGlobal(local, global, body) => {
+                if !cached_map_span(self.funcs, self.shapes, self.locals, *local, *global, body) {
+                    return Err(format!(
+                        "local {} has no valid cached-map borrow span",
+                        local
+                    ));
+                }
+                let before = self.calls.map(|_| owned_references(st));
+                self.record_call(e, before, st);
+                st.insert(*local, Held::Owned(0));
+                let mut borrowed = self.borrowed_parameters.to_vec();
+                borrowed.push(*local);
+                Checker {
+                    borrowed_parameters: &borrowed,
+                    ..*self
+                }
+                .expr(body, st, consume)
+            }
             Expr::Match(s, arms) => {
                 // A boxed match result can enter a worker directly. Its
                 // conversion must retain the caller owners left by every arm.
@@ -1071,6 +1315,7 @@ impl Checker<'_> {
                 self.record_call(e, before, st);
                 self.expr(body, st, consume)
             }
+            Expr::Trace(_, body) => self.expr(body, st, consume),
             Expr::Dup(l, b) => {
                 // A retain can allocate wide-count metadata. Protect existing
                 // references before it runs; the new reference does not exist yet.
@@ -1222,6 +1467,185 @@ mod tests {
 
     fn checked(p: &Program, e: Expr) -> Result<(), String> {
         check(p, &p.funcs[0], &e, &p.funcs[0].locals)
+    }
+
+    fn cached_map_program() -> Program {
+        let number = MT::con("std::I64");
+        let map = MT::Con("std::Map".into(), vec![number.clone(), number.clone()]);
+        let option = MT::Con("std::Option".into(), vec![number.clone()]);
+        let mut p = Program::default();
+        p.shapes.insert(
+            option.clone(),
+            TypeShape::Adt(vec![
+                ("None".into(), vec![]),
+                ("Some".into(), vec![number.clone()]),
+            ]),
+        );
+        p.funcs = vec![
+            Func {
+                name: "lookup".into(),
+                arity: 1,
+                locals: vec![number.clone(), map.clone(), number.clone(), option.clone()],
+                ty: MT::Fun(Box::new(number.clone()), Box::new(option.clone())),
+                body: Body::Expr(Expr::Let(
+                    1,
+                    Box::new(Expr::Func(1)),
+                    Box::new(Expr::Let(
+                        2,
+                        Box::new(Expr::Call(
+                            2,
+                            vec![Expr::Local(0), Expr::Const(Value::I64(3))],
+                        )),
+                        Box::new(Expr::Call(3, vec![Expr::Local(2), Expr::Local(1)])),
+                    )),
+                )),
+            },
+            Func {
+                name: "table".into(),
+                arity: 0,
+                locals: vec![],
+                ty: map.clone(),
+                body: Body::Prim("map.empty".into()),
+            },
+            Func {
+                name: "multiply".into(),
+                arity: 2,
+                locals: vec![number.clone(), number.clone()],
+                ty: MT::Fun(
+                    Box::new(number.clone()),
+                    Box::new(MT::Fun(Box::new(number.clone()), Box::new(number.clone()))),
+                ),
+                body: Body::Prim("prim.mul".into()),
+            },
+            Func {
+                name: "get".into(),
+                arity: 2,
+                locals: vec![number.clone(), map.clone()],
+                ty: MT::Fun(
+                    Box::new(number.clone()),
+                    Box::new(MT::Fun(Box::new(map), Box::new(option))),
+                ),
+                body: Body::Prim("map.get".into()),
+            },
+            Func {
+                name: "unknown".into(),
+                arity: 1,
+                locals: vec![number.clone()],
+                ty: MT::Fun(Box::new(number.clone()), Box::new(number)),
+                body: Body::Prim("probe.suspend".into()),
+            },
+        ];
+        p
+    }
+
+    #[test]
+    fn cached_map_borrow_keeps_global_ownership_out_of_local_cleanup() {
+        let p = cached_map_program();
+        let (body, locals) = counted(&p);
+        assert!(matches!(body, Expr::BorrowGlobal(1, 1, _)), "{body:?}");
+        let calls = ownership_liveness(&p, &p.funcs[0], &body, &locals, &[]).unwrap();
+        assert!(calls.values().all(|c| c
+            .before_arguments
+            .iter()
+            .chain(&c.at_entry)
+            .all(|(l, _)| *l != 1)));
+        assert!(!format!("{body:?}").contains("Dup(1,"));
+        assert!(!format!("{body:?}").contains("Drop(1,"));
+    }
+
+    #[test]
+    fn cached_map_borrow_rejects_unknown_calls_escapes_and_resource_cleanup() {
+        let mut p = cached_map_program();
+        let Body::Expr(Expr::Let(_, _, body)) = &mut p.funcs[0].body else {
+            panic!()
+        };
+        **body = Expr::Let(
+            2,
+            Box::new(Expr::Call(4, vec![Expr::Local(0)])),
+            body.clone(),
+        );
+        let (body, _) = counted(&p);
+        assert!(!format!("{body:?}").contains("BorrowGlobal"));
+
+        let mut p = cached_map_program();
+        let map = p.funcs[1].ty.clone();
+        p.funcs[0].ty = MT::Fun(Box::new(MT::con("std::I64")), Box::new(map));
+        p.funcs[0].body = Body::Expr(Expr::Let(
+            1,
+            Box::new(Expr::Func(1)),
+            Box::new(Expr::Local(1)),
+        ));
+        let (body, _) = counted(&p);
+        assert!(!format!("{body:?}").contains("BorrowGlobal"));
+
+        let mut p = cached_map_program();
+        p.funcs[0].locals[0] = MT::Con("std::Task".into(), vec![MT::con("std::I64")]);
+        let Body::Expr(Expr::Let(_, _, body)) = &p.funcs[0].body else {
+            panic!()
+        };
+        assert!(!cached_map_span(
+            &p.funcs,
+            &p.shapes,
+            &p.funcs[0].locals,
+            1,
+            1,
+            body
+        ));
+    }
+
+    #[test]
+    fn cached_map_borrow_verifier_rejects_an_unowned_drop_or_effectful_span() {
+        let p = cached_map_program();
+        let call = Expr::Call(3, vec![Expr::Local(0), Expr::Local(1)]);
+        for body in [
+            Expr::Drop(1, Box::new(call.clone())),
+            Expr::Local(1),
+            Expr::Let(
+                2,
+                Box::new(Expr::Call(4, vec![Expr::Local(0)])),
+                Box::new(call),
+            ),
+        ] {
+            assert!(checked(&p, Expr::BorrowGlobal(1, 1, Box::new(body))).is_err());
+        }
+    }
+
+    #[test]
+    fn cached_map_borrow_checks_nested_continuations_and_actual_local_uses() {
+        let mut p = cached_map_program();
+        // Inlining can leave unused function/task type slots. They introduce
+        // neither a value nor a destructor, and must not prohibit a borrow.
+        p.funcs[0].locals.extend([
+            MT::Con("std::Task".into(), vec![MT::con("std::I64")]),
+            MT::Fun(Box::new(MT::con("std::I64")), Box::new(MT::con("std::I64"))),
+        ]);
+        let (body, _) = counted(&p);
+        assert!(matches!(body, Expr::BorrowGlobal(1, 1, _)));
+
+        let get = Expr::Call(3, vec![Expr::Local(0), Expr::Local(1)]);
+        let unknown = Expr::Call(4, vec![Expr::Local(0)]);
+        let after_read = Expr::Let(3, Box::new(get.clone()), Box::new(unknown));
+        // A callback after the final read is safe: the borrowed value is dead.
+        assert!(cached_map_span(
+            &p.funcs,
+            &p.shapes,
+            &p.funcs[0].locals,
+            1,
+            1,
+            &after_read
+        ));
+        // The same nested expression is unsafe when an enclosing continuation
+        // still needs the map. The callback could yield to a replacing owner.
+        let nested = Expr::Let(2, Box::new(after_read), Box::new(get));
+        assert!(!cached_map_span(
+            &p.funcs,
+            &p.shapes,
+            &p.funcs[0].locals,
+            1,
+            1,
+            &nested
+        ));
+        assert!(checked(&p, Expr::BorrowGlobal(1, 1, Box::new(nested))).is_err());
     }
 
     fn hash_record_program(second: Expr, second_ty: MT) -> Program {
@@ -1458,7 +1882,9 @@ mod tests {
             match e {
                 Expr::Call(1, _) => Some(e),
                 Expr::Let(_, value, body) => borrowed_call(value).or_else(|| borrowed_call(body)),
-                Expr::Dup(_, body) | Expr::Drop(_, body) => borrowed_call(body),
+                Expr::Trace(_, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => {
+                    borrowed_call(body)
+                }
                 _ => None,
             }
         }

@@ -126,3 +126,21 @@ build an executable with `fwp build docs/tutorials/13-tooling/main.fwp -o toolin
 ---
 
 Previous: [Numerics](../12-numerics/README.md) · [All tutorials](../README.md) · Next: [Services](../14-services/README.md)
+
+
+## Explore a running program
+
+A REPL is a read–evaluate–print loop: enter one expression, see its value, then
+use that value in another expression. Start with `fwp repl --no-history`; enter `2 + 3`,
+then `it * 2` to get `10`. Here `it` names the previous result. The
+[interactive guide](../../repl.md) explains history, definitions and type queries.
+
+A [notebook](../../notebooks.md) keeps source cells next to explanations and
+results. Run cells explicitly; editing code marks old results stale rather than
+silently repeating file writes or other effects. Saved notebooks contain source.
+
+A [debugger](../../debugging.md) pauses a program so you can inspect a function's
+input and step through expressions. Its Python SDK can record execution events.
+The same guide shows how to compare emitted C with actual machine instructions
+at `O0` through `O3` on explicitly selected targets. This inspection does not run
+a cross-target binary or measure its speed.

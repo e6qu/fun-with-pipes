@@ -56,12 +56,18 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --lib sys::tty::tests::native_console -- --exact 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo test --test softfloat_core --test float_math -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          cargo test --test softfloat_core --test float_math --test scalar_math --test repl --test debugger --test infix -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --test compiler_options --test native_allocator --test windows_context --test native_sockets --test library_unload -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo build --bin fwp 2>&1 | Tee-Object -Append windows-native.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Python SDK and native disassembly
+        env:
+          PYTHONPATH: sdk/python
+          FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp.exe
+          FWP_OBJDUMP: llvm-objdump
+        run: python -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v
       - name: Language formatting preflight
         shell: pwsh
         run: |
@@ -75,7 +81,7 @@ jobs:
       - name: Generated programs with native resources and ownership stress
         shell: pwsh
         run: |
-          cargo test --no-fail-fast --test cpu_kernel_ownership --test metrics_ownership --test ternary_ownership --test udp_ownership --test dns_ownership --test vector_ownership --test range_array --test hash_ownership --test mapped_array_construction --test zip_map_fusion --test unzip_cleanup --test list_construction_cleanup --test list_generation_ownership --test list_structure_ownership --test state_sequence_ownership --test map_unwind_ownership --test map_set_ownership --test collection_construction --test selection_unwind_ownership --test zip_unwind_ownership --test fold_unwind_ownership --test windows_runtime --test windows_static_memory --test loop_unwind_ownership --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test file_construction_ownership --test file_inline_path --test file_storage_disposal -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          cargo test --no-fail-fast --test cpu_kernel_ownership --test metrics_ownership --test ternary_ownership --test udp_ownership --test dns_ownership --test vector_ownership --test range_array --test hash_ownership --test mapped_array_construction --test zip_map_fusion --test unzip_cleanup --test list_construction_cleanup --test list_generation_ownership --test list_structure_ownership --test state_sequence_ownership --test map_unwind_ownership --test map_set_ownership --test collection_construction --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test selection_unwind_ownership --test zip_unwind_ownership --test fold_unwind_ownership --test windows_runtime --test windows_static_memory --test loop_unwind_ownership --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test file_construction_ownership --test file_inline_path --test file_storage_disposal -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
       - name: CPU kernel size validation order
         shell: pwsh

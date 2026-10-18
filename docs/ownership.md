@@ -6,17 +6,18 @@ an existing owner keeps it alive. An **alias** is another reference to the same
 storage. These are compiler/runtime concepts; fwp code still uses immutable values
 and ordinary pipes.
 
-This guide states the implemented memory contract. The [primitive tables](primitive-ownership.md)
+This guide states the implemented memory contract and labels proposed changes.
+The [primitive tables](primitive-ownership.md)
 give per-operation details, [benchmarks](benchmarks.md) distinguish memory savings
 from speed, and [delivery history](roadmap-history.md) records accepted tests.
 
-Caught I/O errors must own their kind string, message string and record just like
-ordinary returned values. Error construction now protects each completed string
-while allocating the next field and transfers the completed record to the handler.
-A previous runtime path left all three counts at zero and retained 64 charged bytes
-per small caught error when tracing was disabled. Repeated-catch and injected
-allocation-failure probes cover this repair, with accepted filesystem ownership
-evidence in [PR #147](roadmap-history.md#numerical-precision-and-filesystem-ownership-pr-147).
+For a first example of immutable sharing, read
+[lesson 22](tutorials/22-recursion-and-sharing/README.md). For a specific question:
+
+- [Modes and representations](#existing-implementation): what the compiler does today.
+- [Boundary rules](#ownership-boundaries): who owns arguments and results.
+- [Checked ARC](#checked-arc-delivery): supported entries and caller obligations.
+- [Cycle proposal](#proposed-cycle-policy): design work, not implemented APIs.
 
 ## Direction
 
@@ -26,6 +27,52 @@ lifetimes. ARC is reserved for necessary shared ownership. Counted allocation
 alone is not the desired endpoint: unshared values should avoid count traffic,
 and eligible abstractions should compile away. The contracts below describe
 what exists today; they do not claim this objective is already achieved.
+
+## Proposed cycle policy
+
+An **owning cycle** is a loop of references that keep each other alive. For
+example, a channel owns a queued callback whose captures own the same channel.
+Ordinary reference counting cannot reclaim that unreachable loop.
+
+The design direction is to require a proved way to release each ownership group
+without tracing. This is not a ban on recursion, shared immutable values or
+logical cyclic graphs. The precise rules and public APIs remain to be designed;
+current checked ARC uses the conservative restrictions below.
+
+| Pattern | Proposed treatment | Cost or restriction |
+|---|---|---|
+| Callback used during one call | Borrow inputs/captures | The borrow cannot outlive its owner or escape the call without another valid owner. |
+| Subscription or background operation | Independent scope owns registration and disconnects it | Cleanup must cover failure/cancellation and active callbacks; it cannot depend on the cyclic object's destructor. |
+| Back-reference to an independently owned resource | Explicit weak handle | Acquiring a temporary owner can fail when the target is gone; the program chooses what to do. |
+| Cyclic graph | One graph owner, nodes linked by non-owning IDs | Node deletion and stale IDs need rules; unused nodes may remain until explicitly removed. |
+| Unknown retained callback or foreign pointer | Explicit lifetime contract or rejection | The compiler cannot infer arbitrary external behavior. |
+
+A weak reference does not keep its target alive. Hypothetical `weak.create` and
+`weak.upgrade` helpers could create one and return `Some owner` or `None` when
+used. **These functions and a public `Weak` type are not implemented.** A scoped
+event-registration API is also a design sketch, not a runnable library example.
+
+For example, a callback printing a resource's name could handle a missing weak
+target by reporting “source has gone.” If it must keep the resource alive until
+the job completes, it instead needs an independent operation owner. Silently
+weakening the capture would change the program's behavior.
+
+Weak handles alone do not prove cycle freedom: an acquired strong owner could
+be stored back into a cyclic relationship. The proof must cover later retention
+as well as initial capture. Diagnostics should distinguish a known cycle from
+an unproved lifetime and suggest borrowing, a scope or weak access as appropriate.
+Some safe programs may need more information before the compiler accepts them.
+
+Swift leaves strong-cycle breaking to programmers; fwp's proposed checked policy
+would be stricter. See [Swift's ARC guide](https://github.com/swiftlang/swift-book/blob/main/TSPL.docc/LanguageGuide/AutomaticReferenceCounting.md).
+This policy cannot prevent a program deliberately growing a live collection,
+prove task termination, or replace a foreign library's own lifetime obligations.
+
+Validate the design with four programs before adding syntax: an event
+subscription, a channel worker, a cancelled background task and a graph with
+node deletion. Keep ordinary inference and pipes. For today's runnable behavior,
+see [tasks and channels](tutorials/06-tasks-and-channels/README.md) and
+[recursion and sharing](tutorials/22-recursion-and-sharing/README.md).
 
 ## Stable language behavior
 
@@ -85,6 +132,39 @@ Generated ownership helpers distinguish those cases. An absent external slot is
 not proof that a freshly allocated wide integer is immortal. Physical storage
 checks and a control restoring that mistaken early return cover this boundary.
 
+## Cached numeric map reads
+
+A top-level computed map has a cache owner, released at program teardown. For
+example, this builds a map on first use and returns its value at key 1:
+
+```fwp
+table : Map[I64, I64]
+table = [(1, 7), (2, 9)] | map.from-list
+lookup = flip map.get table | option.unwrap-or 0
+main = 1 | lookup | echo
+```
+
+`map.get` returns `Some value` for a present key or `None` for a missing one;
+`option.unwrap-or 0` extracts that value or supplies zero. This prints `7`.
+The compiler can borrow `table` for the lookup instead of acquiring another
+owner. The cache keeps the map alive throughout that read.
+
+This optimization currently covers `map.get` and `map.size` on maps of immediate
+numeric keys/values (integers up to 64 bits, F32 and F64). It needs a proved
+non-suspending read span: no unknown call, escaping map value or potentially
+reentrant cleanup while a later read still needs the borrow. Other uses keep
+their existing ownership requirements. There is no new syntax or implicit copy.
+
+Initialization keeps its original effects and failure timing. If initialization
+reenters and replaces an earlier cached result, the old cache owner releases;
+independent callers retain their own owners. A failed first read unwinds caller
+owners. A borrowed local never releases the cache's owner. Returning a tuple or
+variant after the read preserves eligible direct-field results without an
+intermediate box. `tests/cached_map_borrows.rs` checks these paths, including
+reentrant aliases, deliberate missing-cleanup controls and raw-interpreter
+agreement. [Measurements](benchmarks.md#compiler-proved-cached-map-reads) separate
+count savings from timing; [the handoff](development-state.md) records acceptance.
+
 ## Ownership boundaries
 
 A boundary is a call where ownership crosses between compiled code and a runtime,
@@ -112,8 +192,9 @@ must protect every acquired child until transfer succeeds.
 Counting cannot reclaim an unreachable cycle by itself. For example, a channel
 can contain a queued value holding that same channel. Closing it must preserve
 queued values for later receives. Explicit draining breaks the tested cycle;
-losing the last external handle without draining does not. Unproved cycles need
-tracing and are rejected by checked ARC.
+losing the last external handle without draining does not. Today, tracing handles
+unproved cycles in native tracing mode; checked ARC rejects them. This is the
+current limitation, not permission to introduce tracing into future ownership rules.
 
 Checked ARC admits channels carrying data such as numbers, strings, records and
 recursive immutable lists or variants. Their payload type must contain no
@@ -423,272 +504,141 @@ full acceptance separately from the focused memory checks.
 
 ## Checked ARC delivery
 
-`fwp build --gc arc` excludes tracing code and rejects unsupported ownership.
-Supported native entries include `main`, exported function executables and CLI
-commands and native C libraries with copied inputs. The owned-result extension
-accepted in PR #165 adds explicitly released strings and records, described below.
-Each entry starts without assuming an existing state or derivative scope.
-Synchronous WASI main/function/CLI entries also use these checks. Generated REST
-and MCP entries are accepted in [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164), including returned
-aliases, caught errors, malformed messages, disconnects and normal shutdown.
-All 18 repeated-request memory jobs pass across the six native hosts. The
-[measurement report](benchmarks.md#generated-rest-and-mcp-server-memory) verifies
-bounded storage and actual binaries without tracing, and records the substantial
-allocation/count costs that remain. All nine final production jobs and
-documentation pass.
-The browser/asynchronous WASI extension accepted in the same delivery
-uses ordinary checked task/channel ownership and command-end scheduler cleanup.
-Both actual-Wasm jobs now pass JSPI and Asyncify execution, storage reclamation
-and exact-result checks; the [report](benchmarks.md#webassembly-task-and-browser-loader-ownership)
-retains all modules and deliberately leaking controls. Browser-loader evidence
-under Node does not establish coverage in a browser engine. Host callbacks receive
-copied output strings; each invocation owns a separate module instance. These
-checks cover values inside the compiled module. The JavaScript engine still owns
-instances, promises and copied strings; removing fwp tracing does not remove
-that host engine's garbage collector. The
-[gRPC extension](#checked-grpc-clients-and-services) adds checked client/service
-entries and has separate platform acceptance. Focused checks and final delivery acceptance are distinguished
-in [the handoff](development-state.md).
+`fwp build --gc arc` checks the supported ownership contracts and excludes
+tracing code. It rejects unproved ownership instead of silently retaining it.
+Ordinary counted freeing must remain enabled; tracing stress and reuse poisoning
+are diagnostic modes incompatible with ARC.
 
-HTTP client ownership is accepted in [PR #162](roadmap-history.md#http-client-owners-and-complete-connection-keys-pr-162). Client
-connections have independent pool, caller and I/O-task owners; startup cleanup
-releases a reserved owner if a background task cannot start. Client and server
-entry transfer the socket/TLS session only after the connection allocation
-succeeds; failure leaves the original owner intact. A request keeps its
-stream alive until the response is copied or the call fails. Failure and
-cancellation notify the peer before releasing request storage. Response strings,
-header pairs and list cells are owned as they are created, so partial copies can
-be released. Completed responses do not borrow the network buffers. Full pool
-keys, including long TLS-option strings, remain distinct without a fixed-size
-temporary buffer. The [HTTP measurements](benchmarks.md#http-clients-without-tracing)
-record constant managed storage, remaining allocation/count traffic and larger
-ARC code sections; raw transport/process memory and timing are excluded.
+| Entry or boundary | Implemented contract | Evidence and limits |
+|---|---|---|
+| Native main, function executable, CLI | Each entry proves its own state/derivative scopes and releases owned results | [Reference](reference.md#checked-reference-counting) |
+| Native C libraries | Copy supported inputs; return scalars or explicitly released strings/records | [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165); no raw-pointer/retained-callback proof |
+| gRPC clients/services | Typed input/result owners and checked iterator handler lifetimes | [Details below](#checked-grpc-clients-and-services) |
+| HTTP clients/servers | Own connections, requests, copied responses, handler captures and tasks | [PR #162](roadmap-history.md#http-client-owners-and-complete-connection-keys-pr-162), [#163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163) |
+| Generated REST/MCP | Same checked entries, including aliases, errors and normal shutdown | [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164) |
+| WASI and browser-loader modules | Counted values and command-end task/scheduler cleanup | [Module evidence](benchmarks.md#webassembly-task-and-browser-loader-ownership); loader tested in Node, actual browser engines remain unverified |
 
-HTTP server ownership is accepted in
-[PR #163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163). A stream handle owns request and
-connection storage; it can survive completion of its handler task without keeping
-that task identity alive. The same allocation carries the task payload, removing
-a separate job record. Connection startup, the inline reader and the writer have
-explicit cleanup; active requests and pending dispatch lists own their streams.
-One retained handler per connection keeps captured values alive if serving fails
-before child tasks finish. Individual jobs borrow that handler. Typed calls retain
-only values that need independent owners. HTTP callbacks run in fresh task scopes:
-a parent State or differentiation scope does not extend into a request task.
-Checked ARC rejects channel payloads containing HTTP stream handles, directly or
-inside other data. Otherwise a handler could store its own handle in a channel
-it captures: channel → handle → connection → handler → channel would form a
-reference-count cycle. Ordinary immutable storage and returned aliases remain
-allowed; the restriction concerns publishing a handle through a mutable queue.
-Focused O1/O2 failure, cancellation, escaped-handle and tracing-stress probes pass
-locally. All six native server-memory jobs pass, with constant final managed
-storage and bounded sampled process memory; the [report](benchmarks.md#http-server-ownership-and-memory)
-explains the workload and remaining allocation costs. All six platform HTTP suites
-pass. Intel macOS passed separate ownership and comparison jobs after the combined
-job reached its time limit; every case and the same limit were preserved. All
-nine production gates and docs passed for PR #163; REST/MCP entries followed
-in PR #164. GPU ownership remains separate work.
+These accepted paths still allocate and count references. Default native mode
+still includes tracing; general removal is a [project goal](../PLAN.md).
+The JavaScript host owns its instances, promises and copied strings independently;
+removing fwp tracing does not remove that host's collector.
 
-WASI supplies standard streams and file access to a WebAssembly module. Build a
-supported program with `fwp build --gc arc --target wasm32-wasi app.fwp -o app.wasm`
-using the [WASI toolchain](reference.md#targets). Its counted values use the
-existing external count table and typed destruction; this still costs metadata,
-lookups and allocations. A count reaching its last owner removes the table entry
-and frees the storage. A counted value escaping to permanent shared retention
-traps instead of silently leaking. Requests to enable tracing or retained-storage
-verification are rejected, just as in native ARC.
+### HTTP ownership
 
-Actual WASI O1/O2 checks compare raw interpretation with repeated collections,
-closures, text reads, caught failures and scoped/nested derivatives. They observe
-physical libc allocations independently of count metadata, after the runtime's
-ordinary shutdown hooks. Omitting object frees or derivative-cache shutdown must
-fail. Function and CLI modules are also inspected for absent tracing functions.
-This checks fwp storage inside the module; the WebAssembly host manages its own
-runtime separately. Native-library flags combined with a WebAssembly target are
-rejected instead of silently building a native library.
+Client connections have independent pool, caller and I/O-task owners. Socket/TLS
+ownership transfers only after connection allocation succeeds. A request keeps
+its stream alive until the copied response is ready or the call fails.
+Failure/cancellation notifies the peer before releasing request storage.
+Response strings, headers and partial lists own each completed field; returned
+responses never borrow network buffers. Complete pool keys include long TLS options.
 
-For a static or shared C library, scalar inputs are copied by value and string
-inputs are copied into owned language storage during the call. Records can
-contain these input types. Scalar results copy all their bits before temporary
-language storage is released. Returned strings and flat records containing
-strings use the result ownership accepted in
-[PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165). The
-[six-host report](benchmarks.md#returning-owned-values-to-c-callers) records
-90 passing focused tests and measured ownership costs.
+On the server, a stream handle owns request/connection storage and may survive
+its handler task. Its allocation also holds the task payload. Active requests
+and dispatch lists own streams. One retained handler per connection keeps its
+captures alive until child tasks finish; individual jobs borrow it. HTTP callbacks
+run in fresh task scopes, without inheriting an active State or derivative handler.
 
-An export named `greet` that returns a string also declares
-`fwp_release_greet(result)` in its generated C header. The caller owns that
-result until it calls the matching release function exactly once. A record's
-release function releases all its string fields, including fields that share
-one allocation. Pass the complete unchanged record. Copying pointer bits does
-not create another owner. Do not use C's `free`, modify returned string bytes,
-use a released result, or keep results past library unload. Serialize host
-calls and releases; concurrent host entry remains outside this contract.
+ARC rejects channel payloads containing HTTP stream handles, including nested
+ones: a handler could otherwise queue its own handle, creating the cycle
+`channel → handle → connection → handler → channel`. Ordinary returned aliases
+remain allowed. [Client](benchmarks.md#http-clients-without-tracing) and
+[server measurements](benchmarks.md#http-server-ownership-and-memory) explain
+bounded measured storage, remaining per-request costs and sampling exclusions.
 
-A unique returned string transfers its existing owner without another copy,
-allocation or retain. When a compiled function returns separate record
-fields and receives each input as a whole value, those fields transfer directly into
-the C result; no intermediate record is allocated. Other record results transfer
-their string fields and release the temporary box and remaining fields when
-uniquely owned. Shared records retain the string owners that C now needs. Conversion finishes before any owner transfers: an embedded
-NUL still traps rather than silently truncating a C string, and a failed field
-conversion releases the full temporary result. Raw pointers and retained foreign
-callbacks still require separate lifetime contracts. Every export is checked
-independently, even if another export calls it inside a state or derivative scope.
+### WebAssembly ownership
 
-The same release interface applies to ordinary tracing libraries. This changes
-the old retain-until-unload contract; rebuild libraries and callers together.
-There is no extra allocated result handle or compatibility adapter. Counting and
-freeing disabled for diagnostic controls still deliberately retain storage;
-checked ARC requires both enabled. Input strings currently copy even when a
-function only reads them. Returned aliases must remain independent of later
-changes to the C buffer; borrowing inputs proved unable to outlive the call
-remains an optimization opportunity.
+Build with `fwp build --gc arc --target wasm32-wasi app.fwp -o app.wasm` and the
+[required toolchain](reference.md#targets). Counted objects use an external
+count table and typed destructors. The last owner removes its entry and frees
+storage; this still costs metadata, lookups and allocation. An escape into
+permanent shared retention traps. Native-library flags with a WebAssembly target
+are rejected. Each browser-loader invocation owns a separate module instance;
+output callbacks receive copied strings.
 
-List transposition also has a checked copying contract. It creates new list
-nodes, retains the original elements as typed aliases and releases temporary
-row cursors and completed-column storage. Scratch space grows with the number
-of rows plus columns, without copying every input row into an array. A failure
-during a retain or list-node construction releases the
-partial column and completed columns. This closes the ownership gap in the
-general matrix multiplication path as well as direct `list.transpose` calls.
-The original input is unchanged, and ragged rows still stop at the shortest row.
+Tests compare actual O1/O2 modules with raw interpretation, including repeated
+collections, closures, failures, scoped derivatives and task cancellation.
+Independent allocation ledgers observe cleanup; deliberately omitted frees/cache/
+scheduler shutdown must fail. Freed blocks are reusable, but WebAssembly memory
+capacity does not shrink. See the [module report](benchmarks.md#webassembly-task-and-browser-loader-ownership).
 
-Console input, process arguments and environment lookups have explicit
-copied-result ownership.
-`read-all` owns its input buffer until conversion to a string completes;
-`read-line` protects that string while constructing `Some`. `read-lines` releases
-the complete input string after copying its lines. `lines` and `args` protect
-partial lists and pending strings during construction. No returned value borrows
-standard-input buffers or the process argument array. Invalid UTF-8 replacement,
-CRLF handling and end-of-input behavior remain unchanged. Environment lookups
-copy the value before the process setting can change; embedded zero bytes in a
-name return `None`, matching the interpreter instead of looking up a prefix.
-Directory and environment snapshots now own their copied strings, pairs and list
-nodes through the existing protected list builder. Scratch buffers, partially
-constructed results and operating-system directory/environment handles are released
-on success and failure. Recursive directory creation releases its temporary path
-buffer. These contracts have passed production acceptance on all six native targets.
+### C library results and foreign calls
 
-File-value runtime changes own metadata records and their duration fields,
-protecting the duration if record construction fails. Byte reads reuse the same
-buffer/stream cleanup as text reads and return a fresh leaf. Existence checks,
-rename/remove, ordinary directory creation and append/byte writes borrow their
-arguments. Focused tests check repeated storage release and error preservation;
-all six native platforms pass, including the directory-error and composed
-application regressions and full production acceptance.
+Scalar inputs copy by value; strings copy into language-owned storage. Supported
+records contain those input types. Scalar results copy all their bits before
+language temporaries release. Strings and flat records containing strings return
+with explicit owners.
 
-The same contracts cover text shortcuts: `file.read`
-returns a counted string, and `file.write-new` borrows its path and contents.
-The latter creates or replaces a file; its name does not mean exclusive creation.
-Both use the existing protected stream/buffer implementation. Invalid UTF-8 must
-release the read buffer before raising `IoError`. Tests cover repeated reads,
-embedded NUL in contents, invalid paths, write/close failures and missing owners.
-The maintained `todo` and `grep` functions exercise these operations in repeated
-application calls with retained results. Their functions and real command lines
-passed focused checks on all six native hosts and full production acceptance in
-[PR #150](https://github.com/e6qu/fun-with-pipes/pull/150).
+For example, an export `greet` returns a string with a generated
+`fwp_release_greet(result)` function. Call it exactly once with the complete,
+unchanged result before unloading the library. A record's function releases all
+string fields, including aliases. Copying pointer bits creates no new owner.
+Do not use C `free`, mutate returned bytes or use released values. Serialize host
+calls and releases; concurrent entry is outside this contract.
 
-Current-directory lookup now returns a counted string and protects its OS path
-buffer until conversion finishes. It raises an explicit `IoError` of kind `cwd`
-when the directory cannot be read. POSIX no longer substitutes `"."` or imposes a
-4 KiB buffer. This contract passed six-host and production acceptance in #148.
-Other unreviewed IO primitives remain outside checked ARC.
+Unique results transfer ownership without a string copy or extra retain. Eligible
+compiled record returns pass fields directly without a box. Other record returns
+release their temporary box after transfer; shared fields retain the independent
+owners needed by C. All conversions finish before transfer: embedded NUL traps
+rather than truncating text, and a failed field conversion frees partial results.
+Every export proves its own entry scopes. The same release interface applies to
+tracing libraries. Rebuild callers/libraries together; there is no compatibility
+adapter. Input strings still copy even for read-only calls; borrowing them needs
+a proof that no result/capture can outlive the call.
 
-The six dense F64 linear-algebra primitives borrow their input arrays and return
-independently owned results. Scratch pointers and partially constructed output
-arrays are tracked in one stack record. Normal completion, singular-result exits
-and unwinding release temporary storage explicitly; outputs transfer to the returned value
-only after its container exists. No input retain or hidden managed workspace
-owner is needed. QR checks its square output size separately from input shape.
-See [numerical storage costs](numerics.md#dense-f64-solvers) and
-[accepted solver evidence](roadmap-history.md#numerical-precision-and-filesystem-ownership-pr-147). Native arithmetic and
-iteration order are unchanged.
+Scoped foreign calls can borrow strings/bytes and copy supported scalar/record
+values. Synchronous callbacks run on the calling task before C returns; C must
+copy borrowed data before keeping it. Foreign strings copy into fwp-owned values.
+Raw pointers and callbacks returning managed C addresses lack an adequate lifetime
+contract and are rejected by checked ARC. See [C interop](tutorials/09-c-interop/README.md).
 
-Scoped C calls can borrow strings/bytes and copy supported scalar/record values.
-Synchronous callbacks must run on the calling task before C returns; C must copy
-borrowed data before keeping it. Foreign strings are copied into owned fwp values.
-Raw pointers and callbacks returning managed C addresses are rejected because
-an address alone cannot prove its storage lifetime.
+### Owned library values
 
-State operations must run under a proved handler. A returned closure does not
-extend the old handler's lifetime, though it can run under a new one. The checker
-tracks callback targets, captures and stored values; unknown targets are rejected.
+The [primitive contracts](primitive-ownership.md) are the detailed inventory.
+The following rules explain common boundaries:
 
-Derivative calls likewise need a proved scope. A returned token cannot keep a
-tape alive, and stale/mixed/cross-task tokens trap. F128 and nested tapes own
-typed weights. Nested tapes remain protected while backward callbacks record
-into an outer tape. Scope
-exit, failure, cancellation and library teardown release those owners. Numeric
-workspace reuse is bounded and counted separately from returned gradient arrays.
+| Operations | Ownership and observable behavior |
+|---|---|
+| `list.transpose` | New nodes own typed aliases of original elements. Protect partial columns/cursors on failure; stop at the shortest row. Scratch grows with rows plus columns. |
+| Console, arguments, environment | Return copied strings/lists; protect partial results. Preserve UTF-8 replacement, CRLF and EOF behavior. Environment names with embedded NUL return `None`. |
+| Directory/environment snapshots | Own copied strings, pairs and nodes; release scratch and OS handles on failure. |
+| Files and metadata | Own returned strings/bytes/records. Ordinary file actions borrow paths/data; write/close errors remain visible. `file.write-new` replaces or creates, not exclusive creation. |
+| Working directory | Return a counted string or `IoError` of kind `cwd`; do not substitute `"."` or truncate paths. |
+| Six dense F64 solvers | Borrow inputs, protect scratch and partial results, transfer completed outputs. QR checks output-size overflow separately. Arithmetic order is unchanged. |
+| JSON/text/binary/CSV and CLI parsing | Own decoded fields, aliases, defaults, flags, errors and displaced map values. Freeing decoder scratch alone is insufficient. |
+| Empty maps/sets | Immutable static storage needs no allocation/count. Insertion allocates an owned container; old aliases remain empty. |
+| Boolean operations | Immediate tags need no storage/counts. |
+| Clocks | `time.monotonic`/`time.unix` return counted Duration records; repeated calls free them. Avoiding those allocations remains work. |
 
-Decoded JSON/text/binary/CSV trees have typed ownership, including partially
-constructed fields and displaced map values. CLI parsing owns defaults, repeated
-flags, diagnostics and results. Temporary decoder storage has its own cleanup;
-freeing that storage alone would not prove ownership of the resulting tree.
+### State, derivatives and processes
 
-Acceptance tests check physical reclamation at O1/O2 with stack placement both
-on and off, inspect native symbols/instructions for absent tracing, and require
-missing-free controls to fail. ARC still needs allocator metadata and can retain
-reusable pages. It promises neither zero allocation overhead nor immediate return
-of every page to the operating system.
+State operations need a proved handler. Returning a closure does not extend its
+old handler's lifetime, though it can run under a new one. The checker follows
+known targets, captures and stored values; unknown targets are rejected.
+Derivative tokens likewise do not extend tape lifetime. Stale, mixed or cross-task
+tokens trap. F128/nested tapes own typed weights; scope exit, failure, cancellation
+and library teardown release them. Workspace reuse is bounded and counted
+separately from returned arrays. See [numerics](numerics.md#reverse-mode).
 
-Empty maps and sets use immutable static storage. Their explicit static-result
-contract permits checked ARC without allocating an owner or changing a reference
-count. Inserting into an empty value allocates an ordinary typed container;
-other aliases still see the empty value. The repeated directory-report test
-checks empty map/set aliases, insertion, removal back to empty and full cleanup
-alongside the maintained application in both memory modes.
+Process calls borrow arguments/input during execution. `process.run` and
+`process.run-input` return owned status/output/error records; `process.call`
+returns a status number. A nonzero child status is a result, while failure to
+start/communicate raises `Error[IoError]` of kind `spawn`. Reject NUL arguments
+before OS access. Protect copied output while constructing the result.
 
-Boolean `not`, `and` and `or` borrow their immediate Boolean arguments and
-return an immediate Boolean tag; none needs storage or reference counts. Their
-explicit contracts admit ordinary Boolean combinations to checked ARC.
+Cleanup frees pipes/buffers, reaps POSIX children or closes Windows handles;
+unwinding before child completion terminates and waits for it. Calls are
+synchronous; this does not promise cancellation responsiveness while waiting.
+POSIX children receive normal SIGPIPE behavior. Parent writes temporarily block
+SIGPIPE only on the calling thread, consume only a newly generated broken-pipe
+signal, and restore the old mask/handler/pending state. Inputs never transfer
+to the child. Tests cover large output, early child exit and forced OS failures.
 
-`time.monotonic` and `time.unix` return a counted Duration record whose single
-field contains nanoseconds. Repeated clock reads and timestamped logs must free
-those records without tracing. The clock regression compares monotonic ordering,
-positive wall-clock readings and log fields with raw interpretation, checks
-final ARC storage, and deliberately removes one count to verify leak detection.
-Timestamps differ between executions; the test checks their format and the
-remaining fields rather than requiring identical clock readings. These records
-still allocate; avoiding that allocation is separate work.
-
-Child-process calls borrow their argument strings and input for the duration of
-execution. `process.run` and `process.run-input` return an owned record containing
-the exit status and copied standard-output/error strings; `process.call` returns
-an immediate status number. A nonzero child exit status is a result, whereas a
-failure to start or communicate with the child raises `Error[IoError]` of kind
-`spawn`. Arguments containing a zero byte are rejected before any OS call.
-
-The process owner releases temporary argument storage, pipe endpoints and capture buffers.
-It also reaps the child on POSIX and closes Windows process/thread handles. If
-execution unwinds before the child finishes, cleanup terminates and waits for
-that child. Captured strings stay protected while the result record is being
-constructed, so a later allocation failure releases earlier copies. Inputs can
-outlive the call; ownership of them is never transferred to the child. POSIX
-children receive ordinary SIGPIPE handling, matching interpretation. Parent writes
-block that signal only on the calling thread, consume only a newly generated
-broken-pipe signal, and restore the previous mask. They preserve the host's signal
-handler and any previously pending SIGPIPE, including when a child exits early.
-
-Process regressions compare repeated raw-interpreter and native calls,
-including quoted/Unicode arguments, output larger than pipe capacity and a child
-that exits without reading its input. Instrumented probes force construction and
-OS failures, check resource cleanup and reject deliberately missing counts or
-buffer frees. These contracts passed all six focused native hosts and full
-production acceptance in [PR #149](roadmap-history.md#owned-processes-and-numeric-mapped-arrays-pr-149). They do not establish ownership for
-networking or arbitrary external-resource contexts. Process calls are synchronous;
-this cleanup does not establish deadline or cancellation responsiveness while
-waiting for a child.
-
-
-Secret terminal input uses the same owned optional string as ordinary line input.
-A registered cleanup restores the original echo setting before a trap leaves the
-read frame. The interpreter and native runtime query real Windows console modes
-and width; redirected streams continue to behave as ordinary input. Descriptor
-validation happens before narrowing to the OS integer type. Terminal tests use a
-real pseudo-terminal on POSIX and a private console on Windows, with a deliberately
-missing restore action required to fail. Accepted platform evidence is recorded
-with [PR #149](roadmap-history.md#owned-processes-and-numeric-mapped-arrays-pr-149).
+Secret input returns an owned optional string; cleanup restores terminal echo
+before unwinding. Native Windows console mode/width are queried directly;
+redirected streams remain ordinary input. Validate descriptors before narrowing
+to the OS integer type. Real terminal tests require a missing-restore control
+to fail. [PR #149](roadmap-history.md#owned-processes-and-numeric-mapped-arrays-pr-149)
+records platform acceptance.
 
 ## Structural hashing without temporary storage
 
@@ -824,103 +774,44 @@ stack use. The report retains the instructions used to read those sizes.
 
 ### Service settings, outgoing headers and callback results
 
-Helpers such as `grpc.with-gzip` and `grpc.with-metadata` run a callback with
-temporary settings for its service calls. A callback is the function supplied
-to the helper. The settings must stay valid while it runs, and a child task
-must keep its inherited settings after the callback returns. See
-[service scopes](services.md#settings-for-a-group-of-calls) for examples.
+`grpc.with-gzip` and related helpers run a callback with temporary service
+settings; see [examples](services.md#settings-for-a-group-of-calls). Settings
+live on the stack during that callback. A child task copies them into its own
+record and retains independently live TLS/capture owners. Synchronous scopes
+borrow those owners. Outgoing headers use one block for pointers/text; empty or
+ignored lists borrow earlier settings. Check overflow before allocation and
+release completed owners on error/cancellation.
 
-The [earlier baseline](measurements/service-context-baseline-2026-10-16.json)
-and [owned-scope and forwarding measurements](measurements/service-context-forwarded-2026-10-16.json)
-compare each service scope with plain fwp state updates at 1, 32 and 128 calls.
-Every call increments the same state. These are extra costs per call, calculated
-from the difference between 32 and 128 calls with collection disabled. Each
-cell shows **earlier → owned scopes**:
+The helpers borrow their callback and own its result. Header capture returns an
+owned tuple of that result and copied header pairs; reverse construction keeps
+order without a temporary pointer array. Every partial field has cleanup.
+A forwarding function can return that owner directly when all paths forward the
+same dynamic result, instead of unpacking and rebuilding an identical tuple.
 
-| Scope | Allocation requests | Requested bytes | Bytes still charged after return |
-|---|---:|---:|---:|
-| Compression setting | 1 → 0 | 64 → 0 | 64 → 0 |
-| Deadline setting | 1 → 0 | 64 → 0 | 64 → 0 |
-| One outgoing header | 5 → 1 | 128 → 40 | 144 → 0 |
-| Response-header capture | 4 → 1 | 120 → 24 | 112 → 0 |
+The TLS-settings cache reads environment variables once per runtime instance.
+It survives tasks/resource finalizers and releases afterward during library
+teardown. Entry and full name share one allocation; no fixed-length truncation.
+A construction guard frees an unpublished entry if settings allocation fails,
+so a later retry remains possible.
 
-The earlier numbers are Linux AMD64 only. The new numbers match on Linux,
-macOS and Windows, each on ARM64 and AMD64, at source `8684127d`, with all six
-focused jobs passing in `38958562126`. Empty and ignored header lists add no
-per-call allocation. Requested bytes are allocator inputs; charged bytes include
-size rounding and explicit releases. Fixed scheduler startup remains in the raw
-rows and is excluded from the per-call difference. Raw TLS/capture allocations,
-allocator pages and total process memory are outside these counts. This compares
-fwp with earlier fwp, not with C or Rust, and does not measure speed.
+The [baseline](measurements/service-context-baseline-2026-10-16.json) and
+[owned/forwarded report](measurements/service-context-forwarded-2026-10-16.json)
+compare 1/32/128 scope calls against identical plain state updates. Slopes between
+32 and 128 calls exclude fixed setup. Collection is off. Compression/deadline
+scopes drop from one allocation/64 requested bytes per call to zero; one outgoing
+header drops 5 → 1 requests, and response capture 4 → 1. Returned charge becomes
+zero. Earlier figures cover Linux AMD64; new counts agree on six native hosts.
+These are fwp memory comparisons, with no speed or C/Rust baseline. Task records
+grow to hold settings (1,512 → 1,584 bytes in the Linux AMD64 example).
 
-Settings now live on the stack during a callback. A child copies them into its
-existing task record. This costs space per task: the Linux AMD64 service task
-grows from 1,512 bytes in the baseline to 1,584 bytes. Programs without service
-support omit the settings fields. The report records all six layouts, compiler
-versions, CPU details and actual ELF, Mach-O or PE binaries. The older baseline
-did not record its exact CPU model or C compiler version.
-
-Synchronous scopes borrow existing TLS/capture owners. Only independently live
-children retain shared owners. Outgoing headers use one owned block for pointers
-and copied text; empty or ignored lists borrow the previous settings. Overflow
-is checked before allocation. Scope return, error and cancellation release
-completed owners. Deliberately omitted inheritance, copying, release and child
-retention must fail the tests.
-
-The five helpers borrow their callback function and own its returned value.
-Response capture builds an owned tuple with that value and copied header pairs.
-It builds the list backwards to preserve order without a temporary pointer
-array. Allocation failure releases every completed field. Tests compare raw and
-optimized interpretation with native tracing/ARC execution, retain caller aliases
-and returned functions, check typed failures, and inspect ARC binaries for
-tracing functions. Capture controls cover 13/14 allocation-failure positions.
-Temporary decoding bytes also release on client result and served-request traps.
-These checks pass on all six native hosts at the source above. Production acceptance is recorded in
-[PR #154](roadmap-history.md#service-settings-and-iteration-storage-pr-154).
-
-A service's TLS settings, used for encrypted connections, are read from
-environment variables once per runtime instance. The cache must survive tasks
-and resource finalizers that still use those settings. Library teardown releases
-it after both have finished. Each entry and its name are stored
-in one allocation, with enough room to look up complete variable
-names. It removes the old 300-byte truncation. A construction guard frees an
-unpublished entry if allocating the TLS settings fails, allowing a later retry.
-Tests inject failure at both allocations and check long names, repeated reads
-and teardown order. This reduces allocation count; allocator rounding and the
-name's temporary suffix space prevent a general claim about bytes saved.
-
-Actual Linux ARM64 instructions copy the 72-byte settings through four 16-byte
-registers and one eight-byte register onto the stack. That wrapper reserves
-144 stack bytes; its separate error handler reserves 464. These are instrumented
-O2 observations, not a whole-program stack bound. The wrapper still calls the
-callback helper, so fewer allocations do not prove that all call overhead is gone.
-
-The earlier [owned-scope report](measurements/service-context-owned-2026-10-16.json)
-still had two allocations for response capture. A forwarding function unpacked
-its callback's tuple and allocated an identical tuple. The compiler now preserves
-that returned owner when every return path forwards a dynamic callback result.
-Aliases, failure cleanup and a deliberately reintroduced extra allocation are
-checked on all six hosts. Actual O2 instructions return that owner directly in
-`x0` on ARM64 and `rax` on AMD64. The forwarding function's stack use falls from
-192 to 144 bytes on ARM64 and from 184 to 120 bytes on AMD64, excluding AMD64's
-incoming return address. These are instrumented binary observations, not timing
-measurements or whole-program stack bounds.
-
-List `each` now avoids its discarded result list. The [six-host report](measurements/service-context-iteration-2026-10-16.json)
-at `20f0f5f0` verifies ordered calls, shared inputs, captured values and failures,
-along with all the service allocation limits above. It saves one allocation and
-32 requested bytes per element. The compiler makes known calls direct inside
-state and service helpers without rebuilding captured lists on each iteration.
-[Repeated timings and binary observations](benchmarks.md#list-iteration-compared-with-its-previous-definition)
-record the improvement and the remaining state bookkeeping. Production acceptance is recorded in
-[PR #154](roadmap-history.md#service-settings-and-iteration-storage-pr-154).
-
-The [intermediate stack-copy report](measurements/service-context-stack-2026-10-16.json)
-preserves the earlier representation tradeoff. It predates packed headers and
-owned callback results, and its Windows fixtures failed before later repairs.
-These earlier scope changes alone did not remove tracing from a server. The
-following sections describe the request, connection and iterator owners, and
-the checked gRPC extension builds on them.
+The [stack-copy](measurements/service-context-stack-2026-10-16.json) and
+[owned-scope](measurements/service-context-owned-2026-10-16.json) reports retain
+intermediate costs and repaired Windows failures. [Iteration measurements](benchmarks.md#list-iteration-compared-with-its-previous-definition)
+explain why `each` now avoids a discarded result list and how known callbacks
+remove dispatch without repeating captured computations.
+[PR #154](roadmap-history.md#service-settings-and-iteration-storage-pr-154)
+records acceptance. Preserve aliases, inherited settings, returned functions,
+all partial failures and deliberately missing-owner controls.
 
 ### Received iterators and remote-call storage
 
@@ -1078,8 +969,9 @@ constant managed bytes on Linux and zero on macOS/Windows after 1, 16 or 256 cal
 Allocation requests match the preceding values/channel stage; independently live
 owners add counts while callback borrowing removes repeated channel counts.
 The separate long-running resident-memory regression also passes, with its
-unchanged 8 MiB growth bound. Escaped callback cycles and HTTP handlers remain
-outside these ownership proofs. Checked remote ARC is the next extension below.
+unchanged 8 MiB growth bound. That report predates checked gRPC and HTTP handlers;
+their accepted contracts appear below and in [checked ARC delivery](#checked-arc-delivery).
+Arbitrary escaped callback cycles remain unproved.
 
 ### Borrowing values inside known folds
 

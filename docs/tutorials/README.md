@@ -15,6 +15,7 @@ of the basics.
 | Generated code and editor tooling | 11, 13 |
 | Numerical calculations and derivatives | 12, then 20 |
 | Split a program into services | 6–8, then 14 and optionally 18 |
+| Recursion and memory use | 22 |
 | Expose functions as tools | 21; 8 for its HTTP transport |
 
 ## Running the examples
@@ -67,7 +68,7 @@ prove every external deployment works.
 | 19 | [WebSockets and HTTP/2](19-websockets-and-http2/README.md) | HTTP/2 servers and clients (h2c, ALPN), compressed responses, WebSocket sessions with `http.websocket` and `ws.connect` |
 | 20 | [Reverse-mode autodiff and devices](20-autodiff-and-devices/README.md) | `grad` and `vjp` on tapes, tensor expressions as fused kernels, `Cpu`, `CpuParallel` and `Gpu` devices |
 | 21 | [MCP tools](21-mcp/README.md) | `# expose: mcp`, `fwp build --mcp`, a stateless MCP server over stdio and HTTP, schemas from types |
-
+| 22 | [Recursion, loops and shared values](22-recursion-and-sharing/README.md) | Tail calls, bounded iteration and immutable sharing |
 
 Use the [reference](../reference.md) to look up exact syntax and the
 [glossary](../glossary.md) for terminology. Lessons introduce concepts before

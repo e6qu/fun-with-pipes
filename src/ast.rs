@@ -34,10 +34,10 @@ pub enum ExprKind {
     Selector(Vec<String>),
     /// Juxtaposition: `f a b`.
     App(Box<Expr>, Vec<Expr>),
-    /// Arithmetic application, retaining notation for formatting. Binary
+    /// Operator application, retaining notation for formatting. Binary
     /// operators use `flip op` with arguments in source evaluation order;
     /// unary negation uses `neg` with one argument.
-    Arithmetic(ArithmeticOp, Box<Expr>, Vec<Expr>),
+    Operator(Operator, Box<Expr>, Vec<Expr>),
     /// `a | b`.
     Pipe(Box<Expr>, Box<Expr>),
     Unit,
@@ -65,16 +65,22 @@ pub enum ExprKind {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ArithmeticOp {
+pub enum Operator {
     Neg,
     Add,
     Sub,
     Mul,
     Div,
     Rem,
+    Eq,
+    Ne,
+    Lt,
+    Le,
+    Gt,
+    Ge,
 }
 
-impl ArithmeticOp {
+impl Operator {
     pub fn text(self) -> &'static str {
         match self {
             Self::Neg => "-",
@@ -83,6 +89,12 @@ impl ArithmeticOp {
             Self::Mul => "*",
             Self::Div => "/",
             Self::Rem => "%",
+            Self::Eq => "==",
+            Self::Ne => "!=",
+            Self::Lt => "<",
+            Self::Le => "<=",
+            Self::Gt => ">",
+            Self::Ge => ">=",
         }
     }
 
@@ -94,14 +106,28 @@ impl ArithmeticOp {
             Self::Mul => "mul",
             Self::Div => "div",
             Self::Rem => "rem",
+            Self::Eq => "eq",
+            Self::Ne => "ne",
+            Self::Lt => "lt",
+            Self::Le => "le",
+            Self::Gt => "gt",
+            Self::Ge => "ge",
         }
+    }
+
+    pub fn comparison(self) -> bool {
+        matches!(
+            self,
+            Self::Eq | Self::Ne | Self::Lt | Self::Le | Self::Gt | Self::Ge
+        )
     }
 
     pub fn precedence(self) -> u8 {
         match self {
-            Self::Neg => 3,
-            Self::Add | Self::Sub => 1,
-            Self::Mul | Self::Div | Self::Rem => 2,
+            Self::Neg => 4,
+            Self::Add | Self::Sub => 2,
+            Self::Mul | Self::Div | Self::Rem => 3,
+            Self::Eq | Self::Ne | Self::Lt | Self::Le | Self::Gt | Self::Ge => 1,
         }
     }
 }
@@ -307,7 +333,7 @@ impl Expr {
     pub fn walk(&self, f: &mut dyn FnMut(&Expr)) {
         f(self);
         match &self.kind {
-            ExprKind::App(g, args) | ExprKind::Arithmetic(_, g, args) => {
+            ExprKind::App(g, args) | ExprKind::Operator(_, g, args) => {
                 g.walk(f);
                 args.iter().for_each(|a| a.walk(f));
             }

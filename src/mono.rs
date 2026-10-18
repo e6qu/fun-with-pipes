@@ -43,6 +43,7 @@ pub struct Roots {
 pub const DEFAULT_SERVICE_ADDR: &str = "127.0.0.1:50051";
 
 pub struct Mono<'a> {
+    source_steps: bool,
     env: &'a Env,
     typed: &'a Typed,
     pub prog: Program,
@@ -278,6 +279,7 @@ impl<'a> Mono<'a> {
             }
         }
         Mono {
+            source_steps: false,
             env,
             typed,
             prog,
@@ -474,6 +476,7 @@ impl<'a> Mono<'a> {
         if b.name.starts_with("std::iter.") || b.name == "std::matmul" {
             self.prog.std_names.insert(id, b.name.clone());
         }
+        self.prog.binding_names.insert(id, b.name.clone());
         self.instances.insert(k, id);
         self.work.push((id, idx, s));
         Ok(id)
@@ -646,6 +649,11 @@ impl<'a> Mono<'a> {
     }
 
     // ----- driver ----------------------------------------------------------------
+
+    pub fn with_source_steps(mut self) -> Self {
+        self.source_steps = true;
+        self
+    }
 
     pub fn run(mut self, roots: Roots) -> MResult<Program> {
         let env = self.env;
@@ -1036,6 +1044,21 @@ impl<'a> Mono<'a> {
 
     #[allow(clippy::only_used_in_recursion)]
     fn expr(&mut self, e: &ast::Expr, s: &Subst, fb: &mut FB) -> MResult<Expr> {
+        let result = self.expr_inner(e, s, fb)?;
+        Ok(if self.source_steps {
+            Expr::Trace(
+                SourcePoint {
+                    span: e.span,
+                    ty: self.node_mt(e.id, s),
+                },
+                Box::new(result),
+            )
+        } else {
+            result
+        })
+    }
+
+    fn expr_inner(&mut self, e: &ast::Expr, s: &Subst, fb: &mut FB) -> MResult<Expr> {
         match &e.kind {
             ExprKind::Int { neg, mag, .. } => {
                 let mt = self.node_mt(e.id, s);
@@ -1110,7 +1133,7 @@ impl<'a> Mono<'a> {
                     body,
                 )))
             }
-            ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
+            ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
                 let fe = self.expr(f, s, fb)?;
                 let mut xs = Vec::new();
                 for a in args {
@@ -1512,10 +1535,15 @@ fn field_infos(fs: &[(String, MT)]) -> Value {
 /// Functions referenced by an expression.
 fn funcs_in(e: &Expr, out: &mut Vec<FuncId>) {
     match e {
-        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
-            funcs_in(b, out)
-        }
+        Expr::Trace(_, b)
+        | Expr::Dup(_, b)
+        | Expr::Drop(_, b)
+        | Expr::ResourceRegion { body: b, .. } => funcs_in(b, out),
         Expr::Func(f) => out.push(*f),
+        Expr::BorrowGlobal(_, global, body) => {
+            out.push(*global);
+            funcs_in(body, out);
+        }
         Expr::Call(f, a) => {
             out.push(*f);
             a.iter().for_each(|x| funcs_in(x, out));
@@ -1649,7 +1677,7 @@ fn field_type(prog: &Program, mt: &MT, idx: u32) -> MT {
 fn index_matches(env: &Env) -> HashMap<NodeId, &ast::Expr> {
     fn go<'e>(e: &'e ast::Expr, out: &mut HashMap<NodeId, &'e ast::Expr>) {
         match &e.kind {
-            ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
+            ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
                 go(f, out);
                 args.iter().for_each(|a| go(a, out));
             }

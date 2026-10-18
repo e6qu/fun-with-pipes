@@ -334,9 +334,11 @@ The compression/frame helpers are native-only. Process metrics retain registry
 entries until process exit or library teardown; snapshots have ordinary value
 lifetimes. CPU workers retain no language references after the call. Reporting
 worker-start failure joins already started workers before releasing borrowed
-inputs or pending output. These contracts do not establish checked ARC for whole remote-service graphs,
-servers, retained host callbacks or GPU execution. Socket handles have separate
-[ownership contracts](ownership.md#tcp-and-tls-socket-owners).
+inputs or pending output. Whole-service ownership needs the separate
+[gRPC and HTTP contracts](ownership.md#checked-arc-delivery); these individual
+primitives alone cannot prove it. Retained foreign callbacks and GPU execution
+still need separate lifetime proofs. Socket handles have
+[their own contracts](ownership.md#tcp-and-tls-socket-owners).
 
 ## Copied service data
 

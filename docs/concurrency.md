@@ -42,12 +42,18 @@ the queue is empty. A sender that finds the channel full waits, which slows the 
 
 A queued value can contain the channel itself. Closing alone does not break
 that reference cycle. The counted ownership implementation verifies explicit
-draining and typed destruction; automatic reclamation of unreachable cycles
-requires tracing outside the checked ARC subset in [the ownership contract](ownership.md).
+draining and typed destruction. Checked ARC currently rejects cycle-capable
+payload types; native tracing mode can collect these graphs. The
+[proposed cycle policy](ownership.md#proposed-cycle-policy) considers finer
+contracts, scoped registrations and explicit weak handles. Those APIs are not
+implemented, and `channel.close` does not discard queued messages.
 
 `loop : (s -> Step[s, r] ! e) -> s -> r ! e` runs a step function in
 constant stack space, which suits accept loops and other long-running
 processes.
+This bounds the loop's own call frames, not recursion inside its callback or
+the memory held in its state. Arbitrary tail recursion has no portable guarantee
+today; see [recursion and sharing](tutorials/22-recursion-and-sharing/README.md).
 
 ### Runtime
 

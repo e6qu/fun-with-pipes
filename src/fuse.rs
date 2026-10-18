@@ -125,7 +125,11 @@ impl<'p> Behaviors<'p> {
             // Resource release is observable even when the source arrow is
             // pure. Fusion must not interleave an original frame's cleanup.
             Expr::ResourceRegion { .. } => None,
-            Expr::Dup(_, b) | Expr::Drop(_, b) => self.expr(b),
+            Expr::Trace(_, b) | Expr::Dup(_, b) | Expr::Drop(_, b) => self.expr(b),
+            Expr::BorrowGlobal(_, global, body) => {
+                let initial = self.call(*global, &[]);
+                union(initial, self.expr(body))
+            }
             Expr::Local(_) | Expr::Const(_) => none(),
             // a constant binding is evaluated; a function is a value
             Expr::Func(id) if self.funcs[*id].arity == 0 => self.call(*id, &[]),

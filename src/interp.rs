@@ -30,9 +30,24 @@ fn trap<T>(msg: impl Into<String>) -> R<T> {
 }
 
 thread_local! {
+    static CONTROL_STDIN: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
     /// The lowest stack address calls may reach on this thread (0: no
     /// limit); see [`set_stack_limit`].
     static STACK_LIMIT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+/// Keep protocol commands out of runtime and compile-time program input.
+/// New interpreters inherit this setting; spawned tasks copy it explicitly.
+pub(crate) struct ControlStdin(bool);
+impl ControlStdin {
+    pub(crate) fn reserve() -> Self {
+        Self(CONTROL_STDIN.with(|flag| flag.replace(true)))
+    }
+}
+impl Drop for ControlStdin {
+    fn drop(&mut self) {
+        CONTROL_STDIN.with(|flag| flag.set(self.0));
+    }
 }
 
 /// The current stack position, approximately.
@@ -65,16 +80,20 @@ pub(crate) fn set_raw_stack_limit(limit: usize) {
 
 pub struct Interp<'p> {
     pub prog: &'p Program,
+    pub(crate) control_stdin: bool,
+    pub(crate) debugger: Option<crate::debugger::Shared>,
     /// Values of argument-less functions, shared by all tasks.
     pub(crate) cafs: Rc<RefCell<Vec<Option<Value>>>>,
     pub(crate) state: Vec<Value>,
     pub(crate) rng: u64,
     pub out: Box<dyn Write + 'p>,
+    pub(crate) err: Box<dyn Write + 'p>,
     pub args: Vec<String>,
     pub(crate) world: std::sync::Arc<crate::sched::World>,
     pub(crate) task: std::sync::Arc<crate::sched::TaskShared>,
     /// The root task's writer, shared by every task.
     pub(crate) root_out: *mut (dyn Write + 'p),
+    pub(crate) root_err: *mut (dyn Write + 'p),
     /// Tasks spawned inside each enclosing `task.scope`.
     pub(crate) scopes: Vec<Vec<std::sync::Arc<crate::sched::TaskShared>>>,
     /// The foreign function shim, loaded on the first foreign C call.
@@ -96,20 +115,32 @@ impl<'p> Interp<'p> {
                     .unwrap_or(1)
             });
         let root_out: *mut (dyn Write + 'p) = &mut *out;
+        let mut err: Box<dyn Write + 'p> = Box::new(std::io::stderr());
+        let root_err: *mut (dyn Write + 'p) = &mut *err;
         Interp {
             prog,
+            control_stdin: CONTROL_STDIN.with(|flag| flag.get()),
+            debugger: None,
             cafs: Rc::new(RefCell::new(vec![None; prog.funcs.len()])),
             state: Vec::new(),
             rng: seed | 1,
             out,
+            err,
             args: Vec::new(),
             world: crate::sched::World::new(),
             task: crate::sched::TaskShared::new(),
             root_out,
+            root_err,
             scopes: Vec::new(),
             ffi: Rc::new(RefCell::new(None)),
             grpc: Default::default(),
         }
+    }
+
+    /// Set both the writer and the stable pointee forwarded to child tasks.
+    pub(crate) fn set_error_writer(&mut self, mut writer: Box<dyn Write + 'p>) {
+        self.root_err = &mut *writer;
+        self.err = writer;
     }
 
     // ----- evaluation ----------------------------------------------------------
@@ -128,6 +159,20 @@ impl<'p> Interp<'p> {
     }
 
     pub fn call(&mut self, id: FuncId, args: Vec<Value>) -> R<Value> {
+        let Some(debugger) = self.debugger.clone() else {
+            return self.call_inner(id, args);
+        };
+        let task = std::sync::Arc::as_ptr(&self.task) as usize;
+        debugger.borrow_mut().enter(self.prog, task, id, &args)?;
+        let result = self.call_inner(id, args);
+        debugger.borrow_mut().leave(self.prog, task, id, &result)?;
+        result
+    }
+
+    fn call_inner(&mut self, id: FuncId, args: Vec<Value>) -> R<Value> {
+        if crate::repl::interrupted() {
+            return Err(Ctl::Cancelled);
+        }
         if stack_position() < STACK_LIMIT.with(|l| l.get()) {
             return trap("stack overflow");
         }
@@ -200,6 +245,13 @@ impl<'p> Interp<'p> {
     }
 
     pub fn eval(&mut self, e: &Expr, locals: &mut Vec<Value>) -> R<Value> {
+        if let Some(debugger) = &self.debugger {
+            debugger.borrow_mut().expression(
+                self.prog,
+                std::sync::Arc::as_ptr(&self.task) as usize,
+                e,
+            )?;
+        }
         match e {
             Expr::ResourceRegion {
                 parameters,
@@ -215,6 +267,18 @@ impl<'p> Interp<'p> {
                 result
             }
             // Rust's reference counts free the interpreter's values
+            Expr::Trace(point, body) => {
+                let result = self.eval(body, locals)?;
+                if let Some(debugger) = &self.debugger {
+                    debugger.borrow_mut().value(
+                        self.prog,
+                        std::sync::Arc::as_ptr(&self.task) as usize,
+                        point,
+                        &result,
+                    )?;
+                }
+                Ok(result)
+            }
             Expr::Dup(_, b) | Expr::Drop(_, b) => self.eval(b, locals),
             Expr::Local(i) => Ok(locals[*i as usize].clone()),
             Expr::Const(v) => Ok(v.clone()),
@@ -263,21 +327,57 @@ impl<'p> Interp<'p> {
                 }
                 Ok(Value::tuple(fs))
             }
+            Expr::BorrowGlobal(l, global, body) => {
+                let value = self.func_value(*global)?;
+                locals[*l as usize] = value;
+                self.debug_binding(*l, &locals[*l as usize])?;
+                self.eval(body, locals)
+            }
             Expr::Let(l, v, body) => {
                 let x = self.eval(v, locals)?;
                 locals[*l as usize] = x;
+                self.debug_binding(*l, &locals[*l as usize])?;
                 self.eval(body, locals)
             }
             Expr::Match(scrut, arms) => {
                 let v = self.eval(scrut, locals)?;
                 for (p, body) in arms {
                     if bind(p, &v, locals) {
+                        self.debug_pattern(p, locals)?;
                         return self.eval(body, locals);
                     }
                 }
                 trap("internal: no match arm applies")
             }
         }
+    }
+
+    fn debug_binding(&self, slot: u32, value: &Value) -> R<()> {
+        if let Some(debugger) = &self.debugger {
+            debugger.borrow_mut().bind(
+                self.prog,
+                std::sync::Arc::as_ptr(&self.task) as usize,
+                slot,
+                value,
+            )?;
+        }
+        Ok(())
+    }
+
+    fn debug_pattern(&self, pattern: &Pat, locals: &[Value]) -> R<()> {
+        if self.debugger.is_none() {
+            return Ok(());
+        }
+        match pattern {
+            Pat::Bind(slot) => self.debug_binding(*slot, &locals[*slot as usize])?,
+            Pat::Construct(_, patterns) | Pat::Record(patterns) => {
+                for pattern in patterns {
+                    self.debug_pattern(pattern, locals)?;
+                }
+            }
+            _ => {}
+        }
+        Ok(())
     }
 
     // ----- primitives ------------------------------------------------------------
@@ -321,6 +421,47 @@ impl<'p> Interp<'p> {
     }
 
     fn prim(&mut self, id: FuncId, sym: &str, mut a: Vec<Value>) -> R<Value> {
+        if let Some(debugger) = &self.debugger {
+            if matches!(sym, "read-line" | "read-all" | "read-lines") {
+                let mut bytes = debugger.borrow_mut().read_input(sym == "read-line")?;
+                return Ok(if sym == "read-line" {
+                    if bytes.is_empty() {
+                        Value::nullary(0)
+                    } else {
+                        if bytes.ends_with(b"\n") {
+                            bytes.pop();
+                            if bytes.ends_with(b"\r") {
+                                bytes.pop();
+                            }
+                        }
+                        Value::data(1, vec![Value::str(&String::from_utf8_lossy(&bytes))])
+                    }
+                } else {
+                    let text = String::from_utf8_lossy(&bytes);
+                    if sym == "read-all" {
+                        Value::str(&text)
+                    } else {
+                        Value::list(
+                            crate::prims_std::split_lines(&text)
+                                .iter()
+                                .map(|s| Value::str(s))
+                                .collect(),
+                        )
+                    }
+                });
+            }
+            if sym == "term.read-secret" {
+                return trap("secret terminal input is unavailable in debugger sessions; pass program data through --input FILE");
+            }
+        }
+        if self.control_stdin
+            && matches!(
+                sym,
+                "read-line" | "read-all" | "read-lines" | "term.read-secret"
+            )
+        {
+            return trap("standard input carries session commands; read program data from an explicit file instead");
+        }
         let (params, result) = self.sig(id);
         match sym {
             "ad.scope" | "ad.scope2" => {
@@ -437,7 +578,9 @@ impl<'p> Interp<'p> {
                 })
             }
             "float.convert" => float_of_quad(&result, a[0].as_quad().unwrap()),
-            "sqrt" | "exp" | "ln" | "sin" | "cos" | "tan" | "floor" | "ceil" | "round" => {
+            "sqrt" | "exp" | "ln" | "sin" | "cos" | "tan" | "floor" | "ceil" | "round" | "asin"
+            | "acos" | "atan" | "sinh" | "cosh" | "tanh" | "asinh" | "acosh" | "atanh" | "log2"
+            | "log10" | "log1p" | "exp2" | "expm1" => {
                 macro_rules! exact_math {
                     ($x:expr, $v:ident) => {
                         return Ok(Value::$v(match sym {
@@ -447,6 +590,21 @@ impl<'p> Interp<'p> {
                             "sin" => $x.sin(),
                             "cos" => $x.cos(),
                             "tan" => $x.tan(),
+                            "asin" => $x.asin(),
+                            "acos" => $x.acos(),
+                            "atan" => $x.atan(),
+                            "sinh" => $x.sinh(),
+                            "cosh" => $x.cosh(),
+                            "tanh" => $x.tanh(),
+                            "asinh" => $x.asinh(),
+                            "acosh" => $x.acosh(),
+                            "atanh" => $x.atanh(),
+                            "log2" => $x.log2(),
+                            "log10" => $x.log10(),
+                            "log1p" => $x.log1p(),
+                            "exp2" => $x.exp2(),
+                            "expm1" => $x.expm1(),
+
                             "floor" => $x.floor(),
                             "ceil" => $x.ceil(),
                             "round" => $x.round(),
@@ -468,6 +626,21 @@ impl<'p> Interp<'p> {
                     "sin" => x.sin(),
                     "cos" => x.cos(),
                     "tan" => x.tan(),
+                    "asin" => x.asin(),
+                    "acos" => x.acos(),
+                    "atan" => x.atan(),
+                    "sinh" => x.sinh(),
+                    "cosh" => x.cosh(),
+                    "tanh" => x.tanh(),
+                    "asinh" => x.asinh(),
+                    "acosh" => x.acosh(),
+                    "atanh" => x.atanh(),
+                    "log2" => x.log2(),
+                    "log10" => x.log10(),
+                    "log1p" => x.ln_1p(),
+                    "exp2" => x.exp2(),
+                    "expm1" => x.exp_m1(),
+
                     "floor" => x.floor(),
                     "ceil" => x.ceil(),
                     _ => x.round(),
@@ -478,9 +651,43 @@ impl<'p> Interp<'p> {
                         "floor" => x32.floor(),
                         "ceil" => x32.ceil(),
                         "round" => x32.round(),
+                        "asin" => x32.asin(),
+                        "acos" => x32.acos(),
+                        "atan" => x32.atan(),
+                        "sinh" => x32.sinh(),
+                        "cosh" => x32.cosh(),
+                        "tanh" => x32.tanh(),
+                        "asinh" => x32.asinh(),
+                        "acosh" => x32.acosh(),
+                        "atanh" => x32.atanh(),
+                        "log2" => x32.log2(),
+                        "log10" => x32.log10(),
+                        "log1p" => x32.ln_1p(),
+                        "exp2" => x32.exp2(),
+                        "expm1" => x32.exp_m1(),
+
                         _ => y as f32,
                     })),
                     _ => Ok(Value::F64(y)),
+                }
+            }
+            "atan2" | "hypot" => {
+                macro_rules! binary_math {
+                    ($x:expr, $y:expr, $variant:ident) => {
+                        Ok(Value::$variant(if sym == "atan2" {
+                            $x.atan2(*$y)
+                        } else {
+                            $x.hypot(*$y)
+                        }))
+                    };
+                }
+                match (&a[1], &a[0]) {
+                    (Value::F16(x), Value::F16(y)) => binary_math!(x, y, F16),
+                    (Value::BF16(x), Value::BF16(y)) => binary_math!(x, y, BF16),
+                    (Value::F128(x), Value::F128(y)) => binary_math!(x, y, F128),
+                    (Value::F32(x), Value::F32(y)) => binary_math!(x, y, F32),
+                    (Value::F64(x), Value::F64(y)) => binary_math!(x, y, F64),
+                    _ => unreachable!("typed binary float function"),
                 }
             }
             "pow" => {

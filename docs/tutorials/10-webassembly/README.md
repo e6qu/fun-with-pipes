@@ -54,21 +54,39 @@ Ubuntu, install `clang`, `lld`, `wasi-libc` and
 ## Reading the example
 
 The Collatz sequence halves even inputs and maps odd inputs to `3n + 1`,
-repeating until 1. `rec` declares recursion. `collatz-length` counts terms including
-that final 1, so starting at 27 gives 112. `longest` checks inputs 1 through 999
-(`range` excludes its upper bound), pairs each with its length, sorts by `.1`
-(the length), and selects the last. The result is optional because `last` can
-receive an empty list. For this range it is `Some (871, 179)`.
+repeating until 1. This example uses small positive inputs whose sequences finish;
+it does not assume termination for every integer or disable overflow checks.
+
+`loop step state` repeatedly calls `step` with the current state. `Again next`
+continues with a new state; `Stop result` finishes. The type `Step[State, Result]`
+names those two alternatives. Here the state is `(current-number, term-count)`.
+`both id (const 1)` constructs `(input, 1)`: `id` keeps the number and `const 1`
+is a function that ignores its argument and returns 1. Ordinary `1` is a value,
+not a function. `.0` and `.1` select the tuple's first and second fields.
+
+When the number reaches 1, `collatz-step` returns the count. Otherwise it computes
+the next number and increments the count. `loop` keeps its own call stack bounded;
+there is no recursive callback here. Starting at 27 counts 112 terms, including 1.
+
+`longest` checks inputs 1 through 999 (`range` excludes its upper bound), pairs
+each with its length, sorts by `.1`, and selects the last. `last` returns an
+`Option` because a list can be empty. This range gives `Some (871, 179)`.
+The final line reverses `"fwp"` and uppercases it, printing `PWF`.
 
 ## The program
 
 [`main.fwp`](main.fwp):
 
 ```fwp
-rec collatz-length : I64 -> I64
-collatz-length = match
-    1 -> 1
-    _ -> if (rem 2 | eq 0) (div 2) (mul 3 | add 1) | collatz-length | add 1
+collatz-next : I64 -> I64
+collatz-next = if (rem 2 | eq 0) (div 2) (mul 3 | add 1)
+
+collatz-step : (I64, I64) -> Step[(I64, I64), I64]
+collatz-step =
+    if (.0 | eq 1) (.1 | Stop) (both (.0 | collatz-next) (.1 | add 1) | Again)
+
+collatz-length : I64 -> I64
+collatz-length = both id (const 1) | loop collatz-step
 
 longest : I64 -> Option[(I64, I64)]
 longest = range 1 | map (both id collatz-length) | sort-by .1 | last
@@ -90,8 +108,8 @@ Some (871, 179)
 PWF
 ```
 
-`rec` is required for a recursive definition; it can go on the signature
-line, as here.
+For tail recursion, shared values and stack limits, see
+[lesson 22](../22-recursion-and-sharing/README.md).
 
 ---
 

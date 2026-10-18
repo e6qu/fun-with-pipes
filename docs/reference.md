@@ -98,6 +98,7 @@ imported under the same name.
 |---|---|
 | `f x y` | successive single-argument applications: `(f x) y` |
 | `a + b`, `a - b`, `a * b`, `a / b`, `a % b` | arithmetic with fixed precedence; `%` is remainder |
+| `a == b`, `a != b`, `a < b`, `a <= b`, `a > b`, `a >= b` | equality and ordering; result is `Bool` |
 | `x \| f` | `f x` when `x` is a value; composition when `x` is a function |
 | `[a, b]`, `(a, b)`, `()` | list, tuple, unit (tuples are records with fields `.0`, `.1`, ...) |
 | `{ x = 1, y = 2 }` | record (structural; unifies with nominal records) |
@@ -114,12 +115,17 @@ imported under the same name.
 | `type[T]` | a `TypeInfo` value describing `T` |
 
 `loop step state` repeats `step` (which returns `Again s` or `Stop r`) in
-constant stack space; use it for long-running loops instead of recursion.
+constant stack space for the loop itself; its callback can still recurse or
+retain growing data. Use it for long-running iteration instead of relying on
+recursive-call optimization.
+Some native recursive calls are optimized, but arbitrary tail recursion is not
+a portable constant-stack guarantee, and the interpreter still uses recursive
+evaluation. See [tail calls and recursion](design.md#tail-calls-and-recursion).
 
 The data being transformed comes last: `sub 1` subtracts one, `div 2` halves, `lt 0` tests
 `x < 0`, and `concat "!"` appends.
 
-### Arithmetic and precedence
+### Arithmetic, comparisons and precedence
 
 From tightest to loosest:
 
@@ -129,7 +135,8 @@ From tightest to loosest:
 | 2 | Unary negation: `-(x + y)` | Negates the following application |
 | 3 | `*`, `/`, `%` | Left to right |
 | 4 | `+`, `-` | Left to right |
-| 5 | Pipe: `\|` | Left to right |
+| 5 | `==`, `!=`, `<`, `<=`, `>`, `>=` | No chaining without parentheses |
+| 6 | Pipe: `\|` | Left to right |
 
 `2 + 3 * 4` gives `14`; `(2 + 3) * 4` gives `20`.
 `20 - 6 - 2` means `(20 - 6) - 2`, giving `12`.
@@ -151,8 +158,21 @@ one. Consequently, `x -1` is application, while `x - 1` is subtraction.
 `10-3` is also subtraction because the minus immediately follows its operand.
 Use `f (-x)` to pass a negated expression to a function.
 
-Exponentiation remains an explicit library call; there is no infix power,
-comparison or user-defined operator syntax.
+Comparisons use `eq`, `ne`, `lt`, `le`, `gt` and `ge` for types supporting those
+operations. `2 + 3 == 5 | echo` prints `True`: arithmetic happens before the
+comparison, then the result enters the pipe. `=` remains a declaration marker.
+Strings and collections use their existing equality/ordering rules; unrelated
+types are not coerced into comparable values.
+
+Write `x | both (ge 0) (lt 10) | uncurry and` to test a range using the same input.
+`0 <= x < 10` is rejected: it must not silently compare a Boolean with a number.
+Parentheses make an intentional Boolean comparison explicit: `(1 < 2) == True`.
+All six comparisons share one precedence level. `3 | lt 4` and `3 < 4` both
+produce `True`; prefix calls remain useful for composing functions.
+
+Exponentiation remains the explicit `pow` library call; there is no infix power
+or user-defined operator syntax. [Scalar math](numerics.md#scalar-math) describes
+the trigonometric, logarithmic and related functions.
 
 Every function still takes one argument, including a tuple-taking function.
 `curry` and `uncurry` explicitly convert between a pair-taking function and
@@ -398,20 +418,27 @@ The effect rules:
 
 ## Compile-time evaluation and macros
 
+Macros are implemented expression transformations. See
+[the compiler pipeline](compiler-pipeline.md#macros-and-compile-time-values)
+for expansion order, hygiene, limits and how this differs from `comptime`;
+[lesson 11](tutorials/11-comptime-and-macros/README.md) is a runnable introduction.
+
 - `comptime e` runs `e` in the interpreter during compilation and embeds
   the result, even closures and maps, as a constant.
 - `quote e` is the `Syntax` of `e`. `Syntax` and `SynPat` are ordinary
   data types.
-- A macro is a function from `Syntax` to `Syntax`. Names that a quote
-  refers to resolve where the quote was written (hygiene).
+- A macro takes zero or more `Syntax` arguments and returns `Syntax`.
+  Resolved names in a quote are qualified at its definition site. Spliced
+  argument names keep their caller spelling; manually constructed names do not
+  acquire automatic hygiene.
 
 `SFloat` carries decimal text, for example `SFloat "1.25"`, so a macro can
 preserve precision until the expanded expression's type is inferred. Its text
 is one unsuffixed decimal float token, with a decimal point or lowercase `e`,
 without digit separators or surrounding whitespace. Quoting normalizes digit
 separators and exponent case; it does not round the value. Suffixed literals
-retain their suffix through `SOther`. Constructing `SFloat` with an `F64` value
-is no longer supported: use literal text to avoid losing digits in macros.
+retain their suffix through `SOther`. Use literal text to avoid losing digits
+in macros.
 
 ## C interop
 
@@ -645,15 +672,14 @@ by value. A `String -> String` export returns an owned string with a matching
 `fwp_release_NAME` function. Records may contain scalars and owned strings;
 release the complete unchanged record once. Raw pointers remain outside checked
 ownership. Serialize host calls, including releases, and release every result
-before library unload. This extension is being verified in the
-[handoff](development-state.md); implementation alone is not platform acceptance.
+before library unload. [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
+records passing six-platform and production checks for these library results.
 The mode rejects unproved ownership or cycles. Browser-loader and WASI task
 extensions pass actual-module JSPI and Asyncify cleanup checks on both Linux
 hosts; [the measurements](benchmarks.md#webassembly-task-and-browser-loader-ownership)
-record their scope and remaining costs. Final production acceptance is tracked
-in the handoff. Generated REST and MCP entries use ordinary checks; their six-host
-functional and repeated-request checks pass, with final production acceptance
-also pending.
+record their scope and remaining costs. Generated REST and MCP entries also use
+checked ownership; [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164)
+records their passing functional, memory and production checks.
 Channels are eligible when their payload contains no functions, tasks, HTTP stream
 handles or channels:
 `Channel[String]` is eligible; `Channel[Task[String]]` is not, since the task
@@ -862,9 +888,12 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 - The interpreter's stack is 512 MiB (a linker argument in
   `.cargo/config.toml`), but WebAssembly frames also use the engine's
   native stack, which a browser keeps small: a few hundred to a few
-  thousand nested non-tail calls. Running out of either is the trap
+  thousand nested function calls. The interpreter does not currently guarantee
+  constant-stack tail recursion. Running out of either is the trap
   `fwp: trap: stack overflow` (exit code 101), with the output written
-  before it kept. Iteration, `loop` and long lists are not limited.
+  before it kept. Iteration through `loop` does not accumulate call frames merely
+  by adding iterations; its body can still recurse. List length is not itself
+  bounded by call depth, but storage remains limited by available memory.
 
 ### Environment variables
 
@@ -890,7 +919,7 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_MATRIX_BLOCKING=0` | when compiling: retain the library F64 matrix implementation for comparison; specialization checks runtime shape and preserves ascending inner-index arithmetic |
 | `FWP_AD_WORKSPACE=0` | interpreter and native programs: release detached tape capacity instead of retaining the single bounded 512 KiB workspace; tape identity and scope lifetimes are unchanged |
 | `FWP_DUMP_IR=1` | prints the program's own functions in optimized IR to stderr when it is compiled (`all`: the standard library's too; `rc`: with their references counted) |
-| `FWP_REUSE=0` | when compiling: native code does not count references, so it copies every record it updates. By default it counts references to the records and variants it allocates, updates a unique record in place (`{r with ...}` where `r` is not used again), and builds a new variant in the cell of a unique one it no longer uses (a tree or list rebuilt by a recursive function); the collector still frees memory |
+| `FWP_REUSE=0` | when compiling: disable optional reference-counted reuse, so updates copy rather than reuse unique storage. Resource ownership can still require counting. Checked ARC rejects this setting because it requires counted cleanup; the ordinary tracing mode remains available. |
 | `FWP_REUSE_VERIFY=1` | native programs: a value judged unique is copied and the original poisoned instead of reused, so that a wrong judgment shows (for testing) |
 | `FWP_FREE=0` | when compiling: disables eligible value storage reclamation by counted drops, leaving that storage to the collector; this does not disable tracing |
 | `FWP_GC=off` | native programs: disables tracing collection. Eligible counted drops can still reclaim values; shared/unmodeled storage may remain allocated. This is not a general tracing-free execution guarantee ([ownership](ownership.md)) |

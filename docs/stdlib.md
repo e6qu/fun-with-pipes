@@ -186,8 +186,9 @@ Step[S, R] =
     | Again S
     | Stop R
 
-# Iterate a step function from an initial state until it stops; runs in
-# constant stack space (servers and other long-running loops).
+# Call the step with the current state: Again supplies the next state,
+# Stop returns the result. The loop itself uses constant stack space;
+# the step can still recurse or build growing data.
 loop : (s -> Step[s, r] ! e) -> s -> r ! e
 
 trait Add[T] =
@@ -283,6 +284,36 @@ prim.ln : a -> a where Float[a] = "ln"
 prim.sin : a -> a where Float[a] = "sin"
 prim.cos : a -> a where Float[a] = "cos"
 prim.tan : a -> a where Float[a] = "tan"
+
+# Scalar floating functions preserve their input format: F16, BF16, F32,
+# F64 or F128. These require Float, not Floating; dual/complex instances do
+# not acquire automatic derivative rules from these scalar declarations.
+# Inverse trig returns radians. asin/acos require [-1, 1]; acosh requires
+# x >= 1 and atanh requires [-1, 1] (endpoints give signed infinity).
+# Inputs outside the real domain give NaN, not an exception.
+asin : a -> a where Float[a]
+acos : a -> a where Float[a]
+atan : a -> a where Float[a]
+sinh : a -> a where Float[a]
+cosh : a -> a where Float[a]
+tanh : a -> a where Float[a]
+asinh : a -> a where Float[a]
+acosh : a -> a where Float[a]
+atanh : a -> a where Float[a]
+
+# log2/log10 use bases 2/10. log1p x computes ln(1+x) accurately near zero;
+# expm1 x computes exp(x)-1 accurately there. exp2 x is 2 raised to x.
+log2 : a -> a where Float[a]
+log10 : a -> a where Float[a]
+log1p : a -> a where Float[a]
+exp2 : a -> a where Float[a]
+expm1 : a -> a where Float[a]
+
+# y | atan2 x returns the angle of (x,y) in radians, including its quadrant.
+# 3.0 | hypot 4.0 is 5.0: hypot scales before squaring to avoid unnecessary
+# overflow/underflow. Both arguments must have the same floating type.
+atan2 : a -> a -> a where Float[a]
+hypot : a -> a -> a where Float[a]
 pow : a -> a -> a where Float[a]
 floor : a -> a where Float[a]
 ceil : a -> a where Float[a]

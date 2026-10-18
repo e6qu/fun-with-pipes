@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fwp-tools"
+version = "0.1.0"
+description = "Python control and instrumentation for the fwp debugger and disassembler"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["fwp_tools*"]
+
+[tool.setuptools.package-data]
+fwp_tools = ["static/*.html", "static/*.css", "static/*.js"]

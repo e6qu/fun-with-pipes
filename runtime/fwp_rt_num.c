@@ -422,7 +422,7 @@ static V fwp_float_to_int(int ks, int kt, V v) {
     return fwp_int_fits((i128)t, kt, 0, &out) ? fwp_some(out) : FWP_NONE;
 }
 
-enum { FM_SQRT, FM_EXP, FM_LN, FM_SIN, FM_COS, FM_TAN, FM_FLOOR, FM_CEIL, FM_ROUND };
+enum { FM_SQRT, FM_EXP, FM_LN, FM_SIN, FM_COS, FM_TAN, FM_FLOOR, FM_CEIL, FM_ROUND, FM_ASIN, FM_ACOS, FM_ATAN, FM_SINH, FM_COSH, FM_TANH, FM_ASINH, FM_ACOSH, FM_ATANH, FM_LOG2, FM_LOG10, FM_LOG1P, FM_EXP2, FM_EXPM1 };
 
 static V fwp_fmath(int k, int f, V v) {
 #ifdef FWP_EXACT_FLOAT
@@ -436,6 +436,21 @@ static V fwp_fmath(int k, int f, V v) {
         case FM_SIN: r = fwp_f16_sin(x); break;
         case FM_COS: r = fwp_f16_cos(x); break;
         case FM_TAN: r = fwp_f16_tan(x); break;
+        case FM_ASIN: r = fwp_f16_asin(x); break;
+        case FM_ACOS: r = fwp_f16_acos(x); break;
+        case FM_ATAN: r = fwp_f16_atan(x); break;
+        case FM_SINH: r = fwp_f16_sinh(x); break;
+        case FM_COSH: r = fwp_f16_cosh(x); break;
+        case FM_TANH: r = fwp_f16_tanh(x); break;
+        case FM_ASINH: r = fwp_f16_asinh(x); break;
+        case FM_ACOSH: r = fwp_f16_acosh(x); break;
+        case FM_ATANH: r = fwp_f16_atanh(x); break;
+        case FM_LOG2: r = fwp_f16_log2(x); break;
+        case FM_LOG10: r = fwp_f16_log10(x); break;
+        case FM_LOG1P: r = fwp_f16_log1p(x); break;
+        case FM_EXP2: r = fwp_f16_exp2(x); break;
+        case FM_EXPM1: r = fwp_f16_expm1(x); break;
+
         default: r = f16_roundToInt((float16_t){x}, mode, false).v;
         }
         return r;
@@ -450,6 +465,21 @@ static V fwp_fmath(int k, int f, V v) {
         case FM_SIN: r = fwp_bf16_sin(x); break;
         case FM_COS: r = fwp_bf16_cos(x); break;
         case FM_TAN: r = fwp_bf16_tan(x); break;
+        case FM_ASIN: r = fwp_bf16_asin(x); break;
+        case FM_ACOS: r = fwp_bf16_acos(x); break;
+        case FM_ATAN: r = fwp_bf16_atan(x); break;
+        case FM_SINH: r = fwp_bf16_sinh(x); break;
+        case FM_COSH: r = fwp_bf16_cosh(x); break;
+        case FM_TANH: r = fwp_bf16_tanh(x); break;
+        case FM_ASINH: r = fwp_bf16_asinh(x); break;
+        case FM_ACOSH: r = fwp_bf16_acosh(x); break;
+        case FM_ATANH: r = fwp_bf16_atanh(x); break;
+        case FM_LOG2: r = fwp_bf16_log2(x); break;
+        case FM_LOG10: r = fwp_bf16_log10(x); break;
+        case FM_LOG1P: r = fwp_bf16_log1p(x); break;
+        case FM_EXP2: r = fwp_bf16_exp2(x); break;
+        case FM_EXPM1: r = fwp_bf16_expm1(x); break;
+
         default: r = fwp_f128_to_bf16(f128_roundToInt(fwp_bf16_to_f128(x), mode, false));
         }
         return r;
@@ -464,6 +494,21 @@ static V fwp_fmath(int k, int f, V v) {
         case FM_SIN: r = fwp_f128_sin(x); break;
         case FM_COS: r = fwp_f128_cos(x); break;
         case FM_TAN: r = fwp_f128_tan(x); break;
+        case FM_ASIN: r = fwp_f128_asin(x); break;
+        case FM_ACOS: r = fwp_f128_acos(x); break;
+        case FM_ATAN: r = fwp_f128_atan(x); break;
+        case FM_SINH: r = fwp_f128_sinh(x); break;
+        case FM_COSH: r = fwp_f128_cosh(x); break;
+        case FM_TANH: r = fwp_f128_tanh(x); break;
+        case FM_ASINH: r = fwp_f128_asinh(x); break;
+        case FM_ACOSH: r = fwp_f128_acosh(x); break;
+        case FM_ATANH: r = fwp_f128_atanh(x); break;
+        case FM_LOG2: r = fwp_f128_log2(x); break;
+        case FM_LOG10: r = fwp_f128_log10(x); break;
+        case FM_LOG1P: r = fwp_f128_log1p(x); break;
+        case FM_EXP2: r = fwp_f128_exp2(x); break;
+        case FM_EXPM1: r = fwp_f128_expm1(x); break;
+
         default: r = f128_roundToInt(x, mode, false);
         }
         return fwp_box_f128(r);
@@ -476,6 +521,21 @@ static V fwp_fmath(int k, int f, V v) {
         case FM_FLOOR: return fwp_from_f32(floorf(x));
         case FM_CEIL: return fwp_from_f32(ceilf(x));
         case FM_ROUND: return fwp_from_f32(roundf(x));
+        case FM_ASIN: return fwp_from_f32(asinf(x));
+        case FM_ACOS: return fwp_from_f32(acosf(x));
+        case FM_ATAN: return fwp_from_f32(atanf(x));
+        case FM_SINH: return fwp_from_f32(sinhf(x));
+        case FM_COSH: return fwp_from_f32(coshf(x));
+        case FM_TANH: return fwp_from_f32(tanhf(x));
+        case FM_ASINH: return fwp_from_f32(asinhf(x));
+        case FM_ACOSH: return fwp_from_f32(acoshf(x));
+        case FM_ATANH: return fwp_from_f32(atanhf(x));
+        case FM_LOG2: return fwp_from_f32(log2f(x));
+        case FM_LOG10: return fwp_from_f32(log10f(x));
+        case FM_LOG1P: return fwp_from_f32(log1pf(x));
+        case FM_EXP2: return fwp_from_f32(exp2f(x));
+        case FM_EXPM1: return fwp_from_f32(expm1f(x));
+
         default: break;
         }
     }
@@ -487,6 +547,21 @@ static V fwp_fmath(int k, int f, V v) {
     case FM_SIN: y = sin(x); break;
     case FM_COS: y = cos(x); break;
     case FM_TAN: y = tan(x); break;
+    case FM_ASIN: y = asin(x); break;
+    case FM_ACOS: y = acos(x); break;
+    case FM_ATAN: y = atan(x); break;
+    case FM_SINH: y = sinh(x); break;
+    case FM_COSH: y = cosh(x); break;
+    case FM_TANH: y = tanh(x); break;
+    case FM_ASINH: y = asinh(x); break;
+    case FM_ACOSH: y = acosh(x); break;
+    case FM_ATANH: y = atanh(x); break;
+    case FM_LOG2: y = log2(x); break;
+    case FM_LOG10: y = log10(x); break;
+    case FM_LOG1P: y = log1p(x); break;
+    case FM_EXP2: y = exp2(x); break;
+    case FM_EXPM1: y = expm1(x); break;
+
     case FM_FLOOR: y = floor(x); break;
     case FM_CEIL: y = ceil(x); break;
     default: y = round(x);
@@ -508,6 +583,26 @@ static V fwp_pow(int k, V base, V exponent) {
     if (k == K_F128) return fwp_box_f128(fwp_f128_pow(fwp_f128(base), fwp_f128(exponent)));
 #endif
     return fwp_float_of(k, pow(fwp_as_f64(k, base), fwp_as_f64(k, exponent)));
+}
+
+static V fwp_atan2(int k, V subject, V other) {
+#ifdef FWP_EXACT_FLOAT
+    if (k == K_F16) return fwp_f16_atan2((uint16_t)subject, (uint16_t)other);
+    if (k == K_BF16) return fwp_bf16_atan2((uint16_t)subject, (uint16_t)other);
+    if (k == K_F128) return fwp_box_f128(fwp_f128_atan2(fwp_f128(subject), fwp_f128(other)));
+#endif
+    if (k == K_F32) return fwp_from_f32(atan2f(fwp_f32(subject), fwp_f32(other)));
+    return fwp_from_f64(atan2(fwp_f64(subject), fwp_f64(other)));
+}
+
+static V fwp_hypot(int k, V subject, V other) {
+#ifdef FWP_EXACT_FLOAT
+    if (k == K_F16) return fwp_f16_hypot((uint16_t)subject, (uint16_t)other);
+    if (k == K_BF16) return fwp_bf16_hypot((uint16_t)subject, (uint16_t)other);
+    if (k == K_F128) return fwp_box_f128(fwp_f128_hypot(fwp_f128(subject), fwp_f128(other)));
+#endif
+    if (k == K_F32) return fwp_from_f32(hypotf(fwp_f32(subject), fwp_f32(other)));
+    return fwp_from_f64(hypot(fwp_f64(subject), fwp_f64(other)));
 }
 
 static V fwp_abs(int k, V v, const char *name) {

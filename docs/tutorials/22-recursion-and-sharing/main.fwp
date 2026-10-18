@@ -1,0 +1,29 @@
+rec down : I64 -> I64
+down = match
+    0 -> 0
+    _ -> sub 1 | down
+
+rec count-back : I64 -> I64
+count-back = match
+    0 -> 0
+    _ -> sub 1 | count-back | add 1
+
+down-step : I64 -> Step[I64, I64]
+down-step = match
+    0 -> Stop 0
+    _ -> sub 1 | Again
+
+down-loop = loop down-step
+preserve-old = both id (map (add 1))
+
+Node = { name: String, next: List[I64] }
+ring =
+    [Node { name = "first", next = [1] }, Node { name = "second", next = [0] }]
+
+main = [
+    4 | down | echo,
+    4 | count-back | echo,
+    100000 | down-loop | echo,
+    [1, 2, 3] | preserve-old | echo,
+    ring | map .next | echo,
+] | ignore

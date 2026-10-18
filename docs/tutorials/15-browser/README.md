@@ -87,7 +87,9 @@ before it starts, with an error that names what is missing. `fwp build` (except
 `--emit-c`), `fwp pipe` and `fwp serve` say that they are not available.
 Deep recursion is limited by the engine's stack, which in a browser is a
 few hundred to a few thousand nested calls; beyond that, the program traps
-with `stack overflow`. Long lists are fine.
+with `stack overflow`. The interpreter does not guarantee tail-call elimination.
+Use `loop` or collection consumers for long traversals. List length is limited
+by memory, not inherently by call depth; callbacks can still recurse.
 
 ## Reading the example
 

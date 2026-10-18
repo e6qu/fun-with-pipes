@@ -69,9 +69,10 @@ observed = dict(head=head, baselineHead=baseline['head'], baselineSha256=baselin
                 lowered=lowered, rows=rows, sourceHashes=source_hashes,
                 status='Observed candidate; contract assertions have not passed')
 args.output.with_suffix('.observed.json').write_text(json.dumps(observed, indent=2) + '\n')
-assert len(rows) == len(baseline['rows']) + 5
+scalar_math = {'asin': 1, 'acos': 1, 'atan': 1, 'sinh': 1, 'cosh': 1, 'tanh': 1, 'asinh': 1, 'acosh': 1, 'atanh': 1, 'log2': 1, 'log10': 1, 'log1p': 1, 'exp2': 1, 'expm1': 1, 'atan2': 2, 'hypot': 2}
+assert len(rows) == len(baseline['rows']) + 5 + len(scalar_math)
 assert len({(row['file'], row['declared']) for row in rows}) == len(rows)
-assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 5
+assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 5 + len(scalar_math)
 assert sum(row['aliased'] for row in rows) == 40
 raw_symbols = {'mem.alloc', 'mem.free', 'mem.string', 'ptr.cast', 'ptr.at',
                'ptr.read', 'ptr.write', 'ptr.read-string', 'ptr.address'}
@@ -89,7 +90,7 @@ service_scopes = {
     'grpc.with-tls': (2, 'OwnedCallback', 1),
     'grpc.with-response-metadata': (1, 'OwnedTree', 0),
 }
-new_keys = scope_keys | {('lib/autodiff.fwp', name) for name in owned_tapes}
+new_keys = {('lib/prelude.fwp', name) for name in scalar_math} | scope_keys | {('lib/autodiff.fwp', name) for name in owned_tapes}
 leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.help', 'zlib.gzip', 'zlib.gzip-chunk', 'zlib.deflate', 'ws.accept', 'ws.deflate', 'ws.key', 'zlib.gzip-end', 'ws.close-payload', 'ws.frame'}
 assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row in rows}
 # These reviewed contract changes are checked against the frozen baseline.
@@ -219,6 +220,13 @@ for row in rows:
             aliased=False, bucket='contract', signature=signature,
             contract='Some(Contract { arguments: ' + arguments + ', result: OwnedCallback, callback: Some(Borrowed(0)), aliases: ' + aliases + ' })')
         continue
+    if row['symbol'] in scalar_math:
+        arity = scalar_math[row['symbol']]
+        arguments = '[' + ', '.join(['Borrow'] * arity) + ']'
+        assert row == dict(file='lib/prelude.fwp', declared=row['symbol'], symbol=row['symbol'],
+            aliased=False, bucket='contract', signature=' -> '.join(['a'] * (arity + 1)) + ' where Float[a]',
+            contract='Some(Contract { arguments: ' + arguments + ', result: Numeric, callback: None, aliases: [] })')
+        continue
     before = baseline_rows[key]
     if row['symbol'] in service_scopes:
         assert before['contract'] == 'None' and before['bucket'] == 'runtime_or_specialization_review'
@@ -329,7 +337,7 @@ for row in rows:
     changed_symbols.add(row['symbol'])
 assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | set(service_scopes) | {'http2.serve', 'grpc._force', 'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
 expected_counts = dict(baseline['counts'])
-expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes)
+expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes) + len(scalar_math)
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22
 expected_counts['flat_scalar_signature'] -= 1
 for before in promoted:

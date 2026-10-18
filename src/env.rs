@@ -150,6 +150,9 @@ pub struct ImplDef {
 
 #[derive(Default)]
 pub struct Env {
+    /// The one REPL cell allowed to perform entry effects and expose a generic
+    /// type for inspection. Ordinary source declarations keep their rules.
+    pub(crate) interactive_root: Option<String>,
     pub traits: HashMap<String, TraitDef>,
     pub impls: Vec<ImplDef>,
     /// Next fresh AST node id (for copies of default method bodies).
@@ -1410,7 +1413,7 @@ pub fn renumber(e: &Expr, next: &mut NodeId) -> Expr {
         e.id = *next;
         *next += 1;
         match &mut e.kind {
-            ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
+            ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
                 go(f, next);
                 args.iter_mut().for_each(|a| go(a, next));
             }

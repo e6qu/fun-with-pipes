@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [language, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -27,6 +27,78 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  repl_terminal:
+    if: inputs.suite == 'repl-terminal'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel"]' || format('["{0}"]', inputs.native_runner)) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Require a POSIX terminal host
+        shell: bash
+        run: test "$RUNNER_OS" != Windows
+      - run: cargo build --bin fwp
+      - name: Completion, history, multiline entry and execution interruption
+        env:
+          FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
+        run: python3 -W error::ResourceWarning -m unittest discover -s sdk/python/tests -p test_repl_terminal.py -v
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: repl-terminal-${{ matrix.runner }}
+          path: target/debug/fwp
+          if-no-files-found: ignore
+  language:
+    if: inputs.suite == 'language'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: sudo apt-get update && sudo apt-get install -y llvm gcc-aarch64-linux-gnu
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - if: ${{ !cancelled() }}
+        run: cargo test --no-fail-fast --test infix --test repl --test debugger --test scalar_math --test float_math --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test stdlib_doc -- --nocapture
+      - if: ${{ !cancelled() }}
+        name: Python debugger, notebook and C/machine-code comparisons
+        env:
+          PYTHONPATH: sdk/python
+          FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
+          CC: cc
+          FWP_OBJDUMP: llvm-objdump
+          FWP_CROSS_CC: aarch64-linux-gnu-gcc
+        run: python3 -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v
+      - if: ${{ !cancelled() }}
+        name: Real notebook browser
+        env:
+          FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
+        run: |
+          python3 -m venv "$RUNNER_TEMP/fwp-tools-env"
+          "$RUNNER_TEMP/fwp-tools-env/bin/python" -m pip install ./sdk/python -r sdk/python/browser/requirements.txt
+          "$RUNNER_TEMP/fwp-tools-env/bin/python" -m playwright install --with-deps chromium
+          "$FWP_TEST_BIN" notebook --python "$RUNNER_TEMP/fwp-tools-env/bin/python" --help
+          "$RUNNER_TEMP/fwp-tools-env/bin/python" sdk/python/browser/check_notebook.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: notebook-browser
+          path: notebook-evidence/
+          if-no-files-found: error
   artifact_paths:
     if: inputs.suite == 'artifact-paths'
     strategy:
@@ -160,6 +232,41 @@ jobs:
           name: map-replay-${{ matrix.sample }}
           path: map-replay-evidence/
           if-no-files-found: error
+  map_borrow:
+    if: inputs.suite == 'map-borrow'
+    permissions:
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-latest, sample: 1}
+          - {runner: ubuntu-latest, sample: 2}
+          - {runner: ubuntu-latest, sample: 3}
+          - {runner: ubuntu-latest, sample: 4}
+          - {runner: ubuntu-24.04-arm, sample: 1}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: cc
+      CARGO_BUILD_JOBS: 2
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_HEAD: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build and verify the measured compiler
+        run: cargo test --no-fail-fast --lib rc::tests::cached_map_borrow && cargo test --no-fail-fast --test cached_map_borrows --test caf_ownership --test inline_caf_ownership
+      - name: Measure compiler-proved cached-map borrowing against saved owned reads
+        run: python3 scripts/measure-map-borrow.py --compiler target/debug/fwp --run "$EVIDENCE_RUN" --source "$EVIDENCE_HEAD" --host "${{ matrix.runner }}" --output map-borrow-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: map-borrow-${{ matrix.runner }}-${{ matrix.sample }}
+          path: map-borrow-evidence/
+          if-no-files-found: error
   collection_report:
     if: inputs.suite == 'collection-report'
     runs-on: ubuntu-latest
@@ -224,10 +331,10 @@ jobs:
           clang --version > collection-build-evidence/clang.txt
           printf '%s\n' 'OS=${{ runner.os }}' 'architecture=${{ runner.arch }}' 'runner=${{ matrix.runner }}' 'ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off' 'tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1' '8 generated builders; every allocation/retain failure and callback exit; independent aliases; missing-cleanup controls' 'Timing compares fused and ordinary fwp only; no C/Rust parity claim' > collection-build-evidence/settings.txt
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --lib --bin fwp --test collection_construction -- -D warnings
+      - run: cargo clippy --lib --bin fwp --test collection_construction --test cached_map_borrows -- -D warnings
       - name: Collection semantics, failures and cancellation
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test collection_construction --test map_set_ownership --test mapped_array_construction --test numeric_array_fusion -- --nocapture
+        run: cargo test --no-fail-fast --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test collection_construction --test map_set_ownership --test mapped_array_construction --test numeric_array_fusion -- --nocapture
       - name: Use the compiler already built by the integration tests
         run: cargo build --bin fwp
       - name: Repeated construction costs and generated code

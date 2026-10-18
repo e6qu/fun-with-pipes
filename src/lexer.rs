@@ -61,6 +61,12 @@ pub enum Kw {
 pub enum Sym {
     Pipe,
     Eq,
+    EqEq,
+    Ne,
+    Lt,
+    Le,
+    Gt,
+    Ge,
     Colon,
     Arrow,
     Bang,
@@ -85,6 +91,13 @@ impl Sym {
         match self {
             Sym::Pipe => "|",
             Sym::Eq => "=",
+            Sym::EqEq => "==",
+            Sym::Ne => "!=",
+            Sym::Lt => "<",
+            Sym::Le => "<=",
+            Sym::Gt => ">",
+            Sym::Ge => ">=",
+
             Sym::Colon => ":",
             Sym::Arrow => "->",
             Sym::Bang => "!",
@@ -394,6 +407,24 @@ impl<'a> Lexer<'a> {
             }
             let sym = match c {
                 b'|' => Sym::Pipe,
+                b'=' if self.peek_at(1) == b'=' => {
+                    self.bump();
+                    Sym::EqEq
+                }
+                b'!' if self.peek_at(1) == b'=' => {
+                    self.bump();
+                    Sym::Ne
+                }
+                b'<' if self.peek_at(1) == b'=' => {
+                    self.bump();
+                    Sym::Le
+                }
+                b'>' if self.peek_at(1) == b'=' => {
+                    self.bump();
+                    Sym::Ge
+                }
+                b'<' => Sym::Lt,
+                b'>' => Sym::Gt,
                 b'=' => Sym::Eq,
                 b':' => Sym::Colon,
                 b'-' if self.peek_at(1) == b'>' => {

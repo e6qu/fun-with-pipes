@@ -928,14 +928,16 @@ impl<'p> Interp<'p> {
                 }
                 "eprint" => {
                     let _ = self.out.flush();
-                    eprintln!("{}", a[0].as_str());
+                    writeln!(self.err, "{}", a[0].as_str())
+                        .map_err(|e| Ctl::Trap(e.to_string()))?;
                     Value::unit()
                 }
                 "ewrite" => {
                     let _ = self.out.flush();
-                    let mut e = std::io::stderr();
-                    let _ = e.write_all(a[0].as_str().as_bytes());
-                    let _ = e.flush();
+                    self.err
+                        .write_all(a[0].as_str().as_bytes())
+                        .and_then(|()| self.err.flush())
+                        .map_err(|e| Ctl::Trap(e.to_string()))?;
                     Value::unit()
                 }
                 "read-line" => {

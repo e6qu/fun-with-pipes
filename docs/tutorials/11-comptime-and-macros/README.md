@@ -28,9 +28,15 @@ It is called with `name!(...)` and expanded before type checking:
 macro twice = quote (unquote!(0) | unquote!(0))
 ```
 
-`unquote!(0)` stands for the macro's first argument. Names in a quote
-refer to what they meant where the quote was written, not where the macro
-is used, so macros cannot capture each other's names by accident.
+`unquote!(0)` stands for the macro's first syntax argument. Resolved names in
+a quote refer to their definition module; spliced argument names keep their
+caller spelling. This avoids accidental changes to known quoted names. Building
+names as strings does not provide that guarantee.
+
+The macro receives parsed syntax, so it cannot add new operators or change
+precedence. Its generated expression is type-checked after expansion.
+`twice!` duplicates the supplied function's execution, including any effects;
+use an ordinary function when syntax transformation is unnecessary.
 
 The prelude defines two macros. `assert!(e)` checks a condition and
 reports the failing expression. `dbg!(e)` prints an expression with its
@@ -107,6 +113,8 @@ unknown command
 Programs that inspect or build syntax directly can match on the `Syntax`
 constructors (`SInt`, `SName`, `SApply`, `SPipe`, ...), which are defined in
 `lib/prelude.fwp`.
+The [compiler pipeline](../../compiler-pipeline.md) explains the implementation,
+expansion-round limit, compile-time effects and parser classification.
 
 ---
 

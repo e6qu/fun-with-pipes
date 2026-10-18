@@ -23,12 +23,21 @@ and closes it. The consumer adds the received values, so the result is `6`.
 `tap (produce | task.spawn)` starts the producer and passes the original channel
 on to the consumer. `the-channel` supplies an explicit type for that channel.
 
+Automatic reference counting (ARC) releases a value when its last owner lets go.
+Sharing this channel is not a cycle: its queued integers cannot refer back to
+it. A queued callback capturing the channel could form a cycle. Checked ARC
+currently rejects such payloads; there are no public weak-reference helpers yet.
+Closing preserves queued messages, so it is not automatic cycle breaking.
+
 ## A loop with explicit state
 
 `loop step state` calls `step` until it returns `Stop result`. `Again next-state`
 means continue from the supplied state. `Step[S, R]` is the variant type holding
 those alternatives, where `S` is state and `R` is the final result. The loop
 reuses call-stack space rather than adding a new frame on each iteration.
+The callback can still recurse or retain growing data. See
+[lesson 22](../22-recursion-and-sharing/README.md) for tail calls and the limits
+of this guarantee.
 
 Here the state is `(channel, running total)`. `both id (const 0)` creates the
 initial pair. `add-next` receives from the channel and sends the old state and

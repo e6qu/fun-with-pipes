@@ -186,7 +186,9 @@ impl Emitter<'_> {
     fn returned_local(expression: &Expr) -> Option<u32> {
         match expression {
             Expr::Local(local) => Some(*local),
-            Expr::Dup(_, body) | Expr::Drop(_, body) => Self::returned_local(body),
+            Expr::Trace(_, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => {
+                Self::returned_local(body)
+            }
             Expr::ResourceRegion {
                 parameters,
                 bindings,
@@ -254,7 +256,9 @@ impl Emitter<'_> {
                 self.output
                     .push_str("    else fwp_trap(\"internal: no match arm applies\");\n");
             }
-            Expr::Dup(_, body) | Expr::Drop(_, body) => self.tail(body, shape, function)?,
+            Expr::Trace(_, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => {
+                self.tail(body, shape, function)?
+            }
             Expr::ResourceRegion {
                 parameters,
                 bindings,
@@ -521,7 +525,9 @@ impl Emitter<'_> {
                     .push_str("    else fwp_trap(\"internal: no match arm applies\");\n");
                 Some(result)
             }
-            Expr::Dup(_, body) | Expr::Drop(_, body) => self.expression(body, shape),
+            Expr::Trace(_, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => {
+                self.expression(body, shape)
+            }
             Expr::ResourceRegion {
                 parameters,
                 bindings,
@@ -677,6 +683,9 @@ impl Emitter<'_> {
                 "prim.div" => "f128_div",
                 "prim.rem" => "fwp_f128_rem",
                 "pow" => "fwp_f128_pow",
+                "atan2" => "fwp_f128_atan2",
+                "hypot" => "fwp_f128_hypot",
+
                 _ => return None,
             };
             return Some(format!("{call}({x}, {y})"));
@@ -692,7 +701,9 @@ impl Emitter<'_> {
                     format!("(float128_t){{{{{x}.v[0], {x}.v[1] & UINT64_C(0x7fffffffffffffff)}}}}")
                 }
                 "sqrt" => format!("f128_sqrt({x})"),
-                "exp" | "ln" | "sin" | "cos" | "tan" => format!("fwp_f128_{sym}({x})"),
+                "exp" | "ln" | "sin" | "cos" | "tan" | "asin" | "acos" | "atan" | "sinh"
+                | "cosh" | "tanh" | "asinh" | "acosh" | "atanh" | "log2" | "log10" | "log1p"
+                | "exp2" | "expm1" => format!("fwp_f128_{sym}({x})"),
                 "floor" => format!("f128_roundToInt({x}, softfloat_round_min, false)"),
                 "ceil" => format!("f128_roundToInt({x}, softfloat_round_max, false)"),
                 "round" => format!("f128_roundToInt({x}, softfloat_round_near_maxMag, false)"),

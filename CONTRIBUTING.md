@@ -4,6 +4,9 @@ This guide explains how to change the compiler, test it and submit a pull reques
 Learn the source language through the [tutorials](docs/tutorials/README.md); use
 [compiler design](docs/design.md) to find the implementation and
 [the glossary](docs/glossary.md) to look up unfamiliar terms.
+The [compiler pipeline](docs/compiler-pipeline.md) maps parsing, expansion,
+desugaring and execution to source files. [Design limits](docs/design-limits.md)
+separate measurable goals from promises the compiler cannot make.
 
 Before work, read [the plan](PLAN.md) and [session handoff](docs/development-state.md)
 to avoid repeating completed tasks. The handoff records actual checks, unresolved

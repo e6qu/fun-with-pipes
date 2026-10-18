@@ -102,13 +102,17 @@ pub fn escapes(e: &Expr, x: Local, noesc: &[Vec<bool>], me: Option<FuncId>) -> b
             };
             scrut || arms.iter().any(|(_, b)| go(b))
         }
-        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => go(b),
+        Expr::Trace(_, b)
+        | Expr::Dup(_, b)
+        | Expr::Drop(_, b)
+        | Expr::BorrowGlobal(_, _, b)
+        | Expr::ResourceRegion { body: b, .. } => go(b),
     }
 }
 
 /// `e` without the reference counts around it.
 fn bare(mut e: &Expr) -> &Expr {
-    while let Expr::Dup(_, b) | Expr::Drop(_, b) = e {
+    while let Expr::Trace(_, b) | Expr::Dup(_, b) | Expr::Drop(_, b) = e {
         e = b;
     }
     e

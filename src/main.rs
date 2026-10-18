@@ -89,6 +89,10 @@ usage:
   fwp test --std                 run the standard library's tests
   fwp check <file.fwp>           type-check a file and print inferred types
   fwp check --parse <file.fwp>   parse a file and print its syntax tree
+  fwp notebook [OPTIONS]       local notebook UI (requires fwp-tools Python package)
+  fwp debug [--json] FILE       interactive interpreter debugger
+  fwp disassemble [--json] --tool PATH BINARY  inspect native instructions
+  fwp repl (--json | --stream | --no-history | --history PATH)  interpreted session
   fwp fmt [--check] [paths...]   format files in place (directories are
                                  searched for .fwp files; default: .);
                                  --check lists unformatted files instead
@@ -196,6 +200,68 @@ fn main() -> ExitCode {
         return not_in_wasm("`--link` (C code for foreign functions)");
     }
     match args.first().map(String::as_str) {
+        Some("notebook") if IN_WASM => {
+            not_in_wasm("`fwp notebook` (it needs Python and local sockets)")
+        }
+        Some("notebook") => {
+            let mut options = args[1..].to_vec();
+            if options.iter().any(|s| s == "--help" || s == "-h") {
+                println!("Usage: fwp notebook --python PATH --directory PATH --port N\nRequires the fwp-tools package installed for the selected Python.\nUses this fwp executable; port 0 asks the OS for an unused port.");
+                return ExitCode::SUCCESS;
+            }
+            if options
+                .iter()
+                .any(|s| s == "--fwp" || s.starts_with("--fwp="))
+            {
+                eprintln!("fwp notebook uses this compiler; invoke Python's fwp_tools.notebook module directly to select another");
+                return ExitCode::from(2);
+            }
+            let python = if let Some(index) = options.iter().position(|s| s == "--python") {
+                if index + 1 == options.len() || options[index + 1].starts_with('-') {
+                    eprintln!("--python needs an executable path");
+                    return ExitCode::from(2);
+                }
+                let executable = options.remove(index + 1);
+                options.remove(index);
+                executable
+            } else {
+                eprintln!("fwp notebook requires --python PATH --directory PATH --port N");
+                return ExitCode::from(2);
+            };
+            let compiler = match std::env::current_exe() {
+                Ok(path) => path,
+                Err(e) => {
+                    eprintln!("{e}");
+                    return ExitCode::from(1);
+                }
+            };
+            match std::process::Command::new(&python)
+                .args(["-m", "fwp_tools.notebook", "--fwp"])
+                .arg(compiler)
+                .args(options)
+                .status()
+            {
+                Ok(status) if status.success() => ExitCode::SUCCESS,
+                Ok(_) => {
+                    eprintln!("Notebook exited unsuccessfully; see the Python diagnostic above.");
+                    ExitCode::from(1)
+                }
+                Err(e) => {
+                    eprintln!("cannot start {python}: {e}; choose --python PATH");
+                    ExitCode::from(1)
+                }
+            }
+        }
+        Some("debug") => {
+            let options = args[1..].to_vec();
+            ExitCode::from(fwp::driver::with_big_stack(move || fwp::debugger::run(&options)) as u8)
+        }
+        Some("disassemble") if IN_WASM => not_in_wasm("`fwp disassemble` (it needs LLVM tools)"),
+        Some("disassemble") => ExitCode::from(fwp::disassemble::run(&args[1..]) as u8),
+        Some("repl") => {
+            let options = args[1..].to_vec();
+            ExitCode::from(fwp::driver::with_big_stack(move || fwp::repl::run(&options)) as u8)
+        }
         Some("check") => check(&args[1..]),
         Some("run") => run(&args[1..]),
         Some("test") => test(&args[1..]),

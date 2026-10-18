@@ -49,7 +49,7 @@ reading the tutorials.
 | Boxing / unboxing | Putting a value in a separate heap object and referring to it by an address, or using its fields directly without that object. |
 | Inlining | Putting a called function's operations into the caller so a separate call is unnecessary. |
 | Fusion | Combining stages such as `map`, `filter` and `sum` into one traversal when doing so preserves their observable behavior. |
-| Tail call | A call whose result is returned immediately. Eligible self-calls can become loops without growing the call stack. |
+| Tail call | A call whose result is returned with no remaining work, including required cleanup. It can permit frame reuse; fwp does not yet guarantee it for arbitrary recursion. |
 | Backend | The compiler part that turns its internal program into executable code or another language, currently C for native fwp programs. |
 | ABI (application binary interface) | The rules compiled code uses to pass arguments, return results and lay out data when calling other compiled code. |
 | FFI (foreign function interface) | The facility for calling code written in another language, such as C. |
@@ -64,6 +64,8 @@ reading the tutorials.
 | Ownership / lifetime | Responsibility for keeping a value alive and eventually releasing its storage; the lifetime is how long that storage remains valid. |
 | Borrow / retain / release | Use an existing value temporarily without taking ownership; add an owning reference; remove an owning reference. |
 | Alias | Another reference to the same storage. Sharing a value does not permit changing its observable contents. |
+| Owning cycle | A loop of references that keep each other alive. Counting alone cannot reclaim it; recursive types and shared values need not form cycles. |
+| Weak reference | A non-owning way to find an object that may already have been destroyed. Public weak handles are proposed, not implemented in fwp. |
 | ARC (automatic reference counting) | Track owning references and release an object after the last is removed. Counting alone does not reclaim reference cycles. |
 | GC (garbage collection) | Find objects no longer reachable by the program and reclaim them. A tracing collector follows references from live roots. |
 | Root | A value the collector starts from, such as a live value held by an active call. |

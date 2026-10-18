@@ -6,12 +6,17 @@ job is to preserve a program's results, external actions and failures while
 removing unnecessary work. Fast execution is a goal supported by specific
 [measurements](benchmarks.md), not a guarantee for every program.
 
-The compiler is written in Rust without third-party Rust crates. Native programs
+The compiler is written in Rust; terminal editing and interrupt handling use
+Rustyline and ctrlc. Native programs
 are generated as C and compiled by the system toolchain. Shared software libraries
 supply some floating-point operations; see [formats](float-formats.md). The
 interpreter runs the compiler's internal program representation directly.
 
 ## Pipeline
+
+For parser theory, precedence, desugaring and macro execution, read
+[From source text to a running program](compiler-pipeline.md). The table below
+is a navigation summary; specialization and IR lowering happen together.
 
 Each stage produces input for the next:
 
@@ -55,8 +60,9 @@ and `uncurry` explicitly convert between these shapes. Type inference does not
 silently convert them. Native calls may combine successive applications and
 eliminate temporary closures or tuples while preserving evaluation and effects.
 
-Arithmetic has fixed precedence: calls, unary negation, `* / %`, `+ -`, then
-pipes, from tightest to loosest. Binary arithmetic associates left to right;
+Operators have fixed precedence: calls, unary negation, `* / %`, `+ -`,
+comparisons (`== != < <= > >=`), then pipes, from tightest to loosest.
+Comparisons do not chain without parentheses. Binary arithmetic associates left to right;
 parentheses override grouping. Operators use the existing standard arithmetic
 traits, with operands evaluated left to right. Their syntax tree retains notation
 for formatting while inference and specialization handle ordinary applications.
@@ -163,9 +169,9 @@ fold inside that callback can call its known function directly. The same applies
 to known callbacks of synchronous service helpers. Aggregate captures, including
 purely constructed header lists, are bound once before the callback; specializing
 a loop must not rebuild them on each element. Repeated callback
-bodies share a specialization rather than expanding recursively. The handoff separates
-implementation, focused checks and full acceptance; benchmarks retain the
-unfused baseline.
+bodies share a specialization rather than expanding recursively.
+[Hash measurements](benchmarks.md#hashing-values-without-constructing-their-encoded-bytes)
+retain the unfused baseline and the remaining costs.
 
 ## Combining F64 lane pipelines
 
@@ -236,8 +242,8 @@ and wider boxed element types retain their existing access rules.
 
 This removes repeated representation checks without changing evaluation order,
 adding a retain or changing floating-point operations. It does not assume that
-all array loops are invariant. The [handoff](development-state.md) records
-current compiler validation and performance evidence for this new change.
+all array loops are invariant. [Controlled measurements](benchmarks.md#selecting-invariant-array-data-once)
+separate this optimization from changes in runner hardware/load.
 
 ### Numeric lists immediately converted to arrays
 
@@ -301,12 +307,10 @@ and reduce; the optimization removes intermediate list nodes and eligible tuples
 Focused local checks cover raw/optimized interpretation, native O1/O2, ARC,
 stressed tracing, aliases, every injected allocation failure and cancellation.
 The [six-host measurements](benchmarks.md#building-numeric-maps-and-sets-without-temporary-lists)
-verify construction combining, fewer set buffers and direct known-set calls in
-separate runs, with actual machine-code inspection. The [handoff](development-state.md)
-tracks full production acceptance and the joined-buffer timing comparison.
-The joined layout passes focused local ownership and overflow checks; native
-platform and performance measurements remain pending. Reduced allocation counts alone do not establish a timing improvement or parity
-with C/Rust.
+verify the joined layout, allocation counts and actual instructions.
+[PR #166](roadmap-history.md#numeric-map-and-set-construction-pr-166) records full
+production acceptance. Large-map timings still include an unresolved Xeon
+slowdown; reduced allocation counts do not establish universal speed gains.
 
 ### Numeric pairs immediately mapped
 
@@ -439,10 +443,21 @@ a widened pointer cannot use the same C static initializer as a native address.
 They own no runtime data and need no heap allocation or reference count. Generic
 calls and their ownership checks can still have costs; this does not make every
 function call free. Static storage and startup stores also have costs. The
-[handoff](development-state.md) distinguishes the measured candidate from full
-platform acceptance.
+[measurements](benchmarks.md#fixed-function-values-in-the-http-server) report
+those costs; [PR #163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163)
+records full platform acceptance.
 
 Shared top-level computed values have cached owners, released during teardown.
+For numeric maps, ownership lowering can introduce `BorrowGlobal`: an internal
+binding that uses the cache owner directly during a verified read span. This
+removes per-read retain/release operations without changing source syntax.
+Initialization still happens at the original read and may fail or yield before
+the borrow begins. The span permits numeric calculations and map reads, but no
+unknown callback, suspension, escape or reentrant destruction while the borrowed
+value is needed. Verification repeats the check after cleanup insertion.
+Tuple and variant result generation must traverse this binding without creating
+intermediate heap objects. See [the contract](ownership.md#cached-numeric-map-reads)
+and [measurements](benchmarks.md#compiler-proved-cached-map-reads).
 A type descriptor is runtime metadata used for operations such as equality,
 printing and decoding.
 
@@ -543,6 +558,95 @@ The blocked F64 matrix kernel uses fixed-size compiler copy intrinsics: they
 preserve aliasing and alignment rules while exposing loads/stores to the C
 compiler's vectorizer. Shape validation bounds each access; floating-point
 accumulation order and separate multiplication/addition remain unchanged.
+
+## Tail calls and recursion
+
+A tail call returns the called function's result without further work. Reusing
+the caller's execution frame can make a chain of these calls use constant call
+stack space. It does not eliminate result storage, derivative tapes, necessary
+owners or arithmetic work, and it does not change an algorithm's time complexity.
+
+For nonnegative input, this recursive function counts down and returns zero:
+
+```fwp
+rec down = match
+    0 -> 0
+    _ -> sub 1 | down
+```
+
+The recursive branch returns `down`'s result directly. Adding `| add 1` after
+`down` leaves an addition to perform after the recursive call returns, so that
+version is not tail recursive. Turning arbitrary recursion into an accumulator
+loop is a separate transformation: it must preserve checked-overflow, floating
+rounding, effects and failure order rather than assume arithmetic is associative.
+
+### Current implementation
+
+`loop step state` is the documented constant-stack iteration facility. Known
+steps can also keep their state as direct fields. General recursive functions
+have no equivalent portable stack-space guarantee today.
+
+`src/cgen.rs::tail_calls` identifies terminal direct calls and function-value
+applications through bindings, reference-count operations and match branches.
+It deliberately does not cross a resource region with cleanup after its body.
+`FnGen::tail_tokens` releases unused storage-reuse tokens before eligible calls,
+removing one obstacle to native tail-call elimination. Ordinary function/worker
+generation still emits C calls; it does not lower every self-recursive function
+to an explicit loop or require a machine tail jump.
+
+`tests/reuse_token_ownership.rs::tail_token_cleanup_preserves_long_native_recursion`
+checks a million-step boxed countdown at O1/O2 with collection enabled/disabled,
+and compares a smaller case with the raw interpreter. That is evidence for the
+tested configurations, not a guarantee for all recursive programs or checked ARC.
+`src/interp.rs::call` and `eval` recurse through the Rust stack; the application
+loop handles extra curried arguments but does not eliminate general tail calls.
+Selected long-chain destructors already use loops; branching cleanup can still
+need additional stack. These are separate from optimizing source recursion.
+
+### Proposed implementation order and limits
+
+1. Lower eligible direct self-tail calls into explicit loops in the compiler's
+   intermediate representation, with corresponding interpreter execution.
+   Make any eventual guarantee independent of the C optimizer and optimization
+   level. Define eligibility after ownership/resource analysis and expose a
+   diagnostic explaining any remaining work that prevents frame reuse.
+2. For statically known mutually recursive groups, assess a shared internal loop
+   with a tag selecting the next function and typed argument storage. This is a
+   potential implementation, not adopted behavior. Measure dispatch, storage and
+   code-size costs before choosing it.
+3. Treat unknown function-value calls and foreign calls separately. Different
+   native argument/result layouts and live frame storage complicate portable
+   tail transfer. Do not introduce a general heap-allocated continuation per
+   call merely to claim constant native stack use. A universal tail-call promise
+   is not part of the current contract.
+
+The proof must prepare next arguments in their original order before destroying
+anything they need. Moves, aliases and swapped arguments must remain correct.
+A borrowed pointer into a discarded caller frame cannot survive the transfer;
+its storage must remain valid through another proved arrangement. Pending
+destructors, error handlers, state handlers, derivative scopes and active callback
+registrations cannot simply be discarded or run early. Some last-looking source
+calls are therefore not tail calls once their required cleanup is included.
+
+Preserve scheduling/cancellation safe points when replacing function entries
+with loop iterations. Every iteration must retire or transfer its cleanup owners
+without accumulating hidden cleanup records. Constant call stack is insufficient
+if continuation storage or retained memory grows with recursion depth.
+
+The existing C backend can implement direct self loops portably. Relying only
+on a C optimizer is weaker: [GCC documents calling-convention restrictions](https://gcc.gnu.org/onlinedocs/gccint/Tail-Calls.html),
+and [Clang's musttail](https://clang.llvm.org/docs/AttributeReference.html#musttail)
+requires compatible signatures/calling conventions and ends local lifetimes
+before transfer. It is not an unrestricted solution for fwp's specialized workers
+or borrowed stack arguments.
+
+Before documenting a guarantee, test growing depths with bounded stack and memory,
+interpreter/native agreement, all supported native architectures and supported
+WebAssembly modes, applicable optimization levels, checked ARC and tracing,
+aliases, argument swaps, resource/handler cleanup, cancellation and negative
+eligibility cases. Inspect generated C and machine code; a deep run alone does
+not identify which transformation occurred. This section records source review
+and proposed work, not new execution or performance evidence.
 
 ## Numerical specialization
 

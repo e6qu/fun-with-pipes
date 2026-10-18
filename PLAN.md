@@ -70,51 +70,50 @@ ownership and removal of GC are the primary design priority.
 
 | Step | Work | Completion evidence |
 |---|---|---|
-| 1 | Remove tracing GC and limit ARC | Compile-time ownership, moves and borrows cover maintained program and deployment modes; shared ownership and cycles have an explicit policy; cleanup works on success, failure and cancellation; binaries exclude tracing; unshared hot paths avoid retain/release traffic; long-running memory remains bounded. |
-| 2 | Remove avoidable costs from functional code | Representative pipes, partial applications, closures, records, variants, iteration and state compile to direct calls and loops where their lifetimes/targets are known, without avoidable intermediate heap objects; remaining costs are measured and explained. |
-| 3 | Improve machine-level performance | Diagnose and reduce the largest equivalent-work C/Rust gaps on ARM64 and AMD64; inspect register use, spills, vector instructions, layout and cache behavior; preserve checked arithmetic, floating-point rules and failure order. |
-| 4 | Improve differentiation speed, memory and precision | Reproduce and address known timing regressions; reduce recording and workspace costs without losing correctness; show memory scaling across input sizes and nesting; preserve and validate F128 gradient precision; measure the typed representation's allocation and arithmetic costs. |
-| 5 | Strengthen numerical kernels | Benchmark arrays, reductions and matrix products across useful sizes/layouts; improve CPU kernels with documented accuracy and allocation costs; establish real-device evidence before claiming GPU execution support. |
-| 6 | Make performance comparisons dependable | Use current revisions, comparable algorithms and explicit arithmetic rules; vary run order and retain repeated samples; report elapsed time, allocations, live memory, compilation/startup cost and binary size; use repeatable regression criteria rather than noisy single timings. |
-| 7 | Validate the language with larger programs | Maintain numerical, collection-heavy and long-running applications; run them across supported targets and memory modes; use observed failures and friction to improve inference diagnostics, libraries, tooling and documentation without expanding syntax unnecessarily. |
+| 1 | Remove tracing GC and limit ARC | Agree and implement ownership/cycle contracts for maintained language features and deployment modes; migrate maintained programs without silently weakening their behavior; verify cleanup on success, failure and cancellation; default generated binaries exclude tracing; selected unshared hot paths avoid count traffic; repeated bounded-live workloads show no accumulating retention. |
+| 2 | Remove avoidable costs from functional code | Define and test a representative set of pipes, partial applications, closures, records, variants, iteration and state patterns whose known targets/lifetimes permit direct calls, loops and elimination of intermediate heap objects; establish constant-stack execution for eligible self-tail recursion in native code and the interpreter; report necessary storage, dispatch and sharing costs outside those patterns. |
+| 3 | Improve machine-level performance | Set per-workload budgets from repeated equivalent-work C/Rust baselines on named ARM64/AMD64 hosts; diagnose known regressions and meet those budgets without hiding slower results; inspect register use, spills, vector instructions and layout while preserving arithmetic and failure rules. |
+| 4 | Improve differentiation speed, memory and precision | Validate supported derivative operations and precision; meet measured time/memory budgets for selected sizes and nesting depths; resolve known regressions; report recording, recomputation, output and workspace costs separately. No constant-memory or zero-overhead promise for arbitrary differentiation. |
+| 5 | Strengthen numerical kernels | Meet accuracy and measured time/memory budgets for selected CPU arrays, reductions and matrix products. Resolve the runtime-compilation conflict separately; claim GPU support only for explicitly supported devices with ahead-of-time artifacts and real execution evidence. |
+| 6 | Make performance comparisons dependable | Establish a reproducible comparison protocol with current revisions, comparable algorithms and explicit arithmetic rules; retain repeated samples and environment details; report timing, memory, compilation/startup and binary-size costs; define regression thresholds and how inconclusive results are investigated. |
+| 7 | Validate the language with larger programs | Select a finite acceptance suite of numerical, collection-heavy and long-running applications; test its supported targets and memory modes, including failure/cancellation and bounded-live repeated work; fix observed implementation and usability issues. Add coverage as features expand, without treating this suite as proof for all programs. |
 
-### Current delivery and next acceptance
+### Acceptance limits
 
-[PR #165](https://github.com/e6qu/fun-with-pipes/pull/165) is accepted after all
-nine production jobs and documentation passed. C callers can release returned
-strings and records explicitly; partial maps, sets and their temporary storage
-clean up on failure. Related Windows toolchain, output, cancellation-fixture and
-artifact problems are repaired. [History](docs/roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
-records the exact sources, complete failure audits and acceptance. Default
-execution still uses tracing; input copies, retained callbacks and actual browser
-engine coverage remain work.
+The [feasibility review](docs/design-limits.md) explains the limits behind these
+goals. Name the programs, inputs, platforms and budgets before measuring a change.
+Do not promise zero heap use, zero ARC, universal C/Rust parity, constant-memory
+autodiff or perfect inference of every lifetime. Correctness remains required
+outside the benchmark suite.
 
-The current delivery removes intermediate lists and numeric result tuples from
-map/set construction. Immediate ranges provide values directly; known callbacks
-use direct calls. Sets use two temporary key arrays instead of four key/value
-arrays. Order, duplicates, aliases, arithmetic and failure behavior stay unchanged.
-The latest focused run passes 78 tests on six native hosts, with 120 actual
-binaries inspected. Joined key/value buffers remove two more map allocations;
-size guards and failure cleanup are verified. Large-map measurements expose
-CPU-dependent costs, so a remaining Xeon slowdown is still under investigation. Direct known-set loops avoid per-item dispatch
-and stack access in the inspected Linux AMD64/ARM64 binaries. Set peak counted storage at 65,536
-inputs falls from 2,102,304 to 1,053,696 bytes after removing the unused buffers and sentinel word.
-[Measurements](docs/benchmarks.md#building-numeric-maps-and-sets-without-temporary-lists)
-identify the exact comparisons and their limits. The [handoff](docs/development-state.md)
-tracks the next PR's full production acceptance. The C/Rust benchmark now keeps
-its actual measured executables and source inputs for subsequent code inspection;
-its full execution and artifact checks remain part of that production gate.
+### Immediate priorities
 
-The larger maintained map benchmark exposed variable AMD64 sorting time. The
-current repair joins related key/value buffers under one owner, with explicit
-size checks and no arbitrary padding. Local ownership/failure tests pass;
-six-host correctness and same-run old/new layout measurements remain required.
-Do not merge based on allocation savings while the timing issue is unresolved.
+1. Complete acceptance of the current compiler and interactive-tool PR.
+   Cached-map borrowing now has matching Xeon 8573C evidence: the old layout
+   slowdown reproduces, and the new joined/borrowed program is 2.67% faster than
+   the old separate-layout baseline. [Measurements](docs/benchmarks.md#rechecking-the-original-xeon-slowdown)
+   retain all faster and slower comparisons. The compiler, math, REPL, notebook
+   and debugger/SDK still require final-head production acceptance; see the
+   [handoff](docs/development-state.md).
+2. Specify and test [cycle-safe ownership contracts](docs/ownership.md#proposed-cycle-policy)
+   against subscriptions, channel workers, cancelled tasks and cyclic data graphs.
+   Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
+   an implemented API. Reject unproved retention rather than silently use tracing.
+   Distinguish a definite cycle from a missing proof.
+3. Develop [tail-recursion elimination](docs/design.md#tail-calls-and-recursion)
+   for eligible self calls, with the same guarantee in native code and the
+   interpreter. Preserve owners, handler lifetimes and cancellation safe points.
+   Assess known mutually recursive groups next; do not promise general tail calls.
+4. Use representative applications and equivalent-work measurements to select
+   the next costs to remove: dynamic closures/calls, input copies, container
+   layout, numerical workspace and derivative recording. Investigate known
+   timing regressions before claiming a performance improvement.
 
-All seven areas above stay open. Each delivery must identify its workload,
-expected change and acceptance criteria. Investigate performance regressions
-even when allocations fall, and preserve traps, cancellation and interpreter
-agreement. A passing microbenchmark does not complete a work area.
+All seven work areas remain open. The syntax and native-platform foundations
+are implemented; the main remaining work is ownership, representation,
+performance and validation of larger programs. A passing microbenchmark or a
+completed PR does not finish a work area. The [handoff](docs/development-state.md)
+contains the next concrete action, checks and unresolved issues.
 
 ## Platform objective and current evidence
 
@@ -148,6 +147,8 @@ Keep both `if` and `match`, explicit `const` for constant functions, and `()` fo
 unit. Tuple positions start at zero. Iteration and state helpers remain library
 functions. No colon application or indentation-based argument groups are planned.
 Avoid needless wrappers, implicit conversions and hidden fallback behavior.
+Use explicit parameters and settings for toolchains, targets and execution
+policy; do not add compatibility adapters or silently choose those settings.
 Register spills and alternatives defined by a protocol are ordinary implementation
 choices, not fallbacks.
 

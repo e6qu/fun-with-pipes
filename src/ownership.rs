@@ -250,12 +250,14 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "prim.zero" | "prim.one" => (&[], ResultOwnership::Numeric, None, &[]),
         "prim.neg" | "prim.from-int" | "prim.from-float" | "bit.not" | "int.convert"
         | "float.to-int" | "float.convert" | "int.to-float" | "sqrt" | "exp" | "ln" | "sin"
-        | "cos" | "tan" | "floor" | "ceil" | "round" => (&[B], ResultOwnership::Numeric, None, &[]),
+        | "cos" | "tan" | "floor" | "ceil" | "round" | "asin" | "acos" | "atan" | "sinh"
+        | "cosh" | "tanh" | "asinh" | "acosh" | "atanh" | "log2" | "log10" | "log1p" | "exp2"
+        | "expm1" => (&[B], ResultOwnership::Numeric, None, &[]),
         "prim.add" | "prim.sub" | "prim.mul" | "prim.div" | "prim.rem" | "wrapping.add"
         | "wrapping.sub" | "wrapping.mul" | "saturating.add" | "saturating.sub"
         | "saturating.mul" | "overflowing.add" | "overflowing.sub" | "overflowing.mul"
         | "checked.add" | "checked.sub" | "checked.mul" | "checked.div" | "bit.and" | "bit.or"
-        | "bit.xor" | "bit.shl" | "bit.shr" | "pow" => {
+        | "bit.xor" | "bit.shl" | "bit.shr" | "pow" | "atan2" | "hypot" => {
             (&[B, B], ResultOwnership::Numeric, None, &[])
         }
         "abs" => (&[B], ResultOwnership::Numeric, None, &[0]),
