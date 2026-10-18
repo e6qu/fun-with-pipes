@@ -19,6 +19,10 @@ fn tasks_and_data_channels_reclaim_after_join_and_cancellation() {
             .args(["run", "--interp"])
             .arg(&source),
     );
+    assert_eq!(
+        reference.stdout,
+        include_bytes!("fixtures/task_channel_ownership.out")
+    );
     for gc in ["tracing", "arc"] {
         let cfile = dir.join(format!("{gc}.c"));
         checked(

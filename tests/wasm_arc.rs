@@ -611,15 +611,20 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
     );
     let dir = fwp::cgen::TempDir::new("wasi-task-owners").unwrap();
     let source = dir.join("tasks.fwp");
-    let program = include_str!("fixtures/task_channel_ownership.fwp")
-        .replace("main = [", "round = [")
-        + "\nmain = range 0 16 | each (const () | round)\n";
+    let program = include_str!("fixtures/task_channel_ownership.fwp").replace(
+        "main = () | round",
+        "main = range 0 16 | each (const () | round)",
+    );
     std::fs::write(&source, program).unwrap();
     let reference = checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .args(["run", "--interp"])
             .env("FWP_NO_OPT", "1")
             .arg(&source),
+    );
+    assert_eq!(
+        reference.stdout,
+        include_bytes!("fixtures/task_channel_ownership.out").repeat(16)
     );
     let ordinary = emit(&source, &dir.join("tasks.c"), &[]);
     let measured = measured_program(&ordinary);

@@ -45,6 +45,14 @@ failure controls passes (35.70 s including rebuild). The shared root compiler
 binary now comes from this worktree; rebuild the root source before using it as
 PR #164 evidence. Do not run full suites or install a local Wasm toolchain.
 
+The first preparation source `1f34278a` generated an invalid repeated workload:
+it defined an effectful value outside `main`. A local check caught it; both jobs
+in run `39081140140` were cancelled while queued, before executing any steps.
+The fixture is now an explicitly typed piped `round` function. Its output matches
+the original fixture byte for byte and 16 iterations reproduce it exactly.
+A persistent golden records that independent comparison. Native ownership and
+all its omitted-release controls pass again (18.29 s including rebuild).
+
 ## Accepted foundation
 
 [PR #163](https://github.com/e6qu/fun-with-pipes/pull/163) is accepted at

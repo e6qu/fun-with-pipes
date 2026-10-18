@@ -42,52 +42,97 @@ queue-failure =
     | tap (flip channel.send ("failed" | string.repeat 2))
     | const "expected"
     | fail
-main = [
-    task.spawn (value ("input" | string.repeat 2))
+round : () -> () ! {Async, IO}
+round =
+    const "input"
+    | string.repeat 2
+    | value
+    | task.spawn
     | both task.await task.await
-    | echo,
-    task.spawn (sleeping ("early" | string.repeat 2))
+    | echo
+    | const "early"
+    | string.repeat 2
+    | sleeping
+    | task.spawn
     | tap task.cancel
     | task.await
-    | echo,
-    task.spawn (sleeping ("entered" | string.repeat 2))
+    | echo
+    | const "entered"
+    | string.repeat 2
+    | sleeping
+    | task.spawn
     | tap (const () | task.yield)
     | tap task.cancel
     | task.await
-    | echo,
-    task.within 1h (value ("within" | string.repeat 2)) | echo,
-    task.spawn (awaiting (task.spawn (value ("older" | string.repeat 2))))
+    | echo
+    | const "within"
+    | string.repeat 2
+    | value
+    | task.within 1h
+    | echo
+    | const "older"
+    | string.repeat 2
+    | value
+    | task.spawn
+    | awaiting
+    | task.spawn
     | task.await
-    | echo,
-    task.spawn own-state | task.await | echo,
-    () | attempt (const scope-failure | task.scope) | echo,
-    task.scope (const "joined" | string.repeat 2 | start-value | ignore),
-    range 0 65 | map show | task.map (string.repeat 3) | length | echo,
-    text-channel 2
+    | echo
+    | const own-state
+    | task.spawn
+    | task.await
+    | echo
+    | const ()
+    | attempt (const scope-failure | task.scope)
+    | echo
+    | const (const "joined" | string.repeat 2 | start-value | ignore)
+    | task.scope
+    | const 0
+    | flip range 65
+    | map show
+    | task.map (string.repeat 3)
+    | length
+    | echo
+    | const 2
+    | text-channel
     | tap (flip channel.send ("kept" | string.repeat 2))
     | tap channel.close
     | channel.recv
-    | echo,
-    text-channel 1 | channel.recv-for 0ns | echo,
-    text-channel 1 | tap channel.close | flip channel.send "rejected" | echo,
-    data-channel 1
+    | echo
+    | const 1
+    | text-channel
+    | channel.recv-for 0ns
+    | echo
+    | const 1
+    | text-channel
+    | tap channel.close
+    | flip channel.send "rejected"
+    | echo
+    | const 1
+    | data-channel
     | tap (flip channel.send (Cell ("data" | string.repeat 2) End))
     | tap channel.close
     | channel.recv
-    | echo,
-    text-channel 1
+    | echo
+    | const 1
+    | text-channel
     | start-receive
     | tap (const () | task.yield)
     | tap task.cancel
     | task.await
-    | echo,
-    text-channel 1
+    | echo
+    | const 1
+    | text-channel
     | tap (flip channel.send ("full" | string.repeat 2))
     | start-send
     | tap (const () | task.yield)
     | tap task.cancel
     | task.await
-    | echo,
-    range 1 65 | each undrained,
-    1 | attempt queue-failure | echo,
-] | ignore
+    | echo
+    | const 1
+    | flip range 65
+    | each undrained
+    | const 1
+    | attempt queue-failure
+    | echo
+main = () | round
