@@ -7,24 +7,37 @@ on `server-entry-delivery`. The implementation/evidence commit is `7c750b75`;
 this tracking update changes documentation only. Final head `6b504c2e` has six
 affected functional jobs in run `39080530770` (`server_entry_part=checks`), nine
 production jobs in `39080534474`, and documentation in `39080534747`.
-Their exact source was verified. Five focused jobs, production benchmarks and
-documentation pass. The Intel focused job reached its 25-minute limit in the
-last REST API test. All six logs are audited: 35 test summaries, 125 passed,
-zero failed and 12 intentionally ignored memory entries executed separately.
-Intel's first five targets pass (20 tests); its API test did not finish. Audit:
-`/private/tmp/fwp164-focused-audit.json`. This cancellation is not acceptance.
+Their exact source was verified. Five original focused jobs and documentation
+pass. The Intel focused job reached its 25-minute limit in the last REST API
+test. All six logs are audited: 35 summaries, 125 passed, zero failed and 12
+ignored memory entries exercised in separate jobs. Its replacement run
+`39082660292` uses workflow `1682ff88` but explicitly checks out `6b504c2e`;
+the split keeps 25-minute limits. This original cancellation is not acceptance.
 
-The preparation workflow now splits entry/codec and API checks into separate
-25-minute jobs. `server-recheck` requires an explicit source SHA and records the
-checked-out source separately from the workflow revision. Dispatch it for Intel
-with `source_revision=6b504c2e333f9c89725db714aed1440b79eab178`; require both
-replacement jobs to pass and audit their source/complete logs. Keep the existing
-five focused passes and nine production gates on that unchanged head. Require
-complete six-host functional coverage, all nine production jobs and documentation
-before the authorized squash merge. No timeout is raised or failure ignored.
-Use an explicit one-line subject of at most 80 characters and an empty body;
-verify the complete message, parent and tested/merged tree, then cancel duplicate
-postmerge production. Keep one delivery PR and preserve passing heads.
+Production `39080534474` has now exposed two missed CSV client goldens in
+`test/rest` on macOS ARM (`117536382972`). All 119 targets completed; the audit
+found 441 passed tests and only `forms_client_round_trip`/`swagger_documents`
+failing. Their CSV lines still expected `12,used`; both now expect `12.0,used`.
+Repository-wide search finds no other copy of that stale CSV expectation.
+The local forms client passes its interpreted golden, then first failed to find
+OpenSSL headers. Setting the installed `/opt/homebrew/opt/openssl@3` path fixes
+that setup; the native build then hit the guard's 1 GiB RSS limit. This is not a
+local pass. Both full interpreter/native client tests move to separate focused
+API steps on all six native hosts, before the final production repair push.
+
+Audit every remaining production job/target before pushing the repaired PR
+head. Keep all known repairs together. Once the prepared Wasm checks pass,
+include that work in this same PR so one new full production matrix covers both
+batches. The current production head cannot merge with these failures. Preserve
+its original evidence/source IDs; do not relabel old passes as final acceptance.
+The existing `/private/tmp/fwp-merge-164.py` is intentionally tied to `6b504c2e`
+and will refuse its failing production gate; replace its expected head/runs only
+after the full audit and combined publication. Auditors are
+`fwp-audit-final-164.py`, `fwp-audit-focused-164.py`, and `fwp-audit-recheck-164.py`
+in `/private/tmp`. Require all nine production jobs and documentation on the
+new final head, plus the affected functional and actual-Wasm evidence. Use an
+explicit one-line squash subject of at most 80 characters and an empty body;
+verify the entire message, parent and tree, and cancel duplicate production.
 
 ## Independent WebAssembly preparation
 
@@ -87,8 +100,10 @@ loader fail and the repair pass (0.14/0.15 s). Tests cover ordinary errors,
 RangeError, strings and undefined. This is a host-boundary repair, not a change
 to the language's trap semantics.
 
-Run `39082338822` tests the complete Wasm repair at `0a3b9fdf`; both jobs are
-queued at this checkpoint. Later workflow-only splitting does not change its
+Run `39082338822` tests the complete Wasm repair at `0a3b9fdf`. AMD-hosted job
+`117541710072` passes: all six Rust test summaries and the loader check were
+audited, with no failures or skips. Its log is
+`/private/tmp/fwp-wasm-repaired-117541710072.log`. The ARM-hosted job is running. Later workflow-only splitting does not change its
 compiler, runtime or tests. Dispatch `suite=wasm-hosts` for actual-Wasm jobs.
 
 ## Accepted foundation
