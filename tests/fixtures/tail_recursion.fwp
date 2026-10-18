@@ -1,0 +1,26 @@
+rec down : I64 -> I64
+down = match
+    0 -> 0
+    _ -> sub 1 | down
+
+rec swap : (I64, String, String) -> (String, String)
+swap = if (.0 | eq 0)
+    (both .1 .2)
+    (make { 0 = .0 | sub 1, 1 = .2, 2 = .1 } | swap)
+
+rec guarded : I64 -> I64 ! {Error[String], IO}
+guarded = if (eq 0)
+    (const "stop" | fail)
+    (tap echo | sub 1 | guarded)
+
+rec count-back : I64 -> I64
+count-back = match
+    0 -> 0
+    _ -> sub 1 | count-back | add 1
+
+main = [
+    200000 | down | echo,
+    (200001, "left", "right") | swap | echo,
+    3 | attempt guarded | echo,
+    10 | count-back | echo,
+] | ignore

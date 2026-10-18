@@ -35,7 +35,7 @@ fn size(e: &Expr) -> usize {
     }
 }
 
-fn calls(e: &Expr, id: FuncId) -> bool {
+pub(crate) fn calls(e: &Expr, id: FuncId) -> bool {
     match e {
         Expr::Trace(_, b)
         | Expr::Dup(_, b)
@@ -697,7 +697,7 @@ fn applied_first(e: &Expr, l: Local) -> bool {
 
 /// Replace callee locals: in expressions with the mapped expressions, in
 /// binding positions (let, patterns) with the mapped locals.
-fn substitute(e: &Expr, s: &[Option<Expr>]) -> Expr {
+pub(crate) fn substitute(e: &Expr, s: &[Option<Expr>]) -> Expr {
     let local = |l: &Local| match &s[*l as usize] {
         Some(Expr::Local(x)) => *x,
         _ => *l,

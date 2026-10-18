@@ -8,31 +8,55 @@ use std::collections::HashSet;
 /// and tasks can hide such a reference in captures even when their result type
 /// contains only scalars. HTTP stream handles keep their connection's handler
 /// captures alive too. Recursive immutable data remains admissible.
-fn channel_data(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> bool {
+fn channel_data(prog: &Program, ty: &MT, seen: &mut HashSet<MT>, path: &str) -> Result<(), String> {
     if !seen.insert(ty.clone()) {
-        return true;
+        return Ok(());
     }
     match ty {
-        MT::Fun(..) => false,
-        MT::Nat(_) => true,
-        MT::Record(fields) => fields.iter().all(|(_, ty)| channel_data(prog, ty, seen)),
-        MT::Con(name, args) => {
-            if matches!(
-                name.as_str(),
-                "std::Channel" | "std::Task" | "std::H2Stream"
-            ) {
-                return false;
+        MT::Fun(..) => Err(format!(
+            "{path}: function captures can retain the receiving channel"
+        )),
+        MT::Nat(_) => Ok(()),
+        MT::Record(fields) => {
+            for (name, ty) in fields {
+                channel_data(prog, ty, seen, &format!("{path}.{name}"))?;
             }
-            args.iter().all(|ty| channel_data(prog, ty, seen))
-                && match prog.shapes.get(ty) {
-                    Some(TypeShape::Record(fields)) => {
-                        fields.iter().all(|(_, ty)| channel_data(prog, ty, seen))
+            Ok(())
+        }
+        MT::Con(name, args) => {
+            let reason = match name.as_str() {
+                "std::Channel" => Some("a queued channel can retain this queue"),
+                "std::Task" => Some("task captures can retain the receiving channel"),
+                "std::H2Stream" => Some("stream handler captures can retain the receiving channel"),
+                _ => None,
+            };
+            if let Some(reason) = reason {
+                return Err(format!("{path}: {reason}"));
+            }
+            for (i, ty) in args.iter().enumerate() {
+                channel_data(
+                    prog,
+                    ty,
+                    seen,
+                    &format!("{path}.{}[{i}]", name.trim_start_matches("std::")),
+                )?;
+            }
+            match prog.shapes.get(ty) {
+                Some(TypeShape::Record(fields)) => {
+                    for (name, ty) in fields {
+                        channel_data(prog, ty, seen, &format!("{path}.{name}"))?;
                     }
-                    Some(TypeShape::Adt(variants)) => variants
-                        .iter()
-                        .all(|(_, fields)| fields.iter().all(|ty| channel_data(prog, ty, seen))),
-                    _ => true,
                 }
+                Some(TypeShape::Adt(variants)) => {
+                    for (name, fields) in variants {
+                        for (i, ty) in fields.iter().enumerate() {
+                            channel_data(prog, ty, seen, &format!("{path}.{name}[{i}]"))?;
+                        }
+                    }
+                }
+                _ => {}
+            }
+            Ok(())
         }
     }
 }
@@ -59,11 +83,11 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
             }
             match name.as_str() {
                 "std::Channel" => {
-                    if args.len() == 1 && channel_data(prog, &args[0], &mut HashSet::new()) {
-                        return Ok(());
-                    }
-                    return Err(format!(
-                        "type `{ty}` has no tracing-free ownership contract: channel payloads cannot contain functions, tasks, HTTP stream handles or channels"
+                    let [payload] = args.as_slice() else {
+                        return Err(format!("channel type `{ty}` requires one payload type"));
+                    };
+                    return channel_data(prog, payload, &mut HashSet::new(), "payload").map_err(|path| format!(
+                        "type `{ty}` has no tracing-free ownership contract: channel payloads cannot contain functions, tasks, HTTP stream handles or channels\n  {path}\n  This is a missing cycle-freedom proof, not a demonstrated cycle. Keep callbacks and handles with an independent owner; queue data or non-owning IDs instead."
                     ));
                 }
                 "std::Bool" | "std::String" | "std::Bytes" | "std::File" | "std::UdpSocket"

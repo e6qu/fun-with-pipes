@@ -1735,6 +1735,8 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
         check(&prog, "matrix specialization");
         crate::opt::optimize(&mut prog);
         check(&prog, "optimizing");
+        crate::tailrec::lower(&mut prog);
+        check(&prog, "self-tail recursion");
         crate::opt::specialize_hofs(&mut prog);
         check(&prog, "specializing");
         crate::fuse::fuse(&mut prog);

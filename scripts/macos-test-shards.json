@@ -120,6 +120,7 @@
     "pipe_ownership",
     "c-interop",
     "repl",
+    "tail_recursion",
     "scalar_math",
     "debugger"
   ],

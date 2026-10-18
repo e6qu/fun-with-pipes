@@ -65,6 +65,7 @@ pub mod stdgen;
 pub mod swagger;
 pub mod syntax;
 pub mod sys;
+pub mod tailrec;
 pub mod textio;
 pub mod tls;
 pub mod transport;
