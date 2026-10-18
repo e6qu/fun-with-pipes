@@ -1451,6 +1451,7 @@ jobs:
           path: |
             performance-evidence/
             target/bench.md
+            target/bench-evidence/
   mapped_array_repeat:
     if: inputs.suite == 'mapped-array-repeat' || inputs.suite == 'zip-map-repeat' || inputs.suite == 'hash-repeat' || inputs.suite == 'vector-repeat'
     permissions:

@@ -35,6 +35,14 @@ garbage collector; this is not a comparison of checked ARC against Rust.
 ARC means automatic reference counting, which releases objects when their last
 owning reference disappears.
 
+The runner retains the measured executables and source inputs in
+`target/bench-evidence`, grouped by source commit and invocation, with a copy of
+each invocation's timing report. It separately
+emits fwp's generated C after timing, using the same compiler and settings;
+that extra emission is outside both execution and reported compilation times.
+Both benchmark workflows upload this evidence. Earlier timing-only artifacts
+cannot establish what their machine instructions looked like.
+
 ### What each program actually does
 
 | Program | Input and work | Important differences between implementations |
@@ -58,7 +66,8 @@ source `7c2b5638881cea6b476997b333aa61006dba1381` and this passing
 It ran on a Linux AMD64 runner with four logical CPUs reporting an AMD EPYC 7763,
 GCC 13.3.0 and Rust 1.99.1. All three map implementations use sorted pairs.
 These are six-run medians, with samples rounded to 0.001 ms in the saved report.
-This benchmark gate passes independently of the delivery's remaining checks.
+[PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165) records
+full acceptance after the Windows failures in that development run were repaired.
 
 | Program | C | Rust | fwp | Extra fwp time versus C | Extra fwp time versus Rust |
 |---|---:|---:|---:|---:|---:|
@@ -2686,8 +2695,8 @@ HTTP or standard input. This [six-host report](measurements/server-entries-2026-
 compares **tracing and checked ARC at the same fwp source**, `8dfc014d`, retained
 by `evidence/server-entries-20261018`. All 18 memory jobs in
 [the runner suite](https://github.com/e6qu/fun-with-pipes/actions/runs/39078070919)
-pass. Functional test repairs and final production acceptance are tracked in
-[the handoff](development-state.md). These measurements contain the exact-number
+pass. [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164)
+records the functional repairs and passing final production acceptance. These measurements contain the exact-number
 JSON repair; the earlier lossy-number baseline is not equivalent work.
 
 The [server fixture](../tests/fixtures/server_entries.fwp) copies records, returns
@@ -2830,8 +2839,8 @@ The [six-host report](measurements/library-results-2026-10-18.json) uses source
 `evidence/library-results-20261018`, and
 [run 39090619574](https://github.com/e6qu/fun-with-pipes/actions/runs/39090619574).
 All 90 focused tests pass on Linux, macOS and Windows, each on ARM64 and AMD64,
-with no failures or skips. Final production acceptance is tracked in the
-[handoff](development-state.md); this focused run does not replace it.
+with no failures or skips. [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
+records the separate passing production gate.
 
 The measured program performs 256 repeated call batches after warmup. It reads
 strings, returns aliases and records, computes a derivative (a function's slope),
@@ -2892,7 +2901,8 @@ The [six-host report](measurements/map-failures-2026-10-18.json) records source
 `af834f8c67c6c5b7d543615755feeb0a85e81c87` and
 [run 39093309107](https://github.com/e6qu/fun-with-pipes/actions/runs/39093309107).
 All 66 focused tests pass on Linux, macOS and Windows, each on ARM64 and AMD64,
-without skips. Full delivery acceptance remains in the [handoff](development-state.md).
+without skips. [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
+records full delivery acceptance.
 
 Each host tests 22 operations, including conversion, insertion, removal, update,
 set operations and map callbacks. Instrumentation deliberately fails each
@@ -2920,73 +2930,78 @@ these cleanup checks. Reproduce the data-only inspection with
 ## Building numeric maps and sets without temporary lists
 
 A set stores distinct keys. A map stores a value for each key; when input keys
-repeat, the last value survives. For this measurement, a range supplies integers
-from zero up to the chosen input count. The callback takes each integer modulo
-257, producing at most 257 distinct keys. The set prints its size; the map stores
-the original integers as values and prints the last value for key 5.
+repeat, the last value survives. Here, a range supplies integers from zero up to
+the input count. The mapped function takes each integer modulo 257, producing
+at most 257 distinct keys. The set prints its size; the map stores the original
+integers as values and prints the last value for key 5.
 
-The [initial six-host report](measurements/collection-build-baseline-2026-10-18.json)
-uses source `488d182203605870ab34d5f431c62f5d58a2a7b1`, preserved as
-`evidence/collection-build-20261018`. It compares the **same fwp program and
+The [final six-host report](measurements/collection-build-direct-2026-10-18.json)
+uses source `c34ca8e340c6f3dbb6251729553e1a8dbf513903`, preserved as
+`evidence/collection-direct-sets-20261018`. It compares the **same fwp program and
 compiler**, with numeric construction combining enabled and disabled through
 `FWP_MAP_BUILD`. The optimized path removes the range list, mapped list and
-eligible key/value tuples. These are fwp comparisons, not C/Rust overhead.
+eligible key/value tuples, and calls known functions directly. These are fwp
+comparisons, not measurements of overhead relative to C or Rust.
 
 All programs use checked ARC, native O2 and disabled tracing/reuse poisoning.
 Inputs are compiled constants. Time includes process startup, construction,
-callbacks, sorting, deduplication, the final query and output; compilation is
-recorded separately. Eight samples per variant use recorded randomized order.
-The report retains hardware, compiler settings, all 576 elapsed samples,
-allocation counts, charged storage and actual executable sizes.
+the mapped function, sorting, deduplication, the final query and output;
+compilation is recorded separately. Eight samples per variant use recorded
+randomized order. The report retains hardware, compiler settings, all 576 elapsed
+samples, allocation counts, counted storage and actual executable sizes.
 
 For 65,536 inputs, the observed medians are:
 
 | Native host | Set: ordinary / optimized ms | Time ratio | Map: ordinary / optimized ms | Time ratio |
 |---|---:|---:|---:|---:|
-| Linux AMD64 | 7.534 / 5.162 | 0.685 | 9.948 / 4.216 | 0.424 |
-| Linux ARM64 | 7.391 / 4.198 | 0.568 | 10.350 / 3.712 | 0.359 |
-| macOS ARM64 | 6.058 / 4.435 | 0.732 | 7.359 / 4.324 | 0.588 |
-| macOS AMD64 | 21.573 / 13.393 | 0.621 | 25.262 / 13.578 | 0.537 |
-| Windows AMD64 | 18.030 / 14.631 | 0.811 | 19.677 / 13.851 | 0.704 |
-| Windows ARM64 | 16.462 / 13.845 | 0.841 | 17.916 / 13.500 | 0.754 |
+| Linux AMD64 | 7.332 / 4.139 | 0.564 | 9.692 / 4.362 | 0.450 |
+| Linux ARM64 | 6.373 / 2.710 | 0.425 | 9.573 / 3.442 | 0.360 |
+| macOS ARM64 | 12.353 / 8.645 | 0.700 | 9.130 / 6.165 | 0.675 |
+| macOS AMD64 | 17.009 / 9.287 | 0.546 | 19.726 / 9.998 | 0.507 |
+| Windows AMD64 | 15.526 / 12.127 | 0.781 | 18.081 / 12.907 | 0.714 |
+| Windows ARM64 | 10.970 / 8.981 | 0.819 | 12.531 / 9.207 | 0.735 |
 
-The ratio is optimized time divided by ordinary time: 0.685 means about 31.5%
-less elapsed time in that run. At 32 inputs, ratios range from 0.953 to 1.043;
-the samples overlap and give no consistent speed improvement. Some Windows
-samples are much slower than their median. Startup was not timed separately,
-and these runner measurements do not establish a universal performance threshold.
+The ratio is optimized time divided by ordinary time: 0.564 means about 43.6%
+less elapsed time in that run. At 32 inputs, ratios range from 0.817 to 1.073;
+every paired sample range overlaps, including apparent slowdowns. There is no
+consistent small-input gain. Some Windows samples take more than twice their
+median. Startup was not timed separately, and these shared-runner measurements
+do not establish a universal performance threshold.
 
-At 65,536 inputs, set allocation requests fall from 131,079 to six and map
+At 65,536 inputs, set allocation requests fall from 131,077 to four and map
 requests from 196,616 to seven. All cases have zero retains, final counted bytes
-and collections. On Apple Silicon, peak charged storage falls from 4,718,600 to
-2,102,304 bytes for sets and from 6,815,752 to 2,102,304 for maps. Charged storage
-excludes allocator capacity and process resident memory. This baseline still
-uses four temporary arrays for sets.
-
-The [set-storage follow-up](measurements/collection-set-storage-2026-10-18.json)
-at source `8fcd7486` removes both unused value buffers. All six hosts pass another
-78 tests without skips; its report verifies 120 actual binaries. At 65,536 inputs,
-the optimized set uses four allocation requests and peaks at 1,053,712 counted
-bytes on every host, versus six requests and 2,102,304 bytes in the baseline.
-Ordinary set construction also saves two requests (131,077 remain); map counts
-are unchanged. The same-run optimized/ordinary set time ratios range from 0.514
-to 0.858 at this size. Different runs use different machines and conditions, so
-their absolute timings do not isolate the benefit of removing the two buffers.
-Known set callbacks still use general dispatch in this measured revision; the
-[handoff](development-state.md) tracks the direct-call follow-up separately.
+and collections. On every host, peak counted storage falls from 4,718,600 to
+1,053,712 bytes for sets and from 6,815,752 to 2,102,304 for maps. These counters
+measure managed storage, excluding allocator capacity and process resident
+memory. Sets still store unused value slots in their final container; small
+integers occupy full words, and temporary storage grows with input length.
 
 All 78 focused tests pass without skips. The report inspects 120 actual binaries,
-including deliberately broken cleanup controls. A
-[focused machine-code review](measurements/collection-build-code-2026-10-18.json)
-checks the actual Linux map executables at 65,536 inputs. AMD64 contains a
-four-item SIMD loop, which computes several values with one vector instruction,
-and a scalar loop selected according to buffer separation. ARM64 uses a scalar
-loop. Both keep loop values in registers and store directly into output buffers,
-with no per-element calls or stack accesses inside the inspected loops.
+including deliberately broken cleanup controls. Eight generated builders undergo
+all 56 allocation failure points and 64 callback error/cancellation exits per
+configuration, while independent input aliases survive. A
+[focused machine-code review](measurements/collection-set-code-2026-10-18.json)
+compares the actual Linux set executables before and after direct calls.
+The old loops invoke general function dispatch and access stack slots per item.
+The new AMD64 loop computes four items with SIMD instructions; ARM64 computes
+two with scalar instructions. Both use registers and direct key-buffer stores,
+with no calls or stack accesses inside the inspected loops.
 
-The complete entry-function stack frame falls from 248 to 216 bytes on AMD64
-and from 304 to 272 on ARM64. These frames include startup and output work,
-exclude callees and the AMD64 return address, and do not bound total stack use.
-The corresponding executable files shrink by 296 bytes on each Linux host.
-These observations apply to these constant-input programs; sorting, final
-container storage, runtime startup and other calls still have costs.
+The AMD64 entry-function frame remains 216 bytes; ARM64 grows from 256 to 272
+bytes. The previous extra builder frame, 120 bytes on AMD64 and 144 on ARM64,
+is no longer on the known-call construction path. These frames include saved
+registers and runtime startup/output work, exclude callees and the AMD64 return
+address, and do not bound total stack use. Both executable files shrink by
+32 bytes. General dispatch remains elsewhere; sorting, final container storage
+and runtime startup still have costs. These observations apply to these
+constant-input programs, not every callback or function.
+
+The [initial optimization report](measurements/collection-build-baseline-2026-10-18.json)
+at source `488d1822` and its [map-loop review](measurements/collection-build-code-2026-10-18.json)
+precede the set improvements. The [set-storage report](measurements/collection-set-storage-2026-10-18.json)
+at `8fcd7486` removes two unused value buffers, reducing optimized set requests
+from six to four and peak counted storage from 2,102,304 to 1,053,712 bytes.
+It still uses general set callback dispatch. Each earlier report separately
+passes 78 tests and inspects 120 binaries. Different runs use different machines
+and conditions; their absolute timings do not isolate either follow-up's speed
+benefit. The final same-source comparison above measures the combined behavior.

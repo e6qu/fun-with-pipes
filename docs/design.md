@@ -298,8 +298,9 @@ and reduce; the optimization removes intermediate list nodes and eligible tuples
 Focused local checks cover raw/optimized interpretation, native O1/O2, ARC,
 stressed tracing, aliases, every injected allocation failure and cancellation.
 The [six-host measurements](benchmarks.md#building-numeric-maps-and-sets-without-temporary-lists)
-verify construction combining and the additional set-buffer reduction in separate
-runs. The [handoff](development-state.md) tracks direct-set calls and production acceptance.
+verify construction combining, fewer set buffers and direct known-set calls in
+separate runs, with actual machine-code inspection. The [handoff](development-state.md)
+tracks the next PR's full production acceptance.
 Reduced allocation counts alone do not establish a timing improvement or parity
 with C/Rust.
 
@@ -588,22 +589,23 @@ proved derivative scopes, selected retained tasks, channels carrying data withou
 functions, tasks, HTTP stream handles or channels, and scoped C calls. Mutable
 cycles, raw pointers and unproved external callbacks remain excluded.
 Checked ARC supports native main and function executables,
-including CLI commands, and C libraries with copied inputs. A prepared C-result
-extension transfers owned strings and record string fields to the host, with
+including CLI commands, and C libraries with copied inputs. The C-result
+extension accepted in PR #165 transfers owned strings and record string fields to the host, with
 explicit per-export release functions. It avoids an extra heap handle; unique
 owners move and shared fields retain only the necessary owners. When the existing
 worker already returns record fields and takes ordinary word arguments, the C
 export transfers those fields directly instead of allocating and unpacking a
 record box. Typed cleanup protects the fields if conversion fails. Raw pointers
-remain excluded. Verification is tracked in the handoff. Every library export is checked as a separate entry. Synchronous WASI
+remain excluded. [Delivery history](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
+records full acceptance. Every library export is checked as a separate entry. Synchronous WASI
 main/function/CLI entries use the same ownership checks and free counted storage
 through their existing external count table. Checked gRPC clients and service
 methods additionally prove when sent and received iterator steps run; the
 [service guide](services.md#building-without-tracing-collection) explains the
 command and validation. HTTP clients and servers are accepted in PRs #162/#163.
-Generated REST and MCP entries now go through the ordinary ownership checks;
-their native execution and memory acceptance are being established in the
-[handoff](development-state.md). They decode requests, call exported functions
+Generated REST and MCP entries use the ordinary ownership checks, with native
+execution and memory acceptance recorded in
+[PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164). They decode requests, call exported functions
 and encode results using ordinary typed fwp code. A returned alias must retain
 its input storage until encoding finishes; a failed call must release decoded
 input. HTTP modes also depend on the connection/task owners described above.

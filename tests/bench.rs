@@ -3,8 +3,9 @@
 //! three must print the same, and the median of six runs in rotating order is
 //! reported with raw samples, compiler/host metadata and ratios to both baselines
 //! (on stdout, in target/bench.md, and in the GitHub
-//! Actions job summary). Timings are not asserted: shared machines are too
-//! noisy. Run with `cargo test --release --test bench benchmarks -- --ignored
+//! Actions job summary). Actual executables, inputs and separately emitted C
+//! remain in target/bench-evidence for inspection. Timings are not asserted:
+//! shared machines are too noisy. Run with `cargo test --release --test bench benchmarks -- --ignored
 //! --exact --nocapture`.
 
 use std::path::{Path, PathBuf};
@@ -161,8 +162,12 @@ fn entry_check_arrangement_measurement() {
 #[test]
 #[ignore]
 fn benchmarks() {
-    let dir = std::env::temp_dir().join(format!("fwp-bench-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).unwrap();
+    let source = command_output("git", &["rev-parse", "HEAD"]);
+    let parent = root().join("target/bench-evidence").join(&source);
+    std::fs::create_dir_all(&parent).unwrap();
+    let dir = parent.join(std::process::id().to_string());
+    // Keep separate invocations and source revisions separate, including failures.
+    std::fs::create_dir(&dir).unwrap();
     let mut names: Vec<String> = std::fs::read_dir(root().join("bench"))
         .unwrap()
         .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
@@ -191,12 +196,15 @@ fn benchmarks() {
          fwp checks integer overflow; the C and optimized Rust baselines do not\n\
          provide the same overflow guarantees. No allocation or peak-memory\n\
          counters are collected by this comparison. See docs/benchmarks.md.\n\n\
+         The measured executables and source inputs are retained in `target/bench-evidence`.\n\
+         Generated fwp C is emitted separately after timing with the same compiler/settings;\n\
+         that extra emission is excluded from execution and compilation timings.\n\n\
          C compiler (`{cc} -O2`):\n\n```text\n{}\n```\n\n\
          Rust compiler (`rustc -O`):\n\n```text\n{}\n```\n\n\
          fwp build flags: `-O2`; fwp compiles through the system C toolchain.\n\n\
          | Program | C | Rust | fwp | fwp / C (extra time) | fwp / Rust (extra time) |\n\
          |---|--:|--:|--:|--:|--:|\n",
-        command_output("git", &["rev-parse", "HEAD"]),
+        source,
         std::env::consts::OS,
         std::env::consts::ARCH,
         command_output(&cc, &["--version"]),
@@ -207,9 +215,12 @@ fn benchmarks() {
     for name in &names {
         let src = root().join("bench").join(name);
         let (c, rs, fw) = (
-            dir.join(format!("{}-c", name)),
-            dir.join(format!("{}-rs", name)),
-            dir.join(format!("{}-fwp", name)),
+            dir.join(format!("{}-c", name))
+                .with_extension(std::env::consts::EXE_EXTENSION),
+            dir.join(format!("{}-rs", name))
+                .with_extension(std::env::consts::EXE_EXTENSION),
+            dir.join(format!("{}-fwp", name))
+                .with_extension(std::env::consts::EXE_EXTENSION),
         );
         let c_build = build(
             Command::new(&cc)
@@ -276,6 +287,22 @@ fn benchmarks() {
             std::fs::metadata(&rs).unwrap().len(),
             std::fs::metadata(&fw).unwrap().len(),
         ));
+        for extension in ["c", "rs", "fwp"] {
+            std::fs::copy(
+                src.join(format!("main.{extension}")),
+                dir.join(format!("{name}-source.{extension}")),
+            )
+            .unwrap();
+        }
+        // Retain compiler output for comparison with the measured executable.
+        // This separate emission is outside all reported build/execution times.
+        build(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .arg("build")
+                .arg(src.join("main.fwp"))
+                .args(["-O2", "--emit-c", "-o"])
+                .arg(dir.join(format!("{name}-generated.c"))),
+        );
     }
     table.push_str(&raw);
     table.push_str(&builds);
@@ -292,8 +319,8 @@ fn benchmarks() {
             command_output("sysctl", &["-n", "machdep.cpu.brand_string"]),
         ));
     }
-    let _ = std::fs::remove_dir_all(&dir);
     println!("\n{}", table);
+    std::fs::write(dir.join("report.md"), &table).unwrap();
     std::fs::write(root().join("target").join("bench.md"), &table).unwrap();
     if let Ok(summary) = std::env::var("GITHUB_STEP_SUMMARY") {
         use std::io::Write;
