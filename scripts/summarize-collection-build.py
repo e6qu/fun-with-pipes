@@ -74,14 +74,20 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     assert re.fullmatch('[0-9a-f]{40}', args.head)
+    # Retain the request and raw run state even when acceptance fails before
+    # downloads. A cancelled job is not success just because its tests passed.
+    args.artifacts.mkdir(parents=True, exist_ok=True)
+    (args.artifacts / 'request.json').write_text(json.dumps(
+        {'run': args.run, 'head': args.head}, indent=2) + '\n')
     metadata = json.loads(command('gh', 'run', 'view', args.run, '--repo', REPO,
                                   '--json', 'headSha,status,conclusion,jobs'))
-    assert metadata['headSha'] == args.head and metadata['status'] == 'completed'
-    assert metadata['conclusion'] == 'success'
+    (args.artifacts / 'run.json').write_text(json.dumps(metadata, indent=2) + '\n')
+    assert metadata['headSha'] == args.head, 'evidence source differs from the requested source'
+    assert metadata['status'] == 'completed', 'evidence run has not completed'
+    assert metadata['conclusion'] == 'success', f"evidence run did not succeed: {metadata['conclusion']}"
     jobs = [job for job in metadata['jobs'] if job['name'].startswith('collection_build (')]
     assert {job['name'] for job in jobs} == {f'collection_build ({host})' for host in HOSTS}
     assert len(jobs) == 6
-    args.artifacts.mkdir(parents=True, exist_ok=True)
     rows = []
     for host in HOSTS:
         job = next(job for job in jobs if job['name'] == f'collection_build ({host})')

@@ -3055,7 +3055,7 @@ Separate diagnostics compare sorting phases for both layouts and measure actual
 construction and query intervals in the same full program. They preserve
 evaluation order and do not infer query time by subtracting unrelated processes.
 
-The [follow-up](https://github.com/e6qu/fun-with-pipes/actions/runs/39106005017)
+The [follow-up report](measurements/large-map-storage-phases-2026-10-18.json)
 reproduces the slow original layout on AMD EPYC 9V74 and verifies that the joined
 layout removes those slow sorting cases. The old layout's slow samples take
 roughly 99–108 ms; joined samples take 14–22 ms, covering both address-bit values.
@@ -3063,7 +3063,18 @@ Full-work joined/separate medians are 0.905 in tracing and 0.768 in ARC; constru
 ratios are 0.394/0.174. Query intervals remain near 273–279 ms and still include
 the same reference-count requests. This isolates the large gain to construction;
 it is not evidence that query overhead or the separate Xeon regression is fixed.
-The full ARM64 follow-up and an additional AMD64 run remain under audit.
+Both follow-up hosts and all 92 binary/sample checks pass. ARM64 construction is
+stable, but its full-work ratios are 0.951 tracing and 1.069 ARC. ARC ranges overlap
+widely; 14 of 24 paired rounds are slower and the median paired ratio is 1.020.
+Its measured query intervals range roughly 421–502 ms. All sixteen ordinary timed
+binaries, generated inputs and profiles match the earlier run byte for byte.
+Keep these slower samples and the Xeon concern; additional AMD64 evidence is pending.
+
+For the complete workload, the same-run fwp/C ratios are 0.918 tracing and 0.954
+ARC on EPYC, and 0.992/0.962 on ARM64. Against Rust, the ratios are 1.110/1.154
+on EPYC and 1.073/1.041 on ARM64: fwp still takes 4–15% more time than Rust in
+these runs. These compare complete implementations, including different sorting
+and overflow guarantees; they are not an isolated language-overhead measurement.
 
 Independent inspection of the actual AMD64 executables finds identical query and
 sorting instructions after resolving address differences. Joined storage removes
@@ -3072,6 +3083,15 @@ falls from 104 to 88 bytes, while the ARC frame remains 88 bytes. On ARM64 ARC,
 code shrinks by 416 bytes and the cached-table frame falls from 112 to 96 bytes.
 These are local frame sizes, not whole-program stack bounds. Code identity does
 not imply identical cache placement or elapsed time.
+
+The joined-layout six-host workflow passed all 78 semantic/ownership tests but
+did not complete: Intel macOS timed out during an additional release build of
+the compiler, before collecting costs. The report correctly rejected that run.
+The measurement job now selects the compiler already built by its integration
+tests and records its exact path/hash alongside source identity. It still builds
+the measured programs at native O2; compiler generation/startup time is outside
+those program timings. The 30-minute limit and all test/cost cases remain.
+A complete replacement run is required before accepting the six-host report.
 
 Two other candidates were rejected: moving integer equality outside the search
 is 8–9% slower on ARM64, and separating cached initialization shows no clear

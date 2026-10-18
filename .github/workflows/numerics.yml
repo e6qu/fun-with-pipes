@@ -158,6 +158,7 @@ jobs:
           name: collection-build-report
           path: |
             collection-report/report.json
+            collection-report/artifacts/*.json
             collection-report/artifacts/*.log
             collection-report/artifacts/**/*.disassembly.txt
             collection-report/artifacts/**/*.symbols.txt
@@ -200,10 +201,11 @@ jobs:
       - name: Collection semantics, failures and cancellation
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test collection_construction --test map_set_ownership --test mapped_array_construction --test numeric_array_fusion -- --nocapture
-      - run: cargo build --release
+      - name: Use the compiler already built by the integration tests
+        run: cargo build --bin fwp
       - name: Repeated construction costs and generated code
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && success() }}
-        run: python3 scripts/measure-collection-build.py --output collection-build-evidence/costs
+        run: python3 scripts/measure-collection-build.py --compiler ${{ runner.os == 'Windows' && 'target/debug/fwp.exe' || 'target/debug/fwp' }} --output collection-build-evidence/costs
       - uses: actions/upload-artifact@v7
         if: always()
         with:

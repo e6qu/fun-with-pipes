@@ -2,12 +2,34 @@
 
 ## Next action
 
-Next: finish auditing storage-phase run `39106005017` at `93cb93a0`, and AMD64-only
-repeat `39106417923` at the same source. The EPYC job now reproduces the old slow
+Next: publish the collection workflow/report repairs and rerun the six-host suite.
+Run `39104669727` failed: Intel macOS passed its 13 tests but timed out during
+the extra release-compiler build; its construction timings never ran. The other
+five jobs pass. All 78 tests pass, but the workflow is not accepted. Report
+`39107047829` correctly rejected it; upload also failed because no early artifact
+existed. The temporary audit display missed `cancelled` jobs when summarizing
+completed jobs; that display and the authoritative handoff are corrected.
+
+The workflow now reuses the compiler already built by integration tests, selected
+explicitly with `--compiler`; measured native programs remain O2 and compiler
+execution is excluded. Path and hash are recorded alongside source identity. Keep the 30-minute
+limit and all test/measurement coverage. The collector records request/run JSON
+before acceptance and uploads it on failure. Four regressions cover early
+rejection and preserved metadata; focused syntax/workflow/docs checks pass.
+The initial metadata preflight caught an unsupported compiler `--version` call;
+the measurement now identifies its compiler directly by source and a streamed
+executable hash. No fallback version value or compiler behavior change is added.
+
+Storage-phase run `39106005017` at `93cb93a0` passes both hosts and all 92 actual
+binary/sample checks. AMD64 repeat `39106417923` passes on EPYC 7763: 46 binaries,
+full ratios 0.920/0.840, construction 0.196/0.187, query intervals unchanged.
+Further AMD64 run `39107501057` uses the immutable diagnostic tag; the Xeon
+question remains open. The original EPYC job reproduces the old slow
 sorting and verifies the joined-layout repair: old slow cases 99–108 ms versus
 14–22 ms joined, both address-bit values covered. Full-work ratios are 0.905
 tracing / 0.768 ARC; construction ratios 0.394/0.174. All 46 binaries/samples pass.
-ARM64 follow-up is still running; the separate Xeon question remains open.
+ARM64 construction is stable, with overlapping full-work ranges and a slower
+ARC median in the repeat; preserve those samples.
 Performance run
 `39104667835` passes both jobs and all 76 binary/sample checks, but does not prove
 the repair: its AMD64 host is Intel Xeon 8573C, while the original slow sorting
