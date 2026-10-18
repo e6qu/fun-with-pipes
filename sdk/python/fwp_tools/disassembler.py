@@ -17,6 +17,7 @@ import subprocess
 class Target:
     name: str
     compiler: str
+    fwp_target: str
     triple: str | None = None
     sysroot: str | None = None
 
@@ -29,11 +30,14 @@ class Disassembler:
         self.llvm_objdump = llvm_objdump
         self.timeout = timeout
 
-    def _run(self, command):
+    def _run_result(self, command):
         result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", timeout=self.timeout)
         if result.returncode:
             raise RuntimeError(f"command failed ({result.returncode}): {command!r}\n{result.stdout}{result.stderr}")
-        return result.stdout
+        return result
+
+    def _run(self, command):
+        return self._run_result(command).stdout
 
     def inspect(self, binary: str | Path):
         """Structured addresses, raw encoding spelling, C locations and assembly."""
@@ -46,13 +50,14 @@ class Disassembler:
         Generated objects contain the emitted C translation unit. External float,
         TLS and other linked libraries are not folded into this object's listing;
         inspect a fully linked executable separately to inspect those components.
-        Target.triple selects Clang's --target; a cross-GCC executable instead
+        Target.fwp_target selects fwp's C generation target (native or a supported
+        Linux triple). Target.triple selects Clang's --target; a cross-GCC executable instead
         selects its target itself and should leave triple unset.
         """
         if not targets or not levels or len(set(levels)) != len(levels):
             raise ValueError("choose at least one target and distinct optimization levels")
-        if any(level not in {"O0", "O1", "O2", "O3"} for level in levels):
-            raise ValueError("optimization levels are O0, O1, O2 or O3")
+        if any(level not in {"O0", "O1", "O2", "O3", "Os", "Oz", "Og"} for level in levels):
+            raise ValueError("optimization levels are O0, O1, O2, O3, Os, Oz or Og")
         if len({target.name for target in targets}) != len(targets):
             raise ValueError("target names must be distinct")
         if any(not re.fullmatch(r"[A-Za-z0-9_-]+", target.name) for target in targets):
@@ -60,13 +65,17 @@ class Disassembler:
         source = Path(source).resolve()
         directory = Path(directory).resolve()
         directory.mkdir(parents=True, exist_ok=False)
-        generated = directory / "generated.c"
-        self._run([self.fwp, "build", "--emit-c", str(source), "-o", str(generated)])
-        c_source = generated.read_text()
-        report = {"source": str(source), "source_text": source.read_text(), "generated_c": c_source,
-                  "c_sha256": hashlib.sha256(generated.read_bytes()).hexdigest(),
-                  "executed": False, "kind": "relocatable objects", "variants": []}
+        report = {"source": str(source), "source_text": source.read_text(),
+                  "executed": False, "kind": "relocatable objects", "targets": [], "variants": []}
         for target in targets:
+            generated = directory / f"{target.name}.c"
+            emit_command = [self.fwp, "build", "--emit-c", "--target", target.fwp_target,
+                            str(source), "-o", str(generated)]
+            emitted = self._run_result(emit_command)
+            report["targets"].append({"name": target.name, "fwp_target": target.fwp_target,
+                "generated_c": generated.read_text(), "c_file": str(generated),
+                "c_sha256": hashlib.sha256(generated.read_bytes()).hexdigest(),
+                "emit_command": emit_command, "emit_stdout": emitted.stdout, "emit_stderr": emitted.stderr})
             version = self._run([target.compiler, "--version"])
             for level in levels:
                 binary = directory / f"{target.name}-{level}.o"
@@ -76,10 +85,11 @@ class Disassembler:
                 if target.sysroot:
                     command += ["--sysroot=" + target.sysroot]
                 command += [str(generated), "-o", str(binary)]
-                self._run(command)
+                compiled = self._run_result(command)
                 listing = self.inspect(binary)
                 report["variants"].append({"target": target.name, "triple": target.triple,
                                            "optimization": level, "compiler_version": version,
+                                           "compiler_stdout": compiled.stdout, "compiler_stderr": compiled.stderr,
                                            "command": command, "binary_sha256": hashlib.sha256(binary.read_bytes()).hexdigest(),
                                            **listing})
                 (directory / "report.json").write_text(json.dumps(report, indent=2) + "\n")

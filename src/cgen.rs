@@ -2731,6 +2731,7 @@ fn unpack_loop_state(prog: &Program, f: &Func) -> Option<Func> {
         let one = |e: &Expr| rewrite(e, width);
         let many = |es: &[Expr]| es.iter().map(one).collect::<Option<Vec<_>>>();
         Some(match e {
+            Expr::Trace(point, body) => Expr::Trace(point.clone(), Box::new(one(body)?)),
             Expr::Field(base, index) if matches!(&**base, Expr::Local(0)) => {
                 if *index >= width {
                     return None;
@@ -3075,7 +3076,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.end_resource_region(frame);
                 result
             }
-            Expr::Trace(_, body) => self.expr(body),
+            Expr::Trace(_, body) => self.expr_fields(body, n),
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
                 self.count(e, *l);
                 self.expr_fields(b, n)
@@ -5548,6 +5549,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     self.expr(b)
                 }
             },
+            Expr::Trace(_, body) => self.expr(body),
             Expr::ResourceRegion {
                 parameters,
                 bindings,

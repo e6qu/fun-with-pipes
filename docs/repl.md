@@ -104,3 +104,8 @@ message prints the history path. Use `--history PATH` to choose it or
 `%LOCALAPPDATA%/fwp/repl-history` on Windows. History is source text, not restored
 variables. Piped input uses the same session engine without prompts, terminal
 escapes or a history file; this mode also works in the WASI compiler.
+
+Program standard input is unavailable in JSON/notebook sessions because that
+stream carries control commands. Use an explicit file for input data. Attempts
+to read standard input, including during macro evaluation, report an error and
+leave the session available for the next cell.

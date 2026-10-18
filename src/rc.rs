@@ -675,7 +675,7 @@ impl Pass<'_> {
                 body: Box::new(self.conv_typed(body, owned, borrowed, expected)),
             },
             Expr::Trace(span, body) => Expr::Trace(
-                *span,
+                span.clone(),
                 Box::new(self.conv_typed(body, owned, borrowed, expected)),
             ),
             Expr::Dup(..) | Expr::Drop(..) | Expr::BorrowGlobal(..) => {

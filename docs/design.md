@@ -6,7 +6,8 @@ job is to preserve a program's results, external actions and failures while
 removing unnecessary work. Fast execution is a goal supported by specific
 [measurements](benchmarks.md), not a guarantee for every program.
 
-The compiler is written in Rust without third-party Rust crates. Native programs
+The compiler is written in Rust; terminal editing and interrupt handling use
+Rustyline and ctrlc. Native programs
 are generated as C and compiled by the system toolchain. Shared software libraries
 supply some floating-point operations; see [formats](float-formats.md). The
 interpreter runs the compiler's internal program representation directly.
@@ -59,8 +60,9 @@ and `uncurry` explicitly convert between these shapes. Type inference does not
 silently convert them. Native calls may combine successive applications and
 eliminate temporary closures or tuples while preserving evaluation and effects.
 
-Arithmetic has fixed precedence: calls, unary negation, `* / %`, `+ -`, then
-pipes, from tightest to loosest. Binary arithmetic associates left to right;
+Operators have fixed precedence: calls, unary negation, `* / %`, `+ -`,
+comparisons (`== != < <= > >=`), then pipes, from tightest to loosest.
+Comparisons do not chain without parentheses. Binary arithmetic associates left to right;
 parentheses override grouping. Operators use the existing standard arithmetic
 traits, with operands evaluated left to right. Their syntax tree retains notation
 for formatting while inference and specialization handle ordinary applications.

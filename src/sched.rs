@@ -791,6 +791,7 @@ impl<'p> Interp<'p> {
         }
         let child = Interp {
             prog: self.prog,
+            control_stdin: self.control_stdin,
             debugger: self.debugger.clone(),
             cafs: self.cafs.clone(),
             state: Vec::new(),

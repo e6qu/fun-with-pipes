@@ -166,6 +166,7 @@ fn multiline_and_scripted_terminal_commands() {
         "value =",
         "f = match",
         "[1,",
+        "assert!(True",
         "(2 + 3",
         "f =\n    add 1",
     ] {
@@ -174,6 +175,7 @@ fn multiline_and_scripted_terminal_commands() {
     for input in [
         "2 + 3",
         "[1, 2]",
+        "assert!(True)",
         "f =\n    add 1\n",
         "[)",
         "\"[\"",

@@ -70,11 +70,18 @@ pub fn parse(text: &str) -> Vec<Json> {
             .and_then(|s| s.strip_suffix(':'))
         {
             section = name.to_string();
+            function.clear();
+            source_file.clear();
+            source_line = None;
+            source_text.clear();
             continue;
         }
         if let Some((_, name)) = line.split_once(" <") {
             if let Some(name) = name.strip_suffix(">:") {
                 function = name.to_string();
+                source_file.clear();
+                source_line = None;
+                source_text.clear();
                 continue;
             }
         }

@@ -36,13 +36,14 @@ not execution on the cross target. Log audit found notebook subprocess/pipe
 ResourceWarnings despite success; cleanup is repaired locally and a regression
 now checks reaping/closed streams.
 
-Uncommitted changes add debugger-only source markers and typed expression-result
-events, source-line breakpoints, SDK cleanup fixes and an actual Chromium notebook
-check with desktop/mobile screenshots. These source-marker walkers are not yet
-compiled. Next: publish a focused checkpoint; audit all compiler diagnostics and
-fix every traversal/test issue. Then complete notebook input/interrupt semantics,
-UI/debugger/disassembly integration as appropriate, docs/tutorials and native
-platform coverage. Do not call the UI/browser checks verified until they run.
+Focused checkpoint `ec02ea2b`, run `39127101809`, failed to compile: three C
+backend source-marker cases and one borrowed marker clone were wrong. All four
+are repaired together. The failed build prevented Rust, SDK and browser execution;
+those dependent failures are not passing checks. This repair also isolates JSON
+and debugger control input from runtime/compile-time reads, fixes multiline macro
+entry, and emits target-specific C in SDK comparisons. Compiler warnings remain
+in reports. Guarded `cargo fmt --all` passed (1.41 s); full compilation and real
+browser verification remain next on the focused runner.
 
 The notebook uses the explicitly installed Python package: `fwp notebook` launches
 it, and `fwp repl --json` supplies the checked session. Runtime stdout/stderr are

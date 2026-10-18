@@ -30,9 +30,24 @@ fn trap<T>(msg: impl Into<String>) -> R<T> {
 }
 
 thread_local! {
+    static CONTROL_STDIN: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
     /// The lowest stack address calls may reach on this thread (0: no
     /// limit); see [`set_stack_limit`].
     static STACK_LIMIT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+/// Keep protocol commands out of runtime and compile-time program input.
+/// New interpreters inherit this setting; spawned tasks copy it explicitly.
+pub(crate) struct ControlStdin(bool);
+impl ControlStdin {
+    pub(crate) fn reserve() -> Self {
+        Self(CONTROL_STDIN.with(|flag| flag.replace(true)))
+    }
+}
+impl Drop for ControlStdin {
+    fn drop(&mut self) {
+        CONTROL_STDIN.with(|flag| flag.set(self.0));
+    }
 }
 
 /// The current stack position, approximately.
@@ -65,6 +80,7 @@ pub(crate) fn set_raw_stack_limit(limit: usize) {
 
 pub struct Interp<'p> {
     pub prog: &'p Program,
+    pub(crate) control_stdin: bool,
     pub(crate) debugger: Option<crate::debugger::Shared>,
     /// Values of argument-less functions, shared by all tasks.
     pub(crate) cafs: Rc<RefCell<Vec<Option<Value>>>>,
@@ -103,6 +119,7 @@ impl<'p> Interp<'p> {
         let root_err: *mut (dyn Write + 'p) = &mut *err;
         Interp {
             prog,
+            control_stdin: CONTROL_STDIN.with(|flag| flag.get()),
             debugger: None,
             cafs: Rc::new(RefCell::new(vec![None; prog.funcs.len()])),
             state: Vec::new(),
@@ -436,6 +453,14 @@ impl<'p> Interp<'p> {
             if sym == "term.read-secret" {
                 return trap("secret terminal input is unavailable in debugger sessions; pass program data through --input FILE");
             }
+        }
+        if self.control_stdin
+            && matches!(
+                sym,
+                "read-line" | "read-all" | "read-lines" | "term.read-secret"
+            )
+        {
+            return trap("standard input carries session commands; read program data from an explicit file instead");
         }
         let (params, result) = self.sig(id);
         match sym {

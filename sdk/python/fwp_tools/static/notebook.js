@@ -107,7 +107,10 @@ async function run(cells) {
 function showError(message) { $('#error-text').textContent = message; $('#error').showModal(); }
 $('#close-error').onclick = () => $('#error').close();
 $('#run-all').onclick = () => run(notebook.cells.filter(c => c.kind === 'code').map(c => c.id));
-$('#stop').onclick = async () => { stopped = true; await api('/interrupt', {}); markEdited(); };
+$('#stop').onclick = async () => {
+  try { await api('/interrupt', {}); stopped = true; markEdited(); $('#status').textContent = 'Stopped · run a cell to restart'; }
+  catch (error) { showError(error.message); }
+};
 $('#title').oninput = event => { notebook.title = event.target.value; };
 $('#add-code').onclick = () => add('code'); $('#add-markdown').onclick = () => add('markdown');
 function add(kind) { const cell = newCell(kind); notebook.cells.push(cell); markEdited(); render(); const card = document.getElementById(cell.id); if (kind === 'markdown') $('.cell-toolbar button', card).click(); $('textarea', card).focus(); }

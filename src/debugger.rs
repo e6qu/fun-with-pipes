@@ -581,6 +581,7 @@ pub fn run(args: &[String]) -> i32 {
         eprintln!("fwp debug: expected one source file");
         return 2;
     }
+    let _control_input = crate::interp::ControlStdin::reserve();
     let checked = match crate::driver::check_file(std::path::Path::new(paths[0])) {
         Ok(c) => c,
         Err(e) => {

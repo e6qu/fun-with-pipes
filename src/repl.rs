@@ -465,7 +465,7 @@ pub fn incomplete(text: &str) -> bool {
     let mut open = Vec::new();
     for token in &tokens {
         match token.tok {
-            Tok::Sym(Sym::LParen) => open.push(Sym::RParen),
+            Tok::Sym(Sym::LParen) | Tok::MacroCall(_) => open.push(Sym::RParen),
             Tok::Sym(Sym::LBracket) => open.push(Sym::RBracket),
             Tok::Sym(Sym::LBrace) => open.push(Sym::RBrace),
             Tok::Sym(s @ (Sym::RParen | Sym::RBracket | Sym::RBrace)) if open.pop() != Some(s) => {
@@ -647,6 +647,7 @@ pub fn run_json(
     mut output: impl Write,
     directory: PathBuf,
 ) -> Result<(), String> {
+    let _control_input = crate::interp::ControlStdin::reserve();
     let mut session = Session::new(directory.clone())?;
     loop {
         let mut line = String::new();
