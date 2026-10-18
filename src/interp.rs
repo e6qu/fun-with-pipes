@@ -263,6 +263,11 @@ impl<'p> Interp<'p> {
                 }
                 Ok(Value::tuple(fs))
             }
+            Expr::BorrowGlobal(l, global, body) => {
+                let value = self.func_value(*global)?;
+                locals[*l as usize] = value;
+                self.eval(body, locals)
+            }
             Expr::Let(l, v, body) => {
                 let x = self.eval(v, locals)?;
                 locals[*l as usize] = x;

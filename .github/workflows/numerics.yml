@@ -175,16 +175,20 @@ jobs:
           - {runner: ubuntu-latest, sample: 4}
           - {runner: ubuntu-24.04-arm, sample: 1}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 10
+    timeout-minutes: 25
     env:
       CC: cc
+      CARGO_BUILD_JOBS: 2
       GH_TOKEN: ${{ github.token }}
       EVIDENCE_RUN: ${{ inputs.evidence_run }}
       EVIDENCE_HEAD: ${{ inputs.source_revision }}
     steps:
       - uses: actions/checkout@v7
-      - name: Measure scoped cached-map borrowing without changing the compiler
-        run: python3 scripts/measure-map-borrow.py --run "$EVIDENCE_RUN" --source "$EVIDENCE_HEAD" --host "${{ matrix.runner }}" --output map-borrow-evidence
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build and verify the measured compiler
+        run: cargo test --no-fail-fast --lib rc::tests::cached_map_borrow && cargo test --no-fail-fast --test cached_map_borrows --test caf_ownership --test inline_caf_ownership
+      - name: Measure compiler-proved cached-map borrowing against saved owned reads
+        run: python3 scripts/measure-map-borrow.py --compiler target/debug/fwp --run "$EVIDENCE_RUN" --source "$EVIDENCE_HEAD" --host "${{ matrix.runner }}" --output map-borrow-evidence
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -255,10 +259,10 @@ jobs:
           clang --version > collection-build-evidence/clang.txt
           printf '%s\n' 'OS=${{ runner.os }}' 'architecture=${{ runner.arch }}' 'runner=${{ matrix.runner }}' 'ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off' 'tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1' '8 generated builders; every allocation/retain failure and callback exit; independent aliases; missing-cleanup controls' 'Timing compares fused and ordinary fwp only; no C/Rust parity claim' > collection-build-evidence/settings.txt
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --lib --bin fwp --test collection_construction -- -D warnings
+      - run: cargo clippy --lib --bin fwp --test collection_construction --test cached_map_borrows -- -D warnings
       - name: Collection semantics, failures and cancellation
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test collection_construction --test map_set_ownership --test mapped_array_construction --test numeric_array_fusion -- --nocapture
+        run: cargo test --no-fail-fast --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test collection_construction --test map_set_ownership --test mapped_array_construction --test numeric_array_fusion -- --nocapture
       - name: Use the compiler already built by the integration tests
         run: cargo build --bin fwp
       - name: Repeated construction costs and generated code

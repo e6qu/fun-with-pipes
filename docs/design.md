@@ -304,9 +304,10 @@ The [six-host measurements](benchmarks.md#building-numeric-maps-and-sets-without
 verify construction combining, fewer set buffers and direct known-set calls in
 separate runs, with actual machine-code inspection. The [handoff](development-state.md)
 tracks full production acceptance and the joined-buffer timing comparison.
-The joined layout passes focused local ownership and overflow checks; native
-platform and performance measurements remain pending. Reduced allocation counts alone do not establish a timing improvement or parity
-with C/Rust.
+The joined layout passes the six-host ownership, overflow and allocation checks.
+Larger measurements expose CPU-dependent timing, including a remaining Xeon
+regression. Reduced allocation counts alone do not establish a timing improvement
+or parity with C/Rust.
 
 ### Numeric pairs immediately mapped
 
@@ -443,6 +444,21 @@ function call free. Static storage and startup stores also have costs. The
 platform acceptance.
 
 Shared top-level computed values have cached owners, released during teardown.
+For selected numeric map reads, the ownership pass can borrow that cached owner
+instead of acquiring and releasing another reference. It checks the span from
+the read through its last use: only numeric key calculations and map lookups or
+size reads may intervene. Unknown calls, suspension, escaping the map and cleanup
+that can invoke other code prevent this proof. The ownership verifier checks the
+same condition again after releases have been inserted.
+
+Initialization still occurs at the original first use; a loop that runs zero
+times does not initialize a value used only inside it. Initialization can fail
+or yield before the borrow begins. Owned and borrowed reads share that setup,
+including releasing a previous cache owner after reentrant initialization.
+Values that escape the proved span still acquire ordinary owned references.
+This compiler change has focused local checks; the [handoff](development-state.md)
+tracks its outstanding native and full-size performance evidence.
+
 A type descriptor is runtime metadata used for operations such as equality,
 printing and decoding.
 

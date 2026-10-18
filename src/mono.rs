@@ -1516,6 +1516,10 @@ fn funcs_in(e: &Expr, out: &mut Vec<FuncId>) {
             funcs_in(b, out)
         }
         Expr::Func(f) => out.push(*f),
+        Expr::BorrowGlobal(_, global, body) => {
+            out.push(*global);
+            funcs_in(body, out);
+        }
         Expr::Call(f, a) => {
             out.push(*f);
             a.iter().for_each(|x| funcs_in(x, out));

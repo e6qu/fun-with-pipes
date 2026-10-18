@@ -3083,6 +3083,28 @@ three use EPYC 7763 and one EPYC 9V74. Full-work joined/separate ratios range
 0.761–0.929 in tracing and 0.770–0.928 in ARC. They confirm construction gains
 on these hosts, without resolving the Xeon result.
 
+The [second four-host replay](measurements/large-map-replay-two-2026-10-18.json)
+includes Xeon 8573C again. Ordinary full-work tracing is 1.0436 times the separate
+layout despite construction taking 0.8997 times as long. Instrumented full work
+instead has ratio 0.9815. This reproduces the regression and shows sensitivity to
+instrumentation or executable layout; it does not identify the hardware cause.
+
+A [five-host borrow prototype](measurements/large-map-borrow-prototype-2026-10-18.json)
+then removes two million query retain/release pairs from this program's generated
+C. Its table is already initialized and owned before the numeric query loop.
+Joined-layout medians fall roughly 1–4%, with unchanged allocations and live
+storage. Both layouts and every slower sample remain in the report. The Intel
+host is Xeon 6973P-C, not 8573C; combined joined/borrowed tracing still takes
+1.014 times the old separate/retained program. This hand-edited experiment does
+not establish compiler correctness or fix the earlier Xeon regression.
+
+The compiler candidate now proves selected cached-map read lifetimes itself.
+`map-borrow` measures its actual generated C against the saved older compiler's
+output, rebuilding both with the same native compiler on each host. It checks
+identical fwp inputs, allocation counts, two million fewer retains and zero final
+charged storage, and retains 24 balanced samples and actual binaries. Those
+results remain pending; the prototype is not substituted for them.
+
 For the complete workload, the same-run fwp/C ratios are 0.918 tracing and 0.954
 ARC on EPYC, and 0.992/0.962 on ARM64. Against Rust, the ratios are 1.110/1.154
 on EPYC and 1.073/1.041 on ARM64: fwp still takes 4–15% more time than Rust in
@@ -3111,6 +3133,7 @@ The failed run remains recorded; the replacement does not relabel its result.
 
 Two other candidates were rejected: moving integer equality outside the search
 is 8–9% slower on ARM64, and separating cached initialization shows no clear
-benefit while increasing code size. Neither changes production code. The large
-map still performs 2,000,001 retains; reducing that cost needs its own lifetime
-proof and measurement.
+benefit while increasing code size. Neither was adopted on that evidence alone.
+The owned-read compiler performs 2,000,001 retains. The current borrow candidate
+shares initialization between owned and borrowed reads as part of its lifetime
+proof; its complete performance and code-size costs require fresh measurements.

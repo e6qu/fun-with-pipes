@@ -107,8 +107,13 @@ its full execution and artifact checks remain part of that production gate.
 
 The larger maintained map benchmark exposed variable AMD64 sorting time. The
 current repair joins related key/value buffers under one owner, with explicit
-size checks and no arbitrary padding. Local ownership/failure tests pass;
-six-host correctness and same-run old/new layout measurements remain required.
+size checks and no arbitrary padding. Six-host correctness passes; repeated
+measurements confirm the construction improvement and a remaining Xeon query
+slowdown. The next candidate proves short numeric cached-map borrows, removing
+repeated reference-count work while preserving first-use initialization and
+cleanup. Focused local checks pass; full native tests and actual compiler timing
+remain required. A hand-edited benchmark prototype is evidence for investigating
+this change, not acceptance of it.
 Do not merge based on allocation savings while the timing issue is unresolved.
 
 All seven areas above stay open. Each delivery must identify its workload,

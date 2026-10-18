@@ -87,6 +87,14 @@ checks and a control restoring that mistaken early return cover this boundary.
 
 ## Ownership boundaries
 
+A cached top-level value has one owner kept until program teardown. Selected
+numeric map lookups now borrow that owner through a compiler-checked span that
+cannot suspend or invoke unknown code. This removes repeated retain/release
+operations without changing when initialization happens. Escaping map values
+still need an owned reference. The [design](design.md) explains the proof and
+reentrant initialization; [current validation](development-state.md) distinguishes
+focused local checks from pending native platform and timing evidence.
+
 A boundary is a call where ownership crosses between compiled code and a runtime,
 foreign function or remote service. Every contract distinguishes:
 
