@@ -50,7 +50,22 @@ jobs:
           PYTHONPATH: sdk/python
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
           FWP_CROSS_CC: aarch64-linux-gnu-gcc
-        run: python3 -m unittest discover -s sdk/python/tests -v
+        run: python3 -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v
+      - if: ${{ !cancelled() }}
+        name: Real notebook browser
+        env:
+          PYTHONPATH: sdk/python
+          FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
+        run: |
+          python3 -m pip install -r sdk/python/browser/requirements.txt
+          python3 -m playwright install --with-deps chromium
+          python3 sdk/python/browser/check_notebook.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: notebook-browser
+          path: notebook-evidence/
+          if-no-files-found: error
   artifact_paths:
     if: inputs.suite == 'artifact-paths'
     strategy:

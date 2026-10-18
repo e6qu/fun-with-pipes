@@ -8,35 +8,62 @@ import json
 from pathlib import Path
 import subprocess
 import threading
+import tempfile
 
 
 class Kernel:
     def __init__(self, fwp, directory):
         self.fwp, self.directory = fwp, directory
         self.process = None
+        self.diagnostics = None
+        self.process_lock = threading.RLock()
         self.lock = threading.Lock()
         self.fingerprint = None
         self.signatures = ""
 
     def interrupt(self):
-        process = self.process
-        if process is not None and process.poll() is None:
-            process.kill()
-        self.fingerprint = None
+        with self.process_lock:
+            process, diagnostics = self.process, self.diagnostics
+            self.process = self.diagnostics = None
+            self.fingerprint = None
+        if process is not None:
+            if process.poll() is None:
+                process.kill()
+            process.wait()
+            for stream in [process.stdin, process.stdout, diagnostics]:
+                if stream is not None:
+                    stream.close()
 
     def _request(self, command, source="", *, allow_error=False):
-        if self.process is None or self.process.poll() is not None:
-            self.process = subprocess.Popen([self.fwp, "repl", "--json"], cwd=self.directory,
-                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                text=True, encoding="utf-8", bufsize=1)
-        self.process.stdin.write(json.dumps({"command": command, "source": source}) + "\n")
-        self.process.stdin.flush()
-        line = self.process.stdout.readline()
+        with self.process_lock:
+            if self.process is not None and self.process.poll() is not None:
+                self.interrupt()
+            if self.process is None:
+                self.diagnostics = tempfile.TemporaryFile(mode="w+t", encoding="utf-8")
+                try:
+                    self.process = subprocess.Popen([self.fwp, "repl", "--json"], cwd=self.directory,
+                        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self.diagnostics,
+                        text=True, encoding="utf-8", bufsize=1)
+                except BaseException:
+                    self.diagnostics.close()
+                    self.diagnostics = None
+                    raise
+                self.fingerprint = None
+            process, diagnostics = self.process, self.diagnostics
+        process.stdin.write(json.dumps({"command": command, "source": source}) + "\n")
+        process.stdin.flush()
+        line = process.stdout.readline()
         if not line:
             raise RuntimeError("The notebook session stopped. Run a cell to start a new session.")
         reply = json.loads(line)
+        diagnostics.seek(0)
+        compile_output = diagnostics.read()
+        diagnostics.seek(0)
+        diagnostics.truncate()
+        if compile_output:
+            reply["compile_output"] = compile_output
         if "error" in reply and not allow_error:
-            raise RuntimeError(reply["error"])
+            raise RuntimeError(reply["error"] + ("\nCompile-time output:\n" + compile_output if compile_output else ""))
         return reply
 
     def run(self, document, selected):

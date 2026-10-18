@@ -278,9 +278,10 @@ impl Proof<'_> {
                 }
                 result
             }
-            Expr::Dup(_, body) | Expr::Drop(_, body) | Expr::ResourceRegion { body, .. } => {
-                self.expr(body, locals, scoped)?
-            }
+            Expr::Trace(_, body)
+            | Expr::Dup(_, body)
+            | Expr::Drop(_, body)
+            | Expr::ResourceRegion { body, .. } => self.expr(body, locals, scoped)?,
         };
         Ok(result)
     }

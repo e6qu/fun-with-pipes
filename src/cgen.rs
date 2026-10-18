@@ -476,7 +476,8 @@ struct Gen<'p> {
 fn is_local_through_counts(e: &Expr, x: Local) -> bool {
     match e {
         Expr::Local(l) => *l == x,
-        Expr::Dup(_, b)
+        Expr::Trace(_, b)
+        | Expr::Dup(_, b)
         | Expr::Drop(_, b)
         | Expr::BorrowGlobal(_, _, b)
         | Expr::ResourceRegion { body: b, .. } => is_local_through_counts(b, x),
@@ -689,6 +690,7 @@ impl Gen<'_> {
             Expr::Call(id, _) => self.abis[*id].as_ref()?.ret,
             Expr::Record(xs) if (1..=MAX_UNBOXED).contains(&xs.len()) => Some(xs.len()),
             Expr::Let(_, _, b)
+            | Expr::Trace(_, b)
             | Expr::Dup(_, b)
             | Expr::Drop(_, b)
             | Expr::ResourceRegion { body: b, .. } => self.unboxed_value(b),
@@ -712,7 +714,8 @@ impl Gen<'_> {
     ) -> Option<usize> {
         match e {
             Expr::Local(l) => known.get(l).copied(),
-            Expr::Dup(_, b)
+            Expr::Trace(_, b)
+            | Expr::Dup(_, b)
             | Expr::Drop(_, b)
             | Expr::BorrowGlobal(_, _, b)
             | Expr::ResourceRegion { body: b, .. } => self.local_record_width(b, locals, known),
@@ -759,7 +762,8 @@ impl Gen<'_> {
                 }
                 self.loop_field_unboxed(b, field, n, locals, &known)
             }
-            Expr::Dup(_, b)
+            Expr::Trace(_, b)
+            | Expr::Dup(_, b)
             | Expr::Drop(_, b)
             | Expr::BorrowGlobal(_, _, b)
             | Expr::ResourceRegion { body: b, .. } => {
@@ -890,7 +894,8 @@ fn built_return(
         Expr::Match(_, arms) => arms
             .iter()
             .all(|(_, body)| built_return(body, known, builds)),
-        Expr::Dup(_, body)
+        Expr::Trace(_, body)
+        | Expr::Dup(_, body)
         | Expr::Drop(_, body)
         | Expr::BorrowGlobal(_, _, body)
         | Expr::ResourceRegion { body, .. } => built_return(body, known, builds),
@@ -993,7 +998,8 @@ fn variant_uses(e: &Expr, l: Local, returned: bool) -> bool {
     match e {
         Expr::Local(x) => *x != l || returned,
         Expr::Const(_) | Expr::Func(_) => true,
-        Expr::Dup(_, b)
+        Expr::Trace(_, b)
+        | Expr::Dup(_, b)
         | Expr::Drop(_, b)
         | Expr::BorrowGlobal(_, _, b)
         | Expr::ResourceRegion { body: b, .. } => variant_uses(b, l, returned),
@@ -2360,7 +2366,8 @@ fn allocates(e: &Expr, n: usize) -> bool {
         Expr::SetFields(r, xs) => allocates(r, n) || xs.iter().any(|(_, x)| allocates(x, n)),
         Expr::Let(_, v, b) => allocates(v, n) || allocates(b, n),
         Expr::Match(s, arms) => allocates(s, n) || arms.iter().any(|(_, b)| allocates(b, n)),
-        Expr::Dup(_, b)
+        Expr::Trace(_, b)
+        | Expr::Dup(_, b)
         | Expr::Drop(_, b)
         | Expr::BorrowGlobal(_, _, b)
         | Expr::ResourceRegion { body: b, .. } => allocates(b, n),
@@ -2581,6 +2588,7 @@ fn hof_def(
 fn tails<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
     match e {
         Expr::Let(_, _, body)
+        | Expr::Trace(_, body)
         | Expr::Dup(_, body)
         | Expr::Drop(_, body)
         | Expr::BorrowGlobal(_, _, body)
@@ -2599,6 +2607,7 @@ fn tail_calls(e: &Expr) -> std::collections::HashSet<*const Expr> {
         match e {
             Expr::ResourceRegion { .. } => {}
             Expr::Let(_, _, body)
+            | Expr::Trace(_, body)
             | Expr::Dup(_, body)
             | Expr::Drop(_, body)
             | Expr::BorrowGlobal(_, _, body) => gather(body, out),
@@ -2634,7 +2643,8 @@ fn int64_kind(t: &MT) -> Option<bool> {
 fn state_by_fields(e: &Expr) -> bool {
     match e {
         // the state's own references: no object when it is kept by fields
-        Expr::Dup(_, b)
+        Expr::Trace(_, b)
+        | Expr::Dup(_, b)
         | Expr::Drop(_, b)
         | Expr::BorrowGlobal(_, _, b)
         | Expr::ResourceRegion { body: b, .. } => state_by_fields(b),
@@ -2795,6 +2805,7 @@ fn invariant_f64_arrays(prog: &Program, e: &Expr, locals: &[MT], arity: usize) -
             }
             Expr::Record(xs) | Expr::Construct(_, xs) => xs.iter().any(|e| reads(prog, e, local)),
             Expr::Field(e, _)
+            | Expr::Trace(_, e)
             | Expr::Dup(_, e)
             | Expr::Drop(_, e)
             | Expr::BorrowGlobal(_, _, e)
@@ -2965,7 +2976,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 return Some(n);
             }
             match e {
-                Expr::Dup(_, body)
+                Expr::Trace(_, body)
+                | Expr::Dup(_, body)
                 | Expr::Drop(_, body)
                 | Expr::BorrowGlobal(_, _, body)
                 | Expr::ResourceRegion { body, .. } => fields(fg, body, known),
@@ -3063,6 +3075,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.end_resource_region(frame);
                 result
             }
+            Expr::Trace(_, body) => self.expr(body),
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
                 self.count(e, *l);
                 self.expr_fields(b, n)
@@ -3554,7 +3567,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
     fn field_uses(&self, e: &Expr, l: Local, n: usize, returned: bool) -> bool {
         let reads = |e: &Expr| self.field_uses(e, l, n, false);
         match e {
-            Expr::Dup(_, b)
+            Expr::Trace(_, b)
+            | Expr::Dup(_, b)
             | Expr::Drop(_, b)
             | Expr::BorrowGlobal(_, _, b)
             | Expr::ResourceRegion { body: b, .. } => self.field_uses(b, l, n, returned),
@@ -3611,7 +3625,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.unboxed(value) == Some(n) && self.field_uses(body, local, n, false)
             }
             Expr::Let(_, value, body) => eligible(value) || eligible(body),
-            Expr::Dup(_, body)
+            Expr::Trace(_, body)
+            | Expr::Dup(_, body)
             | Expr::Drop(_, body)
             | Expr::BorrowGlobal(_, _, body)
             | Expr::Field(body, _)
@@ -3664,7 +3679,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     visit(fg, value, l, ty, found);
                     visit(fg, body, l, ty, found);
                 }
-                Expr::Dup(_, body)
+                Expr::Trace(_, body)
+                | Expr::Dup(_, body)
                 | Expr::Drop(_, body)
                 | Expr::BorrowGlobal(_, _, body)
                 | Expr::Field(body, _)
@@ -4186,7 +4202,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
     fn stack_alias(&self, e: &Expr) -> Option<Vec<(String, MT)>> {
         match e {
             Expr::Local(l) => self.stack_children.get(l).cloned(),
-            Expr::Dup(_, b)
+            Expr::Trace(_, b)
+            | Expr::Dup(_, b)
             | Expr::Drop(_, b)
             | Expr::Let(_, _, b)
             | Expr::BorrowGlobal(_, _, b) => self.stack_alias(b),
@@ -4921,7 +4938,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 Some((g, xs.len()))
             }
             Expr::Local(l) => self.known_callbacks.get(l).copied(),
-            Expr::Dup(_, b)
+            Expr::Trace(_, b)
+            | Expr::Dup(_, b)
             | Expr::Drop(_, b)
             | Expr::BorrowGlobal(_, _, b)
             | Expr::ResourceRegion { body: b, .. } => self.callback_origin(b),
@@ -6921,7 +6939,8 @@ impl<'p> Gen<'p> {
         // their ordinary entry until that calling convention is also proved.
         fn eligible(e: &Expr, id: FuncId) -> bool {
             match e {
-                Expr::ResourceRegion { .. }
+                Expr::Trace(..)
+                | Expr::ResourceRegion { .. }
                 | Expr::Dup(..)
                 | Expr::Drop(..)
                 | Expr::BorrowGlobal(..) => false,
@@ -9014,9 +9033,10 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
     }
     fn refs(e: &Expr, out: &mut Vec<FuncId>) {
         match e {
-            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
-                refs(b, out)
-            }
+            Expr::Trace(_, b)
+            | Expr::Dup(_, b)
+            | Expr::Drop(_, b)
+            | Expr::ResourceRegion { body: b, .. } => refs(b, out),
             Expr::BorrowGlobal(_, global, body) => {
                 out.push(*global);
                 refs(body, out);

@@ -21,12 +21,26 @@ class Tools(unittest.TestCase):
                 debugger.continue_()
                 self.assertEqual(debugger.inspect(0)["value"]["display"], "41")
                 self.assertEqual(debugger.stack()[-1]["function"], "increment")
-                debugger.trace("call", "expression", "bind", "return", "error")
+                debugger.trace("call", "expression", "value", "bind", "return", "error")
                 debugger.return_()
                 debugger.continue_()
                 self.assertTrue(debugger.finished)
             self.assertTrue(any(e["event"] == "expression" for e in events))
+            self.assertTrue(any(e["event"] == "value" for e in events))
             self.assertEqual("".join(e["text"] for e in events if e["event"] == "output"), "42\n")
+
+    def test_source_line_breakpoints_and_float_bits(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "source.fwp"
+            source.write_text("square : F64 -> F64\nsquare = fork mul id id\nmain = 3.0 | square | echo\n")
+            with Debugger(source, fwp=FWP) as debugger:
+                debugger.break_at("source.fwp:2")
+                stopped = debugger.continue_()
+                self.assertEqual(stopped["reason"]["location"]["line"], 2)
+                self.assertEqual(debugger.inspect(0)["value"]["float_bits"], "4008000000000000")
+                debugger.clear("source.fwp:2")
+                debugger.continue_()
+                self.assertTrue(debugger.finished)
 
     def test_program_input_is_separate_from_debugger_commands(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -62,7 +76,11 @@ class Tools(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "defined in two cells"):
                     kernel.run(document, ["result"])
             finally:
+                process = kernel.process
                 kernel.interrupt()
+                if process is not None:
+                    self.assertIsNotNone(process.poll())
+                    self.assertTrue(process.stdin.closed and process.stdout.closed)
 
     def test_disassembly_compares_c_and_instruction_encodings_at_four_levels(self):
         with tempfile.TemporaryDirectory() as directory:

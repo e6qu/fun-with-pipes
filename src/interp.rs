@@ -250,6 +250,18 @@ impl<'p> Interp<'p> {
                 result
             }
             // Rust's reference counts free the interpreter's values
+            Expr::Trace(point, body) => {
+                let result = self.eval(body, locals)?;
+                if let Some(debugger) = &self.debugger {
+                    debugger.borrow_mut().value(
+                        self.prog,
+                        std::sync::Arc::as_ptr(&self.task) as usize,
+                        point,
+                        &result,
+                    )?;
+                }
+                Ok(result)
+            }
             Expr::Dup(_, b) | Expr::Drop(_, b) => self.eval(b, locals),
             Expr::Local(i) => Ok(locals[*i as usize].clone()),
             Expr::Const(v) => Ok(v.clone()),

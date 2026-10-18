@@ -186,7 +186,9 @@ impl Emitter<'_> {
     fn returned_local(expression: &Expr) -> Option<u32> {
         match expression {
             Expr::Local(local) => Some(*local),
-            Expr::Dup(_, body) | Expr::Drop(_, body) => Self::returned_local(body),
+            Expr::Trace(_, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => {
+                Self::returned_local(body)
+            }
             Expr::ResourceRegion {
                 parameters,
                 bindings,
@@ -254,7 +256,9 @@ impl Emitter<'_> {
                 self.output
                     .push_str("    else fwp_trap(\"internal: no match arm applies\");\n");
             }
-            Expr::Dup(_, body) | Expr::Drop(_, body) => self.tail(body, shape, function)?,
+            Expr::Trace(_, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => {
+                self.tail(body, shape, function)?
+            }
             Expr::ResourceRegion {
                 parameters,
                 bindings,
@@ -521,7 +525,9 @@ impl Emitter<'_> {
                     .push_str("    else fwp_trap(\"internal: no match arm applies\");\n");
                 Some(result)
             }
-            Expr::Dup(_, body) | Expr::Drop(_, body) => self.expression(body, shape),
+            Expr::Trace(_, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => {
+                self.expression(body, shape)
+            }
             Expr::ResourceRegion {
                 parameters,
                 bindings,

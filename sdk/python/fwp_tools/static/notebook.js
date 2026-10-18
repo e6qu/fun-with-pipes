@@ -73,6 +73,7 @@ function render() {
     const result = results.get(cell.id);
     if (result?.reply) {
       const reply = result.reply;
+      if (reply.compile_output) output.append(make('pre', 'stdout', `Compile-time output:\n${reply.compile_output}`));
       if (reply.stdout) output.append(make('pre', 'stdout', reply.stdout));
       if (reply.stderr) output.append(make('pre', 'error', reply.stderr));
       if (reply.error) output.append(make('pre', 'error', reply.error));

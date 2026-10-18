@@ -214,6 +214,7 @@ fn cached_map_span(
     }
     fn mentioned(e: &Expr, out: &mut Set) {
         match e {
+            Expr::Trace(_, body) => mentioned(body, out),
             Expr::Local(local) => {
                 out.insert(*local);
             }
@@ -288,7 +289,9 @@ fn cached_map_span(
             Expr::Local(_) | Expr::Const(_) => true,
             Expr::Field(base, _) => calculation(funcs, base),
             Expr::Let(_, value, body) => calculation(funcs, value) && calculation(funcs, body),
-            Expr::Dup(_, body) | Expr::Drop(_, body) => calculation(funcs, body),
+            Expr::Trace(_, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => {
+                calculation(funcs, body)
+            }
             Expr::Call(id, args) => {
                 let f = &funcs[*id];
                 let (parameters, result) = f.ty.params(args.len());
@@ -671,6 +674,10 @@ impl Pass<'_> {
                 bindings: bindings.clone(),
                 body: Box::new(self.conv_typed(body, owned, borrowed, expected)),
             },
+            Expr::Trace(span, body) => Expr::Trace(
+                *span,
+                Box::new(self.conv_typed(body, owned, borrowed, expected)),
+            ),
             Expr::Dup(..) | Expr::Drop(..) | Expr::BorrowGlobal(..) => {
                 unreachable!("reference counting runs once")
             }
@@ -969,6 +976,7 @@ fn free_in(e: &Expr, bound: &mut Set, out: &mut Set) {
             out.extend(parameters.iter().filter(|l| !bound.contains(l)).copied());
             free_in(body, bound, out);
         }
+        Expr::Trace(_, body) => free_in(body, bound, out),
         Expr::Dup(l, b) | Expr::Drop(l, b) => {
             if !bound.contains(l) {
                 out.insert(*l);
@@ -1307,6 +1315,7 @@ impl Checker<'_> {
                 self.record_call(e, before, st);
                 self.expr(body, st, consume)
             }
+            Expr::Trace(_, body) => self.expr(body, st, consume),
             Expr::Dup(l, b) => {
                 // A retain can allocate wide-count metadata. Protect existing
                 // references before it runs; the new reference does not exist yet.
@@ -1873,7 +1882,9 @@ mod tests {
             match e {
                 Expr::Call(1, _) => Some(e),
                 Expr::Let(_, value, body) => borrowed_call(value).or_else(|| borrowed_call(body)),
-                Expr::Dup(_, body) | Expr::Drop(_, body) => borrowed_call(body),
+                Expr::Trace(_, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => {
+                    borrowed_call(body)
+                }
                 _ => None,
             }
         }

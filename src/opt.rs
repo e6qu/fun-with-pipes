@@ -18,7 +18,8 @@ const ROUNDS: usize = 4;
 
 fn size(e: &Expr) -> usize {
     match e {
-        Expr::Dup(_, b)
+        Expr::Trace(_, b)
+        | Expr::Dup(_, b)
         | Expr::Drop(_, b)
         | Expr::BorrowGlobal(_, _, b)
         | Expr::ResourceRegion { body: b, .. } => 1 + size(b),
@@ -36,7 +37,10 @@ fn size(e: &Expr) -> usize {
 
 fn calls(e: &Expr, id: FuncId) -> bool {
     match e {
-        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => calls(b, id),
+        Expr::Trace(_, b)
+        | Expr::Dup(_, b)
+        | Expr::Drop(_, b)
+        | Expr::ResourceRegion { body: b, .. } => calls(b, id),
         Expr::BorrowGlobal(_, global, b) => *global == id || calls(b, id),
         Expr::Local(_) | Expr::Const(_) => false,
         Expr::Func(f) => *f == id,
@@ -57,6 +61,7 @@ pub(crate) fn uses(e: &Expr, l: Local) -> usize {
             bindings,
             body,
         } => (parameters.contains(&l) || bindings.contains(&l)) as usize + uses(body, l),
+        Expr::Trace(_, b) => uses(b, l),
         Expr::Dup(x, b) | Expr::Drop(x, b) => (*x == l) as usize + uses(b, l),
         Expr::Local(x) => (*x == l) as usize,
         Expr::Const(_) | Expr::Func(_) => 0,
@@ -175,6 +180,7 @@ impl<'p> Opt<'p> {
                     body,
                 }
             }
+            Expr::Trace(span, body) => Expr::Trace(span, Box::new(self.expr(*body, depth))),
             Expr::Dup(..) | Expr::Drop(..) | Expr::BorrowGlobal(..) => e,
             Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => e,
             Expr::Call(id, args) => {
@@ -621,7 +627,9 @@ pub(crate) fn only_fields(e: &Expr, l: Local) -> bool {
             bindings,
             body,
         } => !parameters.contains(&l) && !bindings.contains(&l) && only_fields(body, l),
-        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::BorrowGlobal(_, _, b) => only_fields(b, l),
+        Expr::Trace(_, b) | Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::BorrowGlobal(_, _, b) => {
+            only_fields(b, l)
+        }
         Expr::Local(x) => *x != l,
         Expr::Field(r, _) if matches!(**r, Expr::Local(x) if x == l) => true,
         Expr::Const(_) | Expr::Func(_) => true,
@@ -649,6 +657,7 @@ fn replace_fields(e: &Expr, l: Local, ls: &[Local]) -> Expr {
             bindings: bindings.clone(),
             body: Box::new(r(body)),
         },
+        Expr::Trace(span, b) => Expr::Trace(span.clone(), Box::new(r(b))),
         Expr::Dup(x, b) => Expr::Dup(*x, Box::new(r(b))),
         Expr::Drop(x, b) => Expr::Drop(*x, Box::new(r(b))),
         Expr::BorrowGlobal(x, global, b) => Expr::BorrowGlobal(*x, *global, Box::new(r(b))),
@@ -703,6 +712,7 @@ fn substitute(e: &Expr, s: &[Option<Expr>]) -> Expr {
             bindings: bindings.iter().map(local).collect(),
             body: Box::new(substitute(body, s)),
         },
+        Expr::Trace(span, b) => Expr::Trace(span.clone(), Box::new(substitute(b, s))),
         Expr::Dup(x, b) => Expr::Dup(local(x), Box::new(substitute(b, s))),
         Expr::Drop(x, b) => Expr::Drop(local(x), Box::new(substitute(b, s))),
         Expr::BorrowGlobal(x, global, b) => {
@@ -822,6 +832,7 @@ fn free_locals(e: &Expr, out: &mut Vec<Local>) {
             }
             free_locals(body, out);
         }
+        Expr::Trace(_, b) => free_locals(b, out),
         Expr::Dup(l, b) | Expr::Drop(l, b) => {
             if !out.contains(l) {
                 out.push(*l)
@@ -968,7 +979,8 @@ fn rewrite_hofs(
 ) {
     // children first
     match e {
-        Expr::Dup(_, b)
+        Expr::Trace(_, b)
+        | Expr::Dup(_, b)
         | Expr::Drop(_, b)
         | Expr::BorrowGlobal(_, _, b)
         | Expr::ResourceRegion { body: b, .. } => {

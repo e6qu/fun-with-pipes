@@ -123,7 +123,15 @@ pub type FuncId = usize;
 pub type Local = u32;
 
 #[derive(Clone, Debug)]
+pub struct SourcePoint {
+    pub span: crate::diag::Span,
+    pub ty: MT,
+}
+
+#[derive(Clone, Debug)]
 pub enum Expr {
+    /// Source stepping point, inserted only for the unoptimized debugger.
+    Trace(SourcePoint, Box<Expr>),
     Local(Local),
     Const(Value),
     /// A function as a value: a partial application with no arguments, or
@@ -312,7 +320,10 @@ pub fn type_of<'a>(
 ) -> Option<MT> {
     let type_of = |e| type_of(func, shapes, locals, e);
     match e {
-        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => type_of(b),
+        Expr::Trace(_, b)
+        | Expr::Dup(_, b)
+        | Expr::Drop(_, b)
+        | Expr::ResourceRegion { body: b, .. } => type_of(b),
         Expr::Local(l) => locals.get(*l as usize).cloned(),
         Expr::Func(id) => Some(func(*id).clone()),
         Expr::Call(id, a) => Some(func(*id).params(a.len()).1.clone()),
@@ -448,6 +459,7 @@ fn check_expr<'a>(
             }
             check_expr(func, shapes, locals, body)
         }
+        Expr::Trace(_, body) => check_expr(func, shapes, locals, body),
         Expr::Dup(l, b) | Expr::Drop(l, b) => {
             has(*l)?;
             check_expr(func, shapes, locals, b)

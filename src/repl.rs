@@ -434,6 +434,7 @@ fn remap_expr(expr: &mut Expr, ids: &[FuncId]) {
             remap_expr(body, ids);
         }
         Expr::Field(value, _)
+        | Expr::Trace(_, value)
         | Expr::Dup(_, value)
         | Expr::Drop(_, value)
         | Expr::ResourceRegion { body: value, .. } => remap_expr(value, ids),

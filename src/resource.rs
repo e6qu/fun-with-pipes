@@ -134,7 +134,8 @@ pub(crate) fn anchored(expr: &Expr, local: Local) -> bool {
             bindings,
             body,
         } => parameters.contains(&local) || bindings.contains(&local) || visit(body),
-        Expr::Dup(_, body)
+        Expr::Trace(_, body)
+        | Expr::Dup(_, body)
         | Expr::Drop(_, body)
         | Expr::BorrowGlobal(_, _, body)
         | Expr::Field(body, _) => visit(body),

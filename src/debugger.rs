@@ -14,6 +14,7 @@ pub type Shared = std::rc::Rc<std::cell::RefCell<Debugger>>;
 struct Frame {
     function: FuncId,
     locals: Json,
+    location: Option<crate::diag::Span>,
 }
 
 enum Motion {
@@ -74,6 +75,7 @@ impl Debugger {
                     index(b, sites);
                 }
                 Expr::Field(a, _)
+                | Expr::Trace(_, a)
                 | Expr::Dup(_, a)
                 | Expr::Drop(_, a)
                 | Expr::BorrowGlobal(_, _, a)
@@ -138,7 +140,11 @@ impl Debugger {
     }
 
     fn location(&self, id: FuncId) -> Json {
-        let Some(span) = self.spans.get(&id) else {
+        self.source_location(self.spans.get(&id).copied())
+    }
+
+    fn source_location(&self, span: Option<crate::diag::Span>) -> Json {
+        let Some(span) = span else {
             return Json::Null;
         };
         let Some(file) = self.sources.get(span.file) else {
@@ -148,7 +154,7 @@ impl Debugger {
             ("file", Json::str(&file.name)),
             ("line", number(span.line)),
             ("column", number(span.col)),
-            ("scope", Json::str("function declaration")),
+            ("scope", Json::str("source")),
             (
                 "source",
                 Json::str(
@@ -190,7 +196,7 @@ impl Debugger {
                         ("index", number(index)),
                         ("function_id", number(frame.function)),
                         ("function", Json::str(&program.funcs[frame.function].name)),
-                        ("location", self.location(frame.function)),
+                        ("location", self.source_location(frame.location)),
                         ("locals", frame.locals.clone()),
                     ])
                 })
@@ -208,6 +214,7 @@ impl Debugger {
         self.frames.entry(task).or_default().push(Frame {
             function: id,
             locals: Self::values(program, id, args),
+            location: self.spans.get(&id).copied(),
         });
         self.event(program, task, id, "call", Json::Null)
     }
@@ -221,7 +228,13 @@ impl Debugger {
         else {
             return Ok(());
         };
+        if let Expr::Trace(span, _) = expr {
+            if let Some(frame) = self.frames.get_mut(&task).and_then(|s| s.last_mut()) {
+                frame.location = Some(span.span);
+            }
+        }
         let operation = match expr {
+            Expr::Trace(_, _) => "source",
             Expr::Local(_) => "local",
             Expr::Const(_) => "constant",
             Expr::Func(_) => "function",
@@ -251,6 +264,30 @@ impl Debugger {
                         .map_or(Json::Null, number),
                 ),
                 ("operation", Json::str(operation)),
+            ]),
+        )
+    }
+
+    pub fn value(
+        &mut self,
+        program: &Program,
+        task: usize,
+        point: &crate::ir::SourcePoint,
+        value: &Value,
+    ) -> Result<(), Ctl> {
+        let Some(frame) = self.frames.get_mut(&task).and_then(|s| s.last_mut()) else {
+            return Ok(());
+        };
+        let id = frame.function;
+        frame.location = Some(point.span);
+        self.event(
+            program,
+            task,
+            id,
+            "value",
+            Json::obj(vec![
+                ("type", Json::str(point.ty.to_string())),
+                ("value", snapshot(value, &point.ty, program)),
             ]),
         )
     }
@@ -327,14 +364,45 @@ impl Debugger {
             ("depth", number(depth)),
             ("function_id", number(id)),
             ("function", Json::str(&program.funcs[id].name)),
-            ("location", self.location(id)),
+            (
+                "location",
+                self.source_location(
+                    self.frames
+                        .get(&task)
+                        .and_then(|s| s.last())
+                        .and_then(|f| f.location),
+                ),
+            ),
             ("data", data),
         ]);
         if self.trace.contains(kind) {
             self.send(&event)?;
         }
-        let enter = matches!(kind, "call" | "expression");
-        let stop = kind == "error"
+        let source_event = kind == "expression"
+            && event.at(&["data", "operation"]).and_then(Json::as_str) == Some("source");
+        let enter = kind == "call" || source_event;
+        let line_break = source_event
+            && self
+                .frames
+                .get(&task)
+                .and_then(|s| s.last())
+                .and_then(|f| f.location)
+                .is_some_and(|span| {
+                    self.sources.get(span.file).is_some_and(|file| {
+                        self.breakpoints.iter().any(|b| {
+                            b.rsplit_once(':').is_some_and(|(name, line)| {
+                                line.parse::<u32>() == Ok(span.line)
+                                    && (name == file.name
+                                        || std::path::Path::new(&file.name)
+                                            .file_name()
+                                            .and_then(|s| s.to_str())
+                                            == Some(name))
+                            })
+                        })
+                    })
+                });
+        let stop = line_break
+            || kind == "error"
             || (kind == "call" && self.breakpoints.contains(&program.funcs[id].name))
             || match self.motion {
                 Motion::Step => enter,
@@ -410,7 +478,12 @@ impl Debugger {
                 "r" | "return" => { self.motion = Motion::Return { task, depth }; resume = true; Ok(Json::Null) }
                 "q" | "quit" => return Err(Ctl::Cancelled),
                 "b" | "break" => {
-                    if !program.funcs.iter().any(|f| f.name == argument) { Err(format!("no reachable function named {argument}")) }
+                    let source_line = argument.rsplit_once(':').is_some_and(|(name, line)| {
+                        line.parse::<usize>().is_ok_and(|line| line > 0 && self.sources.files.iter().any(|file|
+                            (file.name == name || std::path::Path::new(&file.name).file_name().and_then(|s| s.to_str()) == Some(name))
+                                && line <= file.text.lines().count()))
+                    });
+                    if !source_line && !program.funcs.iter().any(|f| f.name == argument) { Err(format!("no reachable function or loaded source line named {argument}")) }
                     else { self.breakpoints.insert(argument.into()); Ok(Json::str(argument)) }
                 }
                 "clear" => { self.breakpoints.remove(argument); Ok(Json::Null) }
@@ -424,13 +497,13 @@ impl Debugger {
                         self.frames.get(&task).and_then(|s| s.get(self.selected)).and_then(|f| f.locals.as_array()).and_then(|vs| vs.iter().find(|v| v.get("slot") == Some(&number(slot)))).cloned().ok_or("local slot is not initialized in this frame".into())
                     })
                 }
-                "l" | "list" => Ok(self.frames.get(&task).and_then(|s| s.get(self.selected)).map_or(Json::Null, |f| self.location(f.function))),
+                "l" | "list" => Ok(self.frames.get(&task).and_then(|s| s.get(self.selected)).map_or(Json::Null, |f| self.source_location(f.location))),
                 "trace" => {
                     let kinds: HashSet<_> = argument.split_whitespace().map(str::to_string).collect();
-                    if kinds.iter().all(|k| ["call", "expression", "bind", "return", "error"].contains(&k.as_str())) { self.trace = kinds; Ok(Json::Null) }
-                    else { Err("trace events: call expression bind return error; empty clears tracing".into()) }
+                    if kinds.iter().all(|k| ["call", "expression", "value", "bind", "return", "error"].contains(&k.as_str())) { self.trace = kinds; Ok(Json::Null) }
+                    else { Err("trace events: call expression value bind return error; empty clears tracing".into()) }
                 }
-                "h" | "help" => Ok(Json::str("break NAME; clear NAME; breakpoints; step; next; return; continue; stack; frame INDEX; locals; print SLOT; list; trace EVENTS; quit")),
+                "h" | "help" => Ok(Json::str("break NAME or FILE:LINE; clear NAME; breakpoints; step; next; return; continue; stack; frame INDEX; locals; print SLOT; list; trace EVENTS; quit")),
                 _ => Err(format!("unknown debugger command {command}; use help")),
             };
             let reply = match result {
@@ -476,7 +549,7 @@ pub fn snapshot(value: &Value, ty: &MT, program: &Program) -> Json {
 pub fn run(args: &[String]) -> i32 {
     let json = args.iter().any(|s| s == "--json");
     if args.iter().any(|s| s == "--help" || s == "-h") {
-        println!("Usage: fwp debug [--json] [--input FILE] SOURCE\nUnoptimized interpreter: function breakpoints, IR stepping, typed local slots.\nUse --input FILE for program standard input; control commands have their own stream.");
+        println!("Usage: fwp debug [--json] [--input FILE] SOURCE\nUnoptimized interpreter: function/line breakpoints, source stepping, typed local slots.\nUse --input FILE for program standard input; control commands have their own stream.");
         return 0;
     }
     let mut paths = Vec::new();
@@ -515,17 +588,18 @@ pub fn run(args: &[String]) -> i32 {
             return 1;
         }
     };
-    let mut program =
-        match crate::mono::Mono::new(&checked.env, &checked.typed).run(crate::mono::Roots {
+    let mut program = match crate::mono::Mono::new(&checked.env, &checked.typed)
+        .with_source_steps()
+        .run(crate::mono::Roots {
             main: true,
             ..Default::default()
         }) {
-            Ok(p) => p,
-            Err(e) => {
-                eprintln!("{}", e.render(&checked.sm));
-                return 1;
-            }
-        };
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("{}", e.render(&checked.sm));
+            return 1;
+        }
+    };
     crate::resource::preserve_frames(&mut program);
     let spans = program
         .binding_names

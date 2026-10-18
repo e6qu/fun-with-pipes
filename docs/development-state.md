@@ -28,25 +28,28 @@ then audit every final-head job and squash merge only after passing acceptance:
 6. Keep tutorials, parser/compiler docs, benchmark methods and the live plan
    aligned; verify semantic changes against raw interpretation and native code.
 
-Published checkpoint is `085626f3` on PR #167. Focused run `39125583949`
-compiled and passed every selected test: infix, REPL, initial debugger, scalar
-math, cached-map borrows, both older cached-value suites and generated library
-reference. Clippy found two issues: a collapsible REPL match and a redundant box
-allocation in the RC test; both are repaired locally. Earlier preflight failures
-(C++ hypot lookup, token spelling, then a type-checker borrow) are repaired and
-superseded by this successful semantic run. Full production acceptance has not
-been restarted for the expanded scope.
+Published checkpoint `c5c13dee` passed the entire focused run `39126475531`:
+formatting, all-target Clippy, 18 selected Rust tests and four real Python SDK
+integration tests. The SDK compared actual emitted C/object instructions on native
+AMD64 and cross ARM64 at O0/O1/O2/O3, with C line mappings. This is disassembly,
+not execution on the cross target. Log audit found notebook subprocess/pipe
+ResourceWarnings despite success; cleanup is repaired locally and a regression
+now checks reaping/closed streams.
 
-Uncommitted work adds the Python debugger/disassembler SDK, C line mappings,
-O0–O3 object comparisons with explicit toolchains/targets, and the local notebook
-app. Notebook cells use the REPL JSON protocol; imports/types/traits get
-conservative dependencies and editing marks results stale. No automatic effect
-replay. The UI has source/Markdown cells, run/stop, save/open, output and dependency
-labels. `fwp notebook` launches the explicitly installed Python SDK app;
-`fwp repl --json` supplies its checked session protocol. Runtime stdout/stderr
-now have separate capture paths, including child-task forwarding. These additions are not yet compiled or end-to-end verified. Source-level
-debugger locations (beyond function declarations/IR sites), notebook/debugger
-integration and comprehensive SDK/browser/platform tests remain to finish.
+Uncommitted changes add debugger-only source markers and typed expression-result
+events, source-line breakpoints, SDK cleanup fixes and an actual Chromium notebook
+check with desktop/mobile screenshots. These source-marker walkers are not yet
+compiled. Next: publish a focused checkpoint; audit all compiler diagnostics and
+fix every traversal/test issue. Then complete notebook input/interrupt semantics,
+UI/debugger/disassembly integration as appropriate, docs/tutorials and native
+platform coverage. Do not call the UI/browser checks verified until they run.
+
+The notebook uses the explicitly installed Python package: `fwp notebook` launches
+it, and `fwp repl --json` supplies the checked session. Runtime stdout/stderr are
+captured separately, including child-task forwarding. Dependencies conservatively
+include imports/types/traits; source edits mark results stale and never automatically
+replay expression effects. The optional Jupyter-kernel choice received no answer;
+work is proceeding with the recommended local browser notebook.
 
 Local guard checks: primitive ownership inventory PASS (394 declarations,
 371 contracts, 19 IR templates, three flat scalars, one reviewed symbol);
@@ -58,8 +61,16 @@ process-group permission error; unchanged retry passed. Limits were not raised.
 The obsolete documentation-head production run `39120276898` was audited with
 no failed jobs (Windows AMD64, both ARM macOS jobs and benchmarks passed), then
 cancelled to free runners. Docs `39120277029` passed. No merge has occurred.
-Actual-compiler map measurements were dispatched from `085626f3`, against saved
-run `39106005017` / source `93cb93a0`; record the new run ID and audit all hosts.
+Map measurement run `39125883230` at `085626f3` passed all five jobs. Guarded audit
+`/private/tmp/fwp-audit-map-borrow-pr167.py` passed in 36.14 s, checking 80 actual
+ELF/source/profile records, hashes and 24 balanced samples per variant. Raw data:
+`/private/tmp/fwp-map-borrow-pr167`. Intel 8370C and 6973P-C are now measured:
+joined borrowed/retained tracing ratios 0.9170/0.9357; combined new/old-separate
+ratios 0.9685/0.9688. ARC combined ratios 0.9034/0.9305. Retains 2,000,001 → 1,
+unchanged allocation/live-byte counts, zero final charge. Separate-layout tracing
+borrowing is slower on both Intel samples (1.0630/1.0387): preserve those results.
+The exact original Xeon 8573C is still unmeasured by this compiler; do not claim
+that model's regression is settled. Update the committed raw report and guide.
 
 [PLAN.md](../PLAN.md) owns the seven remaining work areas;
 [design limits](design-limits.md) states feasible acceptance criteria.

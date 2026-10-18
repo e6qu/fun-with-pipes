@@ -43,6 +43,7 @@ pub struct Roots {
 pub const DEFAULT_SERVICE_ADDR: &str = "127.0.0.1:50051";
 
 pub struct Mono<'a> {
+    source_steps: bool,
     env: &'a Env,
     typed: &'a Typed,
     pub prog: Program,
@@ -278,6 +279,7 @@ impl<'a> Mono<'a> {
             }
         }
         Mono {
+            source_steps: false,
             env,
             typed,
             prog,
@@ -647,6 +649,11 @@ impl<'a> Mono<'a> {
     }
 
     // ----- driver ----------------------------------------------------------------
+
+    pub fn with_source_steps(mut self) -> Self {
+        self.source_steps = true;
+        self
+    }
 
     pub fn run(mut self, roots: Roots) -> MResult<Program> {
         let env = self.env;
@@ -1037,6 +1044,21 @@ impl<'a> Mono<'a> {
 
     #[allow(clippy::only_used_in_recursion)]
     fn expr(&mut self, e: &ast::Expr, s: &Subst, fb: &mut FB) -> MResult<Expr> {
+        let result = self.expr_inner(e, s, fb)?;
+        Ok(if self.source_steps {
+            Expr::Trace(
+                SourcePoint {
+                    span: e.span,
+                    ty: self.node_mt(e.id, s),
+                },
+                Box::new(result),
+            )
+        } else {
+            result
+        })
+    }
+
+    fn expr_inner(&mut self, e: &ast::Expr, s: &Subst, fb: &mut FB) -> MResult<Expr> {
         match &e.kind {
             ExprKind::Int { neg, mag, .. } => {
                 let mt = self.node_mt(e.id, s);
@@ -1513,9 +1535,10 @@ fn field_infos(fs: &[(String, MT)]) -> Value {
 /// Functions referenced by an expression.
 fn funcs_in(e: &Expr, out: &mut Vec<FuncId>) {
     match e {
-        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
-            funcs_in(b, out)
-        }
+        Expr::Trace(_, b)
+        | Expr::Dup(_, b)
+        | Expr::Drop(_, b)
+        | Expr::ResourceRegion { body: b, .. } => funcs_in(b, out),
         Expr::Func(f) => out.push(*f),
         Expr::BorrowGlobal(_, global, body) => {
             out.push(*global);

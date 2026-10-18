@@ -40,8 +40,11 @@ class Debugger:
         self.stopped = False
         self.finished = False
         self.last_event = None
+        self._readers = []
         for stream, kind in [(self._process.stdout, "protocol"), (self._process.stderr, "stderr")]:
-            threading.Thread(target=self._read_stream, args=(stream, kind), daemon=True).start()
+            reader = threading.Thread(target=self._read_stream, args=(stream, kind), daemon=True)
+            reader.start()
+            self._readers.append(reader)
         try:
             self.wait()
         except BaseException:
@@ -182,6 +185,8 @@ class Debugger:
             except subprocess.TimeoutExpired:
                 self._process.kill()
                 self._process.wait()
+        for reader in self._readers:
+            reader.join()
         for stream in [self._process.stdin, self._process.stdout, self._process.stderr]:
             stream.close()
 
