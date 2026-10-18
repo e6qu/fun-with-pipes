@@ -8,13 +8,21 @@ until #165 is accepted. Fix every failed check before delivery.
 The authoritative delivery handoff is
 `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
 This worktree prepares numeric collection construction and has no active PR.
-Measured source is `cf2fb20c1cf3326187b998789bc31990cfcbcf65`; six-host run
-`39096618831` is queued/running. Audit via `/private/tmp/fwp-audit-collection-build.py`.
-After all six jobs pass, dispatch `collection-report` with `evidence_run=39096618831`
-and `source_revision=cf2fb20c1cf3326187b998789bc31990cfcbcf65`. It audits all four
-test targets, verifies raw counters/timings and inspects 120 actual binaries as
-data on GitHub, retaining disassembly and section sizes. It does not execute
-downloaded artifacts. This avoids large local evidence processing. Its base is repaired PR head `836f39b3`;
+Original measured source `cf2fb20c1cf3326187b998789bc31990cfcbcf65` and run
+`39096618831` are fully audited: 62 passed, 16 failed, no ignored tests.
+Three AMD64 failures come from a test deriving a key from 0/0, whose NaN sign is
+implementation dependent. Use explicit parsed NaNs of both signs, preserving exact
+output comparisons. Windows ARM64's direct toolchain download was forbidden;
+all 13 checks then continued with the wrong compiler and failed on `ssize_t`.
+All failure traces were audited. Authenticated pinned-asset download and explicit
+toolchain-success conditions repair this, including sibling focused jobs.
+Publish one bundled repair after local checks; rerun all six hosts and preserve
+these failed logs separately. Audit via `/private/tmp/fwp-audit-collection-build.py`
+with a separate repair output prefix. Only after the new run passes, dispatch
+`collection-report` using its run and exact source IDs. It audits all four test
+targets, verifies raw counters/timings and inspects 120 actual binaries as data on
+GitHub, retaining disassembly and section sizes without executing downloaded code.
+This avoids large local evidence processing. Its base is repaired PR head `836f39b3`;
 rebase onto the accepted #165 tree before opening its delivery PR. Do not carry this
 preparation-only handoff into the delivered branch.
 
@@ -115,6 +123,18 @@ optimization controls. Measure small input slopes, larger representative inputs,
 code size and stack use; compare repeated native C/Rust timings with explicit
 work differences. Inspect actual saved binaries on six native hosts. Keep full
 builds, gates and large measurements on CI; local checks use the root guard.
+
+## Collection repair verification
+
+All three focused collection tests, formatting and Clippy pass after the NaN
+fixture repair (34.11 s guarded). The test covers parsed F32/F64 NaNs of both
+signs and duplicate keys while retaining exact interpreter/native comparisons.
+Workflow lint, documentation, eight native-runner checks and fixture formatting
+pass (7.58 s guarded). Commands: root `scripts/local-guard.py python3
+/private/tmp/fwp-collection-preflight.py` and `... /private/tmp/fwp-collection-doc-preflight.py`,
+both from the preparation worktree. The authenticated Windows download still
+requires native CI verification. Every known failing collection target was audited
+before publication; original failed logs remain separate.
 
 ## Roadmap status
 

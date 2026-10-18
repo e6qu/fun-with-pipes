@@ -275,9 +275,10 @@ construction rules. This changes no language notation or inference rule.
 
 When an ordinary callback is known at compile time, its generated function can
 return the two numeric fields directly, avoiding temporary tuples. This uses
-the compiler's existing field-return calling convention. Captured values still use the
-ordinary argument ownership rules. Dynamic callbacks use their normal call
-convention and share the same protected buffer construction. Errors and task
+the compiler's existing field-return calling convention. Captured values still use
+ordinary argument ownership and may need reference-count operations. Dynamic
+callbacks use their normal call convention and can still allocate result tuples;
+they share the same protected buffer construction. Errors and task
 cancellation release unfinished buffers. Empty or reversed ranges call no
 callbacks; duplicate handling and floating-key ordering remain unchanged.
 

@@ -74,8 +74,9 @@ updates preserve live aliases. Unmodeled callbacks retain explicit sharing and c
 
 The compiler-only `map._map-list` and `set._map-list` operations borrow a callback
 and input list; their `_map-range` forms borrow a callback and two I64 bounds.
-They return an owned numeric container. Callbacks borrow each input and return
-inline numeric fields; unfinished buffers have scoped cleanup. These are internal
+They return an owned numeric container. Callbacks borrow each input; their results
+contain only inline numeric fields, although dynamic map callbacks can still
+allocate the containing tuple. Unfinished buffers have scoped cleanup. These are internal
 representations of ordinary `map` followed by construction, not new library APIs.
 
 Comparison-only keys never escape into fwp_map_find or structural fwp_cmp;

@@ -11,9 +11,19 @@ fn checked(command: &mut Command) -> Output {
 fn mapped_numeric_collections_agree_with_raw_interpreter() {
     let directory = fwp::cgen::TempDir::new("collection-construction").unwrap();
     let input = directory.join("collections.fwp");
+    // Arithmetic NaN signs are implementation dependent. Parsed NaNs and neg
+    // supply identical key bits, testing both signs and duplicate NaN keys.
     std::fs::write(
         &input,
         r#"
+nan : F64
+nan = "NaN" | parse-float | match
+    Some -> id
+    None -> "test NaN parsing failed" | prim.trap
+nan32 : F32
+nan32 = "NaN" | parse-float | match
+    Some -> id
+    None -> "test NaN parsing failed" | prim.trap
 key : I64 -> I64
 key = rem 3
 pair : I64 -> (I64, I64)
@@ -37,8 +47,8 @@ main = [
     range 9223372036854775805 9223372036854775807 | map (fork (curry id) id id) | map.from-list | map.to-list | echo,
     [1i8, -2i8, 127i8, 1i8] | map id | set.from-list | set.to-list | echo,
     [0u64, 18446744073709551615u64, 0u64] | map id | set.from-list | set.to-list | echo,
-    [0.0, -0.0, 1.5, 0.0 | div 0.0] | map id | set.from-list | set.to-list | echo,
-    [0.0f32, -0.0f32, 1.5f32] | map (fork (curry id) id (mul 2.0f32)) | map.from-list | map.to-list | echo,
+    [0.0, -0.0, 1.5, nan, nan | neg, nan] | map id | set.from-list | set.to-list | echo,
+    [0.0f32, -0.0f32, 1.5f32, nan32, nan32 | neg, nan32] | map (fork (curry id) id (mul 2.0f32)) | map.from-list | map.to-list | echo,
     ["a", "héllo", ""] | both (map string.length | set.from-list | set.to-list) id | echo,
     ["a", "héllo", ""] | both (map string-pair | map.from-list | map.to-list) id | echo,
     range 0 4 | map (captured-pair ("prefix" | concat "!")) | map.from-list | map.to-list | echo,

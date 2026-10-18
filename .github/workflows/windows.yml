@@ -34,6 +34,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Native C toolchain for foreign calls
         shell: pwsh
+        id: windows_toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
       - name: Native Windows compiler check
         id: native_compiler

@@ -22,7 +22,11 @@ switch ($env:RUNNER_ARCH) {
 }
 $package = "llvm-mingw-20261006-ucrt-$architecture"
 $archive = Join-Path $env:RUNNER_TEMP "$package.zip"
-Invoke-WebRequest "https://github.com/mstorsjo/llvm-mingw/releases/download/20261006/$package.zip" -OutFile $archive
+# Use authenticated release-asset requests, not GitHub's web download endpoint.
+# A failed download must stop setup; never continue with the host MSVC compiler.
+if (-not $env:GH_TOKEN) { throw 'GH_TOKEN is required to download LLVM-MinGW' }
+& gh release download 20261006 --repo mstorsjo/llvm-mingw --pattern "$package.zip" --output $archive
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 if ((Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $digest) {
     throw 'LLVM-MinGW archive checksum mismatch'
 }
