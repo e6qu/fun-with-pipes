@@ -2,8 +2,8 @@
 
 ## Next action
 
-Next: publish the direct-set callback follow-up and repeat six-host collection
-evidence while PR #165 finishes acceptance. Do not open a
+Next: audit the direct-set six-host run and its binary/timing report while PR #165
+finishes acceptance. Do not open a
 second PR. The authoritative live delivery handoff is
 `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`; replace this
 preparation-only file with that handoff before the delivery PR.
@@ -43,9 +43,14 @@ A native regression checks that equal, separately allocated strings keep the
 first key's identity and correct reference counts.
 
 Published set-buffer source `8fcd7486881c627f078d8bff7ad6e6c82f040734`
-has six-host run `39100058501` underway. Keep it separate from the new direct-call
+passes six-host run `39100058501` (78 tests, no failures/skips, all measurements).
+Report `39100710058` passes and verifies 120 actual binaries. The unchanged
+runner report is saved in `docs/measurements/collection-set-storage-2026-10-18.json`.
+At 65,536 inputs, all hosts use four set allocation requests and peak at
+1,053,712 counted bytes, versus six requests and 2,102,304 before this change. Keep it separate from the new direct-call
 change: actual baseline AMD64 set machine code calls general function dispatch
-per item and reloads values from the stack. Known set callbacks now use the
+per item and reloads values from the stack. Published follow-up `c34ca8e340c6f3dbb6251729553e1a8dbf513903`, run `39100652902`,
+checks the new direct calls separately. Known set callbacks now use the
 existing owned entry, including primitive argument cleanup. Dynamic callbacks
 retain their ordinary dispatch. Tests add dynamic sets and managed captures,
 including caught errors, and exercise eight actual emitted builder bodies.
@@ -85,7 +90,10 @@ missing cleanup. Tiny counts remain four set/seven map requests with zero retain
 final bytes and collections; data stays separate in
 `/private/tmp/fwp-collection-direct-set-prototype/`. Tiny probes, focused linting,
 workflow/docs checks and report regressions pass (12.80 s guarded). The collector now expects these eight-builder results and four
-set allocation requests. Earlier six-builder reports keep their source identity. Run all six hosts, inspect actual binaries and timing changes, then update the draft PR
+set allocation requests. Earlier six-builder reports keep their source identity. The evidence checker now
+requires the direct-call marker for sets as well as maps; saved tiny generated C
+files satisfy both checks. Documentation/report checks pass (2.67 s guarded).
+The ownership overview no longer calls accepted PR #164 Wasm work pending. Run all six hosts, inspect actual binaries and timing changes, then update the draft PR
 body `/private/tmp/fwp-collection-build-pr.md`. The earlier report remains tied to
 its earlier source. Production acceptance still requires nine exact-head jobs
 plus documentation. One-line commit messages, at most 80 characters, with no

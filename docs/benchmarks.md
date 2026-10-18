@@ -2961,8 +2961,19 @@ requests from 196,616 to seven. All cases have zero retains, final counted bytes
 and collections. On Apple Silicon, peak charged storage falls from 4,718,600 to
 2,102,304 bytes for sets and from 6,815,752 to 2,102,304 for maps. Charged storage
 excludes allocator capacity and process resident memory. This baseline still
-uses four temporary arrays for sets. The following keys-only buffer reduction
-requires its own native measurements, tracked in the [handoff](development-state.md).
+uses four temporary arrays for sets.
+
+The [set-storage follow-up](measurements/collection-set-storage-2026-10-18.json)
+at source `8fcd7486` removes both unused value buffers. All six hosts pass another
+78 tests without skips; its report verifies 120 actual binaries. At 65,536 inputs,
+the optimized set uses four allocation requests and peaks at 1,053,712 counted
+bytes on every host, versus six requests and 2,102,304 bytes in the baseline.
+Ordinary set construction also saves two requests (131,077 remain); map counts
+are unchanged. The same-run optimized/ordinary set time ratios range from 0.514
+to 0.858 at this size. Different runs use different machines and conditions, so
+their absolute timings do not isolate the benefit of removing the two buffers.
+Known set callbacks still use general dispatch in this measured revision; the
+[handoff](development-state.md) tracks the direct-call follow-up separately.
 
 All 78 focused tests pass without skips. The report inspects 120 actual binaries,
 including deliberately broken cleanup controls. A

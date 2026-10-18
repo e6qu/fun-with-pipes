@@ -297,9 +297,9 @@ and reduce; the optimization removes intermediate list nodes and eligible tuples
 `FWP_MAP_BUILD=0` disables this transformation for controlled comparisons.
 Focused local checks cover raw/optimized interpretation, native O1/O2, ARC,
 stressed tracing, aliases, every injected allocation failure and cancellation.
-The [initial six-host measurements](benchmarks.md#building-numeric-maps-and-sets-without-temporary-lists)
-verify construction combining before the additional set-buffer reduction.
-The [handoff](development-state.md) tracks that follow-up and production acceptance.
+The [six-host measurements](benchmarks.md#building-numeric-maps-and-sets-without-temporary-lists)
+verify construction combining and the additional set-buffer reduction in separate
+runs. The [handoff](development-state.md) tracks direct-set calls and production acceptance.
 Reduced allocation counts alone do not establish a timing improvement or parity
 with C/Rust.
 

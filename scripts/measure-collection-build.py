@@ -61,8 +61,9 @@ def main():
                 cfile = out / (label + '.c')
                 run([compiler, 'build', '--gc', 'arc', '-O2', '--emit-c', source, '-o', cfile], build_env)
                 code = cfile.read_text()
-                if kind == 'map':
-                    assert ('/* numeric map: direct callback fields */' in code) == (fused == '1')
+                marker = ('/* numeric map: direct callback fields */' if kind == 'map'
+                          else '/* numeric set: direct callback */')
+                assert (marker in code) == (fused == '1')
                 profile = out / (label + '-profile.c')
                 profile.write_text(iteration.instrument(code))
                 commands, compile_ns = [], []

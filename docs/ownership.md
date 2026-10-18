@@ -54,9 +54,9 @@ value has a statically known lifetime. WebAssembly and native libraries release
 typed counted owners but retain unproved shared graphs: they cannot scan arbitrary
 host roots. Checked ARC admits native executables, synchronous WASI executables,
 and C libraries with checked copying boundaries, described below.
-The browser-loader and asynchronous WASI extensions also use these ownership
-checks; their focused evidence and pending production acceptance are recorded
-under [checked ARC delivery](#checked-arc-delivery).
+The browser-loader and asynchronous WASI extensions accepted in PR #164 also use
+these ownership checks. [Checked ARC delivery](#checked-arc-delivery) records
+their passing evidence under Node and the remaining browser-engine coverage gap.
 
 The compiler first tries to eliminate temporary objects, keep fields as scalars,
 and place eligible values on the stack. Values that still need shared storage
