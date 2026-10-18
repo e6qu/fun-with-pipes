@@ -8559,6 +8559,15 @@ type ExportSig = (
     crate::ffi::CType,
 );
 
+fn library_result_needs_release(result: &crate::ffi::CType) -> bool {
+    use crate::ffi::CType;
+    match result {
+        CType::Str => true,
+        CType::Struct { fields, .. } => fields.iter().any(|(_, _, ty)| *ty == CType::Str),
+        _ => false,
+    }
+}
+
 fn export_sigs(prog: &Program) -> Result<Vec<ExportSig>, String> {
     let mut out = Vec::new();
     for (name, fid) in &prog.exports {
@@ -8580,6 +8589,22 @@ fn export_sigs(prog: &Program) -> Result<Vec<ExportSig>, String> {
             ));
         }
         out.push((c_export_name(name), *fid, params, ret));
+    }
+    let mut names = std::collections::HashSet::new();
+    for (name, _, _, _) in &out {
+        if !names.insert(name.clone()) {
+            return Err(format!("exported functions have the same C name `{name}`"));
+        }
+    }
+    for (name, _, _, result) in &out {
+        if library_result_needs_release(result) {
+            let release = format!("fwp_release_{name}");
+            if !names.insert(release.clone()) {
+                return Err(format!(
+                    "exported function conflicts with generated result release `{release}`"
+                ));
+            }
+        }
     }
     Ok(out)
 }
@@ -8607,8 +8632,9 @@ pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, Strin
         g = guard
     );
     if native_options().arc {
-        h.push_str("/* Checked ARC: inputs are copied for each call; results contain no managed\n * pointers. Keep input strings valid until return. Serialize host calls and\n * finish all calls before unloading the library. */\n\n");
+        h.push_str("/* Checked ARC: owned results require no tracing collector. */\n\n");
     }
+    h.push_str("/* Inputs are copied for each call; keep input strings valid until return.\n * Each result containing strings owns those strings. Release the complete,\n * unchanged result exactly once with its matching fwp_release_FUNCTION.\n * Do not use free(), modify string bytes, or release copied result aliases.\n * No result may be used after release. Serialize calls (including releases),\n * release all owned results and finish all calls before unloading the library. */\n\n");
     let mut all = Vec::new();
     for (_, _, ps, r) in &sigs {
         all.extend(ps.iter().map(|(_, c)| c.clone()));
@@ -8635,6 +8661,13 @@ pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, Strin
                 params.join(", ")
             }
         );
+        if library_result_needs_release(r) {
+            let _ = writeln!(
+                h,
+                "void fwp_release_{cname}({} result);",
+                crate::ffi::c_name(r)
+            );
+        }
     }
     h.push_str("\n#ifdef __cplusplus\n}\n#endif\n\n#endif\n");
     Ok((src, h))
@@ -8844,14 +8877,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             Mode::Library => {
                 let signatures = export_sigs(prog)?;
                 for (name, _, params, result) in &signatures {
-                    // The existing export ABI copies strings on entry but
-                    // returns string addresses without a host release API.
-                    // Admit only results whose bits contain no managed pointer.
                     if !params.iter().all(|(_, ty)| crate::ffi::copied_result(ty))
-                        || !crate::ffi::by_value(result)
+                        || !crate::ffi::copied_result(result)
                     {
                         return Err(format!(
-                            "--gc arc: exported function `{name}` requires copied C inputs and a pointer-free result; returned strings and raw pointers have no host release contract"
+                            "--gc arc: exported function `{name}` requires copied C inputs and scalar or owned-string results; raw pointers have no checked host lifetime"
                         ));
                     }
                 }
@@ -9061,10 +9091,9 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             if r == crate::ffi::CType::Void {
                 let _ = writeln!(lib_defs, "    (void){call};\n{finish_inputs}}}\n");
             } else {
-                // The C result copies scalars and records, but string pointers
-                // escape into host storage for the lifetime of the library.
-                // Evaluate once (OptPtr conversion reads its value twice),
-                // and protect the owned result if string conversion traps.
+                // Evaluate once and protect the full result until every C
+                // string conversion succeeds. Then transfer string owners to
+                // the host, which releases them through the matching export.
                 let result_ty = f.ty.params(f.arity as usize).1.clone();
                 let drop = if g.reuse {
                     g.value_drop(&result_ty)
@@ -9077,22 +9106,73 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                 if g.reuse {
                     match &r {
                         crate::ffi::CType::Str => {
-                            lib_defs.push_str("    fwp_rc_share(result);\n");
+                            // The result already owns its string: no copy or
+                            // retain is needed to give that owner to C.
                         }
                         crate::ffi::CType::Struct { fields, .. } => {
-                            for (_, index, ty) in fields {
-                                if *ty == crate::ffi::CType::Str {
-                                    let _ = writeln!(
-                                        lib_defs,
-                                        "    fwp_rc_share(OBJ(result)->f[{index}]);"
-                                    );
+                            let strings: Vec<_> = fields
+                                .iter()
+                                .filter(|(_, _, ty)| *ty == crate::ffi::CType::Str)
+                                .collect();
+                            if !strings.is_empty() {
+                                lib_defs.push_str(
+                                    "    if (fwp_rc_last(result)) { /* move C result strings */\n",
+                                );
+                                for (_, index, _) in &strings {
+                                    let _ =
+                                        writeln!(lib_defs, "        OBJ(result)->f[{index}] = 0;");
                                 }
+                                lib_defs.push_str("    } else {\n");
+                                let values = strings
+                                    .iter()
+                                    .map(|(_, index, _)| {
+                                        (format!("OBJ(result)->f[{index}]"), MT::con("std::String"))
+                                    })
+                                    .collect::<Vec<_>>();
+                                let retained = g.duplicate_values(
+                                    &values,
+                                    "result_strings",
+                                    "result_strings_cleanup",
+                                );
+                                let _ = writeln!(lib_defs, "        {retained}\n    }}");
                             }
                         }
                         _ => {}
                     }
                 }
-                lib_defs.push_str("    (void)fwp_value_finish(&owner, &cleanup);\n    owner.value = result; fwp_value_release(&owner);\n    return converted;\n}\n\n");
+                lib_defs.push_str("    (void)fwp_value_finish(&owner, &cleanup);\n");
+                if r != crate::ffi::CType::Str {
+                    lib_defs.push_str("    owner.value = result; fwp_value_release(&owner);\n");
+                }
+                lib_defs.push_str("    return converted;\n}\n\n");
+                if library_result_needs_release(&r) {
+                    let _ = writeln!(
+                        lib_defs,
+                        "void fwp_release_{cname}({} result) {{",
+                        crate::ffi::c_name(&r)
+                    );
+                    if g.reuse {
+                        let drop = g.value_drop(&MT::con("std::String"));
+                        let values = match &r {
+                            crate::ffi::CType::Str => vec!["result".into()],
+                            crate::ffi::CType::Struct { fields, .. } => fields
+                                .iter()
+                                .filter(|(_, _, ty)| *ty == crate::ffi::CType::Str)
+                                .map(|(name, _, _)| format!("result.{name}"))
+                                .collect(),
+                            _ => unreachable!(),
+                        };
+                        for value in values {
+                            let _ = writeln!(
+                                lib_defs,
+                                "    {drop}(PTR({value} - offsetof(fwp_str, d)));"
+                            );
+                        }
+                    } else {
+                        lib_defs.push_str("    (void)result;\n");
+                    }
+                    lib_defs.push_str("}\n\n");
+                }
             }
         }
     }

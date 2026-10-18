@@ -114,6 +114,12 @@ callbacks through JSPI and Asyncify. The
 costs. Final production acceptance is still required. Browser-engine coverage,
 retained foreign callbacks, remaining numerical and networking ownership,
 derivative scaling and broader applications remain work.
+An isolated follow-up gives C callers explicit release functions for returned
+strings and records. It transfers unique owners without extra heap handles and
+checks necessary sharing, conversion failure and unload. Its focused native
+checks and pending six-host evidence are recorded in the handoff; it does not
+replace the current delivery's final acceptance requirements.
+
 All seven areas above stay open. Each delivery must identify its workload,
 expected change and acceptance criteria. Investigate performance regressions
 even when allocations fall, and preserve traps, cancellation and interpreter

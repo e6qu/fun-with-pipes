@@ -76,6 +76,24 @@ those files are not supplied by this lesson. A static library is linked into
 another executable; a shared library is loaded alongside it. A generated header
 declares its callable C interface.
 
+When an exported function returns a string, the caller owns the returned storage.
+The generated header supplies a matching release function. For example,
+`tests/c-interop/geom.fwp` exports `greet`, which formats its input as a greeting:
+
+```c
+const char *greeting = greet("c");
+printf("%s\n", greeting);     /* prints hello, c! */
+fwp_release_greet(greeting); /* releases this result's ownership */
+```
+
+Use the result before releasing it, and release it exactly once. Do not call
+`free` or modify the returned string. A returned record containing strings has
+one release function for the whole record; copied pointer bits are aliases,
+not separately owned results. Scalar-only results need no release. Release all
+results and finish all calls before unloading a shared library. Host calls and
+releases must be serialized. This result-ownership extension is undergoing the
+checks recorded in [the handoff](../../development-state.md).
+
 ## The program
 
 [`main.fwp`](main.fwp):
