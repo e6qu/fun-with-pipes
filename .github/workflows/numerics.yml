@@ -114,6 +114,8 @@ jobs:
       - uses: actions/checkout@v7
       - name: Install binary inspection tools
         run: sudo apt-get update && sudo apt-get install -y llvm
+      - name: Check complete-target evidence validation
+        run: python3 scripts/test-collection-evidence.py
       - name: Audit all hosts and inspect their saved binaries
         run: python3 scripts/summarize-collection-build.py --run "$EVIDENCE_RUN" --head "$EVIDENCE_HEAD" --artifacts collection-report/artifacts --llvm-bin /usr/bin --output collection-report/report.json
       - uses: actions/upload-artifact@v7
