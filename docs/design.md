@@ -33,6 +33,9 @@ The executable cache includes the selected C compiler's version, target and
 header-search environment for integer-only programs as well as floating-point
 programs. Exact floating-point programs also include their C++ compiler identity;
 integer-only programs do not require a C++ compiler.
+For linked C or preprocessed assembly sources, the cache also fingerprints the
+expanded source so changes to included headers invalidate the executable. A
+missing header reports a compile error even when an older executable is cached.
 `--interp` selects interpretation. Both paths normally optimize; use
 `FWP_NO_OPT=1` with `--interp` when checking an optimization against the original
 operation order. Tests compare standard output, standard error and exit status.

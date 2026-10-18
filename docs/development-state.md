@@ -32,13 +32,13 @@ covers publication, fixes and merge after acceptance; no repeated permission.
 
 | Run / source | Result and required action |
 |---|---|
-| Production `39080534474` / `6b504c2e` | Benchmarks and macOS ARM GC pass. Regular macOS ARM completes all 119 targets, with only two failed client goldens. Six other jobs remain running; audit all before the combined repair push. |
+| Production `39080534474` / `6b504c2e` | Benchmarks, macOS ARM GC and Windows ARM64 pass. Linux AMD64 completes 241 targets and regular macOS ARM completes 119; each finds only the same two client goldens. Four jobs remain running; audit all before the combined repair push. |
 | Documentation `39080534747` / `6b504c2e` | Passes for the original head only. |
 | Original focused `39080530770` / `6b504c2e` | Five hosts pass. Intel reaches 25 minutes in the last API test; all logs audited: 125 passed, zero failed, 12 ignored memory entries exercised separately. |
-| Split Intel `39082660292` / workflow `1682ff88`, checked-out source `6b504c2e` | All 21 tests pass. Artifact upload fails with GitHub DNS `ENOTFOUND`; attempt 2 reruns the failed checks job. API passes. Do not accept the failed attempt or relabel its source. |
+| Split Intel `39082660292` / workflow `1682ff88`, checked-out source `6b504c2e` | Attempt 2 passes all 21 tests and artifact upload; both logs audited. Attempt 1 passed tests but failed artifact upload with GitHub DNS `ENOTFOUND`. Preserve both attempts and the checked-out source. |
 | Repaired clients `39083100171` / `9b0ca314` | All six native hosts pass ARC API, OpenAPI client and Swagger client checks. All logs audited: 18 passed, no failures or skips; both interpreter and native client halves execute. |
 | Original Wasm execution `39082338822` / `0a3b9fdf` | Both Linux hosts pass six Rust tests and the loader exception check. Allocation/output evidence passes; Asyncify strips internal names, so its name search does not independently establish absence of tracing. |
-| Wasm name repair `39084443415` / `2e47a412` | Queued on ARM job `117547970774` and AMD job `117547970989`. Audit both; download and inspect replacement modules before publishing the draft report. |
+| Wasm name repair `39084443415` / `2e47a412` | Running on ARM job `117547970774` and AMD job `117547970989`. Audit both; download and inspect replacement modules before publishing the draft report. |
 
 The production failures are `forms_client_round_trip` and `swagger_documents`:
 `tests/rest/formsroundtrip.out` and `swaggerroundtrip.out` still expected
@@ -52,15 +52,16 @@ full client verification moved to the six native hosts above.
 The focused workflow now separates entry checks and API tests, retaining the
 25-minute job limit. A source-pinned recheck records both its workflow revision
 and actual checked-out source. Attempt-one Intel upload failure remains recorded;
-its retry is job `117547135883`, with logs to audit separately.
+its retry is job `117547135883`, now passing and separately audited.
 
 Audit tools and results in `/private/tmp`:
 
 - `fwp-audit-final-164.py` → `fwp164-final-audit.json` and all production job logs.
 - `fwp-audit-focused-164.py` → `fwp164-focused-audit.json` for the original six hosts.
 - `fwp-audit-clients-164.py` → `fwp164-clients-audit.json` for the repaired clients.
-- `fwp-audit-recheck-164.py` and `fwp164-recheck-audit.json` preserve attempt one;
-  adapt the auditor for attempt two without overwriting the first audit.
+- `fwp-audit-recheck-164.py` / `fwp164-recheck-audit.json` preserve attempt one;
+  `fwp-audit-recheck2-164.py` / `fwp164-recheck-attempt2-audit.json` record the
+  successful second attempt: 21 passed, zero failed, two separate memory entries ignored.
 - `fwp-wasm-repaired-audit.json` and `fwp-wasm-repaired-JOB.log` preserve the
   original passing execution run. Audit the new binary-name run separately.
 
@@ -94,9 +95,13 @@ Two further audit repairs are included:
 - Integer-only executable cache keys omitted compiler version/target and header
   search environment. Changing `C_INCLUDE_PATH` returned the old answer `41`
   instead of `42`. Every executable now includes its C compiler identity;
-  exact-float programs additionally include C++ identity. The regression verifies
-  that integer programs need no C++ compiler and that a third identical run
-  reuses the second cache entry. Windows production now explicitly runs it;
+  exact-float programs additionally include C++ identity. A broader regression
+  then found that editing a header at the same path still returned `42` rather
+  than `43`. Cache lookup now fingerprints preprocessed linked C/assembly, using
+  explicit include options too, and reports missing headers. The regression
+  covers search paths, in-place edits, explicit include flags, deletion and
+  unchanged reuse, without requiring C++ for integer code. `FWP_LTO` also
+  participates in the key because it changes generated-code options. Windows production now explicitly runs it;
   Linux and macOS include the whole AOT test target.
 - Asyncify stripped internal function names. Seeing the exported `_start` did
   not make an empty internal tracing-name search meaningful. The collector now
@@ -166,11 +171,14 @@ Recent guarded local checks:
 - Tiny locally built Wasm modules reproduce the old output-callback retry and
   verify the loader repair and actual stack-overflow reporting (0.14/0.15 s).
 - `cargo test --test aot integer_cache_tracks_header_search_paths -- --exact`
-  reproduces stale output (2.49 s), then passes after repair (19.28 s).
+  reproduces stale output after a path change (2.49 s), then passes (19.28 s).
+  Its expanded case reproduces stale output after an in-place edit (5.16 s);
+  all path/edit/explicit-include/deletion/reuse cases then pass (22.84 s).
+  The final key including `FWP_LTO` passes again (23.25 s).
 - `cargo test --test aot programs_are_interpreted_without_a_c_compiler -- --exact`
   passes (1.46 s). Existing missing-compiler behavior remains intact.
 - `cargo clippy --lib --bin fwp --test aot --test wasm_arc -- -D warnings`
-  passes after the final code changes (6.05 s). Rust formatting passes (1.27 s).
+  passes after the final cache changes (5.55 s). Rust formatting passes (1.10 s).
   Numerics workflow lint passes (1.38 s); Windows workflow lint passes (0.15 s).
   Tutorial/source consistency passes (16.47 s including rebuild); the roadmap,
   links and commit-message audit passes (2.54 s).

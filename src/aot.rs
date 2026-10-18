@@ -116,17 +116,31 @@ fn key(c_source: &str, opt: &str) -> Result<String, String> {
         k.extend_from_slice(part.as_bytes());
         k.push(0);
     }
-    if let Some(prefix) = std::env::var_os("FWP_OPENSSL_DIR") {
-        k.extend_from_slice(prefix.as_encoded_bytes());
+    for name in ["FWP_OPENSSL_DIR", "FWP_LTO"] {
+        k.extend_from_slice(name.as_bytes());
+        if let Some(value) = std::env::var_os(name) {
+            k.extend_from_slice(value.as_encoded_bytes());
+        }
+        k.push(0);
     }
-    k.push(0);
-    for l in crate::ffi::links() {
+    let links = crate::ffi::links();
+    for l in &links {
         k.extend_from_slice(l.as_bytes());
         k.push(0);
         // a linked source or object file changes the executable
-        if let Ok(bytes) = std::fs::read(&l) {
+        if let Ok(bytes) = std::fs::read(l) {
             k.extend_from_slice(&crate::grpc::web::sha1(&bytes));
         }
+        k.push(0);
+    }
+    // Includes can change without changing the linked source or search path.
+    if links.iter().any(|link| {
+        Path::new(link)
+            .extension()
+            .is_some_and(|extension| extension == "c" || extension == "S")
+    }) {
+        let expanded = crate::cgen::preprocess_linked_sources(&links, c_source, opt)?;
+        k.extend_from_slice(&crate::grpc::web::sha1(&expanded));
         k.push(0);
     }
     k.extend(crate::float_codegen::compiler_identity(

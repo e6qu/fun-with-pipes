@@ -234,6 +234,53 @@ fn integer_cache_tracks_header_search_paths() {
         assert_eq!(result.stdout, expected, "{}", render(&result));
         assert_eq!(cache.entries().len(), entries);
     }
+    std::fs::write(second.join("answer.h"), "#define ANSWER 43\n").unwrap();
+    let changed = output(
+        cache
+            .fwp(&["run", "--native", "--link"])
+            .arg(&host)
+            .arg(&source)
+            .env("C_INCLUDE_PATH", &second),
+        b"",
+    );
+    assert!(changed.status.success(), "{}", render(&changed));
+    assert_eq!(changed.stdout, b"43\n", "{}", render(&changed));
+    assert_eq!(cache.entries().len(), 3);
+    let selected = dir.join("selected");
+    std::fs::create_dir(&selected).unwrap();
+    let include = format!("-I{}", selected.display());
+    for (answer, entries) in [(44, 4), (45, 5)] {
+        std::fs::write(
+            selected.join("answer.h"),
+            format!("#define ANSWER {answer}\n"),
+        )
+        .unwrap();
+        let explicit = output(
+            cache
+                .fwp(&["run", "--native", "--link"])
+                .arg(&host)
+                .arg("--link")
+                .arg(&include)
+                .arg(&source)
+                .env("C_INCLUDE_PATH", &second),
+            b"",
+        );
+        assert!(explicit.status.success(), "{}", render(&explicit));
+        assert_eq!(explicit.stdout, format!("{answer}\n").as_bytes());
+        assert_eq!(cache.entries().len(), entries);
+    }
+    std::fs::remove_file(second.join("answer.h")).unwrap();
+    let missing = output(
+        cache
+            .fwp(&["run", "--native", "--link"])
+            .arg(&host)
+            .arg(&source)
+            .env("C_INCLUDE_PATH", &second),
+        b"",
+    );
+    assert!(!missing.status.success(), "{}", render(&missing));
+    assert!(String::from_utf8_lossy(&missing.stderr).contains("answer.h"));
+    assert!(missing.stdout.is_empty());
 }
 
 #[test]
