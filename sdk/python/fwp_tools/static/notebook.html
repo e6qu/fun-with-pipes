@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>fwp notebook</title><link rel="stylesheet" href="/notebook.css">
+<script type="module" src="/notebook.js"></script>
+</head>
+<body>
+<header><a class="wordmark" href="/" aria-label="fwp notebook">fwp <span>|</span> notebook</a>
+<input id="title" aria-label="Notebook title" value="A calculation in pipes">
+<div class="actions"><button id="open">Open</button><input id="file" type="file" accept=".fwpnb,.json" hidden>
+<button id="save">Save notebook</button><button id="run-all" class="primary">Run all</button><button id="stop" disabled>Stop</button></div></header>
+<div class="workspace"><aside><h2>Cells</h2><nav id="outline" aria-label="Cell outline"></nav>
+<p class="hint">Edit freely. Run explicitly.<br>Changing code marks dependent results stale.</p>
+<details><summary>Keyboard shortcuts</summary><p>Ctrl/⌘ + Enter runs the focused cell.<br>Tab indents code.<br>Every control also works with the keyboard.</p></details>
+<p id="status" role="status">Ready</p></aside>
+<main><div class="notebook-intro"><p class="eyebrow">Source · types · results</p><h1>Follow the calculation.</h1>
+<p>Code and explanation, together. Cells share named definitions; expression cells show their results.</p></div>
+<div id="cells"></div><div class="add-row"><button id="add-code">+ Code cell</button><button id="add-markdown">+ Markdown cell</button></div></main></div>
+<dialog id="error"><h2>Could not complete this action</h2><pre id="error-text"></pre><button id="close-error">Close</button></dialog>
+</body></html>

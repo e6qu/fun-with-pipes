@@ -89,6 +89,7 @@ usage:
   fwp test --std                 run the standard library's tests
   fwp check <file.fwp>           type-check a file and print inferred types
   fwp check --parse <file.fwp>   parse a file and print its syntax tree
+  fwp notebook [OPTIONS]       local notebook UI (requires fwp-tools Python package)
   fwp debug [--json] FILE       interactive interpreter debugger
   fwp disassemble [--json] [--tool PATH] BINARY  inspect native instructions
   fwp repl [--no-history | --history PATH]  interactive interpreted session
@@ -199,6 +200,46 @@ fn main() -> ExitCode {
         return not_in_wasm("`--link` (C code for foreign functions)");
     }
     match args.first().map(String::as_str) {
+        Some("notebook") if IN_WASM => {
+            not_in_wasm("`fwp notebook` (it needs Python and local sockets)")
+        }
+        Some("notebook") => {
+            let mut options = args[1..].to_vec();
+            let python = if let Some(index) = options.iter().position(|s| s == "--python") {
+                if index + 1 == options.len() {
+                    eprintln!("--python needs an executable path");
+                    return ExitCode::from(2);
+                }
+                let executable = options.remove(index + 1);
+                options.remove(index);
+                executable
+            } else {
+                if cfg!(windows) { "python" } else { "python3" }.into()
+            };
+            let compiler = match std::env::current_exe() {
+                Ok(path) => path,
+                Err(e) => {
+                    eprintln!("{e}");
+                    return ExitCode::from(1);
+                }
+            };
+            match std::process::Command::new(&python)
+                .args(["-m", "fwp_tools.notebook", "--fwp"])
+                .arg(compiler)
+                .args(options)
+                .status()
+            {
+                Ok(status) if status.success() => ExitCode::SUCCESS,
+                Ok(_) => {
+                    eprintln!("The notebook requires the fwp-tools Python package; see docs/notebooks.md.");
+                    ExitCode::from(1)
+                }
+                Err(e) => {
+                    eprintln!("cannot start {python}: {e}; choose --python PATH");
+                    ExitCode::from(1)
+                }
+            }
+        }
         Some("debug") => {
             let options = args[1..].to_vec();
             ExitCode::from(fwp::driver::with_big_stack(move || fwp::debugger::run(&options)) as u8)

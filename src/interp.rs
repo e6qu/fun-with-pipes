@@ -71,11 +71,13 @@ pub struct Interp<'p> {
     pub(crate) state: Vec<Value>,
     pub(crate) rng: u64,
     pub out: Box<dyn Write + 'p>,
+    pub(crate) err: Box<dyn Write + 'p>,
     pub args: Vec<String>,
     pub(crate) world: std::sync::Arc<crate::sched::World>,
     pub(crate) task: std::sync::Arc<crate::sched::TaskShared>,
     /// The root task's writer, shared by every task.
     pub(crate) root_out: *mut (dyn Write + 'p),
+    pub(crate) root_err: *mut (dyn Write + 'p),
     /// Tasks spawned inside each enclosing `task.scope`.
     pub(crate) scopes: Vec<Vec<std::sync::Arc<crate::sched::TaskShared>>>,
     /// The foreign function shim, loaded on the first foreign C call.
@@ -97,6 +99,8 @@ impl<'p> Interp<'p> {
                     .unwrap_or(1)
             });
         let root_out: *mut (dyn Write + 'p) = &mut *out;
+        let mut err: Box<dyn Write + 'p> = Box::new(std::io::stderr());
+        let root_err: *mut (dyn Write + 'p) = &mut *err;
         Interp {
             prog,
             debugger: None,
@@ -104,14 +108,22 @@ impl<'p> Interp<'p> {
             state: Vec::new(),
             rng: seed | 1,
             out,
+            err,
             args: Vec::new(),
             world: crate::sched::World::new(),
             task: crate::sched::TaskShared::new(),
             root_out,
+            root_err,
             scopes: Vec::new(),
             ffi: Rc::new(RefCell::new(None)),
             grpc: Default::default(),
         }
+    }
+
+    /// Set both the writer and the stable pointee forwarded to child tasks.
+    pub(crate) fn set_error_writer(&mut self, mut writer: Box<dyn Write + 'p>) {
+        self.root_err = &mut *writer;
+        self.err = writer;
     }
 
     // ----- evaluation ----------------------------------------------------------

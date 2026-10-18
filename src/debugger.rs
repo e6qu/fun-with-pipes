@@ -552,8 +552,11 @@ pub fn run(args: &[String]) -> i32 {
         &program,
     )));
     debugger.borrow_mut().program_input = program_input;
-    let mut interpreter =
-        crate::interp::Interp::new(&program, Box::new(ProgramOutput(debugger.clone())));
+    let mut interpreter = crate::interp::Interp::new(
+        &program,
+        Box::new(ProgramOutput(debugger.clone(), "output")),
+    );
+    interpreter.set_error_writer(Box::new(ProgramOutput(debugger.clone(), "stderr")));
     interpreter.debugger = Some(debugger.clone());
     let result = interpreter.call_root(main);
     let status = match &result {
@@ -574,14 +577,14 @@ pub fn run(args: &[String]) -> i32 {
     status
 }
 
-struct ProgramOutput(Shared);
+struct ProgramOutput(Shared, &'static str);
 impl Write for ProgramOutput {
     fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
         let mut debugger = self.0.borrow_mut();
         if debugger.json {
             debugger
                 .send(&Json::obj(vec![
-                    ("event", Json::str("output")),
+                    ("event", Json::str(self.1)),
                     ("text", Json::str(String::from_utf8_lossy(bytes))),
                 ]))
                 .map_err(|e| std::io::Error::other(format!("{e:?}")))?;

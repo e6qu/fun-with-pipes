@@ -28,36 +28,38 @@ then audit every final-head job and squash merge only after passing acceptance:
 6. Keep tutorials, parser/compiler docs, benchmark methods and the live plan
    aligned; verify semantic changes against raw interpretation and native code.
 
-Checkpoint `f440c903` is published on the same PR. Focused run `39124618102`
-failed in C++ compilation: the vendored `hypot` is a hidden friend found through
-argument-dependent lookup, not qualified namespace lookup. All three format
-diagnostics have the same cause; the call is repaired. Rust/tests were not reached.
-Run `39124700912` then compiled C++ and reported a Rust token-name error in
-REPL continuation detection (`Tok::Kw` versus `Tok::Keyword`); repaired locally.
-The next focused dispatch must check this repair and the remaining implementation.
-Run `39125003915` reported a borrow-check error in the new REPL resource check;
-locally repaired by ending the binding borrow before solving its Dup constraint.
-The debugger now has initial call/expression/binding/return/error hooks, per-task
-frames, function breakpoints, typed snapshots and JSON control. Initial native
-disassembly parsing is implemented. Both remain unverified. Notebook, Python SDK,
-source-level debugger sites and C/target/optimization comparisons remain in progress.
-The obsolete documentation-head production run was audited (no failed jobs;
-Windows AMD64, both ARM macOS jobs and benchmarks passed) and cancelled to avoid
-wasting runners. Full final-head acceptance remains mandatory.
-The previous documentation-only head `8060075e` has passing docs, benchmarks and
-both ARM macOS jobs; the other six production jobs were still running without a
-reported failure at the last audit. Its production run is `39120276898` and docs
-run is `39120277029`. No merge has occurred.
+Published checkpoint is `085626f3` on PR #167. Focused run `39125583949`
+compiled and passed every selected test: infix, REPL, initial debugger, scalar
+math, cached-map borrows, both older cached-value suites and generated library
+reference. Clippy found two issues: a collapsible REPL match and a redundant box
+allocation in the RC test; both are repaired locally. Earlier preflight failures
+(C++ hypot lookup, token spelling, then a type-checker borrow) are repaired and
+superseded by this successful semantic run. Full production acceptance has not
+been restarted for the expanded scope.
 
-New local checks through the unchanged guard: 35 RC unit tests pass; existing
-cached-value tests pass; the new tuple/variant direct-result regression passes;
-all three infix tests pass, including native O0/O1/O2 versus raw interpretation.
-Formatting, generated library documentation/tutorial copies and four collection
-collector tests pass. Scalar math and the REPL are **not compiled or verified yet**;
-C++ runtime changes make a remote build appropriate. The next checkpoint skips
-push-triggered production jobs while the `language` dispatch checks compilation,
-lints and focused tests. Skipped jobs are not acceptance. Run all final-head
-production jobs and documentation after batching discovered repairs.
+Uncommitted work adds the Python debugger/disassembler SDK, C line mappings,
+O0–O3 object comparisons with explicit toolchains/targets, and the local notebook
+app. Notebook cells use the REPL JSON protocol; imports/types/traits get
+conservative dependencies and editing marks results stale. No automatic effect
+replay. The UI has source/Markdown cells, run/stop, save/open, output and dependency
+labels. `fwp notebook` launches the explicitly installed Python SDK app;
+`fwp repl --json` supplies its checked session protocol. Runtime stdout/stderr
+now have separate capture paths, including child-task forwarding. These additions are not yet compiled or end-to-end verified. Source-level
+debugger locations (beyond function declarations/IR sites), notebook/debugger
+integration and comprehensive SDK/browser/platform tests remain to finish.
+
+Local guard checks: primitive ownership inventory PASS (394 declarations,
+371 contracts, 19 IR templates, three flat scalars, one reviewed symbol);
+Python SDK syntax PASS; a tiny ARM64 C object confirms real LLVM disassembly
+with C source lines. That probe exposed unsupported `--show-raw-insn`; removed
+because LLVM already prints encodings by default. A guarded formatter hit a
+process-group permission error; unchanged retry passed. Limits were not raised.
+
+The obsolete documentation-head production run `39120276898` was audited with
+no failed jobs (Windows AMD64, both ARM macOS jobs and benchmarks passed), then
+cancelled to free runners. Docs `39120277029` passed. No merge has occurred.
+Actual-compiler map measurements were dispatched from `085626f3`, against saved
+run `39106005017` / source `93cb93a0`; record the new run ID and audit all hosts.
 
 [PLAN.md](../PLAN.md) owns the seven remaining work areas;
 [design limits](design-limits.md) states feasible acceptance criteria.

@@ -111,6 +111,15 @@ impl Session {
     }
 
     pub fn submit(&mut self, text: &str, output: &mut dyn Write) -> Result<Outcome, String> {
+        self.submit_with_stderr(text, output, &mut std::io::stderr())
+    }
+
+    pub fn submit_with_stderr(
+        &mut self,
+        text: &str,
+        output: &mut dyn Write,
+        errors: &mut dyn Write,
+    ) -> Result<Outcome, String> {
         let started = Instant::now();
         INTERRUPTED.store(false, Ordering::Relaxed);
         self.history.push(text.to_string());
@@ -219,6 +228,7 @@ impl Session {
         let evaluating = Instant::now();
         let value = {
             let mut interpreter = Interp::new(&self.program, Box::new(output));
+            interpreter.set_error_writer(Box::new(errors));
             interpreter.cafs = self.caches.clone();
             interpreter.world = self.world.clone();
             interpreter.task = self.task.clone();
@@ -457,10 +467,8 @@ pub fn incomplete(text: &str) -> bool {
             Tok::Sym(Sym::LParen) => open.push(Sym::RParen),
             Tok::Sym(Sym::LBracket) => open.push(Sym::RBracket),
             Tok::Sym(Sym::LBrace) => open.push(Sym::RBrace),
-            Tok::Sym(s @ (Sym::RParen | Sym::RBracket | Sym::RBrace)) => {
-                if open.pop() != Some(s) {
-                    return false;
-                }
+            Tok::Sym(s @ (Sym::RParen | Sym::RBracket | Sym::RBrace)) if open.pop() != Some(s) => {
+                return false;
             }
             _ => {}
         }
@@ -631,17 +639,139 @@ pub fn run_stream(
     Ok(())
 }
 
+/// Machine interface shared by notebook cells and automation. Program stdout is
+/// captured separately from each reply; it can never impersonate a protocol line.
+pub fn run_json(
+    mut input: impl BufRead,
+    mut output: impl Write,
+    directory: PathBuf,
+) -> Result<(), String> {
+    let mut session = Session::new(directory.clone())?;
+    loop {
+        let mut line = String::new();
+        if input.read_line(&mut line).map_err(|e| e.to_string())? == 0 {
+            return Ok(());
+        }
+        let request = crate::json::Json::parse(&line)?;
+        use crate::json::Json;
+        let source = request.get("source").and_then(Json::as_str).unwrap_or("");
+        let command = request
+            .get("command")
+            .and_then(Json::as_str)
+            .unwrap_or("submit");
+        let mut printed = Vec::new();
+        let mut errors = Vec::new();
+        let result = match command {
+            "reset" => Session::new(directory.clone()).map(|fresh| {
+                session = fresh;
+                Json::Null
+            }),
+            "type" => session.type_of(source).map(Json::str),
+            "analyze" => analyze(source),
+            "submit" => session
+                .submit_with_stderr(source, &mut printed, &mut errors)
+                .map(|cell| {
+                    Json::obj(vec![
+                        ("index", Json::Num(cell.index.to_string())),
+                        ("value", cell.value.map_or(Json::Null, Json::str)),
+                        ("signatures", Json::str(cell.signatures)),
+                        (
+                            "check_ms",
+                            Json::Num((cell.preparation.as_secs_f64() * 1000.0).to_string()),
+                        ),
+                        (
+                            "evaluation_ms",
+                            Json::Num((cell.evaluation.as_secs_f64() * 1000.0).to_string()),
+                        ),
+                    ])
+                }),
+            _ => Err(format!("unknown session command {command}")),
+        };
+        let mut reply = vec![
+            ("id", request.get("id").cloned().unwrap_or(Json::Null)),
+            ("stdout", Json::str(String::from_utf8_lossy(&printed))),
+            ("stderr", Json::str(String::from_utf8_lossy(&errors))),
+        ];
+        match result {
+            Ok(result) => reply.push(("result", result)),
+            Err(error) => reply.push(("error", Json::str(error))),
+        }
+        writeln!(output, "{}", Json::obj(reply))
+            .and_then(|()| output.flush())
+            .map_err(|e| e.to_string())?;
+    }
+}
+
+fn analyze(source: &str) -> Result<crate::json::Json, String> {
+    use crate::json::Json;
+    use crate::lexer::Tok;
+    let module = crate::parser::parse_module(source, 0, &mut 0);
+    let declarations = module.as_ref().is_ok_and(|m| !m.decls.is_empty());
+    if !declarations {
+        crate::parser::parse_expr_text(source, 0, &mut 0).map_err(|e| e.message)?;
+    }
+    let mut defines = std::collections::BTreeSet::new();
+    let mut global_context = false;
+    if let Ok(module) = module {
+        for decl in module.decls {
+            match decl {
+                Decl::Bind(b) | Decl::Macro(b) => {
+                    defines.insert(b.name);
+                }
+                Decl::Type(t) => {
+                    defines.insert(t.name);
+                    global_context = true;
+                }
+                Decl::Import { .. } | Decl::Trait(_) | Decl::Impl(_) | Decl::Foreign { .. } => {
+                    global_context = true
+                }
+                _ => {}
+            }
+        }
+    }
+    let mut uses = std::collections::BTreeSet::new();
+    for token in crate::lexer::lex(source, 0).map_err(|e| e.message)? {
+        match token.tok {
+            Tok::Ident(name) | Tok::Upper(name) | Tok::MacroCall(name) => {
+                uses.insert(name);
+            }
+            _ => {}
+        }
+    }
+    for name in &defines {
+        uses.remove(name);
+    }
+    Ok(Json::obj(vec![
+        (
+            "kind",
+            Json::str(if declarations {
+                "definitions"
+            } else {
+                "expression"
+            }),
+        ),
+        (
+            "defines",
+            Json::Arr(defines.into_iter().map(Json::str).collect()),
+        ),
+        ("uses", Json::Arr(uses.into_iter().map(Json::str).collect())),
+        ("global_context", Json::Bool(global_context)),
+    ]))
+}
+
 pub fn run(args: &[String]) -> i32 {
     if args.iter().any(|a| a == "--help" || a == "-h") {
-        println!("Usage: fwp repl [--no-history | --history PATH]\n\n{HELP}");
+        println!("Usage: fwp repl [--json | --no-history | --history PATH]\n\n{HELP}");
         return 0;
     }
     let mut history = None;
     let mut no_history = false;
+    let mut json = false;
     let mut args = args.iter();
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--no-history" => no_history = true,
+            "--json" => json = true,
             "--history" => match args.next() {
                 Some(path) => history = Some(PathBuf::from(path)),
                 None => {
@@ -666,7 +796,9 @@ pub fn run(args: &[String]) -> i32 {
             return 1;
         }
     };
-    let result = if !io::stdin().is_terminal() || !io::stdout().is_terminal() {
+    let result = if json {
+        run_json(io::stdin().lock(), io::stdout(), directory)
+    } else if !io::stdin().is_terminal() || !io::stdout().is_terminal() {
         run_stream(io::stdin().lock(), io::stdout(), directory)
     } else {
         #[cfg(not(target_family = "wasm"))]

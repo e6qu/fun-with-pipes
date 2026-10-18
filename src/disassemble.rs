@@ -19,9 +19,10 @@ pub fn inspect(path: &Path, tool: &str) -> Result<Json, String> {
     let output = Command::new(tool)
         .args([
             "--disassemble",
-            "--show-raw-insn",
             "--print-imm-hex",
             "--demangle",
+            "--source",
+            "--line-numbers",
         ])
         .arg(&path)
         .output()
@@ -59,6 +60,9 @@ pub fn parse(text: &str) -> Vec<Json> {
     let mut function = String::new();
     let mut section = String::new();
     let mut instructions = Vec::new();
+    let mut source_file = String::new();
+    let mut source_line = None;
+    let mut source_text = String::new();
     for line in text.lines() {
         let line = line.trim();
         if let Some(name) = line
@@ -73,6 +77,20 @@ pub fn parse(text: &str) -> Vec<Json> {
                 function = name.to_string();
                 continue;
             }
+        }
+        if let Some(comment) = line.strip_prefix("; ") {
+            if let Some((file, line)) = comment.rsplit_once(':') {
+                if let Ok(line) = line.parse::<u32>() {
+                    source_file = file.to_string();
+                    source_line = Some(line);
+                    source_text.clear();
+                    continue;
+                }
+            }
+            if !comment.ends_with("():") {
+                source_text = comment.to_string();
+            }
+            continue;
         }
         let Some((address, rest)) = line.split_once(':') else {
             continue;
@@ -105,6 +123,26 @@ pub fn parse(text: &str) -> Vec<Json> {
             ("assembly", Json::str(assembly.trim())),
             ("function", Json::str(&function)),
             ("section", Json::str(&section)),
+            (
+                "c_file",
+                if source_file.is_empty() {
+                    Json::Null
+                } else {
+                    Json::str(&source_file)
+                },
+            ),
+            (
+                "c_line",
+                source_line.map_or(Json::Null, |line| Json::Num(line.to_string())),
+            ),
+            (
+                "c_source",
+                if source_text.is_empty() {
+                    Json::Null
+                } else {
+                    Json::str(&source_text)
+                },
+            ),
         ]));
     }
     instructions

@@ -1550,11 +1550,11 @@ mod tests {
         let Body::Expr(Expr::Let(_, _, body)) = &mut p.funcs[0].body else {
             panic!()
         };
-        *body = Box::new(Expr::Let(
+        **body = Expr::Let(
             2,
             Box::new(Expr::Call(4, vec![Expr::Local(0)])),
             body.clone(),
-        ));
+        );
         let (body, _) = counted(&p);
         assert!(!format!("{body:?}").contains("BorrowGlobal"));
 
