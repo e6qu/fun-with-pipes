@@ -126,9 +126,9 @@ def main():
             for opt in ['-O1', '-O2']:
                 for reuse in (['0'] if mode == 'arc' else ['0', '1']):
                     text = (checks / f'failures-{mode}{opt}-reuse-{reuse}.txt').read_text()
-                    assert text == '6 builders: 50 allocation failures and 48 callback exits cleaned; aliases preserved\n', text
+                    assert text == '8 builders: 56 allocation failures and 64 callback exits cleaned; aliases preserved\n', text
                     exits.append({'mode': mode, 'optimization': opt, 'reuseVerification': reuse == '1',
-                                  'allocationFailures': 50, 'callbackExits': 48})
+                                  'allocationFailures': 56, 'callbackExits': 64})
                 broken = (checks / f'missing-cleanup-{mode}{opt}.txt').read_text()
                 assert 'collection live allocations: 4' in broken, broken
                 for kind in ['failures', 'missing-cleanup']:

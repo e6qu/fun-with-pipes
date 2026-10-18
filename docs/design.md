@@ -273,9 +273,12 @@ without allocating its input list. Other list sources remain borrowed, so their
 aliases stay alive. Boxed numbers and managed result fields keep their existing
 construction rules. This changes no language notation or inference rule.
 
-When an ordinary callback is known at compile time, its generated function can
-return the two numeric fields directly, avoiding temporary tuples. This uses
-the compiler's existing field-return calling convention. Captured values still use
+When an ordinary map callback is known at compile time, its generated function
+can return the two numeric fields directly, avoiding temporary tuples. This uses
+the compiler's existing field-return calling convention. Known set callbacks
+also call their existing owned function entry directly, avoiding general function
+dispatch per item. This includes primitive callbacks and their argument cleanup.
+Captured values still use
 ordinary argument ownership and may need reference-count operations. Dynamic
 callbacks use their normal call convention and can still allocate result tuples;
 they share the same protected buffer construction. Errors and task

@@ -2,8 +2,8 @@
 
 ## Next action
 
-Next: finish the set-buffer follow-up checks, publish them together, and repeat
-six-host collection evidence while PR #165 finishes acceptance. Do not open a
+Next: publish the direct-set callback follow-up and repeat six-host collection
+evidence while PR #165 finishes acceptance. Do not open a
 second PR. The authoritative live delivery handoff is
 `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`; replace this
 preparation-only file with that handoff before the delivery PR.
@@ -32,7 +32,7 @@ Refresh from the root with its local guard and
 `/private/tmp/fwp166-collection-repair-audit.json`; original failures use the
 separate `fwp166-collection-build-*` files. Never relabel earlier measurements.
 
-## Current set-buffer follow-up
+## Current set construction follow-up
 
 The passing baseline still used four temporary word arrays for sets although
 sets contain only keys. Current compiler/runtime changes remove both unused
@@ -41,6 +41,14 @@ shares key/value lanes and avoids copying identical output twice. Final set
 value slots remain explicit unit values. Maps retain separate value buffers.
 A native regression checks that equal, separately allocated strings keep the
 first key's identity and correct reference counts.
+
+Published set-buffer source `8fcd7486881c627f078d8bff7ad6e6c82f040734`
+has six-host run `39100058501` underway. Keep it separate from the new direct-call
+change: actual baseline AMD64 set machine code calls general function dispatch
+per item and reloads values from the stack. Known set callbacks now use the
+existing owned entry, including primitive argument cleanup. Dynamic callbacks
+retain their ordinary dispatch. Tests add dynamic sets and managed captures,
+including caught errors, and exercise eight actual emitted builder bodies.
 
 All local checks use the root `scripts/local-guard.py`, serially, with fixed
 limits. Full builds, suites, measurements and large evidence processing stay on CI.
@@ -70,8 +78,14 @@ Do not overwrite their source identity with current compiler output.
 
 ## Delivery requirements
 
-The new collector expects four set allocation requests and 50 injected
-collection failures per configuration. Run all six hosts, inspect actual binaries and timing changes, then update the draft PR
+The direct-set follow-up passes formatting, Clippy and all three collection
+tests (56.97 s guarded): 56 allocation failures and 64 callback exits per
+configuration, raw/native agreement, managed captures, aliases and deliberately
+missing cleanup. Tiny counts remain four set/seven map requests with zero retains,
+final bytes and collections; data stays separate in
+`/private/tmp/fwp-collection-direct-set-prototype/`. Tiny probes, focused linting,
+workflow/docs checks and report regressions pass (12.80 s guarded). The collector now expects these eight-builder results and four
+set allocation requests. Earlier six-builder reports keep their source identity. Run all six hosts, inspect actual binaries and timing changes, then update the draft PR
 body `/private/tmp/fwp-collection-build-pr.md`. The earlier report remains tied to
 its earlier source. Production acceptance still requires nine exact-head jobs
 plus documentation. One-line commit messages, at most 80 characters, with no

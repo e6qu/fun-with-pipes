@@ -1,4 +1,4 @@
-/* Exercise actual generated builders, including the direct pair worker. */
+/* Exercise actual generated builders, including direct map and set callbacks. */
 static int build_armed, build_step, build_failure, build_live, build_calls;
 static int build_callback_failure, build_cancel;
 static void *build_allocations[128];
@@ -36,8 +36,10 @@ static V build_operation(int op) {
     case 1: return SET_RANGE(PTR(&KEY_CALLBACK), 0, 4);
     case 2: return MAP_LIST(PTR(&PAIR_CALLBACK), build_input);
     case 3: return SET_LIST(PTR(&KEY_CALLBACK), build_input);
-    case 4: return build_direct_range();
-    case 5: return build_direct_list();
+    case 4: return build_direct_map_range();
+    case 5: return build_direct_map_list();
+    case 6: return build_direct_set_range();
+    case 7: return build_direct_set_list();
     default: abort();
     }
 }
@@ -64,7 +66,8 @@ static int build_case(int op, int failure, int callback, int cancel, int *steps)
         if (failure || callback) return 210;
         if (MAP(result)->len != 3 || MAP(result)->d[0] != 0 ||
             MAP(result)->d[2] != 1 || MAP(result)->d[4] != 2) return 211;
-        if (op != 1 && op != 3 && MAP(result)->d[1] != 3) return 212;
+        int is_set = op == 1 || op == 3 || op == 6 || op == 7;
+        if (MAP(result)->d[1] != (is_set ? 0 : 3)) return 212;
         fwp_rc_free_obj(result);
     }
     build_armed = 0; fwp_cur = build_saved_task;
@@ -94,7 +97,7 @@ int main(void) {
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     for (V i = 4; i; i--) build_input = fwp_rc_fresh(fwp_cons(i - 1, build_input));
     int failures = 0, callbacks = 0;
-    for (int op = 0; op < 6; op++) {
+    for (int op = 0; op < 8; op++) {
         int steps = 0, observed = 0, result = build_case(op, 0, 0, 0, &steps);
         if (result) { fprintf(stderr, "builder %d baseline: %d\n", op, result); return result; }
         for (int fail = 1; fail <= steps; fail++) {
@@ -109,6 +112,6 @@ int main(void) {
         }
     }
     while (build_input) { V next = OBJ(build_input)->f[1]; fwp_rc_free_obj(build_input); build_input = next; }
-    printf("6 builders: %d allocation failures and %d callback exits cleaned; aliases preserved\n", failures, callbacks);
+    printf("8 builders: %d allocation failures and %d callback exits cleaned; aliases preserved\n", failures, callbacks);
     return 0;
 }

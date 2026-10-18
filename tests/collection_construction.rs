@@ -34,6 +34,10 @@ string-pair : String -> (I64, I64)
 string-pair = fork (curry id) string.length (string.length | add 1)
 choose : Bool -> (I64 -> (I64, I64))
 choose = if id (const pair) (const (fork (curry id) id id))
+choose-key : Bool -> (I64 -> I64)
+choose-key = if id (const key) (const id)
+captured-key : String -> I64 -> I64
+captured-key = curry (fork add (.0 | string.length) .1)
 main = [
     [0, 1, 2, 3, 4] | map key | set.from-list | set.to-list | echo,
     [0, 1, 2, 3, 4] | map pair | map.from-list | map.to-list | echo,
@@ -53,6 +57,9 @@ main = [
     ["a", "héllo", ""] | both (map string-pair | map.from-list | map.to-list) id | echo,
     range 0 4 | map (captured-pair ("prefix" | concat "!")) | map.from-list | map.to-list | echo,
     range 0 4 | map (choose (read-all () | string.length | eq 0)) | map.from-list | map.to-list | echo,
+    range 0 4 | map (choose-key (read-all () | string.length | eq 0)) | set.from-list | set.to-list | echo,
+    range 0 4 | map (captured-key (read-all () | concat "prefix")) | set.from-list | set.to-list | echo,
+    [0, 1, 2, 3] | map (captured-key (read-all () | concat "prefix")) | set.from-list | set.to-list | echo,
     range (0 | tap echo) (4 | tap echo) | map (captured-pair ("capture" | tap echo)) | map.from-list | map.to-list | echo,
     range (3 | tap echo) (3 | tap echo) | map (captured-pair ("empty capture" | tap echo)) | map.from-list | map.to-list | echo,
     range (0 | tap echo) (4 | tap echo) | map (add (1 | tap echo)) | set.from-list | set.to-list | echo,
@@ -141,10 +148,14 @@ fn failed_numeric_collection_callbacks_release_storage() {
         }
     }
     source.push_str("captured : String -> I64 -> (I64, I64) ! {Error[String]}\ncaptured = curry (if (.1 | eq 2) (.0 | fail) (fork (curry id) (.0 | string.length) .1))\n");
+    source.push_str("captured-key : String -> I64 -> I64 ! {Error[String]}\ncaptured-key = curry (if (.1 | eq 2) (.0 | fail) (fork add (.0 | string.length) .1))\n");
     cases.push("4 | range 0 | attempt (map pair2 | map.from-list) | echo".into());
     cases.push("4 | range 0 | attempt (map step2 | array.from-list) | echo".into());
     for _ in 0..4 {
         cases.push("4 | attempt (range 0 | map (captured (read-all () | concat \"callback failure\")) | map.from-list) | echo".into());
+        for producer in ["range 0", "const [0, 1, 2, 3]"] {
+            cases.push(format!("4 | attempt ({producer} | map (captured-key (read-all () | concat \"callback failure\")) | set.from-list) | echo"));
+        }
     }
     source.push_str(&format!("main = [{}] | ignore\n", cases.join(",\n")));
     std::fs::write(&input, source).unwrap();
@@ -243,50 +254,54 @@ fn allocation_probe(mut code: String) -> String {
     }
     // Retain the actual emitted direct-worker bodies, isolating them from
     // main's unrelated literal list construction and output.
-    let marker = "{ /* numeric map: direct callback fields */";
-    let bodies = code
-        .match_indices(marker)
-        .map(|(start, _)| {
-            let declaration = code[..start].trim_end().lines().last().unwrap();
-            let result = declaration
-                .trim()
-                .strip_prefix("V ")
-                .unwrap()
-                .trim_end_matches(';');
-            let end = start
-                + code[start..]
-                    .find(&format!("{result} = result;\n}}"))
-                    .unwrap()
-                + format!("{result} = result;\n}}").len();
-            (
-                result.to_string(),
-                format!("{declaration}\n{}\nreturn {result};", &code[start..end]),
-            )
-        })
-        .collect::<Vec<_>>();
-    assert_eq!(bodies.len(), 2);
     let mut direct = String::new();
-    for ((_, body), name) in bodies.into_iter().zip(["range", "list"]) {
-        let mut body = body;
-        if name == "list" {
-            let input = body
-                .split("fwp_list_len(")
-                .nth(1)
-                .unwrap()
-                .split(')')
-                .next()
-                .unwrap()
-                .to_string();
-            body = body
-                .replace(
-                    &format!("fwp_list_len({input})"),
-                    "fwp_list_len(build_input)",
+    for (kind, marker) in [
+        ("map", "{ /* numeric map: direct callback fields */"),
+        ("set", "{ /* numeric set: direct callback */"),
+    ] {
+        let bodies = code
+            .match_indices(marker)
+            .map(|(start, _)| {
+                let declaration = code[..start].trim_end().lines().last().unwrap();
+                let result = declaration
+                    .trim()
+                    .strip_prefix("V ")
+                    .unwrap()
+                    .trim_end_matches(';');
+                let end = start
+                    + code[start..]
+                        .find(&format!("{result} = result;\n}}"))
+                        .unwrap()
+                    + format!("{result} = result;\n}}").len();
+                (
+                    result.to_string(),
+                    format!("{declaration}\n{}\nreturn {result};", &code[start..end]),
                 )
-                .replace(&format!("V xs = {input};"), "V xs = build_input;");
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(bodies.len(), 2);
+        for ((_, body), name) in bodies.into_iter().zip(["range", "list"]) {
+            let mut body = body;
+            if name == "list" {
+                let input = body
+                    .split("fwp_list_len(")
+                    .nth(1)
+                    .unwrap()
+                    .split(')')
+                    .next()
+                    .unwrap()
+                    .to_string();
+                body = body
+                    .replace(
+                        &format!("fwp_list_len({input})"),
+                        "fwp_list_len(build_input)",
+                    )
+                    .replace(&format!("V xs = {input};"), "V xs = build_input;");
+            }
+            direct.push_str(&format!(
+                "static V build_direct_{kind}_{name}(void) {{\n{body}\n}}\n"
+            ));
         }
-        direct.push_str(&format!(
-            "static V build_direct_{name}(void) {{\n{body}\n}}\n"
-        ));
     }
     code = code
         .replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1")
@@ -296,7 +311,7 @@ fn allocation_probe(mut code: String) -> String {
         );
     code.push_str(&direct);
     // Every mapped element passes this point in both dynamic and direct code.
-    assert_eq!(code.matches("V input = ").count(), 8);
+    assert_eq!(code.matches("V input = ").count(), 12);
     code = code.replace("V input = ", "build_callback(); V input = ");
     for (name, replacement) in [
         ("fwp_gc_alloc", "build_allocate"),
@@ -394,10 +409,10 @@ fn collection_allocation_failures_and_cancellation_release_every_owner() {
                     &format!("failures-{memory}{optimization}-reuse-{reuse}.txt"),
                     text.as_bytes(),
                 );
-                assert!(text.starts_with("6 builders: "), "{text}");
+                assert!(text.starts_with("8 builders: "), "{text}");
                 assert!(
                     text.ends_with(
-                        " allocation failures and 48 callback exits cleaned; aliases preserved\n"
+                        " allocation failures and 64 callback exits cleaned; aliases preserved\n"
                     ),
                     "{text}"
                 );
