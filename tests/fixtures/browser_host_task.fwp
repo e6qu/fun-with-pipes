@@ -1,0 +1,4 @@
+# The child prints while its parent is waiting, then suspends on a timer.
+speak : () -> String ! {Async, IO}
+speak = const "hello" | tap print | tap (const 1ms | task.sleep)
+main = task.spawn speak | task.await | echo

@@ -7,51 +7,66 @@ on `server-entry-delivery`. The implementation/evidence commit is `7c750b75`;
 this tracking update changes documentation only. Final head `6b504c2e` has six
 affected functional jobs in run `39080530770` (`server_entry_part=checks`), nine
 production jobs in `39080534474`, and documentation in `39080534747`.
-Their exact source was verified; they are queued/running, with no reported failure
-at this checkpoint. Audit all completed results before a repair push. Require all six focused
+Their exact source was verified. Five focused jobs, production benchmarks and
+documentation pass at this checkpoint; the other gates are running without a
+reported failure. Audit all completed results before a repair push. Require all six focused
 jobs, nine production jobs and documentation before the authorized squash merge.
 Use an explicit one-line subject of at most 80 characters and an empty body;
 verify the complete message, parent and tested/merged tree, then cancel duplicate
 postmerge production. Keep one delivery PR and preserve passing heads.
 
-Independent preparation is in `/private/tmp/fwp-wasm-host-ownership`, branch
-`wasm-host-ownership`, based on `6b504c2e`. It investigates WebAssembly task/host
-ownership and cleanup. Its WASI task extension is unaccepted preparation;
-browser ARC remains excluded and no new support is claimed. Keep the delivery head stable; carry this local tracking update into
-the next delivery unless a CI repair requires another push.
+## Independent WebAssembly preparation
 
-## Independent WASI task preparation
-
-Worktree `/private/tmp/fwp-wasm-host-ownership`, branch `wasm-host-ownership`,
-is based on the unchanged PR #164 head `6b504c2e`. Do not open a second PR or
-merge this preparation before #164 passes and merges. Its runtime extension
-removes the WASI task exclusion only on this preparation branch. Browser ARC
-remains excluded; no new support is accepted yet.
+Work in `/private/tmp/fwp-wasm-host-ownership`, branch `wasm-host-ownership`,
+based on the unchanged PR #164 head `6b504c2e`. Keep one delivery PR; transfer
+this preparation only after #164 passes and merges. The preparation extends
+checked ownership to WASI tasks and browser-loader invocations. Neither extension
+is accepted support yet. The shared root compiler binary now comes from this
+worktree; rebuild root source before using it as PR #164 evidence.
 
 The command-end cleanup frees finished tasks' pooled linear-memory stacks and
 the root scheduler record after children finish and language values release.
-The existing native task/channel ownership fixture is shared with an actual WASI
-check: 16 repetitions cover captured strings, repeated awaits, task results,
-scoped errors, queued values, cancelled receivers/senders, state and task maps.
-Ordinary and instrumented O1/O2 modules run through JSPI and Asyncify, match raw
-interpretation and save binaries/symbols. An omitted-cleanup control must fail
-the physical-allocation ledger at shutdown. Dispatch `suite=wasm-hosts` for two
-Linux-hosted actual-Wasm jobs; these are Wasm execution evidence, not native
-platform acceptance.
+The shared native/Wasm fixture runs 16 rounds of captured strings, repeated
+awaits, results, scoped errors, queued values, cancelled receivers/senders, state
+and task maps. A golden preserves the original output. Ordinary and instrumented
+O1/O2 modules run through JSPI and Asyncify, using both WASI and the generated
+browser loader. Each mode must finish its checks even if another mode fails;
+artifacts retain failed sources, binaries and output. Controls deliberately omit
+scheduler cleanup and the completed task's state snapshot; both must leak.
+Separate loader checks cover retained output strings, sequential/concurrent
+runs, reentry from a sink and a throwing sink followed by another invocation.
+They cover exact JSON numbers and output from a child whose parent is suspended;
+the child-output golden agrees with interpretation (0.60 s).
+These run under Node, not an actual browser; do not claim browser-engine coverage.
 
-Guarded local preparation checks: Rust formatting passes (1.21 s), focused
-Clippy passes (13.58 s), and the shared native task/channel test with ownership
-failure controls passes (35.70 s including rebuild). The shared root compiler
-binary now comes from this worktree; rebuild the root source before using it as
-PR #164 evidence. Do not run full suites or install a local Wasm toolchain.
+Run `39081410812` at published `9db2faa7` exposed a real leak on its completed
+ARM-hosted Wasm job `117538925131`: 16 extra allocations and 2,048 bytes, all
+128-byte state buffers. The WebAssembly completion path entered the next task
+without saving the completed task's latest state pointer. The prepared repair
+calls `fwp_leave(t)` before switching globals, matching the native path. Its
+omitted-snapshot control must reproduce this leak. All four completed test
+summaries were audited: one ownership failure; native task controls, existing
+Wasm scheduling and library-flag rejection pass. The remaining AMD-hosted job was cancelled while queued before the repair push;
+no completed failed result was omitted. Log: `/private/tmp/fwp-wasm-prep-117538925131.log`.
 
-The first preparation source `1f34278a` generated an invalid repeated workload:
-it defined an effectful value outside `main`. A local check caught it; both jobs
-in run `39081140140` were cancelled while queued, before executing any steps.
-The fixture is now an explicitly typed piped `round` function. Its output matches
-the original fixture byte for byte and 16 iterations reproduce it exactly.
-A persistent golden records that independent comparison. Native ownership and
-all its omitted-release controls pass again (18.29 s including rebuild).
+The first preparation source `1f34278a` generated an invalid effectful value
+outside `main`. Local checking caught it; both jobs in `39081140140` were
+cancelled while queued. The corrected, explicitly typed piped `round` function
+matches the original output byte for byte; 16 rounds reproduce it exactly.
+Guarded native ownership controls pass again (18.29 s), and checked WASI C
+emission passes (0.84 s). Browser/WASI entry acceptance and unchanged cycle
+rejection pass locally (19.60 s including rebuild). Focused Clippy passes
+(6.40 s, then 0.49 s after the complete test changes). Both host scripts pass
+Node syntax checks, workflow lint passes (1.44 s), Rust/fwp formatting passes
+and the roadmap audit passes (2.66 s). Actual Wasm and loader execution of the
+repair remain required on CI.
+
+The guard refused a later check below 64 GiB free disk; no limit was raised.
+The redundant downloaded `/private/tmp/fwp-http-evidence/39052834580` copy was
+removed after confirming all six unexpired GitHub artifacts and the committed
+HTTP-client report. Free space returned to 64.81 GiB. Preserve the current
+server-entry artifacts; large builds and actual Wasm runs remain on CI.
+Dispatch `suite=wasm-hosts` for two Linux-hosted actual-Wasm jobs.
 
 ## Accepted foundation
 

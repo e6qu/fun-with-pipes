@@ -1510,12 +1510,21 @@ jobs:
       - name: Task owners through JSPI and Asyncify
         if: inputs.suite == 'wasm-hosts'
         run: cargo test --test wasm_arc wasi_tasks_release_captures_channels_stacks_and_scheduler -- --exact --nocapture
-      - name: Existing native task and WebAssembly scheduling semantics
+      - name: Browser loader output ownership and reentry
         if: ${{ !cancelled() && inputs.suite == 'wasm-hosts' }}
-        run: |
-          cargo test --test arc_tasks
-          cargo test --test wasm tasks_as_fibers -- --exact
-          cargo test --test wasm_arc wasi_arc_rejects_unproved_entries_and_native_library_flags -- --exact
+        run: cargo test --test wasm_arc browser_entries_isolate_outputs_reentrant_calls_and_host_errors -- --exact --nocapture
+      - name: Existing native task owners
+        if: ${{ !cancelled() && inputs.suite == 'wasm-hosts' }}
+        run: cargo test --test arc_tasks
+      - name: Existing WebAssembly scheduling semantics
+        if: ${{ !cancelled() && inputs.suite == 'wasm-hosts' }}
+        run: cargo test --test wasm tasks_as_fibers -- --exact
+      - name: Browser and WASI ownership rejection
+        if: ${{ !cancelled() && inputs.suite == 'wasm-hosts' }}
+        run: cargo test --test wasm_arc wasm_entries_keep_cycle_checks_for_browser_and_wasi -- --exact
+      - name: WebAssembly library flag rejection
+        if: ${{ !cancelled() && inputs.suite == 'wasm-hosts' }}
+        run: cargo test --test wasm_arc wasi_arc_rejects_unproved_entries_and_native_library_flags -- --exact
       - name: Checked WASI ownership and physical storage
         if: inputs.suite == 'wasi-arc'
         run: cargo test --no-fail-fast --test wasm_arc --test process_exit_ownership --test arc_execution --test wasm_resource_counts

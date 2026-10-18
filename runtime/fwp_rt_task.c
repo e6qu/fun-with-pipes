@@ -978,6 +978,9 @@ static void fwp_task_main(void) {
         /* return to the host, which resumes `n`; this fiber's stack is
          * freed (or kept for reuse) by the next one */
         if (n && n != t) {
+            /* State storage may have grown since the last suspension. Save
+             * its current owner before another fiber replaces the globals. */
+            fwp_leave(t); /* completed fiber storage */
             fwp_enter(n);
             return fwp_fiber_id(n);
         }

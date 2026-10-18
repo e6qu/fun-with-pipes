@@ -410,10 +410,15 @@ All 18 repeated-request memory jobs pass across the six native hosts. The
 bounded storage and actual binaries without tracing, and records the substantial
 allocation/count costs that remain. Functional repair checks and final production
 acceptance are still required before these entries are accepted.
-Browser execution remains excluded. The prepared asynchronous WASI extension
+The prepared browser/asynchronous WASI extension
 uses ordinary checked task/channel ownership and command-end scheduler cleanup.
 It is not accepted support until real JSPI and Asyncify runs demonstrate storage
-reclamation, correct results and tracing-free modules. The
+reclamation, correct results and tracing-free modules. Browser-loader evidence
+under Node does not establish coverage in a browser engine. Host callbacks receive
+copied output strings; each invocation owns a separate module instance. These
+checks cover values inside the compiled module. The JavaScript engine still owns
+instances, promises and copied strings; removing fwp tracing does not remove
+that host engine's garbage collector. The
 [gRPC extension](#checked-grpc-clients-and-services) adds checked client/service
 entries and has separate platform acceptance. Focused checks and final delivery acceptance are distinguished
 in [the handoff](development-state.md).
