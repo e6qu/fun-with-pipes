@@ -41,7 +41,9 @@ fn empty_kernel_stack_is_safe_and_omission_is_detected() {
             };
             let label = format!("kernel{optimization}-omit{omitted}");
             let cfile = artifacts.join(format!("{label}.c"));
-            let executable = directory.join(&label);
+            let executable = directory
+                .join(&label)
+                .with_extension(std::env::consts::EXE_EXTENSION);
             std::fs::write(
                 &cfile,
                 template

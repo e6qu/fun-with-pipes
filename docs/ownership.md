@@ -412,8 +412,13 @@ on failure; decoding transfers that owner before insertion. A partial map record
 each acquired key before acquiring its value. Result cleanup uses the output
 value type, so mapping strings to integers never treats integer bits as pointers.
 These are compiler/runtime rules, with no new language syntax or heap wrapper.
-[The handoff](development-state.md) tracks focused failure-injection checks and
-native acceptance; this implementation is not yet a completed delivery.
+The [six-host report](benchmarks.md#cleanup-after-failed-map-and-set-operations)
+checks each allocation/retain failure across 22 operations, independent input
+aliases and callbacks that change the value type. All 66 focused tests pass on
+Linux, macOS and Windows, each on ARM64 and AMD64. Actual checked-ARC executables
+exclude tracing functions and report zero counted bytes at shutdown.
+[The handoff](development-state.md) tracks full production acceptance; focused
+checks alone do not complete the delivery.
 
 ## Checked ARC delivery
 

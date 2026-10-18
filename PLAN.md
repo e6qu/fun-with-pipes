@@ -100,7 +100,10 @@ inputs, including decoder insertion. Test each allocation/retain failure,
 surviving aliases and callbacks whose output type differs from their input.
 Require interpreter agreement, zero-byte ARC shutdown, stressed tracing/reuse
 checks, deliberate missing-cleanup controls and native evidence on six hosts.
-The [handoff](docs/development-state.md) records progress. Final production
+All 66 focused tests and 48 saved executable inspections pass on six native
+hosts; [the report](docs/benchmarks.md#cleanup-after-failed-map-and-set-operations)
+records the exact source and measurement limits. The [handoff](docs/development-state.md)
+tracks related Windows test-fixture and artifact repairs. Final production
 acceptance is still required for this batch; memory work remains broader than it.
 
 All seven areas above stay open. Each delivery must identify its workload,

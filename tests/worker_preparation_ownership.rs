@@ -121,6 +121,10 @@ int main(void) {
         prepared_copies=0;fail_field=mode<2 ? mode : mode==4 ? 2 : -1;cancel_in_worker=mode==2;
         fwp_trap_recover=recover_preparation;fwp_trap_jb=&preparation;fwp_trap_cleanup=0;
         memset(&cancelled_worker,0,sizeof cancelled_worker);
+#ifdef _WIN32
+        /* This synthetic task executes on the main thread stack. */
+        cancelled_worker.ctx.top=fwp_gc.main_top;
+#endif
         if (mode==2) { fwp_cur=&cancelled_worker;fwp_budget=1000000; }
         if (!setjmp(preparation) && !setjmp(cancelled_worker.base)) {
             V result=fWORK(extra,boxed);

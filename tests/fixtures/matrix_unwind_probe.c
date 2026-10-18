@@ -21,6 +21,10 @@ int main(void){
             if(strcmp(fwp_trap_msg,"matrix unwind control"))return 218;
         }else{
             memset(&matrix_cancelled,0,sizeof(matrix_cancelled));matrix_cancelled.cancelled=1;fwp_cur=&matrix_cancelled;
+#ifdef _WIN32
+            /* This synthetic task executes on the main thread stack. */
+            matrix_cancelled.ctx.top=fwp_gc.main_top;
+#endif
             if(!setjmp(matrix_cancelled.base)){fwp_p_matrix_mul_f64(33,35,31,left,right);return 219;}
             fwp_cur=0;if(!matrix_cancelled.unwinding)return 220;
         }

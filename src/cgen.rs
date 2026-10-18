@@ -10419,6 +10419,7 @@ fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
                 .to_string();
                 format!("\nthe program uses TLS, which needs OpenSSL 3's headers and libraries for {} (Debian and Ubuntu: libssl-dev:{}; see docs/tls.md)", t, deb)
             }
+            _ if tls && cfg!(windows) => "\nthe program uses TLS, which needs native OpenSSL 3 headers and DLLs (Windows: set FWP_OPENSSL_DIR to the installation prefix and add its bin directory to PATH; see docs/tls.md)".to_string(),
             _ if tls && native_is_macos() => "\nthe program uses TLS, which needs OpenSSL 3's headers and libraries (macOS: brew install openssl@3; set FWP_OPENSSL_DIR to brew --prefix openssl@3; see docs/tls.md)".to_string(),
             _ if tls => "\nthe program uses TLS, which needs OpenSSL 3's headers and libraries (Debian and Ubuntu: libssl-dev; see docs/tls.md)".to_string(),
             _ => String::new(),

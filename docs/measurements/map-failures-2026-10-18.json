@@ -1,0 +1,850 @@
+{
+  "source": "af834f8c67c6c5b7d543615755feeb0a85e81c87",
+  "run": 39093309107,
+  "complete_native_matrix": true,
+  "scope": "Failure cleanup and typed ownership, not a timing or code-size comparison. Instrumented programs execute on native CI hosts; this collector only reads their files. ARC counted bytes exclude allocator capacity and process RSS. Tracing retains collector code and deliberately poisons released objects under reuse verification.",
+  "hosts": [
+    {
+      "host": "ubuntu-latest",
+      "job": 117574435093,
+      "settings": [
+        "OS=Linux",
+        "architecture=X64",
+        "runner=ubuntu-latest",
+        "ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off",
+        "tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1",
+        "22 operations; every allocation and retain fails once; independent aliases; two missing-cleanup controls",
+        "No timing comparison or C/Rust speed claim"
+      ],
+      "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "runs": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": true,
+          "injected_failures": 110
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": true,
+          "injected_failures": 110
+        }
+      ],
+      "controls": {
+        "missing-result-owner": "map operation 0 failure 2/5: 213",
+        "missing-scratch-owner": "map operation 8 failure 4/9: 213"
+      },
+      "binaries": [
+        {
+          "file": "faults-arc-O1.bin",
+          "sha256": "8e6faa5062005704d40221d82bee4078d5ab0ebf305c023776fd10ac56c84d3b",
+          "bytes": 136104,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 205,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O1.bin",
+          "sha256": "20766729ee10ea1b4b51394883958a043d7ae9ba999e08afc7cd857fa8eae384",
+          "bytes": 138808,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 193,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-arc-O2.bin",
+          "sha256": "fc62edb7b428e440313722b5767d0fb4927dfc849617ddf7f37962d1d66105ec",
+          "bytes": 140208,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 206,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O2.bin",
+          "sha256": "f2a7fa9f7d0bd639cd02ea477232bd7c68e78ef6a631f1241c4bfe3fd3dc4800",
+          "bytes": 134584,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 190,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-tracing-O1.bin",
+          "sha256": "eebbc5e6b248bebfcf390a5e819f3c7e2381487c8b7b44be30f9186e6b21683b",
+          "bytes": 144632,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 212,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O1.bin",
+          "sha256": "1a5aa2e80e6a3f9a25adbb276d62ce4e233744fa463079f66a7e7310fa142702",
+          "bytes": 147320,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 200,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "faults-tracing-O2.bin",
+          "sha256": "cac5085134cf0cb18ca3a702da122172f4dddb69b7a8e378590ec43bbdaea08b",
+          "bytes": 148744,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 213,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O2.bin",
+          "sha256": "d1c82a82865af8e564979db5843438b897371ccc0054dcb7346ee07d18b86096",
+          "bytes": 139000,
+          "format": "elf64-x86-64",
+          "internal_runtime_symbols": 197,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        }
+      ],
+      "callback_outputs_match_interpreter": true,
+      "arc_shutdown_counted_bytes": 0
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "job": 117574435195,
+      "settings": [
+        "OS=Linux",
+        "architecture=ARM64",
+        "runner=ubuntu-24.04-arm",
+        "ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off",
+        "tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1",
+        "22 operations; every allocation and retain fails once; independent aliases; two missing-cleanup controls",
+        "No timing comparison or C/Rust speed claim"
+      ],
+      "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "runs": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": true,
+          "injected_failures": 110
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": true,
+          "injected_failures": 110
+        }
+      ],
+      "controls": {
+        "missing-result-owner": "map operation 0 failure 2/5: 213",
+        "missing-scratch-owner": "map operation 8 failure 4/9: 213"
+      },
+      "binaries": [
+        {
+          "file": "faults-arc-O1.bin",
+          "sha256": "02c32330245dda62deb55911bb61b4fbdd9ba8b5f475246e6c6d9d8685e57918",
+          "bytes": 158168,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 205,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O1.bin",
+          "sha256": "3a8a3894a9d753364cd6c310cad0f08021d373650f00f99132843a25623b511d",
+          "bytes": 156776,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 193,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-arc-O2.bin",
+          "sha256": "e557b8f5f426ba96773eb33cbf3ce0b25ae38b75971dceab4c1292d021cafb7d",
+          "bytes": 158232,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 206,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O2.bin",
+          "sha256": "ecd67986a03ca626a63f1056ef607d4fdb8f858f0b0494187a5787b38a685b2c",
+          "bytes": 156680,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 190,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-tracing-O1.bin",
+          "sha256": "7392accd5caabda374c28da3a77765f121a2a5652963690c9cf26182d26caf93",
+          "bytes": 158464,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 211,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O1.bin",
+          "sha256": "1e901530c24b0fd8bd327dfac4661666094910fc300f244f7ecdc39eb5648d72",
+          "bytes": 157056,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 199,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "faults-tracing-O2.bin",
+          "sha256": "cf95f3c81313ffaac42b78bac73faa9e3b0a608e9b633471355af76b21219571",
+          "bytes": 158576,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 213,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O2.bin",
+          "sha256": "9b82678aa23423624037c85e84c2d8396e7c46ebd4bc2f26879e46f226bfd573",
+          "bytes": 156992,
+          "format": "elf64-littleaarch64",
+          "internal_runtime_symbols": 197,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        }
+      ],
+      "callback_outputs_match_interpreter": true,
+      "arc_shutdown_counted_bytes": 0
+    },
+    {
+      "host": "macos-15",
+      "job": 117574435230,
+      "settings": [
+        "OS=macOS",
+        "architecture=ARM64",
+        "runner=macos-15",
+        "ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off",
+        "tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1",
+        "22 operations; every allocation and retain fails once; independent aliases; two missing-cleanup controls",
+        "No timing comparison or C/Rust speed claim"
+      ],
+      "clang": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "runs": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": true,
+          "injected_failures": 110
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": true,
+          "injected_failures": 110
+        }
+      ],
+      "controls": {
+        "missing-result-owner": "map operation 0 failure 2/5: 213",
+        "missing-scratch-owner": "map operation 8 failure 4/9: 213"
+      },
+      "binaries": [
+        {
+          "file": "faults-arc-O1.bin",
+          "sha256": "65be2a57e47c6dc40d18780439a0da79f8bb9289efebdb7d05f33499fda901e0",
+          "bytes": 129584,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 210,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O1.bin",
+          "sha256": "e4b9970d55508fff5beb463883133f621ac411dc80e911829776a20b4e575629",
+          "bytes": 128464,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 197,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-arc-O2.bin",
+          "sha256": "51c9bd4d6293100aff388b730114bcab32bfe060ac64384ccb7e6dd85eb76423",
+          "bytes": 129648,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 211,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O2.bin",
+          "sha256": "50ac7ee55b3eaf074cbd2b716f7e3d5b914e292172b5cc6f36e938b2ad75e9e9",
+          "bytes": 128400,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 195,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-tracing-O1.bin",
+          "sha256": "c2f2ddd4d846d6e5b5084930b2c27bcefa633d5e9b7bb0520ae74c72afa31fdf",
+          "bytes": 129920,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 218,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O1.bin",
+          "sha256": "4230c94dd5dd8692a2385058e763c4da5b2131ec354c6d991e61d258fe1d1cd2",
+          "bytes": 128680,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 202,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "faults-tracing-O2.bin",
+          "sha256": "0452c4f24327ca57dfb3fd99601c725104be8c53cb25a94f3ba637f60e11d130",
+          "bytes": 146544,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 220,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O2.bin",
+          "sha256": "40c7e7c35a73b7c21544a3518d9abcc63ccd5b32a0710375d0b78b18d5274f33",
+          "bytes": 128648,
+          "format": "mach-o arm64",
+          "internal_runtime_symbols": 201,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        }
+      ],
+      "callback_outputs_match_interpreter": true,
+      "arc_shutdown_counted_bytes": 0
+    },
+    {
+      "host": "macos-15-intel",
+      "job": 117574435220,
+      "settings": [
+        "OS=macOS",
+        "architecture=X64",
+        "runner=macos-15-intel",
+        "ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off",
+        "tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1",
+        "22 operations; every allocation and retain fails once; independent aliases; two missing-cleanup controls",
+        "No timing comparison or C/Rust speed claim"
+      ],
+      "clang": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "runs": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": true,
+          "injected_failures": 110
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": true,
+          "injected_failures": 110
+        }
+      ],
+      "controls": {
+        "missing-result-owner": "map operation 0 failure 2/5: 213",
+        "missing-scratch-owner": "map operation 8 failure 4/9: 213"
+      },
+      "binaries": [
+        {
+          "file": "faults-arc-O1.bin",
+          "sha256": "2571b16636da5add52d0fbc42eb530553802dd1f2b05462ea101f1e9c20951b4",
+          "bytes": 112000,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 210,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O1.bin",
+          "sha256": "265beddd2c802657b7c784eb9f80ccd45d147e9c408de1a759244361a7854ffb",
+          "bytes": 106776,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 197,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-arc-O2.bin",
+          "sha256": "6f8c173e6fd9c4f6d6dc107db5be809e6d2fad254e0789c674dc32c4d5be44fd",
+          "bytes": 120224,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 211,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O2.bin",
+          "sha256": "56372e75d280602f700dfdfd78eec706ed8d1231e1d17cf4fde1ef98a80a7fe4",
+          "bytes": 106680,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 195,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-tracing-O1.bin",
+          "sha256": "3e8359b1aac95dab3b72116f733ea25aaf1f8d6ea35a0e84c58a2c3c00a1f63f",
+          "bytes": 120528,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 218,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O1.bin",
+          "sha256": "6a0395de5b854e2f5d4c486a809d49b79cdbc54b56688e09b78e5be2dc617379",
+          "bytes": 111088,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 202,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "faults-tracing-O2.bin",
+          "sha256": "c111f23b462b86c236c3589026a9809dfcd3920bf9a49dc874b0f93f0ee5ff3c",
+          "bytes": 124696,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 220,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O2.bin",
+          "sha256": "19ce4cc6d66609fc0cc19f913a8df09349aab6a4cab33c560d0b23e6ac0deee2",
+          "bytes": 115120,
+          "format": "mach-o 64-bit x86-64",
+          "internal_runtime_symbols": 201,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        }
+      ],
+      "callback_outputs_match_interpreter": true,
+      "arc_shutdown_counted_bytes": 0
+    },
+    {
+      "host": "windows-2025",
+      "job": 117574435246,
+      "settings": [
+        "OS=Windows",
+        "architecture=X64",
+        "runner=windows-2025",
+        "ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off",
+        "tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1",
+        "22 operations; every allocation and retain fails once; independent aliases; two missing-cleanup controls",
+        "No timing comparison or C/Rust speed claim"
+      ],
+      "clang": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin\nConfiguration file: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin/x86_64-w64-windows-gnu.cfg",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "runs": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": true,
+          "injected_failures": 110
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": true,
+          "injected_failures": 110
+        }
+      ],
+      "controls": {
+        "missing-result-owner": "map operation 0 failure 2/5: 213",
+        "missing-scratch-owner": "map operation 8 failure 4/9: 213"
+      },
+      "binaries": [
+        {
+          "file": "faults-arc-O1.bin",
+          "sha256": "8fd1c8d6fd8c64d80b8efa744451e3ef25a3c72b3c3608094aa48bcb1f2bdab0",
+          "bytes": 178688,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 202,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O1.bin",
+          "sha256": "608a8d859c6fc4eb891b3a4505a94971fea9e7fcc9dd008065e70a0a84122579",
+          "bytes": 169984,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 187,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-arc-O2.bin",
+          "sha256": "24adeeab2fdabf4991df12f46228fe8c2cc7553a90df2e42908245c3aa79cfd3",
+          "bytes": 185344,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 201,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O2.bin",
+          "sha256": "8e592ced60563ad530e603fa260e505d33d09a692167c06a5e662e0c2984ecce",
+          "bytes": 173056,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 185,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-tracing-O1.bin",
+          "sha256": "b32f7f8e7cf45070e1a90f6e042ed7e51b5cbe81f48dcbcc9b35cfd1b1bdd5b9",
+          "bytes": 187392,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 207,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O1.bin",
+          "sha256": "d78759f5571b60a811ffc6674a83686c27361fd44073e3df578def8c60ea4571",
+          "bytes": 176640,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 193,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "faults-tracing-O2.bin",
+          "sha256": "93bb2d3ff49137bb2dd47e24e930c3c05d83104f328f63b380678efa85f9b9c6",
+          "bytes": 193536,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 208,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O2.bin",
+          "sha256": "9e746f31cdaab7660f00982db1a5515a10f1cd514951cfa1da136a4d9ed2b77d",
+          "bytes": 179712,
+          "format": "coff-x86-64",
+          "internal_runtime_symbols": 192,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        }
+      ],
+      "callback_outputs_match_interpreter": true,
+      "arc_shutdown_counted_bytes": 0
+    },
+    {
+      "host": "windows-11-arm",
+      "job": 117574435235,
+      "settings": [
+        "OS=Windows",
+        "architecture=ARM64",
+        "runner=windows-11-arm",
+        "ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off",
+        "tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1",
+        "22 operations; every allocation and retain fails once; independent aliases; two missing-cleanup controls",
+        "No timing comparison or C/Rust speed claim"
+      ],
+      "clang": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: aarch64-w64-windows-gnu\nThread model: posix\nInstalledDir: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin\nConfiguration file: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin/aarch64-w64-windows-gnu.cfg",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "runs": [
+        {
+          "mode": "arc",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "arc",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O1",
+          "reuse_verification": true,
+          "injected_failures": 110
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": false,
+          "injected_failures": 108
+        },
+        {
+          "mode": "tracing",
+          "optimization": "-O2",
+          "reuse_verification": true,
+          "injected_failures": 110
+        }
+      ],
+      "controls": {
+        "missing-result-owner": "map operation 0 failure 2/5: 213",
+        "missing-scratch-owner": "map operation 8 failure 4/9: 213"
+      },
+      "binaries": [
+        {
+          "file": "faults-arc-O1.bin",
+          "sha256": "958e39cbfd91eabf75cb2f5247d020c5b75620f8aa72c1f77b2c0ca10c464ad5",
+          "bytes": 167424,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 202,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O1.bin",
+          "sha256": "2b0eb5e24b7b4d04e567ca8a01bfb5730f3d7b9ad827e0ae4702864fe0fb5878",
+          "bytes": 158720,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 187,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-arc-O2.bin",
+          "sha256": "9690a42ec9f67f0c3ed40fe2d817bee24ff004226d4d7c2deb19ec653cdde158",
+          "bytes": 169472,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 201,
+          "tracing_symbols": []
+        },
+        {
+          "file": "callbacks-arc-O2.bin",
+          "sha256": "b322ddb9cdc2e9f9b73063b63b85df9701ce5f8daa3add20dfc910b88c3e2a38",
+          "bytes": 158208,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 185,
+          "tracing_symbols": []
+        },
+        {
+          "file": "faults-tracing-O1.bin",
+          "sha256": "0820346309f9d61abafb40b8371af9dbaa8cf99c58cda5af6b08adaaf15efafb",
+          "bytes": 173568,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 207,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O1.bin",
+          "sha256": "7423c4dd477692d79697d55dca689766f0feff5c1deda10b898cb519c2e4f9d7",
+          "bytes": 163328,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 193,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "faults-tracing-O2.bin",
+          "sha256": "854a12202a0b0ae8b3a3282ff1c356ead947e18242d87fddf21deac3a3c6f2c5",
+          "bytes": 174592,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 208,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        },
+        {
+          "file": "callbacks-tracing-O2.bin",
+          "sha256": "d8d2e76987acb82f9ee9233e2d6e5fa395e049a757624d7b14afd0f537b8ac71",
+          "bytes": 163840,
+          "format": "coff-arm64",
+          "internal_runtime_symbols": 192,
+          "tracing_symbols": [
+            "fwp_gc_mark_all",
+            "fwp_gc_scan",
+            "fwp_gc_sweep"
+          ]
+        }
+      ],
+      "callback_outputs_match_interpreter": true,
+      "arc_shutdown_counted_bytes": 0
+    }
+  ]
+}

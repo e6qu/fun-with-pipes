@@ -81,6 +81,10 @@ int main(void) {
     state_collect();
     /* The real served-call handler restores State after trap and typed error. */
     memset(&state_task,0,sizeof state_task);fwp_cur=&state_task;
+#ifdef _WIN32
+    /* This synthetic task executes on the main thread stack. */
+    state_task.ctx.top=fwp_gc.main_top;
+#endif
     fwp_trap_recover=g_trap_recover;
     for(state_mode=2;state_mode<4;state_mode++) {
         V out=0,error=0;const fwp_desc *desc=0;

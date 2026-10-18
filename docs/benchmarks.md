@@ -2870,3 +2870,45 @@ host sizes reflect different runtimes and static/shared linking. Reproduce the
 data-only inspection with `scripts/summarize-library-results.py --artifacts DIR
 --audit AUDIT --llvm-bin DIR --record-results direct --output FILE`. The collector
 never executes downloaded binaries.
+
+## Cleanup after failed map and set operations
+
+Maps associate keys with values; sets keep distinct keys. A map callback can
+fail after producing earlier values. Those partial results and temporary arrays
+must be released when the error is caught, while independently held input values
+remain usable. Acquiring another owning reference (a retain) or allocating storage
+can also fail midway through construction.
+
+A small fwp reproducer repeated 32 caught map callback failures. Before this
+repair, counted live storage grew by 2,048 bytes after warmup, or 64 bytes per
+failure. The repaired program returns to zero counted bytes. This compares two
+versions of fwp; it does not compare elapsed time with C or Rust.
+
+The [six-host report](measurements/map-failures-2026-10-18.json) records source
+`af834f8c67c6c5b7d543615755feeb0a85e81c87` and
+[run 39093309107](https://github.com/e6qu/fun-with-pipes/actions/runs/39093309107).
+All 66 focused tests pass on Linux, macOS and Windows, each on ARM64 and AMD64,
+without skips. Full delivery acceptance remains in the [handoff](development-state.md).
+
+Each host tests 22 operations, including conversion, insertion, removal, update,
+set operations and map callbacks. Instrumentation deliberately fails each
+allocation or retain in turn: 108 failure points per ordinary configuration and
+110 when storage reuse verification poisons released objects. Six configurations
+combine C optimization levels O1/O2 with checked ARC, stressed tracing, and
+stressed tracing with reuse verification. Aliases must survive these failures.
+Callbacks that change strings into integers or integers into strings must also
+agree with the interpreter and clean up according to their result type.
+
+The report inspects all 48 saved native executables as data. Their internal
+runtime names are present; checked-ARC binaries exclude tracing scan/mark/sweep
+functions, while tracing controls retain them. Checked-ARC callback runs report
+zero counted bytes at shutdown. Removing either the partial-map owner or the
+first scratch-array cleanup makes the probe fail, confirming that the test can
+detect those missing releases.
+
+Counted bytes exclude allocator capacity and process resident memory. Instrumented
+binary sizes are recorded for identification, not as a code-size improvement.
+No C/Rust timing comparison or claim of free reference counting follows from
+these cleanup checks. Reproduce the data-only inspection with
+`scripts/summarize-map-failures.py --artifacts DIR --audit AUDIT --head SOURCE
+--llvm-bin DIR --output FILE`; it never executes downloaded programs.
