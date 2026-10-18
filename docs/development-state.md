@@ -8,9 +8,20 @@ this tracking update changes documentation only. Final head `6b504c2e` has six
 affected functional jobs in run `39080530770` (`server_entry_part=checks`), nine
 production jobs in `39080534474`, and documentation in `39080534747`.
 Their exact source was verified. Five focused jobs, production benchmarks and
-documentation pass at this checkpoint; the other gates are running without a
-reported failure. Audit all completed results before a repair push. Require all six focused
-jobs, nine production jobs and documentation before the authorized squash merge.
+documentation pass. The Intel focused job reached its 25-minute limit in the
+last REST API test. All six logs are audited: 35 test summaries, 125 passed,
+zero failed and 12 intentionally ignored memory entries executed separately.
+Intel's first five targets pass (20 tests); its API test did not finish. Audit:
+`/private/tmp/fwp164-focused-audit.json`. This cancellation is not acceptance.
+
+The preparation workflow now splits entry/codec and API checks into separate
+25-minute jobs. `server-recheck` requires an explicit source SHA and records the
+checked-out source separately from the workflow revision. Dispatch it for Intel
+with `source_revision=6b504c2e333f9c89725db714aed1440b79eab178`; require both
+replacement jobs to pass and audit their source/complete logs. Keep the existing
+five focused passes and nine production gates on that unchanged head. Require
+complete six-host functional coverage, all nine production jobs and documentation
+before the authorized squash merge. No timeout is raised or failure ignored.
 Use an explicit one-line subject of at most 80 characters and an empty body;
 verify the complete message, parent and tested/merged tree, then cancel duplicate
 postmerge production. Keep one delivery PR and preserve passing heads.
@@ -76,7 +87,9 @@ loader fail and the repair pass (0.14/0.15 s). Tests cover ordinary errors,
 RangeError, strings and undefined. This is a host-boundary repair, not a change
 to the language's trap semantics.
 
-Dispatch `suite=wasm-hosts` for two Linux-hosted actual-Wasm jobs.
+Run `39082338822` tests the complete Wasm repair at `0a3b9fdf`; both jobs are
+queued at this checkpoint. Later workflow-only splitting does not change its
+compiler, runtime or tests. Dispatch `suite=wasm-hosts` for actual-Wasm jobs.
 
 ## Accepted foundation
 
@@ -221,7 +234,8 @@ precision and trap fixtures in raw interpretation and native ARC O2/tracing O1/O
 all 20 executions pass under the guard (40.73 s including rebuild).
 The docs explain the retained spelling. Full native
 server verification stays on runners. With the complete audit finished, explicitly select
-`server_entry_part=checks` to rerun all six affected functional jobs. Compiler,
+`server_entry_part=checks` for functional coverage on all six hosts. The split
+workflow runs two functional jobs per host. Compiler,
 runtime, library and existing memory-test behavior are unchanged by this repair;
 retain passing memory evidence at its original source, rather than regenerating
 it as a new measurement. Final production acceptance remains required. Logs are
