@@ -1,7 +1,12 @@
-rec collatz-length : I64 -> I64
-collatz-length = match
-    1 -> 1
-    _ -> if (rem 2 | eq 0) (div 2) (mul 3 | add 1) | collatz-length | add 1
+collatz-next : I64 -> I64
+collatz-next = if (rem 2 | eq 0) (div 2) (mul 3 | add 1)
+
+collatz-step : (I64, I64) -> Step[(I64, I64), I64]
+collatz-step =
+    if (.0 | eq 1) (.1 | Stop) (both (.0 | collatz-next) (.1 | add 1) | Again)
+
+collatz-length : I64 -> I64
+collatz-length = both id (const 1) | loop collatz-step
 
 longest : I64 -> Option[(I64, I64)]
 longest = range 1 | map (both id collatz-length) | sort-by .1 | last

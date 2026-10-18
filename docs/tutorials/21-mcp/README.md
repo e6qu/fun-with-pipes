@@ -316,4 +316,4 @@ share = curry (if (fork lt (.0 | .extra) .1) (.0 | .base | add 1) (.0 | .base))
 
 ---
 
-Previous: [Reverse-mode autodiff and devices](../20-autodiff-and-devices/README.md) · [All tutorials](../README.md)
+Previous: [Reverse-mode autodiff and devices](../20-autodiff-and-devices/README.md) · Next: [Recursion, loops and shared values](../22-recursion-and-sharing/README.md) · [All tutorials](../README.md)

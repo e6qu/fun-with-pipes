@@ -80,8 +80,10 @@ loops into vector instructions. The API alone guarantees neither those instructi
 nor a speedup. Integer lane addition, subtraction, multiplication and sum wrap on
 overflow; ordinary fwp integer arithmetic is checked. Division keeps its checks.
 Floating operations preserve their existing order and format. Choose these rules
-explicitly when using the lane API. Current ownership work and its native/WASI
-validation are recorded in [the handoff](development-state.md).
+explicitly when using the lane API. [Lane measurements](benchmarks.md#fixed-size-lane-calculations-against-c-and-rust)
+compare the same dot-product workloads with C/Rust, explain removed temporary
+values and retain the remaining overhead. [Ownership](ownership.md#vector-library-results)
+records the current value contract.
 
 ## Dense F64 solvers
 

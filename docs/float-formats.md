@@ -20,9 +20,9 @@ platform verification.
 | F64 | binary64: 53 significant bits | 8 bytes, little endian |
 | F128 | binary128: 1 sign, 15 exponent, 112 fraction bits | 16 bytes, little endian |
 
-Protocol v1 used wider half payloads and a narrower quad payload; version 2
-rejects that incompatible wire format. Prior representation evidence remains
-in [history](roadmap-history.md), not as an alternative arithmetic mode.
+The protocol rejects incompatible versions. Build communicating programs with
+matching format definitions; this pre-alpha project provides no compatibility
+mode for older representations.
 
 These formats follow the [LLVM floating-point type definitions](https://llvm.org/docs/LangRef.html#floating-point-types).
 The half and bfloat layouts are also specified in [Clang's type documentation](https://clang.llvm.org/docs/LanguageExtensions.html#half-precision-floating-point).

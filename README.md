@@ -56,6 +56,9 @@ collection and less reference-counting overhead through compile-time ownership,
 borrowing and storage reuse. It also covers measured CPU performance,
 differentiation, numerical kernels and larger example applications. These are
 active goals; the capabilities and limitations above describe today's compiler.
+The [design limits](docs/design-limits.md) explain achievable guarantees and
+tradeoffs. General cycle prevention and guaranteed tail recursion remain design
+work; use existing checked ARC contracts and `loop` today.
 
 ## Supported platforms
 
@@ -114,6 +117,7 @@ The test suite compares both execution methods.
 | Split a program into communicating processes | [Services guide](docs/services.md) |
 | Compute derivatives or run array calculations | [Numerical guide](docs/numerics.md) |
 | Understand memory management | [Memory and ownership](docs/ownership.md) |
+| Understand parsing, desugaring and macro expansion | [Compiler pipeline](docs/compiler-pipeline.md) |
 | Work on the compiler | [Design](docs/design.md) and [Contributing](CONTRIBUTING.md) |
 | Find completed work and the current task | [Plan](PLAN.md) and [session handoff](docs/development-state.md) |
 

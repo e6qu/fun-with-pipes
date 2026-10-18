@@ -163,8 +163,9 @@ Step[S, R] =
     | Again S
     | Stop R
 
-# Iterate a step function from an initial state until it stops; runs in
-# constant stack space (servers and other long-running loops).
+# Call the step with the current state: Again supplies the next state,
+# Stop returns the result. The loop itself uses constant stack space;
+# the step can still recurse or build growing data.
 foreign "fwp" loop : (s -> Step[s, r] ! e) -> s -> r ! e
 
 # ------------------------------------------------------------- numeric traits

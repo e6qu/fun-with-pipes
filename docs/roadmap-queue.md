@@ -8,9 +8,9 @@ A Git commit identifies a saved version of the repository. During earlier work,
 changes were prepared on separate branches and later moved onto newer bases
 (“rebased”). The table keeps both identities so those changes can be traced:
 
-- **Order / NAME:** the historical preparation item and its short label.
-- **Branch / Current head:** the branch and commit recorded after that item's
-  preparation. “Current” means current at the time of that record, not today's
+- **Order / Change:** the historical preparation item and its short label.
+- **Branch / Recorded head:** the branch and commit recorded after that item's
+  preparation. “Recorded” means the version at that time, not today's
   main branch or a live task.
 - **Immutable OLD head / parent:** the original commit and the commit directly
   before it. Do not edit these IDs or move their `roadmap/preparation-*` tags.
@@ -21,7 +21,7 @@ fresh clone before running that audit. `roadmap/revision-NNN-SHA12` tags are als
 fixed historical references. Row 34 intentionally remains a duplicate: its fix
 was included in row 28 and accepted in PR #107.
 
-| Order | NAME | Branch | Current head | Immutable OLD head | Immutable OLD parent |
+| Order | Change | Branch | Recorded head | Immutable OLD head | Immutable OLD parent |
 |---|---|---|---|---|---|
 | 7 | fold | `ownership-fold-transfers` | `a090f1f5ac6c` | `a180c3fb5f42` | `1ea7f079043c` |
 | 8 | zip | `ownership-zip-callbacks` | `cf8ce6e61295` | `bdb750f6d46b` | `a180c3fb5f42` |
