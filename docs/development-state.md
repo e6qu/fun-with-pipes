@@ -40,6 +40,12 @@ New local changes extend coverage to tutorial semantics, real POSIX terminal
 completion/history/multiline/interrupts, notebook stop/restart and rejected input,
 and native SDK execution on the six production hosts. A stopped notebook run now
 cannot silently start a replacement interpreter to execute its remaining cells.
+Checkpoint `7b941c70` failed before tests: the terminal stop display borrowed an
+event after moving it into its JSON envelope. Both the focused run `39128156407`
+and all five measurement jobs `39128158656` report this same compiler error.
+Every job log was audited; SDK/browser failures followed from the missing binary.
+The display now runs before the move, without adding a clone. A separate SDK
+regression preserves compiler diagnostics when debugger startup fails.
 SDK documentation links were corrected; all 59 Markdown link sets and tutorial
 copies pass (`/private/tmp/fwp-doc-audit.py`, guarded, 0.39 s). Guarded formatter
 passed in 1.40 s and Python syntax in 0.22 s. Next: publish this coverage batch,

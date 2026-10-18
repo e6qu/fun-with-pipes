@@ -40,6 +40,7 @@ class Debugger:
         self.stopped = False
         self.finished = False
         self.last_event = None
+        self.diagnostics = ""
         self._readers = []
         for stream, kind in [(self._process.stdout, "protocol"), (self._process.stderr, "stderr")]:
             reader = threading.Thread(target=self._read_stream, args=(stream, kind), daemon=True)
@@ -47,6 +48,9 @@ class Debugger:
             self._readers.append(reader)
         try:
             self.wait()
+        except DebuggerError as error:
+            self.close()
+            raise DebuggerError(f"{error}\n{self.diagnostics}".rstrip()) from error
         except BaseException:
             self.close()
             raise
@@ -54,6 +58,8 @@ class Debugger:
     def _read_stream(self, stream, kind):
         try:
             for line in stream:
+                if kind == "stderr":
+                    self.diagnostics = (self.diagnostics + line)[-65536:]
                 self._queue.put((kind, line))
         finally:
             self._queue.put((kind + "_eof", None))

@@ -1,4 +1,4 @@
-"""Inspect binaries and compare the same emitted C across targets/optimizations.
+"""Inspect binaries and compare target-specific C across optimization levels.
 
 Cross-target objects are inspected, not executed. Each target needs its own
 working C compiler and headers/sysroot. The caller selects these explicitly.

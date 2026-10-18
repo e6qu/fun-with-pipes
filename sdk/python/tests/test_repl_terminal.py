@@ -17,6 +17,7 @@ class Terminal(unittest.TestCase):
         import struct
         import termios
 
+        self.assertTrue(Path(os.environ["FWP_TEST_BIN"]).is_file(), "build fwp before terminal checks")
         with tempfile.TemporaryDirectory() as directory:
             history = Path(directory) / "history"
             pid, terminal = pty.fork()

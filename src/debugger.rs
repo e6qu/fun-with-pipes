@@ -414,10 +414,6 @@ impl Debugger {
             };
         if stop {
             self.selected = depth.saturating_sub(1);
-            self.send(&Json::obj(vec![
-                ("event", Json::str("stopped")),
-                ("reason", event),
-            ]))?;
             if !self.json {
                 writeln!(
                     self.output,
@@ -428,6 +424,10 @@ impl Debugger {
                 )
                 .map_err(|e| Ctl::Trap(e.to_string()))?;
             }
+            self.send(&Json::obj(vec![
+                ("event", Json::str("stopped")),
+                ("reason", event),
+            ]))?;
             self.commands(program, task, depth)?;
         }
         Ok(())

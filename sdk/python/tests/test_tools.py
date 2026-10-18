@@ -4,13 +4,20 @@ import tempfile
 import subprocess
 import unittest
 
-from fwp_tools import Debugger, Disassembler, Target
+from fwp_tools import Debugger, DebuggerError, Disassembler, Target
 from fwp_tools.notebook import Kernel
 
 FWP = os.environ["FWP_TEST_BIN"]
 
 
 class Tools(unittest.TestCase):
+    def test_failed_debugger_start_preserves_compiler_diagnostic(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "bad.fwp"
+            source.write_text("main = missing-name\n")
+            with self.assertRaisesRegex(DebuggerError, "missing-name"):
+                Debugger(source, fwp=FWP)
+
     def test_source_instrumentation_preserves_tutorial_behavior(self):
         root = Path(__file__).resolve().parents[3]
         for lesson in ("01-pipes-and-functions", "02-data", "04-effects", "06-tasks-and-channels", "11-comptime-and-macros"):
