@@ -80,25 +80,7 @@ impl Highlighter for InputHelper {
     }
 }
 
-fn history_path() -> Option<PathBuf> {
-    if let Some(state) = std::env::var_os("XDG_STATE_HOME") {
-        return Some(PathBuf::from(state).join("fwp/repl-history"));
-    }
-    #[cfg(windows)]
-    {
-        std::env::var_os("LOCALAPPDATA").map(|p| PathBuf::from(p).join("fwp/repl-history"))
-    }
-    #[cfg(not(windows))]
-    {
-        std::env::var_os("HOME").map(|p| PathBuf::from(p).join(".local/state/fwp/repl-history"))
-    }
-}
-
-pub(super) fn run(
-    directory: PathBuf,
-    history: Option<PathBuf>,
-    no_history: bool,
-) -> Result<(), String> {
+pub(super) fn run(directory: PathBuf, history: Option<PathBuf>) -> Result<(), String> {
     ctrlc::set_handler(interrupt_from_signal).map_err(|e| e.to_string())?;
     TERMINAL_ACTIVE.store(true, Ordering::Relaxed);
     let _signals = TerminalSignals;
@@ -115,15 +97,6 @@ pub(super) fn run(
         brackets: MatchingBracketHighlighter::new(),
         paste: false,
     }));
-    let history = if no_history {
-        None
-    } else {
-        Some(
-            history
-                .or_else(history_path)
-                .ok_or("no history directory; use --history PATH or --no-history")?,
-        )
-    };
     if let Some(path) = &history {
         match editor.load_history(path) {
             Ok(()) => {}

@@ -66,6 +66,7 @@ jobs:
         env:
           PYTHONPATH: sdk/python
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp.exe
+          FWP_OBJDUMP: llvm-objdump
         run: python -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v
       - name: Language formatting preflight
         shell: pwsh

@@ -25,8 +25,10 @@ Use [CONTRIBUTING.md](CONTRIBUTING.md) for repository conventions and test locat
   register/cache use. Improve close-to-metal numerics and autodiff precision,
   speed and memory scaling. Select optimizations from representative measurements.
 - Prefer compiler-internal ownership over new syntax. Avoid needless wrappers,
-  fallbacks, magic, implicit conversions and defaults. Register spills are normal
-  allocation decisions; protocol alternatives are peers, not fallbacks.
+  fallbacks, magic and implicit conversions. Require explicit parameters and
+  settings for toolchains, targets and execution policy; avoid hidden defaults.
+  Register spills are normal allocation decisions; protocol alternatives are
+  peers, not fallbacks. Backward compatibility is not a requirement.
 - JIT compilation is excluded, not deferred. Do not add it to fwp or its runtime.
   A replacement backend and distributed execution are outside scope.
 - A completed PR does not complete the roadmap. [Ownership](docs/ownership.md)

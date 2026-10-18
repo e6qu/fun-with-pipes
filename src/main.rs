@@ -91,8 +91,8 @@ usage:
   fwp check --parse <file.fwp>   parse a file and print its syntax tree
   fwp notebook [OPTIONS]       local notebook UI (requires fwp-tools Python package)
   fwp debug [--json] FILE       interactive interpreter debugger
-  fwp disassemble [--json] [--tool PATH] BINARY  inspect native instructions
-  fwp repl [--no-history | --history PATH]  interactive interpreted session
+  fwp disassemble [--json] --tool PATH BINARY  inspect native instructions
+  fwp repl (--json | --stream | --no-history | --history PATH)  interpreted session
   fwp fmt [--check] [paths...]   format files in place (directories are
                                  searched for .fwp files; default: .);
                                  --check lists unformatted files instead
@@ -205,8 +205,19 @@ fn main() -> ExitCode {
         }
         Some("notebook") => {
             let mut options = args[1..].to_vec();
+            if options.iter().any(|s| s == "--help" || s == "-h") {
+                println!("Usage: fwp notebook --python PATH --directory PATH --port N\nRequires the fwp-tools package installed for the selected Python.\nUses this fwp executable; port 0 asks the OS for an unused port.");
+                return ExitCode::SUCCESS;
+            }
+            if options
+                .iter()
+                .any(|s| s == "--fwp" || s.starts_with("--fwp="))
+            {
+                eprintln!("fwp notebook uses this compiler; invoke Python's fwp_tools.notebook module directly to select another");
+                return ExitCode::from(2);
+            }
             let python = if let Some(index) = options.iter().position(|s| s == "--python") {
-                if index + 1 == options.len() {
+                if index + 1 == options.len() || options[index + 1].starts_with('-') {
                     eprintln!("--python needs an executable path");
                     return ExitCode::from(2);
                 }
@@ -214,7 +225,8 @@ fn main() -> ExitCode {
                 options.remove(index);
                 executable
             } else {
-                if cfg!(windows) { "python" } else { "python3" }.into()
+                eprintln!("fwp notebook requires --python PATH --directory PATH --port N");
+                return ExitCode::from(2);
             };
             let compiler = match std::env::current_exe() {
                 Ok(path) => path,
@@ -231,7 +243,7 @@ fn main() -> ExitCode {
             {
                 Ok(status) if status.success() => ExitCode::SUCCESS,
                 Ok(_) => {
-                    eprintln!("The notebook requires the fwp-tools Python package; see docs/notebooks.md.");
+                    eprintln!("Notebook exited unsuccessfully; see the Python diagnostic above.");
                     ExitCode::from(1)
                 }
                 Err(e) => {

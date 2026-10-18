@@ -20,16 +20,18 @@ launching the browser UI, dependencies and saved files.
 from fwp_tools.debugger import Debugger
 from fwp_tools.disassembler import Disassembler
 
-with Debugger("program.fwp", fwp="fwp") as debug:
+with Debugger("program.fwp", fwp="fwp", input_file=None, timeout=30) as debug:
     debug.on("output", lambda event: print(event["text"], end=""))
     debug.continue_()
 
-listing = Disassembler(llvm_objdump="llvm-objdump").inspect("program")
+listing = Disassembler(fwp="fwp", llvm_objdump="llvm-objdump", timeout=180).inspect("program")
 print(listing["text"])
 ```
 
 `program.fwp` must be an existing program with a `main`; `program` must already
-be a compiled binary. The context manager reaps the debugger process. Debugger
+be a compiled binary. Tool paths, timeouts and input choice are required:
+`input_file=None` forbids program standard input, and timeouts are in seconds.
+The context manager reaps the debugger process. Debugger
 inspection is read-only and runs the interpreter; disassembly never executes
 the inspected binary. Cross-target objects do not establish native execution.
 

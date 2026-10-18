@@ -12,7 +12,7 @@ from playwright.sync_api import sync_playwright, expect
 output = Path(os.environ.get("FWP_NOTEBOOK_EVIDENCE", "notebook-evidence"))
 output.mkdir(parents=True, exist_ok=True)
 with tempfile.TemporaryDirectory() as directory, (output / "server.log").open("w+") as log:
-    server = subprocess.Popen([sys.executable, "-m", "fwp_tools.notebook", "--fwp", os.environ["FWP_TEST_BIN"], "--directory", directory],
+    server = subprocess.Popen([os.environ["FWP_TEST_BIN"], "notebook", "--python", sys.executable, "--directory", directory, "--port", "0"],
         stdout=subprocess.PIPE, stderr=log, text=True, encoding="utf-8")
     try:
         first_line = server.stdout.readline()

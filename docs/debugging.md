@@ -68,7 +68,7 @@ From the repository root, install the SDK into your Python environment with
 from fwp_tools.debugger import Debugger
 
 values = []
-with Debugger("square.fwp", fwp="./target/debug/fwp") as debug:
+with Debugger("square.fwp", fwp="./target/debug/fwp", input_file=None, timeout=30) as debug:
     debug.on("value", values.append)
     debug.break_at("square")
     debug.continue_()
@@ -79,7 +79,10 @@ with Debugger("square.fwp", fwp="./target/debug/fwp") as debug:
 print(values)
 ```
 
-The context manager closes and reaps the debugger process. `on` registers a
+The compiler, input choice and timeout are required settings. `input_file=None`
+forbids program standard input; pass a path to supply it. `timeout=30` bounds each
+protocol read to 30 seconds. The context manager closes and reaps the debugger
+process. `on` registers a
 Python callback; `trace` selects which execution events the interpreter emits.
 The example gathers typed expression results after stopping in `square`.
 `call`/`return` mark function boundaries, `expression` marks an internal operation
@@ -120,8 +123,8 @@ fwp build square.fwp -O2 -o square
 fwp disassemble --tool /path/to/llvm-objdump square
 ```
 
-Select an installed LLVM `llvm-objdump`; if it is on `PATH`, the `--tool` option
-can be omitted. On macOS, `xcrun --find llvm-objdump` locates the tool shipped with
+Select an installed LLVM `llvm-objdump` with the required `--tool` option.
+Use `--tool llvm-objdump` to resolve that name through `PATH`. On macOS, `xcrun --find llvm-objdump` locates the tool shipped with
 Xcode command-line tools. `--json` returns structured instruction addresses,
 encoding text, assembly and C file/line annotations where debug information is
 present. The complete LLVM listing and tool version are retained too.
@@ -142,12 +145,13 @@ from fwp_tools.disassembler import Disassembler, Target
 tool = Disassembler(
     fwp="./target/debug/fwp",
     llvm_objdump="/path/to/llvm-objdump",
+    timeout=180,
 )
 report = tool.compare(
     "square.fwp", "square-code-report",
     targets=[
-        Target("amd64-linux", "x86_64-linux-gnu-gcc", "x86_64-linux-gnu"),
-        Target("arm64-linux", "aarch64-linux-gnu-gcc", "aarch64-linux-gnu"),
+        Target("amd64-linux", "x86_64-linux-gnu-gcc", "x86_64-linux-gnu", triple=None, sysroot=None),
+        Target("arm64-linux", "aarch64-linux-gnu-gcc", "aarch64-linux-gnu", triple=None, sysroot=None),
     ],
     levels=("O0", "O1", "O2", "O3"),
 )
@@ -161,10 +165,13 @@ for variant in report["variants"]:
 ```
 
 Those compiler paths are examples: install matching toolchains for the requested
-targets. The third argument selects fwp's C generation target: `"native"` for the
+targets. Tool paths, timeout, targets and optimization levels are all required;
+the example allows 180 seconds per subprocess. The third argument selects fwp's C generation target: `"native"` for the
 host, or a supported Linux triple. C is generated separately for each target.
-With Clang, also supply `triple=...` and, when needed, `sysroot=...`.
-A **sysroot** supplies that target's headers and libraries. Missing toolchains or
+With Clang, supply `triple=...` to select its target. `triple=None` uses the
+selected compiler's target, as in the cross-GCC examples. A **sysroot** supplies
+the target's headers and libraries; pass its path or explicitly use `sysroot=None`
+to use the selected compiler's header search configuration. Missing toolchains or
 headers fail explicitly; the tool does not substitute another architecture.
 `O0` disables C optimization; `O1`, `O2` and `O3` select the compiler's increasing
 optimization levels. fwp's own earlier optimization passes are the same in each

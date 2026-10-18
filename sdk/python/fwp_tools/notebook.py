@@ -36,12 +36,13 @@ class Kernel:
                 if stream is not None:
                     stream.close()
 
-    def _request(self, command, source="", *, allow_error=False, generation=None):
+    def _request(self, command, source, *, allow_error, generation):
         with self.process_lock:
-            if generation is not None and generation != self.generation:
+            if generation != self.generation:
                 raise RuntimeError("The notebook run was stopped.")
             if self.process is not None and self.process.poll() is not None:
                 self.interrupt()
+                raise RuntimeError("The notebook session stopped. Run a cell to start a new session.")
             if self.process is None:
                 self.diagnostics = tempfile.TemporaryFile(mode="w+t", encoding="utf-8")
                 try:
@@ -78,8 +79,6 @@ class Kernel:
             if not isinstance(document, dict):
                 raise ValueError("Notebook document must be an object.")
             generation = self.generation
-            def request(command, source="", **kwargs):
-                return self._request(command, source, generation=generation, **kwargs)
             cells = document.get("cells")
             if not isinstance(cells, list) or not all(isinstance(c, dict) for c in cells):
                 raise ValueError("Notebook cells must be a list of objects.")
@@ -93,7 +92,8 @@ class Kernel:
             if not isinstance(selected, list) or not all(i in ids for i in selected):
                 raise ValueError("Run only cells that exist in this notebook.")
             code = [c for c in cells if c["kind"] == "code" and c["source"].strip()]
-            analyses = {c["id"]: request("analyze", c["source"])["result"] for c in code}
+            analyses = {c["id"]: self._request("analyze", c["source"],
+                allow_error=False, generation=generation)["result"] for c in code}
             owners = {}
             for identity, info in analyses.items():
                 for name in info["defines"]:
@@ -108,9 +108,10 @@ class Kernel:
             fingerprint = [(c["id"], c["source"]) for c in code]
             reset = fingerprint != self.fingerprint
             if reset:
-                request("reset")
+                self._request("reset", "", allow_error=False, generation=generation)
                 definitions = "\n\n".join(c["source"] for c in code if analyses[c["id"]]["kind"] == "definitions")
-                self.signatures = request("submit", definitions)["result"]["signatures"] if definitions.strip() else ""
+                self.signatures = self._request("submit", definitions,
+                    allow_error=False, generation=generation)["result"]["signatures"] if definitions.strip() else ""
                 self.fingerprint = fingerprint
             results = {}
             for cell in code:
@@ -123,7 +124,8 @@ class Kernel:
                 else:
                     # An expression is run only when explicitly selected. Changing
                     # another cell never silently repeats its external effects.
-                    results[identity] = request("submit", cell["source"], allow_error=True)
+                    results[identity] = self._request("submit", cell["source"],
+                        allow_error=True, generation=generation)
             return {"results": results, "dependencies": dependencies, "analysis": analyses, "reset": reset}
 
 
@@ -135,7 +137,7 @@ def serve(fwp, directory, port):
         def log_message(self, *_):
             pass
 
-        def send(self, status, body, content_type="application/json"):
+        def send(self, status, body, content_type):
             data = body.encode() if isinstance(body, str) else body
             self.send_response(status)
             self.send_header("Content-Type", content_type + "; charset=utf-8")
@@ -152,19 +154,19 @@ def serve(fwp, directory, port):
 
         def do_GET(self):
             if not self.same_origin():
-                self.send(403, '{"error":"Use the printed local notebook address."}')
+                self.send(403, '{"error":"Use the printed local notebook address."}', "application/json")
                 return
             names = {"/": ("notebook.html", "text/html"), "/notebook.js": ("notebook.js", "text/javascript"),
                      "/notebook.css": ("notebook.css", "text/css")}
             if self.path not in names:
-                self.send(404, '{"error":"Not found"}')
+                self.send(404, '{"error":"Not found"}', "application/json")
                 return
             name, kind = names[self.path]
             self.send(200, assets.joinpath(name).read_bytes(), kind)
 
         def do_POST(self):
             if not self.same_origin() or self.headers.get("Content-Type") != "application/json":
-                self.send(403, '{"error":"Notebook requests need same-origin JSON."}')
+                self.send(403, '{"error":"Notebook requests need same-origin JSON."}', "application/json")
                 return
             try:
                 length = int(self.headers.get("Content-Length", "0"))
@@ -179,11 +181,11 @@ def serve(fwp, directory, port):
                 elif self.path == "/run":
                     response = kernel.run(request["document"], request["cells"])
                 else:
-                    self.send(404, '{"error":"Not found"}')
+                    self.send(404, '{"error":"Not found"}', "application/json")
                     return
-                self.send(200, json.dumps(response))
+                self.send(200, json.dumps(response), "application/json")
             except (ValueError, RuntimeError, KeyError, OSError) as error:
-                self.send(400, json.dumps({"error": str(error)}))
+                self.send(400, json.dumps({"error": str(error)}), "application/json")
 
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     print(f"fwp notebook: http://127.0.0.1:{server.server_port}\nWorking directory: {directory}\nCtrl-C stops the server.", flush=True)
@@ -198,9 +200,9 @@ def serve(fwp, directory, port):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--fwp", default="fwp", help="fwp compiler executable")
-    parser.add_argument("--directory", type=Path, default=Path.cwd(), help="working directory for notebook code and imports")
-    parser.add_argument("--port", type=int, default=0, help="local port; 0 asks the OS for an unused port")
+    parser.add_argument("--fwp", required=True, help="fwp compiler executable")
+    parser.add_argument("--directory", type=Path, required=True, help="working directory for notebook code and imports")
+    parser.add_argument("--port", type=int, required=True, help="local port; 0 asks the OS for an unused port")
     args = parser.parse_args()
     serve(args.fwp, args.directory.resolve(), args.port)
 

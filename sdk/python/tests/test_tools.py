@@ -17,7 +17,7 @@ class Tools(unittest.TestCase):
             source = Path(directory) / "bad.fwp"
             source.write_text("main = missing-name\n")
             with self.assertRaisesRegex(DebuggerError, "missing-name"):
-                Debugger(source, fwp=FWP)
+                Debugger(source, fwp=FWP, input_file=None, timeout=30)
 
     def test_source_instrumentation_preserves_tutorial_behavior(self):
         root = Path(__file__).resolve().parents[3]
@@ -29,7 +29,7 @@ class Tools(unittest.TestCase):
                 self.assertEqual(raw.returncode, 0, raw.stderr)
                 self.assertEqual(raw.stdout, source.with_suffix(".out").read_text())
                 events = []
-                with Debugger(source, fwp=FWP) as debugger:
+                with Debugger(source, fwp=FWP, input_file=None, timeout=30) as debugger:
                     debugger.on("output", events.append)
                     while not debugger.finished:
                         debugger.continue_()
@@ -41,7 +41,7 @@ class Tools(unittest.TestCase):
             source = Path(directory) / "program.fwp"
             source.write_text("increment : I64 -> I64\nincrement = add 1\nmain = 41 | increment | echo\n")
             events = []
-            with Debugger(source, fwp=FWP) as debugger:
+            with Debugger(source, fwp=FWP, input_file=None, timeout=30) as debugger:
                 debugger.on("*", events.append)
                 debugger.break_at("increment")
                 debugger.continue_()
@@ -59,7 +59,7 @@ class Tools(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "source.fwp"
             source.write_text("square : F64 -> F64\nsquare = fork mul id id\nmain = 3.0 | square | echo\n")
-            with Debugger(source, fwp=FWP) as debugger:
+            with Debugger(source, fwp=FWP, input_file=None, timeout=30) as debugger:
                 debugger.break_at("source.fwp:2")
                 stopped = debugger.continue_()
                 self.assertEqual(stopped["reason"]["location"]["line"], 2)
@@ -75,7 +75,7 @@ class Tools(unittest.TestCase):
             data = Path(directory) / "input.txt"
             data.write_text("input for the program")
             events = []
-            with Debugger(source, fwp=FWP, input_file=data) as debugger:
+            with Debugger(source, fwp=FWP, input_file=data, timeout=30) as debugger:
                 debugger.on("output", events.append)
                 debugger.continue_()
                 self.assertEqual(debugger.last_event["status"], 0)
@@ -113,10 +113,27 @@ class Tools(unittest.TestCase):
             kernel = Kernel(FWP, directory)
             try:
                 for primitive in ("read-all", "read-lines", "read-line", "term.read-secret"):
-                    reply = kernel._request("submit", primitive + " ()", allow_error=True)
+                    reply = kernel._request("submit", primitive + " ()", allow_error=True, generation=kernel.generation)
                     self.assertIn("session commands", reply["error"])
-                    reply = kernel._request("submit", "6 * 7")
+                    reply = kernel._request("submit", "6 * 7", allow_error=False, generation=kernel.generation)
                     self.assertEqual(reply["result"]["value"], "42")
+            finally:
+                kernel.interrupt()
+
+    def test_dead_notebook_process_requires_an_explicit_new_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            kernel = Kernel(FWP, directory)
+            document = {"cells": [{"id": "effect", "kind": "code", "source": '"once" | echo'}]}
+            try:
+                self.assertEqual(kernel.run(document, ["effect"])["results"]["effect"]["stdout"], "once\n")
+                process = kernel.process
+                process.kill()
+                process.wait()
+                with self.assertRaisesRegex(RuntimeError, "session stopped"):
+                    kernel.run(document, ["effect"])
+                self.assertIsNone(kernel.process)
+                self.assertTrue(process.stdin.closed and process.stdout.closed)
+                self.assertEqual(kernel.run(document, ["effect"])["results"]["effect"]["stdout"], "once\n")
             finally:
                 kernel.interrupt()
 
@@ -125,11 +142,11 @@ class Tools(unittest.TestCase):
             source = Path(directory) / "program.fwp"
             program = '# Unicode source stays UTF-8: λ\nmain = 41 | add 1 | echo\n'
             source.write_text(program, encoding="utf-8")
-            targets = [Target("native", os.environ.get("CC", "cc"), "native")]
+            targets = [Target("native", os.environ["CC"], "native", triple=None, sysroot=None)]
             if os.environ.get("FWP_CROSS_CC"):
-                targets.append(Target("aarch64-linux", os.environ["FWP_CROSS_CC"], "aarch64-linux-gnu"))
-            report = Disassembler(fwp=FWP, llvm_objdump=os.environ.get("FWP_OBJDUMP", "llvm-objdump")).compare(
-                source, Path(directory) / "report", targets=targets)
+                targets.append(Target("aarch64-linux", os.environ["FWP_CROSS_CC"], "aarch64-linux-gnu", triple=None, sysroot=None))
+            report = Disassembler(fwp=FWP, llvm_objdump=os.environ["FWP_OBJDUMP"], timeout=180).compare(
+                source, Path(directory) / "report", targets=targets, levels=("O0", "O1", "O2", "O3"))
             self.assertFalse(report["executed"])
             self.assertEqual(report["source_text"], program)
             self.assertEqual(len(report["variants"]), 4 * len(targets))

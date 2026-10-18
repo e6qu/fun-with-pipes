@@ -100,7 +100,7 @@ or `./hello.exe` on Windows. `fwp run --interp examples/hello.fwp` uses the
 interpreter instead: it evaluates the compiler's checked program directly.
 The test suite compares both execution methods.
 
-Run `fwp repl` to try expressions without creating a file. The
+Run `fwp repl --no-history` to try expressions without creating a file. The
 [interactive guide](docs/repl.md) explains numbered results, multiline input,
 history, type inspection and how to save definitions.
 For code and explanations in cells, use the [local notebook](docs/notebooks.md).

@@ -2,64 +2,82 @@
 
 ## Next action
 
-[PR #167](https://github.com/e6qu/fun-with-pipes/pull/167) is ready for its final
-acceptance run after repair checkpoint `94420ae2`. All currently reported
-failures are repaired; remaining old-head jobs must still be audited.
-Production run `39129847428` at
-`f957980acfb93e3699e55085def1ffd70f4c18b4` remains intact.
-Focused terminal run `39132990289` passes on both Linux architectures; both
-Mac architectures expose the terminal-drain defect described below.
-Language/SDK/browser run `39132992668` passes, including the UTF-8 repair.
-New terminal run `39133970673` and language run `39133975063` check `94420ae2`.
-Next: audit the repaired terminal probes and all nine production jobs plus docs
-at the final PR head; fix any new failures in this PR. Squash merge only after
-all final-head gates pass, with one subject of at most 80 characters and an empty body.
+[PR #167](https://github.com/e6qu/fun-with-pipes/pull/167) is still open.
+Published acceptance head: `2f3e87cd26e0b28225fcb60faa1473a3e8ac8478`.
+The user then requested explicit settings and no compatibility machinery.
+The working tree applies that requirement to the new tools:
 
-Docs run `39129847367` failed because the handoff cleanup removed the required
-roadmap-status table and `Next:` marker. Both are restored in `763e245b`.
-The restored roadmap audit passes (3.01 s), as do tutorial/library documentation
-harnesses (1.08 s) and eight native-runner scheduling checks (1.08 s).
-SDK review also found locale-dependent text reads in C/disassembly reports:
-the published repair explicitly uses UTF-8 and adds Unicode source to the existing
-real-object comparison test. The updated focused suite passes; final production
-acceptance still needs a new run.
-Focused run `39129853485` now passes: 22 Rust checks, nine Python tests and the
-installed-package browser test, with clean logs and reviewed desktop/mobile images.
-Benchmark, ARM64 macOS GC and Windows AMD64 gates pass; four production jobs
-remain running and both regular macOS jobs failed. The Mac GC log has 293 passed,
-zero failed and 15 ignored checks. Windows AMD64 has 363 passed, zero failed
-and six ignored checks. Audit logs and metadata are in `/private/tmp/fwp-final-f957`.
-Each regular macOS job fails only its terminal interruption test: 468 Rust
-checks and the other eight Python tests pass on each host. The test sent SIGINT after a fixed
-0.3-second delay. Waiting for actual program output fixes interruption in the
-native Mac probe. Its next failure, waiting for exit, had the same cause: macOS
-waits for the PTY peer to consume output before restoring terminal mode.
-A native stack sample confirms `tcsetattr`/`TCSADRAIN`; draining output while
-reaping fixes the test against the unchanged CI-built compiler (guarded PASS,
-2.82 s). No timeout or assertion was weakened.
+- SDK callers supply compiler/tool paths, input choice, timeout, target settings
+  and optimization levels. Two internal forwarding helpers are removed.
+- Notebook startup requires Python, working directory and port; port 0 explicitly
+  requests an available port. The browser test now uses the actual fwp launcher.
+- REPL users select terminal history, no history, scripted input or JSON mode.
+  No environment-derived history path or silent terminal-to-stream conversion.
+  JSON requests require command/source fields; malformed requests cannot run code.
+- A dead notebook interpreter reports failure; another explicit cell run starts
+  a fresh session. Effects are never automatically retried.
+- Examples, tests, CI toolchain settings, PLAN and AGENTS match these interfaces.
+  Backward compatibility remains unnecessary; no adapters are included.
 
-The expanded test separately reproduces a real bug: querying
-`signal.shutdown-requested` replaces the REPL's interrupt handler. The old CI
-compiler fails after the second loop starts (guarded negative control, 23.33 s).
-The published repair routes Ctrl-C to the active terminal session and preserves
-standalone graceful shutdown. A scope guard clears terminal state on exit.
-This Rust repair still needs remote compilation and the full enhanced test.
-Focused terminal jobs use the production O1 profile on Linux/macOS ARM64/AMD64
-and preserve failed compilers for diagnosis.
-An additional standalone test checks normal cleanup after both SIGINT and
-SIGTERM. It passes against the old CI-built Mac compiler (0.51 s under the
-guard); the final run must preserve that behavior with the signal repair.
+Next: complete focused validation of these changes, publish one combined commit,
+then require all nine production jobs, docs, terminal probes and tools/browser
+checks at that new exact head before squash merge. Use one commit subject of at
+most 80 characters and an empty body. Keep the earlier run intact for its results.
 
-Python initializers are empty and imports stay at the top, using defining
-modules directly; [AGENTS.md](../AGENTS.md) records these rules. The installed
-package's browser assets and launcher pass the `f957980a` focused run. These
-results do not replace final-head production acceptance.
+### Current evidence
 
-Do not restart passing CI solely to record run IDs: fold bookkeeping into a
-necessary repair or retain the local handoff until acceptance. Full Linux gates
-require the actual WASI float probe; the focused runner's optional probe alone
-does not establish WASI execution. Cross-target disassembly never establishes
-execution on that target.
+At `2f3e87cd`, production run `39134575726` has eight passing jobs; Linux AMD64
+is still running. Linux ARM64 reports 756 Rust passes, zero failures and 15 ignored
+checks. Each regular Mac reports 468 Rust passes and ten Python passes, with no
+failures/skips. Each Mac GC job reports 293 passes and 15 ignored checks. Windows
+ARM64/AMD64 each report 363 Rust passes and six ignored checks; eight Python tests
+run and two POSIX terminal tests are skipped. Packaging and binary evidence pass.
+Documentation `39134575677`, all four terminal jobs `39134597819`, and the tools/
+package/browser job `39134602773` pass. The latter runs 22 Rust and ten Python
+checks, native/cross-target O0–O3 disassembly and actual Chromium. All terminal
+probes run both interruption/recovery and standalone shutdown tests with no skips.
+These results precede the explicit-settings changes; they do not verify them.
+
+The earlier full run at `f957980a` is completely audited: seven jobs passed;
+both regular Mac jobs failed only the repaired terminal test. Across platforms,
+3,762 Rust test executions passed, none failed, and 72 were ignored. Local logs:
+`/private/tmp/fwp-final-f957` and `/private/tmp/fwp-final-2f3e`.
+
+Repairs already verified remotely: restore the handoff's required status table
+and Next marker; wait for real terminal output before sending SIGINT and drain
+the PTY while waiting for exit; route scheduler SIGINT to the active REPL after
+`signal.shutdown-requested` installs its handler; use UTF-8 for disassembly reports.
+The enhanced terminal test reproduces the signal bug on the old compiler and
+passes on all four native Linux/Mac targets after repair. Standalone SIGINT and
+SIGTERM still clean up normally.
+
+Focused local checks for the explicit-settings changes use the fixed guard:
+
+- `python3 scripts/local-guard.py cargo fmt --all`: pass, 1.55 seconds.
+- `python3 scripts/local-guard.py python3 /private/tmp/fwp-python-import-audit.py`:
+  pass, 0.27 seconds; 71 Python files, top-level imports, empty initializers and
+  AGENTS under 100 lines.
+- `python3 scripts/local-guard.py env PYTHONDONTWRITEBYTECODE=1
+  PYTHONPATH=sdk/python:sdk/python/tests
+  FWP_TEST_BIN=/private/tmp/fwp-terminal-763-mac/fwp python3
+  -W error::ResourceWarning -m unittest
+  test_tools.Tools.test_dead_notebook_process_requires_an_explicit_new_run
+  test_tools.Tools.test_notebook_replaces_definitions_and_never_replays_other_expressions
+  test_tools.Tools.test_notebook_input_cannot_consume_protocol_and_errors_leave_session_usable
+  test_tools.Tools.test_debugger_controls_typed_values_and_streams_events -v`:
+  four passes, 7.96 seconds. This uses the earlier CI-built compiler to check
+  Python changes; it does not validate new Rust code. No local compiler rebuild.
+- The same guarded SDK invocation with explicit `CC=cc` and
+  `FWP_OBJDUMP=/Library/Developer/CommandLineTools/usr/bin/llvm-objdump`, selecting
+  `test_tools.Tools.test_disassembly_compares_c_and_instruction_encodings_at_four_levels`:
+  pass, 1.46 seconds; actual ARM64 C/object instructions at O0/O1/O2/O3.
+- Guarded `scripts/check-roadmap.py`: pass, 3.01 seconds; 59 link sets, 106
+  preparation anchors and seven work areas. Guarded `/private/tmp/fwp-doc-audit.py`:
+  pass, 0.38 seconds; all tutorial copies/outputs and historical evidence links.
+
+Full Linux acceptance must execute the WASI float probe. Cross-target disassembly
+establishes binary inspection, never native execution. Do not restart passing CI
+solely for bookkeeping; fold it into required repairs or keep a local handoff.
 
 ## What this PR implements
 

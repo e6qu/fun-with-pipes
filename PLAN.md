@@ -147,6 +147,8 @@ Keep both `if` and `match`, explicit `const` for constant functions, and `()` fo
 unit. Tuple positions start at zero. Iteration and state helpers remain library
 functions. No colon application or indentation-based argument groups are planned.
 Avoid needless wrappers, implicit conversions and hidden fallback behavior.
+Use explicit parameters and settings for toolchains, targets and execution
+policy; do not add compatibility adapters or silently choose those settings.
 Register spills and alternatives defined by a protocol are ordinary implementation
 choices, not fallbacks.
 

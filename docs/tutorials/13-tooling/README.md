@@ -131,7 +131,7 @@ Previous: [Numerics](../12-numerics/README.md) · [All tutorials](../README.md) 
 ## Explore a running program
 
 A REPL is a read–evaluate–print loop: enter one expression, see its value, then
-use that value in another expression. Start with `fwp repl`; enter `2 + 3`,
+use that value in another expression. Start with `fwp repl --no-history`; enter `2 + 3`,
 then `it * 2` to get `10`. Here `it` names the previous result. The
 [interactive guide](../../repl.md) explains history, definitions and type queries.
 

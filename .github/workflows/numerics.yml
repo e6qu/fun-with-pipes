@@ -79,6 +79,8 @@ jobs:
         env:
           PYTHONPATH: sdk/python
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
+          CC: cc
+          FWP_OBJDUMP: llvm-objdump
           FWP_CROSS_CC: aarch64-linux-gnu-gcc
         run: python3 -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v
       - if: ${{ !cancelled() }}

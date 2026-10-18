@@ -4,6 +4,55 @@ use std::io::Write;
 use std::process::{Command, Stdio};
 
 #[test]
+fn json_requires_explicit_commands_and_recovers_without_executing_them() {
+    fwp::driver::with_big_stack(|| {
+        let input = br#"{"source":"\"must not run\" | echo"}
+{"command":"submit"}
+{"command":"submit","source":"6 * 7"}
+"#;
+        let mut output = Vec::new();
+        fwp::repl::run_json(&input[..], &mut output, std::env::current_dir().unwrap()).unwrap();
+        let replies: Vec<_> = std::str::from_utf8(&output)
+            .unwrap()
+            .lines()
+            .map(|line| fwp::json::Json::parse(line).unwrap())
+            .collect();
+        assert_eq!(replies.len(), 3);
+        for reply in &replies[..2] {
+            assert!(reply.get("error").is_some(), "{reply}");
+            assert_eq!(
+                reply.get("stdout").and_then(fwp::json::Json::as_str),
+                Some("")
+            );
+        }
+        assert_eq!(
+            replies[2]
+                .at(&["result", "value"])
+                .and_then(fwp::json::Json::as_str),
+            Some("42")
+        );
+    });
+}
+
+#[test]
+fn tools_reject_missing_execution_settings_before_starting() {
+    for args in [
+        vec!["repl"],
+        vec!["repl", "--stream", "--history", "must-not-create-history"],
+        vec!["notebook"],
+        vec!["notebook", "--python", "--port", "0"],
+        vec!["disassemble", "does-not-exist"],
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(&args)
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(2), "{args:?}: {output:?}");
+        assert!(output.stdout.is_empty(), "{args:?}: {output:?}");
+    }
+}
+
+#[test]
 fn session_preserves_values_redefinition_and_recovers_from_errors() {
     fwp::driver::with_big_stack(|| {
         let mut session = Session::new(std::env::current_dir().unwrap()).unwrap();
@@ -214,7 +263,7 @@ fn multiline_and_scripted_terminal_commands() {
         assert!(!incomplete(input), "{input}");
     }
     let mut child = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["repl", "--no-history"])
+        .args(["repl", "--stream"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

@@ -686,21 +686,21 @@ pub fn run_json(
         }
         let request = crate::json::Json::parse(&line)?;
         use crate::json::Json;
-        let source = request.get("source").and_then(Json::as_str).unwrap_or("");
-        let command = request
-            .get("command")
-            .and_then(Json::as_str)
-            .unwrap_or("submit");
+        let source = request.get("source").and_then(Json::as_str);
+        let command = request.get("command").and_then(Json::as_str);
         let mut printed = Vec::new();
         let mut errors = Vec::new();
-        let result = match command {
-            "reset" => Session::new(directory.clone()).map(|fresh| {
+        let result = match (command, source) {
+            (None, _) => Err("session request requires a string command".into()),
+            (_, None) => Err("session request requires string source (empty for reset)".into()),
+            (Some("reset"), Some("")) => Session::new(directory.clone()).map(|fresh| {
                 session = fresh;
                 Json::Null
             }),
-            "type" => session.type_of(source).map(Json::str),
-            "analyze" => analyze(source),
-            "submit" => session
+            (Some("reset"), Some(_)) => Err("reset requires empty source".into()),
+            (Some("type"), Some(source)) => session.type_of(source).map(Json::str),
+            (Some("analyze"), Some(source)) => analyze(source),
+            (Some("submit"), Some(source)) => session
                 .submit_with_stderr(source, &mut printed, &mut errors)
                 .map(|cell| {
                     Json::obj(vec![
@@ -717,7 +717,7 @@ pub fn run_json(
                         ),
                     ])
                 }),
-            _ => Err(format!("unknown session command {command}")),
+            (Some(command), _) => Err(format!("unknown session command {command}")),
         };
         let mut reply = vec![
             ("id", request.get("id").cloned().unwrap_or(Json::Null)),
@@ -793,20 +793,22 @@ fn analyze(source: &str) -> Result<crate::json::Json, String> {
 
 pub fn run(args: &[String]) -> i32 {
     if args.iter().any(|a| a == "--help" || a == "-h") {
-        println!("Usage: fwp repl [--json | --no-history | --history PATH]\n\n{HELP}");
+        println!("Usage: fwp repl (--json | --stream | --no-history | --history PATH)\n\n{HELP}");
         return 0;
     }
     let mut history = None;
     let mut no_history = false;
     let mut json = false;
+    let mut stream = false;
     let mut args = args.iter();
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--no-history" => no_history = true,
             "--json" => json = true,
+            "--stream" => stream = true,
             "--history" => match args.next() {
-                Some(path) => history = Some(PathBuf::from(path)),
-                None => {
+                Some(path) if !path.starts_with('-') => history = Some(PathBuf::from(path)),
+                _ => {
                     eprintln!("--history needs a path");
                     return 2;
                 }
@@ -817,8 +819,13 @@ pub fn run(args: &[String]) -> i32 {
             }
         }
     }
-    if (no_history && history.is_some()) || (json && (no_history || history.is_some())) {
-        eprintln!("choose one of --json, --no-history or --history PATH");
+    if [json, stream, no_history, history.is_some()]
+        .iter()
+        .filter(|&&selected| selected)
+        .count()
+        != 1
+    {
+        eprintln!("choose one of --json, --stream, --no-history or --history PATH");
         return 2;
     }
     let directory = match std::env::current_dir() {
@@ -830,12 +837,14 @@ pub fn run(args: &[String]) -> i32 {
     };
     let result = if json {
         run_json(io::stdin().lock(), io::stdout(), directory)
-    } else if !io::stdin().is_terminal() || !io::stdout().is_terminal() {
+    } else if stream {
         run_stream(io::stdin().lock(), io::stdout(), directory)
+    } else if !io::stdin().is_terminal() || !io::stdout().is_terminal() {
+        Err("terminal editing requires a terminal; select --stream for scripted input".into())
     } else {
         #[cfg(not(target_family = "wasm"))]
         {
-            terminal::run(directory, history, no_history)
+            terminal::run(directory, history)
         }
         #[cfg(target_family = "wasm")]
         {

@@ -11,14 +11,20 @@ From the repository root, install the companion tools into your Python environme
 
 ```sh
 python3 -m pip install ./sdk/python
-fwp notebook
+fwp notebook --python python3 --directory . --port 0
 ```
 
-The tools need Python 3.10 or newer. `--python PATH` chooses the Python executable
-used by `fwp notebook`. Open the local address printed in the terminal. The server
-listens only on `127.0.0.1`; code runs with your local interpreter and working
-directory. `--directory PATH` chooses that directory, and `--port N` selects a
-port. Stop the server with Ctrl-C.
+The tools need Python 3.10 or newer. All three settings are required:
+`--python PATH` selects the Python where you installed the package,
+`--directory PATH` selects the directory for code and imports, and `--port N`
+selects a port. Port `0` explicitly asks the OS for an unused port. The launcher
+uses the same fwp executable you invoked. Open the printed address; the server
+listens only on `127.0.0.1`. Stop it with Ctrl-C.
+
+To select a different compiler, launch the Python module directly:
+`python3 -m fwp_tools.notebook --fwp /path/to/fwp --directory . --port 0`.
+If its interpreter process dies, the current run reports an error. Starting a
+fresh session requires another explicit cell run; effects are never retried.
 
 The initial notebook explains and computes a 3–4–5 triangle's distance. Its first
 code cell defines `x = 3.0` and `y = 4.0`. The next evaluates `x | hypot y`, which

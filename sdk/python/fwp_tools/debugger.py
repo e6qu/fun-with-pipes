@@ -19,8 +19,8 @@ class DebuggerError(RuntimeError):
 
 
 class Debugger:
-    def __init__(self, source: str | Path, *, fwp: str = "fwp",
-                 input_file: str | Path | None = None, timeout: float = 30):
+    def __init__(self, source: str | Path, *, fwp: str,
+                 input_file: str | Path | None, timeout: float):
         """Start paused at main. timeout bounds each protocol read, in seconds."""
         if timeout <= 0:
             raise ValueError("timeout must be positive")
@@ -108,7 +108,7 @@ class Debugger:
                 raise DebuggerError("debugger response must be an object")
             return message
 
-    def request(self, command: str, argument: str = ""):
+    def request(self, command: str, argument: str):
         if self._closed or self.finished:
             raise DebuggerError("debugger is closed or finished")
         if self._in_callback:
@@ -142,7 +142,7 @@ class Debugger:
                 return message
 
     def _resume(self, command):
-        self.request(command)
+        self.request(command, "")
         self.stopped = False
         return self.wait()
 
@@ -165,13 +165,13 @@ class Debugger:
         return self.request("clear", function)
 
     def stack(self):
-        return self.request("stack")
+        return self.request("stack", "")
 
     def frame(self, index: int):
         return self.request("frame", str(index))
 
     def locals(self):
-        return self.request("locals")
+        return self.request("locals", "")
 
     def inspect(self, slot: int):
         return self.request("print", str(slot))

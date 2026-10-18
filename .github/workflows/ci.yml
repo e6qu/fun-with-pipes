@@ -86,6 +86,7 @@ jobs:
         env:
           PYTHONPATH: sdk/python
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
+          CC: clang
         run: |
           export FWP_OBJDUMP="$(xcrun --find llvm-objdump)"
           python3 -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v
@@ -286,6 +287,8 @@ jobs:
         env:
           PYTHONPATH: sdk/python
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
+          CC: cc
+          FWP_OBJDUMP: llvm-objdump
         run: python3 -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v
       - name: Build standalone compiler
         run: cargo build --release --bin fwp

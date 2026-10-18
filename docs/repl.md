@@ -1,6 +1,6 @@
 # Try fwp interactively
 
-Run `fwp repl` to enter expressions and see their results immediately. A REPL
+Run `fwp repl --no-history` to enter expressions and see their results immediately. A REPL
 means *read, evaluate, print, loop*. It checks and interprets each entry; it does
 not generate machine code or use a JIT. Read [lesson 1](tutorials/01-pipes-and-functions/README.md)
 for pipes and functions, then try:
@@ -101,14 +101,18 @@ for its tasks. It is a one-shot interpreter measurement, not a repeated native
 benchmark or a comparison with C/Rust. Use the [benchmark guide](benchmarks.md)
 for those comparisons.
 
-Native terminals save the last 1,000 history entries for recall. The startup
-message prints the history path. Use `--history PATH` to choose it or
-`--no-history` to avoid reading/writing a history file. The default is
-`$XDG_STATE_HOME/fwp/repl-history` when set, otherwise
-`$HOME/.local/state/fwp/repl-history` on Unix or
-`%LOCALAPPDATA%/fwp/repl-history` on Windows. History is source text, not restored
-variables. Piped input uses the same session engine without prompts, terminal
-escapes or a history file; this mode also works in the WASI compiler.
+Choose the session mode explicitly. `--history PATH` enables terminal editing
+and saves the last 1,000 history entries at that path. `--no-history` enables
+terminal editing without reading or writing a history file. History is source
+text, not restored variables. Neither mode silently switches to scripted input
+when a terminal is unavailable.
+
+Use `fwp repl --stream` for piped input without prompts, terminal escapes or a
+history file; this mode also works in the WASI compiler. `--json` selects the
+notebook/automation protocol. Every JSON request needs a string `command` and
+string `source`: for example, `{"command":"submit","source":"6 * 7"}` returns
+42. Commands are `submit`, `type`, `analyze` and `reset`; reset takes empty source.
+Missing fields report errors and never implicitly execute code.
 
 Program standard input is unavailable in JSON/notebook sessions because that
 stream carries control commands. Use an explicit file for input data. Attempts

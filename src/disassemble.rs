@@ -156,22 +156,22 @@ pub fn parse(text: &str) -> Vec<Json> {
 }
 
 pub fn run(args: &[String]) -> i32 {
-    let mut tool = "llvm-objdump".to_string();
+    let mut tool = None;
     let mut json = false;
     let mut path = None;
     let mut args = args.iter();
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--tool" => match args.next() {
-                Some(t) => tool = t.clone(),
-                None => {
+                Some(t) if !t.starts_with('-') => tool = Some(t),
+                _ => {
                     eprintln!("--tool needs a path");
                     return 2;
                 }
             },
             "--json" => json = true,
             "--help" | "-h" => {
-                println!("Usage: fwp disassemble [--json] [--tool LLVM_OBJDUMP] BINARY\nInspect existing native machine code without executing it.");
+                println!("Usage: fwp disassemble [--json] --tool LLVM_OBJDUMP BINARY\nInspect existing native machine code without executing it.");
                 return 0;
             }
             s if s.starts_with('-') || path.is_some() => {
@@ -185,7 +185,11 @@ pub fn run(args: &[String]) -> i32 {
         eprintln!("fwp disassemble: missing binary");
         return 2;
     };
-    match inspect(Path::new(path), &tool) {
+    let Some(tool) = tool else {
+        eprintln!("fwp disassemble: select --tool LLVM_OBJDUMP explicitly");
+        return 2;
+    };
+    match inspect(Path::new(path), tool) {
         Ok(report) => {
             if json {
                 println!("{report}");
