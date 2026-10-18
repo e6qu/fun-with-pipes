@@ -553,7 +553,9 @@ checked task/channel owners and frees scheduler records and pooled linear-memory
 stacks when the command returns. A completed fiber saves its latest State
 storage pointer before another fiber replaces the runtime globals. The browser
 loader gives each invocation its own instance and passes copied strings to host
-output callbacks. JSPI and Asyncify execution, cleanup controls
+output callbacks. Exceptions from those callbacks propagate unchanged; a host
+`RangeError` must not become a language stack-overflow trap or trigger a second
+call to the failed output sink. JSPI and Asyncify execution, cleanup controls
 and actual-module inspection are required before acceptance; see the handoff.
 HTTP stream handles cannot be queued through a channel in checked ARC: their
 connection retains the handler, whose captures could contain that same channel.

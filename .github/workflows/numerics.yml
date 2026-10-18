@@ -1507,6 +1507,9 @@ jobs:
       - name: Asyncify toolchain
         if: inputs.suite == 'wasi-arc' || inputs.suite == 'wasm-hosts'
         run: npm install -g binaryen
+      - name: Loader exception boundaries
+        if: inputs.suite == 'wasm-hosts'
+        run: node tests/wasm/loader-errors.mjs
       - name: Task owners through JSPI and Asyncify
         if: inputs.suite == 'wasm-hosts'
         run: cargo test --test wasm_arc wasi_tasks_release_captures_channels_stacks_and_scheduler -- --exact --nocapture

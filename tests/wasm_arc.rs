@@ -798,3 +798,28 @@ fn browser_entries_isolate_outputs_reentrant_calls_and_host_errors() {
         }
     }
 }
+
+#[test]
+fn browser_loader_preserves_host_errors_and_engine_stack_traps() {
+    let have_node = Command::new("node")
+        .arg("--version")
+        .output()
+        .is_ok_and(|output| output.status.success());
+    if !have_node {
+        assert!(
+            std::env::var_os("FWP_REQUIRE_WASI_ARC").is_none(),
+            "required Node unavailable"
+        );
+        eprintln!("skipping loader exception execution: Node unavailable");
+        return;
+    }
+    let result = checked(
+        Command::new("node")
+            .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/wasm/loader-errors.mjs")),
+    );
+    assert_eq!(
+        result.stdout,
+        b"host exceptions and actual WebAssembly stack overflow stay distinct\n"
+    );
+    assert!(result.stderr.is_empty(), "{result:?}");
+}

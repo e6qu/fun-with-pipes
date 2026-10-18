@@ -29,8 +29,11 @@ await Promise.all([invoke(), invoke()]);
 let nested;
 await invoke(() => { nested ??= invoke(); });
 await nested;
-const stopped = new Error("host output sink stopped");
-await assert.rejects(invoke(() => { throw stopped; }), (error) => error === stopped);
+for (const stopped of [new Error("host output sink stopped"), new RangeError("host range error"), "host string error", undefined]) {
+  let calls = 0;
+  await assert.rejects(invoke(() => { if (++calls === 1) throw stopped; }), (error) => Object.is(error, stopped));
+  assert.equal(calls, 1);
+}
 await invoke();
 // Earlier output remains valid after other instances have finished or failed.
 for (const output of saved) assert.equal(output.map((line) => line + "\n").join(""), expected);

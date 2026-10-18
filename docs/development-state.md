@@ -66,6 +66,16 @@ The redundant downloaded `/private/tmp/fwp-http-evidence/39052834580` copy was
 removed after confirming all six unexpired GitHub artifacts and the committed
 HTTP-client report. Free space returned to 64.81 GiB. Preserve the current
 server-entry artifacts; large builds and actual Wasm runs remain on CI.
+A further browser-loader repair preserves host output exceptions, including a
+`RangeError`, instead of retrying the sink and misreporting a Wasm stack overflow.
+The regression executes tiny real Wasm modules locally, with no C toolchain or
+mock engine. It checks exception identity and one sink call, and a real recursive
+module still reports stack overflow. The initial always-throwing callback hid
+the old loader's retry; changing it to throw once makes the prior `92b03d2e`
+loader fail and the repair pass (0.14/0.15 s). Tests cover ordinary errors,
+RangeError, strings and undefined. This is a host-boundary repair, not a change
+to the language's trap semantics.
+
 Dispatch `suite=wasm-hosts` for two Linux-hosted actual-Wasm jobs.
 
 ## Accepted foundation
