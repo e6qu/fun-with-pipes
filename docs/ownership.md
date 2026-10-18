@@ -54,9 +54,9 @@ value has a statically known lifetime. WebAssembly and native libraries release
 typed counted owners but retain unproved shared graphs: they cannot scan arbitrary
 host roots. Checked ARC admits native executables, synchronous WASI executables,
 and C libraries with checked copying boundaries, described below.
-The browser-loader and asynchronous WASI extensions also use these ownership
-checks; their focused evidence and pending production acceptance are recorded
-under [checked ARC delivery](#checked-arc-delivery).
+The browser-loader and asynchronous WASI extensions accepted in PR #164 also use
+these ownership checks. [Checked ARC delivery](#checked-arc-delivery) records
+their passing evidence under Node and the remaining browser-engine coverage gap.
 
 The compiler first tries to eliminate temporary objects, keep fields as scalars,
 and place eligible values on the stack. Values that still need shared storage
@@ -406,7 +406,8 @@ acquisition can also fail after earlier fields were acquired. Those completed
 fields still need owners: catching the error must release them without changing
 an independently retained input map.
 
-The current repair registers cleanup for partial maps, lists, pending fields and
+The repair accepted in [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
+registers cleanup for partial maps, lists, pending fields and
 temporary arrays. Insert, remove and update consume their map argument, including
 on failure; decoding transfers that owner before insertion. A partial map records
 each acquired key before acquiring its value. Result cleanup uses the output
@@ -417,15 +418,15 @@ checks each allocation/retain failure across 22 operations, independent input
 aliases and callbacks that change the value type. All 66 focused tests pass on
 Linux, macOS and Windows, each on ARM64 and AMD64. Actual checked-ARC executables
 exclude tracing functions and report zero counted bytes at shutdown.
-[The handoff](development-state.md) tracks full production acceptance; focused
-checks alone do not complete the delivery.
+All nine production jobs and documentation pass; the linked history records
+full acceptance separately from the focused memory checks.
 
 ## Checked ARC delivery
 
 `fwp build --gc arc` excludes tracing code and rejects unsupported ownership.
 Supported native entries include `main`, exported function executables and CLI
-commands and native C libraries with copied inputs. The prepared owned-result
-extension below adds explicitly released strings; final acceptance is pending.
+commands and native C libraries with copied inputs. The owned-result extension
+accepted in PR #165 adds explicitly released strings and records, described below.
 Each entry starts without assuming an existing state or derivative scope.
 Synchronous WASI main/function/CLI entries also use these checks. Generated REST
 and MCP entries are accepted in [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164), including returned
@@ -508,11 +509,11 @@ rejected instead of silently building a native library.
 For a static or shared C library, scalar inputs are copied by value and string
 inputs are copied into owned language storage during the call. Records can
 contain these input types. Scalar results copy all their bits before temporary
-language storage is released. The prepared result-ownership extension adds
-returned strings and flat records containing strings; see the
-[six-host report](benchmarks.md#returning-owned-values-to-c-callers) for the
-90 passing focused tests and [handoff](development-state.md) for remaining
-production acceptance.
+language storage is released. Returned strings and flat records containing
+strings use the result ownership accepted in
+[PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165). The
+[six-host report](benchmarks.md#returning-owned-values-to-c-callers) records
+90 passing focused tests and measured ownership costs.
 
 An export named `greet` that returns a string also declares
 `fwp_release_greet(result)` in its generated C header. The caller owns that

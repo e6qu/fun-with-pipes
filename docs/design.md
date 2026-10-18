@@ -257,6 +257,57 @@ Semantic and cleanup checks passed on all six native hosts and in the full
 [PR #149 gate](roadmap-history.md#owned-processes-and-numeric-mapped-arrays-pr-149); [benchmarks](benchmarks.md#building-numeric-arrays-without-temporary-list-nodes)
 records the measured gains and limits.
 
+### Building numeric maps and sets without temporary lists
+
+A map stores one value for each key; a set stores distinct keys. For example,
+`range 0 4 | map (rem 3) | set.from-list | set.to-list` produces `[0, 1, 2]`:
+the callback produces `0, 1, 2, 0`, and the set removes the duplicate zero.
+When map input contains duplicate keys, the first key and last value survive.
+
+The compiler now combines `map f | map.from-list` or `map f | set.from-list`
+when the stored fields are integers, F32 or F64 held directly in machine words
+rather than separate heap objects. It runs every callback
+in input order, writes the numeric fields into temporary buffers, then sorts
+and removes duplicates. An immediate I64 `range` can supply numbers directly,
+without allocating its input list. Other list sources remain borrowed, so their
+aliases stay alive. Boxed numbers and managed result fields keep their existing
+construction rules. This changes no language notation or inference rule.
+
+When an ordinary map callback is known at compile time, its generated function
+can return the two numeric fields directly, avoiding temporary tuples. This uses
+the compiler's existing field-return calling convention. Known set callbacks
+also call their existing owned function entry directly, avoiding general function
+dispatch per item. This includes primitive callbacks and their argument cleanup.
+Captured values still use
+ordinary argument ownership and may need reference-count operations. Dynamic
+callbacks use their normal call convention and can still allocate result tuples;
+they share the same protected buffer construction. Errors and task
+cancellation release unfinished buffers. Empty or reversed ranges call no
+callbacks; duplicate handling and floating-key ordering remain unchanged.
+
+Map construction now uses two temporary allocations. Each stores a key lane
+followed immediately by a value lane, with one owner for both. Sort scratch uses
+the same layout. This removes separate-allocation gaps and unused sentinel words;
+size guards check the complete byte count before allocation. Sets use one key
+lane in each allocation, sharing the sorter's key/value lanes rather than storing
+unused values. The sorter copies shared output lanes once. Ordinary typed maps
+use the joined layout too, and empty maps avoid scratch allocation. Both forms
+allocate the final exact-size owned container after sorting. Peak storage grows with input length even when
+most keys are duplicates. Small integer fields occupy full words, and sets currently
+share the map representation's value slots. These remain memory costs to measure
+and reduce; the optimization removes intermediate list nodes and eligible tuples.
+
+`FWP_MAP_BUILD=0` disables this transformation for controlled comparisons.
+Focused local checks cover raw/optimized interpretation, native O1/O2, ARC,
+stressed tracing, aliases, every injected allocation failure and cancellation.
+The [six-host measurements](benchmarks.md#building-numeric-maps-and-sets-without-temporary-lists)
+verify construction combining, fewer set buffers and direct known-set calls in
+separate runs, with actual machine-code inspection. The [handoff](development-state.md)
+tracks full production acceptance and the joined-buffer timing comparison.
+The joined layout passes focused local ownership and overflow checks; native
+platform and performance measurements remain pending. Reduced allocation counts alone do not establish a timing improvement or parity
+with C/Rust.
+
 ### Numeric pairs immediately mapped
 
 `xs | zip ys` pairs each `x` with the corresponding `y`, stopping when either
@@ -542,22 +593,23 @@ proved derivative scopes, selected retained tasks, channels carrying data withou
 functions, tasks, HTTP stream handles or channels, and scoped C calls. Mutable
 cycles, raw pointers and unproved external callbacks remain excluded.
 Checked ARC supports native main and function executables,
-including CLI commands, and C libraries with copied inputs. A prepared C-result
-extension transfers owned strings and record string fields to the host, with
+including CLI commands, and C libraries with copied inputs. The C-result
+extension accepted in PR #165 transfers owned strings and record string fields to the host, with
 explicit per-export release functions. It avoids an extra heap handle; unique
 owners move and shared fields retain only the necessary owners. When the existing
 worker already returns record fields and takes ordinary word arguments, the C
 export transfers those fields directly instead of allocating and unpacking a
 record box. Typed cleanup protects the fields if conversion fails. Raw pointers
-remain excluded. Verification is tracked in the handoff. Every library export is checked as a separate entry. Synchronous WASI
+remain excluded. [Delivery history](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
+records full acceptance. Every library export is checked as a separate entry. Synchronous WASI
 main/function/CLI entries use the same ownership checks and free counted storage
 through their existing external count table. Checked gRPC clients and service
 methods additionally prove when sent and received iterator steps run; the
 [service guide](services.md#building-without-tracing-collection) explains the
 command and validation. HTTP clients and servers are accepted in PRs #162/#163.
-Generated REST and MCP entries now go through the ordinary ownership checks;
-their native execution and memory acceptance are being established in the
-[handoff](development-state.md). They decode requests, call exported functions
+Generated REST and MCP entries use the ordinary ownership checks, with native
+execution and memory acceptance recorded in
+[PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164). They decode requests, call exported functions
 and encode results using ordinary typed fwp code. A returned alias must retain
 its input storage until encoding finishes; a failed call must release decoded
 input. HTTP modes also depend on the connection/task owners described above.

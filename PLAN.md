@@ -80,31 +80,36 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #164](https://github.com/e6qu/fun-with-pipes/pull/164) is accepted after all
-nine production jobs and documentation passed. Generated REST/MCP entries and
-WebAssembly tasks can use checked ownership. JSON preserves numeric precision;
-executable caches track compiler/header changes. [History](docs/roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164)
-records the exact sources, complete audits and remaining measurement limits.
-Actual browser engines and retained foreign callbacks still need coverage.
+[PR #165](https://github.com/e6qu/fun-with-pipes/pull/165) is accepted after all
+nine production jobs and documentation passed. C callers can release returned
+strings and records explicitly; partial maps, sets and their temporary storage
+clean up on failure. Related Windows toolchain, output, cancellation-fixture and
+artifact problems are repaired. [History](docs/roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
+records the exact sources, complete failure audits and acceptance. Default
+execution still uses tracing; input copies, retained callbacks and actual browser
+engine coverage remain work.
 
-The next delivery gives C callers explicit release functions for returned strings
-and records. Unique owners move without extra heap handles; direct record returns
-avoid intermediate boxes. All 90 focused tests pass across six native hosts,
-including repaired Windows DLL exports and Rust interop. The
-[report](docs/benchmarks.md#returning-owned-values-to-c-callers) records remaining
-input copies and necessary reference-count costs, without a timing-parity claim.
+The current delivery removes intermediate lists and numeric result tuples from
+map/set construction. Immediate ranges provide values directly; known callbacks
+use direct calls. Sets use two temporary key arrays instead of four key/value
+arrays. Order, duplicates, aliases, arithmetic and failure behavior stay unchanged.
+The latest focused run passes 78 tests on six native hosts, with 120 actual
+binaries inspected. Joined key/value buffers remove two more map allocations;
+size guards and failure cleanup are verified. Large-map measurements expose
+CPU-dependent costs, so a remaining Xeon slowdown is still under investigation. Direct known-set loops avoid per-item dispatch
+and stack access in the inspected Linux AMD64/ARM64 binaries. Set peak counted storage at 65,536
+inputs falls from 2,102,304 to 1,053,696 bytes after removing the unused buffers and sentinel word.
+[Measurements](docs/benchmarks.md#building-numeric-maps-and-sets-without-temporary-lists)
+identify the exact comparisons and their limits. The [handoff](docs/development-state.md)
+tracks the next PR's full production acceptance. The C/Rust benchmark now keeps
+its actual measured executables and source inputs for subsequent code inspection;
+its full execution and artifact checks remain part of that production gate.
 
-This delivery also repairs leaks when a map callback or allocation fails.
-Protect partial map/set results, temporary arrays, list conversions and consumed
-inputs, including decoder insertion. Test each allocation/retain failure,
-surviving aliases and callbacks whose output type differs from their input.
-Require interpreter agreement, zero-byte ARC shutdown, stressed tracing/reuse
-checks, deliberate missing-cleanup controls and native evidence on six hosts.
-All 66 focused tests and 48 saved executable inspections pass on six native
-hosts; [the report](docs/benchmarks.md#cleanup-after-failed-map-and-set-operations)
-records the exact source and measurement limits. The [handoff](docs/development-state.md)
-tracks related Windows test-fixture and artifact repairs. Final production
-acceptance is still required for this batch; memory work remains broader than it.
+The larger maintained map benchmark exposed variable AMD64 sorting time. The
+current repair joins related key/value buffers under one owner, with explicit
+size checks and no arbitrary padding. Local ownership/failure tests pass;
+six-host correctness and same-run old/new layout measurements remain required.
+Do not merge based on allocation savings while the timing issue is unresolved.
 
 All seven areas above stay open. Each delivery must identify its workload,
 expected change and acceptance criteria. Investigate performance regressions

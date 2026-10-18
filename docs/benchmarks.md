@@ -35,6 +35,14 @@ garbage collector; this is not a comparison of checked ARC against Rust.
 ARC means automatic reference counting, which releases objects when their last
 owning reference disappears.
 
+The runner retains the measured executables and source inputs in
+`target/bench-evidence`, grouped by source commit and invocation, with a copy of
+each invocation's timing report. It separately
+emits fwp's generated C after timing, using the same compiler and settings;
+that extra emission is outside both execution and reported compilation times.
+Both benchmark workflows upload this evidence. Earlier timing-only artifacts
+cannot establish what their machine instructions looked like.
+
 ### What each program actually does
 
 | Program | Input and work | Important differences between implementations |
@@ -58,7 +66,8 @@ source `7c2b5638881cea6b476997b333aa61006dba1381` and this passing
 It ran on a Linux AMD64 runner with four logical CPUs reporting an AMD EPYC 7763,
 GCC 13.3.0 and Rust 1.99.1. All three map implementations use sorted pairs.
 These are six-run medians, with samples rounded to 0.001 ms in the saved report.
-This benchmark gate passes independently of the delivery's remaining checks.
+[PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165) records
+full acceptance after the Windows failures in that development run were repaired.
 
 | Program | C | Rust | fwp | Extra fwp time versus C | Extra fwp time versus Rust |
 |---|---:|---:|---:|---:|---:|
@@ -2686,8 +2695,8 @@ HTTP or standard input. This [six-host report](measurements/server-entries-2026-
 compares **tracing and checked ARC at the same fwp source**, `8dfc014d`, retained
 by `evidence/server-entries-20261018`. All 18 memory jobs in
 [the runner suite](https://github.com/e6qu/fun-with-pipes/actions/runs/39078070919)
-pass. Functional test repairs and final production acceptance are tracked in
-[the handoff](development-state.md). These measurements contain the exact-number
+pass. [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164)
+records the functional repairs and passing final production acceptance. These measurements contain the exact-number
 JSON repair; the earlier lossy-number baseline is not equivalent work.
 
 The [server fixture](../tests/fixtures/server_entries.fwp) copies records, returns
@@ -2830,8 +2839,8 @@ The [six-host report](measurements/library-results-2026-10-18.json) uses source
 `evidence/library-results-20261018`, and
 [run 39090619574](https://github.com/e6qu/fun-with-pipes/actions/runs/39090619574).
 All 90 focused tests pass on Linux, macOS and Windows, each on ARM64 and AMD64,
-with no failures or skips. Final production acceptance is tracked in the
-[handoff](development-state.md); this focused run does not replace it.
+with no failures or skips. [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
+records the separate passing production gate.
 
 The measured program performs 256 repeated call batches after warmup. It reads
 strings, returns aliases and records, computes a derivative (a function's slope),
@@ -2892,7 +2901,8 @@ The [six-host report](measurements/map-failures-2026-10-18.json) records source
 `af834f8c67c6c5b7d543615755feeb0a85e81c87` and
 [run 39093309107](https://github.com/e6qu/fun-with-pipes/actions/runs/39093309107).
 All 66 focused tests pass on Linux, macOS and Windows, each on ARM64 and AMD64,
-without skips. Full delivery acceptance remains in the [handoff](development-state.md).
+without skips. [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
+records full delivery acceptance.
 
 Each host tests 22 operations, including conversion, insertion, removal, update,
 set operations and map callbacks. Instrumentation deliberately fails each
@@ -2916,3 +2926,191 @@ No C/Rust timing comparison or claim of free reference counting follows from
 these cleanup checks. Reproduce the data-only inspection with
 `scripts/summarize-map-failures.py --artifacts DIR --audit AUDIT --head SOURCE
 --llvm-bin DIR --output FILE`; it never executes downloaded programs.
+
+## Building numeric maps and sets without temporary lists
+
+A set stores distinct keys. A map stores a value for each key; when input keys
+repeat, the last value survives. Here, a range supplies integers from zero up to
+the input count. The mapped function takes each integer modulo 257, producing
+at most 257 distinct keys. The set prints its size; the map stores the original
+integers as values and prints the last value for key 5.
+
+The [current six-host report](measurements/collection-joined-storage-2026-10-18.json)
+uses source `b87009905b26071be33b93c4ecf3277265a52488` and successful evidence run
+`39108116774`. It compares the **same fwp program and
+compiler**, with numeric construction combining enabled and disabled through
+`FWP_MAP_BUILD`. The optimized path removes the range list, mapped list and
+eligible key/value tuples, and calls known functions directly. These are fwp
+comparisons, not measurements of overhead relative to C or Rust.
+
+All programs use checked ARC, native O2 and disabled tracing/reuse poisoning.
+Inputs are compiled constants. Time includes process startup, construction,
+the mapped function, sorting, deduplication, the final query and output;
+compilation is recorded separately. Eight samples per variant use recorded
+randomized order. The report retains hardware, compiler settings, all 576 elapsed
+samples, allocation counts, counted storage and actual executable sizes.
+
+For 65,536 inputs, the observed medians are:
+
+| Native host | Set: ordinary / optimized ms | Time ratio | Map: ordinary / optimized ms | Time ratio |
+|---|---:|---:|---:|---:|
+| Linux AMD64 | 7.319 / 3.788 | 0.518 | 9.512 / 3.983 | 0.419 |
+| Linux ARM64 | 6.728 / 2.950 | 0.438 | 9.481 / 3.334 | 0.352 |
+| macOS ARM64 | 9.646 / 6.677 | 0.692 | 10.402 / 8.009 | 0.770 |
+| macOS AMD64 | 16.093 / 9.119 | 0.567 | 22.236 / 11.269 | 0.507 |
+| Windows AMD64 | 17.129 / 13.772 | 0.804 | 20.067 / 14.200 | 0.708 |
+| Windows ARM64 | 18.052 / 14.649 | 0.812 | 19.769 / 15.203 | 0.769 |
+
+The ratio is optimized time divided by ordinary time: 0.518 means about 48.2%
+less elapsed time in that run. At 32 inputs, ratios range from 0.861 to 1.078;
+every paired sample range overlaps, including apparent slowdowns. There is no
+consistent small-input gain. Startup was not timed separately, and these shared-runner measurements
+do not establish a universal performance threshold.
+
+At 65,536 inputs, set allocation requests fall from 131,077 to four and map
+requests from 196,614 to five. All cases have zero retains, final counted bytes
+and collections. On every host, peak counted storage falls from 4,718,600 to
+1,053,696 bytes for sets and from 6,815,752 to 2,102,272 for maps. These counters
+measure managed storage, excluding allocator capacity and process resident
+memory. Sets still store unused value slots in their final container; small
+integers occupy full words, and temporary storage grows with input length.
+
+All 78 focused tests pass without skips. The report inspects 120 actual binaries,
+including deliberately broken cleanup controls. Eight generated builders undergo
+all 48 allocation failure points and 64 callback error/cancellation exits per
+configuration, while independent input aliases survive. A historical
+[focused machine-code review](measurements/collection-set-code-2026-10-18.json)
+compares the actual Linux set executables before and after direct calls.
+The old loops invoke general function dispatch and access stack slots per item.
+The new AMD64 loop computes four items with SIMD instructions; ARM64 computes
+two with scalar instructions. Both use registers and direct key-buffer stores,
+with no calls or stack accesses inside the inspected loops.
+
+The AMD64 entry-function frame remains 216 bytes; ARM64 grows from 256 to 272
+bytes. The previous extra builder frame, 120 bytes on AMD64 and 144 on ARM64,
+is no longer on the known-call construction path. These frames include saved
+registers and runtime startup/output work, exclude callees and the AMD64 return
+address, and do not bound total stack use. Both executable files shrink by
+32 bytes. General dispatch remains elsewhere; sorting, final container storage
+and runtime startup still have costs. These observations apply to these
+constant-input programs, not every callback or function.
+
+The [initial optimization report](measurements/collection-build-baseline-2026-10-18.json)
+at source `488d1822` and its [map-loop review](measurements/collection-build-code-2026-10-18.json)
+precede the set improvements. The [set-storage report](measurements/collection-set-storage-2026-10-18.json)
+at `8fcd7486` removes two unused value buffers, reducing optimized set requests
+from six to four and peak counted storage from 2,102,304 to 1,053,712 bytes.
+It still uses general set callback dispatch. Each earlier report separately
+passes 78 tests and inspects 120 binaries. Different runs use different machines
+and conditions; their absolute timings do not isolate either follow-up's speed
+benefit. The current same-source comparison above includes joined map buffers and complete
+byte-count guards. The [earlier direct-call report](measurements/collection-build-direct-2026-10-18.json)
+preserves the source of the historical loop inspection.
+
+### Larger maps exposed a storage-layout problem
+
+The small construction comparison above has at most 257 distinct keys. The
+maintained `map` benchmark instead constructs 500,000 distinct entries and makes
+two million lookups. Keys are `(index * 7919) modulo 1000003`; input pairs are
+scrambled, and construction sorts them. The program prints the completed map's
+size before starting queries. The original raw report's description of "sorted
+key/value pairs" refers to the resulting map, not already sorted input; its
+correction is recorded alongside the preserved samples.
+Its [controlled report](measurements/large-map-construction-2026-10-18.json)
+compares construction combining on/off with the same compiler and runner, in
+both default tracing and checked ARC. It retains all samples and actual binaries;
+C and Rust run alongside complete fwp programs. Construction-only fwp programs
+are separate workloads, not isolated lookup measurements.
+
+Allocation requests for complete work fall from 1,500,009 to eight and peak
+counted storage from 56,000,040 to 24,000,040 bytes. However, the first AMD64 run
+shows 8.3% more complete-work time and 36.4% more construction-only time in
+tracing mode. Optimized construction alternates between fast and much slower
+processes, including ARC. ARM64 improves. The initial allocation improvement is
+therefore insufficient evidence of acceptable performance at this size.
+
+[Separate phase measurements](https://github.com/e6qu/fun-with-pipes/actions/runs/39103286520)
+locate the variable AMD64 cost in sorting. All 32 optimized instrumented samples
+fall into roughly 19–35 ms or 100–109 ms sorting groups, correlated with a bit in
+the buffers' virtual addresses. Allocation and cleanup remain fast. The sorting
+instructions themselves match between the original enabled/disabled executables.
+This suggests a layout-sensitive cost; it does not establish a particular CPU
+cache or address-translation mechanism. Instrumented timings are diagnostic and
+are excluded from ordinary benchmark timings.
+
+The repair joins related key/value lanes under one allocation owner, also for
+sort scratch, without arbitrary padding. It removes two allocation requests and
+keeps sorting, duplicate handling and callback order. Eight focused local tests
+pass, including all allocation failures, cancellation, aliases and size-overflow
+guards. The [first joined-layout performance run](measurements/large-map-storage-2026-10-18.json)
+passes both Linux jobs and all
+76 actual binary/sample audits. However, its AMD64 host is Intel Xeon 8573C,
+whereas the original slow sorting was on AMD EPYC 9V74. Both layouts sort quickly
+on this Xeon, so it cannot establish that the EPYC problem is fixed. Its full-work
+tracing median is 4.6% slower with joined storage, despite construction-only
+medians improving. This also remains under investigation. The new
+same-run comparison reconstructs the original separate-buffer layout explicitly;
+its results must justify the repair before merge. Older tables above describe
+their recorded sources and must not be relabeled as measurements of this change.
+Separate diagnostics compare sorting phases for both layouts and measure actual
+construction and query intervals in the same full program. They preserve
+evaluation order and do not infer query time by subtracting unrelated processes.
+
+The [follow-up report](measurements/large-map-storage-phases-2026-10-18.json)
+reproduces the slow original layout on AMD EPYC 9V74 and verifies that the joined
+layout removes those slow sorting cases. The old layout's slow samples take
+roughly 99–108 ms; joined samples take 14–22 ms, covering both address-bit values.
+Full-work joined/separate medians are 0.905 in tracing and 0.768 in ARC; construction
+ratios are 0.394/0.174. Query intervals remain near 273–279 ms and still include
+the same reference-count requests. This isolates the large gain to construction;
+it is not evidence that query overhead or the separate Xeon regression is fixed.
+Both follow-up hosts and all 92 binary/sample checks pass. ARM64 construction is
+stable, but its full-work ratios are 0.951 tracing and 1.069 ARC. ARC ranges overlap
+widely; 14 of 24 paired rounds are slower and the median paired ratio is 1.020.
+Its measured query intervals range roughly 421–502 ms. All sixteen ordinary timed
+binaries, generated inputs and profiles match the earlier run byte for byte.
+[Two further AMD64 repeats](measurements/large-map-storage-repeats-2026-10-18.json)
+preserve another 92 audited binaries and all ordinary/phase samples. On EPYC 7763,
+full-work ratios are 0.920 tracing / 0.840 ARC and construction 0.196/0.187; old
+sorting again stalls while joined sorting does not. EPYC 9V45 has fast sorting
+for both layouts: full-work ratios 1.007/0.990 have overlapping ranges, and
+construction ratios are 0.861/0.877. Neither host answers the Xeon question.
+The `map-replay` evidence suite repeats the verified executables on four AMD64
+runners without rebuilding them. It checks source, hashes and architecture first,
+records each actual CPU and keeps separate ordinary and diagnostic samples.
+The [first four replays](measurements/large-map-replay-2026-10-18.json) all pass:
+three use EPYC 7763 and one EPYC 9V74. Full-work joined/separate ratios range
+0.761–0.929 in tracing and 0.770–0.928 in ARC. They confirm construction gains
+on these hosts, without resolving the Xeon result.
+
+For the complete workload, the same-run fwp/C ratios are 0.918 tracing and 0.954
+ARC on EPYC, and 0.992/0.962 on ARM64. Against Rust, the ratios are 1.110/1.154
+on EPYC and 1.073/1.041 on ARM64: fwp still takes 4–15% more time than Rust in
+these runs. These compare complete implementations, including different sorting
+and overflow guarantees; they are not an isolated language-overhead measurement.
+
+Independent inspection of the actual AMD64 executables finds identical query and
+sorting instructions after resolving address differences. Joined storage removes
+384 bytes of machine code in each memory mode; the tracing cached-table frame
+falls from 104 to 88 bytes, while the ARC frame remains 88 bytes. On ARM64 ARC,
+code shrinks by 416 bytes and the cached-table frame falls from 112 to 96 bytes.
+These are local frame sizes, not whole-program stack bounds. Code identity does
+not imply identical cache placement or elapsed time.
+
+The joined-layout six-host workflow passed all 78 semantic/ownership tests but
+did not complete: Intel macOS timed out during an additional release build of
+the compiler, before collecting costs. The report correctly rejected that run.
+The measurement job now selects the compiler already built by its integration
+tests and records its exact path/hash alongside source identity. It still builds
+the measured programs at native O2; compiler generation/startup time is outside
+those program timings. The 30-minute limit and all test/cost cases remain.
+Replacement run `39108116774` passes all six hosts and 78 tests. Its
+[report](measurements/collection-joined-storage-2026-10-18.json), collected by
+`39109026750`, verifies all 120 actual binaries and allocation/cleanup counts.
+The failed run remains recorded; the replacement does not relabel its result.
+
+Two other candidates were rejected: moving integer equality outside the search
+is 8–9% slower on ARM64, and separating cached initialization shows no clear
+benefit while increasing code size. Neither changes production code. The large
+map still performs 2,000,001 retains; reducing that cost needs its own lifetime
+proof and measurement.

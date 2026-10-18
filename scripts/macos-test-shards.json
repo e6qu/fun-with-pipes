@@ -11,6 +11,7 @@
     "arc_extensions",
     "iterator_fusion",
     "mapped_array_construction",
+    "collection_construction",
     "float_linking",
     "wide_workers",
     "float_formats",

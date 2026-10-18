@@ -52,8 +52,11 @@ Protocol golden-byte tests cover widths, signed zero, infinities and NaN payload
 transport. Delivery evidence links the corresponding production verification.
 
 The implementation uses shared binary16/bfloat16/binary128 arithmetic and exact
-decimal cores. Arithmetic/conversion NaNs are canonical positive quiet NaNs;
-raw bit transport preserves payloads. Decimal conversion uses explicit per-call
+decimal cores. For these three formats (F16, BF16 and F128), arithmetic and
+conversion NaNs are canonical positive quiet NaNs. F32/F64 arithmetic NaN signs
+and payloads are implementation dependent. Raw bit transport preserves payloads
+and signs for every format. Tests of NaN key ordering must supply the same bits
+to both implementations, rather than derive keys from arithmetic such as 0/0. Decimal conversion uses explicit per-call
 scratch ownership, including cleanup on allocation failure. Delivery evidence
 records language integration and native verification alongside core arithmetic
 checks.

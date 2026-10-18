@@ -72,6 +72,13 @@ updates preserve live aliases. Unmodeled callbacks retain explicit sharing and c
 | map.update | borrow key/callback/default, consume map | owned container retaining keys and adopting callback result | argument1 borrows value |
 | set.insert | borrow key, consume set | owned container retaining inserted and copied keys | none |
 
+The compiler-only `map._map-list` and `set._map-list` operations borrow a callback
+and input list; their `_map-range` forms borrow a callback and two I64 bounds.
+They return an owned numeric container. Callbacks borrow each input; their results
+contain only inline numeric fields, although dynamic map callbacks can still
+allocate the containing tuple. Unfinished buffers have scoped cleanup. These are internal
+representations of ordinary `map` followed by construction, not new library APIs.
+
 Comparison-only keys never escape into fwp_map_find or structural fwp_cmp;
 these functions read values, allocate nothing and invoke no user callbacks.
 Their wrappers omit fwp_rc_share(key). Typed destruction releases keys/elements

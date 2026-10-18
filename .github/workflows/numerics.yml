@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -55,6 +55,9 @@ jobs:
           components: rustfmt, clippy
       - name: Native Windows toolchain
         shell: pwsh
+        id: windows_toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
       - uses: actions/cache/restore@v6
         id: artifact_tls_cache
@@ -79,22 +82,162 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --lib --bin fwp --test list_applicative_ownership --test typed_state_ownership --test ad_tape_scopes --test serializer_leaf_ownership --test ad_tape_ownership --test autodiff_workspace --test blocked_matrix --test worker_preparation_ownership --test array_size_limits --test device_bounds --test gc -- -D warnings
       - name: Native ownership checks with artifact writing enabled
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test list_applicative_ownership --test typed_state_ownership --test ad_tape_scopes --test serializer_leaf_ownership --test ad_tape_ownership --test autodiff_workspace --test blocked_matrix --test worker_preparation_ownership -- --nocapture
       - name: Array bounds through generated native programs
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test array_size_limits array_size_limits_agree_with_raw_interpreter_and_generic_wrappers -- --exact --nocapture
       - name: Device validation without a GPU or sanitizer toolchain
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact --nocapture
       - name: Retain the actual executable after a snapshot mismatch
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test gc gc_failure_artifacts_retain_the_native_executable -- --exact --nocapture
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: artifact-paths-${{ matrix.runner }}
           path: artifact-path-evidence/
+          if-no-files-found: error
+  large_map:
+    if: inputs.suite == 'large-map'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm"]' || format('["{0}"]', inputs.native_runner)) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: cc
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - name: Require a native Linux measurement host
+        run: test "${{ runner.os }}" = Linux
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Native compiler dependencies and binary inspection tools
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev binutils
+      - name: Build the measured compiler
+        run: cargo build --release --bin fwp
+      - name: Compare complete map work with construction fusion on and off
+        run: python3 scripts/measure-large-map.py --output large-map-evidence
+      - name: Locate variable large-map construction costs
+        run: python3 scripts/measure-map-phases.py --input large-map-evidence --output large-map-evidence/phases
+      - name: Compare joined map buffers with the original layout
+        run: python3 scripts/measure-map-storage.py --input large-map-evidence --output large-map-evidence/storage
+      - name: Attribute construction and query costs for both layouts
+        run: python3 scripts/measure-map-storage-phases.py --input large-map-evidence/storage --output large-map-evidence/storage-phases
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: large-map-${{ matrix.runner }}
+          path: large-map-evidence/
+          if-no-files-found: error
+  map_replay:
+    if: inputs.suite == 'map-replay'
+    permissions:
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2, 3, 4]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_HEAD: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check rejection of changed or incomplete evidence
+        run: python3 scripts/test-map-replay.py
+      - name: Repeat verified binaries without compiler or native builds
+        run: python3 scripts/replay-map-storage.py --run "$EVIDENCE_RUN" --source "$EVIDENCE_HEAD" --output map-replay-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: map-replay-${{ matrix.sample }}
+          path: map-replay-evidence/
+          if-no-files-found: error
+  collection_report:
+    if: inputs.suite == 'collection-report'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_HEAD: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install binary inspection tools
+        run: sudo apt-get update && sudo apt-get install -y llvm
+      - name: Check complete-target evidence validation
+        run: python3 scripts/test-collection-evidence.py
+      - name: Audit all hosts and inspect their saved binaries
+        run: python3 scripts/summarize-collection-build.py --run "$EVIDENCE_RUN" --head "$EVIDENCE_HEAD" --artifacts collection-report/artifacts --llvm-bin /usr/bin --output collection-report/report.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: collection-build-report
+          path: |
+            collection-report/report.json
+            collection-report/artifacts/*.json
+            collection-report/artifacts/*.log
+            collection-report/artifacts/**/*.disassembly.txt
+            collection-report/artifacts/**/*.symbols.txt
+          if-no-files-found: error
+  collection_build:
+    if: inputs.suite == 'collection-build'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_COLLECTION_ARTIFACTS: collection-build-evidence/checks
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Native Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        id: windows_toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/setup-windows.ps1
+      - name: Record source and tools
+        shell: bash
+        run: |
+          mkdir -p collection-build-evidence
+          git rev-parse HEAD > collection-build-evidence/source.txt
+          rustc --version > collection-build-evidence/rustc.txt
+          clang --version > collection-build-evidence/clang.txt
+          printf '%s\n' 'OS=${{ runner.os }}' 'architecture=${{ runner.arch }}' 'runner=${{ matrix.runner }}' 'ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off' 'tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1' '8 generated builders; every allocation/retain failure and callback exit; independent aliases; missing-cleanup controls' 'Timing compares fused and ordinary fwp only; no C/Rust parity claim' > collection-build-evidence/settings.txt
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --lib --bin fwp --test collection_construction -- -D warnings
+      - name: Collection semantics, failures and cancellation
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
+        run: cargo test --no-fail-fast --test collection_construction --test map_set_ownership --test mapped_array_construction --test numeric_array_fusion -- --nocapture
+      - name: Use the compiler already built by the integration tests
+        run: cargo build --bin fwp
+      - name: Repeated construction costs and generated code
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && success() }}
+        run: python3 scripts/measure-collection-build.py --compiler ${{ runner.os == 'Windows' && 'target/debug/fwp.exe' || 'target/debug/fwp' }} --output collection-build-evidence/costs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: collection-build-${{ matrix.runner }}
+          path: collection-build-evidence/
           if-no-files-found: error
   map_storage:
     if: inputs.suite == 'map-storage'
@@ -117,6 +260,9 @@ jobs:
       - name: Native Windows toolchain
         if: runner.os == 'Windows'
         shell: pwsh
+        id: windows_toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
       - name: Record source and tools
         shell: bash
@@ -129,10 +275,10 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --lib --bin fwp --test map_set_ownership --test decoder_partial -- -D warnings
       - name: Map and set results, aliases, failure and reuse
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test map_set_ownership --test map_unwind_ownership --test old_reclamation -- --nocapture
       - name: Typed decoding and partial results
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test decoder_partial -- --nocapture
       - uses: actions/upload-artifact@v7
         if: always()
@@ -161,6 +307,9 @@ jobs:
       - name: Native Windows toolchain
         if: runner.os == 'Windows'
         shell: pwsh
+        id: windows_toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
       - name: Toolchain and source
         shell: bash
@@ -173,13 +322,13 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --lib --bin fwp --test arc_library --test library_input_ownership --test library_result_ownership --test library_unload --test ffi -- -D warnings
       - name: Static and shared results, aliases, release controls and unload
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test arc_library --test library_input_ownership --test library_result_ownership --test library_unload --test ffi -- --nocapture
       - name: TCP and UDP library unload
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test udp_ownership socket_library_unload_closes_retained_handles_and_preserves_host_socket -- --exact --nocapture
       - name: Preserve C and Rust interop diagnostics
-        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && runner.os == 'Windows' }}
         shell: python
         run: |
           import os, pathlib, shutil, subprocess, tempfile
@@ -221,14 +370,17 @@ jobs:
       - name: Native Windows toolchain
         if: runner.os == 'Windows'
         shell: pwsh
+        id: windows_toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
       - name: Linked header paths, edits, include options and missing files
         run: cargo test --test aot integer_cache_tracks_header_search_paths -- --exact
       - name: Missing C compiler behavior
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test aot programs_are_interpreted_without_a_c_compiler -- --exact
       - name: Exact arithmetic archive identity, concurrent builds and eviction
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test float_linking -- --nocapture
   server_checks:
     if: inputs.suite == 'server-checks' || inputs.suite == 'server-entries' || inputs.suite == 'server-recheck'
@@ -270,6 +422,9 @@ jobs:
       - name: Native Windows toolchain
         if: runner.os == 'Windows'
         shell: pwsh
+        id: windows_toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
       - uses: actions/cache/restore@v6
         id: server_tls_cache
@@ -320,15 +475,15 @@ jobs:
       - run: cargo fmt --all -- --check
         if: matrix.part == 'checks'
       - run: cargo clippy --all-targets -- -D warnings
-        if: ${{ !cancelled() && matrix.part == 'checks' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && matrix.part == 'checks' }}
       - name: Accepted connections, UDP cleanup and readiness failures
-        if: ${{ !cancelled() && inputs.suite == 'server-checks' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'server-checks' }}
         run: cargo test --no-fail-fast --test grpc_server_connections --test udp_ownership --test native_sockets -- --nocapture
       - name: Generated entry results and ownership restrictions
-        if: ${{ !cancelled() && inputs.suite != 'server-checks' && matrix.part == 'checks' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite != 'server-checks' && matrix.part == 'checks' }}
         run: cargo test --no-fail-fast --test server_entry_ownership --test arc_execution -- --nocapture
       - name: Exact JSON and YAML numeric parsing
-        if: ${{ !cancelled() && inputs.suite != 'server-checks' && matrix.part == 'checks' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite != 'server-checks' && matrix.part == 'checks' }}
         shell: bash
         run: |
           status=0
@@ -337,19 +492,19 @@ jobs:
           cargo test --test rest openapi_balanced_integer_limits_are_exact -- --exact --nocapture || status=1
           exit "$status"
       - name: REST API, authentication and multipart forms with checked ARC
-        if: ${{ !cancelled() && inputs.suite != 'server-checks' && matrix.part == 'api' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite != 'server-checks' && matrix.part == 'api' }}
         run: cargo test --test rest checked_arc_rest_preserves_api_authentication_and_form_results -- --exact --nocapture
       - name: OpenAPI generated clients through JSON, forms and CSV
-        if: ${{ !cancelled() && inputs.suite != 'server-checks' && matrix.part == 'api' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite != 'server-checks' && matrix.part == 'api' }}
         run: cargo test --test rest forms_client_round_trip -- --exact --nocapture
       - name: Swagger generated clients through JSON, forms and CSV
-        if: ${{ !cancelled() && inputs.suite != 'server-checks' && matrix.part == 'api' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite != 'server-checks' && matrix.part == 'api' }}
         run: cargo test --test rest swagger_documents -- --exact --nocapture
       - name: Repeated MCP standard-input requests and non-freeing control
-        if: ${{ !cancelled() && inputs.suite == 'server-entries' && matrix.part == 'stdio' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'server-entries' && matrix.part == 'stdio' }}
         run: cargo test --test server_entry_ownership mcp_stdio_releases_repeated_requests_without_collection -- --ignored --exact --nocapture
       - name: HTTP entry results, retained storage and process memory
-        if: ${{ !cancelled() && inputs.suite == 'server-entries' && startsWith(matrix.part, 'http-') }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'server-entries' && startsWith(matrix.part, 'http-') }}
         run: cargo test --test server_entry_ownership generated_http_entries_release_requests_and_bound_process_memory -- --ignored --exact --nocapture
       - uses: actions/upload-artifact@v7
         if: always()
@@ -377,14 +532,17 @@ jobs:
       - name: Native Windows toolchain
         if: runner.os == 'Windows'
         shell: pwsh
+        id: windows_toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
       - name: Function lifetime, stack and library regressions
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test closure_ownership --test closure_cleanup --test stack_ownership --test stack_match_ownership --test arc_library
       - name: GCC static function representation
-        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && runner.os == 'Linux' }}
         env:
           CC: gcc
         run: cargo test --test closure_ownership fixed_function_values_preserve_aliases_and_effect_order -- --exact --nocapture
@@ -527,6 +685,9 @@ jobs:
       - name: Native Windows toolchain
         if: runner.os == 'Windows'
         shell: pwsh
+        id: windows_toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
       - uses: actions/cache/restore@v6
         id: decoder_tls_cache
@@ -553,18 +714,18 @@ jobs:
       - run: cargo clippy --all-targets -- -D warnings
         if: matrix.part == 'all' || matrix.part == 'server' || matrix.part == 'ownership'
       - name: HTTP ownership and shared connection controls
-        if: ${{ !cancelled() && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
         shell: bash
         run: |
           cargo test --no-fail-fast --lib --test native_sockets --test http2_client_ownership --test http2_server_ownership --test http2_peer_cleanup --test http2_body_roots --test grpc_connect_startup --test grpc_connect_cleanup --test grpc_connection_addresses --test grpc_tls_pool_identity --test grpc_client_receive --test grpc_client_requests --test library_resources
       - name: Reject cyclic ownership at unsupported boundaries
-        if: ${{ !cancelled() && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
         run: cargo test --test arc_execution arc_rejects_unproved_runtime_boundaries_and_disabled_counting -- --exact --nocapture
       - name: Preserve the counted-owner escape check
-        if: ${{ !cancelled() && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'ownership' }}
         run: cargo test --test arc_execution arc_checks_reject_counted_owners_at_uncounted_boundaries -- --exact --nocapture
       - name: Record HTTP platform and ownership metadata
-        if: ${{ !cancelled() && (inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory') }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory') }}
         env:
           FWP_HTTP_CLIENT_ARTIFACTS: http-client-evidence
         shell: bash
@@ -585,17 +746,17 @@ jobs:
           PYENV
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output http-client-evidence/primitive-inventory.json
       - name: Native HTTP client and server comparisons
-        if: ${{ !cancelled() && inputs.suite == 'http-clients' && matrix.part == 'comparisons' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'comparisons' }}
         env:
           FWP_HTTP_CLIENT_ARTIFACTS: http-client-evidence
         run: cargo test --test web checked_arc_http_matches_interpreter_with_pooled_and_tls_calls -- --exact --nocapture
       - name: Repeated HTTP client memory costs
-        if: ${{ !cancelled() && inputs.suite == 'http-clients' && matrix.part == 'comparisons' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-clients' && matrix.part == 'comparisons' }}
         env:
           FWP_HTTP_MEMORY_ARTIFACTS: http-client-evidence/memory
         run: cargo test --test web repeated_http_client_memory_measurement -- --ignored --exact --nocapture
       - name: HTTP server managed memory and resident memory
-        if: ${{ !cancelled() && inputs.suite == 'http-server-memory' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite == 'http-server-memory' }}
         env:
           FWP_HTTP_SERVER_MEMORY_ARTIFACTS: http-client-evidence/server-memory
         run: cargo test --test web repeated_http_server_memory_measurement -- --ignored --exact --nocapture
@@ -817,10 +978,10 @@ jobs:
           FWP_SERVICE_ARTIFACTS: service-evidence
         run: cargo test --no-fail-fast --test service_value_ownership --test grpc_peer_completion --test http2_peer_cleanup --test grpc_capture_resources --test stdlib_doc
       - name: HTTP/2 body interpreter and native agreement
-        if: ${{ !cancelled() && (inputs.suite == 'service-values' || inputs.suite == 'service-values-linux') }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'service-values' || inputs.suite == 'service-values-linux') }}
         run: cargo test --lib grpc::web::tests::body_bounds_and_error_order_agree_with_native -- --exact
       - name: HTTP/2 body source lifetime
-        if: ${{ !cancelled() && (inputs.suite == 'service-values' || inputs.suite == 'service-values-linux') && runner.os != 'Windows' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'service-values' || inputs.suite == 'service-values-linux') && runner.os != 'Windows' }}
         run: cargo test --test http2_body_roots
       - uses: actions/upload-artifact@v7
         if: always() && (inputs.suite == 'service-values' || inputs.suite == 'service-values-linux')
@@ -838,23 +999,23 @@ jobs:
           cargo test --no-fail-fast --lib resource::tests
           cargo test --no-fail-fast --test native_sockets --test udp_ownership --test arc_tasks
       - name: TLS stream interpreter and native agreement
-        if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
         env:
           FWP_REQUIRE_TLS: '1'
         run: cargo test --test tls streams -- --exact
       - name: Mutual TLS with checked ARC
-        if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
         env:
           FWP_REQUIRE_TLS: '1'
           FWP_TCP_CONSTRUCTOR_ARTIFACTS: tcp-evidence
         run: cargo test --test tls mutual_tls -- --exact
       - name: Native TLS socket errors and clean shutdown
-        if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') }}
         env:
           FWP_REQUIRE_TLS: '1'
         run: cargo test --test tls native_tls_preserves_socket_errors_and_clean_shutdown -- --exact
       - name: Existing POSIX TLS teardown and session-transfer controls
-        if: ${{ !cancelled() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') && runner.os != 'Windows' }}
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') && runner.os != 'Windows' }}
         run: cargo test --no-fail-fast --test tls_wire_ownership --test tls_alpn_roots --test tls_peer_subject_ownership --test tls_listener_ownership --test connect_cleanup --test library_resources
       - uses: actions/upload-artifact@v7
         if: always() && (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows')
@@ -1218,6 +1379,9 @@ jobs:
       - name: Native Windows toolchain
         if: runner.os == 'Windows'
         shell: pwsh
+        id: windows_toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
       - run: cargo fmt --all -- --check
       - run: cargo test --test library_unload --test compiler_options -- --nocapture
@@ -1350,6 +1514,7 @@ jobs:
           path: |
             performance-evidence/
             target/bench.md
+            target/bench-evidence/
   mapped_array_repeat:
     if: inputs.suite == 'mapped-array-repeat' || inputs.suite == 'zip-map-repeat' || inputs.suite == 'hash-repeat' || inputs.suite == 'vector-repeat'
     permissions:

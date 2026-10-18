@@ -1,0 +1,241 @@
+{
+  "source": "c34ca8e340c6f3dbb6251729553e1a8dbf513903",
+  "run": 39100652902,
+  "reportRun": 39101368649,
+  "baselineSource": "8fcd7486881c627f078d8bff7ad6e6c82f040734",
+  "baselineRun": 39100058501,
+  "baselineReportRun": 39100710058,
+  "scope": "Actual saved Linux AMD64 and ARM64 set executables inspected as data, never executed locally. The selected known-callback range loop replaces general dispatch and its stack accesses with direct register arithmetic and key-buffer stores. AMD64 computes four items with SIMD; ARM64 computes two with scalar instructions. Entry frame bytes include saved registers and runtime startup/output work, exclude callees and the AMD64 return address, and do not bound total stack use. AMD64 entry frame remains 216 bytes; ARM64 grows from 256 to 272 bytes. The previous extra generic-builder frame (120/144 bytes) is no longer on the known construction path; general dispatch still exists elsewhere. Sorting, final allocation, runtime startup and necessary stack frames remain. Timing compares fwp variants only; separate-run absolute times do not isolate this code change.",
+  "hosts": [
+    {
+      "host": "ubuntu-latest",
+      "case": "set, 65536 inputs, keys modulo 257",
+      "before": {
+        "source": "8fcd7486881c627f078d8bff7ad6e6c82f040734",
+        "binarySha256": "81efb9b22c34745893a99ad77cbd940a736fc679109287898a13b8fe53bfa2db",
+        "binaryBytes": 51648,
+        "disassemblySha256": "1dee4740ba9017fe1509d7c13e448baeed25df5d3d2bb4b4cd469c6964d6541b",
+        "dispatchAndStackExcerpts": [
+          "    40f0:      \tmovq\t0x8(%rsp), %r15",
+          "    40f5:      \tmovq\t0x10(%rsp), %r14",
+          "    40fa:      \tmovq\t0x40(%rsp), %rcx",
+          "    40ff:      \tmovq\t%r13, (%r15,%rcx,8)",
+          "    4103:      \tincq\t%rcx",
+          "    4106:      \tcmpq\t%r14, %rcx",
+          "    4109:      \tmovq\t0x30(%rsp), %r13",
+          "    410e:      \tje\t0x42df <f12+0x2ff>",
+          "    4114:      \tmovq\t0x38(%rsp), %rax",
+          "    4119:      \tmovq\t%rcx, 0x40(%rsp)",
+          "    411e:      \taddq\t%rcx, %rax",
+          "    4121:      \tmovq\t%rax, 0x18(%rsp)",
+          "    42c1:      \tmovq\t%r13, %rdi",
+          "    42c4:      \tmovl\t%ebp, %esi",
+          "    42c6:      \tmovq\t%r12, %rdx",
+          "    42c9:      \tcallq\t0x4610 <fwp_apply>",
+          "    42ce:      \tmovq\t%rax, %r13",
+          "    42d1:      \tjmp\t0x40f5 <f12+0x115>"
+        ]
+      },
+      "after": {
+        "source": "c34ca8e340c6f3dbb6251729553e1a8dbf513903",
+        "binarySha256": "1450fe9a623142edbfeefa416f771185ae487e86e76f259e2fafa58f1a2ecda3",
+        "binaryBytes": 51616,
+        "disassemblySha256": "48230239b215b8622c415d0f055d562a0e9bedba97a1001a16b7dac002f0a839",
+        "loopDescription": "four-item SIMD loop",
+        "firstAddress": "0x2790",
+        "lastAddress": "0x2807",
+        "instructions": [
+          "    2790:      \tmovdqa\t%xmm0, %xmm5",
+          "    2794:      \tpaddw\t%xmm1, %xmm5",
+          "    2798:      \tmovdqa\t%xmm0, %xmm6",
+          "    279c:      \tpmulhuw\t%xmm2, %xmm6",
+          "    27a0:      \tpsrlw\t$0x8, %xmm6",
+          "    27a5:      \tmovdqa\t%xmm6, %xmm7",
+          "    27a9:      \tpsllw\t$0x8, %xmm7",
+          "    27ae:      \tpor\t%xmm6, %xmm7",
+          "    27b2:      \tmovdqa\t%xmm0, %xmm6",
+          "    27b6:      \tpsubw\t%xmm7, %xmm6",
+          "    27ba:      \tmovdqa\t%xmm5, %xmm7",
+          "    27be:      \tpmulhuw\t%xmm2, %xmm7",
+          "    27c2:      \tpsrlw\t$0x8, %xmm7",
+          "    27c7:      \tmovdqa\t%xmm7, %xmm8",
+          "    27cc:      \tpsllw\t$0x8, %xmm8",
+          "    27d2:      \tpor\t%xmm7, %xmm8",
+          "    27d7:      \tpsubw\t%xmm8, %xmm5",
+          "    27dc:      \tpunpcklwd\t%xmm3, %xmm6    # xmm6 = xmm6[0],xmm3[0],xmm6[1],xmm3[1],xmm6[2],xmm3[2],xmm6[3],xmm3[3]",
+          "    27e0:      \tpunpckldq\t%xmm3, %xmm6    # xmm6 = xmm6[0],xmm3[0],xmm6[1],xmm3[1]",
+          "    27e4:      \tpunpcklwd\t%xmm3, %xmm5    # xmm5 = xmm5[0],xmm3[0],xmm5[1],xmm3[1],xmm5[2],xmm3[2],xmm5[3],xmm3[3]",
+          "    27e8:      \tpunpckldq\t%xmm3, %xmm5    # xmm5 = xmm5[0],xmm3[0],xmm5[1],xmm3[1]",
+          "    27ec:      \tmovdqu\t%xmm6, (%r14,%rax,8)",
+          "    27f2:      \tmovdqu\t%xmm5, 0x10(%r14,%rax,8)",
+          "    27f9:      \taddq\t$0x4, %rax",
+          "    27fd:      \tpaddw\t%xmm4, %xmm0",
+          "    2801:      \tcmpq\t$0x10000, %rax          # imm = 0x10000",
+          "    2807:      \tjne\t0x2790 <fwp_main_thread+0x250>"
+        ],
+        "callsWithinLoop": false,
+        "stackAccessWithinLoop": false
+      },
+      "prologues": [
+        {
+          "function": "fwp_main_thread",
+          "entryFrameBytes": 216,
+          "excerpt": [
+            "<fwp_main_thread>:",
+            "    2540:      \tpushq\t%rbp",
+            "    2541:      \tpushq\t%r14",
+            "    2543:      \tpushq\t%rbx",
+            "    2544:      \tsubq\t$0xc0, %rsp",
+            "    254b:      \tcmpl\t$0x0, 0x7bfa(%rip)      # 0xa14c <fwp_gc+0xfec>",
+            "    2552:      \tjne\t0x2559 <fwp_main_thread+0x19>",
+            "    2554:      \tcallq\t0x3110 <fwp_gc_init>",
+            "    2559:      \tcallq\t0x21f0 <pthread_self@plt>",
+            "    255e:      \tleaq\t0x28(%rsp), %rsi",
+            "    2563:      \tmovq\t%rax, %rdi"
+          ]
+        },
+        {
+          "function": "f12",
+          "entryFrameBytes": 120,
+          "excerpt": [
+            "<f12>:",
+            "    3fe0:      \tpushq\t%rbp",
+            "    3fe1:      \tpushq\t%r15",
+            "    3fe3:      \tpushq\t%r14",
+            "    3fe5:      \tpushq\t%r13",
+            "    3fe7:      \tpushq\t%r12",
+            "    3fe9:      \tpushq\t%rbx",
+            "    3fea:      \tsubq\t$0x48, %rsp",
+            "    3fee:      \txorl\t%r14d, %r14d",
+            "    3ff1:      \tmovq\t%rsi, %rax",
+            "    3ff4:      \tmovq\t%rsi, 0x38(%rsp)"
+          ]
+        },
+        {
+          "function": "fwp_main_thread",
+          "entryFrameBytes": 216,
+          "excerpt": [
+            "<fwp_main_thread>:",
+            "    2540:      \tpushq\t%rbp",
+            "    2541:      \tpushq\t%r15",
+            "    2543:      \tpushq\t%r14",
+            "    2545:      \tpushq\t%rbx",
+            "    2546:      \tsubq\t$0xb8, %rsp",
+            "    254d:      \tcmpl\t$0x0, 0x7bf8(%rip)      # 0xa14c <fwp_gc+0xfec>",
+            "    2554:      \tjne\t0x255b <fwp_main_thread+0x1b>",
+            "    2556:      \tcallq\t0x3510 <fwp_gc_init>",
+            "    255b:      \tcallq\t0x21f0 <pthread_self@plt>",
+            "    2560:      \tleaq\t0x20(%rsp), %rsi"
+          ]
+        }
+      ]
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "case": "set, 65536 inputs, keys modulo 257",
+      "before": {
+        "source": "8fcd7486881c627f078d8bff7ad6e6c82f040734",
+        "binarySha256": "049509d600c72034b58549efd6b4535db9dd9e67acee7eaef4651cf56afc1920",
+        "binaryBytes": 81896,
+        "disassemblySha256": "2b5aaa73baba3508b6a593f21f1bbbcb10b6595e64141cac16d17a76f0ec1859",
+        "dispatchAndStackExcerpts": [
+          "    3308:      \tmov\tx0, x20",
+          "    330c:      \tmov\tw1, w25",
+          "    3310:      \tmov\tx2, x24",
+          "    3314:      \tbl\t0x3790 <fwp_apply>",
+          "    3318:      \tmov\tx24, x23",
+          "    331c:      \tstr\tx0, [x23, x19, lsl #3]",
+          "    3320:      \tldr\tx23, [sp, #0x18]",
+          "    3324:      \tadd\tx19, x19, #0x1",
+          "    3328:      \tcmp\tx19, x23",
+          "    332c:      \tb.eq\t0x34a4 <f12+0x2a4>",
+          "    3330:      \tldr\tx0, [sp, #0x10]"
+        ]
+      },
+      "after": {
+        "source": "c34ca8e340c6f3dbb6251729553e1a8dbf513903",
+        "binarySha256": "54e1faccbbb4418cdd8847b41f74f3122238de52afdfce37973f73ec5c40cf21",
+        "binaryBytes": 81864,
+        "disassemblySha256": "3ef0bf814ad6e7b073c6b8e8dc3289b63c0f3a42e6da07e77446e26f0475f6de",
+        "loopDescription": "two-item scalar loop",
+        "firstAddress": "0x199c",
+        "lastAddress": "0x19e0",
+        "instructions": [
+          "    199c:      \torr\tw10, w8, #0x1",
+          "    19a0:      \tand\tw11, w8, #0xffff",
+          "    19a4:      \tadd\tx13, x20, x8, lsl #3",
+          "    19a8:      \tand\tw12, w10, #0xffff",
+          "    19ac:      \tmul\tw11, w11, w9",
+          "    19b0:      \tmul\tw12, w12, w9",
+          "    19b4:      \tlsr\tw11, w11, #24",
+          "    19b8:      \tlsr\tw12, w12, #24",
+          "    19bc:      \torr\tw11, w11, w11, lsl #8",
+          "    19c0:      \torr\tw12, w12, w12, lsl #8",
+          "    19c4:      \tsub\tw11, w8, w11",
+          "    19c8:      \tadd\tx8, x8, #0x2",
+          "    19cc:      \tsub\tw10, w10, w12",
+          "    19d0:      \tand\tx11, x11, #0xffff",
+          "    19d4:      \tcmp\tx8, #0x10, lsl #12      // =0x10000",
+          "    19d8:      \tand\tx10, x10, #0xffff",
+          "    19dc:      \tstp\tx11, x10, [x13]",
+          "    19e0:      \tb.ne\t0x199c <fwp_main_thread+0x1e8>"
+        ],
+        "callsWithinLoop": false,
+        "stackAccessWithinLoop": false
+      },
+      "prologues": [
+        {
+          "function": "fwp_main_thread",
+          "entryFrameBytes": 256,
+          "excerpt": [
+            "<fwp_main_thread>:",
+            "    17b4:      \tsub\tsp, sp, #0x100",
+            "    17b8:      \tstp\tx29, x30, [sp, #0xc0]",
+            "    17bc:      \tstr\tx23, [sp, #0xd0]",
+            "    17c0:      \tstp\tx22, x21, [sp, #0xe0]",
+            "    17c4:      \tstp\tx20, x19, [sp, #0xf0]",
+            "    17c8:      \tadd\tx29, sp, #0xc0",
+            "    17cc:      \tadrp\tx8, 0x21000 <fwp_gc+0xe88>",
+            "    17d0:      \tldr\tw8, [x8, #0x164]",
+            "    17d4:      \tcbnz\tw8, 0x17dc <fwp_main_thread+0x28>",
+            "    17d8:      \tbl\t0x238c <fwp_gc_init>"
+          ]
+        },
+        {
+          "function": "f12",
+          "entryFrameBytes": 144,
+          "excerpt": [
+            "<f12>:",
+            "    3200:      \tsub\tsp, sp, #0x90",
+            "    3204:      \tstp\tx29, x30, [sp, #0x30]",
+            "    3208:      \tstp\tx28, x27, [sp, #0x40]",
+            "    320c:      \tstp\tx26, x25, [sp, #0x50]",
+            "    3210:      \tstp\tx24, x23, [sp, #0x60]",
+            "    3214:      \tstp\tx22, x21, [sp, #0x70]",
+            "    3218:      \tstp\tx20, x19, [sp, #0x80]",
+            "    321c:      \tadd\tx29, sp, #0x30",
+            "    3220:      \tsubs\tx9, x2, x1",
+            "    3224:      \tmov\tx8, #0x1fffffffffffffff // =2305843009213693951"
+          ]
+        },
+        {
+          "function": "fwp_main_thread",
+          "entryFrameBytes": 272,
+          "excerpt": [
+            "<fwp_main_thread>:",
+            "    17b4:      \tsub\tsp, sp, #0x110",
+            "    17b8:      \tstp\tx29, x30, [sp, #0xc0]",
+            "    17bc:      \tstp\tx28, x25, [sp, #0xd0]",
+            "    17c0:      \tstp\tx24, x23, [sp, #0xe0]",
+            "    17c4:      \tstp\tx22, x21, [sp, #0xf0]",
+            "    17c8:      \tstp\tx20, x19, [sp, #0x100]",
+            "    17cc:      \tadd\tx29, sp, #0xc0",
+            "    17d0:      \tadrp\tx8, 0x21000 <fwp_gc+0xe88>",
+            "    17d4:      \tldr\tw8, [x8, #0x164]",
+            "    17d8:      \tcbnz\tw8, 0x17e0 <fwp_main_thread+0x2c>"
+          ]
+        }
+      ]
+    }
+  ]
+}

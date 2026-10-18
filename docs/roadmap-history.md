@@ -48,6 +48,59 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Owned C results and failure cleanup (PR #165)
+
+[PR #165](https://github.com/e6qu/fun-with-pipes/pull/165) merged as
+`695907781c5efff02e0f202f8b7fa99283df5ef4` after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39094927776)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39094927727)
+passed at `836f39b30079ec52f56b41d81baf468e8384a71b`. All 964 scheduled targets
+completed: 1,264 summaries, 3,652 passed, zero failed, 72 ignored. Ignored cases
+are not support evidence. The sole parent is accepted #164. Tested and merged
+files share tree `f2b67deaf8bfde1d21ed3f1777d07c218f3247a2`; the entire message is
+`Own C library results and release failed map operations`.
+Duplicate post-merge production `39101178854` is confirmed cancelled.
+
+C callers own returned strings and record fields and release each complete
+result once with `fwp_release_NAME`, before library unload. Unique owners move;
+eligible record returns pass their fields directly without an intermediate box.
+Read-only inputs still copy, and raw pointers remain outside checked ARC.
+Windows DLL exports and the Rust caller's toolchain are repaired. The
+[library report](measurements/library-results-2026-10-18.json) records 24 actual
+libraries, 96 zero-byte/zero-collection shutdown observations and 24 deliberately
+broken controls. Necessary sharing still uses reference counts.
+
+Partial maps, sets, scratch arrays, list conversions and consumed inputs now
+release completed owners when a callback or allocation fails. Decoder insertion
+transfers its consumed input before the call. Cleanup uses the callback's output
+type, so returning an integer from a string map cannot treat that integer as a
+pointer. A 32-failure reproducer falls from 2,048 leaked bytes to zero. The
+[map report](measurements/map-failures-2026-10-18.json) checks 48 actual binaries,
+108/110 allocation/retain failures across 22 operations, aliases and controls
+that deliberately remove cleanup. These are memory checks, not C/Rust timing parity.
+
+Focused acceptance includes 90 library-result tests across six hosts
+([run](https://github.com/e6qu/fun-with-pipes/actions/runs/39090619574), source
+`d6d36961f532167beec8a116b35462906ba1cc6f`), 66 map tests across six hosts
+([run](https://github.com/e6qu/fun-with-pipes/actions/runs/39093309107), source
+`af834f8c67c6c5b7d543615755feeb0a85e81c87`), and 52 expanded Windows tests
+([run](https://github.com/e6qu/fun-with-pipes/actions/runs/39094282067), source
+`463c00bfddf8824b88dc953acd2f192c3acb4dcd`). All pass without failures or skips.
+
+Every original failure was audited. The original nine-job production run
+`39092728270` completed all scheduled targets: 3,620 passed and six failed,
+all known Windows newline/executable-path failures. The focused artifact run
+`39093555361` exposed eight more failures from missing OpenSSL setup and synthetic
+cancellation tasks without a Windows stack boundary. Fixes configure TLS before
+dependent tests, supply that boundary, preserve exact stdout comparisons and
+use explicit executable extensions. Sibling fixtures and artifact writes were
+checked too; passing replacements do not erase the original failed runs.
+
+The [complete-program comparison](benchmarks.md#recorded-example-and-overhead)
+retains 90 source-specific C/Rust/fwp samples, compiler settings and timing limits.
+Default execution still includes tracing; retained foreign callbacks, actual
+browser engines and the wider ownership/performance roadmap remain open.
+
 ## Server entries, exact JSON and WebAssembly task owners (PR #164)
 
 [PR #164](https://github.com/e6qu/fun-with-pipes/pull/164) merged as
