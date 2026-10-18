@@ -285,11 +285,14 @@ they share the same protected buffer construction. Errors and task
 cancellation release unfinished buffers. Empty or reversed ranges call no
 callbacks; duplicate handling and floating-key ordering remain unchanged.
 
-Map construction still uses four temporary arrays of machine words; set
-construction uses two, sharing the sorter's key/value lanes rather than storing
-unused values. The sorter copies shared output lanes once. Ordinary set
-construction uses the same keys-only storage. Both forms allocate the final
-owned container after sorting. Peak storage grows with input length even when
+Map construction now uses two temporary allocations. Each stores a key lane
+followed immediately by a value lane, with one owner for both. Sort scratch uses
+the same layout. This removes separate-allocation gaps and unused sentinel words;
+size guards check the complete byte count before allocation. Sets use one key
+lane in each allocation, sharing the sorter's key/value lanes rather than storing
+unused values. The sorter copies shared output lanes once. Ordinary typed maps
+use the joined layout too, and empty maps avoid scratch allocation. Both forms
+allocate the final exact-size owned container after sorting. Peak storage grows with input length even when
 most keys are duplicates. Small integer fields occupy full words, and sets currently
 share the map representation's value slots. These remain memory costs to measure
 and reduce; the optimization removes intermediate list nodes and eligible tuples.
@@ -300,8 +303,9 @@ stressed tracing, aliases, every injected allocation failure and cancellation.
 The [six-host measurements](benchmarks.md#building-numeric-maps-and-sets-without-temporary-lists)
 verify construction combining, fewer set buffers and direct known-set calls in
 separate runs, with actual machine-code inspection. The [handoff](development-state.md)
-tracks the next PR's full production acceptance.
-Reduced allocation counts alone do not establish a timing improvement or parity
+tracks full production acceptance and the joined-buffer timing comparison.
+The joined layout passes focused local ownership and overflow checks; native
+platform and performance measurements remain pending. Reduced allocation counts alone do not establish a timing improvement or parity
 with C/Rust.
 
 ### Numeric pairs immediately mapped

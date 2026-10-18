@@ -2,9 +2,11 @@
 
 ## Next action
 
-Next: finish the tiny comparison preflight, publish the joined-buffer repair on
-`collection-runtime-costs`, then run `large-map` on Linux AMD64/ARM64 and
-`collection-build` on all six native hosts. No second PR. The authoritative live
+Next: audit joined-buffer source `725e2198d721e835be282e2032d99ac5f10b4605`: Linux
+performance run `39104667835` and six-host correctness run `39104669727`. Publish
+the report-collector/doc corrections separately; their code does not alter the
+measured compiler. Once all six hosts pass, collect their report with the new
+collector and explicit measured source/run inputs. No second PR. The authoritative live
 handoff is `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
 PR #166 remains at `7f782388270b5d73a60eaf3c253a6f9a6e680e95` while production runs.
 Do not merge it before fixing the observed AMD64 performance issue.
@@ -14,7 +16,7 @@ Do not merge it before fixing the observed AMD64 performance issue.
 Source `9f0632f9c1abf4f067fa659f1d95c5768cb8a965`, run `39102838322`, passes both
 Linux hosts; 36 actual binaries, raw samples, counters and hashes are audited.
 It is preserved as `evidence/large-map-baseline-20261018`. Its raw reports are
-`docs/measurements/large-map-construction-2026-10-18.json` (currently uncommitted).
+`docs/measurements/large-map-construction-2026-10-18.json` (committed with the repair).
 The maintained program builds 500,000 entries and performs two million lookups.
 Optimization cuts full-work requests from 1,500,009 to eight and peak counted
 bytes from 56,000,040 to 24,000,040, but still performs 2,000,001 retains.
@@ -42,7 +44,7 @@ and remove their unused scripts from the eventual delivery.
 
 ## Current repair
 
-Uncommitted compiler/runtime changes join related key/value lanes into one owned
+Published compiler/runtime changes join related key/value lanes into one owned
 allocation, both for generated numeric builders and ordinary typed maps. Sort
 scratch uses the same layout. No unused sentinel word or allocator-sized gap;
 sets keep one lane. The final exact-size container and stable duplicate handling
@@ -73,12 +75,17 @@ full suites, full benchmarks and large reports remain on GitHub.
   independent interpreter output, two layouts, both modes, zero final charge,
   requests 8 → 6, unchanged 17 retains, phase-probe syntax and workflow/docs.
   Peak counted storage is 464 → 400 bytes; both modes finish at zero charge.
-- Shared root `target/debug/fwp` now contains this uncommitted joined-buffer
-  compiler. It is no longer the published PR #166 compiler. Root CI auditing
+- Shared root `target/debug/fwp` now contains the joined-buffer
+  compiler at source `725e2198`. It is no longer the published PR #166 compiler. Root CI auditing
   remains data-only; run candidate checks from this preparation worktree.
 
-Before publishing, record the exact source and focused results, preserve the
-finished phase/lookup source with an immutable evidence tag, and audit every
+The old phase/lookup source is preserved as `evidence/large-map-phases-20261018`;
+its unused candidate scripts are removed. The report collector previously expected 56 allocation failures and four leaked
+scratch objects. It now requires 48 failure points and two owned scratch
+allocations, retaining exact checks. Report/script/workflow/docs preflight and
+three incomplete-log regressions pass (3.39 s guarded), using
+`/private/tmp/fwp-joined-report-preflight.py`.
+This report-only fix does not invalidate the running source tests. Audit every
 failed production job before one coherent PR repair push. Final acceptance needs
 all nine production jobs, documentation and relevant focused evidence for the
 actual PR commit. Commit/squash messages: one line, at most 80 characters, no

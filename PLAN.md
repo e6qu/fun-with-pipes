@@ -103,6 +103,12 @@ tracks the next PR's full production acceptance. The C/Rust benchmark now keeps
 its actual measured executables and source inputs for subsequent code inspection;
 its full execution and artifact checks remain part of that production gate.
 
+The larger maintained map benchmark exposed variable AMD64 sorting time. The
+current repair joins related key/value buffers under one owner, with explicit
+size checks and no arbitrary padding. Local ownership/failure tests pass;
+six-host correctness and same-run old/new layout measurements remain required.
+Do not merge based on allocation savings while the timing issue is unresolved.
+
 All seven areas above stay open. Each delivery must identify its workload,
 expected change and acceptance criteria. Investigate performance regressions
 even when allocations fall, and preserve traps, cancellation and interpreter

@@ -2935,7 +2935,7 @@ the input count. The mapped function takes each integer modulo 257, producing
 at most 257 distinct keys. The set prints its size; the map stores the original
 integers as values and prints the last value for key 5.
 
-The [final six-host report](measurements/collection-build-direct-2026-10-18.json)
+The [direct-callback six-host report](measurements/collection-build-direct-2026-10-18.json)
 uses source `c34ca8e340c6f3dbb6251729553e1a8dbf513903`, preserved as
 `evidence/collection-direct-sets-20261018`. It compares the **same fwp program and
 compiler**, with numeric construction combining enabled and disabled through
@@ -3005,3 +3005,44 @@ It still uses general set callback dispatch. Each earlier report separately
 passes 78 tests and inspects 120 binaries. Different runs use different machines
 and conditions; their absolute timings do not isolate either follow-up's speed
 benefit. The final same-source comparison above measures the combined behavior.
+
+### Larger maps exposed a storage-layout problem
+
+The small construction comparison above has at most 257 distinct keys. The
+maintained `map` benchmark instead constructs 500,000 distinct entries and makes
+two million lookups. Its [controlled report](measurements/large-map-construction-2026-10-18.json)
+compares construction combining on/off with the same compiler and runner, in
+both default tracing and checked ARC. It retains all samples and actual binaries;
+C and Rust run alongside complete fwp programs. Construction-only fwp programs
+are separate workloads, not isolated lookup measurements.
+
+Allocation requests for complete work fall from 1,500,009 to eight and peak
+counted storage from 56,000,040 to 24,000,040 bytes. However, the first AMD64 run
+shows 8.3% more complete-work time and 36.4% more construction-only time in
+tracing mode. Optimized construction alternates between fast and much slower
+processes, including ARC. ARM64 improves. The initial allocation improvement is
+therefore insufficient evidence of acceptable performance at this size.
+
+[Separate phase measurements](https://github.com/e6qu/fun-with-pipes/actions/runs/39103286520)
+locate the variable AMD64 cost in sorting. All 32 optimized instrumented samples
+fall into roughly 19–35 ms or 100–109 ms sorting groups, correlated with a bit in
+the buffers' virtual addresses. Allocation and cleanup remain fast. The sorting
+instructions themselves match between the original enabled/disabled executables.
+This suggests a layout-sensitive cost; it does not establish a particular CPU
+cache or address-translation mechanism. Instrumented timings are diagnostic and
+are excluded from ordinary benchmark timings.
+
+The repair joins related key/value lanes under one allocation owner, also for
+sort scratch, without arbitrary padding. It removes two allocation requests and
+keeps sorting, duplicate handling and callback order. Eight focused local tests
+pass, including all allocation failures, cancellation, aliases and size-overflow
+guards. Full native and controlled timing checks remain pending. The new
+same-run comparison reconstructs the original separate-buffer layout explicitly;
+its results must justify the repair before merge. Older tables above describe
+their recorded sources and must not be relabeled as measurements of this change.
+
+Two other candidates were rejected: moving integer equality outside the search
+is 8–9% slower on ARM64, and separating cached initialization shows no clear
+benefit while increasing code size. Neither changes production code. The large
+map still performs 2,000,001 retains; reducing that cost needs its own lifetime
+proof and measurement.
