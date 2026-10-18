@@ -260,6 +260,10 @@ impl Proof<'_> {
                 }
                 result
             }
+            Expr::BorrowGlobal(local, global, body) => {
+                locals[*local as usize] = self.request(*global, scoped, &[]);
+                self.expr(body, locals, scoped)?
+            }
             Expr::Let(local, value, body) => {
                 locals[*local as usize] = self.expr(value, locals, scoped)?;
                 self.expr(body, locals, scoped)?

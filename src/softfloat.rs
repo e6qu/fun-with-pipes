@@ -336,72 +336,109 @@ binary_ops!(
 );
 
 macro_rules! transcendental_ops {
-    ($ty:ty, $abi:ty, $unwrap:expr, $wrap:expr, $exp:ident, $ln:ident, $sin:ident, $cos:ident, $tan:ident, $pow:ident) => {
+    ($ty:ty, $abi:ty, $unwrap:expr, $wrap:expr;
+        unary { $($unary:ident => $one:ident),* $(,)? }
+        binary { $($binary:ident => $two:ident),* $(,)? }) => {
         extern "C" {
-            fn $exp(a: $abi) -> $abi;
-            fn $ln(a: $abi) -> $abi;
-            fn $sin(a: $abi) -> $abi;
-            fn $cos(a: $abi) -> $abi;
-            fn $tan(a: $abi) -> $abi;
-            fn $pow(a: $abi, b: $abi) -> $abi;
+            $(fn $one(a: $abi) -> $abi;)*
+            $(fn $two(a: $abi, b: $abi) -> $abi;)*
         }
         impl $ty {
-            pub fn exp(self) -> Self {
-                ($wrap)(unsafe { $exp(($unwrap)(self)) })
-            }
-            pub fn ln(self) -> Self {
-                ($wrap)(unsafe { $ln(($unwrap)(self)) })
-            }
-            pub fn sin(self) -> Self {
-                ($wrap)(unsafe { $sin(($unwrap)(self)) })
-            }
-            pub fn cos(self) -> Self {
-                ($wrap)(unsafe { $cos(($unwrap)(self)) })
-            }
-            pub fn tan(self) -> Self {
-                ($wrap)(unsafe { $tan(($unwrap)(self)) })
-            }
-            pub fn pow(self, exponent: Self) -> Self {
-                ($wrap)(unsafe { $pow(($unwrap)(self), ($unwrap)(exponent)) })
-            }
+            $(pub fn $unary(self) -> Self {
+                ($wrap)(unsafe { $one(($unwrap)(self)) })
+            })*
+            $(pub fn $binary(self, other: Self) -> Self {
+                ($wrap)(unsafe { $two(($unwrap)(self), ($unwrap)(other)) })
+            })*
         }
     };
 }
 transcendental_ops!(
-    Binary128,
-    Binary128,
-    |v| v,
-    |v| v,
-    fwp_f128_exp,
-    fwp_f128_ln,
-    fwp_f128_sin,
-    fwp_f128_cos,
-    fwp_f128_tan,
-    fwp_f128_pow
+    Binary128, Binary128, |v| v, |v| v;
+    unary {
+        exp => fwp_f128_exp,
+        ln => fwp_f128_ln,
+        sin => fwp_f128_sin,
+        cos => fwp_f128_cos,
+        tan => fwp_f128_tan,
+        asin => fwp_f128_asin,
+        acos => fwp_f128_acos,
+        atan => fwp_f128_atan,
+        sinh => fwp_f128_sinh,
+        cosh => fwp_f128_cosh,
+        tanh => fwp_f128_tanh,
+        asinh => fwp_f128_asinh,
+        acosh => fwp_f128_acosh,
+        atanh => fwp_f128_atanh,
+        log2 => fwp_f128_log2,
+        log10 => fwp_f128_log10,
+        log1p => fwp_f128_log1p,
+        exp2 => fwp_f128_exp2,
+        expm1 => fwp_f128_expm1,
+    }
+    binary {
+        pow => fwp_f128_pow,
+        atan2 => fwp_f128_atan2,
+        hypot => fwp_f128_hypot,
+    }
 );
 transcendental_ops!(
-    Binary16,
-    u16,
-    |v: Binary16| v.0,
-    Binary16,
-    fwp_f16_exp,
-    fwp_f16_ln,
-    fwp_f16_sin,
-    fwp_f16_cos,
-    fwp_f16_tan,
-    fwp_f16_pow
+    Binary16, u16, |v: Binary16| v.0, Binary16;
+    unary {
+        exp => fwp_f16_exp,
+        ln => fwp_f16_ln,
+        sin => fwp_f16_sin,
+        cos => fwp_f16_cos,
+        tan => fwp_f16_tan,
+        asin => fwp_f16_asin,
+        acos => fwp_f16_acos,
+        atan => fwp_f16_atan,
+        sinh => fwp_f16_sinh,
+        cosh => fwp_f16_cosh,
+        tanh => fwp_f16_tanh,
+        asinh => fwp_f16_asinh,
+        acosh => fwp_f16_acosh,
+        atanh => fwp_f16_atanh,
+        log2 => fwp_f16_log2,
+        log10 => fwp_f16_log10,
+        log1p => fwp_f16_log1p,
+        exp2 => fwp_f16_exp2,
+        expm1 => fwp_f16_expm1,
+    }
+    binary {
+        pow => fwp_f16_pow,
+        atan2 => fwp_f16_atan2,
+        hypot => fwp_f16_hypot,
+    }
 );
 transcendental_ops!(
-    BFloat16,
-    u16,
-    |v: BFloat16| v.0,
-    BFloat16,
-    fwp_bf16_exp,
-    fwp_bf16_ln,
-    fwp_bf16_sin,
-    fwp_bf16_cos,
-    fwp_bf16_tan,
-    fwp_bf16_pow
+    BFloat16, u16, |v: BFloat16| v.0, BFloat16;
+    unary {
+        exp => fwp_bf16_exp,
+        ln => fwp_bf16_ln,
+        sin => fwp_bf16_sin,
+        cos => fwp_bf16_cos,
+        tan => fwp_bf16_tan,
+        asin => fwp_bf16_asin,
+        acos => fwp_bf16_acos,
+        atan => fwp_bf16_atan,
+        sinh => fwp_bf16_sinh,
+        cosh => fwp_bf16_cosh,
+        tanh => fwp_bf16_tanh,
+        asinh => fwp_bf16_asinh,
+        acosh => fwp_bf16_acosh,
+        atanh => fwp_bf16_atanh,
+        log2 => fwp_bf16_log2,
+        log10 => fwp_bf16_log10,
+        log1p => fwp_bf16_log1p,
+        exp2 => fwp_bf16_exp2,
+        expm1 => fwp_bf16_expm1,
+    }
+    binary {
+        pow => fwp_bf16_pow,
+        atan2 => fwp_bf16_atan2,
+        hypot => fwp_bf16_hypot,
+    }
 );
 
 #[cfg(test)]

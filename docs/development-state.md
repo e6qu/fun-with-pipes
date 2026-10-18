@@ -2,13 +2,40 @@
 
 ## Next action
 
-Next: audit every final-head CI job for branch `clarify-docs-and-benchmarks`, fix
-any failures, and squash merge only after all required gates pass. Find its PR
-with `gh pr view clarify-docs-and-benchmarks`. This delivery covers clearer plans,
-historical records, parser/macro documentation,
-examples and precise benchmark methods. Then integrate cached-map compiler
-candidate `774d838c` into the next substantial delivery, measure Intel, and fix
-the outstanding Xeon map slowdown. Do not infer a repair from allocation savings.
+Finish all of the following in the same [PR #167](https://github.com/e6qu/fun-with-pipes/pull/167),
+then audit every final-head job and squash merge only after passing acceptance:
+
+1. Complete cached-map borrowing and investigate the Xeon 8573C slowdown.
+   Candidate `774d838c` is now integrated locally. Review found and repaired
+   unnecessary tuple/variant boxing across `BorrowGlobal`; a new regression
+   exercises both direct-result paths. Final Intel measurements and production
+   acceptance remain required; do not infer a timing repair from count savings.
+2. Add `==`, `!=`, `<`, `<=`, `>` and `>=` with arithmetic above comparison and
+   pipes below it; preserve left-to-right evaluation and reject ambiguous chains.
+3. Add general scalar math: inverse trig, hyperbolic functions, log/exponential
+   variants and hypot, supporting the existing float formats without narrowing.
+   The user selected scalar math rather than an autodiff expansion or infix power.
+4. Add an interpreter REPL inspired by IPython: persistent definitions/imports,
+   multiline entry, history, completion, type inspection and session reset.
+   No JIT, and no replay of earlier effects when evaluating another cell.
+5. Keep tutorials, parser/compiler docs, benchmark methods and the live plan
+   aligned; verify semantic changes against raw interpretation and native code.
+
+The combined implementation is ready for an initial remote build, not acceptance.
+The previous documentation-only head `8060075e` has passing docs, benchmarks and
+both ARM macOS jobs; the other six production jobs were still running without a
+reported failure at the last audit. Its production run is `39120276898` and docs
+run is `39120277029`. No merge has occurred.
+
+New local checks through the unchanged guard: 35 RC unit tests pass; existing
+cached-value tests pass; the new tuple/variant direct-result regression passes;
+all three infix tests pass, including native O0/O1/O2 versus raw interpretation.
+Formatting, generated library documentation/tutorial copies and four collection
+collector tests pass. Scalar math and the REPL are **not compiled or verified yet**;
+C++ runtime changes make a remote build appropriate. The next checkpoint skips
+push-triggered production jobs while the `language` dispatch checks compilation,
+lints and focused tests. Skipped jobs are not acceptance. Run all final-head
+production jobs and documentation after batching discovered repairs.
 
 [PLAN.md](../PLAN.md) owns the seven remaining work areas;
 [design limits](design-limits.md) states feasible acceptance criteria.
@@ -19,7 +46,9 @@ not implemented semantics. JIT is excluded. Default tracing removal is unfinishe
 
 - Root: `/Users/zardoz/projects/fun-with-pipes`, branch `clarify-docs-and-benchmarks`, based
   on accepted PR #166 merge `de678a7d42af803948835cfbc43b4862b63164da`.
-  This branch changes documentation/examples; the compiler candidate is separate.
+  This branch combines the documentation revision with the compiler and interactive-language work above.
+  The local handoff records post-publication run IDs; fold that bookkeeping into
+  any needed repair rather than restart CI solely for a status-only push.
 - Preparation: `/private/tmp/fwp-collection-runtime-costs`, published clean compiler
   `774d838c8afccddf01cb2d3c0de498857c0d6f86`. Shared `target/debug/fwp` was built
   from this candidate, **not** the merged compiler. Record this when using it.

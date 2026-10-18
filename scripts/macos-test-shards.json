@@ -56,6 +56,7 @@
     "zip_unwind_ownership",
     "resource_frames",
     "caf_ownership",
+    "cached_map_borrows",
     "grpc_connect_cleanup",
     "grpc_client_requests",
     "map_unwind_ownership",
@@ -117,7 +118,9 @@
     "windows_context",
     "golden_parse",
     "pipe_ownership",
-    "c-interop"
+    "c-interop",
+    "repl",
+    "scalar_math"
   ],
   "gc": [
     "web",

@@ -200,7 +200,7 @@ fn check_superclasses(env: &mut Env, out: &mut Typed) {
 fn free_names(e: &Expr, out: &mut Vec<(String, Span)>) {
     match &e.kind {
         ExprKind::Var(n) => out.push((n.clone(), e.span)),
-        ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
+        ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
             free_names(f, out);
             args.iter().for_each(|a| free_names(a, out));
         }
@@ -770,7 +770,11 @@ impl<'a> Infer<'a> {
         for (name, ctx, span) in std::mem::take(&mut self.ctxs) {
             let labels = self.effect_labels(&ctx);
             let is_test = name.contains("::test#");
-            if name == "main::main" || name == crate::rest::ENTRY || name == crate::mcp::ENTRY {
+            if name == "main::main"
+                || name == crate::rest::ENTRY
+                || name == crate::mcp::ENTRY
+                || self.env.interactive_root.as_deref() == Some(name.as_str())
+            {
                 if labels.iter().any(|l| l == "State") {
                     return Err(Diagnostic::error(
                         span,
@@ -880,7 +884,10 @@ impl<'a> Infer<'a> {
             .filter(|v| self.env.table.vars[*v as usize].kind != Kind::Eff)
             .collect();
         // a macro's type is checked where it is expanded
-        if generic.is_empty() || self.env.macros.contains(&b.name) {
+        if generic.is_empty()
+            || self.env.macros.contains(&b.name)
+            || self.env.interactive_root.as_deref() == Some(b.name.as_str())
+        {
             return sc;
         }
         if b.name == "main::main"
@@ -1337,7 +1344,7 @@ impl<'a> Infer<'a> {
                 }
                 Ok(result.unwrap())
             }
-            ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
+            ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
                 let t = self.infer_app(e, f, args, ctx)?;
                 self.size_literal(e, f, args, &t)?;
                 Ok(t)
@@ -1840,7 +1847,7 @@ impl<'a> Infer<'a> {
 pub fn collect_unquotes<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
     match &e.kind {
         ExprKind::MacroCall(n, args) if n == "unquote" => out.extend(args.iter()),
-        ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
+        ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
             collect_unquotes(f, out);
             args.iter().for_each(|a| collect_unquotes(a, out));
         }

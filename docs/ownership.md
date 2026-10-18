@@ -132,6 +132,39 @@ Generated ownership helpers distinguish those cases. An absent external slot is
 not proof that a freshly allocated wide integer is immortal. Physical storage
 checks and a control restoring that mistaken early return cover this boundary.
 
+## Cached numeric map reads
+
+A top-level computed map has a cache owner, released at program teardown. For
+example, this builds a map on first use and returns its value at key 1:
+
+```fwp
+table : Map[I64, I64]
+table = [(1, 7), (2, 9)] | map.from-list
+lookup = flip map.get table | option.unwrap-or 0
+main = 1 | lookup | echo
+```
+
+`map.get` returns `Some value` for a present key or `None` for a missing one;
+`option.unwrap-or 0` extracts that value or supplies zero. This prints `7`.
+The compiler can borrow `table` for the lookup instead of acquiring another
+owner. The cache keeps the map alive throughout that read.
+
+This optimization currently covers `map.get` and `map.size` on maps of immediate
+numeric keys/values (integers up to 64 bits, F32 and F64). It needs a proved
+non-suspending read span: no unknown call, escaping map value or potentially
+reentrant cleanup while a later read still needs the borrow. Other uses keep
+their existing ownership requirements. There is no new syntax or implicit copy.
+
+Initialization keeps its original effects and failure timing. If initialization
+reenters and replaces an earlier cached result, the old cache owner releases;
+independent callers retain their own owners. A failed first read unwinds caller
+owners. A borrowed local never releases the cache's owner. Returning a tuple or
+variant after the read preserves eligible direct-field results without an
+intermediate box. `tests/cached_map_borrows.rs` checks these paths, including
+reentrant aliases, deliberate missing-cleanup controls and raw-interpreter
+agreement. [Measurements](benchmarks.md#compiler-proved-cached-map-reads) separate
+count savings from timing; [the handoff](development-state.md) records acceptance.
+
 ## Ownership boundaries
 
 A boundary is a call where ownership crosses between compiled code and a runtime,

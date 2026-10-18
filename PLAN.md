@@ -90,8 +90,9 @@ outside the benchmark suite.
 
 1. Finish cached-map borrowing and investigate the reproduced Xeon map slowdown.
    A proof should keep the cached map alive without acquiring another owner on
-   each read. The [handoff](docs/development-state.md) records the prepared compiler,
-   actual measurements and missing Intel/full-production acceptance. Fewer
+   each read. The compiler is integrated into PR #167, including a repair that keeps tuple
+   and variant results in direct fields. The [handoff](docs/development-state.md)
+   records actual measurements and missing Intel/full-production acceptance. Fewer
    allocations or retains alone do not settle a timing regression.
 2. Specify and test [cycle-safe ownership contracts](docs/ownership.md#proposed-cycle-policy)
    against subscriptions, channel workers, cancelled tasks and cyclic data graphs.

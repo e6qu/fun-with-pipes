@@ -4,6 +4,8 @@ left = const 10 | tap (const "left" | print)
 right : () -> I64 ! {IO}
 right = const 3 | tap (const "right" | print)
 
+macro same = quote (unquote!(0) == unquote!(1))
+
 macro twice = quote (unquote!(0) * 2)
 
 main = [
@@ -25,4 +27,18 @@ main = [
     -9223372036854775808 | echo,
     twice!(2 + 3) | echo,
     (() | left) - (() | right) | echo,
+    2 + 3 * 4 == 14 | echo,
+    1 != 2 | echo,
+    1 < 2 | echo,
+    2 <= 2 | echo,
+    3 > 2 | echo,
+    3 >= 3 | echo,
+    (1 < 2) == True | echo,
+    "pipe" == "pipe" | echo,
+    [1, 2] == [1, 2] | echo,
+    (Some 3) != None | echo,
+    2.0f32 < 3.0f32 | echo,
+    3i128 >= 2i128 | echo,
+    same!(2 + 3, 5) | echo,
+    (() | left) >= (() | right) | echo,
 ] | ignore

@@ -474,6 +474,7 @@ impl<'a> Mono<'a> {
         if b.name.starts_with("std::iter.") || b.name == "std::matmul" {
             self.prog.std_names.insert(id, b.name.clone());
         }
+        self.prog.binding_names.insert(id, b.name.clone());
         self.instances.insert(k, id);
         self.work.push((id, idx, s));
         Ok(id)
@@ -1110,7 +1111,7 @@ impl<'a> Mono<'a> {
                     body,
                 )))
             }
-            ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
+            ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
                 let fe = self.expr(f, s, fb)?;
                 let mut xs = Vec::new();
                 for a in args {
@@ -1516,6 +1517,10 @@ fn funcs_in(e: &Expr, out: &mut Vec<FuncId>) {
             funcs_in(b, out)
         }
         Expr::Func(f) => out.push(*f),
+        Expr::BorrowGlobal(_, global, body) => {
+            out.push(*global);
+            funcs_in(body, out);
+        }
         Expr::Call(f, a) => {
             out.push(*f);
             a.iter().for_each(|x| funcs_in(x, out));
@@ -1649,7 +1654,7 @@ fn field_type(prog: &Program, mt: &MT, idx: u32) -> MT {
 fn index_matches(env: &Env) -> HashMap<NodeId, &ast::Expr> {
     fn go<'e>(e: &'e ast::Expr, out: &mut HashMap<NodeId, &'e ast::Expr>) {
         match &e.kind {
-            ExprKind::App(f, args) | ExprKind::Arithmetic(_, f, args) => {
+            ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
                 go(f, out);
                 args.iter().for_each(|a| go(a, out));
             }

@@ -18,6 +18,22 @@ extern "C" Bits prefix##_ln(Bits value) { return prefix##_bits(tlfloat::log(std:
 extern "C" Bits prefix##_sin(Bits value) { return prefix##_bits(tlfloat::sin(std::bit_cast<Float>(value))); } \
 extern "C" Bits prefix##_cos(Bits value) { return prefix##_bits(tlfloat::cos(std::bit_cast<Float>(value))); } \
 extern "C" Bits prefix##_tan(Bits value) { return prefix##_bits(tlfloat::tan(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_asin(Bits value) { return prefix##_bits(tlfloat::asin(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_acos(Bits value) { return prefix##_bits(tlfloat::acos(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_atan(Bits value) { return prefix##_bits(tlfloat::atan(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_sinh(Bits value) { return prefix##_bits(tlfloat::sinh(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_cosh(Bits value) { return prefix##_bits(tlfloat::cosh(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_tanh(Bits value) { return prefix##_bits(tlfloat::tanh(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_asinh(Bits value) { return prefix##_bits(tlfloat::asinh(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_acosh(Bits value) { return prefix##_bits(tlfloat::acosh(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_atanh(Bits value) { return prefix##_bits(tlfloat::atanh(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_log2(Bits value) { return prefix##_bits(tlfloat::log2(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_log10(Bits value) { return prefix##_bits(tlfloat::log10(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_log1p(Bits value) { return prefix##_bits(tlfloat::log1p(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_exp2(Bits value) { return prefix##_bits(tlfloat::exp2(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_expm1(Bits value) { return prefix##_bits(tlfloat::expm1(std::bit_cast<Float>(value))); } \
+extern "C" Bits prefix##_atan2(Bits a, Bits b) { return prefix##_bits(tlfloat::atan2(std::bit_cast<Float>(a), std::bit_cast<Float>(b))); } \
+extern "C" Bits prefix##_hypot(Bits a, Bits b) { return prefix##_bits(tlfloat::hypot(std::bit_cast<Float>(a), std::bit_cast<Float>(b))); } \
 extern "C" Bits prefix##_pow(Bits a, Bits b) { return prefix##_bits(tlfloat::pow(std::bit_cast<Float>(a), std::bit_cast<Float>(b))); } \
 extern "C" Bits prefix##_rem(Bits a, Bits b) { return prefix##_bits(tlfloat::fmod(std::bit_cast<Float>(a), std::bit_cast<Float>(b))); }
 

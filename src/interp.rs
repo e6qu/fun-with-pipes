@@ -128,6 +128,9 @@ impl<'p> Interp<'p> {
     }
 
     pub fn call(&mut self, id: FuncId, args: Vec<Value>) -> R<Value> {
+        if crate::repl::interrupted() {
+            return Err(Ctl::Cancelled);
+        }
         if stack_position() < STACK_LIMIT.with(|l| l.get()) {
             return trap("stack overflow");
         }
@@ -262,6 +265,11 @@ impl<'p> Interp<'p> {
                     fs[*i as usize] = self.eval(x, locals)?;
                 }
                 Ok(Value::tuple(fs))
+            }
+            Expr::BorrowGlobal(l, global, body) => {
+                let value = self.func_value(*global)?;
+                locals[*l as usize] = value;
+                self.eval(body, locals)
             }
             Expr::Let(l, v, body) => {
                 let x = self.eval(v, locals)?;
@@ -437,7 +445,9 @@ impl<'p> Interp<'p> {
                 })
             }
             "float.convert" => float_of_quad(&result, a[0].as_quad().unwrap()),
-            "sqrt" | "exp" | "ln" | "sin" | "cos" | "tan" | "floor" | "ceil" | "round" => {
+            "sqrt" | "exp" | "ln" | "sin" | "cos" | "tan" | "floor" | "ceil" | "round" | "asin"
+            | "acos" | "atan" | "sinh" | "cosh" | "tanh" | "asinh" | "acosh" | "atanh" | "log2"
+            | "log10" | "log1p" | "exp2" | "expm1" => {
                 macro_rules! exact_math {
                     ($x:expr, $v:ident) => {
                         return Ok(Value::$v(match sym {
@@ -447,6 +457,21 @@ impl<'p> Interp<'p> {
                             "sin" => $x.sin(),
                             "cos" => $x.cos(),
                             "tan" => $x.tan(),
+                            "asin" => $x.asin(),
+                            "acos" => $x.acos(),
+                            "atan" => $x.atan(),
+                            "sinh" => $x.sinh(),
+                            "cosh" => $x.cosh(),
+                            "tanh" => $x.tanh(),
+                            "asinh" => $x.asinh(),
+                            "acosh" => $x.acosh(),
+                            "atanh" => $x.atanh(),
+                            "log2" => $x.log2(),
+                            "log10" => $x.log10(),
+                            "log1p" => $x.log1p(),
+                            "exp2" => $x.exp2(),
+                            "expm1" => $x.expm1(),
+
                             "floor" => $x.floor(),
                             "ceil" => $x.ceil(),
                             "round" => $x.round(),
@@ -468,6 +493,21 @@ impl<'p> Interp<'p> {
                     "sin" => x.sin(),
                     "cos" => x.cos(),
                     "tan" => x.tan(),
+                    "asin" => x.asin(),
+                    "acos" => x.acos(),
+                    "atan" => x.atan(),
+                    "sinh" => x.sinh(),
+                    "cosh" => x.cosh(),
+                    "tanh" => x.tanh(),
+                    "asinh" => x.asinh(),
+                    "acosh" => x.acosh(),
+                    "atanh" => x.atanh(),
+                    "log2" => x.log2(),
+                    "log10" => x.log10(),
+                    "log1p" => x.ln_1p(),
+                    "exp2" => x.exp2(),
+                    "expm1" => x.exp_m1(),
+
                     "floor" => x.floor(),
                     "ceil" => x.ceil(),
                     _ => x.round(),
@@ -478,9 +518,43 @@ impl<'p> Interp<'p> {
                         "floor" => x32.floor(),
                         "ceil" => x32.ceil(),
                         "round" => x32.round(),
+                        "asin" => x32.asin(),
+                        "acos" => x32.acos(),
+                        "atan" => x32.atan(),
+                        "sinh" => x32.sinh(),
+                        "cosh" => x32.cosh(),
+                        "tanh" => x32.tanh(),
+                        "asinh" => x32.asinh(),
+                        "acosh" => x32.acosh(),
+                        "atanh" => x32.atanh(),
+                        "log2" => x32.log2(),
+                        "log10" => x32.log10(),
+                        "log1p" => x32.ln_1p(),
+                        "exp2" => x32.exp2(),
+                        "expm1" => x32.exp_m1(),
+
                         _ => y as f32,
                     })),
                     _ => Ok(Value::F64(y)),
+                }
+            }
+            "atan2" | "hypot" => {
+                macro_rules! binary_math {
+                    ($x:expr, $y:expr, $variant:ident) => {
+                        Ok(Value::$variant(if sym == "atan2" {
+                            $x.atan2(*$y)
+                        } else {
+                            $x.hypot(*$y)
+                        }))
+                    };
+                }
+                match (&a[1], &a[0]) {
+                    (Value::F16(x), Value::F16(y)) => binary_math!(x, y, F16),
+                    (Value::BF16(x), Value::BF16(y)) => binary_math!(x, y, BF16),
+                    (Value::F128(x), Value::F128(y)) => binary_math!(x, y, F128),
+                    (Value::F32(x), Value::F32(y)) => binary_math!(x, y, F32),
+                    (Value::F64(x), Value::F64(y)) => binary_math!(x, y, F64),
+                    _ => unreachable!("typed binary float function"),
                 }
             }
             "pow" => {

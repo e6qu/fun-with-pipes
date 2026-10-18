@@ -430,6 +430,7 @@ struct Gen<'p> {
     consts: Vec<String>,
     const_init: String,
     used_closures: Vec<bool>,
+    borrowed_globals: std::collections::HashSet<FuncId>,
     /// Function values whose captures are all fixed, capture-free functions.
     static_functions: HashMap<(FuncId, Vec<FuncId>), usize>,
     /// Declarations for foreign C functions: structs, prototypes,
@@ -475,9 +476,10 @@ struct Gen<'p> {
 fn is_local_through_counts(e: &Expr, x: Local) -> bool {
     match e {
         Expr::Local(l) => *l == x,
-        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
-            is_local_through_counts(b, x)
-        }
+        Expr::Dup(_, b)
+        | Expr::Drop(_, b)
+        | Expr::BorrowGlobal(_, _, b)
+        | Expr::ResourceRegion { body: b, .. } => is_local_through_counts(b, x),
         _ => false,
     }
 }
@@ -710,9 +712,10 @@ impl Gen<'_> {
     ) -> Option<usize> {
         match e {
             Expr::Local(l) => known.get(l).copied(),
-            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
-                self.local_record_width(b, locals, known)
-            }
+            Expr::Dup(_, b)
+            | Expr::Drop(_, b)
+            | Expr::BorrowGlobal(_, _, b)
+            | Expr::ResourceRegion { body: b, .. } => self.local_record_width(b, locals, known),
             Expr::Let(l, v, b) => {
                 let mut known = known.clone();
                 if let Some(n) = self
@@ -756,7 +759,10 @@ impl Gen<'_> {
                 }
                 self.loop_field_unboxed(b, field, n, locals, &known)
             }
-            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+            Expr::Dup(_, b)
+            | Expr::Drop(_, b)
+            | Expr::BorrowGlobal(_, _, b)
+            | Expr::ResourceRegion { body: b, .. } => {
                 self.loop_field_unboxed(b, field, n, locals, known)
             }
             Expr::Match(_, arms) => arms
@@ -884,9 +890,10 @@ fn built_return(
         Expr::Match(_, arms) => arms
             .iter()
             .all(|(_, body)| built_return(body, known, builds)),
-        Expr::Dup(_, body) | Expr::Drop(_, body) | Expr::ResourceRegion { body, .. } => {
-            built_return(body, known, builds)
-        }
+        Expr::Dup(_, body)
+        | Expr::Drop(_, body)
+        | Expr::BorrowGlobal(_, _, body)
+        | Expr::ResourceRegion { body, .. } => built_return(body, known, builds),
         _ => builds(e),
     }
 }
@@ -986,9 +993,10 @@ fn variant_uses(e: &Expr, l: Local, returned: bool) -> bool {
     match e {
         Expr::Local(x) => *x != l || returned,
         Expr::Const(_) | Expr::Func(_) => true,
-        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
-            variant_uses(b, l, returned)
-        }
+        Expr::Dup(_, b)
+        | Expr::Drop(_, b)
+        | Expr::BorrowGlobal(_, _, b)
+        | Expr::ResourceRegion { body: b, .. } => variant_uses(b, l, returned),
         Expr::Call(_, xs) | Expr::Construct(_, xs) | Expr::Record(xs) => all(xs),
         Expr::Apply(f, xs) => variant_uses(f, l, false) && all(xs),
         Expr::Field(r, _) => variant_uses(r, l, false),
@@ -2352,9 +2360,10 @@ fn allocates(e: &Expr, n: usize) -> bool {
         Expr::SetFields(r, xs) => allocates(r, n) || xs.iter().any(|(_, x)| allocates(x, n)),
         Expr::Let(_, v, b) => allocates(v, n) || allocates(b, n),
         Expr::Match(s, arms) => allocates(s, n) || arms.iter().any(|(_, b)| allocates(b, n)),
-        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
-            allocates(b, n)
-        }
+        Expr::Dup(_, b)
+        | Expr::Drop(_, b)
+        | Expr::BorrowGlobal(_, _, b)
+        | Expr::ResourceRegion { body: b, .. } => allocates(b, n),
     }
 }
 
@@ -2574,6 +2583,7 @@ fn tails<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
         Expr::Let(_, _, body)
         | Expr::Dup(_, body)
         | Expr::Drop(_, body)
+        | Expr::BorrowGlobal(_, _, body)
         | Expr::ResourceRegion { body, .. } => tails(body, out),
         Expr::Match(_, arms) => {
             for (_, b) in arms {
@@ -2588,7 +2598,10 @@ fn tail_calls(e: &Expr) -> std::collections::HashSet<*const Expr> {
     fn gather(e: &Expr, out: &mut Vec<*const Expr>) {
         match e {
             Expr::ResourceRegion { .. } => {}
-            Expr::Let(_, _, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => gather(body, out),
+            Expr::Let(_, _, body)
+            | Expr::Dup(_, body)
+            | Expr::Drop(_, body)
+            | Expr::BorrowGlobal(_, _, body) => gather(body, out),
             Expr::Match(_, arms) => {
                 for (_, body) in arms {
                     gather(body, out);
@@ -2621,9 +2634,10 @@ fn int64_kind(t: &MT) -> Option<bool> {
 fn state_by_fields(e: &Expr) -> bool {
     match e {
         // the state's own references: no object when it is kept by fields
-        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
-            state_by_fields(b)
-        }
+        Expr::Dup(_, b)
+        | Expr::Drop(_, b)
+        | Expr::BorrowGlobal(_, _, b)
+        | Expr::ResourceRegion { body: b, .. } => state_by_fields(b),
         Expr::Local(0) => false,
         Expr::Field(r, _) if matches!(**r, Expr::Local(0)) => true,
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => true,
@@ -2740,7 +2754,10 @@ fn unpack_loop_state(prog: &Program, f: &Func) -> Option<Func> {
             ),
             // Original resource frames retain their established representation.
             // This transformation runs on the source IR, before reference counts.
-            Expr::ResourceRegion { .. } | Expr::Dup(..) | Expr::Drop(..) => return None,
+            Expr::ResourceRegion { .. }
+            | Expr::Dup(..)
+            | Expr::Drop(..)
+            | Expr::BorrowGlobal(..) => return None,
         })
     }
     let body = rewrite(body, width)?;
@@ -2780,6 +2797,7 @@ fn invariant_f64_arrays(prog: &Program, e: &Expr, locals: &[MT], arity: usize) -
             Expr::Field(e, _)
             | Expr::Dup(_, e)
             | Expr::Drop(_, e)
+            | Expr::BorrowGlobal(_, _, e)
             | Expr::ResourceRegion { body: e, .. } => reads(prog, e, local),
             Expr::SetFields(e, fields) => {
                 reads(prog, e, local) || fields.iter().any(|(_, e)| reads(prog, e, local))
@@ -2947,9 +2965,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 return Some(n);
             }
             match e {
-                Expr::Dup(_, body) | Expr::Drop(_, body) | Expr::ResourceRegion { body, .. } => {
-                    fields(fg, body, known)
-                }
+                Expr::Dup(_, body)
+                | Expr::Drop(_, body)
+                | Expr::BorrowGlobal(_, _, body)
+                | Expr::ResourceRegion { body, .. } => fields(fg, body, known),
                 Expr::Local(l) => known
                     .get(l)
                     .copied()
@@ -2984,6 +3003,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return (off..off + m).map(|k| format!("st[{}]", k)).collect();
         }
         match e {
+            Expr::BorrowGlobal(local, global, body) => {
+                self.bind_global(e, *local, *global);
+                self.expr_fields(body, n)
+            }
             Expr::Local(l) if self.fields.get(l).is_some_and(|fs| fs.len() == n) => {
                 self.fields[l].clone()
             }
@@ -3203,7 +3226,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     }
                     produces(fg, b, m, &known)
                 }
-                Expr::Drop(_, b) | Expr::Dup(_, b) => produces(fg, b, m, known),
+                Expr::Drop(_, b) | Expr::Dup(_, b) | Expr::BorrowGlobal(_, _, b) => {
+                    produces(fg, b, m, known)
+                }
                 Expr::Match(_, arms) => {
                     let mut fields = false;
                     for (_, b) in arms {
@@ -3267,6 +3292,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
             )
         };
         match e {
+            Expr::BorrowGlobal(local, global, body) => {
+                self.bind_global(e, *local, *global);
+                self.expr_variant(body, m, ty)
+            }
             Expr::Construct(tag, xs) => {
                 let mut fs = self.args(xs);
                 fs.resize(m, "0".into());
@@ -3525,9 +3554,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
     fn field_uses(&self, e: &Expr, l: Local, n: usize, returned: bool) -> bool {
         let reads = |e: &Expr| self.field_uses(e, l, n, false);
         match e {
-            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
-                self.field_uses(b, l, n, returned)
-            }
+            Expr::Dup(_, b)
+            | Expr::Drop(_, b)
+            | Expr::BorrowGlobal(_, _, b)
+            | Expr::ResourceRegion { body: b, .. } => self.field_uses(b, l, n, returned),
             Expr::Local(x) => *x != l || returned,
             Expr::Field(r, _) if matches!(**r, Expr::Local(x) if x == l) => true,
             Expr::Const(_) | Expr::Func(_) => true,
@@ -3583,6 +3613,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             Expr::Let(_, value, body) => eligible(value) || eligible(body),
             Expr::Dup(_, body)
             | Expr::Drop(_, body)
+            | Expr::BorrowGlobal(_, _, body)
             | Expr::Field(body, _)
             | Expr::ResourceRegion { body, .. } => eligible(body),
             Expr::Match(value, arms) => {
@@ -3635,6 +3666,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
                 Expr::Dup(_, body)
                 | Expr::Drop(_, body)
+                | Expr::BorrowGlobal(_, _, body)
                 | Expr::Field(body, _)
                 | Expr::ResourceRegion { body, .. } => visit(fg, body, l, ty, found),
                 Expr::Match(value, arms) => {
@@ -4154,7 +4186,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
     fn stack_alias(&self, e: &Expr) -> Option<Vec<(String, MT)>> {
         match e {
             Expr::Local(l) => self.stack_children.get(l).cloned(),
-            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::Let(_, _, b) => self.stack_alias(b),
+            Expr::Dup(_, b)
+            | Expr::Drop(_, b)
+            | Expr::Let(_, _, b)
+            | Expr::BorrowGlobal(_, _, b) => self.stack_alias(b),
             _ => None,
         }
     }
@@ -4794,6 +4829,14 @@ impl<'g, 'p> FnGen<'g, 'p> {
         self.end_call(node);
     }
 
+    // Shared by boxed, record-field and variant-field result generation so a
+    // borrowed cache does not force an otherwise direct result onto the heap.
+    fn bind_global(&mut self, e: &Expr, local: Local, global: FuncId) {
+        self.g.borrowed_globals.insert(global);
+        let value = self.bind_call(e as *const Expr, format!("fwp_caf_borrow{global}()"));
+        self.line(&format!("l{local} = {value};"));
+    }
+
     fn bind_call(&mut self, key: *const Expr, call: String) -> String {
         let node = self.begin_call(key);
         let result = self.bind(call);
@@ -4878,9 +4921,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 Some((g, xs.len()))
             }
             Expr::Local(l) => self.known_callbacks.get(l).copied(),
-            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
-                self.callback_origin(b)
-            }
+            Expr::Dup(_, b)
+            | Expr::Drop(_, b)
+            | Expr::BorrowGlobal(_, _, b)
+            | Expr::ResourceRegion { body: b, .. } => self.callback_origin(b),
             _ => None,
         }
     }
@@ -5511,6 +5555,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     self.g.used_closures[*id] = true;
                     format!("PTR(&fc{})", id)
                 }
+            }
+            Expr::BorrowGlobal(local, global, body) => {
+                self.bind_global(e, *local, *global);
+                self.expr(body)
             }
             Expr::Call(id, args) => self.call_expr(
                 *id,
@@ -6291,9 +6339,10 @@ impl<'p> Gen<'p> {
                 let (ks, _, _) = nk(&p(0));
                 format!("return fwp_float_convert({}, {}, l0);", ks, rk)
             }
-            "sqrt" | "exp" | "ln" | "sin" | "cos" | "tan" | "floor" | "ceil" | "round" => {
+            "sqrt" | "exp" | "ln" | "sin" | "cos" | "tan" | "floor" | "ceil" | "round" | "asin" | "acos" | "atan" | "sinh" | "cosh" | "tanh" | "asinh" | "acosh" | "atanh" | "log2" | "log10" | "log1p" | "exp2" | "expm1" => {
                 format!("return fwp_fmath({}, FM_{}, l0);", rk, sym.to_uppercase())
             }
+            "atan2" | "hypot" => format!("return fwp_{sym}({rk}, l1, l0);"),
             "pow" => format!(
                 "return fwp_pow({rk}, l1, l0);",
                 rk = rk
@@ -6872,7 +6921,10 @@ impl<'p> Gen<'p> {
         // their ordinary entry until that calling convention is also proved.
         fn eligible(e: &Expr, id: FuncId) -> bool {
             match e {
-                Expr::ResourceRegion { .. } | Expr::Dup(..) | Expr::Drop(..) => false,
+                Expr::ResourceRegion { .. }
+                | Expr::Dup(..)
+                | Expr::Drop(..)
+                | Expr::BorrowGlobal(..) => false,
                 Expr::Func(g) => *g != id,
                 Expr::Local(_) | Expr::Const(_) => true,
                 Expr::Call(g, xs) => *g != id && xs.iter().all(|e| eligible(e, id)),
@@ -8965,6 +9017,10 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
             Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
                 refs(b, out)
             }
+            Expr::BorrowGlobal(_, global, body) => {
+                out.push(*global);
+                refs(body, out);
+            }
             Expr::Local(_) => {}
             Expr::Const(v) => value_refs(v, out),
             Expr::Func(f) => out.push(*f),
@@ -9100,6 +9156,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         consts: Vec::new(),
         const_init: String::new(),
         used_closures: vec![false; prog.funcs.len()],
+        borrowed_globals: std::collections::HashSet::new(),
         static_functions: HashMap::new(),
         ffi_decls: String::new(),
         ffi_structs: Vec::new(),
@@ -9808,8 +9865,15 @@ static const fwp_exec_spec exec_spec{i} = {{
             let drop = g.value_drop(&f.ty);
             // Initialization may yield and reenter. Replacing a result cached
             // during evaluation releases that cache owner, preserving callers.
-            let _ = writeln!(caf_defs,
-                "static int fwp_caf_state{id}; static V fwp_caf_value{id};\nstatic V caf{id}(void) {{ if (!fwp_caf_state{id}) {{ V next = f{id}(); V previous = fwp_caf_state{id} ? fwp_caf_value{id} : 0; fwp_caf_value{id} = next; fwp_caf_state{id} = 1; {drop}(previous); }} fwp_rc_dup(fwp_caf_value{id}); return fwp_caf_value{id}; }}");
+            if g.borrowed_globals.contains(&id) {
+                // Both ownership entries share first-use initialization. Keep
+                // its construction/unwind storage out of repeated reads.
+                let _ = writeln!(caf_defs,
+                    "static int fwp_caf_state{id}; static V fwp_caf_value{id};\nstatic __attribute__((noinline)) V fwp_caf_init{id}(void) {{ V next = f{id}(); V previous = fwp_caf_state{id} ? fwp_caf_value{id} : 0; fwp_caf_value{id} = next; fwp_caf_state{id} = 1; {drop}(previous); return fwp_caf_value{id}; }}\nstatic V caf{id}(void) {{ V value = fwp_caf_state{id} ? fwp_caf_value{id} : fwp_caf_init{id}(); fwp_rc_dup(value); return value; }}\nstatic inline V fwp_caf_borrow{id}(void) {{ return fwp_caf_state{id} ? fwp_caf_value{id} : fwp_caf_init{id}(); }}");
+            } else {
+                let _ = writeln!(caf_defs,
+                    "static int fwp_caf_state{id}; static V fwp_caf_value{id};\nstatic V caf{id}(void) {{ if (!fwp_caf_state{id}) {{ V next = f{id}(); V previous = fwp_caf_state{id} ? fwp_caf_value{id} : 0; fwp_caf_value{id} = next; fwp_caf_state{id} = 1; {drop}(previous); }} fwp_rc_dup(fwp_caf_value{id}); return fwp_caf_value{id}; }}");
+            }
             let _ = writeln!(caf_finish,
                 "    if (fwp_caf_state{id}) {{ V v = fwp_caf_value{id}; fwp_caf_value{id} = 0; fwp_caf_state{id} = 0; {drop}(v); }}");
         } else {

@@ -141,6 +141,11 @@ pub enum Expr {
     /// Copy of a record with some fields replaced.
     SetFields(Box<Expr>, Vec<(u32, Expr)>),
     Let(Local, Box<Expr>, Box<Expr>),
+    /// Bind a borrowed cached value for a proved non-suspending read span.
+    /// Ownership lowering alone introduces this; the verifier checks its span.
+    /// Initialization still occurs here and may fail or suspend before the
+    /// borrow starts. The global cache owns the value, not this local.
+    BorrowGlobal(Local, FuncId, Box<Expr>),
     /// Original resource frame, recorded before optimization. Parameters and
     /// initialized bindings remain owners until this body returns or fails.
     ResourceRegion {
@@ -319,7 +324,7 @@ pub fn type_of<'a>(
                 .clone(),
         ),
         Expr::SetFields(r, _) => type_of(r),
-        Expr::Let(_, _, b) => type_of(b),
+        Expr::Let(_, _, b) | Expr::BorrowGlobal(_, _, b) => type_of(b),
         Expr::Match(_, arms) => arms.iter().find_map(|(_, b)| type_of(b)),
         Expr::Const(_) | Expr::Construct(..) | Expr::Record(_) => None,
     }
@@ -339,6 +344,8 @@ pub enum TypeShape {
 #[derive(Default, Clone, Debug)]
 pub struct Program {
     pub funcs: Vec<Func>,
+    /// Canonical source bindings, for persistent interpreter sessions.
+    pub binding_names: std::collections::HashMap<FuncId, String>,
     /// Shapes of all named types reachable from function types.
     pub shapes: Shapes,
     pub main: Option<FuncId>,
@@ -465,6 +472,13 @@ fn check_expr<'a>(
             has(*l)?;
             same(*l, v)?;
             check_expr(func, shapes, locals, v)?;
+            check_expr(func, shapes, locals, b)
+        }
+        Expr::BorrowGlobal(l, id, b) => {
+            has(*l)?;
+            if &locals[*l as usize] != func(*id) {
+                return Err(format!("borrowed global type differs from local {}", l));
+            }
             check_expr(func, shapes, locals, b)
         }
         Expr::Match(s, arms) => {

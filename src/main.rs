@@ -89,6 +89,7 @@ usage:
   fwp test --std                 run the standard library's tests
   fwp check <file.fwp>           type-check a file and print inferred types
   fwp check --parse <file.fwp>   parse a file and print its syntax tree
+  fwp repl [--no-history | --history PATH]  interactive interpreted session
   fwp fmt [--check] [paths...]   format files in place (directories are
                                  searched for .fwp files; default: .);
                                  --check lists unformatted files instead
@@ -196,6 +197,10 @@ fn main() -> ExitCode {
         return not_in_wasm("`--link` (C code for foreign functions)");
     }
     match args.first().map(String::as_str) {
+        Some("repl") => {
+            let options = args[1..].to_vec();
+            ExitCode::from(fwp::driver::with_big_stack(move || fwp::repl::run(&options)) as u8)
+        }
         Some("check") => check(&args[1..]),
         Some("run") => run(&args[1..]),
         Some("test") => test(&args[1..]),

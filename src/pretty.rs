@@ -258,8 +258,8 @@ pub fn expr(e: &Expr) -> String {
 
 fn app_level(e: &Expr) -> String {
     match &e.kind {
-        ExprKind::Arithmetic(ArithmeticOp::Neg, _, args) => format!("-({})", expr(&args[0])),
-        ExprKind::Arithmetic(op, _, args) => format!(
+        ExprKind::Operator(Operator::Neg, _, args) => format!("-({})", expr(&args[0])),
+        ExprKind::Operator(op, _, args) => format!(
             "{} {} {}",
             infix_operand(&args[0], *op, false),
             op.text(),
@@ -284,17 +284,18 @@ fn app_level(e: &Expr) -> String {
     }
 }
 
-pub(crate) fn infix_needs_parens(e: &Expr, op: ArithmeticOp, right: bool) -> bool {
+pub(crate) fn infix_needs_parens(e: &Expr, op: Operator, right: bool) -> bool {
     match &e.kind {
-        ExprKind::Arithmetic(inner, ..) => {
-            inner.precedence() < op.precedence() || (right && inner.precedence() == op.precedence())
+        ExprKind::Operator(inner, ..) => {
+            inner.precedence() < op.precedence()
+                || ((right || op.comparison()) && inner.precedence() == op.precedence())
         }
         ExprKind::Pipe(..) | ExprKind::Comptime(_) => true,
         _ => false,
     }
 }
 
-fn infix_operand(e: &Expr, op: ArithmeticOp, right: bool) -> String {
+fn infix_operand(e: &Expr, op: Operator, right: bool) -> String {
     let text = expr(e);
     if infix_needs_parens(e, op, right) {
         format!("({text})")
@@ -324,7 +325,7 @@ pub fn atom(e: &Expr) -> String {
         ExprKind::Var(v) => v.clone(),
         ExprKind::Ctor(c) => c.clone(),
         ExprKind::Selector(p) => format!(".{}", p.join(".")),
-        ExprKind::App(..) | ExprKind::Arithmetic(..) | ExprKind::Pipe(..) => {
+        ExprKind::App(..) | ExprKind::Operator(..) | ExprKind::Pipe(..) => {
             format!("({})", expr(e))
         }
         ExprKind::Unit => "()".into(),

@@ -52,7 +52,8 @@ def inspect(binary, host, mode, llvm):
 def audit_tests(log):
     """Require every named target to finish, with its complete expected tests."""
     log = re.sub(r'\x1b\[[0-9;]*[A-Za-z]', '', log)
-    expected = {'collection_construction': 3, 'map_set_ownership': 5,
+    expected = {'cached_map_borrows': 3, 'caf_ownership': 3,
+                'collection_construction': 3, 'inline_caf_ownership': 2, 'map_set_ownership': 5,
                 'mapped_array_construction': 3, 'numeric_array_fusion': 2}
     # Cargo's target headers use stderr; harness summaries use stdout. GitHub
     # can place the next header before the preceding summary, so audit the two
@@ -139,18 +140,18 @@ def main():
                 assert 'collection live allocations: 2' in broken, broken
                 for kind in ['failures', 'missing-cleanup']:
                     binaries.append(inspect(checks / f'{kind}-{mode}{opt}.bin', host, mode, args.llvm_bin))
-        rows.append({'host': host, 'job': job['databaseId'], 'passedTests': 13,
+        rows.append({'host': host, 'job': job['databaseId'], 'passedTests': sum(completed_tests.values()),
                      'completedTargets': completed_tests,
                      'failureConfigurations': exits, 'cleanupControls': 4,
                      'failureBinaries': binaries, 'measurements': report})
-        print(host, '13 tests, 20 actual binaries, six cost cases verified', flush=True)
+        print(host, '21 tests, 20 actual binaries, six cost cases verified', flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps({
         'source': args.head, 'run': args.run,
         'collectorSource': command('git', 'rev-parse', 'HEAD').strip(),
         'completeNativeMatrix': True,
         'scope': 'Actual binaries are inspected as data, never executed by this collector. '
-                 'Each host has 13 focused tests, six failure configurations, four deliberately '
+                 'Each host has 21 focused tests, six failure configurations, four deliberately '
                  'broken cleanup controls and six paired cost cases. Timing compares fused and '
                  'ordinary fwp, not C/Rust. Native section sizes are recorded; assembly must be '
                  'reviewed before any claim about register placement or vectorization. '

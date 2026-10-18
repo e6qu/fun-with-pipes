@@ -1829,12 +1829,47 @@ redundancy without changing coverage or limits. Replacement `39108116774` passes
 [the report](measurements/collection-joined-storage-2026-10-18.json) audits all
 120 binaries. PR #166 is accepted, but the Xeon timing issue remains unresolved.
 
-The accepted compiler still makes 2,000,001 retains in this workload. A
+The PR #166 compiler makes 2,000,001 retains in this workload. A
 [hand-edited borrowing prototype](measurements/large-map-borrow-prototype-2026-10-18.json)
 is explicitly not compiler acceptance: Xeon 6973P-C combined tracing remains
-1.4% slower than the old separate/retained layout. A later actual compiler
-candidate, `774d838c`, has focused checks and AMD/ARM results but is unmerged;
-[the handoff](development-state.md) records that evidence and the missing Intel
-comparison. Use `suite=large-map`, `map-storage` and `map-replay` as appropriate.
-Integer-equality hoisting (8–9% slower on ARM64) and split cached initialization
-(more code without a clear gain) were rejected; they are not production changes.
+1.4% slower than the old separate/retained layout. The actual compiler change
+below replaces that experiment with a checked lifetime proof.
+Integer-equality hoisting (8–9% slower on ARM64) and the earlier standalone split
+initialization experiment (more code without a clear gain) were rejected.
+Use `suite=large-map`, `map-storage` and `map-replay` for the storage comparisons.
+
+### Compiler-proved cached map reads
+
+**Comparison:** the saved `93cb93a0` compiler output, which retains the cached map
+on every query, versus actual `774d838c` compiler output with proved borrowing.
+[Five-host results](measurements/cached-map-borrows-2026-10-18.json) come from
+[run 39112673197](https://github.com/e6qu/fun-with-pipes/actions/runs/39112673197).
+This is fwp versus an earlier fwp compiler, not a C/Rust overhead measurement.
+
+**Work and timing:** the same 500,000-entry map and two million queries described
+above. For each revision, tracing/ARC and separate/joined layouts give eight
+variants. The separate layout is an explicit measurement transformation of C;
+the borrow comes from the compiler. All variants are compiled on the same host
+with GCC 13.3, `-O2 -std=gnu11 -ffp-contract=off`, then run as 24 fresh processes
+each in rotating order (three appearances per position). Wall time includes
+startup, construction, queries, output and teardown; compiler build time is
+excluded. Separate instrumented executions count allocations and retains and are
+excluded from timing. Reports retain every sample, command, source/binary hash,
+CPU description, section size and profile. Eighty ordinary/profile binaries were
+audited across the five jobs.
+
+On the joined layout, median borrowed/retained time ratios are 0.958–0.982:
+**1.8–4.2% less elapsed time** on EPYC 7763, EPYC 9V45 and Neoverse N2.
+Retains fall from 2,000,001 to 1; allocation requests and peak counted bytes are
+unchanged, and final counted bytes remain zero. This removes bookkeeping rather
+than map storage. These hosts do not establish an Intel result or resolve the
+Xeon 8573C regression.
+
+PR #167 integrates this compiler and repairs an additional result-representation
+bug: returning a tuple or variant after the borrow could create an unnecessary
+heap box. The prepared measurements predate that repair and full production
+acceptance. [The handoff](development-state.md) records current checks and pending
+measurements. Reproduce with `suite=map-borrow`, `evidence_run=39106005017`, and
+`source_revision=93cb93a0f717b317814ecfc162de0c2f516dbfbd`; the workflow compiles the
+current branch and uses the saved baseline sources, checking identical inputs,
+outputs, counts and binary identities before recording times.

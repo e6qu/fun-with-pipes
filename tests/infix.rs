@@ -20,6 +20,14 @@ fn precedence_and_application() {
         ("f (-x)", "f (-(x))"),
         ("add -1", "add -1"),
         ("count-long", "count-long"),
+        ("2+3*4==14|echo", "2 + 3 * 4 == 14 | echo"),
+        ("1!=2", "1 != 2"),
+        ("1<2", "1 < 2"),
+        ("1<=2", "1 <= 2"),
+        ("2>1", "2 > 1"),
+        ("2>=1", "2 >= 1"),
+        ("(1 < 2) == True", "(1 < 2) == True"),
+        ("True == (1 < 2)", "True == (1 < 2)"),
     ] {
         let expr = parser::parse_expr_text(source, 0, &mut 0).unwrap();
         assert_eq!(pretty::expr(&expr), expected, "{source}");
@@ -29,11 +37,21 @@ fn precedence_and_application() {
         assert_eq!(fmt::format_source(&formatted).unwrap(), formatted);
     }
     let expr = parser::parse_expr_text("2 + 3 * 4", 0, &mut 0).unwrap();
-    let ExprKind::Arithmetic(_, _, args) = expr.kind else {
+    let ExprKind::Operator(_, _, args) = expr.kind else {
         panic!("expected addition");
     };
-    assert!(matches!(args[1].kind, ExprKind::Arithmetic(..)));
-    for source in ["1 +", "1 / * 2", "* 2", "1 + | echo"] {
+    assert!(matches!(args[1].kind, ExprKind::Operator(..)));
+    for source in [
+        "1 +",
+        "1 / * 2",
+        "* 2",
+        "1 + | echo",
+        "1 ==",
+        "1 === 2",
+        "1 < 2 < 3",
+        "True == False == False",
+        "1 <= 2 == True",
+    ] {
         assert!(
             parser::parse_expr_text(source, 0, &mut 0).is_err(),
             "{source}"
@@ -45,6 +63,8 @@ fn precedence_and_application() {
 fn arithmetic_layout_quotes_and_type_sizes_round_trip() {
     for source in [
         "value = 2\n    + 3 * 4\nnext = 5\n",
+        "value = 2 + 3\n    == 5\nnext = True\n",
+        "macro equal = quote (unquote!(0) == unquote!(1))\nmain = equal!(2 + 3, 5) | echo\n",
         "macro twice = quote (unquote!(0) * 2)\nmain = twice!(2 + 3) | echo\n",
         "f : Vector[I64, 2 + 3 * 4] -> I64\nf = vector.length\n",
         "f = match\n    True -> const (2 + 3 * 4)\n    False -> const (20 - (6 - 2))\n",
@@ -73,7 +93,7 @@ fn raw_interpreter_and_native_agree() {
         ),
         (
             "trap-order",
-            "main = (9223372036854775807 + 1) + (1 / 0) | echo\n".into(),
+            "main = (9223372036854775807 + 1) == (1 / 0) | echo\n".into(),
             None,
         ),
     ] {

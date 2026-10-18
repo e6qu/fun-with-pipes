@@ -446,6 +446,16 @@ those costs; [PR #163](roadmap-history.md#http-server-owners-and-fixed-function-
 records full platform acceptance.
 
 Shared top-level computed values have cached owners, released during teardown.
+For numeric maps, ownership lowering can introduce `BorrowGlobal`: an internal
+binding that uses the cache owner directly during a verified read span. This
+removes per-read retain/release operations without changing source syntax.
+Initialization still happens at the original read and may fail or yield before
+the borrow begins. The span permits numeric calculations and map reads, but no
+unknown callback, suspension, escape or reentrant destruction while the borrowed
+value is needed. Verification repeats the check after cleanup insertion.
+Tuple and variant result generation must traverse this binding without creating
+intermediate heap objects. See [the contract](ownership.md#cached-numeric-map-reads)
+and [measurements](benchmarks.md#compiler-proved-cached-map-reads).
 A type descriptor is runtime metadata used for operations such as equality,
 printing and decoding.
 

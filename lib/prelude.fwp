@@ -305,6 +305,34 @@ impl Floating[F128] =
     cos = prim.cos
     tan = prim.tan
 
+# Scalar floating functions preserve their input format: F16, BF16, F32,
+# F64 or F128. These require Float, not Floating; dual/complex instances do
+# not acquire automatic derivative rules from these scalar declarations.
+# Inverse trig returns radians. asin/acos require [-1, 1]; acosh requires
+# x >= 1 and atanh requires [-1, 1] (endpoints give signed infinity).
+# Inputs outside the real domain give NaN, not an exception.
+foreign "fwp" asin : a -> a where Float[a]
+foreign "fwp" acos : a -> a where Float[a]
+foreign "fwp" atan : a -> a where Float[a]
+foreign "fwp" sinh : a -> a where Float[a]
+foreign "fwp" cosh : a -> a where Float[a]
+foreign "fwp" tanh : a -> a where Float[a]
+foreign "fwp" asinh : a -> a where Float[a]
+foreign "fwp" acosh : a -> a where Float[a]
+foreign "fwp" atanh : a -> a where Float[a]
+# log2/log10 use bases 2/10. log1p x computes ln(1+x) accurately near zero;
+# expm1 x computes exp(x)-1 accurately there. exp2 x is 2 raised to x.
+foreign "fwp" log2 : a -> a where Float[a]
+foreign "fwp" log10 : a -> a where Float[a]
+foreign "fwp" log1p : a -> a where Float[a]
+foreign "fwp" exp2 : a -> a where Float[a]
+foreign "fwp" expm1 : a -> a where Float[a]
+# y | atan2 x returns the angle of (x,y) in radians, including its quadrant.
+# 3.0 | hypot 4.0 is 5.0: hypot scales before squaring to avoid unnecessary
+# overflow/underflow. Both arguments must have the same floating type.
+foreign "fwp" atan2 : a -> a -> a where Float[a]
+foreign "fwp" hypot : a -> a -> a where Float[a]
+
 foreign "fwp" pow : a -> a -> a where Float[a]
 foreign "fwp" floor : a -> a where Float[a]
 foreign "fwp" ceil : a -> a where Float[a]

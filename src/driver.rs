@@ -192,6 +192,25 @@ pub fn check_source_with(
     dir: Option<&Path>,
     extra: Option<(&str, &str)>,
 ) -> Result<Compilation, Failure> {
+    check_source_options(name, text, dir, extra, None)
+}
+
+pub(crate) fn check_repl_source(
+    name: &str,
+    text: &str,
+    dir: &Path,
+    entry: &str,
+) -> Result<Compilation, Failure> {
+    check_source_options(name, text, Some(dir), None, Some(entry.to_string()))
+}
+
+fn check_source_options(
+    name: &str,
+    text: &str,
+    dir: Option<&Path>,
+    extra: Option<(&str, &str)>,
+    interactive_root: Option<String>,
+) -> Result<Compilation, Failure> {
     let mut ld = Loader {
         sm: SourceMap::default(),
         next_id: 0,
@@ -230,6 +249,7 @@ pub fn check_source_with(
         Err(errs) => return Err(Failure::new(errs, &ld.sm, root)),
     };
     let mut env = Env {
+        interactive_root,
         next_node_id: ld.next_id,
         macros,
         ..Env::default()

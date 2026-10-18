@@ -900,15 +900,15 @@ impl<'a> Parser<'a> {
             let e = self.expr()?;
             return Ok(self.mk(sp, ExprKind::Comptime(Box::new(e))));
         }
-        let mut lhs = self.arithmetic(1)?;
+        let mut lhs = self.operator_expr(1)?;
         while self.at_sym(Sym::Pipe) && !self.at_boundary_strict() {
             let psp = self.bump().span;
             let rhs = if self.at_kw(Kw::Comptime) {
                 let sp = self.bump().span;
-                let e = self.arithmetic(1)?;
+                let e = self.operator_expr(1)?;
                 self.mk(sp, ExprKind::Comptime(Box::new(e)))
             } else {
-                self.arithmetic(1)?
+                self.operator_expr(1)?
             };
             let span = Span { len: 1, ..psp };
             lhs = self.mk(span, ExprKind::Pipe(Box::new(lhs), Box::new(rhs)));
@@ -916,36 +916,49 @@ impl<'a> Parser<'a> {
         Ok(lhs)
     }
 
-    fn infix_op(&self) -> Option<ArithmeticOp> {
+    fn infix_op(&self) -> Option<Operator> {
         if self.at_boundary_strict() {
             return None;
         }
         match self.peek_tok() {
-            Tok::Sym(Sym::Plus) => Some(ArithmeticOp::Add),
-            Tok::Sym(Sym::Minus) => Some(ArithmeticOp::Sub),
-            Tok::Sym(Sym::Star) => Some(ArithmeticOp::Mul),
-            Tok::Sym(Sym::Slash) => Some(ArithmeticOp::Div),
-            Tok::Sym(Sym::Percent) => Some(ArithmeticOp::Rem),
+            Tok::Sym(Sym::Plus) => Some(Operator::Add),
+            Tok::Sym(Sym::Minus) => Some(Operator::Sub),
+            Tok::Sym(Sym::Star) => Some(Operator::Mul),
+            Tok::Sym(Sym::Slash) => Some(Operator::Div),
+            Tok::Sym(Sym::Percent) => Some(Operator::Rem),
+            Tok::Sym(Sym::EqEq) => Some(Operator::Eq),
+            Tok::Sym(Sym::Ne) => Some(Operator::Ne),
+            Tok::Sym(Sym::Lt) => Some(Operator::Lt),
+            Tok::Sym(Sym::Le) => Some(Operator::Le),
+            Tok::Sym(Sym::Gt) => Some(Operator::Gt),
+            Tok::Sym(Sym::Ge) => Some(Operator::Ge),
+
             _ => None,
         }
     }
 
-    fn arithmetic(&mut self, min_precedence: u8) -> DResult<Expr> {
+    fn operator_expr(&mut self, min_precedence: u8) -> DResult<Expr> {
         let mut lhs = self.app()?;
+        let mut compared = false;
         while let Some(op) = self.infix_op() {
             if op.precedence() < min_precedence {
                 break;
             }
+            if compared && op.comparison() {
+                return Err(Diagnostic::error(self.peek().span,
+                    "comparison operators cannot be chained; use parentheses or combine separate predicates"));
+            }
+            compared |= op.comparison();
             let span = self.bump().span;
-            let rhs = self.arithmetic(op.precedence() + 1)?;
-            // Prefix arithmetic is data-last. `flip op lhs rhs` keeps the
+            let rhs = self.operator_expr(op.precedence() + 1)?;
+            // Prefix operators are data-last. `flip op lhs rhs` keeps the
             // operands' evaluation order while passing their values to op.
             let flip = self.mk(span, ExprKind::Var("::std::flip".into()));
             let function = self.mk(span, ExprKind::Var(format!("::std::{}", op.function())));
             let callee = self.mk(span, ExprKind::App(Box::new(flip), vec![function]));
             lhs = self.mk(
                 span,
-                ExprKind::Arithmetic(op, Box::new(callee), vec![lhs, rhs]),
+                ExprKind::Operator(op, Box::new(callee), vec![lhs, rhs]),
             );
         }
         Ok(lhs)
@@ -958,7 +971,7 @@ impl<'a> Parser<'a> {
             let neg = self.mk(span, ExprKind::Var("::std::neg".into()));
             return Ok(self.mk(
                 span,
-                ExprKind::Arithmetic(ArithmeticOp::Neg, Box::new(neg), vec![operand]),
+                ExprKind::Operator(Operator::Neg, Box::new(neg), vec![operand]),
             ));
         }
         if self.at_expr_end() {

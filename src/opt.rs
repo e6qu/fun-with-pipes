@@ -18,7 +18,10 @@ const ROUNDS: usize = 4;
 
 fn size(e: &Expr) -> usize {
     match e {
-        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => 1 + size(b),
+        Expr::Dup(_, b)
+        | Expr::Drop(_, b)
+        | Expr::BorrowGlobal(_, _, b)
+        | Expr::ResourceRegion { body: b, .. } => 1 + size(b),
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => 1,
         Expr::Call(_, a) | Expr::Construct(_, a) | Expr::Record(a) => {
             1 + a.iter().map(size).sum::<usize>()
@@ -34,6 +37,7 @@ fn size(e: &Expr) -> usize {
 fn calls(e: &Expr, id: FuncId) -> bool {
     match e {
         Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => calls(b, id),
+        Expr::BorrowGlobal(_, global, b) => *global == id || calls(b, id),
         Expr::Local(_) | Expr::Const(_) => false,
         Expr::Func(f) => *f == id,
         Expr::Call(f, a) => *f == id || a.iter().any(|x| calls(x, id)),
@@ -63,6 +67,7 @@ pub(crate) fn uses(e: &Expr, l: Local) -> usize {
         Expr::Field(r, _) => uses(r, l),
         Expr::SetFields(r, s) => uses(r, l) + s.iter().map(|(_, x)| uses(x, l)).sum::<usize>(),
         Expr::Let(_, v, b) => uses(v, l) + uses(b, l),
+        Expr::BorrowGlobal(_, _, b) => uses(b, l),
         // a use inside a match arm may run at most once, but counts as a
         // use for duplication purposes
         Expr::Match(s, arms) => uses(s, l) + arms.iter().map(|(_, b)| uses(b, l)).sum::<usize>(),
@@ -170,7 +175,7 @@ impl<'p> Opt<'p> {
                     body,
                 }
             }
-            Expr::Dup(..) | Expr::Drop(..) => e,
+            Expr::Dup(..) | Expr::Drop(..) | Expr::BorrowGlobal(..) => e,
             Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => e,
             Expr::Call(id, args) => {
                 let args: Vec<Expr> = args.into_iter().map(|a| self.expr(a, depth)).collect();
@@ -616,7 +621,7 @@ pub(crate) fn only_fields(e: &Expr, l: Local) -> bool {
             bindings,
             body,
         } => !parameters.contains(&l) && !bindings.contains(&l) && only_fields(body, l),
-        Expr::Dup(_, b) | Expr::Drop(_, b) => only_fields(b, l),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::BorrowGlobal(_, _, b) => only_fields(b, l),
         Expr::Local(x) => *x != l,
         Expr::Field(r, _) if matches!(**r, Expr::Local(x) if x == l) => true,
         Expr::Const(_) | Expr::Func(_) => true,
@@ -646,6 +651,7 @@ fn replace_fields(e: &Expr, l: Local, ls: &[Local]) -> Expr {
         },
         Expr::Dup(x, b) => Expr::Dup(*x, Box::new(r(b))),
         Expr::Drop(x, b) => Expr::Drop(*x, Box::new(r(b))),
+        Expr::BorrowGlobal(x, global, b) => Expr::BorrowGlobal(*x, *global, Box::new(r(b))),
         Expr::Field(b, i) if matches!(**b, Expr::Local(x) if x == l) => {
             Expr::Local(ls[*i as usize])
         }
@@ -699,6 +705,9 @@ fn substitute(e: &Expr, s: &[Option<Expr>]) -> Expr {
         },
         Expr::Dup(x, b) => Expr::Dup(local(x), Box::new(substitute(b, s))),
         Expr::Drop(x, b) => Expr::Drop(local(x), Box::new(substitute(b, s))),
+        Expr::BorrowGlobal(x, global, b) => {
+            Expr::BorrowGlobal(local(x), *global, Box::new(substitute(b, s)))
+        }
         Expr::Local(l) => s[*l as usize].clone().unwrap_or(Expr::Local(*l)),
         Expr::Const(_) | Expr::Func(_) => e.clone(),
         Expr::Call(f, a) => Expr::Call(*f, a.iter().map(|x| substitute(x, s)).collect()),
@@ -834,7 +843,7 @@ fn free_locals(e: &Expr, out: &mut Vec<Local>) {
         }
         Expr::Field(r, _) => free_locals(r, out),
         // closures built from pure parts have none of these
-        Expr::SetFields(..) | Expr::Let(..) | Expr::Match(..) => {}
+        Expr::SetFields(..) | Expr::Let(..) | Expr::BorrowGlobal(..) | Expr::Match(..) => {}
     }
 }
 
@@ -959,7 +968,10 @@ fn rewrite_hofs(
 ) {
     // children first
     match e {
-        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+        Expr::Dup(_, b)
+        | Expr::Drop(_, b)
+        | Expr::BorrowGlobal(_, _, b)
+        | Expr::ResourceRegion { body: b, .. } => {
             rewrite_hofs(b, funcs, shapes, locals, base, made, seen)
         }
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => {}
