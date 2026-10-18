@@ -355,6 +355,8 @@ pub enum TypeShape {
 #[derive(Default, Clone, Debug)]
 pub struct Program {
     pub funcs: Vec<Func>,
+    /// Proved self-tail functions; backends iterate without changing value layouts.
+    pub self_tail: std::collections::BTreeSet<FuncId>,
     /// Canonical source bindings, for persistent interpreter sessions.
     pub binding_names: std::collections::HashMap<FuncId, String>,
     /// Shapes of all named types reachable from function types.

@@ -287,3 +287,30 @@ fn multiline_and_scripted_terminal_commands() {
     );
     assert!(result.stderr.is_empty(), "{result:?}");
 }
+
+#[test]
+fn session_keeps_tail_recursion_proofs_when_function_ids_change() {
+    fwp::driver::with_big_stack(|| {
+        let mut session = Session::new(std::env::current_dir().unwrap()).unwrap();
+        let mut output = Vec::new();
+        session.submit("seed = 42", &mut output).unwrap();
+        session.submit("seed | echo", &mut output).unwrap();
+        session
+            .submit(
+                "rec down : I64 -> I64\ndown = if (eq 0) id (sub 1 | down)",
+                &mut output,
+            )
+            .unwrap();
+        for _ in 0..2 {
+            assert_eq!(
+                session
+                    .submit("200000 | down", &mut output)
+                    .unwrap()
+                    .value
+                    .as_deref(),
+                Some("0")
+            );
+        }
+        assert_eq!(output, b"42\n");
+    });
+}

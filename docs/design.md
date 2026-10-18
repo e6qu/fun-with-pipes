@@ -582,23 +582,27 @@ rounding, effects and failure order rather than assume arithmetic is associative
 
 ### Implemented lowering and its limits
 
-The compiler simplifies pipes and known applications, then `src/tailrec.rs`
-replaces eligible direct self-tail calls with the existing typed `loop`
-operation. A recursive branch supplies `Again next-arguments`; a final result
-supplies `Stop result`. The interpreter executes that operation iteratively, and
-the C backend emits its existing loop. This does not rely on C tail-call
-optimization, so the generated loop also works at O0. The current revision's
-[handoff](development-state.md) records validation; implementation is not itself
-platform acceptance.
+After simplification, callback specialization and fusion, `src/tailrec.rs`
+marks eligible direct self-tail calls. It keeps their expressions intact so
+native representation selection can still pass records, variants and wide
+numbers as direct fields. The interpreter replaces a proved tail call with the
+next set of parameter values. Generated C prepares those values, retires unused
+storage-reuse tokens and jumps to the function's entry check. Existing wide
+numeric workers retain their own native loop. Each backend therefore keeps
+bounded call-stack space for the recurrence, including native O0 builds.
+The current revision's [handoff](development-state.md) records validation;
+implementation is not itself platform acceptance.
 
 Eligibility requires every self reference to be a direct tail call and the
 frame's types to describe plain immutable data. Closures with unknown captures,
 resource/task/channel owners, calls nested in arguments and remaining work after
 a call keep ordinary recursion. Resource regions cannot be discarded. Function
 parameters are prepared in their original order before becoming next-iteration
-state, including swaps and multiple curried arguments. This internal state is not
-new source syntax. Known loop state can use direct fields in native code; the
-interpreter still represents values through its ordinary value objects.
+state, including swaps and multiple curried arguments. This adds no source
+syntax or intermediate `Step` values. Native record/variant arguments keep their
+existing field layout; the interpreter keeps its ordinary value objects. Native
+frames selected for reuse do not allocate local stack objects that could become
+next-iteration state. Direct fields remain available without such objects.
 
 `FWP_DUMP_IR=1 fwp run --interp program.fwp` reports each direct-self-recursion
 lowering decision. A rejection states what prevents the proof; it does not say

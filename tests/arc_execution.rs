@@ -138,6 +138,25 @@ main = range 0 129 | map (choose | checks) | length | echo
                 assert!(String::from_utf8_lossy(&conflict.stderr)
                     .contains("--gc arc cannot enable tracing"));
             }
+            if name == "ownership-scopes" && stack == "0" {
+                let release = "    fwp_native_tasks_finish();";
+                assert_eq!(measured.matches(release).count(), 1);
+                let omitted = measured.replace(release, "    /* omit scheduler shutdown */");
+                let binary = dir.join("retained-scheduler.exe");
+                fwp::cgen::compile_c(&omitted, &binary, "-O2").unwrap();
+                let actual = Command::new(binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    actual.status.code(),
+                    Some(193),
+                    "scheduler retention must fail the ledger: {actual:?}"
+                );
+            }
             if name == "arrays" && stack == "0" {
                 let needle = "    fwp_mem_free((void *)(uintptr_t)v);";
                 assert_eq!(measured.matches(needle).count(), 2);

@@ -190,7 +190,11 @@ impl<'p> Interp<'p> {
                 }
                 let mut locals = args;
                 locals.resize(f.nlocals() as usize, Value::unit());
-                self.eval(e, &mut locals)?
+                if self.prog.self_tail.contains(&id) && self.debugger.is_none() {
+                    self.eval_self_tail(id, e, &mut locals)?
+                } else {
+                    self.eval(e, &mut locals)?
+                }
             }
             Body::Prim(sym) => self.prim(id, sym, args)?,
             Body::Ctor(tag) => Value::data(*tag, args),
@@ -201,6 +205,44 @@ impl<'p> Interp<'p> {
             self.cafs.borrow_mut()[id] = Some(v.clone());
         }
         Ok(v)
+    }
+
+    /// Follow only proved tail positions. Evaluate all new arguments before
+    /// retiring the old frame, so swaps and aliases keep their ordinary meaning.
+    fn eval_self_tail(&mut self, id: FuncId, root: &Expr, locals: &mut Vec<Value>) -> R<Value> {
+        let mut expression = root;
+        loop {
+            match expression {
+                Expr::Call(callee, args) if *callee == id => {
+                    let next = args
+                        .iter()
+                        .map(|arg| self.eval(arg, locals))
+                        .collect::<R<Vec<_>>>()?;
+                    locals.clear();
+                    locals.extend(next);
+                    locals.resize(self.prog.funcs[id].nlocals() as usize, Value::unit());
+                    if crate::repl::interrupted() {
+                        return Err(Ctl::Cancelled);
+                    }
+                    if crate::sched::tick() {
+                        self.preempt()?;
+                    }
+                    expression = root;
+                }
+                Expr::Let(slot, value, body) => {
+                    locals[*slot as usize] = self.eval(value, locals)?;
+                    expression = body;
+                }
+                Expr::Match(scrutinee, arms) => {
+                    let value = self.eval(scrutinee, locals)?;
+                    expression = arms
+                        .iter()
+                        .find_map(|(pattern, body)| bind(pattern, &value, locals).then_some(body))
+                        .ok_or_else(|| Ctl::Trap("internal: no match arm applies".into()))?;
+                }
+                _ => return self.eval(expression, locals),
+            }
+        }
     }
 
     /// Apply a function value to arguments.

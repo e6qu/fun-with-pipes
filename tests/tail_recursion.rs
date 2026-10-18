@@ -1,4 +1,4 @@
-//! Self-tail recursion uses the same typed loop in both execution backends.
+//! Self-tail recursion reuses frames in both execution backends.
 use fwp::ir::{Body, Expr, Func, Program, MT};
 use std::process::{Command, Output};
 
@@ -38,11 +38,11 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
     assert_eq!(interpreted.stdout, raw.stdout);
     let diagnostics = String::from_utf8_lossy(&interpreted.stderr);
     assert!(
-        diagnostics.lines().any(|s| s.contains("down: typed loop")),
+        diagnostics.lines().any(|s| s.contains("down: frame loop")),
         "{diagnostics}"
     );
     assert!(
-        diagnostics.lines().any(|s| s.contains("swap: typed loop")),
+        diagnostics.lines().any(|s| s.contains("swap: frame loop")),
         "{diagnostics}"
     );
     assert!(
@@ -59,8 +59,19 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
             command.args(["--gc", "arc"]);
         }
         checked(command.arg(&src).arg("-o").arg(&cfile));
-        let code = std::fs::read_to_string(&cfile).unwrap();
-        assert!(code.contains("-self-tail-step"));
+        let mut code = std::fs::read_to_string(&cfile).unwrap();
+        assert!(code.contains("fwp_self_again:"));
+        if mode == "arc" {
+            let start = code
+                .find("static void *fwp_main_thread(void *arg) {")
+                .unwrap();
+            let (runtime, main) = code.split_at(start);
+            assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
+            assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
+            let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t tail_budget = fwp_gc.budget;\n")
+                .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.budget < tail_budget) { fprintf(stderr, \"tail recursion retained %ld bytes\\n\", (long)(tail_budget-fwp_gc.budget)); exit(193); }\n");
+            code = format!("{runtime}{main}");
+        }
         for opt in ["-O0", "-O2"] {
             let binary = dir.join(format!("{mode}{opt}.exe"));
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
@@ -68,7 +79,10 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
                 Command::new(&binary)
                     .env("FWP_GC_STRESS", if mode == "tracing" { "1" } else { "0" })
                     .env("FWP_GC_VERIFY", if mode == "tracing" { "1" } else { "0" })
-                    .env("FWP_REUSE_VERIFY", "1"),
+                    .env(
+                        "FWP_REUSE_VERIFY",
+                        if mode == "tracing" { "1" } else { "0" },
+                    ),
             );
             assert_eq!(output.stdout, raw.stdout, "{mode} {opt}");
         }
@@ -122,17 +136,19 @@ fn cleanup_and_unknown_captures_keep_their_original_frames() {
             ty: MT::Fun(Box::new(ty.clone()), Box::new(ty)),
             body: Body::Expr(call.clone()),
         });
-        fwp::tailrec::lower(&mut program);
-        assert_eq!(program.funcs.len(), 1, "opaque owner must keep its frame");
+        fwp::tailrec::analyze(&mut program);
+        assert!(
+            program.self_tail.is_empty(),
+            "opaque owner must keep its frame"
+        );
         program.funcs[0].body = Body::Expr(Expr::ResourceRegion {
             parameters: vec![0],
             bindings: vec![],
             body: Box::new(call),
         });
-        fwp::tailrec::lower(&mut program);
-        assert_eq!(
-            program.funcs.len(),
-            1,
+        fwp::tailrec::analyze(&mut program);
+        assert!(
+            program.self_tail.is_empty(),
             "cleanup cannot move before the call"
         );
     }

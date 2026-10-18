@@ -16,9 +16,10 @@ Starting from four gives four: four additions remain pending. Those calls are
 not in tail position. Turning this into an accumulator loop is a separate
 transformation; in other programs it can change overflow, rounding or effect order.
 
-The compiler lowers eligible direct self-tail recursion, such as `down`, to its
-existing loop operation. Ordinary interpreted and native execution then reuse
-bounded call-stack space for that recurrence, including native O0 builds.
+For eligible direct self-tail recursion, such as `down`, the compiler proves
+that the next call can reuse the current function frame. Ordinary interpreted
+and native execution then use bounded call-stack space for that recurrence,
+including native O0 builds.
 `count-back` keeps ordinary recursion because additions remain pending. Other
 calls inside an iteration can still recurse or allocate.
 

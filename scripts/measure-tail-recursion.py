@@ -82,7 +82,7 @@ def main():
                 run(emit)
                 code = cfile.read_text(encoding="utf-8")
                 if name == "recursive":
-                    assert "-self-tail-step" in code, "measurement must use the new lowering"
+                    assert "fwp_self_again:" in code, "measurement must use the new lowering"
                 binary = output / label
                 command = [args.cc, f"-{level}", "-g", "-fstack-usage", "-std=gnu11", "-ffp-contract=off",
                            "-fno-fast-math", cfile, "-o", binary, "-lm", "-lpthread"]

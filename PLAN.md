@@ -91,8 +91,8 @@ outside the benchmark suite.
 1. Deliver the cycle-contract and self-tail-recursion batch. PR #167's compiler,
    interactive tools and cached-map borrowing passed all gates and are merged;
    [delivery history](docs/roadmap-history.md#interactive-tools-and-cached-map-borrows-pr-167)
-   records the tested revision and measurement limits. Use the existing typed
-   loop machinery where its ownership contract proves frame reuse safe.
+   records the tested revision and measurement limits. Reuse eligible frames
+   while preserving native field layouts, cleanup and cancellation checks.
 2. Specify and test [cycle-safe ownership contracts](docs/ownership.md#proposed-cycle-policy)
    against subscriptions, channel workers, cancelled tasks and cyclic data graphs.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not

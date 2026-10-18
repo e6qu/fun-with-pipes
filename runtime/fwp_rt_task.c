@@ -1217,6 +1217,38 @@ static void fwp_fiber_tasks_finish(void) {
     }
     fwp_root = fwp_cur = 0;
 }
+#else
+/* Executable shutdown releases scheduler storage too. Libraries retain their
+ * separate unload path; this runs only after the last command and CAF cleanup. */
+static void fwp_native_tasks_finish(void) {
+    if (fwp_cur != fwp_root) abort();
+    if (fwp_root) {
+        fwp_root->unwinding = 1;
+        for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next) fwp_cancel_tree(t);
+        while (fwp_gc_tasks) {
+            fwp_make_ready(fwp_root);
+            fwp_block();
+            fwp_free_zombie();
+        }
+    }
+    fwp_free_zombie();
+    if (fwp_ready_head || fwp_timers) abort();
+#ifdef _WIN32
+    if (fwp_root) fwp_win_context_root_finish(&fwp_root->ctx);
+#elif !defined(FWP_STATIC_MEMORY)
+    while (fwp_stack_pool_n) munmap(fwp_stack_pool[--fwp_stack_pool_n], FWP_NATIVE_TASK_STACK);
+#endif
+#ifndef _WIN32
+    if (fwp_epfd >= 0) close(fwp_epfd);
+#endif
+    fwp_epfd = -1;
+    if (fwp_root) {
+        if (fwp_root->first_child || fwp_root->st || fwp_state_len || fwp_state_owners)
+            abort();
+        fwp_mem_free(fwp_root);
+    }
+    fwp_root = fwp_cur = 0;
+}
 #endif
 
 /* a root function failed: cancel its tasks and wait for them */

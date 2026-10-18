@@ -152,7 +152,17 @@ fn output_is_reproducible() {
 #[test]
 fn raw_function_entries_preserve_interleaving() {
     let dir = TempDir::new("raw");
-    let path = root().join("tests/run/preempt.fwp");
+    // This checks scheduling at raw function entries, not recursion depth.
+    // Unoptimized Rust interpreter frames are much larger than CI's optimized
+    // development frames; keep the independent raw reference shallow in both.
+    let path = dir.0.join("preempt.fwp");
+    let source = std::fs::read_to_string(root().join("tests/run/preempt.fwp")).unwrap();
+    assert!(source.contains("const 4000 | down"));
+    std::fs::write(
+        &path,
+        source.replace("const 4000 | down", "const 200 | down"),
+    )
+    .unwrap();
     let exe = have_cc().then(|| build(&path, &dir.0, &[("FWP_NO_OPT", "1")]));
     for slice in ["37", "10000"] {
         let expected = interpret(&path, &[("FWP_NO_OPT", "1"), ("FWP_PREEMPT", slice)]);

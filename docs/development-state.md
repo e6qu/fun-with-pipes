@@ -11,62 +11,67 @@ passed and their completed logs were audited. Duplicate queued post-merge runs
 records the acceptance links and limitations.
 
 Current branch: `ownership-tail-recursion`, based on that merge.
-Draft [PR #168](https://github.com/e6qu/fun-with-pipes/pull/168).
-Next: complete the cycle-contract and self-tail-recursion batch, run focused
-checks on GitHub, fix every failure, then publish one substantial PR with full
-final-head acceptance before squash merge.
+[PR #168](https://github.com/e6qu/fun-with-pipes/pull/168).
+Next: run the expanded focused language suite for the complete CI repair,
+then require all nine production jobs plus documentation on that exact head.
+Keep the PR draft during the focused repair check to avoid repeating full gates
+before the compiler and every previously failing target pass. Do not merge yet.
 
-## Current batch
+## Current batch and CI repair
 
-- Lower eligible direct self-tail recursion to the existing typed `loop`
-  operation, shared by interpreter and native generation. Preserve evaluation
-  order, ownership and cancellation safe points. Keep resource/handler cleanup
-  and unknown captures outside the proof, with an explanatory IR diagnostic.
-- Test scalar, swapped multi-argument and immutable shared-data states, failure
-  order, cancellation, and rejection of non-tail/resource-bearing frames.
-  Check deep execution at native O0/O2 and in the interpreter. Inspect generated
-  C and real binaries, and measure allocations/live memory before claiming costs.
-- Make checked-ARC diagnostics explain the ownership path that lacks a cycle
-  proof. Exercise subscription lifetime, channel workers, cancellation and graph
-  IDs/deletion using existing language facilities. Weak handles remain proposed;
-  never imply an unproved lifetime is a demonstrated cycle.
-- Update runnable examples and the plan in plain language. Keep explicit tool
-  settings, empty Python initializers, top-level imports and no compatibility
-  adapters. All seven roadmap areas remain open.
+PR #168 adds eligible self-tail frame reuse, cycle-proof diagnostics and lesson
+23's callback/channel/cancellation/graph examples. Default tracing removal and
+all seven roadmap areas remain unfinished.
 
-Implementation started in `src/tailrec.rs`, after ordinary simplification and
-before higher-order specialization/ownership insertion. It uses the existing
-Step/loop representation; no new source syntax or runtime continuation format.
-First focused run `39152295142` at `d3830612` compiles and passes Clippy.
-Twenty-five Rust tests pass; the sole failure is test setup enabling tracing
-stress/verification for an ARC-only binary. The working tree corrects those
-settings by mode and keeps reuse verification enabled. Before that rejection,
-deep interpretation and tracing O0/O2 pass; cancellation passes independently.
-All eleven Python tests and the installed-package browser check pass.
-Full log audited: `/private/tmp/fwp-tail-d383.log`.
+All eleven jobs at `8c9f1c8095f9df1d84f1c61c00fa10cd652c5155` were audited:
+production `39153169076`, focused `39153117778`, docs `39153113800`.
+The eight production execution jobs and focused job fail. Benchmarks, docs,
+eleven Python SDK tests and the real browser pass. Logs are preserved in
+`/private/tmp/fwp-pr168-8c9f`. Distinct failures and repairs:
 
-The working tree also adds lesson 23, ARC physical-reclamation and payload-path
-checks, curried-argument/frame-safety tests, and a runner-only comparison with
-explicit fwp loops. It records raw timings, allocation/live-memory profiles,
-actual disassembly and per-function stack estimates. These additions still need
-the next focused run; full final-head acceptance follows.
+- The typed-loop rewrite hid record/variant fields and wide-number operations
+  from native representation selection. It broke both wide-worker tests, record
+  conversion coverage and variant-alias coverage. The repair proves eligible
+  self calls after fusion without changing their expression trees. Interpreter
+  and native execution reuse the existing frame directly; native count insertion
+  and record/variant/wide-worker selection keep their original inputs. Arguments
+  are prepared before overwrite, reuse tokens retire before the jump, and entry
+  cancellation checks remain. REPL function-ID remapping preserves these proofs.
+- Native scheduler root storage survived executable shutdown. Lesson 23 exposed
+  it through the ARC ledger (1536 bytes on Linux, 768 on Windows). The repair
+  drains remaining tasks, releases native scheduler/root storage and keeps the
+  existing library/fiber shutdown paths. A negative control must detect omission.
+- ARC rejects reuse verification because it intentionally retains freed storage.
+  The recursion harness now enables all three stress/verification controls only
+  for tracing. ARC verifies real reclamation through its allocation ledger.
+- Raw preemption coverage exceeded the stack in an unoptimized Rust build. Its
+  independent scheduling reference now uses 200 recursive calls, while ordinary
+  coverage keeps 4000 and dedicated tail-recursion coverage keeps 200000.
 
-## Checks
+The expanded focused job includes every failing target plus task ownership,
+reuse, scheduling, REPL/debugger and numerical/tool checks. The runner-only
+recursion comparison retains actual binaries/disassembly, stack-use estimates,
+allocations/live bytes and repeated timing against an explicit fwp loop. Earlier
+measurement results describe the superseded rewrite and cannot validate this
+repair. No C/Rust parity or universal tail-call guarantee is claimed.
 
-- Guarded old CI compiler (`763e245b`) raw interpretation passes the small
-  recursion reference (including curried arguments), 0.34 seconds; lesson 23
-  outputs `(Some 7, None)`, `6`, `None`, `(None, Some [1])`, 0.26 seconds.
-  The initial tutorial send-argument ordering mistake was fixed before publication.
-- Guarded Python audit passes all 72 files, 0.37 seconds. Rust formatting and
-  roadmap audit passed before the draft push; rerun for the combined changes.
+## Local checks
 
-- `python3 scripts/local-guard.py python3 /private/tmp/fwp-monitor-pr167-7cb8.py`:
-  PASS, 28.18 seconds. All 15 merged-head jobs passed; no failed Rust executions.
-  Linux: 758 passes per host. Regular Macs: 470 per host. Mac GC: 293 per host.
-  Windows: 365 per host. Tools: 24 Rust checks, eleven Python tests and real
-  Chromium. Four terminal hosts each ran both tests, with zero skips.
-- Preserve the fixed local guard limits. Do not rebuild the compiler locally;
-  focused checks may use downloaded CI binaries with their revision recorded.
+All checks use `python3 scripts/local-guard.py`; no local compiler build or full
+suite. The exact CI-generated lesson-23 C was downloaded from the macOS ARM64
+ownership artifact. A diagnostic reproduced the retained scheduler root; a
+focused C build with the repaired runtime shutdown passes the ARC ledger and
+prints the four expected lines. Commands:
+
+- `cc -O1 -std=gnu11 /private/tmp/fwp-arc-shutdown-fixed.c -o /private/tmp/fwp-arc-shutdown-fixed -lm -lpthread`: pass, 0.98 seconds.
+- `env FWP_GC_STRESS=0 FWP_GC_VERIFY=0 FWP_REUSE_VERIFY=0 /private/tmp/fwp-arc-shutdown-fixed`: pass, 0.50 seconds.
+- `cargo fmt --all`: pass, 1.42 seconds after the final test edits.
+- `/private/tmp/fwp-doc-audit.py`: all 60 Markdown sets and tutorial copies pass, 0.37 seconds.
+- `/private/tmp/fwp-python-import-audit.py`: all 72 Python files, top-level imports, empty initializers and AGENTS length pass, 0.37 seconds.
+- `scripts/check-roadmap.py`: roadmap links, anchors, handoff and commit subjects pass.
+
+This verifies the isolated shutdown repair on this host, not the current Rust
+compiler or the cross-platform change. Those require runner acceptance.
 
 ## Roadmap status
 
@@ -82,5 +87,5 @@ the next focused run; full final-head acceptance follows.
 
 The seven project work areas in [PLAN.md](../PLAN.md) remain open. Default tracing
 removal is unfinished. JIT is excluded. After this delivery, the next substantial
-work is cycle-safe ownership contracts and eligible tail-recursion elimination,
-selected and checked against representative programs.
+work is the next ownership/performance gap selected from representative programs
+and the measured results of this batch. Do not repeat this batch as a new task.

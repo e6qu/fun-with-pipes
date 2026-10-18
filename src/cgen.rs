@@ -2941,6 +2941,36 @@ impl<'g, 'p> FnGen<'g, 'p> {
         format!("(V[]){{{}}}", xs.join(", "))
     }
 
+    /// Prepare every next parameter before overwriting any current parameter.
+    /// Count insertion already transfers/drops the language owners; retire reuse
+    /// tokens before jumping so no cleanup node survives into another iteration.
+    fn self_jump(&mut self, id: FuncId, args: &[Expr], tail: bool) -> bool {
+        if id != self.me || !tail || !self.g.uncounted.self_tail.contains(&id) {
+            return false;
+        }
+        let abi = self.g.abis[id].clone();
+        let mut next = Vec::new();
+        for (i, arg) in args.iter().enumerate() {
+            if let Some(n) = abi.as_ref().and_then(|a| a.params[i]) {
+                let fields = self.expr_fields(arg, n);
+                for (k, field) in fields.into_iter().enumerate() {
+                    let value = self.bind(field);
+                    next.push((format!("l{i}_{k}"), value));
+                }
+            } else {
+                let value = self.expr(arg);
+                let value = self.bind(value);
+                next.push((format!("l{i}"), value));
+            }
+        }
+        self.tail_tokens(true);
+        for (parameter, value) in next {
+            self.line(&format!("{parameter} = {value};"));
+        }
+        self.line("goto fwp_self_again;");
+        true
+    }
+
     /// The arguments of a direct call of a function's worker, in
     /// evaluation order: a record passed field by field is not built.
     fn worker_args(&mut self, g: FuncId, abi: &Abi, args: &[Expr]) -> Vec<String> {
@@ -3012,6 +3042,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// The `n` fields of the record `e`, as C expressions, building it
     /// only when it comes from elsewhere.
     fn expr_fields(&mut self, e: &Expr, n: usize) -> Vec<String> {
+        if let Expr::Call(id, args) = e {
+            if self.self_jump(*id, args, self.tail_calls.contains(&(e as *const Expr))) {
+                return vec!["0".into(); n]; // Unreachable after the jump.
+            }
+        }
         if let Some((off, m)) = self.state_field(e).filter(|(_, m)| *m == n) {
             return (off..off + m).map(|k| format!("st[{}]", k)).collect();
         }
@@ -3299,6 +3334,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// returned as a struct `fwp_u<m>`, without building it. The fields
     /// hold the references the value would.
     fn expr_variant(&mut self, e: &Expr, m: usize, ty: &MT) -> (String, Vec<String>) {
+        if let Expr::Call(id, args) = e {
+            if self.self_jump(*id, args, self.tail_calls.contains(&(e as *const Expr))) {
+                return ("0".into(), vec!["0".into(); m]);
+            }
+        }
         let parts = |u: &str| -> (String, Vec<String>) {
             (
                 format!("{}.tag", u),
@@ -4160,6 +4200,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// or variant with fields, or a closure (a known function applied to
     /// fewer arguments than it takes).
     fn stackable(&self, v: &Expr) -> bool {
+        // An object in this frame must not become next-iteration state. Direct
+        // record/variant fields are still selected independently of stack boxes.
+        if self.g.uncounted.self_tail.contains(&self.me) {
+            return false;
+        }
         match v {
             Expr::Record(xs) | Expr::Construct(_, xs) => !xs.is_empty(),
             Expr::Apply(f, xs) => match **f {
@@ -5347,6 +5392,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
         tail: bool,
         key: *const Expr,
     ) -> String {
+        if self.self_jump(id, args, tail) {
+            return "0".into();
+        }
         if let Some(call) = self.owned_hof(id, args) {
             self.tail_tokens(tail);
             let result = self.bind_call(key, call);
@@ -8204,6 +8252,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                     me: id,
                     tail_calls: tail_calls(&e),
                 };
+                if fg.g.uncounted.self_tail.contains(&id) {
+                    fg.line("fwp_self_again:;");
+                }
                 fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &[]);
                 let r = fg.expr(&e);
                 let body = fg.out;
@@ -8270,6 +8321,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             me: id,
             tail_calls: tail_calls(e),
         };
+        if fg.g.uncounted.self_tail.contains(&id) {
+            fg.line("fwp_self_again:;");
+        }
         fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &[]);
         let ret = match (abi.ret, abi.vret) {
             (Some(n), _) => {
@@ -10342,6 +10396,9 @@ static void *fwp_main_thread(void *arg) {{
     fwp_init_consts();
 {run}
     fwp_caf_finish();
+#ifndef FWP_FIBERS
+    fwp_native_tasks_finish();
+#endif
     fwp_cl_finish();
 #ifdef FWP_FIBERS
     fwp_fiber_tasks_finish();
