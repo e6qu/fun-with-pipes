@@ -1,255 +1,106 @@
-# Session handoff
+# Preparation handoff: collection construction
 
 ## Next action
 
-Next: publish the combined PR #165 repair and its current benchmark evidence,
-then require all nine final-head production jobs and documentation before merge.
-All known failures are repaired and focused native checks pass. CI has no
-cancel-on-push concurrency rule: keep the original production run running and
-continue its complete audit alongside the final-head gates. Waiting for still-running
-original jobs is not required to publish these already-audited fixes. The PR still points to
-`7c2b5638881cea6b476997b333aa61006dba1381`; production `39092728270` has its
-benchmark and regular ARM macOS gates passing, with seven jobs running.
-The macOS job completed all 119 scheduled targets (451 tests, no failures/skips). Documentation `39092728362`
-passes. Use `/private/tmp/fwp-audit-165.py` to retain every completed job/target
-and failure. Already-published step logs are also audited in
-`/private/tmp/fwp165-production-step-audit.json`: each Windows native phase has
-111 passes and the same three map failures now fixed in the six-host diagnostic;
-both macOS sampled-GC steps pass. These partial logs do not replace full-job
-acceptance. Queued or running CI does not prevent independent repair work.
+Next: run the six-host `collection-build` evidence suite on this preparation,
+while finishing active PR #165 from the root workspace. Do not open another PR
+until #165 is accepted. Fix every failed check before delivery.
+The authoritative delivery handoff is
+`/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
+This worktree prepares numeric collection construction and has no active PR. Its base is repaired PR head `836f39b3`;
+rebase onto the accepted #165 tree before opening its delivery PR. Do not carry this
+preparation-only handoff into the delivered branch.
 
-The original map run `39092741368` is fully audited: four hosts pass; both
-Windows hosts have the same six failures (four C stdout newline mismatches and
-two extensionless executable reads). Commit `af834f8c67c6c5b7d543615755feeb0a85e81c87`
-fixes these. Its diagnostic ref `map-portability-repair` and run `39093309107`
-pass all six hosts: 24 summaries, 66 tests, zero failures/skips. Data-only
-inspection verifies all 48 actual executables, failure controls and callback
-outputs. [The report](measurements/map-failures-2026-10-18.json) preserves that
-exact source; do not relabel the original failing runs.
+## Measured problem
 
-Sibling artifact repairs are committed as `99410a018a9e8c39f9d8d1b63abd53be3c672595`,
-on diagnostic ref `artifact-path-repair`. Run `39093555361` is fully audited:
-22 passed, eight failed, no skips across both Windows hosts. All eight traces
-were read. Each host has three missing-OpenSSL failures and one list cancellation
-failure (AMD64 wrong cleanup count; ARM64 access violation). Array/device checks
-and the new GC failure-binary retention regression pass on both native hosts.
-The original audits/logs are `/private/tmp/fwp165-artifact-paths-*`; refresh via
-`/private/tmp/fwp-audit-artifact165.py`.
+`range 0 n | map f | set.from-list` still builds both range and mapped lists.
+The map variant also builds a tuple for each key/value pair. A guarded tiny
+allocation probe at n=8 and n=32 observes 23/71 managed allocation requests for
+sets and 32/104 for maps. Results match raw interpretation; all runs finish with
+zero counted bytes, retains and collections. Reproducer and saved source/C/data:
+`/private/tmp/fwp-collection-baseline.py` and `/private/tmp/fwp-collection-baseline/`.
+Do not rerun it with a differently sourced shared compiler and keep the old ID.
 
-The current repair sets the Windows stack boundary on the affected hand-built task
-fixtures: without it, collection skips main's active stack and can reclaim live
-list inputs. The sibling audit covers State, derivative, matrix and worker
-cancellation probes too. The focused Windows workflow now configures OpenSSL;
-production runs list/State/codec checks after its existing TLS setup. A duplicate
-derivative-scope invocation was removed while preserving its existing later
-coverage. Additional derivative and kernel executable artifact paths are explicit.
-The compiler now gives Windows OpenSSL setup advice rather than Linux package
-instructions. Commit `463c00bfddf8824b88dc953acd2f192c3acb4dcd` is published on
-`cancellation-probe-repair`; run `39094282067` passes both Windows hosts:
-52 tests, 22 summaries, zero failures/skips. All expanded ownership, array/device
-bounds and failure-artifact checks pass. Audit it with `/private/tmp/fwp-audit-cancellation165.py`, preserving separate
-`fwp165-artifact-repair-*` logs and JSON. Its native result establishes this repair; it does not replace full production
-acceptance.
+The maintained `bench/map` builds 500,000 pairs and performs two million lookups.
+The passing source-7c2b5638 Linux AMD64 benchmark records 423.266 ms for fwp,
+382.480 ms for C and 311.772 ms for Rust (six-run medians). All use sorted pairs;
+sorting implementations differ. These whole-process timings include construction
+and lookup, not their separate costs. Current report is in the root workspace at
+`docs/measurements/complete-programs-2026-10-18.json`. No timing improvement can
+be inferred from the tiny allocation counts alone.
 
-Require all nine exact-head production jobs, documentation and complete focused
-map/artifact evidence before authorized squash merge. Use one subject of at most
-80 characters, empty body and no trailers; verify the entire message, sole parent
-and identical tested/merged tree. Fix every encountered issue, including unrelated
-ones; do not defer failures or treat skipped checks as support.
+## Candidate and acceptance
 
-PR #164 is accepted. Its nine production jobs (`39087594221`) and documentation
-(`39087594154`) pass for head `a845e0c5e9a37dad185c99566ddc6ce413b4293b`:
-1,248 summaries, 3,588 passed, zero failed, 72 ignored. All 964 scheduled targets
-completed. Ignored tests do not establish support. The entire single-line message,
-sole parent and identical tested/merged tree were verified. Duplicate production
-`39092256990` was cancelled. [History](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164)
-records accepted behavior, source IDs, measurements and repaired failures.
-Merge record: `/private/tmp/fwp164-merge-record.json`; final target audit:
-`/private/tmp/fwp164-combined-audit.json` (all nine logs retained separately).
+Keep syntax unchanged. First consider compiler-internal construction that writes
+numeric map/set results directly into temporary arrays and sorts them after all
+callbacks finish. Remove the range list when bounds and callback behavior permit;
+use the existing direct worker convention to avoid temporary key/value tuples.
+The first prototype now combines numeric `map` followed by map/set construction.
+It keeps the input list, runs callbacks in order into temporary key/value arrays,
+and reuses typed sorting/build cleanup. Interpreter handling and ownership contracts
+are present. I64 range-list removal is implemented; direct callback result fields
+now pass focused semantic checks. Eligible expression workers return both numeric
+fields directly; dynamic callbacks retain the same protected construction buffers.
+No general platform acceptance or timing improvement is claimed.
 
-## Current batch: C result owners and failed map cleanup
+The focused `collection_construction` test passes locally (26.90 s guarded): raw
+interpretation agrees with enabled/disabled construction fusion at O1/O2 in ARC
+and stressed tracing/reuse. The first compile failed because the interpreter tried
+to move a field out of a Drop type; borrowing that record field fixes it.
+A tiny instrumented rerun passes (6.88 s guarded): set requests fall from 23/71
+to 14/38 at 8/32 inputs, map requests from 32/104 to 23/71. All retain counts,
+final charged bytes and collections remain zero. Set peak charged bytes are
+unchanged; map peaks fall to the same 704/2432 bytes as sets. This removes one
+allocation per element plus one fixed allocation, but leaves range nodes and map
+callback tuples. A later range prototype removes the range list as well: sets
+make 6/6 allocation requests and maps 15/39, with 448/1408 peak charged bytes
+and zero final bytes, retains and collections (7.07 s guarded). Driver:
+`/private/tmp/fwp-collection-range-prototype.py`; saved data:
+`/private/tmp/fwp-collection-range-prototype/`. Expanded semantic checks pass
+(14.10 s), including integer edges, signed zero/NaN, aliases, empty/reversed
+ranges and effects. Failure/cancellation checks remain required.
+The driver `/private/tmp/fwp-collection-prototype.py` records hashes of its
+uncommitted implementation; outputs are in `/private/tmp/fwp-collection-prototype/`.
+Never relabel these results as a committed source or a C/Rust timing comparison.
 
-The root workspace holds branch `library-result-owners` at local repair
-`463c00bf`, three commits ahead of PR #165. The grouped fixture/workflow
-repair passes on both Windows hosts on a separate diagnostic ref. It is based on accepted #164. The old preparation worktree
-`/private/tmp/fwp-library-result-owners` is detached at PR head `7c2b5638` and
-inactive. Its only root handoff edit was backed up before checkout to
-`/private/tmp/fwp165-root-handoff-before-checkout.md`. Rebase tree identity and
-all four one-line commit messages were verified before publication. The PR body
-is `/private/tmp/fwp-library-results-pr.md` and uses ordinary language.
-Original measured library source `d6d36961f532167beec8a116b35462906ba1cc6f`
-remains tagged `evidence/library-results-20261018`; do not relabel that evidence.
+Direct numeric map workers now make 7/7 requests at 8/32 inputs; sets stay
+at 6/6, with zero retains, final bytes and collections (6.88 s guarded).
+Captured strings, dynamic callbacks and string-input aliases pass (15.26 s).
+Caught callback failures at several positions also pass, with zero-byte ARC
+shutdown (10.96 s). The six-builder probe passes 54 allocation failures and 48 callback exits per
+configuration at O1/O2, in ARC and stressed tracing/reuse. Deliberately missing
+cleanup fails with the expected live-allocation diagnostic. Its first attempt
+matched unused platform stubs; instrumentation now selects native definitions
+and accounts for both object and array release paths. Serial formatting, focused
+Clippy and all three collection tests pass together (44.53 s guarded).
+Direct-worker data and implementation hashes are in
+`/private/tmp/fwp-collection-worker-prototype/`; driver is
+`/private/tmp/fwp-collection-worker-prototype.py`. Original and intermediate
+measurements remain separate. Full platform and timing evidence is still required. The new `collection-build`
+suite covers six native hosts and saves actual binaries. Runner-only
+`scripts/measure-collection-build.py` compares enabled/disabled fusion with the
+same compiler and program at 32/4096/65536 inputs, recording eight timings in
+randomized order, allocation counts, compiler commands, code size and assembly.
+It does not compare C/Rust; the production benchmark remains that comparison.
+Windows production and the regular macOS schedule include the new target.
+The first docs preflight caught the missing seven-step table in this preparation
+handoff; the table is restored before publication. The corrected docs/workflow/fixture
+preflight passes (6.89 s), including all eight native-runner checks. One invocation
+used the root directory by mistake and found no prototype script; rerunning in
+this worktree resolved that command error.
 
-The shared root `target/debug/fwp` includes the Windows diagnostic-text change,
-rebuilt by the focused kernel check. Rebuild before testing another compiler revision. Every focused local check uses
-`python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py COMMAND...`.
-Keep its fixed resource limits; full gates/builds/regeneration stay on CI.
+Preserve callback and capture evaluation order, empty/reversed ranges, checked
+arithmetic, first-key/last-value duplicate behavior and floating-key ordering.
+Check aliases, traps at multiple callback positions, captured values, cancellation
+and each allocation failure. Include signed/unsigned widths, floating signed zero
+and NaN, dynamic callbacks and ordinary list sources in the coverage decision.
+Do not silently reinterpret wide numeric fields or claim unsupported patterns.
 
-### C callers own returned strings
-
-C callers receive owned strings and record string fields, releasing each complete,
-unchanged result once with `fwp_release_NAME(result)` before unload. Unique owners
-move; shared fields acquire only the owners C needs. Direct record worker results
-avoid boxing/unpacking when arguments use the ordinary word convention. Raw
-pointers remain outside checked ARC. Input strings still copy, including read-only
-calls; borrowing nonescaping inputs remains work. Headers, C/Rust examples,
-tutorial and reference explain the contract.
-
-All six focused jobs in `39090619574` pass: 36 summaries, 90 passed, no failures
-or skips. The audit is `/private/tmp/fwp-library-results-repaired-audit.json`;
-refresh with `/private/tmp/fwp-audit-library-results-repaired.py`. Checks cover
-static/shared results, aliases, partial conversion/retain failure, rejected
-unproved lifetimes, unload, C/Rust callers and TCP/UDP library unload.
-
-The [report](measurements/library-results-2026-10-18.json) verifies 24 actual ARC
-libraries, 48 execution configurations, 96 zero-byte/zero-collection shutdown
-observations and 24 deliberately failing controls. Internal runtime names exist;
-tracing scan/mark/sweep functions are absent. Identity adds zero retains; two
-fields sharing a string require one. Both measured result forms allocate zero
-record boxes. Fresh count initialization, release work and input copies remain
-costs. This is not a timing comparison with C/Rust.
-
-Initial run `39088723884` at `9cbba70e` exposed the same two failures on both
-Windows hosts (80 passed, four failed). Diagnostic `39089692041` at `e1e8e84b`
-passed 13 tests and retained the last failure. Both are fixed on native hosts:
-
-- Rust callers use `*-pc-windows-gnullvm` and the matching LLVM-MinGW linker;
-  the fwp compiler keeps its MSVC target.
-- `norm` existed inside the DLL but was not exported, so C imported Windows'
-  different function and returned 25 instead of 5. Entries and result releases
-  now use explicit Windows exports. Repaired hosts import `norm` from
-  `libgeom.dll` and return 5. Unload hooks are explicitly exported too; full
-  production will additionally exercise the TLS resource hook.
-
-Artifacts: `/private/tmp/fwp-library-result-evidence/39090619574`; baseline uses
-`39088723884` under the same parent. Diagnostic import/export data is under
-`/private/tmp/fwp-library-windows-diagnostic/39089692041`. Original audits remain
-separate (`fwp-library-results-audit.json`, `fwp-library-windows-diagnostic-audit.json`).
-Collector: `scripts/summarize-library-results.py --artifacts DIR --audit AUDIT
---llvm-bin DIR --record-results direct --output FILE`. LLVM tools locally are in
-`/Library/Developer/CommandLineTools/usr/bin`. Never execute downloaded artifacts.
-
-### Maps and sets release partial results
-
-A tiny checked-ARC reproducer caught 32 failed `map.map-values` calls and leaked
-2,048 bytes (64 per call). The repaired probe has zero bytes after warmup and
-all failures. Baseline C/output are preserved under
-`/private/tmp/fwp-map-failure-probe/`; driver `/private/tmp/fwp-map-failure-probe.py`.
-This was discovered while inspecting the slow `collections_build.fwp` stress
-case. Its 100,000-item native workload was emitted only, never executed locally.
-
-`runtime/fwp_rt_prims.c` now protects partial map/set results, scratch, list
-conversions, pending fields and consumed insert/remove/update inputs with existing
-stack cleanup records. Acquired keys enter the tracked prefix before a later
-value acquisition can fail. `src/cgen.rs` uses the output value type for
-`map.map-values` cleanup. `runtime/fwp_rt_decode.c` clears its owner before calling
-consuming insertion, avoiding two cleanup owners for the same map.
-
-New tests extend existing `map_set_ownership`, with fixtures `map_failures.fwp`
-and `map_failure_probe.c`. They deliberately fail every allocation and retain
-across 22 operations, preserve independent aliases and heap-address-like scalar
-bits, compare changing-type callbacks with the interpreter, and require zero
-counted bytes at ARC shutdown. Missing map-result and scratch owners are separate
-failing controls. Windows production now explicitly includes this target; the
-six-host `map-storage` suite also checks list-map unwind and typed decoder paths.
-`FWP_MAP_FAILURE_ARTIFACTS` retains actual C, binaries, outputs and controls.
-
-The failure probe passes 108 injected failures per ordinary configuration and
-110 under reuse verification, at O1/O2 in ARC and stressed/verified tracing.
-Both missing-cleanup controls fail with the expected live-allocation diagnostic.
-All six native focused jobs pass on repair `af834f8c`; final production acceptance
-remains pending. Collector `scripts/summarize-map-failures.py` verifies source IDs,
-all six jobs, actual binary formats/internal symbols, tracing presence/absence,
-callback interpreter agreement and deliberate failing controls. Artifacts are
-`/private/tmp/fwp-map-storage-evidence/39093309107`; audit is
-`/private/tmp/fwp165-maps-repair-audit.json` (refresh with
-`/private/tmp/fwp-audit-map165-repair.py`). No downloaded code is executed.
-
-## Latest local verification
-
-All checks below used the root guard, serially:
-
-- Windows map repair: all nine tests in the three affected targets pass locally
-  (54.95 s); formatting/Clippy/docs pass (9.70 s).
-- Sibling artifact path checks: GC executable-retention regression passes
-  (3.05 s); formatting/Clippy/workflow checks pass (4.23 s).
-- Hand-built task repair: Cartesian cancellation probe passes (8.02 s).
-  Six other changed probes pass serially (31.01 s), using
-  `env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3
-  /private/tmp/fwp-cancellation-checks.py`. The first attempt failed because the
-  installed headers were not configured; that failure was fixed, not skipped.
-- Cancellation formatting/Clippy/workflow checks pass (3.77 s), then pass after
-  TLS ordering and Windows diagnostic repairs (8.56 s).
-- Documentation validation passes (2.65 s): 52 link sets, 106 immutable
-  preparation pairs, seven roadmap steps and commit messages.
-- Kernel executable-path sanitizer/omission check passes (18.50 s including
-  compiler rebuild).
-- Six-host map artifact download passes (13.99 s). Repository report collector
-  passes (1.37 s), reading 48 executables without executing them.
-
-- Tiny map callback reproducer: baseline fails (1.66 s), repair passes (1.40 s).
-  Compiler rebuild passes (15.52 s); interpreter fixture passes (0.86 s).
-- `cargo test --test map_set_ownership map_ -- --nocapture`: four tests pass;
-  the new scalar injection exposed a test-only source-replacement error. It
-  replaced a one-line scalar wrapper and the following function together.
-  The replacement now checks that exact one-line boundary. Focused rerun passes
-  (5.79 s): 108/110 injected failures, scalar bits and both cleanup controls.
-- Callback interpreter/native agreement and zero-byte ARC shutdown pass at O1/O2
-  in the preceding combined run. Artifact-retention callback rerun passes (5.02 s). Focused Clippy
-  for compiler/map/decoder targets passes (5.84 s). Do not label the earlier
-  failed combined run as passing.
-- The final failure probe also passes when launched with inherited GC stress,
-  verification and reuse enabled (5.91 s). Each ARC execution explicitly selects
-  compatible settings; tracing executions still stress/verify collection.
-- Rust/workflow/docs preflight passes; the fixture formatter initially rejected
-  the new source, which was formatted and then passes (5.92 s combined check).
-- Final serial formatting, Clippy, workflow lint, documentation and fixture
-  checks pass together (7.67 s).
-- Earlier C library checks: ARC/FFI/unload ten passed (53.74 s); artifact-retention
-  C/Rust checks passed (3.69 s). Focused Clippy passed (5.83 s); formatting,
-  workflow lint and docs passed (6.14 s). These precede the map changes.
-- Six-host library evidence collection passes (1.32 s), Windows import/export
-  inspection passes (0.26 s), and serial downloads pass (2.90/11.27/3.50 s).
-
-The initial failure probe also missed the initialized-object allocator's fast
-path, producing inconsistent injection counts. It now instruments both allocator
-entry points exactly once. No runtime failure was hidden by that test correction.
-A prior free-disk guard refusal was resolved by deleting only a redundant,
-verified remote-backed artifact download; no guard limit was changed.
-
-## Current C/Rust timing baseline
-
-The passing production benchmark at `7c2b5638` now replaces the obsolete
-shortest-of-three example in [benchmarks](benchmarks.md#recorded-example-and-overhead).
-[Saved data](measurements/complete-programs-2026-10-18.json) contains all 90 elapsed
-samples, 15 compilation times and 15 binary sizes, with CPU/compiler/flags and
-scope. All three maps use sorted pairs. fwp takes 10.7% longer than C and 35.8%
-longer than Rust in this whole-program run; sorting and construction differ.
-No allocation or peak-memory counters were collected, and pipeline samples are
-noisy. This selects investigation, not a cross-revision regression or speedup claim.
-Original report: `/private/tmp/fwp165-benchmarks/bench.md`; validation driver:
-`/private/tmp/fwp-record-current-bench.py` (0.15 s guarded, no benchmark rerun).
-
-## Independent next preparation
-
-`/private/tmp/fwp-collection-build-storage`, branch `collection-build-storage`,
-starts at PR #165 head `7c2b5638`. It has no compiler changes or second PR.
-Inspect range-to-map/set allocation costs while #165 gates run. The tiny local
-baseline compares 8 and 32 elements only: sets make 23/71 managed allocation
-requests, maps 32/104, with zero retains, zero final bytes and zero collections.
-That is two additional allocations per set input and three per map input over
-this small range. Results agree with raw interpretation; the probe passes in
-7.41 s guarded. No timing or C/Rust parity claim follows from these counts.
-
-Reproducer `/private/tmp/fwp-collection-baseline.py`; source, instrumented C,
-local binaries and JSON are in `/private/tmp/fwp-collection-baseline/`.
-It uses the existing `scripts/measure-iteration.py` allocation instrumenter,
-which counts both allocator entry points without double-counting the initialized
-allocator's slow path. Emitted 100,000-item code still constructs range/mapped
-lists; do not execute that stress workload locally. Existing `bench/map` already
-provides C/Rust sorted-pair comparisons. Establish native before/after timing,
-allocation and machine-code evidence before claiming an optimization. Preserve
-first-key/last-value duplicate semantics, floating ordering and callback traps.
+Compare raw interpretation, ordinary native execution, checked ARC and disabled
+optimization controls. Measure small input slopes, larger representative inputs,
+code size and stack use; compare repeated native C/Rust timings with explicit
+work differences. Inspect actual saved binaries on six native hosts. Keep full
+builds, gates and large measurements on CI; local checks use the root guard.
 
 ## Roadmap status
 
@@ -263,8 +114,7 @@ first-key/last-value duplicate semantics, floating ordering and callback traps.
 | 6 | In progress | Dependable repeated performance comparisons |
 | 7 | In progress | Larger representative applications |
 
-All seven [plan](../PLAN.md) areas remain open. Actual browser engines, retained
-foreign callbacks and other unproved boundaries still need ownership work.
-JIT is excluded, not deferred. Historical preparation anchors are evidence, not
-new tasks. Fix every encountered issue; audit every failed job and completed
-target before repair pushes. Preserve healthy final heads while their gates run.
+
+All seven project work areas remain in progress; see root PLAN.md. The current
+preparation addresses avoidable functional intermediates and map construction
+costs. It does not finish tracing removal or establish C/Rust parity.

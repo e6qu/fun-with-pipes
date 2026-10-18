@@ -1001,6 +1001,11 @@ impl Fuser<'_> {
             {
                 Some("array-map-list")
             }
+            ("map.from-list" | "set.from-list", 1)
+                if std::env::var("FWP_MAP_BUILD").map_or(true, |v| v != "0") =>
+            {
+                Some("collection-map-list")
+            }
             ("simd.sum", 1)
                 if self.funcs[id]
                     .ty
@@ -1058,6 +1063,56 @@ impl Fuser<'_> {
             let direct = self.prim("simd._dot-f64", ty, 2);
             // The multiply's two arguments retain their original order. Only
             // its sole, immediately consumed result array/wrapper disappears.
+            return Some(Expr::Call(direct, inputs.clone()));
+        }
+        if kind == "collection-map-list" {
+            let result = self.funcs[cons_id].ty.params(1).1.clone();
+            let MT::Con(name, fields) = &result else {
+                return None;
+            };
+            let primitive = match (name.as_str(), fields.len()) {
+                ("std::Map", 2) => "map._map-list",
+                ("std::Set", 1) => "set._map-list",
+                _ => return None,
+            };
+            if !fields.iter().all(unboxed_numeric) {
+                return None;
+            }
+            let Expr::Call(map, inputs) = &args[0] else {
+                return None;
+            };
+            if prim_sym(self.funcs, *map) != Some("map") || inputs.len() != 2 {
+                return None;
+            }
+            // Preserve every callback in list order, before sorting. Numeric
+            // fields have no resource finalizers whose timing could move.
+            let parameters = self.funcs[*map].ty.params(2).0;
+            if let Expr::Call(range, bounds) = &inputs[1] {
+                if prim_sym(self.funcs, *range) == Some("range") && bounds.len() == 2 {
+                    let range_parameters = self.funcs[*range].ty.params(2).0;
+                    if range_parameters
+                        .iter()
+                        .all(|ty| **ty == MT::con("std::I64"))
+                    {
+                        let ty = MT::Fun(
+                            Box::new(parameters[0].clone()),
+                            Box::new(fun2(range_parameters[0], range_parameters[1], &result)),
+                        );
+                        let range_primitive = if primitive == "map._map-list" {
+                            "map._map-range"
+                        } else {
+                            "set._map-range"
+                        };
+                        let direct = self.prim(range_primitive, ty, 3);
+                        return Some(Expr::Call(
+                            direct,
+                            vec![inputs[0].clone(), bounds[0].clone(), bounds[1].clone()],
+                        ));
+                    }
+                }
+            }
+            let ty = fun2(parameters[0], parameters[1], &result);
+            let direct = self.prim(primitive, ty, 2);
             return Some(Expr::Call(direct, inputs.clone()));
         }
         if kind == "array-map-list" {

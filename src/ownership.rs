@@ -613,6 +613,20 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(0)),
             &[],
         ),
+        // Compiler-only numeric map/set construction owns its output buffer;
+        // callbacks borrow their inputs and return inline fields.
+        "map._map-range" | "set._map-range" => (
+            &[B, B, B],
+            ResultOwnership::OwnedTree,
+            Some(Callback::Borrowed(0)),
+            &[],
+        ),
+        "map._map-list" | "set._map-list" => (
+            &[B, B],
+            ResultOwnership::OwnedTree,
+            Some(Callback::Borrowed(0)),
+            &[],
+        ),
         "array.fold" => (
             &[B, C, B],
             ResultOwnership::ArrayOperation { consumed: Some(1) },
