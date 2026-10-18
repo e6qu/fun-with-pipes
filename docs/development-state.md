@@ -21,7 +21,11 @@ then audit every final-head job and squash merge only after passing acceptance:
 5. Keep tutorials, parser/compiler docs, benchmark methods and the live plan
    aligned; verify semantic changes against raw interpretation and native code.
 
-The combined implementation is ready for an initial remote build, not acceptance.
+Checkpoint `f440c903` is published on the same PR. Focused run `39124618102`
+failed in C++ compilation: the vendored `hypot` is a hidden friend found through
+argument-dependent lookup, not qualified namespace lookup. All three format
+diagnostics have the same cause; the call is repaired. Rust/tests were not reached.
+The next focused dispatch must check the repair and the remaining implementation.
 The previous documentation-only head `8060075e` has passing docs, benchmarks and
 both ARM macOS jobs; the other six production jobs were still running without a
 reported failure at the last audit. Its production run is `39120276898` and docs

@@ -33,7 +33,7 @@ extern "C" Bits prefix##_log1p(Bits value) { return prefix##_bits(tlfloat::log1p
 extern "C" Bits prefix##_exp2(Bits value) { return prefix##_bits(tlfloat::exp2(std::bit_cast<Float>(value))); } \
 extern "C" Bits prefix##_expm1(Bits value) { return prefix##_bits(tlfloat::expm1(std::bit_cast<Float>(value))); } \
 extern "C" Bits prefix##_atan2(Bits a, Bits b) { return prefix##_bits(tlfloat::atan2(std::bit_cast<Float>(a), std::bit_cast<Float>(b))); } \
-extern "C" Bits prefix##_hypot(Bits a, Bits b) { return prefix##_bits(tlfloat::hypot(std::bit_cast<Float>(a), std::bit_cast<Float>(b))); } \
+extern "C" Bits prefix##_hypot(Bits a, Bits b) { return prefix##_bits(hypot(std::bit_cast<Float>(a), std::bit_cast<Float>(b))); } \
 extern "C" Bits prefix##_pow(Bits a, Bits b) { return prefix##_bits(tlfloat::pow(std::bit_cast<Float>(a), std::bit_cast<Float>(b))); } \
 extern "C" Bits prefix##_rem(Bits a, Bits b) { return prefix##_bits(tlfloat::fmod(std::bit_cast<Float>(a), std::bit_cast<Float>(b))); }
 
