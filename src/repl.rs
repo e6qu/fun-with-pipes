@@ -787,8 +787,8 @@ pub fn run(args: &[String]) -> i32 {
             }
         }
     }
-    if no_history && history.is_some() {
-        eprintln!("choose --no-history or --history, not both");
+    if (no_history && history.is_some()) || (json && (no_history || history.is_some())) {
+        eprintln!("choose one of --json, --no-history or --history PATH");
         return 2;
     }
     let directory = match std::env::current_dir() {

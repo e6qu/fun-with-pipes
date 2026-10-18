@@ -139,10 +139,6 @@ impl Debugger {
         Ok(())
     }
 
-    fn location(&self, id: FuncId) -> Json {
-        self.source_location(self.spans.get(&id).copied())
-    }
-
     fn source_location(&self, span: Option<crate::diag::Span>) -> Json {
         let Some(span) = span else {
             return Json::Null;
@@ -428,7 +424,7 @@ impl Debugger {
                     "{}: {} [{}]",
                     kind,
                     program.funcs[id].name,
-                    self.location(id)
+                    event.get("location").unwrap_or(&Json::Null)
                 )
                 .map_err(|e| Ctl::Trap(e.to_string()))?;
             }
@@ -602,6 +598,14 @@ pub fn run(args: &[String]) -> i32 {
         }
     };
     crate::resource::preserve_frames(&mut program);
+    if program
+        .funcs
+        .iter()
+        .any(|f| matches!(f.body, crate::ir::Body::ForeignC { .. }))
+    {
+        eprintln!("foreign C calls require an ahead-of-time build; the interpreter debugger does not compile shims");
+        return 1;
+    }
     let spans = program
         .binding_names
         .iter()

@@ -24,26 +24,27 @@ then audit every final-head job and squash merge only after passing acceptance:
    Add a scriptable debugger protocol and a Python SDK for execution events,
    breakpoints/stepping, frames/values and trace collection. Share this with the
    terminal debugger/notebook; document instrumentation boundaries precisely.
-   Browser-only versus Jupyter-kernel integration is awaiting an optional reply.
+   The unanswered optional choice was resolved to a local browser notebook.
 6. Keep tutorials, parser/compiler docs, benchmark methods and the live plan
    aligned; verify semantic changes against raw interpretation and native code.
 
-Published checkpoint `c5c13dee` passed the entire focused run `39126475531`:
-formatting, all-target Clippy, 18 selected Rust tests and four real Python SDK
-integration tests. The SDK compared actual emitted C/object instructions on native
-AMD64 and cross ARM64 at O0/O1/O2/O3, with C line mappings. This is disassembly,
-not execution on the cross target. Log audit found notebook subprocess/pipe
-ResourceWarnings despite success; cleanup is repaired locally and a regression
-now checks reaping/closed streams.
+Published checkpoint `ce55d194` passed focused run `39127659928`: formatting,
+all-target Clippy, 18 selected Rust checks, six real Python SDK tests, and Chromium
+notebook execution. Log audit found no failures, ResourceWarnings or leaked-process
+warnings. SDK tests inspect native AMD64/cross ARM64 objects at O0/O1/O2/O3 with
+C line mappings; cross objects are not executed. Actual desktop/mobile screenshots
+were reviewed: readable cells, no horizontal overflow, safe Markdown as text.
 
-Focused checkpoint `ec02ea2b`, run `39127101809`, failed to compile: three C
-backend source-marker cases and one borrowed marker clone were wrong. All four
-are repaired together. The failed build prevented Rust, SDK and browser execution;
-those dependent failures are not passing checks. This repair also isolates JSON
-and debugger control input from runtime/compile-time reads, fixes multiline macro
-entry, and emits target-specific C in SDK comparisons. Compiler warnings remain
-in reports. Guarded `cargo fmt --all` passed (1.41 s); full compilation and real
-browser verification remain next on the focused runner.
+The source-stepping compiler failures from `ec02ea2b` are repaired and verified.
+New local changes extend coverage to tutorial semantics, real POSIX terminal
+completion/history/multiline/interrupts, notebook stop/restart and rejected input,
+and native SDK execution on the six production hosts. A stopped notebook run now
+cannot silently start a replacement interpreter to execute its remaining cells.
+SDK documentation links were corrected; all 59 Markdown link sets and tutorial
+copies pass (`/private/tmp/fwp-doc-audit.py`, guarded, 0.39 s). Guarded formatter
+passed in 1.40 s and Python syntax in 0.22 s. Next: publish this coverage batch,
+run the focused suite and a fresh five-host map measurement, fix every issue,
+then run all final-head production gates. Full acceptance is still pending.
 
 The notebook uses the explicitly installed Python package: `fwp notebook` launches
 it, and `fwp repl --json` supplies the checked session. Runtime stdout/stderr are
@@ -71,7 +72,9 @@ ratios 0.9685/0.9688. ARC combined ratios 0.9034/0.9305. Retains 2,000,001 → 1
 unchanged allocation/live-byte counts, zero final charge. Separate-layout tracing
 borrowing is slower on both Intel samples (1.0630/1.0387): preserve those results.
 The exact original Xeon 8573C is still unmeasured by this compiler; do not claim
-that model's regression is settled. Update the committed raw report and guide.
+that model's regression is settled. Raw reports and all slower cells are now in
+`docs/measurements/cached-map-integrated-2026-10-18.json` and the benchmark guide.
+All five job logs also show 12 focused checks each: 60 passed, zero failed.
 
 [PLAN.md](../PLAN.md) owns the seven remaining work areas;
 [design limits](design-limits.md) states feasible acceptance criteria.

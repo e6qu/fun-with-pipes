@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import tempfile
+import subprocess
 import unittest
 
 from fwp_tools import Debugger, Disassembler, Target
@@ -10,6 +11,23 @@ FWP = os.environ["FWP_TEST_BIN"]
 
 
 class Tools(unittest.TestCase):
+    def test_source_instrumentation_preserves_tutorial_behavior(self):
+        root = Path(__file__).resolve().parents[3]
+        for lesson in ("01-pipes-and-functions", "02-data", "04-effects", "06-tasks-and-channels", "11-comptime-and-macros"):
+            with self.subTest(lesson=lesson):
+                source = root / "docs" / "tutorials" / lesson / "main.fwp"
+                raw = subprocess.run([FWP, "run", "--interp", str(source)],
+                    env={**os.environ, "FWP_NO_OPT": "1"}, capture_output=True, text=True, timeout=30)
+                self.assertEqual(raw.returncode, 0, raw.stderr)
+                self.assertEqual(raw.stdout, source.with_suffix(".out").read_text())
+                events = []
+                with Debugger(source, fwp=FWP) as debugger:
+                    debugger.on("output", events.append)
+                    while not debugger.finished:
+                        debugger.continue_()
+                    self.assertEqual(debugger.last_event["status"], 0)
+                self.assertEqual("".join(e["text"] for e in events), raw.stdout)
+
     def test_debugger_controls_typed_values_and_streams_events(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "program.fwp"

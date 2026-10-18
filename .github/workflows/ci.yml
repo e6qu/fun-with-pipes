@@ -82,6 +82,13 @@ jobs:
           name: macos-regular-tests-${{ matrix.runner }}
           path: ${{ runner.temp }}/macos-regular-tests/
           if-no-files-found: warn
+      - name: Python SDK and native disassembly
+        env:
+          PYTHONPATH: sdk/python
+          FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
+        run: |
+          export FWP_OBJDUMP="$(xcrun --find llvm-objdump)"
+          python3 -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v
       - name: Build standalone compiler
         run: cargo build --release --bin fwp
       - name: Iterator and state allocation and binary evidence
@@ -275,6 +282,11 @@ jobs:
           name: native-test-logs-${{ matrix.runner }}
           path: ${{ runner.temp }}/linux-tests/
           if-no-files-found: ignore
+      - name: Python SDK and native disassembly
+        env:
+          PYTHONPATH: sdk/python
+          FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
+        run: python3 -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v
       - name: Build standalone compiler
         run: cargo build --release --bin fwp
       - name: Iterator and state allocation and binary evidence

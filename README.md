@@ -103,6 +103,9 @@ The test suite compares both execution methods.
 Run `fwp repl` to try expressions without creating a file. The
 [interactive guide](docs/repl.md) explains numbered results, multiline input,
 history, type inspection and how to save definitions.
+For code and explanations in cells, use the [local notebook](docs/notebooks.md).
+The [debugging guide](docs/debugging.md) covers breakpoints, Python instrumentation,
+generated C and machine instructions across architectures and optimization levels.
 
 ## Where to go next
 

@@ -1873,3 +1873,32 @@ measurements. Reproduce with `suite=map-borrow`, `evidence_run=39106005017`, and
 `source_revision=93cb93a0f717b317814ecfc162de0c2f516dbfbd`; the workflow compiles the
 current branch and uses the saved baseline sources, checking identical inputs,
 outputs, counts and binary identities before recording times.
+
+
+The [integrated compiler results](measurements/cached-map-integrated-2026-10-18.json)
+from [run 39125883230](https://github.com/e6qu/fun-with-pipes/actions/runs/39125883230)
+use `085626f3`, including the direct-result repair. The same protocol above yielded
+60 passing focused checks and 80 audited executable/profile records. This adds
+Intel evidence, without substituting a different processor for the original
+Xeon 8573C regression.
+
+Each ratio is new elapsed time divided by the named baseline time; below 1 is
+faster. “Joined” keeps both revisions' map layout joined and isolates borrowing.
+“Combined” compares joined/borrowed against separate/retained, so includes both
+changes. “Separate” isolates borrowing with the older separate layout.
+
+| CPU / sample | Tracing joined | ARC joined | Tracing combined | ARC combined | Tracing separate |
+|---|---:|---:|---:|---:|---:|
+| AMD EPYC 7763 64-Core Processor / 2 | 0.9638 | 0.9686 | 0.8868 | 0.7518 | 1.0647 |
+| AMD EPYC 7763 64-Core Processor / 4 | 0.9571 | 0.9641 | 0.7957 | 0.7361 | 0.8793 |
+| Intel(R) Xeon(R) 6973P-C / 1 | 0.9357 | 0.9376 | 0.9688 | 0.9305 | 1.0387 |
+| Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz / 3 | 0.9170 | 0.8835 | 0.9685 | 0.9034 | 1.0630 |
+| Neoverse-N2 / 1 | 0.9801 | 0.9601 | 0.9562 | 0.9609 | 0.9319 |
+
+The joined tracing medians on Xeon 8370C fell from 381.575 to 349.890 ms,
+and on Xeon 6973P-C from 405.236 to 379.191 ms. Retains again fall from
+2,000,001 to 1, with unchanged allocation requests, peak charged memory and
+zero final charge. Separate-layout tracing borrowing is slower on both Intel
+samples and one EPYC sample. Count savings therefore do not establish a general
+timing win. The original Xeon 8573C slowdown still needs a matching-host result;
+these other Intel models do not close that investigation.

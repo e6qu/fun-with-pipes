@@ -108,8 +108,9 @@ function showError(message) { $('#error-text').textContent = message; $('#error'
 $('#close-error').onclick = () => $('#error').close();
 $('#run-all').onclick = () => run(notebook.cells.filter(c => c.kind === 'code').map(c => c.id));
 $('#stop').onclick = async () => {
-  try { await api('/interrupt', {}); stopped = true; markEdited(); $('#status').textContent = 'Stopped · run a cell to restart'; }
-  catch (error) { showError(error.message); }
+  stopped = true;
+  try { await api('/interrupt', {}); markEdited(); $('#status').textContent = 'Stopped · run a cell to restart'; }
+  catch (error) { stopped = false; showError(error.message); }
 };
 $('#title').oninput = event => { notebook.title = event.target.value; };
 $('#add-code').onclick = () => add('code'); $('#add-markdown').onclick = () => add('markdown');

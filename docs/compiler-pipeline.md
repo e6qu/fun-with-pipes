@@ -215,3 +215,18 @@ Useful entry points: `driver::check_source`, `macros::expand`, `Expander::invoke
 `syntax::quote/from_value`, `mono::comptime` and `mono::lower`. Tests live in
 `tests/parse/`, `tests/run/` and [lesson 11](tutorials/11-comptime-and-macros/README.md).
 For representations, ownership and emitted code, continue with [compiler design](design.md).
+
+
+## Interactive execution and machine-code inspection
+
+The [REPL](repl.md) reuses checked definitions and evaluated values between
+submissions. The [notebook](notebooks.md) uses that session through a JSON
+protocol; neither introduces a JIT. The [debugger](debugging.md) instead lowers
+an unoptimized program with source-expression markers for stepping and value
+events. Those markers are absent from ordinary native builds.
+
+The disassembler reads actual objects or executables using LLVM. Its Python
+comparison API generates C for each explicit target, then invokes the selected
+C compiler at each requested optimization level. C debug line tables associate
+instructions with generated source. They are not a one-to-one mapping after
+optimization, and cross-target inspection is not native execution evidence.

@@ -11,9 +11,9 @@ From the repository root:
 python3 -m pip install ./sdk/python
 ```
 
-Read the [debugger and disassembler guide](../../../docs/debugging.md) for a runnable
+Read the [debugger and disassembler guide](../../docs/debugging.md) for a runnable
 program, stepping commands, event meanings, binary inspection and target/O0–O3
-comparisons. Read the [notebook guide](../../../docs/notebooks.md) for cell semantics,
+comparisons. Read the [notebook guide](../../docs/notebooks.md) for cell semantics,
 launching the browser UI, dependencies and saved files.
 
 ```python
@@ -37,4 +37,4 @@ compare C/object listings on selected native/cross targets. The
 [browser check](browser/check_notebook.py) uses a real Chromium session; its
 separate pinned Playwright dependency is only for testing. Current verified
 revisions and remaining work are recorded in the
-[project handoff](../../../docs/development-state.md).
+[project handoff](../../docs/development-state.md).

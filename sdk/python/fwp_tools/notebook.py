@@ -20,9 +20,11 @@ class Kernel:
         self.lock = threading.Lock()
         self.fingerprint = None
         self.signatures = ""
+        self.generation = 0
 
     def interrupt(self):
         with self.process_lock:
+            self.generation += 1
             process, diagnostics = self.process, self.diagnostics
             self.process = self.diagnostics = None
             self.fingerprint = None
@@ -34,8 +36,10 @@ class Kernel:
                 if stream is not None:
                     stream.close()
 
-    def _request(self, command, source="", *, allow_error=False):
+    def _request(self, command, source="", *, allow_error=False, generation=None):
         with self.process_lock:
+            if generation is not None and generation != self.generation:
+                raise RuntimeError("The notebook run was stopped.")
             if self.process is not None and self.process.poll() is not None:
                 self.interrupt()
             if self.process is None:
@@ -56,10 +60,13 @@ class Kernel:
         if not line:
             raise RuntimeError("The notebook session stopped. Run a cell to start a new session.")
         reply = json.loads(line)
-        diagnostics.seek(0)
-        compile_output = diagnostics.read()
-        diagnostics.seek(0)
-        diagnostics.truncate()
+        with self.process_lock:
+            if process is not self.process:
+                raise RuntimeError("The notebook run was stopped.")
+            diagnostics.seek(0)
+            compile_output = diagnostics.read()
+            diagnostics.seek(0)
+            diagnostics.truncate()
         if compile_output:
             reply["compile_output"] = compile_output
         if "error" in reply and not allow_error:
@@ -68,6 +75,11 @@ class Kernel:
 
     def run(self, document, selected):
         with self.lock:
+            if not isinstance(document, dict):
+                raise ValueError("Notebook document must be an object.")
+            generation = self.generation
+            def request(command, source="", **kwargs):
+                return self._request(command, source, generation=generation, **kwargs)
             cells = document.get("cells")
             if not isinstance(cells, list) or not all(isinstance(c, dict) for c in cells):
                 raise ValueError("Notebook cells must be a list of objects.")
@@ -81,7 +93,7 @@ class Kernel:
             if not isinstance(selected, list) or not all(i in ids for i in selected):
                 raise ValueError("Run only cells that exist in this notebook.")
             code = [c for c in cells if c["kind"] == "code" and c["source"].strip()]
-            analyses = {c["id"]: self._request("analyze", c["source"])["result"] for c in code}
+            analyses = {c["id"]: request("analyze", c["source"])["result"] for c in code}
             owners = {}
             for identity, info in analyses.items():
                 for name in info["defines"]:
@@ -96,9 +108,9 @@ class Kernel:
             fingerprint = [(c["id"], c["source"]) for c in code]
             reset = fingerprint != self.fingerprint
             if reset:
-                self._request("reset")
+                request("reset")
                 definitions = "\n\n".join(c["source"] for c in code if analyses[c["id"]]["kind"] == "definitions")
-                self.signatures = self._request("submit", definitions)["result"]["signatures"] if definitions.strip() else ""
+                self.signatures = request("submit", definitions)["result"]["signatures"] if definitions.strip() else ""
                 self.fingerprint = fingerprint
             results = {}
             for cell in code:
@@ -111,7 +123,7 @@ class Kernel:
                 else:
                     # An expression is run only when explicitly selected. Changing
                     # another cell never silently repeats its external effects.
-                    results[identity] = self._request("submit", cell["source"], allow_error=True)
+                    results[identity] = request("submit", cell["source"], allow_error=True)
             return {"results": results, "dependencies": dependencies, "analysis": analyses, "reset": reset}
 
 
@@ -159,6 +171,8 @@ def serve(fwp, directory, port):
                 if not 0 < length <= 2 * 1024 * 1024:
                     raise ValueError("Request size must be between 1 byte and 2 MiB.")
                 request = json.loads(self.rfile.read(length))
+                if not isinstance(request, dict):
+                    raise ValueError("Notebook request must be an object.")
                 if self.path == "/interrupt":
                     kernel.interrupt()
                     response = {"stopped": True}
