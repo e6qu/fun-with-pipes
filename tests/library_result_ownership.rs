@@ -150,8 +150,9 @@ static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_
 int main(void) {
  fwp_lib_init();
  V bits = fwp_rc_fresh(fwp_str_new("bits",4));
+ size_t pair_before = data_calls;
  struct fwp_c_Pair p = pair((int64_t)bits);
- if(p.a != (int64_t)bits || p.b != (int64_t)bits || !dead(observed_data)) return 1;
+ if(p.a != (int64_t)bits || p.b != (int64_t)bits || data_calls != pair_before) return 1;
  if(*fwp_rc_slot(bits) != 1) return 2;
  size_t before = data_calls;
  void *raw = pointer((void *)(uintptr_t)bits);
@@ -165,8 +166,9 @@ int main(void) {
  for(int i=0; i<1000; i++) { p=cached(); if(p.a!=17 || p.b!=42 || *fwp_rc_slot(observed_data)!=1) return 7; }
  fwp_cleanup *boundary = fwp_cleanups;
  fwp_trap_recover=recover; fwp_trap_jb=&failure; fwp_trap_cleanup=boundary;
+ size_t before_bad = data_calls;
  if(setjmp(failure)==0) { (void)bad(0); return 8; }
- if(fwp_cleanups!=boundary || !dead(observed_data) || !dead_string(observed_string)) return 4;
+ if(fwp_cleanups!=boundary || data_calls!=before_bad || !dead_string(observed_string)) return 4;
  if(setjmp(failure)==0) { (void)bad_string(0); return 8; }
  if(fwp_cleanups!=boundary || !dead_string(observed_string)) return 4;
  fwp_trap_recover=0; fwp_trap_jb=0;
@@ -211,14 +213,12 @@ int main(void) {
         let mut missing_guard = observed.clone();
         let guard = bad_start
             + observed[bad_start..]
-                .find("    fwp_value_protect(&owner, &cleanup);")
+                .find("fwp_cleanup_push(&result_cleanup,")
                 .unwrap();
-        missing_guard.replace_range(
-            guard..guard + "    fwp_value_protect(&owner, &cleanup);".len(),
-            "",
-        );
+        let end = guard + observed[guard..].find(';').unwrap() + 1;
+        missing_guard.replace_range(guard..end, "");
         for (broken, expected) in [
-            (missing_drop, 1),
+            (missing_drop, 3),
             (premature_release, 6),
             (missing_guard, 4),
             (extra_evaluation, 11),

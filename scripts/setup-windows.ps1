@@ -32,3 +32,8 @@ Add-Content $env:GITHUB_PATH $compilerBin
 Add-Content $env:GITHUB_ENV "CC=$compilerBin/$architecture-w64-mingw32-clang.exe"
 & "$compilerBin/$architecture-w64-mingw32-clang.exe" --version
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# Rust callers of generated archives must use the same LLVM-MinGW/UCRT ABI.
+# The fwp compiler itself continues to use its existing MSVC target.
+& rustup target add "$architecture-pc-windows-gnullvm"
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -273,6 +273,17 @@ fn static_library_from_rust() {
         .arg(&d)
         .args(["-l", "static=geom", "-l", "m", "-o"])
         .arg(&exe);
+    if cfg!(windows) {
+        // The generated archive uses LLVM-MinGW/UCRT, not the MSVC CRT.
+        // Match that ABI explicitly for the Rust caller.
+        rustc
+            .args([
+                "--target",
+                &format!("{}-pc-windows-gnullvm", std::env::consts::ARCH),
+            ])
+            .args(["-C", &format!("linker={}", cc())])
+            .args(["-l", "ws2_32", "-l", "shell32"]);
+    }
     stdout(rustc);
     assert_eq!(stdout(Command::new(&exe)), GEOM_OUT.replace("LANG", "rust"));
     let _ = std::fs::remove_dir_all(&d);
@@ -304,7 +315,11 @@ fn shared_library_from_c() {
         .arg("-o")
         .arg(&exe);
     stdout(c);
-    assert_eq!(stdout(Command::new(&exe)), GEOM_OUT.replace("LANG", "c"));
+    // This external C host uses the platform text stream convention.
+    assert_eq!(
+        stdout(Command::new(&exe)).replace("\r\n", "\n"),
+        GEOM_OUT.replace("LANG", "c")
+    );
     let _ = std::fs::remove_dir_all(&d);
 }
 

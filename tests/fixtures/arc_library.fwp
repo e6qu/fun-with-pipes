@@ -17,7 +17,7 @@ export keep-text : String -> String
 keep-text = id
 export twin : String -> Words
 twin = make { count = string.length, left = id, right = id }
-saved : Words
+export saved : Words
 saved = "cache" | string.repeat 2 | twin
 export shared : () -> Words
 shared = const saved

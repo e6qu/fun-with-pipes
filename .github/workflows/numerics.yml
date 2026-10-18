@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+        runner: ${{ fromJSON(inputs.native_runner != 'all' && format('["{0}"]', inputs.native_runner) || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
@@ -62,6 +62,25 @@ jobs:
       - name: Static and shared results, aliases, release controls and unload
         if: ${{ !cancelled() }}
         run: cargo test --no-fail-fast --test arc_library --test library_input_ownership --test library_result_ownership --test library_unload --test ffi -- --nocapture
+      - name: Preserve C and Rust interop diagnostics
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        shell: python
+        run: |
+          import os, pathlib, shutil, subprocess, tempfile
+          output = pathlib.Path('library-result-evidence/interop')
+          output.mkdir(parents=True, exist_ok=True)
+          for path in pathlib.Path(tempfile.gettempdir()).glob('fwp-ffi-test-*'):
+              if path.is_dir():
+                  shutil.copytree(path, output / path.name, dirs_exist_ok=True)
+          compiler = pathlib.Path('target/debug/fwp.exe' if os.name == 'nt' else 'target/debug/fwp')
+          if compiler.exists():
+              subprocess.run([str(compiler), 'build', '--staticlib', '--emit-c', 'tests/c-interop/geom.fwp', '-o', str(output / 'geom.c')], check=True)
+          for path in list(output.rglob('*')):
+              if path.is_file() and (path.suffix in {'.a', '.dll', '.exe'} or path.name in {'geom-c', 'geom-rs'}):
+                  result = subprocess.run(['nm', str(path)], capture_output=True)
+                  path.with_suffix(path.suffix + '.symbols.txt').write_bytes(result.stdout + result.stderr)
+                  result = subprocess.run(['llvm-objdump', '-d', '--demangle', str(path)], capture_output=True)
+                  path.with_suffix(path.suffix + '.disassembly.txt').write_bytes(result.stdout + result.stderr)
       - uses: actions/upload-artifact@v7
         if: always()
         with:
