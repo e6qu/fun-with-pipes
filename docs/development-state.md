@@ -2,265 +2,197 @@
 
 ## Next action
 
-Next: complete final verification of [PR #164](https://github.com/e6qu/fun-with-pipes/pull/164)
-on `server-entry-delivery`. The implementation/evidence commit is `7c750b75`;
-this tracking update changes documentation only. Final head `6b504c2e` has six
-affected functional jobs in run `39080530770` (`server_entry_part=checks`), nine
-production jobs in `39080534474`, and documentation in `39080534747`.
-Their exact source was verified. Five original focused jobs and documentation
-pass. The Intel focused job reached its 25-minute limit in the last REST API
-test. All six logs are audited: 35 summaries, 125 passed, zero failed and 12
-ignored memory entries exercised in separate jobs. Its replacement run
-`39082660292` uses workflow `1682ff88` but explicitly checks out `6b504c2e`;
-the split keeps 25-minute limits. This original cancellation is not acceptance.
+Next: finish auditing every job in production run `39080534474`, validate the
+Asyncify name-preservation repair in `39084443415`, and publish one combined
+repair of [PR #164](https://github.com/e6qu/fun-with-pipes/pull/164). Keep all known
+fixes together. Do not cancel healthy remaining jobs or merge a failing head.
 
-Production `39080534474` has now exposed two missed CSV client goldens in
-`test/rest` on macOS ARM (`117536382972`). All 119 targets completed; the audit
-found 441 passed tests and only `forms_client_round_trip`/`swagger_documents`
-failing. Their CSV lines still expected `12,used`; both now expect `12.0,used`.
-Repository-wide search finds no other copy of that stale CSV expectation.
-The local forms client passes its interpreted golden, then first failed to find
-OpenSSL headers. Setting the installed `/opt/homebrew/opt/openssl@3` path fixes
-that setup; the native build then hit the guard's 1 GiB RSS limit. This is not a
-local pass. Both full interpreter/native client tests move to separate focused
-API steps on all six native hosts, before the final production repair push.
+The root checkout, branch `server-entry-delivery`, remains published at
+`6b504c2e333f9c89725db714aed1440b79eab178`. It has uncommitted handoff updates and
+two repaired client goldens. Prepare the combined change in
+`/private/tmp/fwp-wasm-host-ownership`, branch `wasm-host-ownership`, based on that
+head and published through `2e47a412732700f15b422a8dc88d5fddf5f918e8`. Preserve the
+root edits when transferring the preparation. Its matching golden changes are
+already committed. Other server/HTTP preparation worktrees are inactive.
 
-Audit every remaining production job/target before pushing the repaired PR
-head. Keep all known repairs together. Once the prepared Wasm checks pass,
-include that work in this same PR so one new full production matrix covers both
-batches. The current production head cannot merge with these failures. Preserve
-its original evidence/source IDs; do not relabel old passes as final acceptance.
-The existing `/private/tmp/fwp-merge-164.py` is intentionally tied to `6b504c2e`
-and will refuse its failing production gate; replace its expected head/runs only
-after the full audit and combined publication. Auditors are
-`fwp-audit-final-164.py`, `fwp-audit-focused-164.py`, and `fwp-audit-recheck-164.py`
-in `/private/tmp`. Require all nine production jobs and documentation on the
-new final head, plus the affected functional and actual-Wasm evidence. Use an
-explicit one-line squash subject of at most 80 characters and an empty body;
-verify the entire message, parent and tree, and cancel duplicate production.
+The shared root `target/debug/fwp` now comes from the preparation worktree.
+Rebuild before treating it as evidence for another source. All local checks use
+`python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py COMMAND...`.
+Full builds, suites, native server compiles and large regeneration stay on CI.
 
-## Independent WebAssembly preparation
+Before merging, require nine production jobs and documentation on the new final
+commit, plus affected functional and actual-Wasm evidence. The old helper
+`/private/tmp/fwp-merge-164.py` is tied to failing `6b504c2e`; rewrite its expected
+head/run checks after publication. Use one squash subject of at most 80
+characters and an empty body. Verify the entire message, sole parent and tested
+versus merged tree, then cancel duplicate production. Standing authorization
+covers publication, fixes and merge after acceptance; no repeated permission.
 
-Work in `/private/tmp/fwp-wasm-host-ownership`, branch `wasm-host-ownership`,
-based on the unchanged PR #164 head `6b504c2e`. Keep one delivery PR; transfer
-this preparation only after #164 passes and merges. The preparation extends
-checked ownership to WASI tasks and browser-loader invocations. Neither extension
-is accepted support yet. The shared root compiler binary now comes from this
-worktree; rebuild root source before using it as PR #164 evidence.
+## Current CI and repairs
 
-The command-end cleanup frees finished tasks' pooled linear-memory stacks and
-the root scheduler record after children finish and language values release.
-The shared native/Wasm fixture runs 16 rounds of captured strings, repeated
-awaits, results, scoped errors, queued values, cancelled receivers/senders, state
-and task maps. A golden preserves the original output. Ordinary and instrumented
-O1/O2 modules run through JSPI and Asyncify, using both WASI and the generated
-browser loader. Each mode must finish its checks even if another mode fails;
-artifacts retain failed sources, binaries and output. Controls deliberately omit
-scheduler cleanup and the completed task's state snapshot; both must leak.
-Separate loader checks cover retained output strings, sequential/concurrent
-runs, reentry from a sink and a throwing sink followed by another invocation.
-They cover exact JSON numbers and output from a child whose parent is suspended;
-the child-output golden agrees with interpretation (0.60 s).
-These run under Node, not an actual browser; do not claim browser-engine coverage.
+| Run / source | Result and required action |
+|---|---|
+| Production `39080534474` / `6b504c2e` | Benchmarks and macOS ARM GC pass. Regular macOS ARM completes all 119 targets, with only two failed client goldens. Six other jobs remain running; audit all before the combined repair push. |
+| Documentation `39080534747` / `6b504c2e` | Passes for the original head only. |
+| Original focused `39080530770` / `6b504c2e` | Five hosts pass. Intel reaches 25 minutes in the last API test; all logs audited: 125 passed, zero failed, 12 ignored memory entries exercised separately. |
+| Split Intel `39082660292` / workflow `1682ff88`, checked-out source `6b504c2e` | All 21 tests pass. Artifact upload fails with GitHub DNS `ENOTFOUND`; attempt 2 reruns the failed checks job. API passes. Do not accept the failed attempt or relabel its source. |
+| Repaired clients `39083100171` / `9b0ca314` | All six native hosts pass ARC API, OpenAPI client and Swagger client checks. All logs audited: 18 passed, no failures or skips; both interpreter and native client halves execute. |
+| Original Wasm execution `39082338822` / `0a3b9fdf` | Both Linux hosts pass six Rust tests and the loader exception check. Allocation/output evidence passes; Asyncify strips internal names, so its name search does not independently establish absence of tracing. |
+| Wasm name repair `39084443415` / `2e47a412` | Queued on ARM job `117547970774` and AMD job `117547970989`. Audit both; download and inspect replacement modules before publishing the draft report. |
 
-Run `39081410812` at published `9db2faa7` exposed a real leak on its completed
-ARM-hosted Wasm job `117538925131`: 16 extra allocations and 2,048 bytes, all
-128-byte state buffers. The WebAssembly completion path entered the next task
-without saving the completed task's latest state pointer. The prepared repair
-calls `fwp_leave(t)` before switching globals, matching the native path. Its
-omitted-snapshot control must reproduce this leak. All four completed test
-summaries were audited: one ownership failure; native task controls, existing
-Wasm scheduling and library-flag rejection pass. The remaining AMD-hosted job was cancelled while queued before the repair push;
-no completed failed result was omitted. Log: `/private/tmp/fwp-wasm-prep-117538925131.log`.
+The production failures are `forms_client_round_trip` and `swagger_documents`:
+`tests/rest/formsroundtrip.out` and `swaggerroundtrip.out` still expected
+`12,used`; corrected exact-number JSON preserves the F64 spelling `12.0,used`.
+Both goldens are repaired. Repository-wide search found no other stale copy.
+The first local client run passed its interpreted golden but lacked OpenSSL
+headers. Setting the installed `/opt/homebrew/opt/openssl@3` fixed setup, then
+the native compilation reached the guard's 1 GiB RSS limit. That was not a pass;
+full client verification moved to the six native hosts above.
 
-The first preparation source `1f34278a` generated an invalid effectful value
-outside `main`. Local checking caught it; both jobs in `39081140140` were
-cancelled while queued. The corrected, explicitly typed piped `round` function
-matches the original output byte for byte; 16 rounds reproduce it exactly.
-Guarded native ownership controls pass again (18.29 s), and checked WASI C
-emission passes (0.84 s). Browser/WASI entry acceptance and unchanged cycle
-rejection pass locally (19.60 s including rebuild). Focused Clippy passes
-(6.40 s, then 0.49 s after the complete test changes). Both host scripts pass
-Node syntax checks, workflow lint passes (1.44 s), Rust/fwp formatting passes
-and the roadmap audit passes (2.66 s). Actual Wasm and loader execution of the
-repair remain required on CI.
+The focused workflow now separates entry checks and API tests, retaining the
+25-minute job limit. A source-pinned recheck records both its workflow revision
+and actual checked-out source. Attempt-one Intel upload failure remains recorded;
+its retry is job `117547135883`, with logs to audit separately.
 
-The guard refused a later check below 64 GiB free disk; no limit was raised.
-The redundant downloaded `/private/tmp/fwp-http-evidence/39052834580` copy was
-removed after confirming all six unexpired GitHub artifacts and the committed
-HTTP-client report. Free space returned to 64.81 GiB. Preserve the current
-server-entry artifacts; large builds and actual Wasm runs remain on CI.
-A further browser-loader repair preserves host output exceptions, including a
-`RangeError`, instead of retrying the sink and misreporting a Wasm stack overflow.
-The regression executes tiny real Wasm modules locally, with no C toolchain or
-mock engine. It checks exception identity and one sink call, and a real recursive
-module still reports stack overflow. The initial always-throwing callback hid
-the old loader's retry; changing it to throw once makes the prior `92b03d2e`
-loader fail and the repair pass (0.14/0.15 s). Tests cover ordinary errors,
-RangeError, strings and undefined. This is a host-boundary repair, not a change
-to the language's trap semantics.
+Audit tools and results in `/private/tmp`:
 
-Run `39082338822` tests the complete Wasm repair at `0a3b9fdf`. AMD-hosted job
-`117541710072` passes: all six Rust test summaries and the loader check were
-audited, with no failures or skips. Its log is
-`/private/tmp/fwp-wasm-repaired-117541710072.log`. The ARM-hosted job is running. Later workflow-only splitting does not change its
-compiler, runtime or tests. Dispatch `suite=wasm-hosts` for actual-Wasm jobs.
+- `fwp-audit-final-164.py` → `fwp164-final-audit.json` and all production job logs.
+- `fwp-audit-focused-164.py` → `fwp164-focused-audit.json` for the original six hosts.
+- `fwp-audit-clients-164.py` → `fwp164-clients-audit.json` for the repaired clients.
+- `fwp-audit-recheck-164.py` and `fwp164-recheck-audit.json` preserve attempt one;
+  adapt the auditor for attempt two without overwriting the first audit.
+- `fwp-wasm-repaired-audit.json` and `fwp-wasm-repaired-JOB.log` preserve the
+  original passing execution run. Audit the new binary-name run separately.
+
+## Combined implementation
+
+Generated REST APIs and MCP tools now use ordinary checked ARC compilation.
+ARC means automatic reference counting; ownership checks reject unproved cycles
+and lifetimes instead of silently using tracing. Tests cover results, aliases,
+caught errors, malformed input, disconnects and normal shutdown, including
+standard-input MCP and HTTP/TLS services.
+
+Validation exposed a precision bug: an MCP I64 value of `9007199254740993`
+returned as `9007199254740992.0`. `Json.Num` now retains number text until explicit
+conversion to the declared type. Requests, results, error payloads, numeric IDs,
+OpenAPI integer bounds and F128 values preserve their precision. Invalid manually
+constructed numbers trap; encoding beyond the parser's 512-level limit reports
+an error instead of silently becoming Null. YAML normalizes decimal spelling
+without rounding and explicitly rejects non-finite values and oversized hex/octal
+integers. Source comments, generated reference, tutorials and tests change together.
+
+The Wasm extension admits checked tasks and browser-loader invocations. Completed
+fibers save their latest State storage pointer before another task replaces the
+runtime globals. Command cleanup releases scheduler records and pooled stacks.
+Each loader invocation owns an instance and passes copied strings to callbacks.
+Host callback exceptions, including RangeError and non-error values, propagate
+unchanged without retrying a failed output callback. Actual engine stack overflow
+still reports the language trap.
+
+Two further audit repairs are included:
+
+- Integer-only executable cache keys omitted compiler version/target and header
+  search environment. Changing `C_INCLUDE_PATH` returned the old answer `41`
+  instead of `42`. Every executable now includes its C compiler identity;
+  exact-float programs additionally include C++ identity. The regression verifies
+  that integer programs need no C++ compiler and that a third identical run
+  reuses the second cache entry. Windows production now explicitly runs it;
+  Linux and macOS include the whole AOT test target.
+- Asyncify stripped internal function names. Seeing the exported `_start` did
+  not make an empty internal tracing-name search meaningful. The collector now
+  rejects nameless modules; the old artifact fails that stricter check. Asyncify
+  preserves names, and runtime tests require internal `fwp_` names before the
+  collector search. Rerun artifacts record actual toolchain versions. Browser
+  tutorial guidance and the playground's unsupported “a fifth larger and slower”
+  claim are corrected; measurements must identify their program and host.
+
+## Measurements and focused verification
+
+Native server evidence is retained at `8dfc014d843903e7e517e4b117cb1856732d07e9`,
+tag `evidence/server-entries-20261018`, run `39078070919`. All 24 jobs were audited:
+18 memory jobs pass; the six functional jobs exposed two stale inline CSV
+assertions subsequently fixed. Later full production found the two separate
+client goldens repaired above. No failed target was hidden by accepting only an
+earlier successful check.
+
+The [server report](measurements/server-entries-2026-10-18.json) records all six
+native hosts: 18 ARC binaries exclude tracing, 24 tracing controls retain it.
+Standard-input freeing modes end with zero counted bytes. HTTP storage remains
+flat through 15,360 requests per case; maximum settled resident-memory growth is
+2 MiB. Remaining per-request costs are substantial: approximately 237 allocations
+and 458 count increments for standard-input MCP, 874/2,426 for REST and 797/1,970
+for HTTP MCP. These compare same-revision fwp memory modes, not C/Rust speed.
+[The benchmark guide](benchmarks.md#generated-rest-and-mcp-server-memory) explains
+inputs, scopes and exclusions. Later Wasm runtime and cache changes do not make
+the combined source identical to the measured source; do not relabel old evidence.
+
+Artifacts: `/private/tmp/fwp-server-entry-evidence/39078070919` (1.54 GiB).
+Guarded download/collection passed in 91.25/2.92 seconds. Collector:
+`scripts/summarize-server-entries.py --artifacts DIR --llvm-bin DIR --output FILE`.
+Downloaded executables and modules are inspected as data, never executed locally.
+
+Original Wasm source `0a3b9fdf4aaffdf7d51f42aba8752720d9ae819f` is tagged
+`evidence/wasm-host-owners-20261018`. Both actual-Wasm jobs pass 16 repeated rounds
+of captured strings, repeated awaits, results, scoped errors, queued values,
+cancelled senders/receivers, State and task maps. Ordinary and measured O1/O2
+modules run through WASI and the browser loader, each with JSPI and Asyncify.
+JSPI lets the host suspend the module's stack; Asyncify rewrites code to save it.
+Outputs match raw interpretation. Sequential, concurrent, reentrant and throwing
+callbacks are checked separately, including output from a suspended child.
+These are Node-hosted checks, not evidence from actual browser engines.
+
+Missing State cleanup reproduces a leak of 16 buffers / 2,048 bytes. Omitting
+scheduler cleanup leaves 64 pooled 1 MiB task stacks plus its root record:
+67,109,088 extra requested bytes. Both controls fail as intended. Ordinary
+modules start with about 32 MiB linear memory; Asyncify adds a 16 MiB plus one
+page workspace. Returning allocations permits reuse, but does not shrink memory
+capacity. Counts exclude the JavaScript engine's own storage and resident RAM.
+
+The uncommitted Wasm report currently describes the original 72 modules. Replace
+it after `39084443415` passes; the stricter collector intentionally rejects the
+old stripped modules. Original artifacts are
+`/private/tmp/fwp-wasm-host-evidence/39082338822`. Use
+`scripts/summarize-wasm-hosts.py --artifacts DIR --audit AUDIT --output FILE`.
+Record the new exact source and a new immutable tag; preserve the old source ID.
+
+Recent guarded local checks:
+
+- Exact-number JSON/CSV fixtures agree in raw interpretation and native ARC O2
+  and stressed tracing O1/O2: all 20 executions pass (40.73 s including rebuild).
+  JSON/YAML unit tests, OpenAPI limits, tutorial output checks and generated
+  standard-library documentation also pass.
+- Native task ownership controls pass (18.29 s). Browser/WASI entry acceptance
+  and cycle rejection pass (19.60 s). The child-output fixture matches its golden.
+- Tiny locally built Wasm modules reproduce the old output-callback retry and
+  verify the loader repair and actual stack-overflow reporting (0.14/0.15 s).
+- `cargo test --test aot integer_cache_tracks_header_search_paths -- --exact`
+  reproduces stale output (2.49 s), then passes after repair (19.28 s).
+- `cargo test --test aot programs_are_interpreted_without_a_c_compiler -- --exact`
+  passes (1.46 s). Existing missing-compiler behavior remains intact.
+- `cargo clippy --lib --bin fwp --test aot --test wasm_arc -- -D warnings`
+  passes after the final code changes (6.05 s). Rust formatting passes (1.27 s).
+  Numerics workflow lint passes (1.38 s); Windows workflow lint passes (0.15 s).
+  Tutorial/source consistency passes (16.47 s including rebuild); the roadmap,
+  links and commit-message audit passes (2.54 s).
+
+A previous guard refusal below 64 GiB was resolved by removing only the redundant
+HTTP-client artifact download after verifying its six unexpired GitHub artifacts
+and committed report. Current server evidence remains. No limits were raised.
 
 ## Accepted foundation
 
 [PR #163](https://github.com/e6qu/fun-with-pipes/pull/163) is accepted at
-`0a468c9d0ee3283bd5de6a7cbc05126379ed3ee5`. All nine production jobs and docs
-passed on `c998ce68`; every completed target and test summary was audited.
-The entire squash message, sole parent and identical tested/merged tree were
-verified. Duplicate production `39079288609` is confirmed cancelled.
+`0a468c9d0ee3283bd5de6a7cbc05126379ed3ee5`. All nine production jobs and docs passed
+on `c998ce68`; every target was audited. Squash message, sole parent and tested
+versus merged tree were verified. Duplicate production `39079288609` was cancelled.
 [History](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163)
-records its changes, measurements and exact acceptance evidence.
-
-## Current delivery
-
-Work in the root checkout on `server-entry-delivery`. Its three transferred
-preparation commits are `5f83174b`, `6f522b00` and `ae79bc6b`, based on the accepted
-#163 squash. Before the documentation/CSV expectation changes, its tree
-was verified identical to measured preparation `8dfc014d843903e7e517e4b117cb1856732d07e9`,
-retained by published tag `evidence/server-entries-20261018`.
-The `/private/tmp/fwp-server-entries` worktree and older HTTP worktrees are now
-inactive; the root contains the current handoff and published repair.
-
-Generated REST APIs and MCP tools now use ordinary checked ARC compilation.
-ARC means automatic reference counting; these builds omit tracing collection
-while retaining the ownership and cycle checks. Browser and asynchronous WASI
-boundaries remain excluded. No new language syntax or compatibility adapter is
-introduced. CLI help now correctly distinguishes REST TLS options from MCP's
-plain HTTP and standard-input transports.
-
-Validation found a precision bug: an MCP call sent I64 `9007199254740993` and
-received `9007199254740992.0`. Untyped JSON converted every number to F64.
-`Json.Num` now stores number text until an explicit numeric conversion. Incoming
-arguments, results, caught-error payloads, numeric request IDs and OpenAPI integer
-bounds preserve their precision. Rust typed and untyped parsing share one exact
-representation. Native parsing gives each stored number string an ordinary owner.
-
-Invalid manually constructed number text traps. `json.encode-value` also reports
-the existing 512-level parser limit instead of silently returning Null. YAML
-normalizes decimal spelling without rounding, and rejects non-finite numbers or
-hexadecimal/octal integers beyond U128 with explicit errors. Source comments,
-generated library docs, examples and tutorial outputs are updated together.
-
-### Runner validation and measurements
-
-[Run 39078070919](https://github.com/e6qu/fun-with-pipes/actions/runs/39078070919)
-finished on exact source `8dfc014d`. All 24 logs were audited before the next
-repair push: 54 test summaries, 132 passed tests and six failures. All 18 memory
-jobs pass. Every functional job fails only on the same stale CSV expectation;
-all its other ownership, numeric and schema checks pass. The two ignored memory
-entries in each functional job execute in the separate memory jobs. No failure
-is unexamined. Audit: `/private/tmp/fwp-entry-repaired-audit.json`; auditor:
-`/private/tmp/fwp-audit-entry-repaired.py`.
-There are four jobs per native host, each retaining the existing 25-minute limit:
-
-- Functional results, aliases, caught errors, malformed inputs, ownership
-  rejection, exact numeric payloads, disconnects and normal shutdown.
-- Repeated MCP standard-input requests, including a deliberately non-freeing
-  control that must grow while both freeing modes remain bounded.
-- REST HTTP/TLS memory and response checks.
-- MCP HTTP memory and response checks.
-
-HTTP measurements compare ordinary and counted native responses with a raw
-interpreter. They use 1/16/128 cycles with three fresh samples, then persistent
-servers through 15,360 requests per case. After warm-up, sampled resident memory
-must stay less than 8 MiB higher. Counts include server startup and background
-work; transport/TLS/allocator storage and client memory are excluded from managed
-counters. These are same-revision tracing-versus-ARC measurements, with no timing
-or C/Rust parity claim.
-
-The earlier [24-job baseline](https://github.com/e6qu/fun-with-pipes/actions/runs/39075061445)
-at `d2222bf8` passed. All logs were audited before the repair push: 36 successful
-test summaries, 66 executing tests, no failures. The 12 ignored entries in
-functional jobs execute in the separate memory jobs. Audit:
-`/private/tmp/fwp-entry-baseline-audit.json`; logs:
-`/private/tmp/fwp-entry-baseline-JOB.log`. This older lossy representation is not
-acceptance for the repair. Its counts are not an equivalent-work comparison
-with the updated numeric workload.
-
-The [completed report](measurements/server-entries-2026-10-18.json) validates
-9 standard-input rows, 54 HTTP rows, 30 resident-memory samples and 7 executable
-files per host. All 18 ARC files exclude tracing; all 24 tracing controls retain
-it. Each file has its artifact path, architecture, section sizes and fingerprint.
-Downloaded executables were read as data, never run locally. Standard-input
-freeing modes end at zero counted bytes; HTTP final storage stays flat and the
-largest settled RSS increase is 2 MiB. The [guide](benchmarks.md#generated-rest-and-mcp-server-memory)
-explains inputs, measurement scope and remaining allocation/count costs.
-
-Artifacts: `/private/tmp/fwp-server-entry-evidence/39078070919` (1.54 GiB).
-Guarded download passed in 91.25 s; guarded collection/binary inspection passed
-in 2.92 s. LLVM tools are in
-`/Users/zardoz/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin`.
-Use `scripts/summarize-server-entries.py --artifacts DIR --llvm-bin DIR --output FILE`.
-Compiler/runtime/library and existing measurement behavior still match `8dfc014d`.
-Only the test file's added codec regression, workflow part selector and collector's
-explicit artifact-path labels differ among the recorded source files. Preserve
-the original measured source instead of relabeling this evidence as a new run.
-
-### Completed local verification
-
-All local checks use the root `scripts/local-guard.py`, serially. The current
-`target/debug/fwp` was rebuilt from the root delivery branch.
-
-- Focused Rust lint passes (6.20 s); Rust/fwp formatting, workflow lint and
-  the roadmap/link audit pass. The generated library reference is current. The tutorial source-consistency
-  check also passes (1.52 s).
-- Two JSON unit tests and all nine YAML tests pass. Five OpenAPI checks pass,
-  including existing goldens and exact integer bounds (25.81 s including rebuild).
-  Document-import errors and the language-server integration test also pass.
-- Raw interpretation independently verifies signed/unsigned 64/128-bit values,
-  F128 at 2^53+1 and 1+2^-100, numeric IDs and MCP success/error payloads against
-  Python integer/Decimal expectations (4.40 s). Eight JSON library tests pass.
-- Native ARC O1/O2 and stressed tracing O1/O2 pass the exact-number checks;
-  the strengthened near-one case passes ARC O2 and tracing O1/O2 (10.12 s).
-  Both invalid encoders preserve traps and output order even when their results
-  are discarded: raw interpretation, ARC O2 and tracing O1/O2 pass (8.87 s).
-  The depth-limit trap also agrees between interpreter and native ARC O2.
-- All six documented HTTP tutorial responses match raw interpretation (1.33 s).
-  The MCP tutorial was checked with its actual jq command and now shows `212.0`.
-
-The first large native MCP build hit the guard's 1 GiB aggregate RSS limit and
-moved to CI; it was not counted as a pass and no limit was raised. An outdated
-YAML expectation was corrected to the explicit numeric rules above. A temporary
-trap-order harness initially enabled tracing-only reuse verification in ARC;
-its setting was corrected before the passing rerun. No unresolved local failure
-is being deferred. Large native server builds and full suites remain on runners.
-
-Temporary independent probes are `/private/tmp/fwp-json-exact-check.py`,
-`/private/tmp/fwp-check-json-native.py`, `/private/tmp/fwp-json-trap-order.py`
-and `/private/tmp/fwp-json-tutorial-check.py`. Run them through the root guard.
-The exact typed-JSON golden was changed only for the new quoted Num payload.
-
-### CSV expectation repair
-
-The repaired JSON representation retains F64 spelling in REST CSV responses.
-All six native hosts returned `12.0` where the test still expected
-`12`. Both affected assertions, including the later curl assertion, are corrected.
-The complete interpreted forms/content-negotiation suite passes (4.79 s), and a
-new CSV fixture verifies I64 `9007199254740993`, F64 `12.0` and F128 near one in
-raw interpretation and native ARC/stressed tracing O2 (11.06 s). Its first draft
-had an unindented continuation pipe; it was corrected before verification.
-Formatting then passes. The persistent regression test now runs all five JSON/CSV
-precision and trap fixtures in raw interpretation and native ARC O2/tracing O1/O2:
-all 20 executions pass under the guard (40.73 s including rebuild).
-The docs explain the retained spelling. Full native
-server verification stays on runners. With the complete audit finished, explicitly select
-`server_entry_part=checks` for functional coverage on all six hosts. The split
-workflow runs two functional jobs per host. Compiler,
-runtime, library and existing memory-test behavior are unchanged by this repair;
-retain passing memory evidence at its original source, rather than regenerating
-it as a new measurement. Final production acceptance remains required. Logs are
-`/private/tmp/fwp-entry-repaired-JOB.log`.
+records accepted HTTP owners and fixed function storage.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
-| 1 | In progress | Server-entry acceptance, remaining host owners and tracing removal |
+| 1 | In progress | Combined server/Wasm acceptance, remaining host owners and tracing removal |
 | 2 | In progress | Remove functional intermediates and unnecessary counts |
 | 3 | In progress | C/Rust gaps, register/cache use and code costs |
 | 4 | In progress | Differentiation precision, speed and memory scaling |
@@ -268,16 +200,8 @@ it as a new measurement. Final production acceptance remains required. Logs are
 | 6 | In progress | Dependable repeated performance comparisons |
 | 7 | In progress | Larger representative applications |
 
-All seven [plan](../PLAN.md) areas remain open. Browser, asynchronous WASI,
-retained host callbacks and other unproved boundaries remain ownership work.
-JIT is excluded, not deferred. Historical preparation entries are evidence,
-not additional tasks. Follow [AGENTS.md](../AGENTS.md) for delivery and resource
-limits, and update this single handoff after meaningful progress.
-
-Latest guarded lint of the changed Rust tests passes (6.29 s); workflow lint
-passes (1.48 s). Documentation checks pass after removing obsolete pending-work
-claims and recording #163 acceptance. All commit messages remain one line, no
-more than 80 characters, without bodies, trailers or attribution. PR #164 was
-created briefly as a draft to record its link before starting the full gate;
-draft skips are not acceptance. The ready-for-review event starts the full gate
-on the final published head.
+All seven [plan](../PLAN.md) areas remain open. Actual browser engines, retained
+foreign callbacks and other unproved boundaries still need ownership work.
+JIT is excluded, not deferred. Historical preparation anchors are evidence,
+not additional tasks. Follow [AGENTS.md](../AGENTS.md) and update this handoff
+with actual checks, unresolved failures and one next concrete action.

@@ -8,9 +8,10 @@
 # Needs the Rust target: rustup target add wasm32-wasip1
 #
 # With --asyncify, fwp.wasm also runs tasks in browsers without JavaScript
-# Promise Integration (Firefox, Safari): binaryen's wasm-opt (`npm install
+# Promise Integration: binaryen's wasm-opt (`npm install
 # -g binaryen`, or FWP_WASM_OPT) applies Asyncify, which web/fibers.js
-# recognizes. The module is then about a fifth larger and slower.
+# recognizes. Code size, memory and execution overhead depend on the program;
+# this option does not establish coverage in every browser engine.
 set -eu
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
@@ -18,7 +19,7 @@ cd "$root"
 cargo build --release --target wasm32-wasip1
 cp target/wasm32-wasip1/release/fwp.wasm web/fwp.wasm
 if [ "${1:-}" = "--asyncify" ]; then
-    "${FWP_WASM_OPT:-wasm-opt}" web/fwp.wasm --asyncify --pass-arg=asyncify-imports@fwp.none -O2 -o web/fwp.wasm
+    "${FWP_WASM_OPT:-wasm-opt}" web/fwp.wasm --asyncify --debuginfo --pass-arg=asyncify-imports@fwp.none -O2 -o web/fwp.wasm
 fi
 
 # Examples: the tutorials that fwp.wasm can run, then two programs from examples/. Each is
@@ -32,7 +33,7 @@ for dir in docs/tutorials/*/; do
     name=$(basename "$dir")
     [ -f "$dir/main.fwp" ] || continue
     # what the WebAssembly build of fwp cannot run: sockets, processes, C
-    # (tasks run where the browser has JavaScript Promise Integration)
+    # (tasks need JSPI or a compatible Asyncify build)
     if grep -qE '(tcp|udp|http|grpc|tls|dns|process)\.|foreign "C"' "$dir/main.fwp"; then
         continue
     fi
