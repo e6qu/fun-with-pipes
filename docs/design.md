@@ -545,7 +545,10 @@ Checked ARC supports native main and function executables,
 including CLI commands, and C libraries with copied inputs. A prepared C-result
 extension transfers owned strings and record string fields to the host, with
 explicit per-export release functions. It avoids an extra heap handle; unique
-owners move and shared fields retain only the necessary owners. Raw pointers
+owners move and shared fields retain only the necessary owners. When the existing
+worker already returns record fields and takes ordinary word arguments, the C
+export transfers those fields directly instead of allocating and unpacking a
+record box. Typed cleanup protects the fields if conversion fails. Raw pointers
 remain excluded. Verification is tracked in the handoff. Every library export is checked as a separate entry. Synchronous WASI
 main/function/CLI entries use the same ownership checks and free counted storage
 through their existing external count table. Checked gRPC clients and service

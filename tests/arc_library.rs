@@ -54,8 +54,11 @@ fn copied_library_values_match_interpreter_and_reclaim_storage() {
     assert!(source.contains("#define FWP_ARC_ONLY 1"));
     let needle = "    fwp_tape_finish();\n    fwp_gc_finish();";
     assert_eq!(source.matches(needle).count(), 1);
+    let box_entry = "static V fwp_data(uint32_t tag, uint32_t n, const V *f) {";
+    assert_eq!(source.matches(box_entry).count(), 1);
+    let source = source.replace(box_entry, &format!("{box_entry} fwp_library_test_boxes++;"));
     let source = format!(
-        "static unsigned long long fwp_library_test_retains, fwp_library_fail_value;\nstatic unsigned fwp_library_fail_seen;\nstatic void fwp_test_finished(void);\n{}\n{}",
+        "static unsigned long long fwp_library_test_retains, fwp_library_fail_value, fwp_library_test_boxes;\nstatic unsigned fwp_library_fail_seen;\nstatic void fwp_test_finished(void);\n{}\n{}",
         source.replace(
             needle,
             "    fwp_tape_finish();\n    fwp_test_finished();\n    fwp_gc_finish();"
@@ -189,10 +192,15 @@ fn copied_library_values_match_interpreter_and_reclaim_storage() {
             186,
         ),
         (
+            "extra-box",
+            source.replace("/* move C result fields */", "V fwp_test_extra = fwp_rc_fresh(fwp_record(1, (V[]){0})); fwp_rc_free_obj(fwp_test_extra);"),
+            205,
+        ),
+        (
             "extra-counts",
             source.replace(
-                "if (fwp_rc_last(result)) { /* move C result strings */",
-                "if (0) { /* force redundant retains */",
+                "/* move C result fields */",
+                "fwp_rc_dup(result.f1); fwp_rc_drop(result.f1); /* force redundant retains */",
             ),
             202,
         ),

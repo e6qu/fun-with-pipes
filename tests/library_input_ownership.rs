@@ -203,7 +203,7 @@ int main(void){
  for(int i=0;i<ns;i++)if(!dead_string(strings[i]))return 4;
  if(*fwp_rc_slot(bits)!=1)return 5;
  reset(); struct fwp_c_Input alias=record_alias(input);
- if(alias.word!=(int64_t)bits||alias.p!=(void *)(uintptr_t)bits||strcmp(alias.s,"first")||strcmp(alias.t,"second")||ns!=2||nd!=3||!data_released())return 6;
+ if(alias.word!=(int64_t)bits||alias.p!=(void *)(uintptr_t)bits||strcmp(alias.s,"first")||strcmp(alias.t,"second")||ns!=2||nd!=2||!data_released())return 6;
  for(int i=0;i<ns;i++)if(*fwp_rc_slot(strings[i])!=1)return 6;
  if(*fwp_rc_slot(bits)!=1)return 5;
  reset(); const char *second_host=second("first","second");

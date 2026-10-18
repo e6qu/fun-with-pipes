@@ -9088,8 +9088,68 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             } else {
                 "    fwp_cleanup_pop(&inputs_cleanup); inputs_cleanup.release(inputs_cleanup.arg);\n"
             };
+            let direct = g.abis[fid]
+                .as_ref()
+                .filter(|abi| {
+                    matches!(r, crate::ffi::CType::Struct { .. })
+                        && abi.ret.is_some()
+                        && abi.params.iter().all(Option::is_none)
+                })
+                .cloned();
             if r == crate::ffi::CType::Void {
                 let _ = writeln!(lib_defs, "    (void){call};\n{finish_inputs}}}\n");
+            } else if let Some(abi) = direct {
+                // The worker already returns fields. Transfer those owners
+                // directly into the C result rather than boxing then unpacking.
+                let args = abi.args_decode_words(prog, fid, args.clone());
+                let _ = writeln!(
+                    lib_defs,
+                    "    fwp_wr{fid} result = w{fid}({});\n{finish_inputs}",
+                    args.join(", ")
+                );
+                let values = abi.result_words(prog, fid, "result");
+                let result_ty = f.ty.params(f.arity as usize).1;
+                let fields = record_fields(&prog.shapes, result_ty).expect("record export result");
+                let owners = fields
+                    .iter()
+                    .enumerate()
+                    .map(|(i, (_, ty))| (values[i].clone(), ty.clone()))
+                    .collect::<Vec<_>>();
+                let protect = g.protect_values(&owners, "result_fields", "result_cleanup");
+                let _ = writeln!(
+                    lib_defs,
+                    "    {protect}\n    {} converted;",
+                    crate::ffi::c_name(&r)
+                );
+                let crate::ffi::CType::Struct {
+                    fields: c_fields, ..
+                } = &r
+                else {
+                    unreachable!()
+                };
+                for (name, index, ty) in c_fields {
+                    let _ = writeln!(
+                        lib_defs,
+                        "    converted.{name} = {};",
+                        ffi_to_c(ty, &values[*index])
+                    );
+                }
+                if !protect.is_empty() {
+                    lib_defs.push_str("    fwp_cleanup_pop(&result_cleanup);\n");
+                }
+                lib_defs.push_str("    /* move C result fields */\n");
+                if g.reuse {
+                    for (_, index, ty) in c_fields {
+                        let (_, field_ty) = &fields[*index];
+                        if *ty != crate::ffi::CType::Str
+                            && crate::rc::needs_rc(&prog.shapes, field_ty)
+                        {
+                            let drop = g.value_drop(field_ty);
+                            let _ = writeln!(lib_defs, "    {drop}({});", values[*index]);
+                        }
+                    }
+                }
+                lib_defs.push_str("    return converted;\n}\n\n");
             } else {
                 // Evaluate once and protect the full result until every C
                 // string conversion succeeds. Then transfer string owners to
@@ -9145,34 +9205,32 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                     lib_defs.push_str("    owner.value = result; fwp_value_release(&owner);\n");
                 }
                 lib_defs.push_str("    return converted;\n}\n\n");
-                if library_result_needs_release(&r) {
-                    let _ = writeln!(
-                        lib_defs,
-                        "void fwp_release_{cname}({} result) {{",
-                        crate::ffi::c_name(&r)
-                    );
-                    if g.reuse {
-                        let drop = g.value_drop(&MT::con("std::String"));
-                        let values = match &r {
-                            crate::ffi::CType::Str => vec!["result".into()],
-                            crate::ffi::CType::Struct { fields, .. } => fields
-                                .iter()
-                                .filter(|(_, _, ty)| *ty == crate::ffi::CType::Str)
-                                .map(|(name, _, _)| format!("result.{name}"))
-                                .collect(),
-                            _ => unreachable!(),
-                        };
-                        for value in values {
-                            let _ = writeln!(
-                                lib_defs,
-                                "    {drop}(PTR({value} - offsetof(fwp_str, d)));"
-                            );
-                        }
-                    } else {
-                        lib_defs.push_str("    (void)result;\n");
+            }
+            if library_result_needs_release(&r) {
+                let _ = writeln!(
+                    lib_defs,
+                    "void fwp_release_{cname}({} result) {{",
+                    crate::ffi::c_name(&r)
+                );
+                if g.reuse {
+                    let drop = g.value_drop(&MT::con("std::String"));
+                    let values = match &r {
+                        crate::ffi::CType::Str => vec!["result".into()],
+                        crate::ffi::CType::Struct { fields, .. } => fields
+                            .iter()
+                            .filter(|(_, _, ty)| *ty == crate::ffi::CType::Str)
+                            .map(|(name, _, _)| format!("result.{name}"))
+                            .collect(),
+                        _ => unreachable!(),
+                    };
+                    for value in values {
+                        let _ =
+                            writeln!(lib_defs, "    {drop}(PTR({value} - offsetof(fwp_str, d)));");
                     }
-                    lib_defs.push_str("}\n\n");
+                } else {
+                    lib_defs.push_str("    (void)result;\n");
                 }
+                lib_defs.push_str("}\n\n");
             }
         }
     }

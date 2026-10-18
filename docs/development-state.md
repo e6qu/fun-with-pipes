@@ -57,10 +57,44 @@ The extended ARC probe asserts zero retains for returned input identity and one
 necessary retain for two fields sharing a string. Failure controls remove box
 or host releases and force redundant retains. Six-host `library-results` CI is
 prepared; binaries, source, headers, symbols, outputs and shutdown counts will
-be retained. Publish this preparation branch and dispatch `library-results`;
-record its exact source and run ID without opening another PR.
+be retained. Run `39088723884` now checks published source
+`9cbba70eac15602db6fc8430a8ca327c28b532b0` on all six hosts. No second PR is open.
+A further local fixture directly exports its shared cached record, so the new
+C-result retain path is exercised separately from a function worker returning
+that record. It passes locally (7.16 s). A tiny allocation probe then found
+`hold`: zero record boxes/one input string, and `duplicate`: one record box/one
+input string (1.10 s guarded). `/private/tmp/fwp-library-box-counts/` preserves
+the baseline source and counts; the probe script is `fwp-library-box-counts.py`.
+An uncommitted optimization now uses existing worker result fields directly for
+C record exports whose parameters use the ordinary word convention. It avoids
+boxing/unpacking that result while preserving typed cleanup during conversion.
+The same probe now reports zero boxes/one string for both calls (1.22 s).
+ARC/input checks pass after direct return. The result test initially assumed a
+failed conversion still allocated a record box; it now checks no box allocation
+and actual string cleanup, and both result tests pass (5.09 s).
+
+The six-host run has finished: Linux and macOS pass; both Windows hosts fail
+only `shared_library_from_c` and `static_library_from_rust`. All 30 test summaries
+are audited: 80 passed, four failures, no skips. Audit and logs:
+`/private/tmp/fwp-audit-library-results.py`, `fwp-library-results-audit.json`.
+The C host returns `norm = 25` where `5` is required, plus ordinary Windows text
+line endings. The Rust host uses MSVC to link a generated LLVM-MinGW archive and
+asks for Unix `m.lib`. The prepared repair installs/uses the matching native
+Rust `*-pc-windows-gnullvm` target and explicitly selects the LLVM-MinGW linker.
+The C host assertion normalizes only its platform text line endings; the wrong
+numeric result remains unresolved. Retain generated C, libraries, executables,
+symbols and disassembly in the next Windows-only `library-results` probe to find
+its cause. Do not weaken the expected number or claim this run passed.
 
 Guarded checks from this worktree:
+
+- Final focused Clippy passes (5.84 s); formatting passes (1.09 s); both
+  changed workflows pass actionlint (1.65 s).
+
+- After direct record returns, `cargo test --no-fail-fast --test arc_library
+  --test ffi -- --nocapture`: nine passed (27.40 s), including a control that
+  deliberately reintroduces a record allocation and must fail. The earlier
+  command result was lost during session compaction, so this is a recorded rerun.
 
 - `cargo test --test arc_library --test library_result_ownership -- --nocapture`:
   four passed (15.60 s), including partial-retain failure, generated name
