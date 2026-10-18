@@ -399,6 +399,22 @@ Reference-count operations and the chain's allocations still exist. Native remot
 stream caches use a separate runtime cleanup loop; their request and connection
 owners are described [below](#received-iterators-and-remote-call-storage).
 
+## Failed map and set operations
+
+A callback can fail after producing some results. Allocation or reference-count
+acquisition can also fail after earlier fields were acquired. Those completed
+fields still need owners: catching the error must release them without changing
+an independently retained input map.
+
+The current repair registers cleanup for partial maps, lists, pending fields and
+scratch arrays. Insert, remove and update consume their map argument, including
+on failure; decoding transfers that owner before insertion. A partial map records
+each acquired key before acquiring its value. Result cleanup uses the output
+value type, so mapping strings to integers never treats integer bits as pointers.
+These are compiler/runtime rules, with no new language syntax or heap wrapper.
+[The handoff](development-state.md) tracks focused failure-injection checks and
+native acceptance; this implementation is not yet a completed delivery.
+
 ## Checked ARC delivery
 
 `fwp build --gc arc` excludes tracing code and rejects unsupported ownership.
@@ -407,19 +423,18 @@ commands and native C libraries with copied inputs. The prepared owned-result
 extension below adds explicitly released strings; final acceptance is pending.
 Each entry starts without assuming an existing state or derivative scope.
 Synchronous WASI main/function/CLI entries also use these checks. Generated REST
-and MCP entries are being validated with the same checks, including returned
+and MCP entries are accepted in [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164), including returned
 aliases, caught errors, malformed messages, disconnects and normal shutdown.
 All 18 repeated-request memory jobs pass across the six native hosts. The
 [measurement report](benchmarks.md#generated-rest-and-mcp-server-memory) verifies
 bounded storage and actual binaries without tracing, and records the substantial
-allocation/count costs that remain. Functional repair checks and final production
-acceptance are still required before these entries are accepted.
-The prepared browser/asynchronous WASI extension
+allocation/count costs that remain. All nine final production jobs and
+documentation pass.
+The browser/asynchronous WASI extension accepted in the same delivery
 uses ordinary checked task/channel ownership and command-end scheduler cleanup.
 Both actual-Wasm jobs now pass JSPI and Asyncify execution, storage reclamation
 and exact-result checks; the [report](benchmarks.md#webassembly-task-and-browser-loader-ownership)
-retains all modules and deliberately leaking controls. Final production
-acceptance remains required. Browser-loader evidence
+retains all modules and deliberately leaking controls. Browser-loader evidence
 under Node does not establish coverage in a browser engine. Host callbacks receive
 copied output strings; each invocation owns a separate module instance. These
 checks cover values inside the compiled module. The JavaScript engine still owns
@@ -464,8 +479,8 @@ storage and bounded sampled process memory; the [report](benchmarks.md#http-serv
 explains the workload and remaining allocation costs. All six platform HTTP suites
 pass. Intel macOS passed separate ownership and comparison jobs after the combined
 job reached its time limit; every case and the same limit were preserved. All
-nine production gates and docs passed for PR #163. REST/MCP entry acceptance
-and GPU ownership remain separate work.
+nine production gates and docs passed for PR #163; REST/MCP entries followed
+in PR #164. GPU ownership remains separate work.
 
 WASI supplies standard streams and file access to a WebAssembly module. Build a
 supported program with `fwp build --gc arc --target wasm32-wasi app.fwp -o app.wasm`
@@ -490,7 +505,9 @@ inputs are copied into owned language storage during the call. Records can
 contain these input types. Scalar results copy all their bits before temporary
 language storage is released. The prepared result-ownership extension adds
 returned strings and flat records containing strings; see the
-[handoff](development-state.md) for verification and remaining acceptance.
+[six-host report](benchmarks.md#returning-owned-values-to-c-callers) for the
+90 passing focused tests and [handoff](development-state.md) for remaining
+production acceptance.
 
 An export named `greet` that returns a string also declares
 `fwp_release_greet(result)` in its generated C header. The caller owns that
@@ -502,8 +519,8 @@ use a released result, or keep results past library unload. Serialize host
 calls and releases; concurrent host entry remains outside this contract.
 
 A unique returned string transfers its existing owner without another copy,
-allocation or retain. For record returns with an existing worker that returns
-fields and accepts ordinary word arguments, those fields transfer directly into
+allocation or retain. When a compiled function returns separate record
+fields and receives each input as a whole value, those fields transfer directly into
 the C result; no intermediate record is allocated. Other record results transfer
 their string fields and release the temporary box and remaining fields when
 uniquely owned. Shared records retain the string owners that C now needs. Conversion finishes before any owner transfers: an embedded
@@ -516,8 +533,10 @@ The same release interface applies to ordinary tracing libraries. This changes
 the old retain-until-unload contract; rebuild libraries and callers together.
 There is no extra allocated result handle or compatibility adapter. Counting and
 freeing disabled for diagnostic controls still deliberately retain storage;
-checked ARC requires both enabled. Input strings still require a copy because
-the C host can change its original buffer after returning.
+checked ARC requires both enabled. Input strings currently copy even when a
+function only reads them. Returned aliases must remain independent of later
+changes to the C buffer; borrowing inputs proved unable to outlive the call
+remains an optimization opportunity.
 
 List transposition also has a checked copying contract. It creates new list
 nodes, retains the original elements as typed aliases and releases temporary

@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, map-storage, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -27,6 +27,50 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  map_storage:
+    if: inputs.suite == 'map-storage'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_MAP_FAILURE_ARTIFACTS: map-storage-evidence
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Native Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows.ps1
+      - name: Record source and tools
+        shell: bash
+        run: |
+          mkdir -p map-storage-evidence
+          git rev-parse HEAD > map-storage-evidence/source.txt
+          rustc --version > map-storage-evidence/rustc.txt
+          clang --version > map-storage-evidence/clang.txt
+          printf '%s\n' 'OS=${{ runner.os }}' 'architecture=${{ runner.arch }}' 'runner=${{ matrix.runner }}' 'ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off' 'tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1' '22 operations; every allocation and retain fails once; independent aliases; two missing-cleanup controls' 'No timing comparison or C/Rust speed claim' > map-storage-evidence/settings.txt
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --lib --bin fwp --test map_set_ownership --test decoder_partial -- -D warnings
+      - name: Map and set results, aliases, failure and reuse
+        if: ${{ !cancelled() }}
+        run: cargo test --no-fail-fast --test map_set_ownership --test map_unwind_ownership --test old_reclamation -- --nocapture
+      - name: Typed decoding and partial results
+        if: ${{ !cancelled() }}
+        run: cargo test --no-fail-fast --test decoder_partial -- --nocapture
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: map-storage-${{ matrix.runner }}
+          path: map-storage-evidence/
+          if-no-files-found: error
   library_results:
     if: inputs.suite == 'library-results'
     strategy:

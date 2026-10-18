@@ -80,45 +80,28 @@ ownership and removal of GC are the primary design priority.
 
 ### Current delivery and next acceptance
 
-[PR #163](https://github.com/e6qu/fun-with-pipes/pull/163) is accepted after all
-nine production jobs and documentation passed. HTTP clients and servers own
-connections, requests and tasks; fixed function captures avoid rebuilding heap
-records. The [report](docs/measurements/fixed-functions-2026-10-18.json) records
-remaining costs: about 722 managed allocations and 1,901 count increments per
-additional HTTP request. Paired Linux runs show about 4–6% less elapsed time than
-the previous fwp compiler on this workload, without claiming C/Rust parity.
-[History](docs/roadmap-history.md) records exact sources, gates and merge checks.
+[PR #164](https://github.com/e6qu/fun-with-pipes/pull/164) is accepted after all
+nine production jobs and documentation passed. Generated REST/MCP entries and
+WebAssembly tasks can use checked ownership. JSON preserves numeric precision;
+executable caches track compiler/header changes. [History](docs/roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164)
+records the exact sources, complete audits and remaining measurement limits.
+Actual browser engines and retained foreign callbacks still need coverage.
 
-The current batch extends checked ownership to generated REST APIs and MCP tools.
-Verify success, returned aliases, caught errors, malformed input, disconnects and
-normal shutdown, with repeated memory checks and actual no-tracing binaries on
-all six native hosts. Measure remaining allocation/count costs using ordinary
-and instrumented programs that produce the same responses. All 18 memory jobs
-pass and actual binaries exclude tracing in ARC; the
-[report](docs/benchmarks.md#generated-rest-and-mcp-server-memory) records remaining
-costs. Functional repairs and final production acceptance are still pending.
+The next delivery gives C callers explicit release functions for returned strings
+and records. Unique owners move without extra heap handles; direct record returns
+avoid intermediate boxes. All 90 focused tests pass across six native hosts,
+including repaired Windows DLL exports and Rust interop. The
+[report](docs/benchmarks.md#returning-owned-values-to-c-callers) records remaining
+input copies and necessary reference-count costs, without a timing-parity claim.
 
-This validation exposed numeric precision loss in untyped JSON. The repair keeps
-number text until conversion to a declared numeric type, preserving large
-integers, F128 values and request IDs. It also reports invalid number construction
-and excessive nesting instead of silently changing values. Tests, tutorials and
-API documentation change together. [The handoff](docs/development-state.md)
-records the current runner results and fixes; implementation alone is not
-acceptance.
-
-The combined delivery also includes the prepared WebAssembly ownership repair.
-Both actual-Wasm jobs pass repeated tasks, cancellation and browser-loader
-callbacks through JSPI and Asyncify. The
-[report](docs/benchmarks.md#webassembly-task-and-browser-loader-ownership) records
-72 inspected modules, the repaired state-buffer leak and remaining memory/code
-costs. Final production acceptance is still required. Browser-engine coverage,
-retained foreign callbacks, remaining numerical and networking ownership,
-derivative scaling and broader applications remain work.
-An isolated follow-up gives C callers explicit release functions for returned
-strings and records. It transfers unique owners without extra heap handles and
-checks necessary sharing, conversion failure and unload. Its focused native
-checks and pending six-host evidence are recorded in the handoff; it does not
-replace the current delivery's final acceptance requirements.
+This delivery also repairs leaks when a map callback or allocation fails.
+Protect partial map/set results, scratch arrays, list conversions and consumed
+inputs, including decoder insertion. Test each allocation/retain failure,
+surviving aliases and callbacks whose output type differs from their input.
+Require interpreter agreement, zero-byte ARC shutdown, stressed tracing/reuse
+checks, deliberate missing-cleanup controls and native evidence on six hosts.
+The [handoff](docs/development-state.md) records progress. Final production
+acceptance is still required for this batch; memory work remains broader than it.
 
 All seven areas above stay open. Each delivery must identify its workload,
 expected change and acceptance criteria. Investigate performance regressions

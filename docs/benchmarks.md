@@ -2811,3 +2811,62 @@ not shrink the WebAssembly memory's capacity. These counts exclude JavaScript
 continuation stacks, instances, promises and strings, and do not measure host
 resident RAM. Their host engine still has its own memory management. Eliminating
 remaining allocation/count traffic and reducing these storage costs remain work.
+
+## Returning owned values to C callers
+
+A C caller can receive a string or a record containing strings from an fwp
+library and release that result explicitly. For example, `greet("c")` returns
+an owned string; `fwp_release_greet(result)` releases it. A record's release
+function releases all of its string fields together, including two fields that
+share the same allocation. [C interop](tutorials/09-c-interop/README.md) introduces
+the interface and caller obligations.
+
+The [six-host report](measurements/library-results-2026-10-18.json) uses source
+`d6d36961f532167beec8a116b35462906ba1cc6f`, retained by
+`evidence/library-results-20261018`, and
+[run 39090619574](https://github.com/e6qu/fun-with-pipes/actions/runs/39090619574).
+All 90 focused tests pass on Linux, macOS and Windows, each on ARM64 and AMD64,
+with no failures or skips. Final production acceptance is tracked in the
+[handoff](development-state.md); this focused run does not replace it.
+
+The measured program performs 256 repeated call batches after warmup. It reads
+strings, returns aliases and records, computes a derivative (a function's slope),
+and runs a function pipeline. Eight configurations per host combine static or
+shared linking, C optimization levels O1/O2 and an enabled or disabled cache for
+derivative temporary storage. A shared host loads, calls and unloads its library
+three times. Outputs match the interpreter; all 96 shutdown observations report
+zero counted bytes and zero collections. Inspection of the 24 actual ARC
+libraries finds internal runtime symbols and no tracing scan/mark/sweep functions.
+
+| Measured call | Additional retains | Intermediate record allocations |
+|---|---:|---:|
+| Return the copied input string unchanged | 0 | 0 |
+| Return two fields sharing the copied input string | 1 | 0 |
+
+A retain acquires another owning reference. The second call needs one because
+both fields own the same string. When a compiled function already returns
+separate record fields and takes whole argument values, the C entry now reuses
+those fields directly. It previously allocated and unpacked a temporary record.
+Other calling conventions can still allocate record boxes. Counts above exclude fresh count initialization and
+release work. Input strings still copy, even for calls that only read them;
+proving when those copies can be replaced by borrowing remains work.
+
+Failure checks cover embedded NUL conversion, partial acquisition of shared
+fields, traps and unload. Four deliberately broken variants per host must fail:
+omitting a temporary box release, omitting a host result release, adding a record
+allocation, or adding an unnecessary retain. The report verifies all 24 controls.
+
+Separate C and Rust callers use default library mode and check the public
+interface. Windows DLL export tables now include `norm`, and both saved Windows
+C hosts import it from `libgeom.dll`. Before the repair, `norm` existed inside the
+DLL but was omitted from its public exports; the host used Windows' different
+function and returned 25 instead of 5. Explicit exports and matching Rust
+LLVM-MinGW targets fix both discovered Windows interop failures.
+
+These checks measure fwp ownership and allocations; no elapsed-time comparison
+with C or Rust was collected. Counted bytes exclude allocator capacity and host
+resident memory. ARC library sizes include test instrumentation; C and Rust
+host sizes reflect different runtimes and static/shared linking. Reproduce the
+data-only inspection with `scripts/summarize-library-results.py --artifacts DIR
+--audit AUDIT --llvm-bin DIR --record-results direct --output FILE`. The collector
+never executes downloaded binaries.

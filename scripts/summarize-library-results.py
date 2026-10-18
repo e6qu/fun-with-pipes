@@ -55,6 +55,43 @@ def inspect(path, host, llvm, expected_exports):
             'tracing_symbols': tracing, 'dll_public_exports': public_exports}
 
 
+def interop(directory, host, llvm):
+    rows = []
+    for kind, language, executable in [('static-rust', 'rust', 'geom-rs'), ('shared-c', 'c', 'geom-c')]:
+        root = directory / 'interop' / kind
+        expected = f'norm = 5\nscale = (3, -4)\nadd_ints = 42\nhello, {language}!\nword_count = 4\n'
+        assert (root / 'host.stdout').read_text() == expected, root
+        files = [path for path in root.iterdir() if path.name in {executable, executable + '.exe'}]
+        assert len(files) == 1, (root, files)
+        binary = files[0]
+        assembly = subprocess.check_output([str(llvm / 'llvm-objdump'), '-d', str(binary)], text=True)
+        assert 'file format ' + HOSTS[host][0] in assembly, binary
+        binary.with_suffix(binary.suffix + '.disassembly.txt').write_text(assembly)
+        row = {'caller': language, 'linking': kind, 'library_mode': 'default (--gc tracing)',
+               'file': binary.name,
+               'sha256': digest(binary), 'file_bytes': binary.stat().st_size,
+               'stdout': expected}
+        if kind == 'shared-c' and host.startswith('windows-'):
+            library = root / 'libgeom.dll'
+            image = subprocess.check_output([str(llvm / 'llvm-objdump'), '-p', str(library)], text=True)
+            exports = {line.split()[-1] for line in image.split('Export Table:', 1)[1].splitlines()
+                       if line.split() and line.split()[0].isdigit()}
+            assert {'norm', 'scale', 'add_ints', 'greet', 'fwp_release_greet', 'word_count'} <= exports
+            image = subprocess.check_output([str(llvm / 'llvm-objdump'), '-p', str(binary)], text=True)
+            dll, providers = None, []
+            for line in image.splitlines():
+                match = re.match(r'\s*DLL Name: (.+)', line)
+                if match:
+                    dll = match[1]
+                if re.fullmatch(r'\s*\d+\s+norm\s*', line):
+                    providers.append(dll)
+            assert providers == ['libgeom.dll'], (binary, providers)
+            row.update({'dll_sha256': digest(library), 'dll_exports': sorted(exports),
+                        'norm_imported_from': providers[0]})
+        rows.append(row)
+    return rows
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--artifacts', type=Path, required=True)
@@ -114,14 +151,18 @@ def main():
                       'rustc': (directory / 'rustc.txt').read_text().strip(),
                       'clang': (directory / 'clang.txt').read_text().strip(),
                       'source_sha256': digest(directory / 'library.c'),
-                      'runs': runs, 'controls': controls, 'binaries': binaries})
+                      'runs': runs, 'controls': controls, 'binaries': binaries,
+                      'interop': interop(directory, host, args.llvm_bin) if direct else None})
         print(host, 'ownership artifacts verified;', jobs[0]['conclusion'], 'whole test job', flush=True)
     report = {'source': audit['head'], 'run': audit['run'], 'record_results': args.record_results,
               'all_functional_jobs_pass': all(j['conclusion'] == 'success' for j in audit['jobs']),
               'scope': 'fwp C library ownership, not an elapsed-time comparison with C or Rust. '
                        '256 repeated call batches after warmup; static or three dynamic load/unload executions. '
                        'One retain is necessary for two independently released fields sharing one string. '
+                       'Retain counts exclude fresh count initialization and release work; input strings still copy. '
                        'Shutdown counts exclude host memory, allocator capacity and operating-system RSS. '
+                       'The separate C/Rust interop programs use default library mode. '
+                       'Their host sizes reflect different runtimes and linkage, not a language size comparison. '
                        'Instrumented binaries are inspected as data, never executed by this collector.',
               'hosts': hosts}
     args.output.write_text(json.dumps(report, indent=2) + '\n')

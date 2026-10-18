@@ -7499,12 +7499,14 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                 s.push_str(" return result;");
                             }
                             ResultOwnership::MapOperation { .. } => {
-                                let map =
-                                    if matches!(sym.as_str(), "map.from-list" | "set.from-list") {
-                                        func.ty.params(func.arity as usize).1.clone()
-                                    } else {
-                                        func.locals[func.arity as usize - 1].clone()
-                                    };
+                                let map = if matches!(
+                                    sym.as_str(),
+                                    "map.from-list" | "set.from-list" | "map.map-values"
+                                ) {
+                                    func.ty.params(func.arity as usize).1.clone()
+                                } else {
+                                    func.locals[func.arity as usize - 1].clone()
+                                };
                                 let MT::Con(name, types) = &map else {
                                     return Err(format!("typed map `{sym}` has a non-map type"));
                                 };
@@ -7546,7 +7548,15 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                 } else {
                                     "fwp_rc_drop".into()
                                 };
-                                let ops = format!("&(const fwp_map_ops){{{dk}, {dv}, {drop_key}, {drop_value}, {drop_map}}}");
+                                let result = func.ty.params(func.arity as usize).1.clone();
+                                let drop_result = if (free_enabled() || self.resource_type(&result))
+                                    && crate::rc::needs_rc(&self.prog.shapes, &result)
+                                {
+                                    format!("fwp_drop{}", self.drop_id(&result))
+                                } else {
+                                    "NULL".into()
+                                };
+                                let ops = format!("&(const fwp_map_ops){{{dk}, {dv}, {drop_key}, {drop_value}, {drop_map}, {drop_result}}}");
                                 let mut args: Vec<String> =
                                     (0..func.arity).map(|i| format!("l{i}")).collect();
                                 args.push(ops);

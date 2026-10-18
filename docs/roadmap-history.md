@@ -48,6 +48,60 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Server entries, exact JSON and WebAssembly task owners (PR #164)
+
+[PR #164](https://github.com/e6qu/fun-with-pipes/pull/164) merged as
+`25f95f9c6cb157b7f4e2d74760f6f1e27be83f47` after all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39087594221)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39087594154)
+passed at `a845e0c5e9a37dad185c99566ddc6ce413b4293b`. All 964 scheduled targets
+completed: 1,248 summaries, 3,588 passed, zero failed, 72 ignored. Ignored cases
+are not native-support evidence. The sole parent is accepted #163; merge and
+tested head share tree `cf72cfb51006d467736120c3489ea50d7771331b`. The entire
+message is `Run servers and WebAssembly tasks without tracing collection`.
+Duplicate production `39092256990` was cancelled after merge.
+
+Generated REST APIs and MCP tools can use checked ARC. They release decoded
+inputs, returned aliases and service tasks on success, failure and disconnect.
+JSON numbers retain decimal text until conversion, preserving large I64, F128,
+request IDs and OpenAPI limits. Invalid numbers and excessive nesting report
+errors instead of silently becoming Null. YAML normalization preserves precision.
+
+WebAssembly tasks save each completed fiber's latest State storage pointer and
+free scheduler records and pooled stacks at command end. Browser-loader calls
+own separate instances; output callback exceptions propagate once and unchanged.
+Asyncify now preserves internal names, making inspection for tracing functions
+meaningful. Actual-browser-engine execution remains unverified; these loader
+checks run in Node. Native executable cache keys include compiler identity,
+linked-header contents/search paths and LTO options.
+
+The [server report](measurements/server-entries-2026-10-18.json) records 18 passing
+memory jobs on six native hosts, 18 ARC binaries without tracing and 24 tracing
+controls. Standard-input shutdown returns all counted bytes; HTTP memory stays
+flat across 15,360 requests, with at most 2 MiB settled resident-memory growth.
+Measured per-request allocations/count increments remain about 237/458 for
+standard-input MCP, 874/2,426 for REST and 797/1,970 for HTTP MCP. These are fwp
+memory-mode comparisons, not C/Rust timing parity.
+
+The [Wasm report](measurements/wasm-host-owners-2026-10-18.json) inspects 72 named
+modules and 32 failing leak controls from both Linux hosts. It distinguishes
+requested storage from linear-memory capacity and records the extra Asyncify
+code/workspace cost. Removing State cleanup leaks 2,048 bytes; removing scheduler
+cleanup leaves about 64 MiB of pooled stacks. Focused
+[Wasm](https://github.com/e6qu/fun-with-pipes/actions/runs/39084443415),
+[cache](https://github.com/e6qu/fun-with-pipes/actions/runs/39086209307) and
+[client](https://github.com/e6qu/fun-with-pipes/actions/runs/39083100171) repairs pass.
+
+The original production run found two stale CSV goldens on four hosts and an
+Intel GC job that exhausted 90 minutes. Every completed/partial target was
+audited, including all 84 retained Intel logs; incomplete work was not accepted.
+The goldens now preserve `12.0`, matching the declared F64 value. macOS starts
+long targets earlier with the same coverage and two workers, and allows 150
+minutes for completion. The [scheduling estimate](measurements/ci-scheduling-2026-10-18.json)
+is a simulation, not a measured speedup. The final run completes every target.
+An earlier Intel focused job passed tests but failed artifact upload with DNS
+`ENOTFOUND`; its separately audited retry passes. No failed run was relabeled.
+
 ## HTTP server owners and fixed function storage (PR #163)
 
 [PR #163](https://github.com/e6qu/fun-with-pipes/pull/163) merged as
