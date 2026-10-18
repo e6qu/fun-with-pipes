@@ -29,6 +29,10 @@ Each stage produces input for the next:
 
 `fwp run`, `exec`, `test`, `serve` and `pipe` compile native code by default and
 cache it by content. The front end still runs to produce current diagnostics.
+The executable cache includes the selected C compiler's version, target and
+header-search environment for integer-only programs as well as floating-point
+programs. Exact floating-point programs also include their C++ compiler identity;
+integer-only programs do not require a C++ compiler.
 `--interp` selects interpretation. Both paths normally optimize; use
 `FWP_NO_OPT=1` with `--interp` when checking an optimization against the original
 operation order. Tests compare standard output, standard error and exit status.

@@ -1530,6 +1530,17 @@ jobs:
       - name: Asyncify toolchain
         if: inputs.suite == 'wasi-arc' || inputs.suite == 'wasm-hosts'
         run: npm install -g binaryen
+      - name: Record WebAssembly source and toolchains
+        if: inputs.suite == 'wasi-arc' || inputs.suite == 'wasm-hosts'
+        run: |
+          mkdir -p wasi-arc-evidence
+          git rev-parse HEAD > wasi-arc-evidence/revision.txt
+          uname -a > wasi-arc-evidence/host.txt
+          rustc -Vv > wasi-arc-evidence/rust.txt
+          clang --version > wasi-arc-evidence/clang.txt
+          clang --target=wasm32-wasi -dumpmachine > wasi-arc-evidence/target.txt
+          wasm-opt --version > wasi-arc-evidence/binaryen.txt
+          node --version > wasi-arc-evidence/node.txt
       - name: Loader exception boundaries
         if: inputs.suite == 'wasm-hosts'
         run: node tests/wasm/loader-errors.mjs

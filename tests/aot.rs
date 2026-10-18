@@ -183,6 +183,60 @@ fn programs_are_interpreted_without_a_c_compiler() {
 }
 
 #[test]
+fn integer_cache_tracks_header_search_paths() {
+    if !have_cc() {
+        eprintln!("skipping native cache test: C compiler unavailable");
+        return;
+    }
+    let cache = Cache::new("integer-header-paths");
+    let dir = fwp::cgen::TempDir::new("integer-header-paths").unwrap();
+    let first = dir.join("first");
+    let second = dir.join("second");
+    std::fs::create_dir(&first).unwrap();
+    std::fs::create_dir(&second).unwrap();
+    std::fs::write(first.join("answer.h"), "#define ANSWER 41\n").unwrap();
+    std::fs::write(second.join("answer.h"), "#define ANSWER 42\n").unwrap();
+    let host = dir.join("answer.c");
+    std::fs::write(&host, "#include <stdint.h>\n#include <answer.h>\nint64_t cached_answer(int64_t n) { return n + ANSWER; }\n").unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(
+        &source,
+        "foreign \"C\" answer : I64 -> I64 = \"cached_answer\"\nmain = 0 | answer | echo\n",
+    )
+    .unwrap();
+    let cfile = dir.join("main.c");
+    let emitted = Command::new(fwp())
+        .args(["build", "--emit-c"])
+        .arg(&source)
+        .arg("-o")
+        .arg(&cfile)
+        .output()
+        .unwrap();
+    assert!(emitted.status.success(), "{}", render(&emitted));
+    assert!(!std::fs::read_to_string(cfile)
+        .unwrap()
+        .contains(fwp::float_codegen::MARK));
+    for (headers, expected, entries) in [
+        (&first, b"41\n", 1),
+        (&second, b"42\n", 2),
+        (&second, b"42\n", 2),
+    ] {
+        let result = output(
+            cache
+                .fwp(&["run", "--native", "--link"])
+                .arg(&host)
+                .arg(&source)
+                .env("C_INCLUDE_PATH", headers)
+                .env("CXX", "/nonexistent/cxx"),
+            b"",
+        );
+        assert!(result.status.success(), "{}", render(&result));
+        assert_eq!(result.stdout, expected, "{}", render(&result));
+        assert_eq!(cache.entries().len(), entries);
+    }
+}
+
+#[test]
 fn exec_runs_exported_functions_natively() {
     if !have_cc() {
         return;

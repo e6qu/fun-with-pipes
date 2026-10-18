@@ -129,12 +129,11 @@ fn key(c_source: &str, opt: &str) -> Result<String, String> {
         }
         k.push(0);
     }
-    if c_source.contains(crate::float_codegen::MARK) {
-        k.extend(crate::float_codegen::compiler_identity(
-            &crate::cgen::c_compiler()?,
-            false,
-        )?);
-    }
+    k.extend(crate::float_codegen::compiler_identity(
+        &crate::cgen::c_compiler()?,
+        false,
+        c_source.contains(crate::float_codegen::MARK),
+    )?);
     Ok(hex(&crate::grpc::web::sha1(&k)))
 }
 
@@ -148,6 +147,9 @@ pub enum Error {
 
 /// The cached executable for a C program, compiled when missing.
 pub fn executable(c_source: &str, opt: &str) -> Result<PathBuf, Error> {
+    if !have_cc() {
+        return Err(Error::NoCc);
+    }
     let dir = cache_dir().join("native");
     std::fs::create_dir_all(&dir)
         .map_err(|e| Error::Failed(format!("cannot create the cache {}: {}", dir.display(), e)))?;
@@ -161,9 +163,6 @@ pub fn executable(c_source: &str, opt: &str) -> Result<PathBuf, Error> {
         }
         prune(&dir, &exe);
         return Ok(exe);
-    }
-    if !have_cc() {
-        return Err(Error::NoCc);
     }
     // compiled under a private name and renamed into place, so concurrent
     // runs of one program never see half an executable

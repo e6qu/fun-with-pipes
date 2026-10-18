@@ -385,7 +385,7 @@ fn wasi_function_and_cli_entries_reclaim_inputs_and_results() {
             let symbols = checked(Command::new("wasm-objdump").arg("--details").arg(&binary));
             let symbols = String::from_utf8_lossy(&symbols.stdout);
             assert!(
-                symbols.contains("<_start>"),
+                symbols.contains("<_start>") && symbols.contains("<fwp_"),
                 "module symbols missing: {symbols}"
             );
             for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
@@ -729,9 +729,13 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
                         let symbols =
                             checked(Command::new("wasm-objdump").arg("--details").arg(&binary));
                         let symbols = String::from_utf8_lossy(&symbols.stdout);
-                        assert!(symbols.contains("<_start>"));
+                        if !symbols.contains("<_start>") || !symbols.contains("<fwp_") {
+                            failures.push(format!("{name}: runtime function names missing"));
+                        }
                         for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
-                            assert!(!symbols.contains(collector), "{collector} remains");
+                            if symbols.contains(collector) {
+                                failures.push(format!("{name}: {collector} remains"));
+                            }
                         }
                         if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
                             let path = std::path::PathBuf::from(path);
