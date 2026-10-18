@@ -563,7 +563,8 @@ loader gives each invocation its own instance and passes copied strings to host
 output callbacks. Exceptions from those callbacks propagate unchanged; a host
 `RangeError` must not become a language stack-overflow trap or trigger a second
 call to the failed output sink. JSPI and Asyncify execution, cleanup controls
-and actual-module inspection are required before acceptance; see the handoff.
+and actual-module inspection now pass on both Linux hosts. Final production
+acceptance remains pending; see the handoff for source revisions and scope.
 HTTP stream handles cannot be queued through a channel in checked ARC: their
 connection retains the handler, whose captures could contain that same channel.
 The allocators still use metadata;

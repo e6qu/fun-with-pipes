@@ -106,8 +106,14 @@ API documentation change together. [The handoff](docs/development-state.md)
 records the current runner results and fixes; implementation alone is not
 acceptance.
 
-Browser, asynchronous WASI, retained host callbacks, remaining numerical and
-networking ownership, derivative scaling and broader applications remain work.
+The combined delivery also includes the prepared WebAssembly ownership repair.
+Both actual-Wasm jobs pass repeated tasks, cancellation and browser-loader
+callbacks through JSPI and Asyncify. The
+[report](docs/benchmarks.md#webassembly-task-and-browser-loader-ownership) records
+72 inspected modules, the repaired state-buffer leak and remaining memory/code
+costs. Final production acceptance is still required. Browser-engine coverage,
+retained foreign callbacks, remaining numerical and networking ownership,
+derivative scaling and broader applications remain work.
 All seven areas above stay open. Each delivery must identify its workload,
 expected change and acceptance criteria. Investigate performance regressions
 even when allocations fall, and preserve traps, cancellation and interpreter

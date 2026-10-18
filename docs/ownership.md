@@ -54,6 +54,9 @@ value has a statically known lifetime. WebAssembly and native libraries release
 typed counted owners but retain unproved shared graphs: they cannot scan arbitrary
 host roots. Checked ARC admits native executables, synchronous WASI executables,
 and C libraries with checked copying boundaries, described below.
+The browser-loader and asynchronous WASI extensions also use these ownership
+checks; their focused evidence and pending production acceptance are recorded
+under [checked ARC delivery](#checked-arc-delivery).
 
 The compiler first tries to eliminate temporary objects, keep fields as scalars,
 and place eligible values on the stack. Values that still need shared storage
@@ -412,8 +415,10 @@ allocation/count costs that remain. Functional repair checks and final productio
 acceptance are still required before these entries are accepted.
 The prepared browser/asynchronous WASI extension
 uses ordinary checked task/channel ownership and command-end scheduler cleanup.
-It is not accepted support until real JSPI and Asyncify runs demonstrate storage
-reclamation, correct results and tracing-free modules. Browser-loader evidence
+Both actual-Wasm jobs now pass JSPI and Asyncify execution, storage reclamation
+and exact-result checks; the [report](benchmarks.md#webassembly-task-and-browser-loader-ownership)
+retains all modules and deliberately leaking controls. Final production
+acceptance remains required. Browser-loader evidence
 under Node does not establish coverage in a browser engine. Host callbacks receive
 copied output strings; each invocation owns a separate module instance. These
 checks cover values inside the compiled module. The JavaScript engine still owns

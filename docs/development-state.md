@@ -2,8 +2,8 @@
 
 ## Next action
 
-Next: finish auditing every job in production run `39080534474`, validate the
-Asyncify name-preservation repair in `39084443415`, and publish one combined
+Next: finish auditing the two Intel macOS jobs in production run
+`39080534474`, then publish one combined
 repair of [PR #164](https://github.com/e6qu/fun-with-pipes/pull/164). Keep all known
 fixes together. Do not cancel healthy remaining jobs or merge a failing head.
 
@@ -11,7 +11,7 @@ The root checkout, branch `server-entry-delivery`, remains published at
 `6b504c2e333f9c89725db714aed1440b79eab178`. It has uncommitted handoff updates and
 two repaired client goldens. Prepare the combined change in
 `/private/tmp/fwp-wasm-host-ownership`, branch `wasm-host-ownership`, based on that
-head and published through `2e47a412732700f15b422a8dc88d5fddf5f918e8`. Preserve the
+head and published through `dfde1e2fa6ba2157c3a6b29ae19580b8926fa956`. Preserve the
 root edits when transferring the preparation. Its matching golden changes are
 already committed. Other server/HTTP preparation worktrees are inactive.
 
@@ -32,13 +32,14 @@ covers publication, fixes and merge after acceptance; no repeated permission.
 
 | Run / source | Result and required action |
 |---|---|
-| Production `39080534474` / `6b504c2e` | Benchmarks, macOS ARM GC and Windows ARM64 pass. Linux AMD64 completes 241 targets and regular macOS ARM completes 119; each finds only the same two client goldens. Four jobs remain running; audit all before the combined repair push. |
+| Production `39080534474` / `6b504c2e` | Benchmarks, macOS ARM GC and both Windows hosts pass. Both Linux hosts complete 241 targets each and regular macOS ARM completes 119; each finds only the same two client goldens. Two Intel macOS jobs remain running; audit all before the combined repair push. |
 | Documentation `39080534747` / `6b504c2e` | Passes for the original head only. |
 | Original focused `39080530770` / `6b504c2e` | Five hosts pass. Intel reaches 25 minutes in the last API test; all logs audited: 125 passed, zero failed, 12 ignored memory entries exercised separately. |
 | Split Intel `39082660292` / workflow `1682ff88`, checked-out source `6b504c2e` | Attempt 2 passes all 21 tests and artifact upload; both logs audited. Attempt 1 passed tests but failed artifact upload with GitHub DNS `ENOTFOUND`. Preserve both attempts and the checked-out source. |
 | Repaired clients `39083100171` / `9b0ca314` | All six native hosts pass ARC API, OpenAPI client and Swagger client checks. All logs audited: 18 passed, no failures or skips; both interpreter and native client halves execute. |
 | Original Wasm execution `39082338822` / `0a3b9fdf` | Both Linux hosts pass six Rust tests and the loader exception check. Allocation/output evidence passes; Asyncify strips internal names, so its name search does not independently establish absence of tracing. |
-| Wasm name repair `39084443415` / `2e47a412` | Running on ARM job `117547970774` and AMD job `117547970989`. Audit both; download and inspect replacement modules before publishing the draft report. |
+| Wasm name repair `39084443415` / `2e47a412` | Both jobs pass; all 12 Rust summaries and both loader checks audited. All 72 saved modules independently inspected with internal names present, no named tracing functions and matching binaries across hosts. All 32 leak controls verified. |
+| Cache repair `39085202140` / `dfde1e2f` | All six hosts pass four tests each: 24 passed, no failures/skips; every log audited. Checks cover paths, edits, include flags, missing headers/compilers and exact-arithmetic archive identity/concurrent publication/eviction. |
 
 The production failures are `forms_client_round_trip` and `swagger_documents`:
 `tests/rest/formsroundtrip.out` and `swaggerroundtrip.out` still expected
@@ -63,7 +64,10 @@ Audit tools and results in `/private/tmp`:
   `fwp-audit-recheck2-164.py` / `fwp164-recheck-attempt2-audit.json` record the
   successful second attempt: 21 passed, zero failed, two separate memory entries ignored.
 - `fwp-wasm-repaired-audit.json` and `fwp-wasm-repaired-JOB.log` preserve the
-  original passing execution run. Audit the new binary-name run separately.
+  original passing execution run. `fwp-audit-wasm-final164.py` writes the new
+  `fwp-wasm-final164-audit.json`; `fwp-audit-cache-164.py` writes
+  `fwp164-cache-audit.json`. A remote status watcher is
+  `/private/tmp/fwp-watch-delivery164.py` (session `29130`); it does not mutate CI.
 
 ## Combined implementation
 
@@ -153,12 +157,20 @@ modules start with about 32 MiB linear memory; Asyncify adds a 16 MiB plus one
 page workspace. Returning allocations permits reuse, but does not shrink memory
 capacity. Counts exclude the JavaScript engine's own storage and resident RAM.
 
-The uncommitted Wasm report currently describes the original 72 modules. Replace
-it after `39084443415` passes; the stricter collector intentionally rejects the
-old stripped modules. Original artifacts are
-`/private/tmp/fwp-wasm-host-evidence/39082338822`. Use
-`scripts/summarize-wasm-hosts.py --artifacts DIR --audit AUDIT --output FILE`.
-Record the new exact source and a new immutable tag; preserve the old source ID.
+The [Wasm report](measurements/wasm-host-owners-2026-10-18.json) now uses the
+complete passing name-preservation run `39084443415` at `2e47a412`, retained by
+tag `evidence/wasm-host-names-20261018`. Both logs were audited. The collector
+verifies all 72 modules, all task outputs and 32 failing controls; every module
+has internal function names, no named tracing functions, and matching binary
+bytes across hosts. The recorded tools are Clang 18.1.3, Binaryen 132 and Node
+24.21.0. Ordinary O2 task files are 577,618 bytes with JSPI and 724,240 bytes with
+Asyncify: 25.4% larger files and 42.7% more code, without a speed claim.
+
+Artifacts: `/private/tmp/fwp-wasm-host-evidence/39084443415`. Guarded downloads
+pass (4.81/4.60 s), ARM-only inspection passes (0.15 s), and full collection
+passes (0.26 s). Use `scripts/summarize-wasm-hosts.py --artifacts DIR --audit AUDIT
+--output FILE`. The old stripped modules remain at their original source;
+subsequent native cache changes do not alter generated Wasm code or its runtime.
 
 Recent guarded local checks:
 
@@ -181,7 +193,7 @@ Recent guarded local checks:
   passes after the final cache changes (5.55 s). Rust formatting passes (1.10 s).
   Numerics workflow lint passes (1.38 s); Windows workflow lint passes (0.15 s).
   Tutorial/source consistency passes (16.47 s including rebuild); the roadmap,
-  links and commit-message audit passes (2.54 s).
+  links and commit-message audit passes (2.51 s).
 
 A previous guard refusal below 64 GiB was resolved by removing only the redundant
 HTTP-client artifact download after verifying its six unexpired GitHub artifacts

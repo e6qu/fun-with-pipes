@@ -2745,3 +2745,69 @@ and tracing symbols. All 18 ARC files exclude tracing; all 24 tracing controls
 retain it. MCP uses the same executable for HTTP and standard input, so separately
 saved copies can be identical. Each file's artifact path and fingerprint are
 recorded. Downloaded binaries were inspected as data and never executed locally.
+
+
+## WebAssembly task and browser-loader ownership
+
+The [module report](measurements/wasm-host-owners-2026-10-18.json) covers source
+`2e47a412`, retained by tag `evidence/wasm-host-names-20261018`, in
+[run 39084443415](https://github.com/e6qu/fun-with-pipes/actions/runs/39084443415).
+Both Linux hosts, AMD64 and ARM64, execute actual 32-bit WebAssembly modules.
+The generated browser loader runs under Node. These checks establish loader
+behavior in that engine; actual browser engines have not been measured here.
+
+A task is a computation that can wait while another task runs. JavaScript Promise
+Integration (JSPI) lets the engine suspend its WebAssembly execution stack. Asyncify rewrites
+the module so it can save and restore that stack itself. Both mechanisms run
+the same 16 rounds of task/channel operations: captured strings, repeated waits,
+returned values, scoped errors, cancelled senders/receivers and task-local state.
+Ordinary and measured O1/O2 modules must print the raw interpreter's results.
+Each mechanism runs through both WASI and the generated browser loader.
+
+The measured modules track actual C allocation/free calls and reference-count
+entries. At shutdown, live allocations, requested bytes and count entries must
+not exceed the initialized baseline. Every measured case passes. Two controls
+prove that the check detects missing cleanup:
+
+- Omitting the completed task's state snapshot leaves 16 state buffers, or
+  2,048 bytes, after 16 rounds. This reproduces the repaired 128-byte-per-round
+  leak. Saving the current state pointer before switching tasks lets the task's
+  destructor release the right buffer.
+- Omitting scheduler shutdown leaves its root record and 64 pooled 1 MiB task
+  stacks: 67,109,088 extra requested bytes in these builds.
+
+Separate checks retain output strings across sequential and concurrent calls,
+start another call from an output callback, and throw from a callback while a
+parent task is suspended. Exact JSON numbers and the child-task example produce
+their goldens. Host exceptions, including RangeError and non-error values,
+propagate unchanged without calling the failed output callback again. A tiny
+recursive module separately verifies real WebAssembly stack-overflow reporting.
+
+The report inspects 72 saved modules, including 32 deliberately broken controls.
+It records byte fingerprints, exports, memory declarations, code/other sections
+and producer metadata. Corresponding files are identical between the two host
+architectures. Downloaded modules were inspected as data, never executed locally.
+
+| Same task program, ordinary O2 build | Module file bytes | Code-section bytes |
+|---|---:|---:|
+| JSPI | 577,618 | 366,064 |
+| Asyncify | 724,240 | 522,427 |
+
+For this program, Asyncify adds about 25.4% to file size and 42.7% to the code
+section. This compares two fwp execution mechanisms, with no C/Rust baseline
+or elapsed-time measurement. The commands use `--target=wasm32-wasi`, O1/O2,
+`-ffp-contract=off` and a 32 MiB main stack. The saved toolchain records identify
+Clang 18.1.3, Binaryen 132 and Node 24.21.0. Asyncify preserves internal function
+names for stack traces and binary inspection; both file sizes include names.
+Producer strings inside a linked module can also name compilers used for its
+libraries, so they are recorded separately from the invoking compiler.
+
+Memory costs remain substantial. Ordinary modules declare 513 initial 64 KiB
+pages, or 32.0625 MiB. The allocation ledger adds four pages (256 KiB) of static
+measurement storage. A task requests 1 MiB for its C locals; at most 64 completed
+stacks are pooled until command cleanup. Asyncify also grows a 16 MiB plus one
+page workspace. Returning allocations to the allocator permits reuse; it does
+not shrink the WebAssembly memory's capacity. These counts exclude JavaScript
+continuation stacks, instances, promises and strings, and do not measure host
+resident RAM. Their host engine still has its own memory management. Eliminating
+remaining allocation/count traffic and reducing these storage costs remain work.

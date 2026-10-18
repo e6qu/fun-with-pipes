@@ -36,9 +36,14 @@ fwp build main.fwp --target wasm32-browser -o palindromes.wasm
 fetches the `.wasm` file, for example with `python3 -m http.server`. The
 program gets standard streams, clocks and random numbers; there are no
 files. As in [tutorial 10](../10-webassembly/README.md), programs with
-`Network` are rejected when they are compiled, tasks need a browser with
-JavaScript Promise Integration (Chrome and Edge 137 and later), and
-compiling needs clang with a WASI sysroot.
+`Network` are rejected when they are compiled, and compiling needs clang with
+a WASI sysroot. Tasks need a host that can suspend and resume their execution.
+JavaScript Promise Integration (JSPI) provides that ability directly. On a host
+without JSPI, build with `--wasm-async=asyncify`: Binaryen's `wasm-opt` transforms
+the module to save and restore its execution state. That transformation adds
+code and memory costs; see the [measured example](../../benchmarks.md#webassembly-task-and-browser-loader-ownership).
+The loader checks here run under Node; they do not establish support in every
+browser engine.
 
 ## fwp itself, in the browser
 
@@ -73,9 +78,11 @@ This build has the limits of the `wasm32-wasi` target, and for the same
 reasons. This interpreter build runs tasks as fibers: suspended computations resumed
 by the browser through JavaScript Promise Integration (JSPI). The example menu
 includes [tutorial 6](../06-tasks-and-channels/README.md), which needs a host with
-JSPI enabled. This build exposes no sockets, cannot start processes, and cannot
-load C code. A program that needs sockets
-or foreign C functions (or tasks, in a browser without JSPI) is rejected
+JSPI enabled, or a playground built with `scripts/build-playground.sh --asyncify`.
+That option requires Binaryen's `wasm-opt` and a host compatible with the
+transformed module. This build exposes no sockets, cannot start processes, and
+cannot load C code. A program that needs sockets or foreign C functions, or tasks
+without the required host suspension support, is rejected
 before it starts, with an error that names what is missing. `fwp build` (except
 `--emit-c`), `fwp pipe` and `fwp serve` say that they are not available.
 Deep recursion is limited by the engine's stack, which in a browser is a

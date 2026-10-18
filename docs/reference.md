@@ -519,7 +519,7 @@ fwp build file.fwp [options]                  compile
                      with the arguments after `--` (stdin from
                      --pgo-input F, or empty), then build with the profile
                      (needs GCC)
-    --gc arc         checked native/WASI executables and native C libraries;
+    --gc arc         checked native/WebAssembly executables and native C libraries;
                      unsupported value/runtime boundaries diagnose
     --gc tracing     tracing collection mode (the default)
     --memory static  bounded runtime storage and stacks at startup, with
@@ -638,10 +638,13 @@ are described in the [ownership guide](ownership.md#checked-arc-delivery).
 by value. A `String -> String` export is rejected because the existing C ABI
 returns a pointer with no host release operation. Records follow these rules
 field by field. Host calls must be serialized and finish before library unload.
-The mode rejects unproved ownership or cycles. Prepared browser and WASI task
-extensions await real JSPI and Asyncify ownership validation; see
-the handoff for acceptance. Generated REST and MCP entries use ordinary checks;
-their platform and repeated-request acceptance is tracked in the handoff.
+The mode rejects unproved ownership or cycles. Browser-loader and WASI task
+extensions pass actual-module JSPI and Asyncify cleanup checks on both Linux
+hosts; [the measurements](benchmarks.md#webassembly-task-and-browser-loader-ownership)
+record their scope and remaining costs. Final production acceptance is tracked
+in the handoff. Generated REST and MCP entries use ordinary checks; their six-host
+functional and repeated-request checks pass, with final production acceptance
+also pending.
 Channels are eligible when their payload contains no functions, tasks, HTTP stream
 handles or channels:
 `Channel[String]` is eligible; `Channel[Task[String]]` is not, since the task
