@@ -580,36 +580,46 @@ version is not tail recursive. Turning arbitrary recursion into an accumulator
 loop is a separate transformation: it must preserve checked-overflow, floating
 rounding, effects and failure order rather than assume arithmetic is associative.
 
-### Current implementation
+### Implemented lowering and its limits
 
-`loop step state` is the documented constant-stack iteration facility. Known
-steps can also keep their state as direct fields. General recursive functions
-have no equivalent portable stack-space guarantee today.
+The compiler simplifies pipes and known applications, then `src/tailrec.rs`
+replaces eligible direct self-tail calls with the existing typed `loop`
+operation. A recursive branch supplies `Again next-arguments`; a final result
+supplies `Stop result`. The interpreter executes that operation iteratively, and
+the C backend emits its existing loop. This does not rely on C tail-call
+optimization, so the generated loop also works at O0. The current revision's
+[handoff](development-state.md) records validation; implementation is not itself
+platform acceptance.
 
-`src/cgen.rs::tail_calls` identifies terminal direct calls and function-value
-applications through bindings, reference-count operations and match branches.
-It deliberately does not cross a resource region with cleanup after its body.
-`FnGen::tail_tokens` releases unused storage-reuse tokens before eligible calls,
-removing one obstacle to native tail-call elimination. Ordinary function/worker
-generation still emits C calls; it does not lower every self-recursive function
-to an explicit loop or require a machine tail jump.
+Eligibility requires every self reference to be a direct tail call and the
+frame's types to describe plain immutable data. Closures with unknown captures,
+resource/task/channel owners, calls nested in arguments and remaining work after
+a call keep ordinary recursion. Resource regions cannot be discarded. Function
+parameters are prepared in their original order before becoming next-iteration
+state, including swaps and multiple curried arguments. This internal state is not
+new source syntax. Known loop state can use direct fields in native code; the
+interpreter still represents values through its ordinary value objects.
 
-`tests/reuse_token_ownership.rs::tail_token_cleanup_preserves_long_native_recursion`
-checks a million-step boxed countdown at O1/O2 with collection enabled/disabled,
-and compares a smaller case with the raw interpreter. That is evidence for the
-tested configurations, not a guarantee for all recursive programs or checked ARC.
-`src/interp.rs::call` and `eval` recurse through the Rust stack; the application
-loop handles extra curried arguments but does not eliminate general tail calls.
-Selected long-chain destructors already use loops; branching cleanup can still
-need additional stack. These are separate from optimizing source recursion.
+`FWP_DUMP_IR=1 fwp run --interp program.fwp` reports each direct-self-recursion
+lowering decision. A rejection states what prevents the proof; it does not say
+that the program is unsafe. `FWP_NO_OPT=1` disables this pass with the other
+optimizations and remains the small-case semantic reference. The source debugger
+also retains original recursive frames. Deep recursion in those modes can still
+reach the stack limit. Calls made inside an iteration have their own stack costs,
+and a loop can still retain growing data.
 
-### Proposed implementation order and limits
+The existing `loop step state` API remains available when the source program
+needs explicit iteration. `FnGen::tail_tokens` also releases unused storage-reuse
+tokens before eligible ordinary calls; this separate cleanup optimization does
+not promise portable tail transfer for every function. Long-chain destruction
+and function-call recursion are separate stack concerns.
 
-1. Lower eligible direct self-tail calls into explicit loops in the compiler's
-   intermediate representation, with corresponding interpreter execution.
-   Make any eventual guarantee independent of the C optimizer and optimization
-   level. Define eligibility after ownership/resource analysis and expose a
-   diagnostic explaining any remaining work that prevents frame reuse.
+### Remaining work
+
+1. Broaden frame reuse only with ownership evidence for the additional cases.
+   Preserve cleanup, handler scopes and cancellation; measure allocations,
+   retained memory and code size as well as execution time. The first comparison
+   uses equivalent explicit fwp loops, not a C/Rust parity claim.
 2. For statically known mutually recursive groups, assess a shared internal loop
    with a tag selecting the next function and typed argument storage. This is a
    potential implementation, not adopted behavior. Measure dispatch, storage and

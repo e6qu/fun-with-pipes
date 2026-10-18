@@ -1,4 +1,5 @@
 //! Self-tail recursion uses the same typed loop in both execution backends.
+use fwp::ir::{Body, Expr, Func, Program, MT};
 use std::process::{Command, Output};
 
 fn checked(command: &mut Command) -> Output {
@@ -24,7 +25,7 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
     );
     assert_eq!(
         raw.stdout,
-        b"0\n(\"right\", \"left\")\n3\n2\n1\nErr \"stop\"\n10\n"
+        b"0\n(\"right\", \"left\")\n3\n2\n1\nErr \"stop\"\n10\n42\n(\"sharedshared\", (\"sharedshared\", \"sharedshared\"))\n"
     );
     std::fs::write(&src, source).unwrap();
     let interpreted = checked(
@@ -65,8 +66,8 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
             let output = checked(
                 Command::new(&binary)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_GC_STRESS", if mode == "tracing" { "1" } else { "0" })
+                    .env("FWP_GC_VERIFY", if mode == "tracing" { "1" } else { "0" })
                     .env("FWP_REUSE_VERIFY", "1"),
             );
             assert_eq!(output.stdout, raw.stdout, "{mode} {opt}");
@@ -101,4 +102,38 @@ fn tail_loop_remains_cancellable() {
     );
     let native = checked(Command::new(binary).env("FWP_PREEMPT", "37"));
     assert_eq!(native.stdout, interpreted.stdout);
+}
+
+#[test]
+fn cleanup_and_unknown_captures_keep_their_original_frames() {
+    let integer = MT::Con("std::I64".into(), vec![]);
+    for ty in [
+        MT::Con("std::File".into(), vec![]),
+        MT::Con("std::Channel".into(), vec![integer.clone()]),
+        MT::Con("std::Task".into(), vec![integer.clone()]),
+        MT::Fun(Box::new(integer.clone()), Box::new(integer)),
+    ] {
+        let call = Expr::Call(0, vec![Expr::Local(0)]);
+        let mut program = Program::default();
+        program.funcs.push(Func {
+            name: "keep-owner".into(),
+            arity: 1,
+            locals: vec![ty.clone()],
+            ty: MT::Fun(Box::new(ty.clone()), Box::new(ty)),
+            body: Body::Expr(call.clone()),
+        });
+        fwp::tailrec::lower(&mut program);
+        assert_eq!(program.funcs.len(), 1, "opaque owner must keep its frame");
+        program.funcs[0].body = Body::Expr(Expr::ResourceRegion {
+            parameters: vec![0],
+            bindings: vec![],
+            body: Box::new(call),
+        });
+        fwp::tailrec::lower(&mut program);
+        assert_eq!(
+            program.funcs.len(),
+            1,
+            "cleanup cannot move before the call"
+        );
+    }
 }

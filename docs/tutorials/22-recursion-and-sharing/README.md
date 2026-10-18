@@ -16,10 +16,17 @@ Starting from four gives four: four additions remain pending. Those calls are
 not in tail position. Turning this into an accumulator loop is a separate
 transformation; in other programs it can change overflow, rounding or effect order.
 
-Some native tail calls already optimize into jumps, but this depends on the
-emitted C and C compiler. General recursion has no constant-stack guarantee in
-either execution mode; the interpreter recursively executes function calls.
-The two recursive examples therefore use four steps, not an unbounded depth.
+The compiler lowers eligible direct self-tail recursion, such as `down`, to its
+existing loop operation. Ordinary interpreted and native execution then reuse
+bounded call-stack space for that recurrence, including native O0 builds.
+`count-back` keeps ordinary recursion because additions remain pending. Other
+calls inside an iteration can still recurse or allocate.
+
+Resource cleanup, task/channel owners and unknown closure captures can prevent
+this proof. `FWP_DUMP_IR=1` explains lowering decisions. The raw interpreter
+(`FWP_NO_OPT=1`) and source debugger preserve original recursive calls; use the
+small four-step examples in those modes. See [the handoff](../../development-state.md)
+for validation of the current compiler revision.
 
 ## An explicit loop
 

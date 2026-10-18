@@ -69,6 +69,7 @@ prove every external deployment works.
 | 20 | [Reverse-mode autodiff and devices](20-autodiff-and-devices/README.md) | `grad` and `vjp` on tapes, tensor expressions as fused kernels, `Cpu`, `CpuParallel` and `Gpu` devices |
 | 21 | [MCP tools](21-mcp/README.md) | `# expose: mcp`, `fwp build --mcp`, a stateless MCP server over stdio and HTTP, schemas from types |
 | 22 | [Recursion, loops and shared values](22-recursion-and-sharing/README.md) | Tail calls, bounded iteration and immutable sharing |
+| 23 | [Ownership scopes](23-ownership-scopes/README.md) | Scoped callbacks, workers, cancellation and graph IDs/deletion |
 
 Use the [reference](../reference.md) to look up exact syntax and the
 [glossary](../glossary.md) for terminology. Lessons introduce concepts before

@@ -11,6 +11,7 @@ passed and their completed logs were audited. Duplicate queued post-merge runs
 records the acceptance links and limitations.
 
 Current branch: `ownership-tail-recursion`, based on that merge.
+Draft [PR #168](https://github.com/e6qu/fun-with-pipes/pull/168).
 Next: complete the cycle-contract and self-tail-recursion batch, run focused
 checks on GitHub, fix every failure, then publish one substantial PR with full
 final-head acceptance before squash merge.
@@ -36,9 +37,28 @@ final-head acceptance before squash merge.
 Implementation started in `src/tailrec.rs`, after ordinary simplification and
 before higher-order specialization/ownership insertion. It uses the existing
 Step/loop representation; no new source syntax or runtime continuation format.
-It is not yet compiled or verified. Full builds and suites belong on CI.
+First focused run `39152295142` at `d3830612` compiles and passes Clippy.
+Twenty-five Rust tests pass; the sole failure is test setup enabling tracing
+stress/verification for an ARC-only binary. The working tree corrects those
+settings by mode and keeps reuse verification enabled. Before that rejection,
+deep interpretation and tracing O0/O2 pass; cancellation passes independently.
+All eleven Python tests and the installed-package browser check pass.
+Full log audited: `/private/tmp/fwp-tail-d383.log`.
+
+The working tree also adds lesson 23, ARC physical-reclamation and payload-path
+checks, curried-argument/frame-safety tests, and a runner-only comparison with
+explicit fwp loops. It records raw timings, allocation/live-memory profiles,
+actual disassembly and per-function stack estimates. These additions still need
+the next focused run; full final-head acceptance follows.
 
 ## Checks
+
+- Guarded old CI compiler (`763e245b`) raw interpretation passes the small
+  recursion reference (including curried arguments), 0.34 seconds; lesson 23
+  outputs `(Some 7, None)`, `6`, `None`, `(None, Some [1])`, 0.26 seconds.
+  The initial tutorial send-argument ordering mistake was fixed before publication.
+- Guarded Python audit passes all 72 files, 0.37 seconds. Rust formatting and
+  roadmap audit passed before the draft push; rerun for the combined changes.
 
 - `python3 scripts/local-guard.py python3 /private/tmp/fwp-monitor-pr167-7cb8.py`:
   PASS, 28.18 seconds. All 15 merged-head jobs passed; no failed Rust executions.
@@ -64,4 +84,3 @@ The seven project work areas in [PLAN.md](../PLAN.md) remain open. Default traci
 removal is unfinished. JIT is excluded. After this delivery, the next substantial
 work is cycle-safe ownership contracts and eligible tail-recursion elimination,
 selected and checked against representative programs.
-

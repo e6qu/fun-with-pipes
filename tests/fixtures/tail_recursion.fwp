@@ -18,9 +18,18 @@ count-back = match
     0 -> 0
     _ -> sub 1 | count-back | add 1
 
+rec curried : I64 -> I64 -> I64
+curried = curry (if (.1 | eq 0)
+    .0
+    (fork curried .0 (.1 | sub 1)))
+
 main = [
     200000 | down | echo,
     (200001, "left", "right") | swap | echo,
     3 | attempt guarded | echo,
     10 | count-back | echo,
+    200000 | curried 42 | echo,
+    "shared" | string.repeat 2
+    | both id (make { 0 = const 200001, 1 = id, 2 = id } | swap)
+    | echo,
 ] | ignore
