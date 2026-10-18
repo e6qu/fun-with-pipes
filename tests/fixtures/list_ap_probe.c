@@ -68,6 +68,10 @@ static int flat_probe(void) {
         if(ap_mode==2) {
             ap_saved_task=fwp_cur;memset(&ap_cancelled_task,0,sizeof(ap_cancelled_task));
             ap_cancelled_task.cancelled=1;fwp_cur=&ap_cancelled_task;
+#ifdef _WIN32
+            /* This synthetic task executes on the main thread stack. */
+            ap_cancelled_task.ctx.top=fwp_gc.main_top;
+#endif
             if(!setjmp(ap_cancelled_task.base)) {
                 fwp_p_flat_map_owned(PTR(&flat_callback),inputs,fwp_rc_dup,ap_drop_element,ap_drop_list);return 98;
             }
@@ -115,6 +119,10 @@ int main(void) {
         if(ap_mode==2) {
             ap_saved_task=fwp_cur;memset(&ap_cancelled_task,0,sizeof(ap_cancelled_task));
             ap_cancelled_task.cancelled=1;fwp_cur=&ap_cancelled_task;
+#ifdef _WIN32
+            /* This synthetic task executes on the main thread stack. */
+            ap_cancelled_task.ctx.top=fwp_gc.main_top;
+#endif
             if(!setjmp(ap_cancelled_task.base)) { fwp_p_list_ap_owned(fs,xs,ap_drop_element,ap_drop_list);return 82; }
             fwp_cur=ap_saved_task;if(!ap_cancelled_task.unwinding) return 83;
         } else if(!setjmp(ap_recovered)) {
@@ -135,7 +143,10 @@ int main(void) {
         if(fwp_cleanups || ap_allocations!=3) return 85;
         for(unsigned i=0;i<3;i++) if(!ap_scratch[i] || ap_frees[i]!=1) return 81;
         if((ap_mode==1 || ap_mode==2) && ap_element_drops!=2) return 89;
-        if(ap_mode==3 && (ap_element_drops!=3 || ap_list_drops!=1)) return 90;
+        if(ap_mode==3 && (ap_element_drops!=3 || ap_list_drops!=1)) {
+            fprintf(stderr,"list.ap spine failure: element drops %u expected 3; list drops %u expected 1\n",ap_element_drops,ap_list_drops);
+            return 90;
+        }
     }
     int flattened=flat_probe();if(flattened) return flattened;
     size_t maximum=SIZE_MAX/sizeof(V)-1;

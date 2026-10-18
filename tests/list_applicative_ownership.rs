@@ -129,7 +129,10 @@ fn cartesian_results_and_scratch_release_on_trap_and_cancel() {
             ("flat-unprotected", &flat_unprotected, 0, 1, 99),
             ("flat-unduplicated", &flat_unduplicated, 0, 0, 100),
         ] {
-            let executable = scratch.0.join(format!("{label}{}", &opt[1..]));
+            let executable = scratch
+                .0
+                .join(format!("{label}{}", &opt[1..]))
+                .with_extension(std::env::consts::EXE_EXTENSION);
             let code=format!("{source}\n#define PROBE_FIRST_MODE {first}\n#define FLAT_FIRST_MODE {flat_first}\n{probe}");
             if let Some(directory) = std::env::var_os("FWP_LIST_AP_ARTIFACTS") {
                 let directory = PathBuf::from(directory);
@@ -237,7 +240,10 @@ main = [
             .unwrap();
         }
         for opt in ["-O1", "-O2"] {
-            let executable = scratch.0.join(format!("{label}{}", &opt[1..]));
+            let executable = scratch
+                .0
+                .join(format!("{label}{}", &opt[1..]))
+                .with_extension(std::env::consts::EXE_EXTENSION);
             let cfile = executable.with_extension("c");
             checked(
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
@@ -336,7 +342,10 @@ fn closure_drop_context_recovers_after_capture_trap_and_spill_oom() {
                 "{source}\n{}",
                 include_str!("fixtures/closure_drop_probe.c")
             );
-            let executable = scratch.0.join(format!("{label}{}", &opt[1..]));
+            let executable = scratch
+                .0
+                .join(format!("{label}{}", &opt[1..]))
+                .with_extension(std::env::consts::EXE_EXTENSION);
             if let Some(directory) = std::env::var_os("FWP_LIST_AP_ARTIFACTS") {
                 let directory = PathBuf::from(directory);
                 std::fs::create_dir_all(&directory).unwrap();
@@ -429,7 +438,10 @@ fn inactive_state_slots_are_cleared_at_real_collection_and_handler_boundaries() 
             ("state-task-retained", &task_control, 112),
         ] {
             let code = format!("{source}\n{}", include_str!("fixtures/state_slot_probe.c"));
-            let executable = scratch.0.join(format!("{label}{}", &opt[1..]));
+            let executable = scratch
+                .0
+                .join(format!("{label}{}", &opt[1..]))
+                .with_extension(std::env::consts::EXE_EXTENSION);
             if let Some(directory) = std::env::var_os("FWP_LIST_AP_ARTIFACTS") {
                 let directory = PathBuf::from(directory);
                 std::fs::create_dir_all(&directory).unwrap();
@@ -512,7 +524,10 @@ main = [
         .unwrap();
     }
     for opt in ["-O1", "-O2"] {
-        let executable = scratch.0.join(format!("state-semantics{}", &opt[1..]));
+        let executable = scratch
+            .0
+            .join(format!("state-semantics{}", &opt[1..]))
+            .with_extension(std::env::consts::EXE_EXTENSION);
         let cfile = executable.with_extension("c");
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))

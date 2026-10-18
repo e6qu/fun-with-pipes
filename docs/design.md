@@ -542,8 +542,14 @@ proved derivative scopes, selected retained tasks, channels carrying data withou
 functions, tasks, HTTP stream handles or channels, and scoped C calls. Mutable
 cycles, raw pointers and unproved external callbacks remain excluded.
 Checked ARC supports native main and function executables,
-including CLI commands, and C libraries with copied inputs and pointer-free
-results. Every library export is checked as a separate entry. Synchronous WASI
+including CLI commands, and C libraries with copied inputs. A prepared C-result
+extension transfers owned strings and record string fields to the host, with
+explicit per-export release functions. It avoids an extra heap handle; unique
+owners move and shared fields retain only the necessary owners. When the existing
+worker already returns record fields and takes ordinary word arguments, the C
+export transfers those fields directly instead of allocating and unpacking a
+record box. Typed cleanup protects the fields if conversion fails. Raw pointers
+remain excluded. Verification is tracked in the handoff. Every library export is checked as a separate entry. Synchronous WASI
 main/function/CLI entries use the same ownership checks and free counted storage
 through their existing external count table. Checked gRPC clients and service
 methods additionally prove when sent and received iterator steps run; the
@@ -555,7 +561,7 @@ their native execution and memory acceptance are being established in the
 and encode results using ordinary typed fwp code. A returned alias must retain
 its input storage until encoding finishes; a failed call must release decoded
 input. HTTP modes also depend on the connection/task owners described above.
-A prepared browser/WASI task extension uses the same
+The browser/WASI task extension accepted in PR #164 uses the same
 checked task/channel owners and frees scheduler records and pooled linear-memory
 stacks when the command returns. A completed fiber saves its latest State
 storage pointer before another fiber replaces the runtime globals. The browser
@@ -563,8 +569,8 @@ loader gives each invocation its own instance and passes copied strings to host
 output callbacks. Exceptions from those callbacks propagate unchanged; a host
 `RangeError` must not become a language stack-overflow trap or trigger a second
 call to the failed output sink. JSPI and Asyncify execution, cleanup controls
-and actual-module inspection now pass on both Linux hosts. Final production
-acceptance remains pending; see the handoff for source revisions and scope.
+and actual-module inspection pass on both Linux hosts. All nine final production
+jobs and docs pass; [history](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164) records the accepted source and scope.
 HTTP stream handles cannot be queued through a channel in checked ARC: their
 connection retains the handler, whose captures could contain that same channel.
 The allocators still use metadata;

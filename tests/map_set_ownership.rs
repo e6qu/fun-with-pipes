@@ -93,7 +93,10 @@ main = [
     );
     for opt in ["-O1", "-O2"] {
         for stack in ["0", "1"] {
-            let exe = dir.0.join(format!("aliases{opt}-{stack}"));
+            let exe = dir
+                .0
+                .join(format!("aliases{opt}-{stack}"))
+                .with_extension(std::env::consts::EXE_EXTENSION);
             checked(
                 Command::new(fwp)
                     .arg("build")
@@ -117,7 +120,10 @@ main = [
         }
     }
     for flag in ["FWP_REUSE", "FWP_FREE"] {
-        let exe = dir.0.join(flag);
+        let exe = dir
+            .0
+            .join(flag)
+            .with_extension(std::env::consts::EXE_EXTENSION);
         checked(
             Command::new(fwp)
                 .arg("build")
@@ -217,7 +223,10 @@ main = (10000, 0) | loop step | echo
     assert_ne!(shared, owned);
     let mut freed = Vec::new();
     for (name, code) in [("shared", &shared), ("owned", &owned)] {
-        let exe = dir.0.join(name);
+        let exe = dir
+            .0
+            .join(name)
+            .with_extension(std::env::consts::EXE_EXTENSION);
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
         let out = checked(
             Command::new(&exe)
@@ -271,6 +280,10 @@ main = [
     let emitted = std::fs::read_to_string(cfile).unwrap();
     let mut probe = r#"
 int main(void) {
+#ifdef _WIN32
+    /* Preserve exact test output bytes on native Windows too. */
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0));
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));
     V input = fwp_cons(fwp_tuple2(bits, bits), 0);
@@ -348,7 +361,7 @@ int main(void) {
                 .split('}')
                 .next()
                 .unwrap();
-            probe = probe.replace(drop_placeholder, ops.rsplit(", ").next().unwrap());
+            probe = probe.replace(drop_placeholder, ops.split(", ").nth(4).unwrap());
         }
     }
     let runtime = emitted.replace(
@@ -357,11 +370,309 @@ int main(void) {
     );
     let source = format!("{runtime}\n{probe}");
     for opt in ["-O1", "-O2"] {
-        let exe = dir.0.join(opt);
+        let exe = dir
+            .0
+            .join(opt)
+            .with_extension(std::env::consts::EXE_EXTENSION);
         fwp::cgen::compile_c(&source, &exe, opt).unwrap();
         assert_eq!(
             checked(&mut Command::new(&exe)).stdout,
             b"typed map/set native ownership preserved\n"
         );
+    }
+}
+
+fn save_map_evidence(name: &str, bytes: &[u8]) {
+    if let Some(root) = std::env::var_os("FWP_MAP_FAILURE_ARTIFACTS") {
+        let root = PathBuf::from(root);
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join(name), bytes).unwrap();
+    }
+}
+
+fn map_failure_source(dir: &Scratch, mode: &str) -> String {
+    let src = dir.0.join("failures.fwp");
+    let cfile = dir.0.join(format!("failures-{mode}.c"));
+    std::fs::write(&src, include_str!("fixtures/map_failures.fwp")).unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .arg("build")
+            .arg(&src)
+            .args(["--gc", mode, "--emit-c", "-o"])
+            .arg(&cfile)
+            .env("FWP_STACK", "0"),
+    );
+    std::fs::read_to_string(cfile).unwrap()
+}
+
+fn map_failure_ops<'a>(emitted: &'a str, symbol: &str, prefix: &str) -> (&'a str, &'a str) {
+    let call = emitted
+        .lines()
+        .find(|line| {
+            line.contains(&format!("return fwp_p_{symbol}_typed(l"))
+                && line.contains(&format!("fwp_map_ops){{{prefix}"))
+        })
+        .unwrap_or_else(|| panic!("missing typed {symbol}: {prefix}"));
+    let ops = call.split("fwp_map_ops){").nth(1).unwrap();
+    (ops.split('}').next().unwrap(), call)
+}
+
+fn map_failure_probe(emitted: &str) -> String {
+    let (map, call) = map_failure_ops(emitted, "map_from_list", "fwp_rc_dup, fwp_rc_dup,");
+    let key_type = call.split("}, ").nth(1).unwrap().trim_end_matches(");");
+    let (set, _) = map_failure_ops(emitted, "set_from_list", "fwp_rc_dup, NULL,");
+    let (column, _) = map_failure_ops(emitted, "map_values", "fwp_rc_dup, fwp_rc_dup,");
+    let (pairs, _) = map_failure_ops(emitted, "map_to_list", "fwp_rc_dup, fwp_rc_dup,");
+    let (get, _) = map_failure_ops(emitted, "map_get", "fwp_rc_dup, fwp_rc_dup,");
+    let (scalar, _) = map_failure_ops(emitted, "map_map_values", "fwp_rc_dup, NULL,");
+    let scalar_start = emitted.find("/* scalar :").unwrap();
+    let scalar_id = emitted[scalar_start..]
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let start = emitted.find("/* transform :").unwrap();
+    let callback = emitted[start..]
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let mut probe = include_str!("fixtures/map_failure_probe.c").to_string();
+    for (name, value) in [
+        ("SCALAR_OPS", format!("{{{scalar}}}")),
+        ("SCALAR_CALLBACK", format!("PTR(&fc{scalar_id})")),
+        ("MAP_OPS", format!("{{{map}}}")),
+        ("SET_OPS", format!("{{{set}}}")),
+        ("COLUMN_OPS", format!("{{{column}}}")),
+        ("PAIR_OPS", format!("{{{pairs}}}")),
+        ("KEY_TYPE", key_type.into()),
+        ("DROP_STRING", map.split(", ").nth(2).unwrap().into()),
+        ("DROP_MAP", map.split(", ").nth(4).unwrap().into()),
+        ("DROP_SET", set.split(", ").nth(4).unwrap().into()),
+        ("DROP_OPTION", get.split(", ").nth(5).unwrap().into()),
+        ("CALLBACK", format!("PTR(&fc{callback})")),
+    ] {
+        probe = probe.replace(name, &value);
+    }
+    // Return real heap address bits as an I64. Typed output cleanup must leave
+    // that independent string owner untouched, even after a later failure.
+    let definition = format!("static V f{scalar_id}(V l0) {{");
+    let start = emitted.find(&definition).unwrap();
+    let end = start + emitted[start..].find('\n').unwrap() + 1;
+    assert!(
+        emitted[start..end].trim_end().ends_with('}'),
+        "expected the scalar word wrapper on one line"
+    );
+    let mut emitted = emitted.to_string();
+    emitted.replace_range(
+        start..end,
+        &format!("static V map_test_scalar(V);\n{definition} return map_test_scalar(l0); }}\n"),
+    );
+    let allocate = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+    assert_eq!(emitted.matches(allocate).count(), 1);
+    let mut runtime = emitted.replace(
+        allocate,
+        "static inline void *map_test_allocate(size_t n, int leaf) {",
+    );
+    let start = runtime
+        .find("static inline void *map_test_allocate(")
+        .unwrap();
+    let end = start + runtime[start..].find("\n}\n").unwrap() + 3;
+    runtime.insert_str(end, "\nstatic inline void *fwp_gc_alloc(size_t n, int leaf) { map_test_tick(); void *p = map_test_allocate(n, leaf); map_test_record(p); return p; }\n");
+    // The initialized-object allocator has its own fast path. Instrument it
+    // once, including that path, without counting its slow path twice.
+    let init = "static inline void *fwp_alloc_init(size_t n) {";
+    assert_eq!(runtime.matches(init).count(), 1);
+    runtime = runtime.replace(
+        init,
+        "static inline void *map_test_allocate_init(size_t n) {",
+    );
+    let start = runtime
+        .find("static inline void *map_test_allocate_init(")
+        .unwrap();
+    let end = start + runtime[start..].find("\n}\n").unwrap() + 3;
+    let body = runtime[start..end].replace("fwp_gc_alloc(n, 0)", "map_test_allocate(n, 0)");
+    runtime.replace_range(start..end, &body);
+    runtime.insert_str(start + body.len(), "\nstatic inline void *fwp_alloc_init(size_t n) { map_test_tick(); void *p = map_test_allocate_init(n); map_test_record(p); return p; }\n");
+    runtime = runtime
+        .replace(
+            "static inline void fwp_rc_dup(V v) {",
+            "static inline void fwp_rc_dup(V v) { map_test_tick();",
+        )
+        .replace(
+            "static void fwp_mem_free(void *p) {",
+            "static void fwp_mem_free(void *p) { map_test_release(p);",
+        )
+        .replace(
+            "    if (!fwp_rc_last(v)) return;",
+            "    if (!fwp_rc_last(v)) return;\n    map_test_release((void *)(uintptr_t)v);",
+        )
+        .replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+    format!("static void map_test_no_release(void *p) {{ (void)p; }}\nstatic void map_test_tick(void);\nstatic void map_test_record(void *);\nstatic void map_test_release(void *);\n{runtime}\n{probe}")
+}
+
+#[test]
+fn map_set_failures_release_partial_storage_and_preserve_aliases() {
+    let dir = Scratch::new("partial-failure");
+    for mode in ["arc", "tracing"] {
+        let emitted = map_failure_source(&dir, mode);
+        let source = map_failure_probe(&emitted);
+        save_map_evidence(&format!("faults-{mode}.c"), source.as_bytes());
+        for opt in ["-O1", "-O2"] {
+            let exe = dir
+                .0
+                .join(format!("failures-{mode}{opt}"))
+                .with_extension(std::env::consts::EXE_EXTENSION);
+            fwp::cgen::compile_c(&source, &exe, opt).unwrap();
+            save_map_evidence(
+                &format!("faults-{mode}{opt}.bin"),
+                &std::fs::read(&exe).unwrap(),
+            );
+            for poison in if mode == "arc" {
+                &["0"][..]
+            } else {
+                &["0", "1"][..]
+            } {
+                let mut command = Command::new(&exe);
+                command
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", poison);
+                if mode != "arc" {
+                    command.env("FWP_GC_STRESS", "1").env("FWP_GC_VERIFY", "1");
+                }
+                let out = checked(&mut command);
+                save_map_evidence(
+                    &format!("faults-{mode}{opt}-reuse-{poison}.txt"),
+                    &out.stdout,
+                );
+                let stdout = String::from_utf8(out.stdout).unwrap();
+                assert!(stdout.starts_with("22 map/set operations: "), "{stdout}");
+                assert!(
+                    stdout.ends_with(" injected failures cleaned; aliases preserved\n"),
+                    "{stdout}"
+                );
+                print!("{mode} {opt} reuse={poison}: {stdout}");
+            }
+        }
+        // A missing result owner must be detected independently of output checks.
+        if mode == "arc" {
+            let start = source.find("static V fwp_map_typed_copy(").unwrap();
+            let end = start + source[start..].find("\n}\n").unwrap() + 3;
+            let mut broken = source.clone();
+            let body = source[start..end].replace(
+                "fwp_value_owner owner = {result, ops->drop_map};",
+                "fwp_value_owner owner = {result, NULL};",
+            );
+            assert_ne!(body, source[start..end]);
+            broken.replace_range(start..end, &body);
+            let exe = dir
+                .0
+                .join("missing-owner")
+                .with_extension(std::env::consts::EXE_EXTENSION);
+            fwp::cgen::compile_c(&broken, &exe, "-O1").unwrap();
+            let out = Command::new(exe)
+                .env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(
+                out.status.code(),
+                Some(213),
+                "{}",
+                String::from_utf8_lossy(&out.stderr)
+            );
+            save_map_evidence("missing-result-owner.txt", &out.stderr);
+            // Protecting the map alone is insufficient when an earlier scratch
+            // allocation survives failure of the next allocation.
+            let start = source.find("static V fwp_map_build_typed(").unwrap();
+            let end = start + source[start..].find("\n}\n").unwrap() + 3;
+            let body = source[start..end].replace(
+                "fwp_scratch_protect(&tk, &tk_cleanup);",
+                "fwp_cleanup_push(&tk_cleanup, map_test_no_release, &tk);",
+            );
+            assert_ne!(body, source[start..end]);
+            let mut broken = source.clone();
+            broken.replace_range(start..end, &body);
+            let exe = dir
+                .0
+                .join("missing-scratch-owner")
+                .with_extension(std::env::consts::EXE_EXTENSION);
+            fwp::cgen::compile_c(&broken, &exe, "-O1").unwrap();
+            let out = Command::new(exe)
+                .env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(
+                out.status.code(),
+                Some(213),
+                "{}",
+                String::from_utf8_lossy(&out.stderr)
+            );
+            save_map_evidence("missing-scratch-owner.txt", &out.stderr);
+        }
+    }
+}
+
+#[test]
+fn map_callbacks_can_change_value_types_and_fail_without_leaking() {
+    let dir = Scratch::new("callback-failure");
+    let source = dir.0.join("failures.fwp");
+    std::fs::write(&source, include_str!("fixtures/map_failures.fwp")).unwrap();
+    let reference = checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["run", "--interp"])
+            .arg(&source)
+            .env("FWP_NO_OPT", "1"),
+    );
+    for mode in ["arc", "tracing"] {
+        save_map_evidence("interpreter.txt", &reference.stdout);
+        let mut emitted = map_failure_source(&dir, mode);
+        if mode == "arc" {
+            let finish = "    fwp_caf_finish();\n    fwp_cl_finish();";
+            assert_eq!(emitted.matches(finish).count(), 1);
+            emitted = emitted.replace(finish, &format!("{finish}\n    if (fwp_gc.budget_given != fwp_gc.budget) {{ fprintf(stderr, \"map callback storage leaked: %lld bytes\\n\", (long long)(fwp_gc.budget_given - fwp_gc.budget)); abort(); }}"));
+        }
+        save_map_evidence(&format!("callbacks-{mode}.c"), emitted.as_bytes());
+        for opt in ["-O1", "-O2"] {
+            let exe = dir
+                .0
+                .join(format!("callbacks-{mode}{opt}"))
+                .with_extension(std::env::consts::EXE_EXTENSION);
+            fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
+            save_map_evidence(
+                &format!("callbacks-{mode}{opt}.bin"),
+                &std::fs::read(&exe).unwrap(),
+            );
+            let mut command = Command::new(&exe);
+            command
+                .env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0");
+            if mode != "arc" {
+                command
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", "1");
+            }
+            let output = checked(&mut command);
+            assert_eq!(output.stdout, reference.stdout);
+            save_map_evidence(&format!("callbacks-{mode}{opt}.txt"), &output.stdout);
+            save_map_evidence(&format!("callbacks-{mode}{opt}.stderr"), &output.stderr);
+        }
     }
 }

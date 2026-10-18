@@ -52,39 +52,43 @@ The timing runner does not measure those costs separately.
 
 ### Recorded example and overhead
 
-This accepted [PR #141 benchmark job](https://github.com/e6qu/fun-with-pipes/actions/runs/38728631817/job/116400593825)
-ran on Linux AMD64 on 2026-10-15 at `f31f7b66`. Its old output rounded times to
-whole milliseconds and did not record CPU/compiler versions or raw samples.
-The percentages below are therefore **approximate**, calculated from those
-rounded times. Treat them as an example of how to read a comparison, not a
-precise hardware baseline.
-
-That historical Rust map used `BTreeMap`. The current benchmark uses sorted
-pairs to match C and fwp; do not attribute differences from this old table solely
-to compiler improvements.
+The [2026-10-18 report](measurements/complete-programs-2026-10-18.json) records
+source `7c2b5638881cea6b476997b333aa61006dba1381` and this passing
+[benchmark job](https://github.com/e6qu/fun-with-pipes/actions/runs/39092728270/job/117572692192).
+It ran on a Linux AMD64 runner with four logical CPUs reporting an AMD EPYC 7763,
+GCC 13.3.0 and Rust 1.99.1. All three map implementations use sorted pairs.
+These are six-run medians, with samples rounded to 0.001 ms in the saved report.
+This benchmark gate passes independently of the delivery's remaining checks.
 
 | Program | C | Rust | fwp | Extra fwp time versus C | Extra fwp time versus Rust |
 |---|---:|---:|---:|---:|---:|
-| `fib` | 15 ms | 25 ms | 11 ms | −27% | −56% |
-| `loop` | 83 ms | 110 ms | 111 ms | +34% | +1% |
-| `map` | 315 ms | 251 ms | 361 ms | +15% | +44% |
-| `pipeline` | 28 ms | 12 ms | 13 ms | −54% | +8% |
-| `strings` | 110 ms | 129 ms | 166 ms | +51% | +29% |
+| `fib` | 20.310 ms | 29.174 ms | 13.427 ms | −33.9% | −54.0% |
+| `loop` | 94.445 ms | 125.738 ms | 127.146 ms | +34.6% | +1.1% |
+| `map` | 382.480 ms | 311.772 ms | 423.266 ms | +10.7% | +35.8% |
+| `pipeline` | 27.546 ms | 15.063 ms | 24.033 ms | −12.8% | +59.6% |
+| `strings` | 167.595 ms | 166.028 ms | 198.031 ms | +18.2% | +19.3% |
 
-Use `(fwp time / baseline time − 1) × 100%`. For example, `111 / 83` is about
-`1.34×`, or 34% longer than the C loop. A negative percentage means less elapsed
-time. Always name the baseline: that same fwp loop is only about 1% longer than
-the Rust result in this run. Do not average these percentages into a language-wide
-score: the programs do different work and have different comparison limitations.
+Use `(fwp time / baseline time − 1) × 100%`. For example, `127.146 / 94.445`
+is about `1.346×`, or 34.6% longer than the C loop. A negative percentage means
+less elapsed time. Always name the baseline: the same fwp loop is only about
+1.1% longer than Rust in this run. Do not average these into a language-wide
+score: each program has the comparison limits described above.
+
+The map gap includes constructing and sorting its input, as well as lookups;
+it cannot identify how much time comes from temporary lists or reference counts.
+The pipeline's fwp samples range from 20.737 to 36.057 ms, so its median is not a
+stable regression threshold. The report retains all 90 elapsed samples, 15
+compilation times and 15 binary sizes. It has no allocation or memory-use counts,
+and does not measure checked ARC. Separate ownership reports below provide those
+measurements for their stated workloads. No speedup over an older fwp revision
+is claimed from this single runner's comparison.
 
 The runner writes `target/bench.md`, the GitHub job summary and a downloadable
 `benchmarks` artifact. It reports both ratios and percentages, all six samples,
 the source commit, OS/architecture, compiler versions and Linux/macOS CPU details.
 Rotating order reduces systematic order bias, but shared-runner load still
-affects results. The historical table above used the older shortest-of-three
-method; it has not been relabeled as a new measurement.
-Timing is reported, not used as a pass/fail
-threshold. Output disagreement is a failure.
+affects results. Timing is reported, not used as a pass/fail threshold. Output
+disagreement is a failure.
 
 ## Numerical workloads compared with C and Rust
 
@@ -2811,3 +2815,104 @@ not shrink the WebAssembly memory's capacity. These counts exclude JavaScript
 continuation stacks, instances, promises and strings, and do not measure host
 resident RAM. Their host engine still has its own memory management. Eliminating
 remaining allocation/count traffic and reducing these storage costs remain work.
+
+## Returning owned values to C callers
+
+A C caller can receive a string or a record containing strings from an fwp
+library and release that result explicitly. For example, `greet("c")` returns
+an owned string; `fwp_release_greet(result)` releases it. A record's release
+function releases all of its string fields together, including two fields that
+share the same allocation. [C interop](tutorials/09-c-interop/README.md) introduces
+the interface and caller obligations.
+
+The [six-host report](measurements/library-results-2026-10-18.json) uses source
+`d6d36961f532167beec8a116b35462906ba1cc6f`, retained by
+`evidence/library-results-20261018`, and
+[run 39090619574](https://github.com/e6qu/fun-with-pipes/actions/runs/39090619574).
+All 90 focused tests pass on Linux, macOS and Windows, each on ARM64 and AMD64,
+with no failures or skips. Final production acceptance is tracked in the
+[handoff](development-state.md); this focused run does not replace it.
+
+The measured program performs 256 repeated call batches after warmup. It reads
+strings, returns aliases and records, computes a derivative (a function's slope),
+and runs a function pipeline. Eight configurations per host combine static or
+shared linking, C optimization levels O1/O2 and an enabled or disabled cache for
+derivative temporary storage. A shared host loads, calls and unloads its library
+three times. Outputs match the interpreter; all 96 shutdown observations report
+zero counted bytes and zero collections. Inspection of the 24 actual ARC
+libraries finds internal runtime symbols and no tracing scan/mark/sweep functions.
+
+| Measured call | Additional retains | Intermediate record allocations |
+|---|---:|---:|
+| Return the copied input string unchanged | 0 | 0 |
+| Return two fields sharing the copied input string | 1 | 0 |
+
+A retain acquires another owning reference. The second call needs one because
+both fields own the same string. When a compiled function already returns
+separate record fields and takes whole argument values, the C entry now reuses
+those fields directly. It previously allocated and unpacked a temporary record.
+Other calling conventions can still allocate record boxes. Counts above exclude fresh count initialization and
+release work. Input strings still copy, even for calls that only read them;
+proving when those copies can be replaced by borrowing remains work.
+
+Failure checks cover embedded NUL conversion, partial acquisition of shared
+fields, traps and unload. Four deliberately broken variants per host must fail:
+omitting a temporary box release, omitting a host result release, adding a record
+allocation, or adding an unnecessary retain. The report verifies all 24 controls.
+
+Separate C and Rust callers use default library mode and check the public
+interface. Windows DLL export tables now include `norm`, and both saved Windows
+C hosts import it from `libgeom.dll`. Before the repair, `norm` existed inside the
+DLL but was omitted from its public exports; the host used Windows' different
+function and returned 25 instead of 5. Explicit exports and matching Rust
+LLVM-MinGW targets fix both discovered Windows interop failures.
+
+These checks measure fwp ownership and allocations; no elapsed-time comparison
+with C or Rust was collected. Counted bytes exclude allocator capacity and host
+resident memory. ARC library sizes include test instrumentation; C and Rust
+host sizes reflect different runtimes and static/shared linking. Reproduce the
+data-only inspection with `scripts/summarize-library-results.py --artifacts DIR
+--audit AUDIT --llvm-bin DIR --record-results direct --output FILE`. The collector
+never executes downloaded binaries.
+
+## Cleanup after failed map and set operations
+
+Maps associate keys with values; sets keep distinct keys. A map callback can
+fail after producing earlier values. Those partial results and temporary arrays
+must be released when the error is caught, while independently held input values
+remain usable. Acquiring another owning reference (a retain) or allocating storage
+can also fail midway through construction.
+
+A small fwp reproducer repeated 32 caught map callback failures. Before this
+repair, counted live storage grew by 2,048 bytes after warmup, or 64 bytes per
+failure. The repaired program returns to zero counted bytes. This compares two
+versions of fwp; it does not compare elapsed time with C or Rust.
+
+The [six-host report](measurements/map-failures-2026-10-18.json) records source
+`af834f8c67c6c5b7d543615755feeb0a85e81c87` and
+[run 39093309107](https://github.com/e6qu/fun-with-pipes/actions/runs/39093309107).
+All 66 focused tests pass on Linux, macOS and Windows, each on ARM64 and AMD64,
+without skips. Full delivery acceptance remains in the [handoff](development-state.md).
+
+Each host tests 22 operations, including conversion, insertion, removal, update,
+set operations and map callbacks. Instrumentation deliberately fails each
+allocation or retain in turn: 108 failure points per ordinary configuration and
+110 when storage reuse verification poisons released objects. Six configurations
+combine C optimization levels O1/O2 with checked ARC, stressed tracing, and
+stressed tracing with reuse verification. Aliases must survive these failures.
+Callbacks that change strings into integers or integers into strings must also
+agree with the interpreter and clean up according to their result type.
+
+The report inspects all 48 saved native executables as data. Their internal
+runtime names are present; checked-ARC binaries exclude tracing scan/mark/sweep
+functions, while tracing controls retain them. Checked-ARC callback runs report
+zero counted bytes at shutdown. Removing either the partial-map owner or the
+first scratch-array cleanup makes the probe fail, confirming that the test can
+detect those missing releases.
+
+Counted bytes exclude allocator capacity and process resident memory. Instrumented
+binary sizes are recorded for identification, not as a code-size improvement.
+No C/Rust timing comparison or claim of free reference counting follows from
+these cleanup checks. Reproduce the data-only inspection with
+`scripts/summarize-map-failures.py --artifacts DIR --audit AUDIT --head SOURCE
+--llvm-bin DIR --output FILE`; it never executes downloaded programs.

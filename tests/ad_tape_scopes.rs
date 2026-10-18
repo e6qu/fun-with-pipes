@@ -99,7 +99,10 @@ fn callback_scopes_release_live_tapes_without_per_scope_heap_owners() {
                 ("unconsumed", &unconsumed, 62),
                 ("uncounted", &uncounted, 76),
             ] {
-                let executable = scratch.0.join(format!("{label}{}", &opt[1..]));
+                let executable = scratch
+                    .0
+                    .join(format!("{label}{}", &opt[1..]))
+                    .with_extension(std::env::consts::EXE_EXTENSION);
                 let mode = if arc == 1 {
                     "#define FWP_ARC_ONLY 1\n"
                 } else {
@@ -202,7 +205,10 @@ fn scoped_gradient_functions_agree_with_raw_interpreter() {
                 .any(|line| line == "fwp: trap: gradient callback control"));
         }
         for opt in ["-O1", "-O2"] {
-            let executable = scratch.0.join(format!("{label}{}", &opt[1..]));
+            let executable = scratch
+                .0
+                .join(format!("{label}{}", &opt[1..]))
+                .with_extension(std::env::consts::EXE_EXTENSION);
             let cfile = executable.with_extension("c");
             checked(
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
@@ -298,7 +304,10 @@ main = read-all () | concat "runtime-owned scope input" | make {
             .arg(&input),
     );
     for opt in ["-O1", "-O2"] {
-        let executable = scratch.0.join(format!("aliases{opt}"));
+        let executable = scratch
+            .0
+            .join(format!("aliases{opt}"))
+            .with_extension(std::env::consts::EXE_EXTENSION);
         checked(
             Command::new(fwp)
                 .env_remove("FWP_NO_OPT")

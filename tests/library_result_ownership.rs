@@ -1,4 +1,4 @@
-//! C export results release their boxes without invalidating host strings.
+//! C export results transfer string owners and release boxes and host results.
 use fwp::ir::*;
 use fwp::value::Value;
 use std::process::Command;
@@ -150,8 +150,9 @@ static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_
 int main(void) {
  fwp_lib_init();
  V bits = fwp_rc_fresh(fwp_str_new("bits",4));
+ size_t pair_before = data_calls;
  struct fwp_c_Pair p = pair((int64_t)bits);
- if(p.a != (int64_t)bits || p.b != (int64_t)bits || !dead(observed_data)) return 1;
+ if(p.a != (int64_t)bits || p.b != (int64_t)bits || data_calls != pair_before) return 1;
  if(*fwp_rc_slot(bits) != 1) return 2;
  size_t before = data_calls;
  void *raw = pointer((void *)(uintptr_t)bits);
@@ -161,16 +162,21 @@ int main(void) {
  const char *held = string(0);
  struct fwp_c_Text t = text(17);
  if(t.number != 17 || strcmp(t.text,"hihi") || !dead(observed_data)) return 5;
- if(*fwp_rc_slot(observed_string) != 0 || strcmp(held,"okok")) return 6;
+ if(*fwp_rc_slot(observed_string) != 1 || strcmp(held,"okok")) return 6;
  for(int i=0; i<1000; i++) { p=cached(); if(p.a!=17 || p.b!=42 || *fwp_rc_slot(observed_data)!=1) return 7; }
  fwp_cleanup *boundary = fwp_cleanups;
  fwp_trap_recover=recover; fwp_trap_jb=&failure; fwp_trap_cleanup=boundary;
+ size_t before_bad = data_calls;
  if(setjmp(failure)==0) { (void)bad(0); return 8; }
- if(fwp_cleanups!=boundary || !dead(observed_data) || !dead_string(observed_string)) return 4;
+ if(fwp_cleanups!=boundary || data_calls!=before_bad || !dead_string(observed_string)) return 4;
  if(setjmp(failure)==0) { (void)bad_string(0); return 8; }
  if(fwp_cleanups!=boundary || !dead_string(observed_string)) return 4;
  fwp_trap_recover=0; fwp_trap_jb=0;
  if(strcmp(held,"okok") || strcmp(t.text,"hihi") || fwp_gc.armed || fwp_gc.ncollect) return 9;
+ V held_owner = PTR(held) - offsetof(fwp_str, d), text_owner = PTR(t.text) - offsetof(fwp_str, d);
+ fwp_release_string(held); fwp_release_text(t);
+ if(!dead_string(held_owner) || !dead_string(text_owner)) return 12;
+ fwp_rc_free_obj(bits);
  if(!fwp_reuse_verify && fwp_gc.freed < 32) return 10;
  return 0;
 }
@@ -195,7 +201,10 @@ int main(void) {
             );
         }
         let missing_drop = observed.replace("owner.value = result; fwp_value_release(&owner);", "");
-        let missing_share = observed.replace("    fwp_rc_share(result);\n", "");
+        let premature_release = observed.replace(
+            "const char * converted = fwp_c_str_arg(result);",
+            "const char * converted = fwp_c_str_arg(result); fwp_rc_free_obj(result);",
+        );
         let extra_evaluation = observed.replace(
             "    V result = f1(input_arg0);",
             "    V result = f1(input_arg0); (void)f1(input_arg0);",
@@ -204,15 +213,13 @@ int main(void) {
         let mut missing_guard = observed.clone();
         let guard = bad_start
             + observed[bad_start..]
-                .find("    fwp_value_protect(&owner, &cleanup);")
+                .find("fwp_cleanup_push(&result_cleanup,")
                 .unwrap();
-        missing_guard.replace_range(
-            guard..guard + "    fwp_value_protect(&owner, &cleanup);".len(),
-            "",
-        );
+        let end = guard + observed[guard..].find(';').unwrap() + 1;
+        missing_guard.replace_range(guard..end, "");
         for (broken, expected) in [
-            (missing_drop, 1),
-            (missing_share, 6),
+            (missing_drop, 3),
+            (premature_release, 6),
             (missing_guard, 4),
             (extra_evaluation, 11),
         ] {
@@ -234,4 +241,20 @@ int main(void) {
         }
     }
     std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn exported_names_cannot_collide_with_result_release_functions() {
+    let mut p = program();
+    p.exports.push(("fwp_release_text".into(), 0));
+    let error = fwp::cgen::generate_library(&p, "collision").unwrap_err();
+    assert!(
+        error.contains("generated result release `fwp_release_text`"),
+        "{error}"
+    );
+    let mut p = program();
+    p.exports.push(("same-name".into(), 0));
+    p.exports.push(("same_name".into(), 0));
+    let error = fwp::cgen::generate_library(&p, "collision").unwrap_err();
+    assert!(error.contains("same C name `same_name`"), "{error}");
 }

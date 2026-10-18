@@ -1,0 +1,261 @@
+{
+  "source": "7c2b5638881cea6b476997b333aa61006dba1381",
+  "run": 39092728270,
+  "job": 117572692192,
+  "conclusion": "success",
+  "original_report_sha256": "619845289de82552f7ec8bdeb2edc5ffdcd845f03be8b5fafb3b9b5ccdc8d030",
+  "host": "linux/x86_64",
+  "cpu": "AMD EPYC 7763 64-Core Processor",
+  "logical_cpus": 4,
+  "c_compiler": "Ubuntu GCC 13.3.0-6ubuntu2~24.04.1",
+  "rust_compiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13), LLVM 23.1.1",
+  "flags": {
+    "c": "cc -O2",
+    "rust": "rustc -O",
+    "fwp": "fwp build -O2, default tracing mode, system C compiler"
+  },
+  "method": "One warmup, six samples, rotating C/Rust/fwp, Rust/fwp/C, fwp/C/Rust twice. Whole-process startup, input construction, computation, allocation and output; excludes compilation. One separate compilation per implementation. Reported samples rounded to 0.001 ms.",
+  "limits": "No allocation or live/peak-memory counters in this run. Equal output does not imply equal work. Maps use sorted pairs but different sorts; pipeline/string allocation and formatting can be eliminated differently. fwp checks integer overflow; C and optimized Rust do not provide the same guarantees. Shared-runner noise remains. No cross-revision regression claim or checked-ARC comparison.",
+  "programs": [
+    {
+      "program": "fib",
+      "implementations": {
+        "c": {
+          "elapsed_ms_rounded": [
+            20.572,
+            20.41,
+            20.321,
+            20.246,
+            20.299,
+            20.294
+          ],
+          "median_ms_rounded": 20.31,
+          "build_ms_rounded": 564.644,
+          "executable_bytes": 15992
+        },
+        "rust": {
+          "elapsed_ms_rounded": [
+            29.162,
+            29.352,
+            28.952,
+            28.939,
+            29.186,
+            29.426
+          ],
+          "median_ms_rounded": 29.174,
+          "build_ms_rounded": 56.602,
+          "executable_bytes": 4537784
+        },
+        "fwp": {
+          "elapsed_ms_rounded": [
+            17.545,
+            18.114,
+            12.962,
+            13.801,
+            13.052,
+            13.038
+          ],
+          "median_ms_rounded": 13.427,
+          "build_ms_rounded": 1167.386,
+          "executable_bytes": 52320
+        }
+      },
+      "fwp_ratios": {
+        "c": 0.6611029049729198,
+        "rust": 0.4602385685884692
+      }
+    },
+    {
+      "program": "loop",
+      "implementations": {
+        "c": {
+          "elapsed_ms_rounded": [
+            94.272,
+            94.606,
+            94.611,
+            94.272,
+            94.385,
+            94.505
+          ],
+          "median_ms_rounded": 94.445,
+          "build_ms_rounded": 36.577,
+          "executable_bytes": 15968
+        },
+        "rust": {
+          "elapsed_ms_rounded": [
+            125.749,
+            126.089,
+            125.728,
+            125.583,
+            125.873,
+            125.651
+          ],
+          "median_ms_rounded": 125.738,
+          "build_ms_rounded": 58.094,
+          "executable_bytes": 4537896
+        },
+        "fwp": {
+          "elapsed_ms_rounded": [
+            126.457,
+            127.249,
+            133.472,
+            127.097,
+            126.028,
+            127.195
+          ],
+          "median_ms_rounded": 127.146,
+          "build_ms_rounded": 1125.702,
+          "executable_bytes": 61496
+        }
+      },
+      "fwp_ratios": {
+        "c": 1.3462438456244377,
+        "rust": 1.0111978876711893
+      }
+    },
+    {
+      "program": "map",
+      "implementations": {
+        "c": {
+          "elapsed_ms_rounded": [
+            382.234,
+            382.726,
+            382.044,
+            382.002,
+            383.583,
+            383.591
+          ],
+          "median_ms_rounded": 382.48,
+          "build_ms_rounded": 49.685,
+          "executable_bytes": 16120
+        },
+        "rust": {
+          "elapsed_ms_rounded": [
+            311.929,
+            311.701,
+            312.601,
+            311.808,
+            311.515,
+            311.737
+          ],
+          "median_ms_rounded": 311.772,
+          "build_ms_rounded": 164.05,
+          "executable_bytes": 4543344
+        },
+        "fwp": {
+          "elapsed_ms_rounded": [
+            421.344,
+            424.68,
+            518.565,
+            421.853,
+            412.381,
+            425.632
+          ],
+          "median_ms_rounded": 423.266,
+          "build_ms_rounded": 1362.72,
+          "executable_bytes": 75024
+        }
+      },
+      "fwp_ratios": {
+        "c": 1.1066356410792721,
+        "rust": 1.3576138973352323
+      }
+    },
+    {
+      "program": "pipeline",
+      "implementations": {
+        "c": {
+          "elapsed_ms_rounded": [
+            39.641,
+            30.531,
+            26.936,
+            26.055,
+            27.559,
+            27.534
+          ],
+          "median_ms_rounded": 27.546,
+          "build_ms_rounded": 46.873,
+          "executable_bytes": 16048
+        },
+        "rust": {
+          "elapsed_ms_rounded": [
+            15.026,
+            16.938,
+            15.1,
+            14.911,
+            15.245,
+            15.007
+          ],
+          "median_ms_rounded": 15.063,
+          "build_ms_rounded": 95.604,
+          "executable_bytes": 4538088
+        },
+        "fwp": {
+          "elapsed_ms_rounded": [
+            32.185,
+            23.52,
+            24.546,
+            20.737,
+            36.057,
+            21.71
+          ],
+          "median_ms_rounded": 24.033,
+          "build_ms_rounded": 1185.572,
+          "executable_bytes": 61968
+        }
+      },
+      "fwp_ratios": {
+        "c": 0.8724678719233283,
+        "rust": 1.5954989046006771
+      }
+    },
+    {
+      "program": "strings",
+      "implementations": {
+        "c": {
+          "elapsed_ms_rounded": [
+            167.466,
+            167.724,
+            168.047,
+            167.303,
+            168.143,
+            166.922
+          ],
+          "median_ms_rounded": 167.595,
+          "build_ms_rounded": 39.233,
+          "executable_bytes": 16112
+        },
+        "rust": {
+          "elapsed_ms_rounded": [
+            166.043,
+            166.482,
+            165.659,
+            166.013,
+            166.418,
+            165.852
+          ],
+          "median_ms_rounded": 166.028,
+          "build_ms_rounded": 66.642,
+          "executable_bytes": 4540016
+        },
+        "fwp": {
+          "elapsed_ms_rounded": [
+            203.559,
+            193.843,
+            190.126,
+            203.473,
+            190.864,
+            202.219
+          ],
+          "median_ms_rounded": 198.031,
+          "build_ms_rounded": 1158.376,
+          "executable_bytes": 61672
+        }
+      },
+      "fwp_ratios": {
+        "c": 1.1816044631403084,
+        "rust": 1.1927566434577301
+      }
+    }
+  ]
+}

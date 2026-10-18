@@ -10,11 +10,12 @@ static SOCKET input_socket(void) {
 }
 #ifdef STATIC_HOST
 extern const char *cached(void);
+extern void fwp_release_cached(const char *);
 extern void setup(struct snapshot *);
 static struct snapshot state;
 int main(void) {
  WSADATA data;if(WSAStartup(MAKEWORD(2,2),&data))return 30;
- if(strcmp(cached(),"heapheap"))return 33;
+ const char *value=cached(); if(strcmp(value,"heapheap"))return 33; fwp_release_cached(value);
  state.socket=(uintptr_t)input_socket();setup(&state);state.static_exit=1;
  if(state.order_error)return 34;
  puts("main");return 0;
@@ -29,12 +30,14 @@ int main(int argc,char **argv) {
   SOCKET fd=input_socket();
   HMODULE lib=LoadLibraryA(argv[1]);if(!lib){fprintf(stderr,"load: %lu\n",GetLastError());return 32;}
   const char *(*cached)(void)=(const char *(*)(void))GetProcAddress(lib,"cached");
+  void (*release_cached)(const char *)=(void (*)(const char *))GetProcAddress(lib,"fwp_release_cached");
   void (*setup)(struct snapshot *)=(void (*)(struct snapshot *))GetProcAddress(lib,"setup");
-  if(!cached||!setup){fprintf(stderr,"missing DLL exports: cached=%d setup=%d\n",cached!=NULL,setup!=NULL);return 33;}
+  if(!cached||!release_cached||!setup){fprintf(stderr,"missing DLL exports: cached=%d setup=%d\n",cached!=NULL,setup!=NULL);return 33;}
   const char *value=cached();
   if(strcmp(value,"heapheap")){fprintf(stderr,"cached result: %s\n",value);return 33;}
+  release_cached(value);
   static struct snapshot s;memset(&s,0,sizeof s);s.socket=(uintptr_t)fd;setup(&s);
-  if(s.order_error||strcmp(cached(),"heapheap"))return 34;
+  const char *second=cached(); if(s.order_error||strcmp(second,"heapheap"))return 34; release_cached(second);
   if(!FreeLibrary(lib))return 35;
   if(!unmapped(s.heap)||!unmapped(s.meta))return 1;
   for(int j=0;j<3;j++)if(!unmapped(s.stacks[j]))return 2;

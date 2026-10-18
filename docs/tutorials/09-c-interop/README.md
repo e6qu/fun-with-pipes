@@ -56,6 +56,15 @@ On macOS the shared-library form (`--cdylib`) uses `.dylib` and the
 interpreter loads a Darwin FFI shim. Native portability and verification
 are tracked in [the session handoff](../../development-state.md).
 
+On Windows, generated libraries use LLVM-MinGW and the Universal C Runtime
+(UCRT). A Rust caller must use the matching native
+[`x86_64-pc-windows-gnullvm` or `aarch64-pc-windows-gnullvm` target](https://doc.rust-lang.org/rustc/platform-support/windows-gnullvm.html)
+and LLVM-MinGW linker. These targets make the Rust caller and generated library
+agree on the C calling convention and runtime libraries. The repository setup
+script installs that Rust target for its Windows interop checks. Generated DLLs
+explicitly export their declared functions and result releases, so a name also
+used by the Windows runtime cannot silently disappear from the DLL interface.
+
 ## Reading the example
 
 The first four outputs come from standard C functions: `strlen` counts the five
@@ -75,6 +84,24 @@ The `mylib.c`, `program.fwp` and `geom.fwp` commands above are usage templates;
 those files are not supplied by this lesson. A static library is linked into
 another executable; a shared library is loaded alongside it. A generated header
 declares its callable C interface.
+
+When an exported function returns a string, the caller owns the returned storage.
+The generated header supplies a matching release function. For example,
+`tests/c-interop/geom.fwp` exports `greet`, which formats its input as a greeting:
+
+```c
+const char *greeting = greet("c");
+printf("%s\n", greeting);     /* prints hello, c! */
+fwp_release_greet(greeting); /* releases this result's ownership */
+```
+
+Use the result before releasing it, and release it exactly once. Do not call
+`free` or modify the returned string. A returned record containing strings has
+one release function for the whole record; copied pointer bits are aliases,
+not separately owned results. Scalar-only results need no release. Release all
+results and finish all calls before unloading a shared library. Host calls and
+releases must be serialized. This result-ownership extension is undergoing the
+checks recorded in [the handoff](../../development-state.md).
 
 ## The program
 

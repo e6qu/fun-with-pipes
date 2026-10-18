@@ -12,9 +12,25 @@ export pipeline : I64 -> I64
 pipeline = range 0 | map (add 1) | sum
 export crash : String -> I64
 crash = const 1 | div 0
+repr(C) Words = { count: I64, left: String, right: String }
+export keep-text : String -> String
+keep-text = id
+export twin : String -> Words
+twin = make { count = string.length, left = id, right = id }
+export saved : Words
+saved = "cache" | string.repeat 2 | twin
+export shared : () -> Words
+shared = const saved
+export return-nul : String -> String
+return-nul = const "bad\0text"
+export pair-nul : String -> Words
+pair-nul = make { count = string.length, left = id, right = const "bad\0text" }
 main = [
     "héllo" | text-length | echo,
     { number = 7, text = "abcd" } | summarize | .count | echo,
     3.0 | slope | echo,
     10 | pipeline | echo,
+    "owned" | keep-text | echo,
+    "twice" | twin | .right | echo,
+    () | shared | .left | echo,
 ] | ignore

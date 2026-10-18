@@ -1,0 +1,32 @@
+transform : String -> String ! {Error[String]}
+transform = if (eq "stop") (const "expected" | fail) (concat "!")
+scalar : String -> I64 ! {Error[String]}
+scalar = if (eq "stop") (const "expected" | fail) string.length
+text : I64 -> String ! {Error[String]}
+text = if (eq 2) (const "expected" | fail) show
+strings : Map[String, String]
+strings = [("a", "first"), ("b", "stop")] | map.from-list
+numbers : Map[String, I64]
+numbers = [("a", 1), ("b", 2)] | map.from-list
+views : Map[String, String] -> (List[String], List[String], List[(String, String)])
+views = make { 0 = map.keys, 1 = map.values, 2 = map.to-list }
+exercise : () -> ()
+exercise =
+    const [
+        strings | attempt (map.map-values transform) | ignore,
+        strings | attempt (map.map-values scalar) | ignore,
+        numbers | attempt (map.map-values text) | ignore,
+        strings | attempt (map.update "b" transform "unused") | ignore,
+    ]
+    | ignore
+main = [
+    exercise (),
+    strings | attempt (map.map-values transform) | echo,
+    strings | attempt (map.map-values scalar) | echo,
+    numbers | attempt (map.map-values text) | echo,
+    strings | attempt (map.update "b" transform "unused") | echo,
+    strings | views | echo,
+    strings | map.get "a" | echo,
+    strings | map.insert "c" "last" | map.remove "b" | map.to-list | echo,
+    ["a", "b"] | set.from-list | set.to-list | echo,
+] | ignore

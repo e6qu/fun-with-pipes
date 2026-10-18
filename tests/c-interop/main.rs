@@ -14,6 +14,7 @@ extern "C" {
     fn scale(k: f64, p: Point) -> Point;
     fn add_ints(a: i64, b: i64) -> i64;
     fn greet(name: *const c_char) -> *const c_char;
+    fn fwp_release_greet(result: *const c_char);
     fn word_count(s: *const c_char) -> i64;
 }
 
@@ -24,7 +25,9 @@ fn main() {
         println!("scale = ({}, {})", p.x, p.y);
         println!("add_ints = {}", add_ints(40, 2));
         let name = CString::new("rust").unwrap();
-        println!("{}", CStr::from_ptr(greet(name.as_ptr())).to_str().unwrap());
+        let greeting = greet(name.as_ptr());
+        println!("{}", CStr::from_ptr(greeting).to_str().unwrap());
+        fwp_release_greet(greeting);
         let s = CString::new("the quick brown fox").unwrap();
         println!("word_count = {}", word_count(s.as_ptr()));
     }

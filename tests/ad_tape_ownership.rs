@@ -109,7 +109,10 @@ fn detached_tape_buffers_release_on_return_trap_and_cancellation() {
             ("wrapping", &wrapping, 46),
             ("unchecked", &unchecked, 31),
         ] {
-            let executable = scratch.0.join(format!("{label}{}", &opt[1..]));
+            let executable = scratch
+                .0
+                .join(format!("{label}{}", &opt[1..]))
+                .with_extension(std::env::consts::EXE_EXTENSION);
             let source = format!("{code}\n{PROBE}");
             std::fs::write(executable.with_extension("c"), &source).unwrap();
             fwp::cgen::compile_c(&source, &executable, opt).unwrap();
@@ -184,7 +187,10 @@ fn public_tape_tokens_agree_with_raw_interpreter() {
             );
         }
         for opt in ["-O1", "-O2"] {
-            let executable = scratch.0.join(format!("{label}{}", &opt[1..]));
+            let executable = scratch
+                .0
+                .join(format!("{label}{}", &opt[1..]))
+                .with_extension(std::env::consts::EXE_EXTENSION);
             checked(
                 Command::new(env!("CARGO_BIN_EXE_fwp"))
                     .env_remove("FWP_NO_OPT")

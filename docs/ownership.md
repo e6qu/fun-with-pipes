@@ -308,7 +308,7 @@ uses a separate 64-bit logical owner count for descriptors, and owns both fields
 received `(Bytes, String)` pair while constructing it. The socket count is aligned
 in the common header. TCP/TLS stream handles keep UDP headers the same
 size while giving stream handles a separate TLS field when needed. Failure releases completed
-fields and receive scratch storage. Closing a Linux descriptor wakes its waiting
+fields and temporary receive buffers. Closing a Linux descriptor wakes its waiting
 tasks and releases its polling records; synchronization after wake does not
 recreate a closed descriptor's record. Disabling physical frees still closes the
 socket when its logical owners finish. Library teardown closes retained sockets
@@ -399,26 +399,47 @@ Reference-count operations and the chain's allocations still exist. Native remot
 stream caches use a separate runtime cleanup loop; their request and connection
 owners are described [below](#received-iterators-and-remote-call-storage).
 
+## Failed map and set operations
+
+A callback can fail after producing some results. Allocation or reference-count
+acquisition can also fail after earlier fields were acquired. Those completed
+fields still need owners: catching the error must release them without changing
+an independently retained input map.
+
+The current repair registers cleanup for partial maps, lists, pending fields and
+temporary arrays. Insert, remove and update consume their map argument, including
+on failure; decoding transfers that owner before insertion. A partial map records
+each acquired key before acquiring its value. Result cleanup uses the output
+value type, so mapping strings to integers never treats integer bits as pointers.
+These are compiler/runtime rules, with no new language syntax or heap wrapper.
+The [six-host report](benchmarks.md#cleanup-after-failed-map-and-set-operations)
+checks each allocation/retain failure across 22 operations, independent input
+aliases and callbacks that change the value type. All 66 focused tests pass on
+Linux, macOS and Windows, each on ARM64 and AMD64. Actual checked-ARC executables
+exclude tracing functions and report zero counted bytes at shutdown.
+[The handoff](development-state.md) tracks full production acceptance; focused
+checks alone do not complete the delivery.
+
 ## Checked ARC delivery
 
 `fwp build --gc arc` excludes tracing code and rejects unsupported ownership.
 Supported native entries include `main`, exported function executables and CLI
-commands and native C libraries with copied inputs and pointer-free results.
+commands and native C libraries with copied inputs. The prepared owned-result
+extension below adds explicitly released strings; final acceptance is pending.
 Each entry starts without assuming an existing state or derivative scope.
 Synchronous WASI main/function/CLI entries also use these checks. Generated REST
-and MCP entries are being validated with the same checks, including returned
+and MCP entries are accepted in [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164), including returned
 aliases, caught errors, malformed messages, disconnects and normal shutdown.
 All 18 repeated-request memory jobs pass across the six native hosts. The
 [measurement report](benchmarks.md#generated-rest-and-mcp-server-memory) verifies
 bounded storage and actual binaries without tracing, and records the substantial
-allocation/count costs that remain. Functional repair checks and final production
-acceptance are still required before these entries are accepted.
-The prepared browser/asynchronous WASI extension
+allocation/count costs that remain. All nine final production jobs and
+documentation pass.
+The browser/asynchronous WASI extension accepted in the same delivery
 uses ordinary checked task/channel ownership and command-end scheduler cleanup.
 Both actual-Wasm jobs now pass JSPI and Asyncify execution, storage reclamation
 and exact-result checks; the [report](benchmarks.md#webassembly-task-and-browser-loader-ownership)
-retains all modules and deliberately leaking controls. Final production
-acceptance remains required. Browser-loader evidence
+retains all modules and deliberately leaking controls. Browser-loader evidence
 under Node does not establish coverage in a browser engine. Host callbacks receive
 copied output strings; each invocation owns a separate module instance. These
 checks cover values inside the compiled module. The JavaScript engine still owns
@@ -463,8 +484,8 @@ storage and bounded sampled process memory; the [report](benchmarks.md#http-serv
 explains the workload and remaining allocation costs. All six platform HTTP suites
 pass. Intel macOS passed separate ownership and comparison jobs after the combined
 job reached its time limit; every case and the same limit were preserved. All
-nine production gates and docs passed for PR #163. REST/MCP entry acceptance
-and GPU ownership remain separate work.
+nine production gates and docs passed for PR #163; REST/MCP entries followed
+in PR #164. GPU ownership remains separate work.
 
 WASI supplies standard streams and file access to a WebAssembly module. Build a
 supported program with `fwp build --gc arc --target wasm32-wasi app.fwp -o app.wasm`
@@ -486,19 +507,41 @@ rejected instead of silently building a native library.
 
 For a static or shared C library, scalar inputs are copied by value and string
 inputs are copied into owned language storage during the call. Records can
-contain these input types. Results must be scalars or records of scalars: C
-receives all their bits before the temporary language value is released.
-Returned strings and raw pointers are rejected because the current ABI (the C
-calling convention and generated declarations) has no way for the host to
-release managed storage. Each exported function is checked independently, even
-if another export uses it under a state or derivative handler. Serialize host
-calls and finish them before unloading; concurrent host entry is not supported
-by this contract. The generated header states these obligations.
+contain these input types. Scalar results copy all their bits before temporary
+language storage is released. The prepared result-ownership extension adds
+returned strings and flat records containing strings; see the
+[six-host report](benchmarks.md#returning-owned-values-to-c-callers) for the
+90 passing focused tests and [handoff](development-state.md) for remaining
+production acceptance.
 
-This extends the existing copying ABI without introducing a handle or release
-wrapper. Ordinary tracing libraries keep their existing behavior. Proving these
-boundaries does not make every library eligible for ARC, or eliminate the
-necessary copy of a string that the host can later change.
+An export named `greet` that returns a string also declares
+`fwp_release_greet(result)` in its generated C header. The caller owns that
+result until it calls the matching release function exactly once. A record's
+release function releases all its string fields, including fields that share
+one allocation. Pass the complete unchanged record. Copying pointer bits does
+not create another owner. Do not use C's `free`, modify returned string bytes,
+use a released result, or keep results past library unload. Serialize host
+calls and releases; concurrent host entry remains outside this contract.
+
+A unique returned string transfers its existing owner without another copy,
+allocation or retain. When a compiled function returns separate record
+fields and receives each input as a whole value, those fields transfer directly into
+the C result; no intermediate record is allocated. Other record results transfer
+their string fields and release the temporary box and remaining fields when
+uniquely owned. Shared records retain the string owners that C now needs. Conversion finishes before any owner transfers: an embedded
+NUL still traps rather than silently truncating a C string, and a failed field
+conversion releases the full temporary result. Raw pointers and retained foreign
+callbacks still require separate lifetime contracts. Every export is checked
+independently, even if another export calls it inside a state or derivative scope.
+
+The same release interface applies to ordinary tracing libraries. This changes
+the old retain-until-unload contract; rebuild libraries and callers together.
+There is no extra allocated result handle or compatibility adapter. Counting and
+freeing disabled for diagnostic controls still deliberately retain storage;
+checked ARC requires both enabled. Input strings currently copy even when a
+function only reads them. Returned aliases must remain independent of later
+changes to the C buffer; borrowing inputs proved unable to outlive the call
+remains an optimization opportunity.
 
 List transposition also has a checked copying contract. It creates new list
 nodes, retains the original elements as typed aliases and releases temporary
@@ -553,7 +596,7 @@ Other unreviewed IO primitives remain outside checked ARC.
 The six dense F64 linear-algebra primitives borrow their input arrays and return
 independently owned results. Scratch pointers and partially constructed output
 arrays are tracked in one stack record. Normal completion, singular-result exits
-and unwinding release scratch explicitly; outputs transfer to the returned value
+and unwinding release temporary storage explicitly; outputs transfer to the returned value
 only after its container exists. No input retain or hidden managed workspace
 owner is needed. QR checks its square output size separately from input shape.
 See [numerical storage costs](numerics.md#dense-f64-solvers) and
@@ -579,8 +622,8 @@ workspace reuse is bounded and counted separately from returned gradient arrays.
 
 Decoded JSON/text/binary/CSV trees have typed ownership, including partially
 constructed fields and displaced map values. CLI parsing owns defaults, repeated
-flags, diagnostics and results. Temporary decoder scratch has its own cleanup;
-freeing scratch alone would not prove ownership of the resulting tree.
+flags, diagnostics and results. Temporary decoder storage has its own cleanup;
+freeing that storage alone would not prove ownership of the resulting tree.
 
 Acceptance tests check physical reclamation at O1/O2 with stack placement both
 on and off, inspect native symbols/instructions for absent tracing, and require
@@ -615,7 +658,7 @@ an immediate status number. A nonzero child exit status is a result, whereas a
 failure to start or communicate with the child raises `Error[IoError]` of kind
 `spawn`. Arguments containing a zero byte are rejected before any OS call.
 
-The process owner releases argument scratch, pipe endpoints and capture buffers.
+The process owner releases temporary argument storage, pipe endpoints and capture buffers.
 It also reaps the child on POSIX and closes Windows process/thread handles. If
 execution unwinds before the child finishes, cleanup terminates and waits for
 that child. Captured strings stay protected while the result record is being
@@ -718,7 +761,7 @@ cleanup. Both actual WASI jobs pass common-helper regressions; they do not test
 DNS. The earlier owned-values/kernel report does not cover DNS. Retained
 networking callbacks still need separate ownership work. This does not add WASI networking or prove faster DNS lookups.
 
-TCP/UDP receive scratch and UDP-send resolver entries are also registered on the
+TCP/UDP receive buffers and UDP-send resolver entries are also registered on the
 runtime cleanup stack so cancellation and result-allocation failure can release
 them. Failed native receive allocation traps before the buffer is used. These
 repairs pass all six focused native hosts in `38898918147` at `7224b3de` and do

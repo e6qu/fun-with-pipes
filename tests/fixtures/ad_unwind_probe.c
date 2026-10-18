@@ -59,6 +59,10 @@ int main(void) {
         if (probe_mode==4) {
             memset(&cancelled_task,0,sizeof(cancelled_task));
             cancelled_task.cancelled=1;fwp_cur=&cancelled_task;
+#ifdef _WIN32
+            /* This synthetic task executes on the main thread stack. */
+            cancelled_task.ctx.top=fwp_gc.main_top;
+#endif
             if (!setjmp(cancelled_task.base)) { fwp_p_ad_backward(selected_base,outputs,seeds);return 34; }
             fwp_cur=saved_current;
             if (!cancelled_task.unwinding) return 35;

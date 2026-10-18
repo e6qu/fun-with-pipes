@@ -73,7 +73,10 @@ fn device_output_limits_preserve_kernel_validation_order() {
         }
         for opt in ["-O1", "-O2"] {
             for reuse in ["0", "1"] {
-                let executable = scratch.0.join(format!("{label}{}-reuse{reuse}", &opt[1..]));
+                let executable = scratch
+                    .0
+                    .join(format!("{label}{}-reuse{reuse}", &opt[1..]))
+                    .with_extension(std::env::consts::EXE_EXTENSION);
                 let cfile = executable.with_extension("c");
                 checked(
                     Command::new(fwp)
@@ -189,7 +192,9 @@ fn device_allocations_are_bounded_and_cleanup_controls_detect_omissions() {
         ] {
             let name = format!("device-{label}{opt}");
             let cfile = artifacts.join(format!("{name}.c"));
-            let executable = directory.join(&name);
+            let executable = directory
+                .join(&name)
+                .with_extension(std::env::consts::EXE_EXTENSION);
             let probe = include_str!("fixtures/device_bounds_probe.c")
                 .replace("/* OWNERS */", &ownership)
                 .replace("/* WORKSPACE */", &fits)

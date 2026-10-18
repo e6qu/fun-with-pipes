@@ -75,6 +75,9 @@ static void socket_pair(fwp_socket_t pair[2]) {
  pair[1]=fwp_socket_accept(listener,0,0);fwp_socket_close(listener);
  if(pair[1]==FWP_INVALID_SOCKET)abort();
 }
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
 void setup(uintptr_t *fds,int *observations,const char *path,const char *cert,const char *key){
  fwp_lib_init();counts=observations;
  V file=fwp_p_file_open(fwp_cstr(path),1,0);

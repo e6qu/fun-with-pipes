@@ -170,10 +170,12 @@ int main(int argc,char **argv) {
   sigaction(SIGINT,0,&old_int);sigaction(SIGTERM,0,&old_term);
   void *lib=dlopen(argv[1],RTLD_NOW|RTLD_LOCAL);if(!lib){fprintf(stderr,"%s\n",dlerror());return 32;}
   const char *(*cached)(void)=dlsym(lib,"cached");
+  void (*release_cached)(const char *)=dlsym(lib,"fwp_release_cached");
   void (*setup)(struct snapshot *)=dlsym(lib,"setup");
-  if(!cached||!setup||strcmp(cached(),"heapheap"))return 33;
+  if(!cached||!release_cached||!setup)return 33;
+  const char *first=cached(); if(strcmp(first,"heapheap"))return 33; release_cached(first);
   static struct snapshot s;memset(&s,0,sizeof s);s.read_fd=pipes[0];setup(&s);
-  if(s.order_error||strcmp(cached(),"heapheap"))return 34;
+  const char *second=cached(); if(s.order_error||strcmp(second,"heapheap"))return 34; release_cached(second);
   if(i==1){struct sigaction replacement={0};replacement.sa_handler=after;sigemptyset(&replacement.sa_mask);sigaction(SIGTERM,&replacement,0);}
   if(dlclose(lib))return 35;
   if(!unmapped(s.heap,s.heap_bytes)||!unmapped(s.meta,s.meta_bytes)){fprintf(stderr,"unload: final=%d cancelled=%d order=%d wide=%d heap=%d meta=%d\n",s.finalized,s.cancelled,s.order_error,s.wide_freed,unmapped(s.heap,s.heap_bytes),unmapped(s.meta,s.meta_bytes));return 1;}
@@ -209,11 +211,12 @@ int main(int argc,char **argv) {
 #include <string.h>
 {SNAPSHOT}
 extern const char *cached(void);
+extern void fwp_release_cached(const char *);
 extern void setup(struct snapshot *);
 static struct snapshot s;
 int main(void) {{
  int pipes[2];if(pipe(pipes))return 31;
- if(strcmp(cached(),"heapheap"))return 33;
+ const char *value=cached(); if(strcmp(value,"heapheap"))return 33; fwp_release_cached(value);
  s.read_fd=pipes[0];setup(&s);s.static_exit=1;
  if(s.order_error)return 34;
  puts("main");return 0;

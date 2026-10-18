@@ -128,7 +128,10 @@ fn array_size_limits_agree_with_raw_interpreter_and_generic_wrappers() {
         }
         for opt in ["-O1", "-O2"] {
             for reuse in ["0", "1"] {
-                let executable = scratch.0.join(format!("{label}{}-reuse{reuse}", &opt[1..]));
+                let executable = scratch
+                    .0
+                    .join(format!("{label}{}-reuse{reuse}", &opt[1..]))
+                    .with_extension(std::env::consts::EXE_EXTENSION);
                 let cfile = executable.with_extension("c");
                 checked(
                     Command::new(fwp)

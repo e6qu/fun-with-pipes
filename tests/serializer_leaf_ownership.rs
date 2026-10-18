@@ -56,7 +56,9 @@ main = read-all () | concat "heap-dependent text" | both id checks | echo
     for opt in ["-O1", "-O2"] {
         for stack in ["0", "1"] {
             let label = format!("codecs{opt}-stack{stack}");
-            let exe = directory.join(&label);
+            let exe = directory
+                .join(&label)
+                .with_extension(std::env::consts::EXE_EXTENSION);
             let cfile = artifacts.join(format!("{label}.c"));
             checked(
                 Command::new(fwp)

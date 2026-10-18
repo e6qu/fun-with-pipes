@@ -1,0 +1,1693 @@
+{
+  "source": "d6d36961f532167beec8a116b35462906ba1cc6f",
+  "run": 39090619574,
+  "record_results": "direct",
+  "all_functional_jobs_pass": true,
+  "scope": "fwp C library ownership, not an elapsed-time comparison with C or Rust. 256 repeated call batches after warmup; static or three dynamic load/unload executions. One retain is necessary for two independently released fields sharing one string. Retain counts exclude fresh count initialization and release work; input strings still copy. Shutdown counts exclude host memory, allocator capacity and operating-system RSS. The separate C/Rust interop programs use default library mode. Their host sizes reflect different runtimes and linkage, not a language size comparison. Instrumented binaries are inspected as data, never executed by this collector.",
+  "hosts": [
+    {
+      "host": "ubuntu-latest",
+      "job_audit": {
+        "job": 117566390142,
+        "name": "library_results (ubuntu-latest)",
+        "conclusion": "success",
+        "unfinished_targets": [],
+        "failed_targets": [],
+        "scheduled_targets": 0,
+        "completed_targets": 0,
+        "summaries": 6,
+        "passed": 15,
+        "failed": 0,
+        "ignored": 0,
+        "failed_steps": [],
+        "panic_lines": []
+      },
+      "settings": "OS=Linux\narchitecture=X64\nrunner=ubuntu-latest\ngenerated source: build --gc arc --staticlib --emit-c; FWP_STACK=0\nnative libraries: -O1/-O2 -std=gnu11 -ffp-contract=off -fPIC; shared flag depends on host\nFWP_AD_WORKSPACE=0/1; one static execution or three dynamic unload rounds\n256 repeated calls after warmup; zero counted bytes at shutdown; no timing comparison\n",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin",
+      "source_sha256": "d25684c07a8ec8917ff02ba602f9a7dcb56db2245146bc83953556a234832b65",
+      "runs": [
+        {
+          "optimization": "-O1",
+          "shared": false,
+          "workspace_cache": 0,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": false,
+          "workspace_cache": 1,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": true,
+          "workspace_cache": 0,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": true,
+          "workspace_cache": 1,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": false,
+          "workspace_cache": 0,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": false,
+          "workspace_cache": 1,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": true,
+          "workspace_cache": 0,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": true,
+          "workspace_cache": 1,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        }
+      ],
+      "controls": {
+        "box": 186,
+        "host": 186,
+        "extra-counts": 202,
+        "extra-box": 205
+      },
+      "binaries": [
+        {
+          "file": "library--O1-static.a",
+          "sha256": "b1577f29680f13aab22ba758d9acb830b6350be2895f83e21c8776079f0b0e26",
+          "file_bytes": 201646,
+          "sections": {
+            ".text": 84571,
+            ".rodata.cst16": 32,
+            ".rodata.cst8": 16,
+            ".text.unlikely.": 45,
+            ".rodata": 296,
+            ".bss": 1500,
+            ".data": 6880,
+            ".rodata.str1.1": 2437,
+            ".data.rel.ro": 7232,
+            ".fini_array": 8,
+            ".comment": 40,
+            ".note.GNU-stack": 0,
+            ".eh_frame": 11480,
+            ".llvm_addrsig": 465
+          },
+          "format": "elf64-x86-64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O1-shared.so",
+          "sha256": "fdfe7694f5b328d31aecbd6644c60f2320b77f808d261f0c9d4d317edb99c0e7",
+          "file_bytes": 152840,
+          "sections": {
+            ".note.gnu.build-id": 36,
+            ".gnu.hash": 172,
+            ".dynsym": 1464,
+            ".dynstr": 646,
+            ".gnu.version": 122,
+            ".gnu.version_r": 80,
+            ".rela.dyn": 8400,
+            ".rela.plt": 1200,
+            ".init": 27,
+            ".plt": 816,
+            ".plt.got": 8,
+            ".text": 85074,
+            ".fini": 13,
+            ".rodata": 2731,
+            ".eh_frame_hdr": 2436,
+            ".eh_frame": 11592,
+            ".init_array": 8,
+            ".fini_array": 16,
+            ".data.rel.ro": 7232,
+            ".dynamic": 464,
+            ".got": 48,
+            ".got.plt": 424,
+            ".data": 6888,
+            ".bss": 1520,
+            ".comment": 84
+          },
+          "format": "elf64-x86-64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O2-static.a",
+          "sha256": "744958a5e5182274ecba988a80b358b5d45e45d421858acbe0d1820f15f82c25",
+          "file_bytes": 187702,
+          "sections": {
+            ".text": 75588,
+            ".rodata.cst16": 544,
+            ".rodata.cst8": 16,
+            ".text.unlikely.": 45,
+            ".rodata": 296,
+            ".bss": 1516,
+            ".data": 6880,
+            ".rodata.str1.1": 2437,
+            ".data.rel.ro": 7232,
+            ".fini_array": 8,
+            ".comment": 40,
+            ".note.GNU-stack": 0,
+            ".eh_frame": 10952,
+            ".llvm_addrsig": 455
+          },
+          "format": "elf64-x86-64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O2-shared.so",
+          "sha256": "11f622c690e1b0401a9cd8e7c3140c299d7b7980f68a2c341fac7b357e7864ef",
+          "file_bytes": 144352,
+          "sections": {
+            ".note.gnu.build-id": 36,
+            ".gnu.hash": 172,
+            ".dynsym": 1464,
+            ".dynstr": 646,
+            ".gnu.version": 122,
+            ".gnu.version_r": 80,
+            ".rela.dyn": 8400,
+            ".rela.plt": 1200,
+            ".init": 27,
+            ".plt": 816,
+            ".plt.got": 8,
+            ".text": 76098,
+            ".fini": 13,
+            ".rodata": 2955,
+            ".eh_frame_hdr": 2364,
+            ".eh_frame": 11064,
+            ".init_array": 8,
+            ".fini_array": 16,
+            ".data.rel.ro": 7232,
+            ".dynamic": 464,
+            ".got": 48,
+            ".got.plt": 424,
+            ".data": 6888,
+            ".bss": 1536,
+            ".comment": 84
+          },
+          "format": "elf64-x86-64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        }
+      ],
+      "interop": [
+        {
+          "caller": "rust",
+          "linking": "static-rust",
+          "library_mode": "default (--gc tracing)",
+          "file": "geom-rs",
+          "sha256": "9687258862f025f51cb91139131297232ee3894542347744fd5f6bf8991e7e5a",
+          "file_bytes": 4611504,
+          "stdout": "norm = 5\nscale = (3, -4)\nadd_ints = 42\nhello, rust!\nword_count = 4\n"
+        },
+        {
+          "caller": "c",
+          "linking": "shared-c",
+          "library_mode": "default (--gc tracing)",
+          "file": "geom-c",
+          "sha256": "56d4c4eb3c8c11919af7d00ab9ef3789d3485a47ac15549bc0f2627f5658ca1a",
+          "file_bytes": 16248,
+          "stdout": "norm = 5\nscale = (3, -4)\nadd_ints = 42\nhello, c!\nword_count = 4\n"
+        }
+      ]
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "job_audit": {
+        "job": 117566389955,
+        "name": "library_results (ubuntu-24.04-arm)",
+        "conclusion": "success",
+        "unfinished_targets": [],
+        "failed_targets": [],
+        "scheduled_targets": 0,
+        "completed_targets": 0,
+        "summaries": 6,
+        "passed": 15,
+        "failed": 0,
+        "ignored": 0,
+        "failed_steps": [],
+        "panic_lines": []
+      },
+      "settings": "OS=Linux\narchitecture=ARM64\nrunner=ubuntu-24.04-arm\ngenerated source: build --gc arc --staticlib --emit-c; FWP_STACK=0\nnative libraries: -O1/-O2 -std=gnu11 -ffp-contract=off -fPIC; shared flag depends on host\nFWP_AD_WORKSPACE=0/1; one static execution or three dynamic unload rounds\n256 repeated calls after warmup; zero counted bytes at shutdown; no timing comparison\n",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: aarch64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin",
+      "source_sha256": "d25684c07a8ec8917ff02ba602f9a7dcb56db2245146bc83953556a234832b65",
+      "runs": [
+        {
+          "optimization": "-O1",
+          "shared": false,
+          "workspace_cache": 0,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": false,
+          "workspace_cache": 1,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": true,
+          "workspace_cache": 0,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": true,
+          "workspace_cache": 1,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": false,
+          "workspace_cache": 0,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": false,
+          "workspace_cache": 1,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": true,
+          "workspace_cache": 0,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": true,
+          "workspace_cache": 1,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        }
+      ],
+      "controls": {
+        "box": 186,
+        "host": 186,
+        "extra-counts": 202,
+        "extra-box": 205
+      },
+      "binaries": [
+        {
+          "file": "library--O1-static.a",
+          "sha256": "7fa09d38990190ff2c27101b8d16322552b3d5c500dfb4351e68e8254cb9bbb8",
+          "file_bytes": 218446,
+          "sections": {
+            ".text": 85436,
+            ".text.unlikely.": 48,
+            ".bss": 1596,
+            ".data": 6880,
+            ".rodata.str1.1": 2437,
+            ".data.rel.ro": 7232,
+            ".fini_array": 8,
+            ".comment": 40,
+            ".note.GNU-stack": 0,
+            ".eh_frame": 13072,
+            ".llvm_addrsig": 444
+          },
+          "format": "elf64-littleaarch64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O1-shared.so",
+          "sha256": "7e83c704246d9083d80c3fa550de8030649ff8b75c421f99669d615497431bd7",
+          "file_bytes": 158152,
+          "sections": {
+            ".note.gnu.build-id": 36,
+            ".gnu.hash": 172,
+            ".dynsym": 1512,
+            ".dynstr": 623,
+            ".gnu.version": 126,
+            ".gnu.version_r": 48,
+            ".rela.dyn": 8400,
+            ".rela.plt": 1248,
+            ".init": 24,
+            ".plt": 864,
+            ".text": 85772,
+            ".fini": 20,
+            ".rodata": 2387,
+            ".eh_frame_hdr": 2444,
+            ".eh_frame": 13228,
+            ".init_array": 8,
+            ".fini_array": 16,
+            ".data.rel.ro": 7232,
+            ".dynamic": 464,
+            ".got": 56,
+            ".got.plt": 440,
+            ".data": 6888,
+            ".bss": 1608,
+            ".comment": 84
+          },
+          "format": "elf64-littleaarch64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O2-static.a",
+          "sha256": "ee6d66278e6b919fcb43fc9b0e1125407135d455c047e89af469f532d25167bb",
+          "file_bytes": 205286,
+          "sections": {
+            ".text": 78108,
+            ".rodata.cst16": 192,
+            ".text.unlikely.": 48,
+            ".bss": 1612,
+            ".data": 6880,
+            ".rodata.str1.1": 2437,
+            ".data.rel.ro": 7232,
+            ".fini_array": 8,
+            ".comment": 40,
+            ".note.GNU-stack": 0,
+            ".eh_frame": 12888,
+            ".llvm_addrsig": 433
+          },
+          "format": "elf64-littleaarch64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O2-shared.so",
+          "sha256": "156bed3cc0aecfccaf07f9604e958e46c60a7188ac9eb829292aa3d8cb2e9395",
+          "file_bytes": 157888,
+          "sections": {
+            ".note.gnu.build-id": 36,
+            ".gnu.hash": 172,
+            ".dynsym": 1512,
+            ".dynstr": 623,
+            ".gnu.version": 126,
+            ".gnu.version_r": 48,
+            ".rela.dyn": 8400,
+            ".rela.plt": 1248,
+            ".init": 24,
+            ".plt": 864,
+            ".text": 78444,
+            ".fini": 20,
+            ".rodata": 2579,
+            ".eh_frame_hdr": 2372,
+            ".eh_frame": 13044,
+            ".init_array": 8,
+            ".fini_array": 16,
+            ".data.rel.ro": 7232,
+            ".dynamic": 464,
+            ".got": 56,
+            ".got.plt": 440,
+            ".data": 6888,
+            ".bss": 1632,
+            ".comment": 84
+          },
+          "format": "elf64-littleaarch64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        }
+      ],
+      "interop": [
+        {
+          "caller": "rust",
+          "linking": "static-rust",
+          "library_mode": "default (--gc tracing)",
+          "file": "geom-rs",
+          "sha256": "045f9abaad745b27daa126efaa84d1070a805562e75b70b4541ca603f860e9f3",
+          "file_bytes": 4707400,
+          "stdout": "norm = 5\nscale = (3, -4)\nadd_ints = 42\nhello, rust!\nword_count = 4\n"
+        },
+        {
+          "caller": "c",
+          "linking": "shared-c",
+          "library_mode": "default (--gc tracing)",
+          "file": "geom-c",
+          "sha256": "e02b162f3c67fb5a3b43b45322460929bf675348f3af00222d0a616f537474c8",
+          "file_bytes": 70808,
+          "stdout": "norm = 5\nscale = (3, -4)\nadd_ints = 42\nhello, c!\nword_count = 4\n"
+        }
+      ]
+    },
+    {
+      "host": "macos-15",
+      "job_audit": {
+        "job": 117566389826,
+        "name": "library_results (macos-15)",
+        "conclusion": "success",
+        "unfinished_targets": [],
+        "failed_targets": [],
+        "scheduled_targets": 0,
+        "completed_targets": 0,
+        "summaries": 6,
+        "passed": 15,
+        "failed": 0,
+        "ignored": 0,
+        "failed_steps": [],
+        "panic_lines": []
+      },
+      "settings": "OS=macOS\narchitecture=ARM64\nrunner=macos-15\ngenerated source: build --gc arc --staticlib --emit-c; FWP_STACK=0\nnative libraries: -O1/-O2 -std=gnu11 -ffp-contract=off -fPIC; shared flag depends on host\nFWP_AD_WORKSPACE=0/1; one static execution or three dynamic unload rounds\n256 repeated calls after warmup; zero counted bytes at shutdown; no timing comparison\n",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "clang": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+      "source_sha256": "d25684c07a8ec8917ff02ba602f9a7dcb56db2245146bc83953556a234832b65",
+      "runs": [
+        {
+          "optimization": "-O1",
+          "shared": false,
+          "workspace_cache": 0,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": false,
+          "workspace_cache": 1,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": true,
+          "workspace_cache": 0,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": true,
+          "workspace_cache": 1,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": false,
+          "workspace_cache": 0,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": false,
+          "workspace_cache": 1,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": true,
+          "workspace_cache": 0,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": true,
+          "workspace_cache": 1,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        }
+      ],
+      "controls": {
+        "box": 186,
+        "host": 186,
+        "extra-counts": 202,
+        "extra-box": 205
+      },
+      "binaries": [
+        {
+          "file": "library--O1-static.a",
+          "sha256": "e27fde45810fad5a1da43e794d1b03c1952c2c1cd5cd53eb66283bf671f19c6a",
+          "file_bytes": 175048,
+          "sections": {
+            "__text": 80896,
+            "__StaticInit": 24,
+            "__bss": 1484,
+            "__data": 6880,
+            "__cstring": 2437,
+            "__const": 7232,
+            "__mod_init_func": 8,
+            "__literal16": 16,
+            "__compact_unwind": 9728
+          },
+          "format": "mach-o arm64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O1-shared.dylib",
+          "sha256": "216f85cc30f4e5f2f7549ad1fbbb411c63b5d4368268d2129dcf65ebc891c8fc",
+          "file_bytes": 146880,
+          "sections": {
+            "__text": 80920,
+            "__stubs": 480,
+            "__init_offsets": 4,
+            "__cstring": 2437,
+            "__const": 7248,
+            "__unwind_info": 936,
+            "__got": 352,
+            "__data": 6880,
+            "__bss": 1484
+          },
+          "format": "mach-o arm64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O2-static.a",
+          "sha256": "c44974e0fe2b3ce45657fbf9d0f58cc2b5db64cb6583e06122944960b8cc027a",
+          "file_bytes": 176416,
+          "sections": {
+            "__text": 81880,
+            "__literal8": 160,
+            "__literal16": 208,
+            "__StaticInit": 24,
+            "__bss": 1500,
+            "__data": 6880,
+            "__cstring": 2435,
+            "__const": 7232,
+            "__mod_init_func": 8,
+            "__compact_unwind": 9440
+          },
+          "format": "mach-o arm64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O2-shared.dylib",
+          "sha256": "fe8ed8f261eb7cc3e5b24f2093d8cb67835dcd06c69faeb4f26f99d59ca47620",
+          "file_bytes": 146624,
+          "sections": {
+            "__text": 81904,
+            "__stubs": 480,
+            "__init_offsets": 4,
+            "__const": 7488,
+            "__cstring": 2435,
+            "__unwind_info": 912,
+            "__got": 352,
+            "__data": 6880,
+            "__bss": 1500
+          },
+          "format": "mach-o arm64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        }
+      ],
+      "interop": [
+        {
+          "caller": "rust",
+          "linking": "static-rust",
+          "library_mode": "default (--gc tracing)",
+          "file": "geom-rs",
+          "sha256": "1b35afebf9ab4123fc6bcb6bb7cdf7d38ef3844e1ac233cd71f3bb85fededce4",
+          "file_bytes": 532488,
+          "stdout": "norm = 5\nscale = (3, -4)\nadd_ints = 42\nhello, rust!\nword_count = 4\n"
+        },
+        {
+          "caller": "c",
+          "linking": "shared-c",
+          "library_mode": "default (--gc tracing)",
+          "file": "geom-c",
+          "sha256": "0a14a908e1431353782cace1e8099f4b0b47fb48ee26dcc878abdc1763073d77",
+          "file_bytes": 33720,
+          "stdout": "norm = 5\nscale = (3, -4)\nadd_ints = 42\nhello, c!\nword_count = 4\n"
+        }
+      ]
+    },
+    {
+      "host": "macos-15-intel",
+      "job_audit": {
+        "job": 117566390051,
+        "name": "library_results (macos-15-intel)",
+        "conclusion": "success",
+        "unfinished_targets": [],
+        "failed_targets": [],
+        "scheduled_targets": 0,
+        "completed_targets": 0,
+        "summaries": 6,
+        "passed": 15,
+        "failed": 0,
+        "ignored": 0,
+        "failed_steps": [],
+        "panic_lines": []
+      },
+      "settings": "OS=macOS\narchitecture=X64\nrunner=macos-15-intel\ngenerated source: build --gc arc --staticlib --emit-c; FWP_STACK=0\nnative libraries: -O1/-O2 -std=gnu11 -ffp-contract=off -fPIC; shared flag depends on host\nFWP_AD_WORKSPACE=0/1; one static execution or three dynamic unload rounds\n256 repeated calls after warmup; zero counted bytes at shutdown; no timing comparison\n",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "clang": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+      "source_sha256": "d25684c07a8ec8917ff02ba602f9a7dcb56db2245146bc83953556a234832b65",
+      "runs": [
+        {
+          "optimization": "-O1",
+          "shared": false,
+          "workspace_cache": 0,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": false,
+          "workspace_cache": 1,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": true,
+          "workspace_cache": 0,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": true,
+          "workspace_cache": 1,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": false,
+          "workspace_cache": 0,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": false,
+          "workspace_cache": 1,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": true,
+          "workspace_cache": 0,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": true,
+          "workspace_cache": 1,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        }
+      ],
+      "controls": {
+        "box": 186,
+        "host": 186,
+        "extra-counts": 202,
+        "extra-box": 205
+      },
+      "binaries": [
+        {
+          "file": "library--O1-static.a",
+          "sha256": "674f7b6d67e496bbd511ba099459754566d1e2ccbde609142217b5bd21f9b2f6",
+          "file_bytes": 170336,
+          "sections": {
+            "__text": 86618,
+            "__literal16": 48,
+            "__literal8": 16,
+            "__StaticInit": 26,
+            "__bss": 1460,
+            "__data": 6880,
+            "__cstring": 2437,
+            "__const": 7232,
+            "__mod_init_func": 8,
+            "__compact_unwind": 9728,
+            "__eh_frame": 12648
+          },
+          "format": "mach-o 64-bit x86-64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O1-shared.dylib",
+          "sha256": "6bf3aa7cf538364a0c90a7e6f6f736649972453d8cb3525832e5560a3c873479",
+          "file_bytes": 125184,
+          "sections": {
+            "__text": 86650,
+            "__stubs": 252,
+            "__init_offsets": 4,
+            "__const": 7280,
+            "__cstring": 2437,
+            "__unwind_info": 920,
+            "__got": 360,
+            "__data": 6880,
+            "__bss": 1460
+          },
+          "format": "mach-o 64-bit x86-64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O2-static.a",
+          "sha256": "11af1d4c0b67a0eb24f4387e216053d3f6ddc9fed867af124f50c675d5f91872",
+          "file_bytes": 171600,
+          "sections": {
+            "__text": 87879,
+            "__literal16": 768,
+            "__const": 7246,
+            "__literal8": 16,
+            "__StaticInit": 26,
+            "__bss": 1484,
+            "__data": 6880,
+            "__cstring": 2435,
+            "__mod_init_func": 8,
+            "__compact_unwind": 9440,
+            "__eh_frame": 12248
+          },
+          "format": "mach-o 64-bit x86-64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O2-shared.dylib",
+          "sha256": "662826b35f686048be1bc4688068eada7807cf1d1a099d93873125e7e19075f8",
+          "file_bytes": 124928,
+          "sections": {
+            "__text": 87911,
+            "__stubs": 252,
+            "__init_offsets": 4,
+            "__const": 7536,
+            "__cstring": 2435,
+            "__unwind_info": 904,
+            "__got": 360,
+            "__data": 6880,
+            "__bss": 1484
+          },
+          "format": "mach-o 64-bit x86-64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        }
+      ],
+      "interop": [
+        {
+          "caller": "rust",
+          "linking": "static-rust",
+          "library_mode": "default (--gc tracing)",
+          "file": "geom-rs",
+          "sha256": "7ba397efc2532b666207c79413919b8b55ff8042b223975faf1ff1798ebd2d30",
+          "file_bytes": 517240,
+          "stdout": "norm = 5\nscale = (3, -4)\nadd_ints = 42\nhello, rust!\nword_count = 4\n"
+        },
+        {
+          "caller": "c",
+          "linking": "shared-c",
+          "library_mode": "default (--gc tracing)",
+          "file": "geom-c",
+          "sha256": "155c401fbc117b0b997cf0c4b7c201cd14025f8a453896cf6acf0c8e197146fc",
+          "file_bytes": 8736,
+          "stdout": "norm = 5\nscale = (3, -4)\nadd_ints = 42\nhello, c!\nword_count = 4\n"
+        }
+      ]
+    },
+    {
+      "host": "windows-2025",
+      "job_audit": {
+        "job": 117566389993,
+        "name": "library_results (windows-2025)",
+        "conclusion": "success",
+        "unfinished_targets": [],
+        "failed_targets": [],
+        "scheduled_targets": 0,
+        "completed_targets": 0,
+        "summaries": 6,
+        "passed": 15,
+        "failed": 0,
+        "ignored": 0,
+        "failed_steps": [],
+        "panic_lines": []
+      },
+      "settings": "OS=Windows\narchitecture=X64\nrunner=windows-2025\ngenerated source: build --gc arc --staticlib --emit-c; FWP_STACK=0\nnative libraries: -O1/-O2 -std=gnu11 -ffp-contract=off -fPIC; shared flag depends on host\nFWP_AD_WORKSPACE=0/1; one static execution or three dynamic unload rounds\n256 repeated calls after warmup; zero counted bytes at shutdown; no timing comparison\n",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "clang": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin\nConfiguration file: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin/x86_64-w64-windows-gnu.cfg",
+      "source_sha256": "d25684c07a8ec8917ff02ba602f9a7dcb56db2245146bc83953556a234832b65",
+      "runs": [
+        {
+          "optimization": "-O1",
+          "shared": false,
+          "workspace_cache": 0,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": false,
+          "workspace_cache": 1,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": true,
+          "workspace_cache": 0,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": true,
+          "workspace_cache": 1,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": false,
+          "workspace_cache": 0,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": false,
+          "workspace_cache": 1,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": true,
+          "workspace_cache": 0,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": true,
+          "workspace_cache": 1,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        }
+      ],
+      "controls": {
+        "box": 186,
+        "host": 186,
+        "extra-counts": 202,
+        "extra-box": 205
+      },
+      "binaries": [
+        {
+          "file": "library--O1-static.a",
+          "sha256": "a0735df61a78dd285378fd18ebfa121310858e3ef4993ce63111a236449c4ccf",
+          "file_bytes": 165394,
+          "sections": {
+            ".text": 87394,
+            ".data": 6872,
+            ".bss": 1560,
+            ".xdata": 2636,
+            ".rdata": 10045,
+            ".dtors": 8,
+            ".drectve": 370,
+            ".debug$S": 156,
+            ".pdata": 2676,
+            ".llvm_addrsig": 470
+          },
+          "format": "coff-x86-64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O1-shared.dll",
+          "sha256": "ed804db16eb300e7fdb4051eca9a230ff65f5e0db042c63768333f9b6c51657a",
+          "file_bytes": 174080,
+          "sections": {
+            ".text": 91606,
+            ".rdata": 16184,
+            ".buildid": 53,
+            ".data": 7168,
+            ".pdata": 2832,
+            ".reloc": 756,
+            ".debug_abbrev": 3675,
+            ".debug_aranges": 48,
+            ".debug_info": 11111,
+            ".debug_line": 5510,
+            ".debug_loc": 4323,
+            ".debug_ranges": 336,
+            ".debug_str": 9777
+          },
+          "format": "coff-x86-64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": [
+            "crash",
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin",
+            "fwp_test_probe",
+            "keep_text",
+            "pair_nul",
+            "pipeline",
+            "return_nul",
+            "saved",
+            "shared",
+            "slope",
+            "summarize",
+            "text_length",
+            "twin"
+          ]
+        },
+        {
+          "file": "library--O2-static.a",
+          "sha256": "ee12d5e6cca5c4cc536b94c59009f5e5e40d181e862e84ada2017e8ef1850c95",
+          "file_bytes": 164684,
+          "sections": {
+            ".text": 86571,
+            ".data": 6872,
+            ".bss": 1576,
+            ".xdata": 2592,
+            ".rdata": 10557,
+            ".dtors": 8,
+            ".drectve": 370,
+            ".debug$S": 156,
+            ".pdata": 2604,
+            ".llvm_addrsig": 458
+          },
+          "format": "coff-x86-64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O2-shared.dll",
+          "sha256": "0e45d0bbc625a5cc0c20e462551273bb8864f04a56e63a4fc1e6d71d70d93ff6",
+          "file_bytes": 173568,
+          "sections": {
+            ".text": 90774,
+            ".rdata": 16652,
+            ".buildid": 53,
+            ".data": 7168,
+            ".pdata": 2760,
+            ".reloc": 756,
+            ".debug_abbrev": 3675,
+            ".debug_aranges": 48,
+            ".debug_info": 11111,
+            ".debug_line": 5510,
+            ".debug_loc": 4323,
+            ".debug_ranges": 336,
+            ".debug_str": 9777
+          },
+          "format": "coff-x86-64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": [
+            "crash",
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin",
+            "fwp_test_probe",
+            "keep_text",
+            "pair_nul",
+            "pipeline",
+            "return_nul",
+            "saved",
+            "shared",
+            "slope",
+            "summarize",
+            "text_length",
+            "twin"
+          ]
+        }
+      ],
+      "interop": [
+        {
+          "caller": "rust",
+          "linking": "static-rust",
+          "library_mode": "default (--gc tracing)",
+          "file": "geom-rs.exe",
+          "sha256": "4797872969850fbccf9829f01db131e97f6fbd7b06ba3d38e8341edf2e70ed40",
+          "file_bytes": 4413440,
+          "stdout": "norm = 5\nscale = (3, -4)\nadd_ints = 42\nhello, rust!\nword_count = 4\n"
+        },
+        {
+          "caller": "c",
+          "linking": "shared-c",
+          "library_mode": "default (--gc tracing)",
+          "file": "geom-c.exe",
+          "sha256": "eb1efde72cf0dc2ef7649fe0f6dc2b40f3acf440dc98cfe5f67a2b247d552b42",
+          "file_bytes": 65024,
+          "stdout": "norm = 5\nscale = (3, -4)\nadd_ints = 42\nhello, c!\nword_count = 4\n",
+          "dll_sha256": "79323337e878b0816e54b115f32602870fcb4c983294ae4b07617584185fa5dd",
+          "dll_exports": [
+            "add_ints",
+            "fwp_release_greet",
+            "greet",
+            "norm",
+            "scale",
+            "word_count"
+          ],
+          "norm_imported_from": "libgeom.dll"
+        }
+      ]
+    },
+    {
+      "host": "windows-11-arm",
+      "job_audit": {
+        "job": 117566389956,
+        "name": "library_results (windows-11-arm)",
+        "conclusion": "success",
+        "unfinished_targets": [],
+        "failed_targets": [],
+        "scheduled_targets": 0,
+        "completed_targets": 0,
+        "summaries": 6,
+        "passed": 15,
+        "failed": 0,
+        "ignored": 0,
+        "failed_steps": [],
+        "panic_lines": []
+      },
+      "settings": "OS=Windows\narchitecture=ARM64\nrunner=windows-11-arm\ngenerated source: build --gc arc --staticlib --emit-c; FWP_STACK=0\nnative libraries: -O1/-O2 -std=gnu11 -ffp-contract=off -fPIC; shared flag depends on host\nFWP_AD_WORKSPACE=0/1; one static execution or three dynamic unload rounds\n256 repeated calls after warmup; zero counted bytes at shutdown; no timing comparison\n",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "clang": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: aarch64-w64-windows-gnu\nThread model: posix\nInstalledDir: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin\nConfiguration file: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin/aarch64-w64-windows-gnu.cfg",
+      "source_sha256": "d25684c07a8ec8917ff02ba602f9a7dcb56db2245146bc83953556a234832b65",
+      "runs": [
+        {
+          "optimization": "-O1",
+          "shared": false,
+          "workspace_cache": 0,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": false,
+          "workspace_cache": 1,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": true,
+          "workspace_cache": 0,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O1",
+          "shared": true,
+          "workspace_cache": 1,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": false,
+          "workspace_cache": 0,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": false,
+          "workspace_cache": 1,
+          "executions": 1,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": true,
+          "workspace_cache": 0,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        },
+        {
+          "optimization": "-O2",
+          "shared": true,
+          "workspace_cache": 1,
+          "executions": 3,
+          "shutdown_counted_bytes": 0,
+          "collections": 0,
+          "identity_retains": 0,
+          "two_alias_fields_retains": 1,
+          "record_boxes_asserted": 0
+        }
+      ],
+      "controls": {
+        "box": 186,
+        "host": 186,
+        "extra-counts": 202,
+        "extra-box": 205
+      },
+      "binaries": [
+        {
+          "file": "library--O1-static.a",
+          "sha256": "5ae060941d02675c4d81e5d65973ca7e494993530751854eccc0a2d19f4f0bca",
+          "file_bytes": 159126,
+          "sections": {
+            ".text": 78464,
+            ".data": 6872,
+            ".bss": 1464,
+            ".xdata": 2924,
+            ".rdata": 9813,
+            ".dtors": 8,
+            ".drectve": 370,
+            ".debug$S": 156,
+            ".pdata": 1776,
+            ".llvm_addrsig": 469
+          },
+          "format": "coff-arm64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O1-shared.dll",
+          "sha256": "c8ac13980bb2704a22a9da982f36d1ed8a735cee456a65cb59c413bf3229204a",
+          "file_bytes": 162304,
+          "sections": {
+            ".text": 82108,
+            ".rdata": 16128,
+            ".buildid": 53,
+            ".data": 7168,
+            ".pdata": 1864,
+            ".reloc": 748,
+            ".debug_abbrev": 3533,
+            ".debug_info": 10433,
+            ".debug_line": 5630,
+            ".debug_loc": 4632,
+            ".debug_ranges": 592,
+            ".debug_str": 9315
+          },
+          "format": "coff-arm64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": [
+            "crash",
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin",
+            "fwp_test_probe",
+            "keep_text",
+            "pair_nul",
+            "pipeline",
+            "return_nul",
+            "saved",
+            "shared",
+            "slope",
+            "summarize",
+            "text_length",
+            "twin"
+          ]
+        },
+        {
+          "file": "library--O2-static.a",
+          "sha256": "2d56969f9d722e46b417d16391ddd4062078c81198d1eaf399a4fabb0600098c",
+          "file_bytes": 159340,
+          "sections": {
+            ".text": 79768,
+            ".data": 6872,
+            ".bss": 1480,
+            ".xdata": 2956,
+            ".rdata": 10005,
+            ".dtors": 8,
+            ".drectve": 370,
+            ".debug$S": 156,
+            ".pdata": 1728,
+            ".llvm_addrsig": 456
+          },
+          "format": "coff-arm64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": null
+        },
+        {
+          "file": "library--O2-shared.dll",
+          "sha256": "3b9c9810bfe21e5847d23db68c6c6548620bda06877b366dd0741ea96f7624be",
+          "file_bytes": 163328,
+          "sections": {
+            ".text": 83412,
+            ".rdata": 16360,
+            ".buildid": 53,
+            ".data": 7168,
+            ".pdata": 1816,
+            ".reloc": 752,
+            ".debug_abbrev": 3533,
+            ".debug_info": 10433,
+            ".debug_line": 5630,
+            ".debug_loc": 4632,
+            ".debug_ranges": 592,
+            ".debug_str": 9315
+          },
+          "format": "coff-arm64",
+          "release_symbols": [
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin"
+          ],
+          "tracing_symbols": [],
+          "dll_public_exports": [
+            "crash",
+            "fwp_release_keep_text",
+            "fwp_release_pair_nul",
+            "fwp_release_return_nul",
+            "fwp_release_saved",
+            "fwp_release_shared",
+            "fwp_release_twin",
+            "fwp_test_probe",
+            "keep_text",
+            "pair_nul",
+            "pipeline",
+            "return_nul",
+            "saved",
+            "shared",
+            "slope",
+            "summarize",
+            "text_length",
+            "twin"
+          ]
+        }
+      ],
+      "interop": [
+        {
+          "caller": "rust",
+          "linking": "static-rust",
+          "library_mode": "default (--gc tracing)",
+          "file": "geom-rs.exe",
+          "sha256": "a63499c175ae2940e3b81b0e56fd7fd87c3611ae62583c1c6aaf3bc6fdbfa495",
+          "file_bytes": 4409344,
+          "stdout": "norm = 5\nscale = (3, -4)\nadd_ints = 42\nhello, rust!\nword_count = 4\n"
+        },
+        {
+          "caller": "c",
+          "linking": "shared-c",
+          "library_mode": "default (--gc tracing)",
+          "file": "geom-c.exe",
+          "sha256": "6d4444b2a39cd8e282092eaa14c948f0c663925d9b74a21bb0cfc618cb47dd44",
+          "file_bytes": 64000,
+          "stdout": "norm = 5\nscale = (3, -4)\nadd_ints = 42\nhello, c!\nword_count = 4\n",
+          "dll_sha256": "2750556546b41cb0e410f61fb30eb1f35502984c40f39d49982eaa2b43f7fddf",
+          "dll_exports": [
+            "add_ints",
+            "fwp_release_greet",
+            "greet",
+            "norm",
+            "scale",
+            "word_count"
+          ],
+          "norm_imported_from": "libgeom.dll"
+        }
+      ]
+    }
+  ]
+}

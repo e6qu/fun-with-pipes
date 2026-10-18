@@ -96,6 +96,10 @@ static void old_caps(V f, int duplicate) {
 static const fwp_owned_fninfo old_owned = {old_entry, old_caps, old_args};
 static const fwp_fninfo old_fns[] = {{1, old_entry, "owned capture", &old_owned}};
 int main(void) {
+#ifdef _WIN32
+    /* Preserve exact test output bytes on native Windows too. */
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0));
     fwp_fns = old_fns;
     old_roots[0] = fwp_rc_fresh(fwp_cstr("standalone"));
@@ -168,7 +172,10 @@ int main(void) {
     );
     let source = format!("{runtime}\n{probe}");
     for opt in ["-O1", "-O2"] {
-        let exe = dir.0.join(opt);
+        let exe = dir
+            .0
+            .join(opt)
+            .with_extension(std::env::consts::EXE_EXTENSION);
         fwp::cgen::compile_c(&source, &exe, opt).unwrap();
         for poison in ["0", "1"] {
             let out = checked(
@@ -207,6 +214,10 @@ fn surviving_leaf_storage_is_released_by_counts() {
     let probe = r#"
 static volatile V count_root;
 int main(void) {
+#ifdef _WIN32
+    /* Preserve exact test output bytes on native Windows too. */
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0));
     char bytes[20000] = {0};
     for (int i = 0; i < 250; i++) {
@@ -242,7 +253,10 @@ int main(void) {
     let mut freed = Vec::new();
     let mut reference = None;
     for (name, code) in [("aged", &aged), ("owned", &owned)] {
-        let exe = dir.0.join(name);
+        let exe = dir
+            .0
+            .join(name)
+            .with_extension(std::env::consts::EXE_EXTENSION);
         fwp::cgen::compile_c(code, &exe, "-O1").unwrap();
         let out = checked(
             Command::new(&exe)
@@ -280,7 +294,10 @@ fn retained_task_boundaries_preserve_golden_behavior() {
     let source = root.join("tests/run/tasks.fwp");
     let expected = std::fs::read(source.with_extension("out")).unwrap();
     for opt in ["-O1", "-O2"] {
-        let exe = dir.0.join("tasks");
+        let exe = dir
+            .0
+            .join("tasks")
+            .with_extension(std::env::consts::EXE_EXTENSION);
         checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .arg("build")

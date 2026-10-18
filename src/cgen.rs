@@ -7499,12 +7499,14 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                 s.push_str(" return result;");
                             }
                             ResultOwnership::MapOperation { .. } => {
-                                let map =
-                                    if matches!(sym.as_str(), "map.from-list" | "set.from-list") {
-                                        func.ty.params(func.arity as usize).1.clone()
-                                    } else {
-                                        func.locals[func.arity as usize - 1].clone()
-                                    };
+                                let map = if matches!(
+                                    sym.as_str(),
+                                    "map.from-list" | "set.from-list" | "map.map-values"
+                                ) {
+                                    func.ty.params(func.arity as usize).1.clone()
+                                } else {
+                                    func.locals[func.arity as usize - 1].clone()
+                                };
                                 let MT::Con(name, types) = &map else {
                                     return Err(format!("typed map `{sym}` has a non-map type"));
                                 };
@@ -7546,7 +7548,15 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                 } else {
                                     "fwp_rc_drop".into()
                                 };
-                                let ops = format!("&(const fwp_map_ops){{{dk}, {dv}, {drop_key}, {drop_value}, {drop_map}}}");
+                                let result = func.ty.params(func.arity as usize).1.clone();
+                                let drop_result = if (free_enabled() || self.resource_type(&result))
+                                    && crate::rc::needs_rc(&self.prog.shapes, &result)
+                                {
+                                    format!("fwp_drop{}", self.drop_id(&result))
+                                } else {
+                                    "NULL".into()
+                                };
+                                let ops = format!("&(const fwp_map_ops){{{dk}, {dv}, {drop_key}, {drop_value}, {drop_map}, {drop_result}}}");
                                 let mut args: Vec<String> =
                                     (0..func.arity).map(|i| format!("l{i}")).collect();
                                 args.push(ops);
@@ -8559,6 +8569,15 @@ type ExportSig = (
     crate::ffi::CType,
 );
 
+fn library_result_needs_release(result: &crate::ffi::CType) -> bool {
+    use crate::ffi::CType;
+    match result {
+        CType::Str => true,
+        CType::Struct { fields, .. } => fields.iter().any(|(_, _, ty)| *ty == CType::Str),
+        _ => false,
+    }
+}
+
 fn export_sigs(prog: &Program) -> Result<Vec<ExportSig>, String> {
     let mut out = Vec::new();
     for (name, fid) in &prog.exports {
@@ -8580,6 +8599,22 @@ fn export_sigs(prog: &Program) -> Result<Vec<ExportSig>, String> {
             ));
         }
         out.push((c_export_name(name), *fid, params, ret));
+    }
+    let mut names = std::collections::HashSet::new();
+    for (name, _, _, _) in &out {
+        if !names.insert(name.clone()) {
+            return Err(format!("exported functions have the same C name `{name}`"));
+        }
+    }
+    for (name, _, _, result) in &out {
+        if library_result_needs_release(result) {
+            let release = format!("fwp_release_{name}");
+            if !names.insert(release.clone()) {
+                return Err(format!(
+                    "exported function conflicts with generated result release `{release}`"
+                ));
+            }
+        }
     }
     Ok(out)
 }
@@ -8607,8 +8642,9 @@ pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, Strin
         g = guard
     );
     if native_options().arc {
-        h.push_str("/* Checked ARC: inputs are copied for each call; results contain no managed\n * pointers. Keep input strings valid until return. Serialize host calls and\n * finish all calls before unloading the library. */\n\n");
+        h.push_str("/* Checked ARC: owned results require no tracing collector. */\n\n");
     }
+    h.push_str("/* Inputs are copied for each call; keep input strings valid until return.\n * Each result containing strings owns those strings. Release the complete,\n * unchanged result exactly once with its matching fwp_release_FUNCTION.\n * Do not use free(), modify string bytes, or release copied result aliases.\n * No result may be used after release. Serialize calls (including releases),\n * release all owned results and finish all calls before unloading the library. */\n\n");
     let mut all = Vec::new();
     for (_, _, ps, r) in &sigs {
         all.extend(ps.iter().map(|(_, c)| c.clone()));
@@ -8635,6 +8671,13 @@ pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, Strin
                 params.join(", ")
             }
         );
+        if library_result_needs_release(r) {
+            let _ = writeln!(
+                h,
+                "void fwp_release_{cname}({} result);",
+                crate::ffi::c_name(r)
+            );
+        }
     }
     h.push_str("\n#ifdef __cplusplus\n}\n#endif\n\n#endif\n");
     Ok((src, h))
@@ -8844,14 +8887,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             Mode::Library => {
                 let signatures = export_sigs(prog)?;
                 for (name, _, params, result) in &signatures {
-                    // The existing export ABI copies strings on entry but
-                    // returns string addresses without a host release API.
-                    // Admit only results whose bits contain no managed pointer.
                     if !params.iter().all(|(_, ty)| crate::ffi::copied_result(ty))
-                        || !crate::ffi::by_value(result)
+                        || !crate::ffi::copied_result(result)
                     {
                         return Err(format!(
-                            "--gc arc: exported function `{name}` requires copied C inputs and a pointer-free result; returned strings and raw pointers have no host release contract"
+                            "--gc arc: exported function `{name}` requires copied C inputs and scalar or owned-string results; raw pointers have no checked host lifetime"
                         ));
                     }
                 }
@@ -8996,6 +9036,10 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     }
     let mut lib_defs = String::new();
     if let Mode::Library = mode {
+        // Windows automatic exports omit names also present in import
+        // libraries (for example CRT `norm`). Export the language interface
+        // explicitly, including its ownership release functions.
+        let export_attribute = "#ifdef _WIN32\n__declspec(dllexport)\n#endif\n";
         // Register exit cleanup before runtime dependencies can be loaded.
         // Darwin terminates dlopened images before archive destructors. The
         // guarded finish also runs at dynamic unload; repeated calls are safe.
@@ -9021,7 +9065,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             };
             let _ = writeln!(
                 lib_defs,
-                "{} {}({}) {{\n    fwp_lib_init();",
+                "{export_attribute}{} {}({}) {{\n    fwp_lib_init();",
                 crate::ffi::c_name(&r),
                 cname,
                 if decl.is_empty() {
@@ -9058,13 +9102,72 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             } else {
                 "    fwp_cleanup_pop(&inputs_cleanup); inputs_cleanup.release(inputs_cleanup.arg);\n"
             };
+            let direct = g.abis[fid]
+                .as_ref()
+                .filter(|abi| {
+                    matches!(r, crate::ffi::CType::Struct { .. })
+                        && abi.ret.is_some()
+                        && abi.params.iter().all(Option::is_none)
+                })
+                .cloned();
             if r == crate::ffi::CType::Void {
                 let _ = writeln!(lib_defs, "    (void){call};\n{finish_inputs}}}\n");
+            } else if let Some(abi) = direct {
+                // The worker already returns fields. Transfer those owners
+                // directly into the C result rather than boxing then unpacking.
+                let args = abi.args_decode_words(prog, fid, args.clone());
+                let _ = writeln!(
+                    lib_defs,
+                    "    fwp_wr{fid} result = w{fid}({});\n{finish_inputs}",
+                    args.join(", ")
+                );
+                let values = abi.result_words(prog, fid, "result");
+                let result_ty = f.ty.params(f.arity as usize).1;
+                let fields = record_fields(&prog.shapes, result_ty).expect("record export result");
+                let owners = fields
+                    .iter()
+                    .enumerate()
+                    .map(|(i, (_, ty))| (values[i].clone(), ty.clone()))
+                    .collect::<Vec<_>>();
+                let protect = g.protect_values(&owners, "result_fields", "result_cleanup");
+                let _ = writeln!(
+                    lib_defs,
+                    "    {protect}\n    {} converted;",
+                    crate::ffi::c_name(&r)
+                );
+                let crate::ffi::CType::Struct {
+                    fields: c_fields, ..
+                } = &r
+                else {
+                    unreachable!()
+                };
+                for (name, index, ty) in c_fields {
+                    let _ = writeln!(
+                        lib_defs,
+                        "    converted.{name} = {};",
+                        ffi_to_c(ty, &values[*index])
+                    );
+                }
+                if !protect.is_empty() {
+                    lib_defs.push_str("    fwp_cleanup_pop(&result_cleanup);\n");
+                }
+                lib_defs.push_str("    /* move C result fields */\n");
+                if g.reuse {
+                    for (_, index, ty) in c_fields {
+                        let (_, field_ty) = &fields[*index];
+                        if *ty != crate::ffi::CType::Str
+                            && crate::rc::needs_rc(&prog.shapes, field_ty)
+                        {
+                            let drop = g.value_drop(field_ty);
+                            let _ = writeln!(lib_defs, "    {drop}({});", values[*index]);
+                        }
+                    }
+                }
+                lib_defs.push_str("    return converted;\n}\n\n");
             } else {
-                // The C result copies scalars and records, but string pointers
-                // escape into host storage for the lifetime of the library.
-                // Evaluate once (OptPtr conversion reads its value twice),
-                // and protect the owned result if string conversion traps.
+                // Evaluate once and protect the full result until every C
+                // string conversion succeeds. Then transfer string owners to
+                // the host, which releases them through the matching export.
                 let result_ty = f.ty.params(f.arity as usize).1.clone();
                 let drop = if g.reuse {
                     g.value_drop(&result_ty)
@@ -9077,22 +9180,71 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                 if g.reuse {
                     match &r {
                         crate::ffi::CType::Str => {
-                            lib_defs.push_str("    fwp_rc_share(result);\n");
+                            // The result already owns its string: no copy or
+                            // retain is needed to give that owner to C.
                         }
                         crate::ffi::CType::Struct { fields, .. } => {
-                            for (_, index, ty) in fields {
-                                if *ty == crate::ffi::CType::Str {
-                                    let _ = writeln!(
-                                        lib_defs,
-                                        "    fwp_rc_share(OBJ(result)->f[{index}]);"
-                                    );
+                            let strings: Vec<_> = fields
+                                .iter()
+                                .filter(|(_, _, ty)| *ty == crate::ffi::CType::Str)
+                                .collect();
+                            if !strings.is_empty() {
+                                lib_defs.push_str(
+                                    "    if (fwp_rc_last(result)) { /* move C result strings */\n",
+                                );
+                                for (_, index, _) in &strings {
+                                    let _ =
+                                        writeln!(lib_defs, "        OBJ(result)->f[{index}] = 0;");
                                 }
+                                lib_defs.push_str("    } else {\n");
+                                let values = strings
+                                    .iter()
+                                    .map(|(_, index, _)| {
+                                        (format!("OBJ(result)->f[{index}]"), MT::con("std::String"))
+                                    })
+                                    .collect::<Vec<_>>();
+                                let retained = g.duplicate_values(
+                                    &values,
+                                    "result_strings",
+                                    "result_strings_cleanup",
+                                );
+                                let _ = writeln!(lib_defs, "        {retained}\n    }}");
                             }
                         }
                         _ => {}
                     }
                 }
-                lib_defs.push_str("    (void)fwp_value_finish(&owner, &cleanup);\n    owner.value = result; fwp_value_release(&owner);\n    return converted;\n}\n\n");
+                lib_defs.push_str("    (void)fwp_value_finish(&owner, &cleanup);\n");
+                if r != crate::ffi::CType::Str {
+                    lib_defs.push_str("    owner.value = result; fwp_value_release(&owner);\n");
+                }
+                lib_defs.push_str("    return converted;\n}\n\n");
+            }
+            if library_result_needs_release(&r) {
+                let _ = writeln!(
+                    lib_defs,
+                    "{export_attribute}void fwp_release_{cname}({} result) {{",
+                    crate::ffi::c_name(&r)
+                );
+                if g.reuse {
+                    let drop = g.value_drop(&MT::con("std::String"));
+                    let values = match &r {
+                        crate::ffi::CType::Str => vec!["result".into()],
+                        crate::ffi::CType::Struct { fields, .. } => fields
+                            .iter()
+                            .filter(|(_, _, ty)| *ty == crate::ffi::CType::Str)
+                            .map(|(name, _, _)| format!("result.{name}"))
+                            .collect(),
+                        _ => unreachable!(),
+                    };
+                    for value in values {
+                        let _ =
+                            writeln!(lib_defs, "    {drop}(PTR({value} - offsetof(fwp_str, d)));");
+                    }
+                } else {
+                    lib_defs.push_str("    (void)result;\n");
+                }
+                lib_defs.push_str("}\n\n");
             }
         }
     }
@@ -10267,6 +10419,7 @@ fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
                 .to_string();
                 format!("\nthe program uses TLS, which needs OpenSSL 3's headers and libraries for {} (Debian and Ubuntu: libssl-dev:{}; see docs/tls.md)", t, deb)
             }
+            _ if tls && cfg!(windows) => "\nthe program uses TLS, which needs native OpenSSL 3 headers and DLLs (Windows: set FWP_OPENSSL_DIR to the installation prefix and add its bin directory to PATH; see docs/tls.md)".to_string(),
             _ if tls && native_is_macos() => "\nthe program uses TLS, which needs OpenSSL 3's headers and libraries (macOS: brew install openssl@3; set FWP_OPENSSL_DIR to brew --prefix openssl@3; see docs/tls.md)".to_string(),
             _ if tls => "\nthe program uses TLS, which needs OpenSSL 3's headers and libraries (Debian and Ubuntu: libssl-dev; see docs/tls.md)".to_string(),
             _ => String::new(),

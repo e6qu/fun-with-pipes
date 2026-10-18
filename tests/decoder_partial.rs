@@ -42,6 +42,10 @@ main = "{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"]
         r#"
 static int decode_recover(void) {{ return 1; }}
 int main(void) {{
+#ifdef _WIN32
+    /* Preserve exact test output bytes on native Windows too. */
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
+#endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
     V text=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"],\"sign\":0}}");
     V invalid=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",3],\"packed\":[\"a\",\"b\"],\"sign\":0}}");
@@ -100,7 +104,9 @@ int main(void) {{
     );
     assert_ne!(omitted, code);
     for opt in ["-O1", "-O2"] {
-        let binary = dir.join(opt);
+        let binary = dir
+            .join(opt)
+            .with_extension(std::env::consts::EXE_EXTENSION);
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
         assert_eq!(
             checked(&mut Command::new(&binary)).stdout,
