@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -99,6 +99,67 @@ jobs:
           name: artifact-paths-${{ matrix.runner }}
           path: artifact-path-evidence/
           if-no-files-found: error
+  large_map:
+    if: inputs.suite == 'large-map'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm"]' || format('["{0}"]', inputs.native_runner)) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: cc
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - name: Require a native Linux measurement host
+        run: test "${{ runner.os }}" = Linux
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Native compiler dependencies and binary inspection tools
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev binutils
+      - name: Build the measured compiler
+        run: cargo build --release --bin fwp
+      - name: Compare complete map work with construction fusion on and off
+        run: python3 scripts/measure-large-map.py --output large-map-evidence
+      - name: Locate variable large-map construction costs
+        run: python3 scripts/measure-map-phases.py --input large-map-evidence --output large-map-evidence/phases
+      - name: Compare joined map buffers with the original layout
+        run: python3 scripts/measure-map-storage.py --input large-map-evidence --output large-map-evidence/storage
+      - name: Attribute construction and query costs for both layouts
+        run: python3 scripts/measure-map-storage-phases.py --input large-map-evidence/storage --output large-map-evidence/storage-phases
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: large-map-${{ matrix.runner }}
+          path: large-map-evidence/
+          if-no-files-found: error
+  map_replay:
+    if: inputs.suite == 'map-replay'
+    permissions:
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2, 3, 4]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_HEAD: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check rejection of changed or incomplete evidence
+        run: python3 scripts/test-map-replay.py
+      - name: Repeat verified binaries without compiler or native builds
+        run: python3 scripts/replay-map-storage.py --run "$EVIDENCE_RUN" --source "$EVIDENCE_HEAD" --output map-replay-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: map-replay-${{ matrix.sample }}
+          path: map-replay-evidence/
+          if-no-files-found: error
   collection_report:
     if: inputs.suite == 'collection-report'
     runs-on: ubuntu-latest
@@ -124,6 +185,7 @@ jobs:
           name: collection-build-report
           path: |
             collection-report/report.json
+            collection-report/artifacts/*.json
             collection-report/artifacts/*.log
             collection-report/artifacts/**/*.disassembly.txt
             collection-report/artifacts/**/*.symbols.txt
@@ -166,10 +228,11 @@ jobs:
       - name: Collection semantics, failures and cancellation
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test collection_construction --test map_set_ownership --test mapped_array_construction --test numeric_array_fusion -- --nocapture
-      - run: cargo build --release
+      - name: Use the compiler already built by the integration tests
+        run: cargo build --bin fwp
       - name: Repeated construction costs and generated code
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && success() }}
-        run: python3 scripts/measure-collection-build.py --output collection-build-evidence/costs
+        run: python3 scripts/measure-collection-build.py --compiler ${{ runner.os == 'Windows' && 'target/debug/fwp.exe' || 'target/debug/fwp' }} --output collection-build-evidence/costs
       - uses: actions/upload-artifact@v7
         if: always()
         with:

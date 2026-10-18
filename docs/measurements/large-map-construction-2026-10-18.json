@@ -1,0 +1,1355 @@
+{
+  "source": "9f0632f9c1abf4f067fa659f1d95c5768cb8a965",
+  "run": 39102838322,
+  "status": "Both native jobs and artifact audit pass; AMD64 timing instability remains unresolved.",
+  "descriptionCorrection": "The raw reports below say sorted key/value pairs. The input pairs have scrambled distinct keys, computed as (index * 7919) modulo 1000003; map construction sorts them. Raw timing data and original report text are preserved. The program constructs and prints the table size before its query loop.",
+  "scope": "Controlled optimization-on/off comparison; compiler/runtime identical to PR 166 head 7f782388270b5d73a60eaf3c253a6f9a6e680e95. Raw reports retained without relabeling. Allocation reduction is not acceptance of the observed AMD64 slowdown.",
+  "hosts": {
+    "large-map-ubuntu-24.04-arm": {
+      "source": "9f0632f9c1abf4f067fa659f1d95c5768cb8a965",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervmidgih",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+        "machine": "aarch64",
+        "processor": "aarch64"
+      },
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "scope": "Maintained map benchmark: build 500,000 sorted key/value pairs and perform 2,000,000 lookups. C/Rust outputs agree with every fwp variant. Same runner, compiler and fwp source; compare numeric construction fusion on/off in both default tracing and checked ARC. Separate construction-only fwp programs print the map size; their timings are not a direct measurement of lookup time and must not be subtracted as one. Whole-process time includes startup, allocation, construction, queries/output and shutdown. Build time includes fwp C generation, native compilation/linking and any ordinary compiler cache effects. C/Rust sorting and overflow rules differ; the guide explains these comparisons. Counter instrumentation uses separate executables excluded from timing. Counted storage excludes allocator capacity and process RSS; tracing may retain uncollected storage. Every variant occupies every position twice after warmup. Actual timed executables, sources, hashes, raw samples and disassembly are saved. No universal speed threshold or cross-run regression conclusion is assumed.",
+      "cases": [
+        {
+          "work": "full",
+          "expected": "500000\n249999500000\n",
+          "executionOrder": [
+            [
+              "c",
+              "rust",
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1"
+            ],
+            [
+              "rust",
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "c"
+            ],
+            [
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "c",
+              "rust"
+            ],
+            [
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "c",
+              "rust",
+              "tracing-0"
+            ],
+            [
+              "arc-0",
+              "arc-1",
+              "c",
+              "rust",
+              "tracing-0",
+              "tracing-1"
+            ],
+            [
+              "arc-1",
+              "c",
+              "rust",
+              "tracing-0",
+              "tracing-1",
+              "arc-0"
+            ],
+            [
+              "c",
+              "rust",
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1"
+            ],
+            [
+              "rust",
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "c"
+            ],
+            [
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "c",
+              "rust"
+            ],
+            [
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "c",
+              "rust",
+              "tracing-0"
+            ],
+            [
+              "arc-0",
+              "arc-1",
+              "c",
+              "rust",
+              "tracing-0",
+              "tracing-1"
+            ],
+            [
+              "arc-1",
+              "c",
+              "rust",
+              "tracing-0",
+              "tracing-1",
+              "arc-0"
+            ]
+          ],
+          "variants": {
+            "c": {
+              "binary": "map-c",
+              "binaryBytes": 70496,
+              "binarySha256": "666b84c3ad1465de2382c96ac7ab7851fdd2b0cda1a2abf2b3781a508081e17b",
+              "buildCommand": [
+                "cc",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/bench/map/main.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/map-c"
+              ],
+              "buildNs": 44172118,
+              "processWallNs": [
+                534799732,
+                482038010,
+                527349376,
+                528226470,
+                486503032,
+                490762620,
+                499529115,
+                502663560,
+                516144193,
+                491109888,
+                487172362,
+                527544612
+              ],
+              "medianProcessWallNs": 501096337.5
+            },
+            "rust": {
+              "binary": "map-rust",
+              "binaryBytes": 4621880,
+              "binarySha256": "f06c581d3b3afaf86b3c2284f12ebf18c9a91707755c867daba128c1642c8a30",
+              "buildCommand": [
+                "rustc",
+                "-O",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/bench/map/main.rs",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/map-rust"
+              ],
+              "buildNs": 226833606,
+              "processWallNs": [
+                473380570,
+                451471042,
+                459627729,
+                461086182,
+                457753267,
+                451054021,
+                459544388,
+                447468830,
+                459604208,
+                460181225,
+                459326151,
+                443553630
+              ],
+              "medianProcessWallNs": 459435269.5
+            },
+            "tracing-0": {
+              "binary": "full-tracing-fusion-0",
+              "binaryBytes": 84360,
+              "binarySha256": "89c7aa549a99366d8b13b80afe1d1e552e3bd209f706e941117a0c1b1fc5e1fb",
+              "mode": "tracing",
+              "constructionFusion": false,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "tracing",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/bench/map/main.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-tracing-fusion-0"
+              ],
+              "buildNs": 1333242633,
+              "sourceSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+              "generatedSha256": "6d2dd220ed5f98b9c4c00c39a3274ed1e5d03c44725ab3b0a68fb15a25d25a81",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-tracing-fusion-0-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-tracing-fusion-0-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "71a0e0d10d2a51cc512f0c76f4a9c5c508b40dfb462a7639b1a8b0cbbe75b471",
+              "counters": {
+                "requests": 1500009,
+                "requestedBytes": 64000108,
+                "retains": 2000001,
+                "peakChargedBytes": 56000040,
+                "finalChargedBytes": 0,
+                "collections": 3
+              },
+              "processWallNs": [
+                560223727,
+                540331819,
+                556539542,
+                518182676,
+                514705376,
+                521690605,
+                575534965,
+                537215367,
+                564118299,
+                528903485,
+                539509725,
+                571131931
+              ],
+              "medianProcessWallNs": 539920772.0
+            },
+            "tracing-1": {
+              "binary": "full-tracing-fusion-1",
+              "binaryBytes": 84048,
+              "binarySha256": "046e977a736d1bda46b319a579835c9edf6dab6d5d7d3f2fdfb2eac8ec836cd1",
+              "mode": "tracing",
+              "constructionFusion": true,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "tracing",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/bench/map/main.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-tracing-fusion-1"
+              ],
+              "buildNs": 1192847235,
+              "sourceSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+              "generatedSha256": "754fbb1bb38d203a0f19db175169a3a32d1fa594eb0ee0a3903139ba62fd5b8d",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-tracing-fusion-1-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-tracing-fusion-1-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "2ed93603f3435ef4b4733bb2bd30b5566e3e4188e4d2961a4940c5f60b26e8fb",
+              "counters": {
+                "requests": 8,
+                "requestedBytes": 24000100,
+                "retains": 2000001,
+                "peakChargedBytes": 24000040,
+                "finalChargedBytes": 0,
+                "collections": 2
+              },
+              "processWallNs": [
+                497080223,
+                512642603,
+                465840150,
+                505212887,
+                478680604,
+                491915025,
+                488565026,
+                463431578,
+                465015325,
+                488387927,
+                470471119,
+                487554252
+              ],
+              "medianProcessWallNs": 487971089.5
+            },
+            "arc-0": {
+              "binary": "full-arc-fusion-0",
+              "binaryBytes": 83952,
+              "binarySha256": "e2d9636cc90d73f9a696972ebd4af1d8ffd218a907b3be3d7db719148b13c6e7",
+              "mode": "arc",
+              "constructionFusion": false,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "arc",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/bench/map/main.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-arc-fusion-0"
+              ],
+              "buildNs": 1080282400,
+              "sourceSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+              "generatedSha256": "530ac02c4d9727bdc3cedf7b378cad7809e04d79f4eed343e03964a636dba90e",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-arc-fusion-0-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-arc-fusion-0-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "e26bf0ab1039f64031e4cafd58f48f41f70e083ce6e537a8f2132aba965886b3",
+              "counters": {
+                "requests": 1500009,
+                "requestedBytes": 64000108,
+                "retains": 2000001,
+                "peakChargedBytes": 56000040,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "processWallNs": [
+                503613925,
+                554374263,
+                554162166,
+                506037465,
+                540401480,
+                515637210,
+                525552575,
+                555343257,
+                544048258,
+                546249098,
+                505207952,
+                512455715
+              ],
+              "medianProcessWallNs": 532977027.5
+            },
+            "arc-1": {
+              "binary": "full-arc-fusion-1",
+              "binaryBytes": 83600,
+              "binarySha256": "b7a4735d5c2ca6558ac01b20b4070d19135f3bdaf6e6847d8b4e00debc481ffd",
+              "mode": "arc",
+              "constructionFusion": true,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "arc",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/bench/map/main.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-arc-fusion-1"
+              ],
+              "buildNs": 1043878973,
+              "sourceSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+              "generatedSha256": "11c154c58d1df7b21815cb2f6493cad5c77a684e737b6e45389c99dfb206e345",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-arc-fusion-1-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-arc-fusion-1-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "082e7e258b893d1a98dbe82a26942f20a973bf573d57b190411004be28045297",
+              "counters": {
+                "requests": 8,
+                "requestedBytes": 24000100,
+                "retains": 2000001,
+                "peakChargedBytes": 24000040,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "processWallNs": [
+                461019811,
+                473813214,
+                492497077,
+                518676479,
+                455881590,
+                459563762,
+                452001526,
+                463941332,
+                514300156,
+                466460146,
+                465613138,
+                503088292
+              ],
+              "medianProcessWallNs": 466036642.0
+            }
+          },
+          "enabledToDisabledTimeRatio": {
+            "tracing": 0.9037827674094376,
+            "arc": 0.8744028690805065
+          }
+        },
+        {
+          "work": "construction",
+          "expected": "500000\n",
+          "executionOrder": [
+            [
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1"
+            ],
+            [
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "tracing-0"
+            ],
+            [
+              "arc-0",
+              "arc-1",
+              "tracing-0",
+              "tracing-1"
+            ],
+            [
+              "arc-1",
+              "tracing-0",
+              "tracing-1",
+              "arc-0"
+            ],
+            [
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1"
+            ],
+            [
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "tracing-0"
+            ],
+            [
+              "arc-0",
+              "arc-1",
+              "tracing-0",
+              "tracing-1"
+            ],
+            [
+              "arc-1",
+              "tracing-0",
+              "tracing-1",
+              "arc-0"
+            ]
+          ],
+          "variants": {
+            "tracing-0": {
+              "binary": "construction-tracing-fusion-0",
+              "binaryBytes": 83560,
+              "binarySha256": "1b93b07ad5839612daaa0e21fb1e739a2d6b6f385894eb866a101797f943ff14",
+              "mode": "tracing",
+              "constructionFusion": false,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "tracing",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-tracing-fusion-0"
+              ],
+              "buildNs": 1122778669,
+              "sourceSha256": "3f61aa056789b6faa06d6297f888f7e2aca9707a91638ba2ae9842c479abfbb3",
+              "generatedSha256": "03ca04e693783402cd1cdabcc994f8da577eaf8f83db036a8798d22956818891",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-tracing-fusion-0-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-tracing-fusion-0-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "99011957cb6a03ded4f0b64f3010751ec32b08c602df3395fd9920b6917abc91",
+              "counters": {
+                "requests": 1500007,
+                "requestedBytes": 64000063,
+                "retains": 1,
+                "peakChargedBytes": 56000040,
+                "finalChargedBytes": 0,
+                "collections": 3
+              },
+              "processWallNs": [
+                80480720,
+                80163194,
+                78788561,
+                79732161,
+                79623037,
+                78406968,
+                78669914,
+                79537507
+              ],
+              "medianProcessWallNs": 79580272.0
+            },
+            "tracing-1": {
+              "binary": "construction-tracing-fusion-1",
+              "binaryBytes": 83216,
+              "binarySha256": "89bbe42b60da31275cb50cdce23624f4c129e70a9eac0287a70d9e9c550a267d",
+              "mode": "tracing",
+              "constructionFusion": true,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "tracing",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-tracing-fusion-1"
+              ],
+              "buildNs": 1053659984,
+              "sourceSha256": "3f61aa056789b6faa06d6297f888f7e2aca9707a91638ba2ae9842c479abfbb3",
+              "generatedSha256": "1f7054cafb8ef80d1ef989e43a867ed8e029e88c5843bcd7ef4cd770da38473f",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-tracing-fusion-1-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-tracing-fusion-1-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "e88c06d2530d63eaca1270d437755cfb825ea83cca020f8cdca6cce273d1fc96",
+              "counters": {
+                "requests": 6,
+                "requestedBytes": 24000055,
+                "retains": 1,
+                "peakChargedBytes": 24000040,
+                "finalChargedBytes": 0,
+                "collections": 2
+              },
+              "processWallNs": [
+                25874727,
+                25400187,
+                25533787,
+                26407241,
+                26216500,
+                25135543,
+                26684986,
+                26258882
+              ],
+              "medianProcessWallNs": 26045613.5
+            },
+            "arc-0": {
+              "binary": "construction-arc-fusion-0",
+              "binaryBytes": 83184,
+              "binarySha256": "b37db5c48d972b5fcf858c0c7d4e6cb2b8e6ef9779c75586b03bc892d0cebf06",
+              "mode": "arc",
+              "constructionFusion": false,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "arc",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-arc-fusion-0"
+              ],
+              "buildNs": 959895411,
+              "sourceSha256": "3f61aa056789b6faa06d6297f888f7e2aca9707a91638ba2ae9842c479abfbb3",
+              "generatedSha256": "eaf8cafa26a4895c3f807d4a4d5496d85da6d600995786b2b13c0414b5871c9a",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-arc-fusion-0-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-arc-fusion-0-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "df865f95109173dc5ded259823c99aed2573edc2b93a10761b8b927ae2c424d7",
+              "counters": {
+                "requests": 1500007,
+                "requestedBytes": 64000063,
+                "retains": 1,
+                "peakChargedBytes": 56000040,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "processWallNs": [
+                67354663,
+                64669763,
+                62507992,
+                64455241,
+                64139170,
+                63978532,
+                62450367,
+                63716961
+              ],
+              "medianProcessWallNs": 64058851.0
+            },
+            "arc-1": {
+              "binary": "construction-arc-fusion-1",
+              "binaryBytes": 82816,
+              "binarySha256": "105ff7b34979134ecd51d70a19cc193cb17ff0000e0f70d33940bf40f6f86e56",
+              "mode": "arc",
+              "constructionFusion": true,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "arc",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-arc-fusion-1"
+              ],
+              "buildNs": 886974330,
+              "sourceSha256": "3f61aa056789b6faa06d6297f888f7e2aca9707a91638ba2ae9842c479abfbb3",
+              "generatedSha256": "9a95f29402889afc12782c0956e8d151bd12e92de76b1c629e001e8078f16fba",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-arc-fusion-1-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-arc-fusion-1-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "978e044e75ec2e55bb021805c9ee62142c4cf8755ff04e16cf6a989dd807c0f4",
+              "counters": {
+                "requests": 6,
+                "requestedBytes": 24000055,
+                "retains": 1,
+                "peakChargedBytes": 24000040,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "processWallNs": [
+                24047617,
+                23442476,
+                24591233,
+                23706805,
+                23096839,
+                23589397,
+                23633194,
+                22887468
+              ],
+              "medianProcessWallNs": 23611295.5
+            }
+          },
+          "enabledToDisabledTimeRatio": {
+            "tracing": 0.3272873143735925,
+            "arc": 0.3685875586497797
+          }
+        }
+      ]
+    },
+    "large-map-ubuntu-latest": {
+      "source": "9f0632f9c1abf4f067fa659f1d95c5768cb8a965",
+      "hardware": {
+        "system": "Linux",
+        "node": "runnervm8k3b6",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+        "machine": "x86_64",
+        "processor": "x86_64"
+      },
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "scope": "Maintained map benchmark: build 500,000 sorted key/value pairs and perform 2,000,000 lookups. C/Rust outputs agree with every fwp variant. Same runner, compiler and fwp source; compare numeric construction fusion on/off in both default tracing and checked ARC. Separate construction-only fwp programs print the map size; their timings are not a direct measurement of lookup time and must not be subtracted as one. Whole-process time includes startup, allocation, construction, queries/output and shutdown. Build time includes fwp C generation, native compilation/linking and any ordinary compiler cache effects. C/Rust sorting and overflow rules differ; the guide explains these comparisons. Counter instrumentation uses separate executables excluded from timing. Counted storage excludes allocator capacity and process RSS; tracing may retain uncollected storage. Every variant occupies every position twice after warmup. Actual timed executables, sources, hashes, raw samples and disassembly are saved. No universal speed threshold or cross-run regression conclusion is assumed.",
+      "cases": [
+        {
+          "work": "full",
+          "expected": "500000\n249999500000\n",
+          "executionOrder": [
+            [
+              "c",
+              "rust",
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1"
+            ],
+            [
+              "rust",
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "c"
+            ],
+            [
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "c",
+              "rust"
+            ],
+            [
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "c",
+              "rust",
+              "tracing-0"
+            ],
+            [
+              "arc-0",
+              "arc-1",
+              "c",
+              "rust",
+              "tracing-0",
+              "tracing-1"
+            ],
+            [
+              "arc-1",
+              "c",
+              "rust",
+              "tracing-0",
+              "tracing-1",
+              "arc-0"
+            ],
+            [
+              "c",
+              "rust",
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1"
+            ],
+            [
+              "rust",
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "c"
+            ],
+            [
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "c",
+              "rust"
+            ],
+            [
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "c",
+              "rust",
+              "tracing-0"
+            ],
+            [
+              "arc-0",
+              "arc-1",
+              "c",
+              "rust",
+              "tracing-0",
+              "tracing-1"
+            ],
+            [
+              "arc-1",
+              "c",
+              "rust",
+              "tracing-0",
+              "tracing-1",
+              "arc-0"
+            ]
+          ],
+          "variants": {
+            "c": {
+              "binary": "map-c",
+              "binaryBytes": 16120,
+              "binarySha256": "f4300eb2b4af54dd579acc84f9d7bdaac68c8696e009b62d3fccb59c5170c5fb",
+              "buildCommand": [
+                "cc",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/bench/map/main.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/map-c"
+              ],
+              "buildNs": 121125230,
+              "processWallNs": [
+                385843575,
+                381533673,
+                384174270,
+                385519936,
+                385579958,
+                384262959,
+                382004017,
+                385999737,
+                383814777,
+                381947246,
+                385523271,
+                385671117
+              ],
+              "medianProcessWallNs": 384891447.5
+            },
+            "rust": {
+              "binary": "map-rust",
+              "binaryBytes": 4543344,
+              "binarySha256": "a0103293322c57aa73e3cfb14c3cbe1efc17688e4e6aed5f29bf4791866f08e7",
+              "buildCommand": [
+                "rustc",
+                "-O",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/bench/map/main.rs",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/map-rust"
+              ],
+              "buildNs": 168048055,
+              "processWallNs": [
+                311779421,
+                309662823,
+                313797803,
+                312028585,
+                311635139,
+                314556745,
+                309953418,
+                314149183,
+                310353699,
+                310479964,
+                312307071,
+                313631728
+              ],
+              "medianProcessWallNs": 311904003.0
+            },
+            "tracing-0": {
+              "binary": "full-tracing-fusion-0",
+              "binaryBytes": 75040,
+              "binarySha256": "1ad2f3de88838a4db74718fc2c800acf05eb09a43b33c270c2ae281d92e50075",
+              "mode": "tracing",
+              "constructionFusion": false,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "tracing",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/bench/map/main.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-tracing-fusion-0"
+              ],
+              "buildNs": 1782248574,
+              "sourceSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+              "generatedSha256": "6d2dd220ed5f98b9c4c00c39a3274ed1e5d03c44725ab3b0a68fb15a25d25a81",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-tracing-fusion-0-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-tracing-fusion-0-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "8f18c4f4f2fdfef35976ffcb86e12b374cb54dfddbb8a2aced8f1e83c93aa80c",
+              "counters": {
+                "requests": 1500009,
+                "requestedBytes": 64000108,
+                "retains": 2000001,
+                "peakChargedBytes": 56000040,
+                "finalChargedBytes": 0,
+                "collections": 3
+              },
+              "processWallNs": [
+                416647842,
+                416587289,
+                423213689,
+                418262303,
+                424789836,
+                418551507,
+                421056010,
+                405883522,
+                414494271,
+                425209392,
+                415248628,
+                418445121
+              ],
+              "medianProcessWallNs": 418353712.0
+            },
+            "tracing-1": {
+              "binary": "full-tracing-fusion-1",
+              "binaryBytes": 74672,
+              "binarySha256": "17a320711deb2e7c3cb50e8a014d3db21861dc2e0c4713b86370c96cd9d5d72b",
+              "mode": "tracing",
+              "constructionFusion": true,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "tracing",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/bench/map/main.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-tracing-fusion-1"
+              ],
+              "buildNs": 1286044335,
+              "sourceSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+              "generatedSha256": "754fbb1bb38d203a0f19db175169a3a32d1fa594eb0ee0a3903139ba62fd5b8d",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-tracing-fusion-1-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-tracing-fusion-1-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "f377fdb1da8ac1f5241d442405ec72be2272d0c28c11c861b8dd2e277d821621",
+              "counters": {
+                "requests": 8,
+                "requestedBytes": 24000100,
+                "retains": 2000001,
+                "peakChargedBytes": 24000040,
+                "finalChargedBytes": 0,
+                "collections": 2
+              },
+              "processWallNs": [
+                365384932,
+                458473782,
+                374684768,
+                373470859,
+                369631433,
+                453743784,
+                459622925,
+                458331120,
+                452703091,
+                461781019,
+                458496207,
+                367565495
+              ],
+              "medianProcessWallNs": 453223437.5
+            },
+            "arc-0": {
+              "binary": "full-arc-fusion-0",
+              "binaryBytes": 62264,
+              "binarySha256": "e0bbb755d506c03ec791b2d4ecd2416b456333b169d768f57b3b572d91b93a5b",
+              "mode": "arc",
+              "constructionFusion": false,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "arc",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/bench/map/main.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-arc-fusion-0"
+              ],
+              "buildNs": 1178075847,
+              "sourceSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+              "generatedSha256": "530ac02c4d9727bdc3cedf7b378cad7809e04d79f4eed343e03964a636dba90e",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-arc-fusion-0-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-arc-fusion-0-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "2e818fffda32e47b5da832fe292b1042ca4bb8c1c63603248ab0457be62e6bfa",
+              "counters": {
+                "requests": 1500009,
+                "requestedBytes": 64000108,
+                "retains": 2000001,
+                "peakChargedBytes": 56000040,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "processWallNs": [
+                405997008,
+                389447829,
+                398918446,
+                413060827,
+                405449216,
+                403288029,
+                396072720,
+                400670907,
+                408497455,
+                406310226,
+                406413779,
+                400538849
+              ],
+              "medianProcessWallNs": 404368622.5
+            },
+            "arc-1": {
+              "binary": "full-arc-fusion-1",
+              "binaryBytes": 61848,
+              "binarySha256": "a2f1742649e80ac1a8d0980add62cf637a29bbfda5d9f417448c9568cc170586",
+              "mode": "arc",
+              "constructionFusion": true,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "arc",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/bench/map/main.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-arc-fusion-1"
+              ],
+              "buildNs": 1118938878,
+              "sourceSha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b",
+              "generatedSha256": "11c154c58d1df7b21815cb2f6493cad5c77a684e737b6e45389c99dfb206e345",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-arc-fusion-1-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/full-arc-fusion-1-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "6375e967f19ea4413f1bcd9839b4c56f0c24071ff65c28e8ceea764f16374c09",
+              "counters": {
+                "requests": 8,
+                "requestedBytes": 24000100,
+                "retains": 2000001,
+                "peakChargedBytes": 24000040,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "processWallNs": [
+                376414424,
+                375173994,
+                449484035,
+                375270764,
+                354802045,
+                372401483,
+                447021796,
+                455474118,
+                448765373,
+                373366803,
+                372276886,
+                355735558
+              ],
+              "medianProcessWallNs": 375222379.0
+            }
+          },
+          "enabledToDisabledTimeRatio": {
+            "tracing": 1.0833498651973237,
+            "arc": 0.9279215995548715
+          }
+        },
+        {
+          "work": "construction",
+          "expected": "500000\n",
+          "executionOrder": [
+            [
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1"
+            ],
+            [
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "tracing-0"
+            ],
+            [
+              "arc-0",
+              "arc-1",
+              "tracing-0",
+              "tracing-1"
+            ],
+            [
+              "arc-1",
+              "tracing-0",
+              "tracing-1",
+              "arc-0"
+            ],
+            [
+              "tracing-0",
+              "tracing-1",
+              "arc-0",
+              "arc-1"
+            ],
+            [
+              "tracing-1",
+              "arc-0",
+              "arc-1",
+              "tracing-0"
+            ],
+            [
+              "arc-0",
+              "arc-1",
+              "tracing-0",
+              "tracing-1"
+            ],
+            [
+              "arc-1",
+              "tracing-0",
+              "tracing-1",
+              "arc-0"
+            ]
+          ],
+          "variants": {
+            "tracing-0": {
+              "binary": "construction-tracing-fusion-0",
+              "binaryBytes": 66016,
+              "binarySha256": "29b6da873eb52464a1dea9caaa7e0e302a01b381fd50d46f6ceb1118171f6e93",
+              "mode": "tracing",
+              "constructionFusion": false,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "tracing",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-tracing-fusion-0"
+              ],
+              "buildNs": 1240676712,
+              "sourceSha256": "3f61aa056789b6faa06d6297f888f7e2aca9707a91638ba2ae9842c479abfbb3",
+              "generatedSha256": "03ca04e693783402cd1cdabcc994f8da577eaf8f83db036a8798d22956818891",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-tracing-fusion-0-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-tracing-fusion-0-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "9c457ec592c4177dd7a138724505374de9d2e3b0f516526c1c511810ae6a53b0",
+              "counters": {
+                "requests": 1500007,
+                "requestedBytes": 64000063,
+                "retains": 1,
+                "peakChargedBytes": 56000040,
+                "finalChargedBytes": 0,
+                "collections": 3
+              },
+              "processWallNs": [
+                98623956,
+                97787860,
+                93088830,
+                90233211,
+                100714033,
+                98692090,
+                107464903,
+                85527883
+              ],
+              "medianProcessWallNs": 98205908.0
+            },
+            "tracing-1": {
+              "binary": "construction-tracing-fusion-1",
+              "binaryBytes": 61520,
+              "binarySha256": "01e8deffa1f20f775bea4452d9ca79609e4d8372873aaf6acc22aeee9942fbae",
+              "mode": "tracing",
+              "constructionFusion": true,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "tracing",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-tracing-fusion-1"
+              ],
+              "buildNs": 1143778482,
+              "sourceSha256": "3f61aa056789b6faa06d6297f888f7e2aca9707a91638ba2ae9842c479abfbb3",
+              "generatedSha256": "1f7054cafb8ef80d1ef989e43a867ed8e029e88c5843bcd7ef4cd770da38473f",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-tracing-fusion-1-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-tracing-fusion-1-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "ad28003cbff7b5ed5c77eb8d31bf29fcbb202bfa73bb91e42c5741df9692add7",
+              "counters": {
+                "requests": 6,
+                "requestedBytes": 24000055,
+                "retains": 1,
+                "peakChargedBytes": 24000040,
+                "finalChargedBytes": 0,
+                "collections": 2
+              },
+              "processWallNs": [
+                132929512,
+                54392200,
+                138524530,
+                134944296,
+                135509276,
+                51888045,
+                139279151,
+                131005181
+              ],
+              "medianProcessWallNs": 133936904.0
+            },
+            "arc-0": {
+              "binary": "construction-arc-fusion-0",
+              "binaryBytes": 57280,
+              "binarySha256": "d31ca6c11bb1795eede1219d048b471d494c5d74679c57caddb9a03ae7df85fd",
+              "mode": "arc",
+              "constructionFusion": false,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "arc",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-arc-fusion-0"
+              ],
+              "buildNs": 1052441078,
+              "sourceSha256": "3f61aa056789b6faa06d6297f888f7e2aca9707a91638ba2ae9842c479abfbb3",
+              "generatedSha256": "eaf8cafa26a4895c3f807d4a4d5496d85da6d600995786b2b13c0414b5871c9a",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-arc-fusion-0-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-arc-fusion-0-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "016ab842b3e3b84d86e52b9d8364a4e5ecb02c622b7c1f047a704f66381334dc",
+              "counters": {
+                "requests": 1500007,
+                "requestedBytes": 64000063,
+                "retains": 1,
+                "peakChargedBytes": 56000040,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "processWallNs": [
+                78379580,
+                79617702,
+                78813671,
+                83294637,
+                79670564,
+                74293323,
+                75657371,
+                79640589
+              ],
+              "medianProcessWallNs": 79215686.5
+            },
+            "arc-1": {
+              "binary": "construction-arc-fusion-1",
+              "binaryBytes": 56936,
+              "binarySha256": "469c1be95626dc7c7e8110a03dfdddb7cd4ea550ec5ba36cf8aec3be14fabbf1",
+              "mode": "arc",
+              "constructionFusion": true,
+              "buildCommand": [
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+                "build",
+                "--gc",
+                "arc",
+                "-O2",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction.fwp",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-arc-fusion-1"
+              ],
+              "buildNs": 978723451,
+              "sourceSha256": "3f61aa056789b6faa06d6297f888f7e2aca9707a91638ba2ae9842c479abfbb3",
+              "generatedSha256": "9a95f29402889afc12782c0956e8d151bd12e92de76b1c629e001e8078f16fba",
+              "profileCommand": [
+                "cc",
+                "-O2",
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-arc-fusion-1-profile.c",
+                "-o",
+                "/home/runner/work/fun-with-pipes/fun-with-pipes/large-map-evidence/construction-arc-fusion-1-profile",
+                "-lm",
+                "-lpthread"
+              ],
+              "profileSha256": "0fbea6b15ef132dbe7b3f3e06323c753931ee7ea7cfbb57da1b2371f783f80a3",
+              "counters": {
+                "requests": 6,
+                "requestedBytes": 24000055,
+                "retains": 1,
+                "peakChargedBytes": 24000040,
+                "finalChargedBytes": 0,
+                "collections": 0
+              },
+              "processWallNs": [
+                140937170,
+                44650609,
+                48459306,
+                59191474,
+                39682239,
+                138090716,
+                134435819,
+                54824148
+              ],
+              "medianProcessWallNs": 57007811.0
+            }
+          },
+          "enabledToDisabledTimeRatio": {
+            "tracing": 1.3638375402017564,
+            "arc": 0.719653057604948
+          }
+        }
+      ]
+    }
+  }
+}

@@ -74,14 +74,20 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     assert re.fullmatch('[0-9a-f]{40}', args.head)
+    # Retain the request and raw run state even when acceptance fails before
+    # downloads. A cancelled job is not success just because its tests passed.
+    args.artifacts.mkdir(parents=True, exist_ok=True)
+    (args.artifacts / 'request.json').write_text(json.dumps(
+        {'run': args.run, 'head': args.head}, indent=2) + '\n')
     metadata = json.loads(command('gh', 'run', 'view', args.run, '--repo', REPO,
                                   '--json', 'headSha,status,conclusion,jobs'))
-    assert metadata['headSha'] == args.head and metadata['status'] == 'completed'
-    assert metadata['conclusion'] == 'success'
+    (args.artifacts / 'run.json').write_text(json.dumps(metadata, indent=2) + '\n')
+    assert metadata['headSha'] == args.head, 'evidence source differs from the requested source'
+    assert metadata['status'] == 'completed', 'evidence run has not completed'
+    assert metadata['conclusion'] == 'success', f"evidence run did not succeed: {metadata['conclusion']}"
     jobs = [job for job in metadata['jobs'] if job['name'].startswith('collection_build (')]
     assert {job['name'] for job in jobs} == {f'collection_build ({host})' for host in HOSTS}
     assert len(jobs) == 6
-    args.artifacts.mkdir(parents=True, exist_ok=True)
     rows = []
     for host in HOSTS:
         job = next(job for job in jobs if job['name'] == f'collection_build ({host})')
@@ -107,7 +113,7 @@ def main():
                 counters = variant['counters']
                 assert counters['retains'] == counters['finalChargedBytes'] == counters['collections'] == 0
                 count = case['inputs']
-                expected = (4 if fused == '1' else 2 * count + 5) if case['kind'] == 'set' else (7 if fused == '1' else 3 * count + 8)
+                expected = (4 if fused == '1' else 2 * count + 5) if case['kind'] == 'set' else (5 if fused == '1' else 3 * count + 6)
                 assert counters['requests'] == expected, (host, case['kind'], count, fused, counters)
                 assert len(variant['processWallNs']) == 8 and min(variant['processWallNs']) > 0
                 assert variant['medianProcessWallNs'] == statistics.median(variant['processWallNs'])
@@ -126,11 +132,11 @@ def main():
             for opt in ['-O1', '-O2']:
                 for reuse in (['0'] if mode == 'arc' else ['0', '1']):
                     text = (checks / f'failures-{mode}{opt}-reuse-{reuse}.txt').read_text()
-                    assert text == '8 builders: 56 allocation failures and 64 callback exits cleaned; aliases preserved\n', text
+                    assert text == '8 builders: 48 allocation failures and 64 callback exits cleaned; aliases preserved\n', text
                     exits.append({'mode': mode, 'optimization': opt, 'reuseVerification': reuse == '1',
-                                  'allocationFailures': 56, 'callbackExits': 64})
+                                  'allocationFailures': 48, 'callbackExits': 64})
                 broken = (checks / f'missing-cleanup-{mode}{opt}.txt').read_text()
-                assert 'collection live allocations: 4' in broken, broken
+                assert 'collection live allocations: 2' in broken, broken
                 for kind in ['failures', 'missing-cleanup']:
                     binaries.append(inspect(checks / f'{kind}-{mode}{opt}.bin', host, mode, args.llvm_bin))
         rows.append({'host': host, 'job': job['databaseId'], 'passedTests': 13,

@@ -27,6 +27,8 @@ def main():
     assert os.environ.get('GITHUB_ACTIONS') == 'true', 'full evidence runs on GitHub'
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--compiler', required=True, type=Path,
+                        help='Compiler executable; its own execution is excluded from program timing')
     options = parser.parse_args()
     out = options.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -35,7 +37,12 @@ def main():
     spec.loader.exec_module(iteration)
     windows = platform.system() == 'Windows'
     suffix = '.exe' if windows else ''
-    compiler = ROOT / 'target/release' / ('fwp' + suffix)
+    compiler = options.compiler.resolve()
+    assert compiler.is_file(), compiler
+    compiler_hash = hashlib.sha256()
+    with compiler.open('rb') as executable:
+        for chunk in iter(lambda: executable.read(1024 * 1024), b''):
+            compiler_hash.update(chunk)
     cc = os.environ['CC']
     flags = ['-O2', '-std=gnu11', '-ffp-contract=off', '-w']
     links = ['-lm', '-lws2_32', '-lshell32'] if windows else ['-lm', '-lpthread']
@@ -126,7 +133,8 @@ def main():
                    else ['lscpu'], env).stdout,
         'compiler': run([cc, '--version'], env).stdout,
         'rustc': run(['rustc', '--version', '--verbose'], env).stdout,
-        'scope': 'Same fwp program and compiler with numeric collection fusion enabled or disabled, '
+        'fwpCompiler': {'path': str(compiler), 'sha256': compiler_hash.hexdigest()},
+        'scope': 'Same fwp program and explicitly selected compiler with numeric collection fusion enabled or disabled, '
                  'checked ARC, native -O2, no tracing or reuse poisoning. Inputs are compiled constants; '
                  'range construction, callbacks, sorting, deduplication, one query, startup and output '
                  'are included in whole-process time. Both variants use the same map sorting algorithm. '
@@ -134,7 +142,8 @@ def main():
                  'Memory uses separate instrumented executables and includes main and shutdown; '
                  'charged storage excludes allocator capacity and process RSS. Eight samples per '
                  'variant use recorded randomized order; small inputs may be dominated by startup. '
-                 'Native compilation times exclude fwp C generation. No C/Rust timing parity, '
+                 'Native compilation times exclude fwp C generation; the compiler executable need not '
+                 'itself be a release build to produce the measured native -O2 programs. No C/Rust timing parity, '
                  'universal speed threshold or register-placement claim follows from this report.',
         'cases': cases,
     }

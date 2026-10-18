@@ -2787,14 +2787,13 @@ static V fwp_p_map_to_list_typed(V m, const fwp_map_ops *ops) {
  * materialization writes unit into the final container's value slots. */
 static V fwp_map_build_typed(V *keys, V *vals, size_t n, const fwp_map_ops *ops, const fwp_desc *kd) {
     if (!n) return FWP_EMPTY_MAP;
-    V *tk = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-    fwp_cleanup tk_cleanup, tv_cleanup;
+    /* Related lanes share one owner and no allocator-sized gap. */
+    size_t lanes = vals ? 2 : 1;
+    if (n > SIZE_MAX / (lanes * sizeof(V))) fwp_trap("map too large");
+    V *tk = (V *)fwp_mem_alloc(lanes * n * sizeof(V));
+    fwp_cleanup tk_cleanup;
     fwp_scratch_protect(&tk, &tk_cleanup);
-    V *tv = NULL;
-    if (vals) {
-        tv = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-        fwp_scratch_protect(&tv, &tv_cleanup);
-    }
+    V *tv = vals ? tk + n : NULL;
     fwp_msort(keys, vals ? vals : keys, n, kd, tk, tv ? tv : tk);
     size_t len = 0;
     for (size_t i = 0; i < n; len++) {
@@ -2818,7 +2817,6 @@ static V fwp_map_build_typed(V *keys, V *vals, size_t n, const fwp_map_ops *ops,
         MAP(result)->d[2 * i + 1] = value;
     }
     fwp_value_finish(&owner, &cleanup);
-    if (tv) fwp_scratch_finish(&tv, &tv_cleanup);
     fwp_scratch_finish(&tk, &tk_cleanup);
     FWP_KEEP_ALIVE(keys); FWP_KEEP_ALIVE(vals);
     return result;
@@ -2826,17 +2824,16 @@ static V fwp_map_build_typed(V *keys, V *vals, size_t n, const fwp_map_ops *ops,
 static V fwp_p_map_from_list_typed(V xs, const fwp_map_ops *ops, const fwp_desc *kd) {
     V source = xs;
     size_t n = fwp_list_len(xs);
-    if (n >= SIZE_MAX / sizeof(V)) fwp_trap("map too large");
-    V *keys = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-    fwp_cleanup keys_cleanup, vals_cleanup;
+    if (!n) return FWP_EMPTY_MAP;
+    if (n > SIZE_MAX / (2 * sizeof(V))) fwp_trap("map too large");
+    V *keys = (V *)fwp_mem_alloc(2 * n * sizeof(V));
+    fwp_cleanup keys_cleanup;
     fwp_scratch_protect(&keys, &keys_cleanup);
-    V *vals = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
-    fwp_scratch_protect(&vals, &vals_cleanup);
+    V *vals = keys + n;
     for (size_t i = 0; xs; i++, xs = OBJ(xs)->f[1]) {
         V pair = OBJ(xs)->f[0]; keys[i] = OBJ(pair)->f[0]; vals[i] = OBJ(pair)->f[1];
     }
     V result = fwp_map_build_typed(keys, vals, n, ops, kd);
-    fwp_scratch_finish(&vals, &vals_cleanup);
     fwp_scratch_finish(&keys, &keys_cleanup);
     FWP_KEEP_ALIVE(source);
     return result;

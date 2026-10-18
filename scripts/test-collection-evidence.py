@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Keep incomplete or interleaved CI logs from producing misleading evidence."""
 import importlib.util
+import json
 from pathlib import Path
+import tempfile
 import unittest
+from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location(
     "collection_report", Path(__file__).with_name("summarize-collection-build.py"))
@@ -23,6 +26,24 @@ test result: ok. 2 passed; 0 failed; 0 ignored;
 
 
 class CollectionEvidence(unittest.TestCase):
+    def test_rejected_runs_preserve_metadata_without_certifying_evidence(self):
+        head = 'a' * 40
+        for status, conclusion in [('completed', 'failure'), ('completed', 'cancelled'),
+                                   ('in_progress', '')]:
+            metadata = {'headSha': head, 'status': status, 'conclusion': conclusion,
+                        'jobs': [{'name': 'collection_build (macos-15-intel)',
+                                  'status': status, 'conclusion': 'cancelled'}]}
+            with self.subTest(status=status, conclusion=conclusion), tempfile.TemporaryDirectory() as temporary:
+                folder = Path(temporary)
+                arguments = ['summarize-collection-build.py', '--run', '123', '--head', head,
+                             '--artifacts', str(folder / 'artifacts'), '--llvm-bin', '/unused',
+                             '--output', str(folder / 'report.json')]
+                with patch('sys.argv', arguments), patch.object(REPORT, 'command', return_value=json.dumps(metadata)), self.assertRaises(AssertionError):
+                    REPORT.main()
+                self.assertEqual(json.loads((folder / 'artifacts/run.json').read_text()), metadata)
+                self.assertEqual(json.loads((folder / 'artifacts/request.json').read_text()), {'run': 123, 'head': head})
+                self.assertFalse((folder / 'report.json').exists())
+
     def test_interleaved_streams_and_windows_paths(self):
         for log in [LOG, LOG.replace("tests/", "tests\\").replace(
                 "Running", "\x1b[1;32mRunning\x1b[0m")]:
