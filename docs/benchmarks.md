@@ -1065,6 +1065,13 @@ sample balance and medians, and inspects native sections and tracing symbols.
 It retains disassembly for review; a passing collector alone does not establish
 that an inner loop has no calls, spills or avoidable instructions.
 
+Acceptance requires identical canonical results, zero allocation/count operations
+inside hashing, and unchanged whole-program ARC allocation/owner profiles versus
+general traversal. The performance target is lower time on the large array and
+set cases without a reproducible small-case regression. Overlapping samples need
+a repeat on the same verified binaries before a speed claim; report C/Rust gaps
+and binary sizes even when the targeted dispatch is removed.
+
 ## CPU tensor output storage
 
 **Comparison:** previous versus direct-output fwp executors, with only that runtime
