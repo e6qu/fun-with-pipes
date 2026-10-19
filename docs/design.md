@@ -313,8 +313,10 @@ stressed tracing, aliases, every injected allocation failure and cancellation.
 The [six-host measurements](benchmarks.md#building-numeric-maps-and-sets-without-temporary-lists)
 verify the joined layout, allocation counts and actual instructions.
 [PR #166](roadmap-history.md#numeric-map-and-set-construction-pr-166) records full
-production acceptance. Large-map timings still include an unresolved Xeon
-slowdown; reduced allocation counts do not establish universal speed gains.
+production acceptance. Its large-map Xeon slowdown was subsequently repaired
+for the measured workload by [cached-map borrowing](benchmarks.md#rechecking-the-original-xeon-slowdown).
+Other layouts and workloads can still be slower; reduced allocation counts do
+not establish universal speed gains.
 
 ### Numeric pairs immediately mapped
 

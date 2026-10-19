@@ -53,8 +53,10 @@ def audit_tests(log):
     """Require every named target to finish, with its complete expected tests."""
     log = re.sub(r'\x1b\[[0-9;]*[A-Za-z]', '', log)
     expected = {'cached_map_borrows': 3, 'caf_ownership': 3,
-                'collection_construction': 3, 'inline_caf_ownership': 2, 'map_set_ownership': 5,
-                'mapped_array_construction': 3, 'numeric_array_fusion': 2}
+                'collection_construction': 3, 'decoder_partial': 1,
+                'inline_caf_ownership': 2, 'map_set_ownership': 6,
+                'mapped_array_construction': 3, 'numeric_array_fusion': 2,
+                'protocol': 9, 'repl': 8, 'static_constants': 1}
     # Cargo's target headers use stderr; harness summaries use stdout. GitHub
     # can place the next header before the preceding summary, so audit the two
     # ordered streams separately instead of splitting on headers.
@@ -64,6 +66,46 @@ def audit_tests(log):
     assert summaries == [('ok', str(count), '0', '0') for count in expected.values()], summaries
     assert 'panicked at' not in log
     return expected
+
+
+def set_requests(path):
+    """Validate observed requests; the previous-layout sizes are calculated."""
+    rows = []
+    for line in path.read_text().splitlines():
+        match = re.fullmatch(r'keys=(\d+) requested=(\d+) charged=(\d+)', line)
+        assert match, (path, line)
+        keys, requested, charged = map(int, match.groups())
+        expected = 8 + 8 * keys if keys else 0
+        assert requested == expected and charged >= requested, (path, line)
+        if not keys:
+            assert charged == 0, (path, line)
+        rows.append({'keys': keys, 'requestedBytes': requested,
+                     'chargedBytes': charged,
+                     'previousLayoutRequestBytes': 8 + 16 * keys if keys else 0})
+    assert [row['keys'] for row in rows] == [0, 1, 7, 257, 4096], path
+    return rows
+
+
+def compact_sets(directory, host, llvm):
+    runs = []
+    for mode in ['arc', 'tracing']:
+        for opt in ['-O0', '-O2']:
+            label = f'compact-{mode}{opt}'
+            rows = set_requests(directory / f'{label}.txt')
+            binary = inspect(directory / f'{label}.exe', host, mode, llvm)
+            source = directory / f'{label}.c'
+            assert source.stat().st_size and (directory / f'{label}.asm').stat().st_size
+            runs.append({'mode': mode, 'optimization': opt, 'sizes': rows,
+                         'generatedSha256': digest(source), 'binaryInspection': binary})
+    control = (directory / 'compact-wasted-slot-control.txt').read_text().strip()
+    assert control == 'set 1: requested 24, expected 16', control
+    return {'runs': runs, 'wastedSlotControl': control,
+            'scope': 'Observed requests to the managed allocator for a freshly built I64 set. '
+                     'Charged bytes include allocator rounding, not process RAM or child storage. '
+                     'Empty sets use static storage. The previous 8 + 16*n layout is calculated '
+                     'from its representation, not timed here. ARC charge returns to its starting '
+                     'value after each result is freed; tracing does not assert that ledger. '
+                     'These instrumented executions are not a speed benchmark.'}
 
 
 def main():
@@ -143,16 +185,19 @@ def main():
         rows.append({'host': host, 'job': job['databaseId'], 'passedTests': sum(completed_tests.values()),
                      'completedTargets': completed_tests,
                      'failureConfigurations': exits, 'cleanupControls': 4,
-                     'failureBinaries': binaries, 'measurements': report})
-        print(host, '21 tests, 20 actual binaries, six cost cases verified', flush=True)
+                     'failureBinaries': binaries,
+                     'compactSets': compact_sets(directory / 'sets', host, args.llvm_bin),
+                     'measurements': report})
+        print(host, sum(completed_tests.values()), 'tests, 24 actual binaries, six cost cases verified', flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps({
         'source': args.head, 'run': args.run,
         'collectorSource': command('git', 'rev-parse', 'HEAD').strip(),
         'completeNativeMatrix': True,
         'scope': 'Actual binaries are inspected as data, never executed by this collector. '
-                 'Each host has 21 focused tests, six failure configurations, four deliberately '
-                 'broken cleanup controls and six paired cost cases. Timing compares fused and '
+                 'Each host has 41 focused tests, six failure configurations, four deliberately '
+                 'broken cleanup controls, four compact-set configurations, an extra-slot '
+                 'control and six paired cost cases. Timing compares fused and '
                  'ordinary fwp, not C/Rust. Native section sizes are recorded; assembly must be '
                  'reviewed before any claim about register placement or vectorization. '
                  'Passing focused evidence does not replace production acceptance.',

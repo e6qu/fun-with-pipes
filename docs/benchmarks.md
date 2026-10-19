@@ -1870,7 +1870,9 @@ The six-host joined-layout run initially timed out rebuilding the compiler on
 Intel macOS. Reusing the already-built integration-test compiler fixes that
 redundancy without changing coverage or limits. Replacement `39108116774` passes;
 [the report](measurements/collection-joined-storage-2026-10-18.json) audits all
-120 binaries. PR #166 is accepted, but the Xeon timing issue remains unresolved.
+120 binaries. PR #166 left the Xeon timing issue unresolved; the later
+[matching-host comparison](#rechecking-the-original-xeon-slowdown) verifies its
+repair in the combined compiler.
 
 The PR #166 compiler makes 2,000,001 retains in this workload. A
 [hand-edited borrowing prototype](measurements/large-map-borrow-prototype-2026-10-18.json)
@@ -1908,11 +1910,11 @@ unchanged, and final counted bytes remain zero. This removes bookkeeping rather
 than map storage. These hosts do not establish an Intel result or resolve the
 Xeon 8573C regression.
 
-PR #167 integrates this compiler and repairs an additional result-representation
-bug: returning a tuple or variant after the borrow could create an unnecessary
-heap box. The prepared measurements predate that repair and full production
-acceptance. [The handoff](development-state.md) records current checks and pending
-measurements. Reproduce with `suite=map-borrow`, `evidence_run=39106005017`, and
+PR #167 integrated this compiler and also removed an unnecessary heap box when
+returning a tuple or variant after the borrow. These prepared measurements predate
+that repair. [Delivery history](roadmap-history.md#interactive-tools-and-cached-map-borrows-pr-167)
+records production acceptance; the later matching-host measurements below cover
+the integrated compiler. Reproduce with `suite=map-borrow`, `evidence_run=39106005017`, and
 `source_revision=93cb93a0f717b317814ecfc162de0c2f516dbfbd`; the workflow compiles the
 current branch and uses the saved baseline sources, checking identical inputs,
 outputs, counts and binary identities before recording times.

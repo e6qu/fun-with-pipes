@@ -53,7 +53,7 @@ def main():
         jobs = [job for job in audit['jobs'] if job['name'] == f'map_storage ({host})']
         assert len(jobs) == 1, host
         job = jobs[0]
-        assert job['conclusion'] == 'success' and job['passed'] == 11
+        assert job['conclusion'] == 'success' and job['passed'] == 12
         assert not any(job[key] for key in
                        ['failed', 'ignored', 'failed_steps', 'panic_lines'])
         directory = args.artifacts / f'map-storage-{host}'
@@ -65,7 +65,7 @@ def main():
             for opt in ['-O1', '-O2']:
                 for poison in (['0'] if mode == 'arc' else ['0', '1']):
                     line = (directory / f'faults-{mode}{opt}-reuse-{poison}.txt').read_text().strip()
-                    count = 110 if poison == '1' else 108
+                    count = 106 if poison == '1' else 104
                     assert line == (f'22 map/set operations: {count} injected failures cleaned; '
                                     'aliases preserved'), line
                     runs.append({'mode': mode, 'optimization': opt,

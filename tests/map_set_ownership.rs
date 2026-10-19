@@ -717,8 +717,19 @@ fn compact_sets_preserve_values_and_request_only_key_storage() {
                 .arg(&cfile),
         );
         let code = std::fs::read_to_string(&cfile).unwrap();
-        let start = code.find("/* build-set :").unwrap();
-        let function = code[start..]
+        let probe_cfile = dir.0.join("builder.c");
+        checked(
+            Command::new(compiler)
+                .args(["build", "--emit-c", "--gc", mode, "--fn", "build-set"])
+                .arg(&src)
+                .arg("-o")
+                .arg(&probe_cfile),
+        );
+        let builder = std::fs::read_to_string(&probe_cfile).unwrap();
+        let start = builder
+            .find("/* build-set :")
+            .expect("selected set builder missing");
+        let function = builder[start..]
             .split("static V ")
             .nth(1)
             .unwrap()
@@ -726,8 +737,8 @@ fn compact_sets_preserve_values_and_request_only_key_storage() {
             .next()
             .unwrap();
         let allocation = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
-        assert_eq!(code.matches(allocation).count(), 1);
-        let measured = code
+        assert_eq!(builder.matches(allocation).count(), 1);
+        let measured = builder
             .replace(
                 "typedef uint64_t V;",
                 "typedef uint64_t V;\nstatic size_t set_last_request;",

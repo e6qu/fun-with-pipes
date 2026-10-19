@@ -106,9 +106,11 @@ int main(void) {{
         .replace("        V previous = owner.value;", "        decode_probe();\n        V previous = owner.value;")
         .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
     let code = format!("{code}\n{probe}");
+    // Successful set decoding releases duplicate-key scratch owners too. Keep
+    // that cleanup intact; omit drops only while a construction fault is armed.
     let omitted = code.replace(
         "if (d && d->drop) d->drop(f->values[i]);",
-        "/* omitted partial child drop */",
+        "if (!decode_probe_at && d && d->drop) d->drop(f->values[i]);",
     );
     assert_ne!(omitted, code);
     for opt in ["-O1", "-O2"] {
@@ -121,10 +123,8 @@ int main(void) {{
             b"partial decoder cleanup verified\n"
         );
         fwp::cgen::compile_c(&omitted, &binary, opt).unwrap();
-        assert_eq!(
-            Command::new(binary).output().unwrap().status.code(),
-            Some(193)
-        );
+        let rejected = Command::new(binary).output().unwrap();
+        assert_eq!(rejected.status.code(), Some(193), "{opt}: {rejected:?}");
     }
     std::fs::remove_dir_all(dir).unwrap();
 }

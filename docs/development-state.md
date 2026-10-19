@@ -8,14 +8,29 @@ Branch: `compact-set-storage`, based on accepted PR #171 merge
 (`39276733207`) and documentation (`39276733233`) passed.
 [History](roadmap-history.md#mixed-tail-recursion-pr-171) records that delivery.
 
-[PR #172](https://github.com/e6qu/fun-with-pipes/pull/172) is a draft. The initial
-focused `collection-build` run `39291722740` queued without starting; the next
-revision adds the native decoder set/truncation checks found during review.
-Next: replace the queued run with the completed revision, fix every failure, then
-run the complete native matrix, WASI checks and documentation gate. Merge only
-after all nine production jobs and documentation pass for the final head.
-No new compiler build has run locally; added tests are not acceptance evidence.
-Full builds and measurements belong on GitHub runners.
+[PR #172](https://github.com/e6qu/fun-with-pipes/pull/172) is a draft. Focused run
+[39292052172](https://github.com/e6qu/fun-with-pipes/actions/runs/39292052172)
+on `dcdf8f82094dc5763e99454ae60bf1231c1d4651` passed formatting, all-target
+Clippy and 39 of 41 tests. Documentation `39292057238` passed. Both test failures
+were reviewed: the allocation probe selected an unused export from a main-only
+build, and the omitted-drop control leaked duplicate set keys before fault
+injection began. The probe now explicitly builds `--fn build-set`; the control
+omits drops only while an injected fault is armed. These repairs await CI.
+
+Next: publish both repairs with the report/documentation updates and run the
+six-host collection matrix. The first Linux run already checked all targets;
+repeating only that host would add a cycle before platform coverage. Fix every
+reported failure, collect the report, then start the complete production matrix.
+Use `suite=collection-report` on GitHub to audit the six-host run and inspect its
+saved binaries. Include actual WASI checks. Require all nine production jobs and
+documentation for the final head before squash merge. Full compiler builds and
+large evidence collection stay on GitHub runners.
+
+The report collector now requires all 41 tests and four compact-set allocation
+and binary configurations per host. Map failure counts are 104 normally and 106
+with reuse poisoning: smaller sets fit more entries before a growth allocation.
+The two cleanup controls still failed as intended. Earlier run `39291722740` was
+cancelled before starting; draft production jobs are skipped, not passed.
 
 Duplicate post-merge run `39289648247` was cancelled on the identical accepted
 PR #171 tree. It had no failed jobs; cancellation is not acceptance.
@@ -60,7 +75,31 @@ limits. The downloaded accepted ARM Mac compiler at
 - `cargo fmt --all` after the decoder extension passed. Native decoder coverage
   now includes sets, text round trips, every truncated binary prefix and injected
   failures during set insertion.
-- New Rust/C compilation, ownership probes and native/WASI execution are pending CI.
+- `clang -fsyntax-only -std=gnu11 /private/tmp/fwp-runtime-syntax.c`: passed in
+  0.37 seconds. A tiny accepted-compiler translation unit supplied scaffolding;
+  its four changed runtime sections were replaced verbatim with current sources.
+- `clang -std=gnu11 -O0 /private/tmp/fwp-compact-runtime.c -lm -o /private/tmp/fwp-compact-runtime`
+  and the corresponding O2 build passed (0.26/0.38 seconds). These focused C
+  probes call the current runtime builder directly, not the new compiler's
+  generated wrapper. Both executions passed: requests for 0/1/7/257/4096 keys
+  were 0/16/64/2064/32776 bytes; charged bytes were 0/16/64/2560/32776.
+  ARC charge returned to its starting value after every result was freed.
+- `otool -tvV /private/tmp/fwp-compact-runtime-o2`: passed; saved assembly shows
+  eight-byte indexed key loads/stores. This is ARM64 runtime evidence only.
+- The control restoring an extra word per key exited 211 as required: one key
+  requested 24 bytes instead of 16. Its bounded build/run took 0.14/0.37 seconds.
+- Final documentation audit passed in 3.06 seconds; `git diff --check` passed.
+- CI passed raw/optimized set output, typed map/set aliases and failures, protocol,
+  REPL, constants and collection construction checks. The new compact allocation
+  probe did not reach execution; decoder positive cases passed before its control
+  assertion failed. All native/WASI acceptance remains pending.
+- The accepted compiler `build --emit-c --gc arc --fn build-set` retained the
+  selected builder (0.27 seconds); this checks the repaired selection only.
+- The documentation audit passed in 3.00 seconds after replacing stale current
+  claims about the Xeon regression with links to its later accepted repair.
+- `python3 scripts/test-collection-evidence.py`: all five report checks passed in
+  0.34 seconds. They reject missing/failed tests, cancelled runs, extra set slots,
+  incorrect charges and incomplete measurements.
 
 ## Roadmap status
 

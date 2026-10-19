@@ -418,6 +418,7 @@ jobs:
           rustc --version > collection-build-evidence/rustc.txt
           clang --version > collection-build-evidence/clang.txt
           printf '%s\n' 'OS=${{ runner.os }}' 'architecture=${{ runner.arch }}' 'runner=${{ matrix.runner }}' 'ARC and tracing; -O1/-O2; -std=gnu11 -ffp-contract=off' 'tracing: FWP_GC_STRESS=1 FWP_GC_VERIFY=1; FWP_REUSE_VERIFY=0/1' '8 generated builders; every allocation/retain failure and callback exit; independent aliases; missing-cleanup controls' 'Timing compares fused and ordinary fwp only; no C/Rust parity claim' > collection-build-evidence/settings.txt
+      - run: python3 scripts/test-collection-evidence.py
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
       - name: Collection semantics, failures and cancellation

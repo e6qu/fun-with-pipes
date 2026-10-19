@@ -155,8 +155,8 @@ Numeric map/set construction skips temporary lists and eligible tuples, calls
 known callbacks directly, and joins related buffers. At 65,536 inputs with at
 most 257 keys, map requests fall 196,614 → 5 and set requests 131,077 → 4.
 An unnecessary second compiler build caused the Intel macOS timeout and was
-removed without reducing coverage. **Xeon 8573C full-map tracing remains
-4.4–4.6% slower**; allocation savings do not resolve that result. Cached-map
+removed without reducing coverage. **At this revision, Xeon 8573C full-map tracing
+was 4.4–4.6% slower**; allocation savings do not resolve that result. Cached-map
 borrowing candidate `774d838c` is not part of this merge. PR #167 above supplies
 the subsequent implementation and matching-host repair evidence.
 

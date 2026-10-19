@@ -140,7 +140,7 @@ checks and a control restoring that mistaken early return cover this boundary.
 
 `["b", "a", "b"] | set.from-list` makes `set{"a", "b"}`: each distinct key
 appears once, in sorted order. A native set now stores its length followed by
-one word per key. Maps retain two words per entry, including maps whose values
+one eight-byte slot per key. Maps retain two slots per entry, including maps whose values
 are `()`. The interpreter also distinguishes sets from maps; this distinction
 lets compile-time constants use the correct native layout.
 
