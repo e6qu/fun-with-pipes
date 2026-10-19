@@ -315,15 +315,7 @@ input : () -> List[I64] ! {IO}
 input = const [1, 2, 3] | tap (const "input" | echo)
 main = input () | map (both (const (left ())) (const (right ())) | hash) | fold bit.xor 0u64 | echo
 "#, true, 0),
-        ("consumer-order", r#"
-seed : () -> U64 ! {IO}
-seed = const 0u64 | tap (const "seed" | echo)
-capture : () -> I64 ! {IO}
-capture = const 7 | tap (const "capture" | echo)
-input : () -> List[I64] ! {IO}
-input = const [1, 2, 3] | tap (const "input" | echo)
-main = input () | map (both id (const (capture ())) | hash) | fold bit.xor (seed ()) | echo
-"#, false, 0),
+        ("consumer-order", include_str!("fixtures/hash_capture_order.fwp"), false, 0),
         ("capture-trap", r#"
 input : () -> List[I64] ! {IO}
 input = const [] | tap (const "input" | echo)
