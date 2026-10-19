@@ -10,7 +10,12 @@ these changes onto either tested head or open a competing PR.
 
 The initial ARM probe `39326880740` at `72865856` was still queued when a
 local check caught the protocol fixture missing its required `# expose: cli`.
-That fixture is fixed; cancel the obsolete queued probe and dispatch this head.
+That fixture is fixed; the obsolete queued probe was cancelled.
+Corrected run `39327114349` at `d8d98a1f` failed Clippy on an unnecessary borrowed
+type reference before tests ran. Removed that borrow. Its second failure was an
+artifact upload expecting files from the skipped test step; upload now depends
+on that step running, and records the source before testing. Rerun the full probe;
+these repairs do not establish that the integration tests pass.
 
 Next: run six native `integer-output` jobs and both-Linux `wasi-arc` checks on
 this source, inspect every failure, and retain actual binaries/allocation results.

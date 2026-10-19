@@ -1378,12 +1378,17 @@ jobs:
           path: vector-evidence/
           if-no-files-found: ignore
       - name: Direct integer output, ownership and binary protocol
+        id: integer_output_check
         if: inputs.suite == 'integer-output'
+        shell: bash
         env:
           FWP_INTEGER_OUTPUT_ARTIFACTS: integer-output-evidence
-        run: cargo test --no-fail-fast --test integer_output --test scalar_traps --test exec_protocol_ownership
+        run: |
+          mkdir -p integer-output-evidence
+          git rev-parse HEAD > integer-output-evidence/source.txt
+          cargo test --no-fail-fast --test integer_output --test scalar_traps --test exec_protocol_ownership
       - uses: actions/upload-artifact@v7
-        if: always() && inputs.suite == 'integer-output'
+        if: always() && inputs.suite == 'integer-output' && steps.integer_output_check.outcome != 'skipped'
         with:
           name: integer-output-${{ matrix.runner }}
           path: integer-output-evidence/

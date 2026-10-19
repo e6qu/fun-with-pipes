@@ -5057,7 +5057,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         let [value] = values.as_slice() else {
             return None;
         };
-        let signed = int64_kind(&function.ty.params(1).0[0])?;
+        let signed = int64_kind(function.ty.params(1).0[0])?;
         let value = self.expr(value);
         Some(format!("fwp_print_integer({value}, {})", u8::from(signed)))
     }
