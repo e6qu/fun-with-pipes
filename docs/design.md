@@ -402,7 +402,9 @@ traversal and C/Rust. Removing dispatch does not guarantee a speed improvement.
 ### Printing integers without an owned temporary
 
 The direct-output preparation recognizes an immediately consumed integer
-`show | print`, including `echo` after inlining. It formats into a 24-byte local
+`show | print`, including `echo` after inlining. Before ownership lowering adds
+String temporaries, it replaces that pair with a typed backend-only print
+operation that borrows the integer and returns unit. It formats into a 24-byte local
 buffer, then writes the same digits and newline to the program output stream.
 For example, `-17 | echo` prints `-17` on one line without requiring an owned
 String solely for that print. The argument still evaluates before output.
