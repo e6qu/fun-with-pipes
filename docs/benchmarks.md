@@ -1028,17 +1028,28 @@ printing and generic hash traversal remain in the measured interval.
 
 ### Numeric hash specialization: measurement in preparation
 
+The [production baseline](measurements/range-set-peers-2026-10-19.md) at `3e4d0a37`
+includes a million-key range set followed by canonical hashing. On Linux AMD64
+EPYC 7763, with GCC 13.3/O2 and Rust 1.99.1/O2, six-run medians were C 12.260 ms,
+Rust 12.165 ms and tracing fwp 13.009 ms. That is 6.1%/6.9% extra whole-process
+time, including construction, startup and output. Some sample ranges overlap;
+these figures do not isolate hashing or establish a general language overhead.
+The report comes from [production job 118265645528](https://github.com/e6qu/fun-with-pipes/actions/runs/39312560218/job/118265645528),
+artifact `12217338696`, and also retains the other five benchmark programs.
+
 `scripts/measure-hashing.py` compares direct numeric hash loops with general
 type-descriptor traversal, using the same fwp compiler and `FWP_TYPED_HASH=1/0`.
 It also times C/Rust implementations of the same encoding and a separate fwp
 control that first constructs an encoded byte buffer. The buffered control uses
 general traversal explicitly; it does not stand in for the specialization cost.
 
-Each program constructs one I64 array `0..N-1`. At each iteration it hashes the
-tuple `(iteration, array)` and combines results with XOR. Inputs are 16 elements
-with 4,096 repetitions, or 4,096 elements with 1,024 repetitions. The prefix
-changes each hash. C/Rust use the same eight-byte integers and unsigned LEB128
-array length. Both ARC and tracing versions of specialized fwp are measured.
+Each program constructs one I64 collection `0..N-1`. At each iteration it hashes
+the tuple `(iteration, collection)` and combines results with XOR. Array cases
+use 16 elements with 4,096 repetitions, or 4,096 elements with 1,024 repetitions.
+The set case uses 65,536 ordered keys with 64 repetitions. C/Rust store those
+same keys in an array/vector; no version needs sorting. The prefix changes each
+hash. All versions encode the same eight-byte integers and unsigned LEB128
+length. Both ARC and tracing versions of specialized fwp are measured.
 
 After one warmup, twelve balanced rotating/reversed samples include startup,
 input construction, hashing and output. Compilation and instrumented allocation
