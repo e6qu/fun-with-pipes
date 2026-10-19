@@ -56,9 +56,15 @@ def main():
                         source = directory / f'{name}.c'
                         code = source.read_text()
                         assert (code.count('fwp_print_integer(') > 1) == (direct == '1'), name
+                        # This immediate print then trap has no remaining owner;
+                        # O2 can remove the unused collector along with show.
+                        require_tracing = (mode == 'tracing' and
+                            not (case == 'trap' and direct == '1' and optimization == '-O2'))
                         binaries.append(dict(case=case, direct=direct, mode=mode,
                             optimization=optimization, generatedSha256=HASH.digest(source),
-                            inspection=HASH.COLLECTIONS.inspect(source.with_suffix('.exe'), host, mode, args.llvm_bin)))
+                            tracingRequired=require_tracing,
+                            inspection=HASH.COLLECTIONS.inspect(source.with_suffix('.exe'), host, mode, args.llvm_bin,
+                                                               require_tracing=require_tracing)))
         hosts.append(dict(host=host, job=job['databaseId'], passedTests=passed, binaries=binaries))
         print(host, passed, 'tests and', len(binaries), 'binaries inspected', flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -71,7 +77,9 @@ def main():
               'inserted allocation at both optimization levels and memory modes. Those '
               'counts are test assertions, not whole-process allocation or timing data. '
               'The 144 saved semantic-test binaries are inspected as data, never executed '
-              'by this collector. ARC binaries must exclude tracing symbols. Assembly needs '
+              'by this collector. ARC binaries must exclude tracing symbols. Tracing controls '
+              'must contain them, except the direct O2 print-then-trap case, whose unused '
+              'collector can be eliminated. Observed symbols are recorded in every case. Assembly needs '
               'human review for stack/register claims. WASI and full production acceptance '
               'are separate gates.', hosts=hosts), indent=2) + '\n')
 
