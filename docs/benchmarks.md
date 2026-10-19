@@ -1775,6 +1775,36 @@ records acceptance; `scripts/summarize-map-failures.py` audits the artifacts.
 
 ## Building numeric maps and sets without temporary lists
 
+### Direct integer range sets: comparison in preparation
+
+`range 0 n | set.from-list` builds the distinct integers from zero through
+`n - 1`. Ordinary construction allocates a list and two scratch buffers before
+the final set; direct construction writes already sorted keys into that set.
+Both preserve the same values. [The design](design.md#constructing-integer-range-sets-directly)
+limits this transformation to inline integer ranges consumed immediately.
+
+The focused runtime probe observes the following requests for 4,096 keys:
+
+| Construction | Allocation requests | Total requested bytes | Final container bytes |
+|---|---:|---:|---:|
+| Ordinary list, scratch and set | 4,099 | 196,624 | 32,776 |
+| Direct set | 1 | 32,776 | 32,776 |
+
+These are bounded O0/O2 runtime checks using accepted compiler scaffolding, not
+acceptance of the new compiler path or a timing comparison. Counts exclude
+startup/output, allocator headers and rounding; ARC charge returns to baseline
+after releasing each result. Zero keys make no requests in either version.
+
+The runner measurement compares the same fwp program with `FWP_MAP_BUILD=0/1`,
+at 32, 4,096 and 65,536 keys. It hashes every key, checks output against raw
+interpretation and records eight whole-process timing samples per version.
+Construction, hashing, startup and output are included. Separate instrumented
+executables count allocations and memory. This is fwp versus fwp, not a C/Rust
+baseline. [The handoff](development-state.md) records validation status; no
+speedup is claimed before those measurements complete.
+
+### Mapped lists: accepted earlier measurements
+
 **Work:** construct a set or map from a range of integers reduced modulo 257,
 so there are at most 257 distinct keys. The set prints its size; the map stores
 the original integers and prints the last value for key 5. Duplicates keep the

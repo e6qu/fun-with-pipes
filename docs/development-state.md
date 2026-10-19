@@ -2,84 +2,64 @@
 
 ## Next action
 
-[PR #172](https://github.com/e6qu/fun-with-pipes/pull/172), branch
-`compact-set-storage`, is ready. This revision fixes empty-set construction:
-return the static empty set before allocating temporary storage.
+This is the `direct-range-sets` preparation in `/private/tmp/fwp-direct-range-sets`,
+based on PR #172's head `a6dd760904c5d72c09a5fcf720d8f255a19de1f1`.
+PR #172 remains the only active PR. Its live acceptance handoff is in the primary
+checkout, `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
+Do not merge this batch or count its base as accepted before that PR passes.
 
-Next: publish this repair, run the six-host collection matrix, and replace
-superseded production run `39294160658`. After the collection run succeeds,
-run `suite=collection-report` on GitHub with its run ID and exact source revision.
-Inspect its binary report there and download the resulting JSON. Require all
-nine production jobs and documentation for the final head, including actual WASI
-execution, before squash merge. Supply a one-line subject and empty body.
-Full builds and large evidence collection stay on GitHub runners.
+Next: run focused compiler integration on GitHub, fix every failure, and retain the
+complete results. After PR #172 passes and merges, replay this change on main,
+record its accepted evidence and publish the next substantial PR. Require all
+nine production jobs and documentation at the final head before squash merge.
 
 ## Current batch
 
-Sets now store keys without unused unit-value slots. Maps keep key/value pairs,
-including maps with unit values. The interpreter distinguishes sets from maps,
-so compile-time constants generate the correct layout. Native construction,
-updates, set operations, cleanup, decoders, JSON, comparisons and hashing use the
-appropriate entry size. Logical values and evaluation order stay unchanged.
+`range lo hi | set.from-list` now constructs inline integer keys directly in
+one owned set buffer. Equal or descending bounds return the static empty set.
+The compiler preserves evaluation order, checks byte limits before narrowing
+to the target's size type, and leaves boxed integers and shared input lists on
+their existing paths. No new language syntax or public function is introduced.
 
-A freshly built set of `n` distinct keys requests `8 + 8*n` container bytes,
-previously `8 + 16*n`. Empty sets use static storage and skip construction scratch.
-These figures exclude allocator headers, rounding, scratch and separately
-allocated keys. Insertion can reserve capacity. No elapsed-time or C/Rust parity
-claim follows from this change.
+Three native tests compare raw/optimized interpretation and generated O0/O2
+programs in ARC and stressed tracing modes. They cover integer widths/bounds,
+alias updates, bound effects/traps, exact construction allocations, injected
+allocation failure and oversized counts. Deliberately missing size checks,
+missing release and disabled optimization must violate their respective checks.
+Actual WASI coverage adds this fixture and explicit 32-bit overflow cases.
 
-Tests cover raw/optimized interpretation, native ARC/tracing at O0/O2, nested and
-wide-number keys, sharing, JSON, protocol round trips, REPL linking, constants and
-WASI. A probe checks allocation requests for 0, 1, 7, 257 and 4096 keys; restoring
-an unused slot must fail. Existing allocation/retain failures, cancellation and
-reuse checks remain. The report collector requires all 41 focused tests per host
-and inspects generated C, executables, disassembly and byte counts.
+The six-host collection workflow now requires 44 focused tests, saves eight
+range-set binaries per host, and compares ordinary/direct construction at
+32/4,096/65,536 keys. It hashes every key and records eight timing samples per
+version. The collector audits all targets, allocations and binary formats.
+The [benchmark explanation](benchmarks.md#direct-integer-range-sets-comparison-in-preparation)
+distinguishes those pending timings from local allocation counts.
 
-## CI evidence and unresolved checks
+## Checks and unresolved validation
 
-- Accepted [PR #171](roadmap-history.md#mixed-tail-recursion-pr-171) merged as
-  `f3f3bd811c6d3935cd84fca2f7e6e877dc13c3d0`, identical to tested head
-  `13210b757db74379c4f1d9893fd0049d2e774916`. All nine jobs and documentation passed.
-- Initial focused Linux run `39292052172` passed 39/41. Both test assumptions were
-  repaired: select `--fn build-set` for inspection, and arm the omitted-drop
-  control only during injected failures. Both repairs passed on all six hosts.
-- Six-host run [39294156070](https://github.com/e6qu/fun-with-pipes/actions/runs/39294156070)
-  tested `8c5e3851383a3924122b2c517979c8bfc0be6160`. Every host passed 40 tests,
-  failed only the empty-set allocation assertion, and ignored none. All six
-  complete logs were audited: 240 passed, six instances of that one failure.
-  The runtime repair keeps the strict zero-request assertion.
-- The map/set failure probe cleaned every injected exit: 104 points normally,
-  106 with reuse poisoning. Smaller sets fit more entries before needing growth.
-  Both deliberately omitted-cleanup controls still failed as required.
-- Documentation `39294160469` passed. The empty-set repair still needs complete
-  CI validation; no new compiler was built locally.
-- Older superseded production `39292969344` was cancelled; its available logs had
-  no additional failures. Cancellation and partial passes are not acceptance.
+No new compiler was built locally. Full builds, suites and measurements stay
+on GitHub. All local workloads use the primary checkout's shared
+`python3 scripts/local-guard.py` with unchanged limits, even from this worktree.
 
-## Local checks
-
-All workloads used `python3 scripts/local-guard.py`, serially, with unchanged
-limits. The accepted ARM Mac compiler at
-`/private/tmp/fwp-170-accepted-macos/fwp-macos-arm64/fwp` identifies head
-`142117d2`; it supplied reference output and C scaffolding, not a new compiler.
-
-- Rust/fwp formatting, `git diff --check` and the documentation audit pass.
-  The audit checks 60 document sets, 106 immutable anchors and seven work areas.
-- `python3 scripts/test-collection-evidence.py`: five tests pass. They reject
-  missing/failed targets, cancelled runs, extra slots and incomplete byte counts.
-- Raw interpretation of `tests/fixtures/compact_sets.fwp` supplied its twelve-line
-  reference output. Explicit `build --emit-c --gc arc --fn build-set` retains the
-  selected builder.
-- `/private/tmp/fwp-selected-set-probe.c` uses that builder scaffold with current
-  runtime sections and the explicit one-column operations record. Guarded Clang
-  O0/O2 builds pass in 0.51/0.85 seconds; executions pass in 0.50/0.26 seconds.
-  Requests are 0/16/64/2064/32776 bytes at the five sizes; allocator charges are
-  0/16/64/2560/32776. ARC charge returns to its starting value after each result.
-  This checks the runtime path, not the new compiler's generated wrapper.
-- An earlier direct-runtime probe passed at O0/O2; restoring a wasted slot exited
-  211 as required. Its ARM64 disassembly showed eight-byte indexed key access.
-- `/private/tmp/fwp-audit-172-failures.py` verified all six complete CI logs in
-  0.22 seconds. The documentation audit after this repair passed in 3.07 seconds.
+- `cargo fmt --all` passed in 1.46 seconds.
+- `python3 scripts/test-collection-evidence.py`: six tests passed in 0.22 seconds.
+- `python3 scripts/check-roadmap.py`: 60 document sets, 106 immutable anchors
+  and seven roadmap areas passed in 2.68 seconds. The handoff's required `Next:`
+  marker was restored after the first check caught its omission. Python syntax
+  and Rust formatting checks pass; the accepted formatter fixed the new fixture.
+- The accepted ARM Mac compiler at
+  `/private/tmp/fwp-170-accepted-macos/fwp-macos-arm64/fwp` ran the thirteen-line
+  range-set fixture, including all eight inline integer types and alias updates.
+- `/private/tmp/fwp-count-range-set.py`, guarded Clang O2 and its executable
+  counted ordinary construction: 4,099 requests/196,624 bytes for 4,096 keys.
+  It counts initialized-allocation slow paths only once.
+- `/private/tmp/fwp-check-range-runtime.py` passed O0/O2 checks in 3.07 seconds.
+  It uses accepted compiler scaffolding with the new runtime, not a newly built
+  compiler. At 0/1/7/257/4,096 keys, direct construction requests
+  0/16/64/2,064/32,776 bytes; each nonempty set uses one request. ARC charge
+  returns to baseline. Removed size guards and releases exit 245/243 as required.
+- Compiler integration, WASI, native platform acceptance and timing remain
+  unverified until the new CI runs complete. No speedup or C/Rust parity claim.
 
 ## Roadmap status
 
@@ -95,5 +75,5 @@ limits. The accepted ARM Mac compiler at
 
 All seven areas in [PLAN.md](../PLAN.md) remain open. Persistent subscriptions,
 unknown retained captures, resource-owning tail frames and mutual recursion need
-further proofs. JIT is excluded. Select the next cost using representative
-programs and equivalent-work measurements; move accepted evidence to history.
+further proofs. JIT is excluded. Move accepted evidence to history; keep one live
+next action and select further costs from representative measurements.

@@ -2611,6 +2611,20 @@ static V fwp_map_typed_new(size_t capacity, size_t columns) {
     if (capacity > (SIZE_MAX - sizeof(fwp_map)) / (columns * sizeof(V))) fwp_trap("map too large");
     return fwp_rc_fresh(fwp_map_alloc(capacity, columns));
 }
+/* An immediately consumed inline integer range has sorted, distinct keys.
+ * Check the full byte count before narrowing to size_t, also on 32-bit WASI.
+ * There are no callbacks, allocations or cancellation points after allocation;
+ * initializing inline keys cannot fail and requires no partial-value owner. */
+static V fwp_p_set_range(V lo, V hi, const fwp_desc *elem) {
+    i128 a = fwp_as_i128(elem->kind, lo), b = fwp_as_i128(elem->kind, hi);
+    u128 count = b > a ? (u128)(b - a) : 0;
+    if (count > (SIZE_MAX - sizeof(fwp_map)) / sizeof(V)) fwp_trap("map too large");
+    size_t n = (size_t)count;
+    if (!n) return FWP_EMPTY_MAP;
+    V result = fwp_map_typed_new(n, 1);
+    for (size_t i = 0; i < n; i++) MAP(result)->d[i] = (V)(a + (i128)i);
+    return result;
+}
 static V fwp_map_typed_copy(V m, size_t capacity, int retain, const fwp_map_ops *ops) {
     if (!capacity) return FWP_EMPTY_MAP;
     V result = fwp_map_typed_new(capacity, ops->columns);
