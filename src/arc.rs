@@ -62,7 +62,13 @@ fn channel_payload(
                 Some(TypeShape::Adt(variants)) => {
                     for (name, fields) in variants {
                         for (i, ty) in fields.iter().enumerate() {
-                            channel_payload(prog, ty, channel, seen, &format!("{path}.{name}[{i}]"))?;
+                            channel_payload(
+                                prog,
+                                ty,
+                                channel,
+                                seen,
+                                &format!("{path}.{name}[{i}]"),
+                            )?;
                         }
                     }
                 }
