@@ -680,10 +680,13 @@ hosts; [the measurements](benchmarks.md#webassembly-task-and-browser-loader-owne
 record their scope and remaining costs. Generated REST and MCP entries also use
 checked ownership; [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164)
 records their passing functional, memory and production checks.
-Channels are eligible when their payload contains no functions, tasks, HTTP stream
-handles or channels:
-`Channel[String]` is eligible; `Channel[Task[String]]` is not, since the task
-could capture that channel. The check also examines record and container fields.
+Channels are eligible when their ownership types cannot form a queue cycle.
+`Channel[String]` and `Channel[List[Channel[String]]]` are eligible: the inner
+channels hold strings, which cannot point back. `Channel[Task[String]]` is not,
+since a task could capture that channel. Functions and HTTP stream handles are
+excluded for the same hidden-capture reason. The compiler follows record,
+variant and container fields and rejects a path back to the same channel type;
+see the [proof and limits](ownership.md#ownership-boundaries).
 It requires normal counted
 freeing; tracing stress/verification and reuse poisoning are incompatible.
 The [ownership contract](ownership.md#checked-arc-delivery) and

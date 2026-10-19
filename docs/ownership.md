@@ -124,7 +124,7 @@ traps. Unproved runtime sharing still uses tracing.
 | Arrays, maps and sets | Typed elements, counted storage, selected unique updates | Callback and alias contracts must be proved |
 | Strings and bytes | Counted leaves for proved copies/aliases | Unmodeled result families remain shared |
 | Closures | Owned captured arguments and typed call metadata; eligible functions with only fixed function captures use static records | Runtime-data captures retain ordinary ownership; retained unknown callbacks are not checked ARC |
-| Tasks and channels | Counted handles/results/queues; ARC admits channels whose payloads contain no functions, tasks, HTTP stream handles or channels | Mutable cycles are not automatically broken by counting |
+| Tasks and channels | Counted handles/results/queues; ARC admits nested channels with an acyclic ownership type graph | Function/task/HTTP stream captures and recursive channel ownership remain unproved |
 | Derivative tapes | Scoped owners and a bounded numeric workspace | Raw unscoped tape calls are not checked ARC |
 | External/network state | Explicit resource teardown where modeled | Freeing a C buffer does not prove the lifetime of every referenced fwp value |
 
@@ -200,13 +200,30 @@ losing the last external handle without draining does not. Today, tracing handle
 unproved cycles in native tracing mode; checked ARC rejects them. This is the
 current limitation, not permission to introduce tracing into future ownership rules.
 
-Checked ARC admits channels carrying data such as numbers, strings, records and
-recursive immutable lists or variants. Their payload type must contain no
-functions, tasks, HTTP stream handles or channels, even inside another container.
+Checked ARC admits channels carrying numbers, strings, records, recursive
+immutable lists or variants, and nested channels whose types cannot form an
+owning cycle. For example, `Channel[Channel[String]]` can hold a string channel:
+the inner queue holds only strings, so it cannot refer back to the outer queue.
+`Channel[List[Channel[String]]]` is also accepted. A recursive immutable tree
+with string-channel leaves is allowed; recursion alone is not an owning cycle.
+
+For each channel type, the compiler follows payload, record and variant fields,
+including nested containers. Reaching the same channel type again means the
+types permit an owning cycle, so the compiler rejects that relationship. For
+example, `Link = | Node (Channel[Link])` is still rejected even if a particular
+program would drain every queue. This is a missing proof about all executions,
+not a claim that every value of `Link` is cyclic.
+
+Payloads still cannot contain functions, tasks or HTTP stream handles.
 A function or task can capture the sending channel; an HTTP stream handle can
 reach the channel through its connection-owned handler. These paths can form
 a cycle without mentioning the channel in the result type; the check therefore examines the complete payload type.
-This is a conservative eligibility rule, not a ban on ordinary tracing channels.
+This proof adds no runtime fields, checks, weak references or implicit draining.
+Each search visits a reachable type once; checking C distinct channel types in a
+graph of V types and E field links takes at most O(C × (V + E)) graph visits.
+The compiler checks each channel separately so an outer queue cannot hide a
+cycle in an inner one. This remains a conservative eligibility rule, not a ban
+on ordinary tracing channels.
 Closing an admitted channel still preserves queued messages for receiving.
 Releasing its last owner destroys the remaining queue and its typed contents;
 cancelled blocked operations release their wait registrations and owners first.

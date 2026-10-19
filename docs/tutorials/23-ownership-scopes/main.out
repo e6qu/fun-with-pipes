@@ -1,4 +1,5 @@
 (Some 7, None)
 6
 None
+Some (Some 42)
 (None, Some [1])

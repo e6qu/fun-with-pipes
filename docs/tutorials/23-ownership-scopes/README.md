@@ -42,6 +42,25 @@ cancelled without a result. Awaiting completion is part of cleanup: requesting
 cancellation alone does not establish that registrations and captured owners have
 already been released. The queue never owns the task handle.
 
+## Sending a channel through another channel
+
+`routes` makes a queue whose messages are integer channels. `route-message`
+creates an `inbox`, sends 42 to it and closes it, preserving that message.
+`both id (const 1 | routes)` pairs the inbox with a new routing queue.
+`fork channel.send .1 .0` sends the inbox (`.0`) through the routing queue (`.1`).
+Here `fork f g h` computes `f (g input) (h input)`, so the send order is explicit.
+
+Receiving from the routing queue gives `Some inbox`; mapping `channel.recv`
+over that option receives `Some 42` from the inbox. The result is therefore
+`Some (Some 42)`: the two options describe two independent receives.
+
+Checked ARC accepts this ownership direction. The routing queue can own the
+inbox, but the inbox holds only integers and cannot refer back. It still rejects
+recursive channel types and queued functions, tasks or HTTP stream handles whose
+captures could complete a cycle. Closing a queue does not discard its messages,
+and receiving transfers the queued owner. Dropping the last owner releases any
+messages that remain; no implicit drain operation is added.
+
 ## A graph with deletion
 
 `graph` owns two records, keyed by integer IDs 0 and 1. Each record's `links` list
@@ -72,6 +91,7 @@ The expected output is:
 (Some 7, None)
 6
 None
+Some (Some 42)
 (None, Some [1])
 ```
 
@@ -103,6 +123,23 @@ cancel-worker =
     | tap task.cancel
     | task.await
 
+inbox : I64 -> Channel[I64] ! {Async}
+inbox = channel.make
+routes : I64 -> Channel[Channel[I64]] ! {Async}
+routes = channel.make
+route-message : () -> Option[Option[I64]] ! {Async}
+route-message =
+    const 1
+    | inbox
+    | tap (flip channel.send 42)
+    | tap channel.close
+    | both id (const 1 | routes)
+    | tap (fork channel.send .1 .0)
+    | .1
+    | tap channel.close
+    | channel.recv
+    | option.map channel.recv
+
 Node = { label: String, links: List[I64] }
 graph : Map[I64, Node]
 graph =
@@ -119,6 +156,7 @@ main = [
     | echo,
     1 | channel.make | tap (produce | task.spawn) | channel.drain | sum | echo,
     1 | channel.make | cancel-worker | echo,
+    () | route-message | echo,
     graph
     | both (map.remove 1 | map.get 1) (map.get 0 | option.map .links)
     | echo,

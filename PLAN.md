@@ -88,22 +88,18 @@ outside the benchmark suite.
 
 ### Immediate priorities
 
-1. Complete the storage repair following merged PR #168. Its language/tools
-   checks passed and network stalls were resolved, but stricter final-memory
-   checks exposed compound constants retained on the heap. Put known immutable
-   constants in static storage, verify their layouts and updates, and restore
-   complete platform acceptance. [Delivery evidence](docs/roadmap-history.md#self-tail-recursion-and-shutdown-repairs-pr-168)
-   distinguishes the merge from passing acceptance.
-2. Specify and test [cycle-safe ownership contracts](docs/ownership.md#proposed-cycle-policy)
+1. Extend [cycle-safe ownership contracts](docs/ownership.md#proposed-cycle-policy)
    against subscriptions, channel workers, cancelled tasks and cyclic data graphs.
+   The current batch proves acyclic nested channel types and tests queued owners,
+   aliases, failure and cancellation in native and WebAssembly execution.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.
-3. Extend [tail-recursion elimination](docs/design.md#tail-calls-and-recursion)
+2. Extend [tail-recursion elimination](docs/design.md#tail-calls-and-recursion)
    beyond the implemented eligible self calls only with ownership evidence.
    Preserve owners, handler lifetimes and cancellation safe points. Assess known
    mutually recursive groups; do not promise general tail calls.
-4. Use representative applications and equivalent-work measurements to select
+3. Use representative applications and equivalent-work measurements to select
    the next costs to remove: dynamic closures/calls, input copies, container
    layout, numerical workspace and derivative recording. Investigate known
    timing regressions before claiming a performance improvement.

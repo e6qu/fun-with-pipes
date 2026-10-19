@@ -1,4 +1,4 @@
-//! Task captures and data-only channel queues reclaim without a collector.
+//! Task captures and acyclic nested channel queues reclaim without a collector.
 use std::process::{Command, Output};
 
 fn checked(command: &mut Command) -> Output {
@@ -8,7 +8,7 @@ fn checked(command: &mut Command) -> Output {
 }
 
 #[test]
-fn tasks_and_data_channels_reclaim_after_join_and_cancellation() {
+fn tasks_and_acyclic_channels_reclaim_after_join_and_cancellation() {
     let dir = fwp::cgen::TempDir::new("fwp-arc-tasks").unwrap();
     let source = dir.join("tasks.fwp");
     std::fs::write(&source, include_str!("fixtures/task_channel_ownership.fwp")).unwrap();
@@ -51,6 +51,21 @@ fn tasks_and_data_channels_reclaim_after_join_and_cancellation() {
         for opt in ["-O1", "-O2"] {
             let binary = dir.join(format!("{gc}{opt}"));
             fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
+            if gc == "arc" {
+                let symbols = checked(Command::new("nm").arg(&binary));
+                let text = String::from_utf8_lossy(&symbols.stdout);
+                for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                    assert!(!text.contains(name), "ARC binary contains {name}");
+                }
+                if let Some(path) = std::env::var_os("FWP_ARC_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(path);
+                    std::fs::create_dir_all(&path).unwrap();
+                    let name = format!("nested-channels{opt}");
+                    std::fs::copy(&binary, path.join(format!("{name}.exe"))).unwrap();
+                    std::fs::write(path.join(format!("{name}.c")), &measured).unwrap();
+                    std::fs::write(path.join(format!("{name}.symbols")), symbols.stdout).unwrap();
+                }
+            }
             let verify = if gc == "arc" { "0" } else { "1" };
             let output = checked(
                 Command::new(&binary)

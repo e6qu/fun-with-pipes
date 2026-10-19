@@ -1693,6 +1693,9 @@ under Node, not actual browser engines.
 errors, cancellation and task-local state. O1/O2 ordinary/counting modules must
 match raw interpretation, through WASI and the browser loader. Clang 18.1.3,
 Binaryen 132, Node 24.21.0, `-ffp-contract=off`, 32 MiB main stack.
+These recorded sizes describe that revision's fixture. The current fixture also
+tests nested channel queues; its new checks do not update these historical sizes
+or establish a speed comparison.
 
 At shutdown, allocation/free-ledger totals and count entries must return to at
 most the initialized baseline. Omitting task-state cleanup leaves 16 buffers /

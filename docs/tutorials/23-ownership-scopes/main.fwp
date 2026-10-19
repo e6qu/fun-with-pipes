@@ -18,6 +18,23 @@ cancel-worker =
     | tap task.cancel
     | task.await
 
+inbox : I64 -> Channel[I64] ! {Async}
+inbox = channel.make
+routes : I64 -> Channel[Channel[I64]] ! {Async}
+routes = channel.make
+route-message : () -> Option[Option[I64]] ! {Async}
+route-message =
+    const 1
+    | inbox
+    | tap (flip channel.send 42)
+    | tap channel.close
+    | both id (const 1 | routes)
+    | tap (fork channel.send .1 .0)
+    | .1
+    | tap channel.close
+    | channel.recv
+    | option.map channel.recv
+
 Node = { label: String, links: List[I64] }
 graph : Map[I64, Node]
 graph =
@@ -34,6 +51,7 @@ main = [
     | echo,
     1 | channel.make | tap (produce | task.spawn) | channel.drain | sum | echo,
     1 | channel.make | cancel-worker | echo,
+    () | route-message | echo,
     graph
     | both (map.remove 1 | map.get 1) (map.get 0 | option.map .links)
     | echo,

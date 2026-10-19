@@ -12,6 +12,25 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Static constants and complete shutdown checks (PR #169)
+
+[PR #169](https://github.com/e6qu/fun-with-pipes/pull/169) merged as
+`bbb3d530e497549316d563671f1c74c51b772934`, with the same files as tested head
+`2429292d6f82d0cde46519fe7cb23c7527887e8d`.
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39233047574),
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39232286485),
+[language/tools](https://github.com/e6qu/fun-with-pipes/actions/runs/39232335383)
+and [Linux/ARM Mac/Intel Mac shutdown checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39232331253)
+passed before the merge.
+
+Compile-time records, arrays, maps, wide numbers and captures now use static
+storage instead of retained startup heap objects. Tests check zero startup
+allocation requests, immutable updates and final ARC cleanup. O0 float linking
+and cleanup probes were repaired. The native runner times out stalled tests
+without killing a long suite that continues completing cases. This closes the
+failures left by #168; it does not remove the default tracing collector or
+establish a timing improvement over C/Rust.
+
 ## Self-tail recursion and shutdown repairs (PR #168)
 
 [PR #168](https://github.com/e6qu/fun-with-pipes/pull/168) was merged by the user
@@ -25,10 +44,11 @@ and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39211352
 passed. [Shutdown checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39211372965)
 finished on Linux AMD64 and macOS ARM64: network stalls were resolved, but stricter
 allocation ledgers exposed startup constants retained on the heap. Three generated-C
-instrumentation anchors also matched unrelated runtime calls. These failures are
-being repaired in the next batch; this merge is **not full platform acceptance**.
+instrumentation anchors also matched unrelated runtime calls. PR #169 repaired
+these failures and established full acceptance for the resulting code; the
+original #168 merge alone was **not full platform acceptance**.
 Duplicate full runs `39215835611` and `39215850976` were cancelled on this known
-failing tree. The [handoff](development-state.md) tracks its successor.
+failing tree.
 
 The countdown measurements compare two fwp implementations. O0 executes both
 loops; O2 eliminates the recursive countdown but retains the explicit loop, so
