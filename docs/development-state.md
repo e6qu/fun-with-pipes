@@ -12,8 +12,12 @@ channel proof and Windows filename repair. The old run has no separate failures.
 Duplicate post-merge production run `39275352369` was cancelled on the identical
 accepted tree; cancellation is not acceptance.
 
-Next: publish this recursion batch as one PR, audit every final-head production
-job and the documentation check, and fix every failure before squash merging.
+[PR #171](https://github.com/e6qu/fun-with-pipes/pull/171) contains this batch.
+The first head `bbd0ec0180f8db7a04c76fed6c84b5219bf6ac4e` started production
+`39275968728` and docs `39275968351`. Additional REPL and debugger checks now
+complete its coverage; that earlier run is not final-head acceptance.
+Next: audit every production job and the documentation check on the updated head,
+fix every failure, then squash-merge with an explicit subject and empty body.
 The new compiler behavior has not yet been rebuilt or executed. Full builds,
 suites and benchmarks belong on GitHub runners. Do not repeat the accepted
 channel work as a new task or claim the pending recursion checks have passed.
@@ -35,7 +39,8 @@ exercise the optimized interpreter, native tracing/ARC at O0/O2 and actual WASI
 ARC at O0/O2. Native cleanup ledgers, tracing/reuse stress, WASI allocation checks
 and omitted-free controls remain required. Both pure and mixed tail loops have
 cancellation tests. Proof tests retain ordinary work and reject cleanup/debugger
-regions. CI retains generated C, executable and disassembly artifacts through
+regions. The REPL repeats deep mixed calls after remapping function IDs; a source
+debugger test checks all five recursive entries and reverse-order returns. CI retains generated C, executable and disassembly artifacts through
 `FWP_TAIL_ARTIFACTS`.
 
 Lesson 22 explains mixed calls with a small executable example. The design,
@@ -64,6 +69,13 @@ and small-case semantics, not the new proof or deep execution.
 - `python3 scripts/check-roadmap.py`: passed in 3.29 seconds (60 document sets,
   106 immutable anchors and seven work areas). `git diff --check` passed.
   Final-head CI is next.
+- The old local compiler has no `debug` command. Downloaded the accepted ARM Mac
+  compiler from PR #170 instead of rebuilding locally. Its package manifest
+  identifies head `142117d2`. A small protocol check through
+  `python3 /private/tmp/fwp-check-debugger-recursion.py` passed in 0.72 seconds:
+  five `mixed` calls have increasing depths and return in reverse order, printing
+  one. This verifies the debugger reference only; the new compiled test awaits CI.
+- `cargo fmt --all` after the interactive checks: passed in 1.54 seconds.
 
 ## Roadmap status
 
