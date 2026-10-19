@@ -21,7 +21,7 @@ on:
         description: Full source commit for profiling, evidence audits or server rechecks
         type: string
       evidence_run:
-        description: Completed evidence run to use for generated-code comparisons
+        description: Completed test or measurement run consumed by the selected suite
         type: string
       costs_run:
         description: Completed hash-costs run for the hash evidence audit
