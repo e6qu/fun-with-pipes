@@ -59,6 +59,9 @@ All local checks use the primary checkout's `python3 scripts/local-guard.py` wit
 unchanged limits. No full compiler build or benchmark ran locally.
 
 - `cargo fmt --all` passed in 1.34 seconds.
+- Review corrected a stale runtime comment that still described sets with dummy
+  value slots. Sets have stored one word per key since accepted PR #172; this
+  comment-only repair does not change the measured output implementation.
 - The extracted actual runtime formatter passed 56 comparisons with standard C
   decimal formatting at O0/O2 in 1.03 seconds, including signed/unsigned extrema.
 - Accepted interpreter ran the 19-line fixture in 0.27 seconds; formatting passed
