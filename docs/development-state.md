@@ -8,10 +8,26 @@ PR #172 remains the only active PR. Its live acceptance handoff is in the primar
 checkout, `/Users/zardoz/projects/fun-with-pipes/docs/development-state.md`.
 Do not merge this batch or count its base as accepted before that PR passes.
 
-Next: run focused compiler integration on GitHub, fix every failure, and retain the
-complete results. After PR #172 passes and merges, replay this change on main,
+Next: audit six-host collection run `39303492049`, which tests compiler/runtime
+revision `7901a576019a01c490efe248c15730fac0602701`, preserved at
+`roadmap/revision-range-sets-7901a576`. Later changes add C/Rust benchmark sources,
+explicit tracing selection in the general benchmark runner and documentation;
+they do not change the measured compiler or collection runtime.
+After PR #172 passes and merges, replay this change on main,
 record its accepted evidence and publish the next substantial PR. Require all
 nine production jobs and documentation at the final head before squash merge.
+
+Six-host collection run `39303492049` now checks the same preparation. Audit all
+hosts, then dispatch `suite=collection-report` with that run and its source ID.
+Keep evidence on its measured source; final PR acceptance still requires all
+nine production jobs and documentation for the eventual PR head.
+
+The preparation passed Linux all-target Clippy, all 44 collection tests and all
+nine measurement cases. Both WASI hosts passed 24 tests each, including actual
+32-bit oversized-set rejection; no tests were ignored. Reports/logs are in
+`/private/tmp/fwp-range-linux-report.json`, `/private/tmp/fwp-range-set-linux.log`
+and `/private/tmp/fwp-range-wasi-{amd,arm}.log`. PR #172's six-host binary audit
+also passed; its report is `/private/tmp/fwp-compact-report.json`.
 
 ## Current batch
 
@@ -35,6 +51,14 @@ version. The collector audits all targets, allocations and binary formats.
 The [benchmark explanation](benchmarks.md#direct-integer-range-sets-comparison-in-preparation)
 distinguishes those pending timings from local allocation counts.
 
+`bench/range-set` adds a million-key C/Rust/fwp comparison to the existing
+production benchmark gate. All three hash the same canonical bytes; the report
+distinguishes optimizer/storage differences and explicitly selects tracing.
+No full benchmark was run locally. Guarded `/private/tmp/fwp-check-range-peers.py`
+verified equal C/Rust/raw-fwp outputs for 0/1/257 keys in 3.05 seconds, with C and
+Rust warnings treated as errors. Rust and fwp formatting passed. The complete
+comparison remains pending on CI.
+
 ## Checks and unresolved validation
 
 No new compiler was built locally. Full builds, suites and measurements stay
@@ -43,6 +67,8 @@ on GitHub. All local workloads use the primary checkout's shared
 
 - `cargo fmt --all` passed in 1.46 seconds.
 - `python3 scripts/test-collection-evidence.py`: six tests passed in 0.22 seconds.
+- `python3 scripts/test-native-test-runner.py Coverage.test_repository_targets_are_assigned_exactly_once`
+  passed in 0.33 seconds; the new target belongs to one macOS production shard.
 - `python3 scripts/check-roadmap.py`: 60 document sets, 106 immutable anchors
   and seven roadmap areas passed in 2.68 seconds. The handoff's required `Next:`
   marker was restored after the first check caught its omission. Python syntax
@@ -58,8 +84,12 @@ on GitHub. All local workloads use the primary checkout's shared
   compiler. At 0/1/7/257/4,096 keys, direct construction requests
   0/16/64/2,064/32,776 bytes; each nonempty set uses one request. ARC charge
   returns to baseline. Removed size guards and releases exit 245/243 as required.
-- Compiler integration, WASI, native platform acceptance and timing remain
-  unverified until the new CI runs complete. No speedup or C/Rust parity claim.
+- Linux compiler integration and WASI passed. Full native platform acceptance
+  remains pending. Initial AMD EPYC 7763/Clang 18.1.3 ARC/O2 timing ratios are
+  1.030/0.848/0.351 at 32/4,096/65,536 keys (direct/ordinary median, eight samples).
+  Small-input samples overlap; retain the slightly slower small-input result.
+  The largest case measured 2.112 ms versus 6.021 ms. These are whole-process
+  fwp/fwp measurements, not C/Rust comparisons or a universal speed claim.
 
 ## Roadmap status
 

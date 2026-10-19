@@ -1,5 +1,5 @@
 //! Benchmarks against C and Rust (`bench/<name>/main.{fwp,c,rs}`): each
-//! program is built with `fwp build -O2`, `cc -O2` and `rustc -O`, the
+//! program is built with `fwp build --gc tracing -O2`, `cc -O2` and `rustc -O`, the
 //! three must print the same, and the median of six runs in rotating order is
 //! reported with raw samples, compiler/host metadata and ratios to both baselines
 //! (on stdout, in target/bench.md, and in the GitHub
@@ -8,6 +8,7 @@
 //! shared machines are too noisy. Run with `cargo test --release --test bench benchmarks -- --ignored
 //! --exact --nocapture`.
 
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, Instant};
@@ -201,7 +202,7 @@ fn benchmarks() {
          that extra emission is excluded from execution and compilation timings.\n\n\
          C compiler (`{cc} -O2`):\n\n```text\n{}\n```\n\n\
          Rust compiler (`rustc -O`):\n\n```text\n{}\n```\n\n\
-         fwp build flags: `-O2`; fwp compiles through the system C toolchain.\n\n\
+         fwp build flags: `--gc tracing -O2`; fwp compiles through the system C toolchain.\n\n\
          | Program | C | Rust | fwp | fwp / C (extra time) | fwp / Rust (extra time) |\n\
          |---|--:|--:|--:|--:|--:|\n",
         source,
@@ -236,7 +237,7 @@ fn benchmarks() {
         );
         let fwp_build = build(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(src.join("main.fwp"))
                 .args(["-O2", "-o"])
                 .arg(&fw),
@@ -298,7 +299,7 @@ fn benchmarks() {
         // This separate emission is outside all reported build/execution times.
         build(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .arg("build")
+                .args(["build", "--gc", "tracing"])
                 .arg(src.join("main.fwp"))
                 .args(["-O2", "--emit-c", "-o"])
                 .arg(dir.join(format!("{name}-generated.c"))),
@@ -323,7 +324,6 @@ fn benchmarks() {
     std::fs::write(dir.join("report.md"), &table).unwrap();
     std::fs::write(root().join("target").join("bench.md"), &table).unwrap();
     if let Ok(summary) = std::env::var("GITHUB_STEP_SUMMARY") {
-        use std::io::Write;
         if let Ok(mut f) = std::fs::OpenOptions::new().append(true).open(summary) {
             let _ = writeln!(f, "### Benchmarks\n\n{}", table);
         }

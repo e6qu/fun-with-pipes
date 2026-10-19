@@ -5,7 +5,7 @@ the program, the implementation used for comparison, compiler settings and the
 machine. This page separates two different questions:
 
 1. **How long do these fwp programs take compared with C and Rust programs?**
-   The five examples in `bench/` answer this for complete executable runs.
+   The examples in `bench/` answer this for complete executable runs.
 2. **Does a particular fwp optimization reduce work or storage?** The reports
    under `docs/measurements/` usually compare two fwp implementations. Those
    fwp-only comparisons do not measure overhead relative to another language;
@@ -76,7 +76,7 @@ storage. Neither cost is quantified by the countdown comparison.
 
 Each directory in [`bench/`](../bench) contains `main.fwp`, `main.c` and
 `main.rs`. The programs must print the same result. The runner builds native
-executables with `fwp build -O2`, `cc -O2` and `rustc -O`. After one warmup per
+executables with `fwp build --gc tracing -O2`, `cc -O2` and `rustc -O`. After one warmup per
 executable, it measures six runs each and reports the median: the average of
 the two middle times after sorting. Execution order rotates C/Rust/fwp,
 Rust/fwp/C and fwp/C/Rust, twice. “Native” means machine code;
@@ -88,8 +88,8 @@ inner calculation, startup alone or peak memory. The report separately records
 one compilation time and the executable file size for each implementation.
 Compilation includes tool startup and linking; it excludes building the fwp
 compiler itself. Binary sizes include differing runtime and linking choices.
-The fwp build uses its normal native memory mode, which includes a tracing
-garbage collector; this is not a comparison of checked ARC against Rust.
+The fwp build explicitly selects tracing, matching earlier runs' native memory
+mode; this is not a comparison of checked ARC against Rust.
 ARC means automatic reference counting, which releases objects when their last
 owning reference disappears.
 
@@ -108,6 +108,7 @@ cannot establish what their machine instructions looked like.
 | `fib` | Compute `fib(35)`, with `fib(0)=0`, `fib(1)=1`, otherwise `fib(n-1)+fib(n-2)` | Same recurrence. Compilers can transform calls differently. fwp checks integer overflow; these C and optimized Rust builds do not have the same overflow guarantees. These inputs fit all three. |
 | `loop` | Start `(i, sum)=(100000000, 0)`; add `(i*3)%7`, decrement `i`, stop at zero | fwp expresses the loop state as a pair; its compiler can turn that into local variables. C and Rust write the loop directly. Checked arithmetic and generated code can still differ. |
 | `map` | Build `(key(i), i)` for `i=0..499999`, where `key(i)=(i*7919)%1000003`; sum 2 million lookups using the same key formula, missing values as zero | All three use contiguous sorted pairs searched by bisection. C uses `qsort`, Rust `sort_unstable_by_key`, fwp its map builder; construction/sorting costs differ. This compares complete implementations, not an isolated lookup operation. |
+| `range-set` | Build the distinct keys `0..999999`, then compute FNV-1a over the canonical set encoding: unsigned LEB128 count followed by eight little-endian bytes per key | All three start with ordered keys and need no sorting. C uses a heap buffer, Rust a vector, fwp a set. Hash multiplication wraps modulo 2^64 in all three. Optimizers may remove storage or combine loops; inspect retained binaries before claiming equal allocations. Runtime startup, allocation, hashing and output are timed together; the general runner uses fwp's tracing mode. |
 | `pipeline` | For `0..999999`, multiply by 3, keep even results and sum; sum 20 rounds | fwp can combine the stages into one traversal without intermediate lists. C explicitly fills arrays; Rust constructs vectors and filters them. Eliminating that work can outweigh language overhead. |
 | `strings` | For `i=0..1999999`, concatenate decimal `i`, decimal `3*i` and `#`; sum text lengths | fwp can calculate some formatted lengths without creating the string. C uses `snprintf` and `strlen`; Rust uses `format!` and byte length. All characters here are ASCII, so the lengths agree. The programs need not perform the same formatting or allocation work. |
 
