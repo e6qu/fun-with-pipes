@@ -64,6 +64,14 @@ Deep O0/interpreter execution checks separately verify that eligible recursive
 calls do not accumulate call frames. No speed or zero-allocation result is claimed
 until the current [handoff](development-state.md) records passing evidence.
 
+The mixed-recursion regression fixture is separate from this countdown benchmark.
+It checks results and cleanup with both tail and ordinary recursive calls, using
+200,000 tail steps and smaller raw-interpreter references. Retained C, binaries
+and disassembly support inspection; these tests do not measure elapsed-time
+improvement, stack bytes or parity with C/Rust. Ordinary recursive calls retain
+their stack cost, and frame reuse can prevent local objects from using stack
+storage. Neither cost is quantified by the countdown comparison.
+
 ## fwp compared with C and Rust
 
 Each directory in [`bench/`](../bench) contains `main.fwp`, `main.c` and

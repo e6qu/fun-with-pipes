@@ -90,15 +90,18 @@ outside the benchmark suite.
 
 1. Extend [cycle-safe ownership contracts](docs/ownership.md#proposed-cycle-policy)
    against subscriptions, channel workers, cancelled tasks and cyclic data graphs.
-   The current batch proves acyclic nested channel types and tests queued owners,
-   aliases, failure and cancellation in native and WebAssembly execution.
+   Acyclic nested channel types now have native and WebAssembly acceptance,
+   including queued owners, aliases, failure and cancellation. Persistent
+   subscriptions and unknown retained captures still need ownership contracts.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.
 2. Extend [tail-recursion elimination](docs/design.md#tail-calls-and-recursion)
-   beyond the implemented eligible self calls only with ownership evidence.
-   Preserve owners, handler lifetimes and cancellation safe points. Assess known
-   mutually recursive groups; do not promise general tail calls.
+   to functions mixing eligible tail calls with ordinary recursion. Validate
+   argument order, aliases, cleanup and cancellation in native and WebAssembly
+   execution; retain C and machine-code evidence. Calls with work left afterward
+   must keep ordinary frames. Resource-owning frames and known mutually recursive
+   groups need separate proofs; do not promise general tail calls.
 3. Use representative applications and equivalent-work measurements to select
    the next costs to remove: dynamic closures/calls, input copies, container
    layout, numerical workspace and derivative recording. Investigate known

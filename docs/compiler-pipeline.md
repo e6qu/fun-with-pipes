@@ -30,8 +30,9 @@ program, not that macro implementations are untyped.
 Self-tail analysis follows fusion, before native reference-count insertion.
 It marks eligible functions without changing their expression trees: native
 representation selection still sees their original record/variant fields and
-wide-number operations. Both backends reuse the marked frame after preparing
-all next arguments. [The recursion contract](design.md#tail-calls-and-recursion)
+wide-number operations. Both backends reuse the marked frame only for direct
+self calls in tail position, after preparing all next arguments. Other recursive
+calls in the same function keep ordinary frames. [The recursion contract](design.md#tail-calls-and-recursion)
 explains eligibility, preserved cleanup and the raw/debugger exceptions.
 
 `FWP_NO_OPT=1` skips the optimization stages listed above; it does not skip

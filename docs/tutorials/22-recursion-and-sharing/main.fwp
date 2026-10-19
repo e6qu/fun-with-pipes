@@ -8,6 +8,12 @@ count-back = match
     0 -> 0
     _ -> sub 1 | count-back | add 1
 
+rec mixed : I64 -> I64
+mixed = match
+    0 -> 0
+    1 -> 0 | mixed | add 1
+    _ -> sub 1 | mixed
+
 down-step : I64 -> Step[I64, I64]
 down-step = match
     0 -> Stop 0
@@ -23,6 +29,7 @@ ring =
 main = [
     4 | down | echo,
     4 | count-back | echo,
+    4 | mixed | echo,
     100000 | down-loop | echo,
     [1, 2, 3] | preserve-old | echo,
     ring | map .next | echo,

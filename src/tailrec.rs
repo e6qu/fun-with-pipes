@@ -36,22 +36,19 @@ fn plain_data(shapes: &Shapes, ty: &MT, seen: &mut HashSet<MT>) -> bool {
     }
 }
 
-/// Check tail positions without hiding the original expressions from native
-/// record/variant and wide-number representation selection.
-fn tail(e: &Expr, id: FuncId) -> Result<(), &'static str> {
+/// Find direct self calls in tail positions without changing the expressions.
+/// Calls that compute an argument, binding, scrutinee or returned calculation
+/// keep ordinary frames. Both backends follow only these outer tail positions.
+fn tail(e: &Expr, id: FuncId) -> Result<bool, &'static str> {
     match e {
-        Expr::Call(callee, args) if *callee == id => {
-            if args.iter().any(|a| crate::opt::calls(a, id)) {
-                return Err("a recursive call computes another call's argument");
-            }
-            Ok(())
-        }
-        Expr::Let(_, value, body) if !crate::opt::calls(value, id) => tail(body, id),
-        Expr::Match(scrutinee, arms) if !crate::opt::calls(scrutinee, id) => {
+        Expr::Call(callee, _) if *callee == id => Ok(true),
+        Expr::Let(_, _, body) => tail(body, id),
+        Expr::Match(_, arms) => {
+            let mut found = false;
             for (_, body) in arms {
-                tail(body, id)?;
+                found |= tail(body, id)?;
             }
-            Ok(())
+            Ok(found)
         }
         Expr::ResourceRegion { .. } if crate::opt::calls(e, id) => {
             Err("resource cleanup must run after the recursive call")
@@ -59,10 +56,7 @@ fn tail(e: &Expr, id: FuncId) -> Result<(), &'static str> {
         Expr::Trace(..) if crate::opt::calls(e, id) => {
             Err("source debugger frames must remain observable")
         }
-        _ if crate::opt::calls(e, id) => {
-            Err("a self reference escapes or has work remaining after its call")
-        }
-        _ => Ok(()),
+        _ => Ok(false),
     }
 }
 
@@ -75,7 +69,10 @@ pub fn analyze(prog: &mut Program) {
         if !crate::opt::calls(body, id) {
             continue;
         }
-        let candidate = tail(body, id).and_then(|()| {
+        let candidate = tail(body, id).and_then(|found| {
+            if !found {
+                return Err("no direct self call returns without further work");
+            }
             if f.arity == 0 {
                 return Err("a cached value needs its initialization frame");
             }
@@ -100,6 +97,63 @@ pub fn analyze(prog: &mut Program) {
                     eprintln!("self-tail recursion {}: ordinary calls ({reason})", f.name);
                 }
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mixed_calls_preserve_ordinary_argument_binding_and_scrutinee_calls() {
+        let call = Expr::Call(0, vec![Expr::Local(0)]);
+        for body in [
+            Expr::Call(0, vec![call.clone()]),
+            Expr::Let(1, Box::new(call.clone()), Box::new(call.clone())),
+            Expr::Match(Box::new(call.clone()), vec![(Pat::Wild, call.clone())]),
+            Expr::Match(
+                Box::new(Expr::Local(0)),
+                vec![
+                    (
+                        Pat::Lit(crate::value::Value::I64(0)),
+                        Expr::Call(1, vec![call.clone()]),
+                    ),
+                    (Pat::Wild, call.clone()),
+                ],
+            ),
+        ] {
+            assert_eq!(tail(&body, 0), Ok(true));
+        }
+        assert_eq!(tail(&Expr::Call(1, vec![call.clone()]), 0), Ok(false));
+        assert_eq!(tail(&Expr::Record(vec![call]), 0), Ok(false));
+    }
+
+    #[test]
+    fn one_safe_branch_cannot_discard_another_branches_cleanup_or_trace() {
+        let call = Expr::Call(0, vec![Expr::Local(0)]);
+        for guarded in [
+            Expr::ResourceRegion {
+                parameters: vec![0],
+                bindings: vec![],
+                body: Box::new(call.clone()),
+            },
+            Expr::Trace(
+                crate::ir::SourcePoint {
+                    span: crate::diag::Span::DUMMY,
+                    ty: MT::con("std::I64"),
+                },
+                Box::new(call.clone()),
+            ),
+        ] {
+            let body = Expr::Match(
+                Box::new(Expr::Local(0)),
+                vec![
+                    (Pat::Lit(crate::value::Value::I64(0)), call.clone()),
+                    (Pat::Wild, guarded),
+                ],
+            );
+            assert!(tail(&body, 0).is_err());
         }
     }
 }
