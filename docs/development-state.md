@@ -2,98 +2,101 @@
 
 ## Next action
 
-Branch: `runtime-storage-completion`, based on merged PR #168 at
-`5258c6efd0418f19add23f5e2a763563178af823`. Its tree equals PR head `59845d04`.
-The [delivery record](roadmap-history.md#self-tail-recursion-and-shutdown-repairs-pr-168)
-records passing checks and the remaining failures; the merge is not acceptance.
+Branch: `cycle-safe-channel-ownership`, based on merged PR #169 at
+`bbb3d530e497549316d563671f1c74c51b772934`. Its files match tested head
+`2429292d6f82d0cde46519fe7cb23c7527887e8d`.
+All nine production jobs (`39233047574`), docs (`39232286485`), language/tools
+(`39232335383`) and three-host shutdown checks (`39232331253`) passed before the
+user merged. [History](roadmap-history.md#static-constants-and-complete-shutdown-checks-pr-169)
+records the completed storage repair; do not repeat it as new work.
+Post-merge docs `39247754197` also passed. Duplicate production run
+`39247754322` was cancelled after confirming identical files and complete PR-head
+acceptance, freeing its runners for the new batch; cancellation is not a pass.
 
-[PR #169](https://github.com/e6qu/fun-with-pipes/pull/169) remains open.
-Next: publish the batched CI repairs below, dispatch focused shutdown and language
-runs, and audit all results. Focused shutdown now covers Linux AMD64 and both Mac
-architectures. Require all nine production jobs plus docs on the final head
-before squash merging with an explicit one-line subject and empty body.
+[PR #170](https://github.com/e6qu/fun-with-pipes/pull/170) is open at
+`262a73b8a099d222e5d597f572ab6abaa5603e94`.
+Full production `39249106161` exposed the same executable-filename failure on
+both Windows hosts; docs `39249106113` passed. Next: publish the filename repair
+below and audit all nine production jobs plus documentation on the new head.
+The full matrix includes compiler proof units, native ownership controls and
+actual WebAssembly checks; no additional duplicate suite is needed.
+Squash-merge only after all required gates pass, with one explicit subject of at
+most 80 characters and an empty body. No trailers or attribution.
 
-## Current CI repair
+## Current batch
 
-Audited all nine jobs in full run `39218043349` at `0bb1d63d`, both focused
-shutdown jobs in `39216746539`, language `39216749928` and docs `39216745819`.
-Bench, language/tools and docs passed. All eight production execution jobs failed;
-focused Mac failed and focused Linux exhausted its job deadline. Complete target
-logs are in `/private/tmp/fwp-0bb-targets`; full logs are
-`/private/tmp/fwp-0bb-full.log` and `/private/tmp/fwp-0bb-shutdown.log`.
+### Windows inspection repair
 
-Distinct failures and batched repairs:
+The new `arc_tasks` symbol check requested `arc-O1`, but Windows emitted
+`arc-O1.exe`. Execution had inferred the suffix; `nm` and artifact copying do not.
+The test now supplies an explicit `.exe` path to every consumer and asserts that
+the compiler produced that file. Tracing-symbol checks, cleanup ledgers and all
+negative controls remain intact. CONTRIBUTING records this portable convention.
 
-- Collection/map probes omitted a final newline before `#ifdef`. Restore it;
-  keep the exact-line anchors and strict zero-charge checks.
-- The library stack-release negative control changed the unused executable
-  cleanup routine. Restrict it to library teardown and require a unique match.
-- The OpenCL executable negative control assumed adjacent CAF/OpenCL cleanup.
-  Match the actual final OpenCL call; preserve the independent library control.
-- Unoptimized exact-float linking lacked `softfloat_commonNaNToF128UI` because
-  plain C `inline` requires an external definition. Configure header helpers as
-  `static inline`; test native and WASI O0 in addition to O1/O2, including NaN
-  conversions from F16/F32/F64 to F128.
-- Intel REST completed 20 cases before the target's 1800-second total limit.
-  Historical Intel runtime was already 1704 seconds. The runner now requires
-  explicit `--idle-timeout`: completed harness cases renew the deadline, while
-  arbitrary output cannot. It still kills stalled process groups, reports failure
-  and continues other targets. Full-job deadlines and local limits are unchanged.
+Audited both complete Windows ownership logs and all available Linux/Mac target
+logs in `/private/tmp/fwp-170-targets`. The only reported failure is this path in
+`arc_tasks`. Both Linux jobs, regular ARM Mac, both Mac GC jobs and benchmarks
+passed. The compiler proof units, all four Linux/Mac task-cleanup checks and
+actual Linux WebAssembly checks pass at the original head. Intel Mac regular
+and the remaining Windows AMD64 stages are still running; audit their results
+too. The full Windows ARM job has no other failed step. Full logs are retained
+in `/private/tmp/fwp-170-windows-arm.log`.
 
-The stricter task, scope, socket, foreign-call, autodiff and golden-corpus ledgers
-passed after static storage was implemented. The new dedicated static-constant
-probe still needs a passing run after its O0 linking repair. Focused checks now
-include every failed code target and the runner deadline controls. Previously
-passing network/example targets remain in full production acceptance; removing
-their duplicate focused runs prevents another focused-job timeout.
+Local `python3 scripts/local-guard.py cargo fmt --all -- --check` refused to run
+because free disk fell below 64 GiB. No limit was changed or bypassed; verify the
+repair on CI. `git diff --check` passes. No new local compiler build was attempted.
 
-## Current work
+### Acyclic channel proof
 
-The previous shutdown run `39211372965` finished on Linux AMD64 and macOS ARM64.
-Network, TLS, services, AOT and tutorial sessions no longer stall. Language/tools
-`39211377606` and documentation `39211352992` passed. Full runs `39215835611` and
-`39215850976` were cancelled because they duplicate the known failing merged tree.
-Complete failed logs are in `/private/tmp/fwp-598-shutdown-fail.log`.
+Checked ARC previously rejected every channel inside another queue, even when
+its payload could not refer back. The compiler now checks each channel's reachable
+payload types independently. A path back to the same channel type is rejected;
+acyclic nested channels and recursive immutable containers of safe channels pass.
+Functions, tasks and HTTP stream handles remain excluded because their captures
+can hide an owning path. No runtime checks, new syntax, weak handles, implicit
+draining or collector substitution are added.
 
-Stricter allocation ledgers exposed retained startup constants: 16–336 bytes in
-multiple golden programs, task results, scopes, sockets, foreign callbacks and
-wide autodiff. The compiler built compound constants and wide literals on the
-heap before the old baseline snapshot. This batch emits static storage for
-records, variants, arrays, maps, 128-bit numbers and constant closure captures.
-Pointer fields initialize without allocating. Packed arrays retain their selected
-layout; immutable updates cannot reuse static storage. No collector or leak
-allowance replaces ownership. Runtime-computed cached values keep ordinary owners.
+Proof tests cover nested queues, immutable recursive trees, hidden captures and
+a cycle reached through an already visited sibling. Diagnostic tests retain
+direct cycles and add mutually recursive channel types. This is a type-based
+proof; a rejected type is not evidence that every value of that type is cyclic.
 
-The collection, map and new executable-shutdown probes also matched indented
-OpenCL error cleanup calls. Their insertion anchors now match complete lines at
-the generated program's final cleanup. This fixes test instrumentation, without
-removing the allocation or missing-connection-closure negative controls.
+The shared native/WebAssembly task fixture now includes channel aliases, nested
+list/variant messages, closed queues, undrained repeated work, failure and
+cancelled sends/receives. Existing allocation ledgers and deliberately omitted
+release controls remain required. Native ARC binaries are inspected for tracing
+symbols and retained with their C and symbol lists when artifacts are enabled.
+Lesson 23 introduces sending an inbox through a routing queue and explains both
+layers of Option in the output. Live docs remove the obsolete blanket ban.
 
-`tests/static_constants.rs` compares interpreter output with O0/O2 native code,
-ARC/tracing, packed/word arrays, aliases and immutable updates. It counts startup
-allocation requests and checks zero final ARC charge. Injecting a startup request
-must fail. The shutdown suite retains generated C, symbols and actual executables;
-new target coverage includes macOS shards and native Windows. Full platform and
-WebAssembly verification remain required; implementation alone is not support.
+## Checks and limits
 
-## Checks
+Local commands use `python3 scripts/local-guard.py`; no compiler rebuild or full
+suite runs locally. The existing `target/debug/fwp` predates this change, so its
+runs verify fixture syntax/semantics only, not the new acceptance proof.
 
-All local checks use `python3 scripts/local-guard.py`; no local compiler build.
+- `env FWP_NO_OPT=1 target/debug/fwp run --interp tests/fixtures/task_channel_ownership.fwp`:
+  pass, 0.96 seconds; output matches the explicitly written expected values.
+  An initial fixture placed an effectful channel constructor in a definition;
+  moving it into the callback fixed the error without implicit effect timing.
+- `target/debug/fwp fmt tests/fixtures/task_channel_ownership.fwp docs/tutorials/23-ownership-scopes/main.fwp`:
+  pass, 0.15 seconds.
+- `env FWP_NO_OPT=1 target/debug/fwp run --interp docs/tutorials/23-ownership-scopes/main.fwp`:
+  pass, 0.62 seconds; the five lines match `main.out`.
+- `target/debug/fwp check /private/tmp/fwp-mutual-channel.fwp`: pass, 0.72 seconds.
+  The negative fixture reaches the ownership check, rather than a syntax error.
+- `cargo fmt --all`: pass, 1.42 seconds.
+  A final helper rename needed one line wrap; formatter reapplied in 1.54 seconds
+  and the correction was published before opening the PR.
+- `python3 scripts/check-roadmap.py`: pass, 2.70 seconds (60 document sets,
+  106 immutable anchors and seven work areas). `git diff --check`: pass.
+- CI results and the remaining Windows repair are recorded above. Final-head
+  full platform acceptance is still required.
 
-- `python3 scripts/test-native-test-runner.py`: all eleven pass, 8.55 seconds.
-  The first new progress test was too tight under local throttling; its synthetic
-  timing now allows startup overhead while still running longer than its deadline.
-- `cc -std=c11 -O0 -I vendor/softfloat /private/tmp/fwp-nan-inline.c -o /private/tmp/fwp-nan-inline`:
-  pass, 0.39 seconds; `/private/tmp/fwp-nan-inline`: pass, 0.26 seconds. This directly
-  checks the missing helper's linkage and canonical F128 NaN bits, not the full compiler.
-- `cargo fmt --all`: pass. Full builds and native/WASI verification stay on runners.
-
-## Measurement limits
-
-This batch tests allocation and representation, not elapsed-time parity with C.
-Static data and startup stores still cost space and work. PR #168's recursive vs
-explicit-loop timings compare fwp with fwp; O2 eliminated one countdown but not
-the other, so those timings do not establish equivalent executed-loop performance.
+This batch removes a compile-time rejection, not allocation or ARC operations.
+It adds no runtime representation and makes no speed or C/Rust parity claim.
+Shared channel handles still need reference counts; arbitrary owning cycles,
+unknown captures and default tracing removal remain unfinished.
 
 ## Roadmap status
 
@@ -107,7 +110,8 @@ the other, so those timings do not establish equivalent executed-loop performanc
 | 6 | In progress | Reproducible comparisons and regression budgets |
 | 7 | In progress | Representative larger applications |
 
-The seven project work areas in [PLAN.md](../PLAN.md) remain open. Default tracing
-removal is unfinished. JIT is excluded. After this delivery, the next substantial
-work is the next ownership/performance gap selected from representative programs
-and the measured results of this batch. Do not repeat this batch as a new task.
+All seven work areas in [PLAN.md](../PLAN.md) remain open. JIT is excluded.
+After this batch, select the next ownership/performance gap from representative
+programs; persistent subscriptions and weak handles remain design work, not
+implemented APIs. Keep one current handoff and preserve completed evidence in
+history.

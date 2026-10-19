@@ -13,3 +13,9 @@ Some (Cell "datadata" End)
 None
 None
 Err "expected"
+(Some (Some "nestednested"), None)
+Some [Some "nestednested"]
+False
+None
+None
+Err "nested failure"

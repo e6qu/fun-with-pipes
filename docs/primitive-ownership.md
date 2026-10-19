@@ -133,11 +133,12 @@ boundary; it does not establish tracing-free eligibility.
 | External resource contexts | Original scoped/task owners preserve teardown order; counted C context storage does not by itself prove ownership of every fwp graph |
 
 Channel close preserves queued values. Explicit drain breaks the tested counted
-cycle, while unreachable shared cycles still need tracing. Checked ARC now admits
-data-only channel payloads: no functions, tasks, HTTP stream handles or channels
-at any nested position. The queue owns each retained message and the last channel owner releases
-remaining messages; the type restriction prevents a queue from owning a path
-back to its channel. Preserve callback, trap and task ordering when extending
+cycle, while unreachable shared cycles still need tracing. Checked ARC admits
+nested channels when following their payload types cannot lead back to the same
+channel type. Functions, tasks and HTTP stream handles remain excluded at any
+nested position because their captures can hide such a path. The queue owns each
+retained message and the last channel owner releases remaining messages. See the
+[type proof](ownership.md#ownership-boundaries). Preserve callback, trap and task ordering when extending
 contracts. These contracts describe the current runtime. Checked ARC additionally
 enforces its lifetime and cycle rules, rejecting unproved shared boundaries.
 

@@ -1,14 +1,26 @@
 //! Eligibility for explicitly requested reference-counted execution.
-//! Mutable runtime graphs and unmodeled external owners require tracing.
+//! Unproved mutable ownership and external lifetimes are rejected.
 use crate::ir::{Body, Program, TypeShape, MT};
 use crate::ownership::{Argument, Callback, ResultOwnership};
 use std::collections::HashSet;
 
-/// A data-only queue cannot publish a reference back to its channel. Functions
-/// and tasks can hide such a reference in captures even when their result type
-/// contains only scalars. HTTP stream handles keep their connection's handler
-/// captures alive too. Recursive immutable data remains admissible.
-fn channel_data(prog: &Program, ty: &MT, seen: &mut HashSet<MT>, path: &str) -> Result<(), String> {
+/// Prove that a queue's payload cannot reach another channel of the same type.
+/// `value_type` checks each reachable channel type independently, so every cycle
+/// through a queue is rejected, including cycles inside a nested queue. Immutable
+/// recursive types may repeat; `seen` bounds each search to the reachable type
+/// graph. Functions/tasks/streams hide owners not described by their field types.
+fn channel_payload(
+    prog: &Program,
+    ty: &MT,
+    channel: &MT,
+    seen: &mut HashSet<MT>,
+    path: &str,
+) -> Result<(), String> {
+    if ty == channel {
+        return Err(format!(
+            "{path}: a queue can lead back to channel type `{channel}`"
+        ));
+    }
     if !seen.insert(ty.clone()) {
         return Ok(());
     }
@@ -19,13 +31,12 @@ fn channel_data(prog: &Program, ty: &MT, seen: &mut HashSet<MT>, path: &str) -> 
         MT::Nat(_) => Ok(()),
         MT::Record(fields) => {
             for (name, ty) in fields {
-                channel_data(prog, ty, seen, &format!("{path}.{name}"))?;
+                channel_payload(prog, ty, channel, seen, &format!("{path}.{name}"))?;
             }
             Ok(())
         }
         MT::Con(name, args) => {
             let reason = match name.as_str() {
-                "std::Channel" => Some("a queued channel can retain this queue"),
                 "std::Task" => Some("task captures can retain the receiving channel"),
                 "std::H2Stream" => Some("stream handler captures can retain the receiving channel"),
                 _ => None,
@@ -34,9 +45,10 @@ fn channel_data(prog: &Program, ty: &MT, seen: &mut HashSet<MT>, path: &str) -> 
                 return Err(format!("{path}: {reason}"));
             }
             for (i, ty) in args.iter().enumerate() {
-                channel_data(
+                channel_payload(
                     prog,
                     ty,
+                    channel,
                     seen,
                     &format!("{path}.{}[{i}]", name.trim_start_matches("std::")),
                 )?;
@@ -44,13 +56,19 @@ fn channel_data(prog: &Program, ty: &MT, seen: &mut HashSet<MT>, path: &str) -> 
             match prog.shapes.get(ty) {
                 Some(TypeShape::Record(fields)) => {
                     for (name, ty) in fields {
-                        channel_data(prog, ty, seen, &format!("{path}.{name}"))?;
+                        channel_payload(prog, ty, channel, seen, &format!("{path}.{name}"))?;
                     }
                 }
                 Some(TypeShape::Adt(variants)) => {
                     for (name, fields) in variants {
                         for (i, ty) in fields.iter().enumerate() {
-                            channel_data(prog, ty, seen, &format!("{path}.{name}[{i}]"))?;
+                            channel_payload(
+                                prog,
+                                ty,
+                                channel,
+                                seen,
+                                &format!("{path}.{name}[{i}]"),
+                            )?;
                         }
                     }
                 }
@@ -86,8 +104,8 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
                     let [payload] = args.as_slice() else {
                         return Err(format!("channel type `{ty}` requires one payload type"));
                     };
-                    return channel_data(prog, payload, &mut HashSet::new(), "payload").map_err(|path| format!(
-                        "type `{ty}` has no tracing-free ownership contract: channel payloads cannot contain functions, tasks, HTTP stream handles or channels\n  {path}\n  This is a missing cycle-freedom proof, not a demonstrated cycle. Keep callbacks and handles with an independent owner; queue data or non-owning IDs instead."
+                    return channel_payload(prog, payload, ty, &mut HashSet::new(), "payload").map_err(|path| format!(
+                        "type `{ty}` has no tracing-free ownership contract: channel payloads cannot contain functions, tasks, HTTP stream handles or recursive channel ownership\n  {path}\n  This is a missing cycle-freedom proof, not a demonstrated cycle. Keep callbacks and handles with an independent owner; queue data or non-owning IDs instead."
                     ));
                 }
                 "std::Bool" | "std::String" | "std::Bytes" | "std::File" | "std::UdpSocket"
@@ -210,4 +228,80 @@ pub(crate) fn check(prog: &Program, entries: &[crate::ir::FuncId]) -> Result<(),
         )));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn channel(payload: MT) -> MT {
+        MT::Con("std::Channel".into(), vec![payload])
+    }
+
+    #[test]
+    fn nested_queues_and_recursive_immutable_containers_are_acyclic() {
+        let mut prog = Program::default();
+        let tree = MT::con("Tree");
+        prog.shapes.insert(
+            tree.clone(),
+            TypeShape::Adt(vec![
+                ("Leaf".into(), vec![channel(MT::con("std::String"))]),
+                ("Branch".into(), vec![tree.clone(), tree.clone()]),
+            ]),
+        );
+        for payload in [MT::con("std::String"), tree] {
+            let mut ty = payload;
+            for _ in 0..8 {
+                ty = channel(ty);
+                value_type(&prog, &ty, &mut HashSet::new()).unwrap();
+            }
+        }
+    }
+
+    #[test]
+    fn recursive_queue_edges_are_rejected_even_through_an_earlier_sibling() {
+        let mut prog = Program::default();
+        let a = MT::con("A");
+        let b = MT::con("B");
+        let c = MT::con("C");
+        // A -> B -> A is immutable. The later A -> Channel[C] -> C -> B
+        // edge makes a queue cycle. A global "already safe" cache during a
+        // single traversal would incorrectly accept the second visit to B.
+        prog.shapes.insert(
+            a.clone(),
+            TypeShape::Record(vec![
+                ("first".into(), b.clone()),
+                ("queue".into(), channel(c.clone())),
+            ]),
+        );
+        prog.shapes
+            .insert(b.clone(), TypeShape::Record(vec![("a".into(), a.clone())]));
+        prog.shapes
+            .insert(c.clone(), TypeShape::Record(vec![("b".into(), b)]));
+        for root in [a, channel(c.clone()), channel(channel(c))] {
+            let error = value_type(&prog, &root, &mut HashSet::new()).unwrap_err();
+            assert!(
+                error.contains("a queue can lead back to channel type"),
+                "{error}"
+            );
+            assert!(error.contains("missing cycle-freedom proof"), "{error}");
+        }
+    }
+
+    #[test]
+    fn nested_queues_do_not_hide_callback_task_or_stream_captures() {
+        let prog = Program::default();
+        for payload in [
+            MT::Fun(Box::new(MT::unit()), Box::new(MT::con("std::String"))),
+            MT::Con("std::Task".into(), vec![MT::con("std::String")]),
+            MT::con("std::H2Stream"),
+        ] {
+            let ty = channel(channel(payload));
+            let error = value_type(&prog, &ty, &mut HashSet::new()).unwrap_err();
+            assert!(
+                error.contains("captures can retain the receiving channel"),
+                "{error}"
+            );
+        }
+    }
 }

@@ -729,8 +729,12 @@ count insertion. Unsupported lifetimes produce a compile error; the compiler
 does not silently switch to tracing.
 
 Admitted programs include ordinary immutable values, scoped files and state,
-proved derivative scopes, selected retained tasks, channels carrying data without
-functions, tasks, HTTP stream handles or channels, and scoped C calls. Mutable
+proved derivative scopes, selected retained tasks, channels with acyclic nested
+queue ownership, and scoped C calls. Channel payloads still exclude functions,
+tasks and HTTP stream handles because their captures can hide a back-reference.
+The [channel proof](ownership.md#ownership-boundaries) follows each channel's
+payload types and rejects a path back to that channel type. Immutable recursive
+containers remain allowed. Mutable
 cycles, raw pointers and unproved external callbacks remain excluded.
 Checked ARC supports native main and function executables,
 including CLI commands, and C libraries with copied inputs. The C-result

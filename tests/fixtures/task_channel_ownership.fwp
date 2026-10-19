@@ -42,6 +42,85 @@ queue-failure =
     | tap (flip channel.send ("failed" | string.repeat 2))
     | const "expected"
     | fail
+filled-channel : I64 -> Channel[String] ! {Async}
+filled-channel =
+    text-channel
+    | tap (flip channel.send ("nested" | string.repeat 2))
+    | tap channel.close
+nested-channel : I64 -> Channel[Channel[String]] ! {Async}
+nested-channel = channel.make
+routing-channel : I64 -> Channel[List[Channel[String]]] ! {Async}
+routing-channel = channel.make
+Route =
+    | EndRoute
+    | Route Channel[String] Route
+route-channel : I64 -> Channel[Route] ! {Async}
+route-channel = channel.make
+nested-pair : I64 -> (Channel[String], Channel[Channel[String]]) ! {Async}
+nested-pair =
+    filled-channel
+    | both id (const 1 | nested-channel)
+    | tap (fork channel.send .1 .0)
+nested-send : Channel[Channel[String]] -> () -> Bool ! {Async}
+nested-send = curry (fork channel.send .0 (const 1 | filled-channel))
+nested-receive : Channel[Channel[String]] -> () -> Option[Channel[String]] ! {Async}
+nested-receive = curry (.0 | channel.recv)
+nested-failure : I64 -> () ! {Async, Error[String]}
+nested-failure = nested-pair | const "nested failure" | fail
+nested-round : () -> () ! {Async, IO}
+nested-round =
+    const 1
+    | nested-pair
+    | both
+        (.1 | tap channel.close | channel.recv | option.map channel.recv)
+        (.0 | channel.recv)
+    | echo
+    | const 1
+    | filled-channel
+    | singleton
+    | both id (const 1 | routing-channel)
+    | tap (fork channel.send .1 .0)
+    | .1
+    | tap channel.close
+    | channel.recv
+    | option.map (map channel.recv)
+    | echo
+    | const 1
+    | filled-channel
+    | flip Route EndRoute
+    | both id (const 1 | route-channel)
+    | tap (fork channel.send .1 .0)
+    | ignore
+    | const 1
+    | nested-pair
+    | .1
+    | tap channel.close
+    | fork channel.send id (const 1 | filled-channel)
+    | echo
+    | const 1
+    | nested-pair
+    | .1
+    | nested-send
+    | task.spawn
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
+    | echo
+    | const 1
+    | nested-channel
+    | nested-receive
+    | task.spawn
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
+    | option.map ignore
+    | echo
+    | const 1
+    | flip range 65
+    | each (nested-pair | ignore)
+    | const 1
+    | attempt nested-failure
+    | echo
 round : () -> () ! {Async, IO}
 round =
     const "input"
@@ -135,4 +214,5 @@ round =
     | const 1
     | attempt queue-failure
     | echo
+    | nested-round
 main = () | round
