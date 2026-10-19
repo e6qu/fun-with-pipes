@@ -123,7 +123,7 @@ typedef struct { uint32_t tag; uint32_t n; V f[]; } fwp_obj;
 typedef struct { uint64_t len; char d[]; } fwp_str;
 typedef struct { uint32_t fn; uint32_t n; V a[]; } fwp_clo;
 typedef struct { uint64_t len; V d[]; } fwp_arr;
-/* map: len entries, keys and values interleaved; sets use values of 0 */
+/* Maps interleave key/value words; sets store one word per key. */
 typedef struct { uint64_t len; V d[]; } fwp_map;
 typedef struct { FILE *f; uint64_t refs; char path[]; } fwp_file;
 
