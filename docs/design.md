@@ -413,6 +413,22 @@ Specialized numeric functions use concrete C types instead. Records, variants
 and partially applied functions may need heap objects, but eligible local values
 can remain as separate fields, C structs or stack storage.
 
+Two C pointers **alias** when they can access the same storage. C compilers may
+assume that pointers to unrelated structure types do not alias, even if the
+structures have identical field offsets. fwp emits fixed-size structures for
+stack and static values, then accesses them through runtime structures with
+variable-length trailing arrays. Those views need an explicit aliasing contract.
+
+The object, closure, string, array and map view types use `__may_alias__`, supported
+by [GCC](https://gcc.gnu.org/onlinedocs/gcc/Common-Attributes.html) and
+[Clang](https://clang.llvm.org/docs/UsersManual.html). Their pointers can then
+access the concrete generated structures without allowing the optimizer to
+discard the stores that initialized them. Field sizes, offsets and alignment
+remain the same. This annotation changes compiler assumptions and adds no runtime
+operation; its effect on generated code and performance still needs measurement.
+Strict alias analysis remains enabled elsewhere. Byte reinterpretation, such as
+floating-point bits and packed array loads, continues to use `memcpy`.
+
 When a record already exists as separate local fields, selecting its last-used
 field can transfer that field's ownership and release only the discarded fields.
 The new conversion path also checks whether a heap record has exactly one owner:
