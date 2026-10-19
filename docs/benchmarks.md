@@ -1058,6 +1058,13 @@ retain hardware, compilers, raw wall/child-CPU samples, allocation/live-memory
 counts, process RSS and actual binaries/disassembly. No new timing claim is made
 until [the handoff](development-state.md) records completed runs.
 
+Repeat with the `hash` and `hash-costs` evidence suites at the same revision.
+After both pass, `hash-report` takes their `evidence_run` / `costs_run` IDs and
+the full `source_revision`. It audits every host's tests, checks saved-file hashes,
+sample balance and medians, and inspects native sections and tracing symbols.
+It retains disassembly for review; a passing collector alone does not establish
+that an inner loop has no calls, spills or avoidable instructions.
+
 ## CPU tensor output storage
 
 **Comparison:** previous versus direct-output fwp executors, with only that runtime

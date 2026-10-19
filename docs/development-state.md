@@ -9,12 +9,16 @@ its acceptance handoff is in the primary checkout. Production `39312560218`
 has passed its benchmark job, with eight platform jobs running; documentation
 `39312560173` passed. Do not replace that tested head.
 
-Preparation `c05e592e22a67a7a04f884dab9c2a1cd2d63c2ae` is published. Its first
-Linux `hash` run is `39314998423`, running; formatting and Clippy passed.
+Preparation `6ffd2385a8207078cadd046d7dc2e3f3c389675f` is published. The initial
+Linux `hash` run `39314998423` passed 69 tests, none ignored, at `c05e592e`.
+Its compiler/runtime is unchanged; the latest fixture adds NaN/infinity cases.
+At `6ffd2385`, six-host `hash` run `39317215955`, both-Linux `wasi-arc` run
+`39317221484` and four-host `hash-costs` run `39317226192` are queued.
 
-Next: audit that focused `hash` run first on Linux,
-then on all six native hosts; run `wasi-arc` and `hash-costs` on GitHub. Audit all
-failures and actual binary loops before deciding whether to adopt the change.
+Next: audit all three matrix runs. Fix every failure. Run `hash-report` with
+those exact test/cost run IDs and source revision, then inspect the saved inner
+loops before deciding whether to adopt the change. Its collector checks all
+69 tests per host, 96 correctness binaries and 48 measured fwp binaries.
 Keep one active PR. After #173 passes and merges, replay accepted preparation
 on main, update the plan/evidence and require all final-head production gates.
 
@@ -44,8 +48,8 @@ sharing, mixed map widths and named records. It compares raw interpretation
 with generated ARC/stressed-tracing O0/O2 code, with specialization on/off.
 A second probe asserts no allocation or reference-count operations inside the
 new bodies, and must detect deliberately added allocation/retain calls.
-The WASI shutdown corpus now includes the same fixture. None of the new native
-checks has run yet; compiler integration belongs on CI.
+The WASI shutdown corpus now includes the same fixture. The initial Linux run
+passed both new native tests; the expanded fixture still needs the full matrix.
 
 The measurement script compares specialized ARC/tracing, generic ARC, buffered
 ARC, C and Rust in twelve balanced samples. It keeps the two array cases and
@@ -62,6 +66,9 @@ unchanged limits. No new compiler build or full benchmark ran locally.
 - `cargo fmt --all` passed in 1.55/1.42 seconds during preparation.
 - Python syntax checks passed in 0.15 seconds; the documentation audit passed
   60 document sets, 106 immutable anchors and seven work areas in 2.87 seconds.
+- Latest fixture formatting passed in 0.01 seconds and documentation in 2.54
+  seconds. `scripts/test-hash-evidence.py` passed three rejection/audit checks
+  in 0.22 seconds; complete binary inspection runs on GitHub.
 - The accepted compiler at `/private/tmp/fwp-170-accepted-macos/fwp-macos-arm64/fwp`
   ran the original 18-line fixture in 0.27 seconds. Its first syntax check correctly
   required explicit `Hash[a]` and `make Samples`; both were fixed. Formatting passed.
