@@ -94,7 +94,7 @@ fn udp_results_preserve_values_aliases_and_release_storage() {
             let body = code[start..end]
                 .replace(
                     "    fwp_init_consts();\n",
-                    "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t udp_budget=fwp_gc.budget;\n",
+                    "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t udp_budget=fwp_gc.budget_given;\n",
                 )
                 .replace(
                     "    fwp_cl_finish();\n",

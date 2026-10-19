@@ -34,8 +34,7 @@ fn tasks_and_data_channels_reclaim_after_join_and_cancellation() {
                 .arg(&cfile),
         );
         let code = std::fs::read_to_string(cfile).unwrap();
-        // The scheduler root is permanent scratch, created once per runtime.
-        // Charge all child owners and results against the initialized baseline.
+        // Final teardown must release every charge, including scheduler storage.
         let measured = if gc == "arc" {
             let main_start = code
                 .find("static void *fwp_main_thread(void *arg) {")
@@ -44,7 +43,7 @@ fn tasks_and_data_channels_reclaim_after_join_and_cancellation() {
             assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
             assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
             format!("{runtime}{}", main
-                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t task_budget=fwp_gc.budget;\n")
+                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t task_budget=fwp_gc.budget_given;\n")
                 .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < task_budget) { fprintf(stderr,\"task bytes left: %ld\\n\",(long)(task_budget-fwp_gc.budget)); exit(193); }\n"))
         } else {
             code

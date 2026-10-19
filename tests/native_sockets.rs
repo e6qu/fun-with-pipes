@@ -374,7 +374,7 @@ fn tcp_values_preserve_scopes_and_release_storage_without_tracing() {
             .unwrap();
         let end = start + code[start..].find("\n}\n").unwrap() + 3;
         let body = code[start..end]
-            .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t tcp_budget=fwp_gc.budget;\n")
+            .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t tcp_budget=fwp_gc.budget_given;\n")
             .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.budget<tcp_budget) { fprintf(stderr,\"TCP charged storage left: %lld\\n\",(long long)(tcp_budget-fwp_gc.budget)); exit(248); }\n");
         let mut measured = code.clone();
         measured.replace_range(start..end, &body);

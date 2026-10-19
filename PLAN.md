@@ -88,13 +88,11 @@ outside the benchmark suite.
 
 ### Immediate priorities
 
-1. Complete acceptance of the current compiler and interactive-tool PR.
-   Cached-map borrowing now has matching Xeon 8573C evidence: the old layout
-   slowdown reproduces, and the new joined/borrowed program is 2.67% faster than
-   the old separate-layout baseline. [Measurements](docs/benchmarks.md#rechecking-the-original-xeon-slowdown)
-   retain all faster and slower comparisons. The compiler, math, REPL, notebook
-   and debugger/SDK still require final-head production acceptance; see the
-   [handoff](docs/development-state.md).
+1. Deliver the cycle-contract and self-tail-recursion batch. PR #167's compiler,
+   interactive tools and cached-map borrowing passed all gates and are merged;
+   [delivery history](docs/roadmap-history.md#interactive-tools-and-cached-map-borrows-pr-167)
+   records the tested revision and measurement limits. Reuse eligible frames
+   while preserving native field layouts, cleanup and cancellation checks.
 2. Specify and test [cycle-safe ownership contracts](docs/ownership.md#proposed-cycle-policy)
    against subscriptions, channel workers, cancelled tasks and cyclic data graphs.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not

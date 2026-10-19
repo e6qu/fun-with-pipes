@@ -48,6 +48,29 @@ remaining failures and supplied the full passing gate; #135's merge alone is
 not support evidence. These deliveries completed the previous implementation
 batch. The remaining memory and performance objectives are in [PLAN.md](../PLAN.md).
 
+## Interactive tools and cached-map borrows (PR #167)
+
+Cached numeric-map reads avoid repeated retains: 2,000,001 become one in the
+500,000-entry/two-million-query workload. The matching Xeon 8573C comparison
+reproduces PR #166's layout penalty and measures the combined change 2.67% faster
+than the old separate-layout program. These are fwp-versus-fwp results, not C/Rust
+parity; [the benchmark report](benchmarks.md#rechecking-the-original-xeon-slowdown)
+retains slower cases, repeated samples and binary evidence.
+
+The delivery also adds comparisons/scalar math, a persistent REPL, local notebook,
+interpreter debugger/Python SDK and generated-C/machine-code inspection. Toolchain,
+timeout, target, notebook directory/port and REPL mode settings are explicit.
+Guides explain parsing, compiler stages, examples and benchmark scope. Weak
+references and guaranteed tail recursion were proposals at this revision;
+default tracing removal remains unfinished.
+
+- Same files: merge `e8e22f1901e5396e1bf3555073ebeb9d5c65da41`, tested `7cb899faa86d3cafb1192529d7fd357e7067ca4b`.
+- Passing [nine production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39141587973)
+  and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39141587926).
+- Passing [four-host terminal probes](https://github.com/e6qu/fun-with-pipes/actions/runs/39141595653)
+  and [language, Python, disassembly and browser checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39141618594).
+  Cross-target object inspection is not evidence of native execution.
+
 ## Numeric map and set construction (PR #166)
 
 Numeric map/set construction skips temporary lists and eligible tuples, calls
@@ -56,7 +79,8 @@ most 257 keys, map requests fall 196,614 → 5 and set requests 131,077 → 4.
 An unnecessary second compiler build caused the Intel macOS timeout and was
 removed without reducing coverage. **Xeon 8573C full-map tracing remains
 4.4–4.6% slower**; allocation savings do not resolve that result. Cached-map
-borrowing candidate `774d838c` is not part of this merge.
+borrowing candidate `774d838c` is not part of this merge. PR #167 above supplies
+the subsequent implementation and matching-host repair evidence.
 
 [PR #166](https://github.com/e6qu/fun-with-pipes/pull/166): merge `de678a7d42af803948835cfbc43b4862b63164da`, tested `91c8923fa68a754c29b85eb963f7f3b965b158d8`.
 [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39109626103) and

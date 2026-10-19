@@ -68,9 +68,13 @@ would be stricter. See [Swift's ARC guide](https://github.com/swiftlang/swift-bo
 This policy cannot prevent a program deliberately growing a live collection,
 prove task termination, or replace a foreign library's own lifetime obligations.
 
-Validate the design with four programs before adding syntax: an event
-subscription, a channel worker, a cancelled background task and a graph with
-node deletion. Keep ordinary inference and pipes. For today's runnable behavior,
+[Lesson 23](tutorials/23-ownership-scopes/README.md) exercises a scoped event
+callback, a channel worker, a cancelled background task and a graph with node
+deletion using existing APIs. The scoped callback models the ownership direction
+needed for subscriptions; it is not a persistent subscription API. Checked ARC
+diagnostics identify the payload field/container/capture path that lacks a
+proof and suggest data queues or independently owned handles. They do not claim
+that merely having such a type creates a cycle. Keep ordinary inference and pipes. For today's runnable behavior,
 see [tasks and channels](tutorials/06-tasks-and-channels/README.md) and
 [recursion and sharing](tutorials/22-recursion-and-sharing/README.md).
 

@@ -35,6 +35,35 @@ report. Elapsed time includes waiting to run; child CPU time sums user/system
 processing time. Neither alone identifies the cause of a gap. Allocation-count
 percentages are not time percentages.
 
+## Self-tail recursion compared with an explicit loop
+
+`scripts/measure-tail-recursion.py` compares two current fwp programs: a recursive
+countdown lowered by the compiler and the same countdown written with `loop`,
+`Again` and `Stop`. Each starts at the requested positive integer, subtracts one
+until zero, prints zero and exits. This is an abstraction-cost comparison within
+fwp, not a C/Rust baseline or a test of arbitrary recursive algorithms.
+
+Run it on a GitHub Linux runner with explicit compiler/tool paths, iteration count,
+sample count, subprocess timeout and output directory. The focused language job
+selects one million iterations, eight samples per variant and both O0/O2 under
+tracing/checked ARC. It records the CPU, compiler version, exact commands and
+runtime settings. Timings cover fresh-process startup, the countdown, printing,
+output capture and teardown; compilation and profiling are excluded. Run order
+alternates each round. Ratios are recursive median / explicit-loop median;
+extra time is `(ratio - 1) × 100%`. Constant function-entry/scheduler costs may
+still differ; small timing differences need repeat measurements.
+
+Separate profiles compare 1,000 iterations with the full count. They count
+managed allocation requests, retain operations, allocator-charged peak bytes and
+remaining charge after teardown. The check requires equal allocation counts and
+peak charge at both sizes, with zero final charge; it does not measure process
+RSS or external library memory. Each actual executable is disassembled and saved
+with generated C and compiler stack-use estimates. Those estimates are per
+function, not a measured aggregate peak. Whole-file sizes include debug data.
+Deep O0/interpreter execution checks separately verify that eligible recursive
+calls do not accumulate call frames. No speed or zero-allocation result is claimed
+until the current [handoff](development-state.md) records passing evidence.
+
 ## fwp compared with C and Rust
 
 Each directory in [`bench/`](../bench) contains `main.fwp`, `main.c` and

@@ -30,6 +30,10 @@ main = range 0 129 | map (choose | checks) | length | echo
         ("arrays", include_str!("fixtures/numeric_array_fusion.fwp")),
         ("closures", closures),
         ("files", files.as_str()),
+        (
+            "ownership-scopes",
+            include_str!("../docs/tutorials/23-ownership-scopes/main.fwp"),
+        ),
         // abs has a portable C int signature, including Windows LLP64.
         // The surrounding list forces allocation/reclamation so the existing
         // ledger also checks the foreign call inside an owned graph.
@@ -134,6 +138,25 @@ main = range 0 129 | map (choose | checks) | length | echo
                 assert!(String::from_utf8_lossy(&conflict.stderr)
                     .contains("--gc arc cannot enable tracing"));
             }
+            if name == "ownership-scopes" && stack == "0" {
+                let release = "    fwp_native_tasks_finish();";
+                assert_eq!(measured.matches(release).count(), 1);
+                let omitted = measured.replace(release, "    /* omit scheduler shutdown */");
+                let binary = dir.join("retained-scheduler.exe");
+                fwp::cgen::compile_c(&omitted, &binary, "-O2").unwrap();
+                let actual = Command::new(binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    actual.status.code(),
+                    Some(193),
+                    "scheduler retention must fail the ledger: {actual:?}"
+                );
+            }
             if name == "arrays" && stack == "0" {
                 let needle = "    fwp_mem_free((void *)(uintptr_t)v);";
                 assert_eq!(measured.matches(needle).count(), 2);
@@ -235,6 +258,7 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
         ("http-stream-channel","streams : I64 -> Channel[H2Stream] ! {Async}\nstreams = channel.make\nmain = streams 1 | channel.close\n","channel payloads cannot contain"),
         ("wrapped-http-stream-channel","streams : I64 -> Channel[List[H2Stream]] ! {Async}\nstreams = channel.make\nmain = streams 1 | channel.close\n","channel payloads cannot contain"),
         ("cyclic-channel","Link = | Node (Channel[Link])\nlinks : I64 -> Channel[Link] ! {Async}\nlinks = channel.make\nmain = links 1 | channel.close\n","channel payloads cannot contain"),
+        ("record-channel","Event = { callback: Option[I64 -> String] }\nevents : I64 -> Channel[Event] ! {Async}\nevents = channel.make\nmain = events 1 | channel.close\n","payload.callback.Option[0]"),
         ("unscoped-tape","main = 1 | ad.tape | echo\n","tracing-free lifetime policy"),
     ] {
         let input=dir.join(format!("{name}.fwp"));
@@ -243,6 +267,10 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
         assert!(!out.status.success());
         let error=String::from_utf8_lossy(&out.stderr);
         assert!(error.contains("--gc arc") && error.contains(reason),"{error}");
+        if name.contains("channel") {
+            assert!(error.contains("missing cycle-freedom proof, not a demonstrated cycle"), "{error}");
+            assert!(error.contains("queue data or non-owning IDs instead"), "{error}");
+        }
     }
     let input = dir.join("valid.fwp");
     std::fs::write(&input, "main = 42 | echo\n").unwrap();

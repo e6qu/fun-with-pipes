@@ -492,8 +492,8 @@ this path needs no task reference-count updates. Language-visible task handles
 retain the shared-owner policy because callers can keep independent aliases.
 Server jobs also have explicit owners, including the accepted HTTP extension. Connection records
 can outlive their sockets while response readers retain status information;
-the pool, I/O tasks and callers hold separate storage owners. Library teardown
-closes these connections before waiting for their tasks. The
+the pool, I/O tasks and callers hold separate storage owners. Executable and library teardown
+close these connections before waiting for their tasks. The
 [ownership guide](ownership.md) and [measured comparison](benchmarks.md#freeing-closed-connections-and-finished-tasks)
 describe the limits. Checked gRPC client/service builds add iterator scope
 checks and use these owners; [PR #161](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161)
@@ -580,36 +580,50 @@ version is not tail recursive. Turning arbitrary recursion into an accumulator
 loop is a separate transformation: it must preserve checked-overflow, floating
 rounding, effects and failure order rather than assume arithmetic is associative.
 
-### Current implementation
+### Implemented lowering and its limits
 
-`loop step state` is the documented constant-stack iteration facility. Known
-steps can also keep their state as direct fields. General recursive functions
-have no equivalent portable stack-space guarantee today.
+After simplification, callback specialization and fusion, `src/tailrec.rs`
+marks eligible direct self-tail calls. It keeps their expressions intact so
+native representation selection can still pass records, variants and wide
+numbers as direct fields. The interpreter replaces a proved tail call with the
+next set of parameter values. Generated C prepares those values, retires unused
+storage-reuse tokens and jumps to the function's entry check. Existing wide
+numeric workers retain their own native loop. Each backend therefore keeps
+bounded call-stack space for the recurrence, including native O0 builds.
+The current revision's [handoff](development-state.md) records validation;
+implementation is not itself platform acceptance.
 
-`src/cgen.rs::tail_calls` identifies terminal direct calls and function-value
-applications through bindings, reference-count operations and match branches.
-It deliberately does not cross a resource region with cleanup after its body.
-`FnGen::tail_tokens` releases unused storage-reuse tokens before eligible calls,
-removing one obstacle to native tail-call elimination. Ordinary function/worker
-generation still emits C calls; it does not lower every self-recursive function
-to an explicit loop or require a machine tail jump.
+Eligibility requires every self reference to be a direct tail call and the
+frame's types to describe plain immutable data. Closures with unknown captures,
+resource/task/channel owners, calls nested in arguments and remaining work after
+a call keep ordinary recursion. Resource regions cannot be discarded. Function
+parameters are prepared in their original order before becoming next-iteration
+state, including swaps and multiple curried arguments. This adds no source
+syntax or intermediate `Step` values. Native record/variant arguments keep their
+existing field layout; the interpreter keeps its ordinary value objects. Native
+frames selected for reuse do not allocate local stack objects that could become
+next-iteration state. Direct fields remain available without such objects.
 
-`tests/reuse_token_ownership.rs::tail_token_cleanup_preserves_long_native_recursion`
-checks a million-step boxed countdown at O1/O2 with collection enabled/disabled,
-and compares a smaller case with the raw interpreter. That is evidence for the
-tested configurations, not a guarantee for all recursive programs or checked ARC.
-`src/interp.rs::call` and `eval` recurse through the Rust stack; the application
-loop handles extra curried arguments but does not eliminate general tail calls.
-Selected long-chain destructors already use loops; branching cleanup can still
-need additional stack. These are separate from optimizing source recursion.
+`FWP_DUMP_IR=1 fwp run --interp program.fwp` reports each direct-self-recursion
+lowering decision. A rejection states what prevents the proof; it does not say
+that the program is unsafe. `FWP_NO_OPT=1` disables this pass with the other
+optimizations and remains the small-case semantic reference. The source debugger
+also retains original recursive frames. Deep recursion in those modes can still
+reach the stack limit. Calls made inside an iteration have their own stack costs,
+and a loop can still retain growing data.
 
-### Proposed implementation order and limits
+The existing `loop step state` API remains available when the source program
+needs explicit iteration. `FnGen::tail_tokens` also releases unused storage-reuse
+tokens before eligible ordinary calls; this separate cleanup optimization does
+not promise portable tail transfer for every function. Long-chain destruction
+and function-call recursion are separate stack concerns.
 
-1. Lower eligible direct self-tail calls into explicit loops in the compiler's
-   intermediate representation, with corresponding interpreter execution.
-   Make any eventual guarantee independent of the C optimizer and optimization
-   level. Define eligibility after ownership/resource analysis and expose a
-   diagnostic explaining any remaining work that prevents frame reuse.
+### Remaining work
+
+1. Broaden frame reuse only with ownership evidence for the additional cases.
+   Preserve cleanup, handler scopes and cancellation; measure allocations,
+   retained memory and code size as well as execution time. The first comparison
+   uses equivalent explicit fwp loops, not a C/Rust parity claim.
 2. For statically known mutually recursive groups, assess a shared internal loop
    with a tag selecting the next function and typed argument storage. This is a
    potential implementation, not adopted behavior. Measure dispatch, storage and

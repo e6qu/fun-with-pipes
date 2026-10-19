@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [language, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -27,6 +27,77 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  shutdown:
+    if: inputs.suite == 'shutdown'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-15]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+      RUST_TEST_THREADS: 1
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - name: Target timeout, child termination and continued coverage
+        if: ${{ !cancelled() }}
+        run: python3 scripts/test-native-test-runner.py
+      - name: Shutdown, network stalls and complete allocation ledgers
+        if: ${{ !cancelled() }}
+        run: |
+          python3 - <<'PYTHON'
+          import importlib.util
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          spec = importlib.util.spec_from_file_location('native_tests', 'scripts/run-native-tests.py')
+          runner = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(runner)
+          targets = ['grpc_receive_cleanup', 'arc_tasks', 'exec_protocol_ownership',
+                     'service_scope_ownership', 'collection_construction', 'map_set_ownership',
+                     'cached_map_borrows', 'arc_corpus', 'arc_execution', 'udp_ownership',
+                     'autodiff_nested', 'foreign_callback_ownership', 'autodiff_precision',
+                     'native_sockets', 'autodiff_checkpoint', 'tls', 'aot', 'examples',
+                     'web', 'services']
+          metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--no-deps', '--format-version', '1']))
+          command = ['cargo', 'test', '--no-run', '--message-format=json']
+          for target in targets:
+              command += ['--test', target]
+          built = subprocess.run(command, stdout=subprocess.PIPE, text=True)
+          if built.returncode:
+              print(built.stdout)
+              built.check_returncode()
+          executables = runner.test_executables(built.stdout, metadata, 'gc', targets)
+          raise SystemExit(runner.run_tests(executables, [],
+                           Path(os.environ['RUNNER_TEMP']) / 'shutdown-tests', 900))
+          PYTHON
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: shutdown-tests-${{ matrix.runner }}
+          path: ${{ runner.temp }}/shutdown-tests/
+          if-no-files-found: warn
   repl_terminal:
     if: inputs.suite == 'repl-terminal'
     strategy:
@@ -73,7 +144,18 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
       - if: ${{ !cancelled() }}
-        run: cargo test --no-fail-fast --test infix --test repl --test debugger --test scalar_math --test float_math --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test stdlib_doc -- --nocapture
+        run: cargo test --no-fail-fast --test tail_recursion --test arc_execution --test record_conversion_ownership --test variant_alias_ownership --test wide_workers --test task_ownership --test task_handle_ownership --test reuse_token_ownership --test preempt --test infix --test repl --test debugger --test scalar_math --test float_math --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test stdlib_doc -- --nocapture
+      - if: ${{ !cancelled() }}
+        name: Tail recursion code and memory evidence
+        env:
+          PYTHONPATH: sdk/python
+        run: python3 scripts/measure-tail-recursion.py --fwp target/debug/fwp --cc cc --objdump llvm-objdump --output tail-recursion-evidence --iterations 1000000 --samples 8 --timeout 180
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: tail-recursion-evidence
+          path: tail-recursion-evidence/
+          if-no-files-found: warn
       - if: ${{ !cancelled() }}
         name: Python debugger, notebook and C/machine-code comparisons
         env:
@@ -2139,7 +2221,7 @@ jobs:
               built.check_returncode()
           executables = shards.test_executables(built.stdout, metadata, 'regular', selected)
           raise SystemExit(shards.run_tests(executables, ['--skip', 'golden_programs_under_gc_stress'],
-                                           Path(os.environ['RUNNER_TEMP']) / 'macos-shard-probe'))
+                                           Path(os.environ['RUNNER_TEMP']) / 'macos-shard-probe', 1800))
           PYTHON
       - uses: actions/upload-artifact@v7
         if: always()

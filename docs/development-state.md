@@ -2,113 +2,85 @@
 
 ## Next action
 
-[PR #167](https://github.com/e6qu/fun-with-pipes/pull/167) is still open.
-Published acceptance head: `2f3e87cd26e0b28225fcb60faa1473a3e8ac8478`.
-The user then requested explicit settings and no compatibility machinery.
-The working tree applies that requirement to the new tools:
+[PR #168](https://github.com/e6qu/fun-with-pipes/pull/168), branch
+`ownership-tail-recursion`, is draft while fixing CI. PR #167 is merged; its
+[delivery record](roadmap-history.md#interactive-tools-and-cached-map-borrows-pr-167)
+contains the accepted revision and evidence.
 
-- SDK callers supply compiler/tool paths, input choice, timeout, target settings
-  and optimization levels. Two internal forwarding helpers are removed.
-- Notebook startup requires Python, working directory and port; port 0 explicitly
-  requests an available port. The browser test now uses the actual fwp launcher.
-- REPL users select terminal history, no history, scripted input or JSON mode.
-  No environment-derived history path or silent terminal-to-stream conversion.
-  JSON requests require command/source fields; malformed requests cannot run code.
-- A dead notebook interpreter reports failure; another explicit cell run starts
-  a fresh session. Effects are never automatically retried.
-- Examples, tests, CI toolchain settings, PLAN and AGENTS match these interfaces.
-  Backward compatibility remains unnecessary; no adapters are included.
+Next: publish the shutdown repair, dispatch `numerics.yml` with `suite=shutdown`
+and `suite=language`, and audit every result. Then mark the PR ready to run the
+complete production matrix. Require all nine production jobs, documentation and
+both focused suites on the final head before squash merging. Use a one-line
+subject of at most 80 characters and an explicitly empty body.
 
-Next: complete focused validation of these changes, publish one combined commit,
-then require all nine production jobs, docs, terminal probes and tools/browser
-checks at that new exact head before squash merge. Use one commit subject of at
-most 80 characters and an empty body. Keep the earlier run intact for its results.
+## Current batch
 
-### Current evidence
+PR #168 adds eligible self-tail frame reuse, cycle-proof diagnostics and lesson
+23's scoped callback, channel, cancellation and graph examples. The compiler
+keeps the original expression trees so native record, variant and wide-number
+layouts remain available. It prepares arguments before replacing locals, retires
+reuse tokens and preserves cancellation checks. REPL remapping retains the proof.
+Native executable teardown also releases scheduler storage exposed by lesson 23.
+Default tracing removal and all seven roadmap areas remain unfinished.
 
-At `2f3e87cd`, production run `39134575726` has eight passing jobs; Linux AMD64
-is still running. Linux ARM64 reports 756 Rust passes, zero failures and 15 ignored
-checks. Each regular Mac reports 468 Rust passes and ten Python passes, with no
-failures/skips. Each Mac GC job reports 293 passes and 15 ignored checks. Windows
-ARM64/AMD64 each report 363 Rust passes and six ignored checks; eight Python tests
-run and two POSIX terminal tests are skipped. Packaging and binary evidence pass.
-Documentation `39134575677`, all four terminal jobs `39134597819`, and the tools/
-package/browser job `39134602773` pass. The latter runs 22 Rust and ten Python
-checks, native/cross-target O0–O3 disassembly and actual Chromium. All terminal
-probes run both interruption/recovery and standalone shutdown tests with no skips.
-These results precede the explicit-settings changes; they do not verify them.
+## CI failures and repair
 
-The earlier full run at `f957980a` is completely audited: seven jobs passed;
-both regular Mac jobs failed only the repaired terminal test. Across platforms,
-3,762 Rust test executions passed, none failed, and 72 were ignored. Local logs:
-`/private/tmp/fwp-final-f957` and `/private/tmp/fwp-final-2f3e`.
+All jobs at `7bc07ff662220d53ae4d01b36ba60cd600d0f0e6` were audited.
+[Production run 39178860004](https://github.com/e6qu/fun-with-pipes/actions/runs/39178860004)
+**failed acceptance**: all eight execution jobs timed out, with failures before
+the stalls. Benchmarks passed. Linux stalled in `aot` and `examples`; regular
+macOS in `aot` and `services`; GC macOS in `examples` and `web`. Windows stalled
+in native networking after reporting seven test failures. Queues are not the cause.
+Logs: `/private/tmp/fwp-pr168-7bc0` and `/private/tmp/fwp-pr168-stalls`.
 
-Repairs already verified remotely: restore the handoff's required status table
-and Next marker; wait for real terminal output before sending SIGINT and drain
-the PTY while waiting for exit; route scheduler SIGINT to the active REPL after
-`signal.shutdown-requested` installs its handler; use UTF-8 for disassembly reports.
-The enhanced terminal test reproduces the signal bug on the old compiler and
-passes on all four native Linux/Mac targets after repair. Standalone SIGINT and
-SIGTERM still clean up normally.
+Repairs awaiting runner verification:
 
-Focused local checks for the explicit-settings changes use the fixed guard:
+- Network I/O tasks defer cancellation. Executable teardown now closes their
+  connections before draining tasks, as library teardown already does. A new
+  native regression covers pooled and unpooled connections at O1/O2 with GC
+  enabled/disabled; deliberately omitting connection closure must time out.
+- Ten final-memory ledgers used an allowance for the scheduler root that teardown
+  now frees. They now require release of the full initial allocation budget,
+  so a freed root cannot hide leaked task results or command arguments.
+- Collection and map tests now insert their ledger check after closure cleanup
+  without assuming it immediately follows CAF cleanup. The library shutdown
+  negative control targets its own drain loop, not the new executable loop.
+- The cached-map test preserves status and stderr when a rejected runtime setting
+  closes stdin before the parent writes; all expected diagnostics remain checked.
+- The native test runner has an explicit per-target deadline: 1800 seconds in
+  production, 900 in focused shutdown checks. It kills the timed-out process
+  group, records failure and continues other targets. Coverage is unchanged.
 
-- `python3 scripts/local-guard.py cargo fmt --all`: pass, 1.55 seconds.
-- `python3 scripts/local-guard.py python3 /private/tmp/fwp-python-import-audit.py`:
-  pass, 0.27 seconds; 71 Python files, top-level imports, empty initializers and
-  AGENTS under 100 lines.
-- `python3 scripts/local-guard.py env PYTHONDONTWRITEBYTECODE=1
-  PYTHONPATH=sdk/python:sdk/python/tests
-  FWP_TEST_BIN=/private/tmp/fwp-terminal-763-mac/fwp python3
-  -W error::ResourceWarning -m unittest
-  test_tools.Tools.test_dead_notebook_process_requires_an_explicit_new_run
-  test_tools.Tools.test_notebook_replaces_definitions_and_never_replays_other_expressions
-  test_tools.Tools.test_notebook_input_cannot_consume_protocol_and_errors_leave_session_usable
-  test_tools.Tools.test_debugger_controls_typed_values_and_streams_events -v`:
-  four passes, 7.96 seconds. This uses the earlier CI-built compiler to check
-  Python changes; it does not validate new Rust code. No local compiler rebuild.
-- The same guarded SDK invocation with explicit `CC=cc` and
-  `FWP_OBJDUMP=/Library/Developer/CommandLineTools/usr/bin/llvm-objdump`, selecting
-  `test_tools.Tools.test_disassembly_compares_c_and_instruction_encodings_at_four_levels`:
-  pass, 1.46 seconds; actual ARM64 C/object instructions at O0/O1/O2/O3.
-- Guarded `scripts/check-roadmap.py`: pass, 3.01 seconds; 59 link sets, 106
-  preparation anchors and seven work areas. Guarded `/private/tmp/fwp-doc-audit.py`:
-  pass, 0.38 seconds; all tutorial copies/outputs and historical evidence links.
+The new `shutdown` suite covers every failed/stalled target and every changed
+ledger on Linux AMD64 and macOS ARM64. It does not replace full native acceptance.
 
-Full Linux acceptance must execute the WASI float probe. Cross-target disassembly
-establishes binary inspection, never native execution. Do not restart passing CI
-solely for bookkeeping; fold it into required repairs or keep a local handoff.
+## Existing evidence and limits
 
-## What this PR implements
+At `7bc07ff6`, [focused run 39178030845](https://github.com/e6qu/fun-with-pipes/actions/runs/39178030845)
+passed formatting, all-target Clippy, 49 Rust tests (zero skips), eleven Python
+checks, the real browser and recursion measurements. Documentation `39178000702`
+also passed. These results do not verify the current shutdown repair.
 
-- Cached numeric-map borrowing across proven non-suspending reads, eliminating
-  repeated retain/release operations. Unknown calls, escaping values and reentrant
-  destruction remain checked. Initializer timing and cleanup are preserved.
-  Direct tuple/variant results retain their correct representation.
-- Infix `==`, `!=`, `<`, `<=`, `>` and `>=`, below arithmetic and above pipes.
-  Operands evaluate left to right; ambiguous comparison chains are rejected.
-- Inverse trig, hyperbolic functions, logarithm/exponential variants, `atan2` and
-  `hypot` across the existing float formats without narrowing. These are scalar
-  operations; they do not extend the differentiation traits.
-- A persistent interpreter [REPL](repl.md): history, completion, multiline input,
-  type inspection, loading/saving, interruption and reset, without replaying old
-  effects. JSON protocol input stays separate from program input, including tasks.
-- A local browser [notebook](notebooks.md): code/Markdown cells, dependencies,
-  stale-result tracking, explicit reruns, interruption and source-only save/open.
-  Tests use actual Chromium on desktop/mobile layouts. The package must be
-  installed explicitly. No Jupyter kernel or automatic replay is implemented.
-- An interpreter [debugger and Python SDK](debugging.md): function/source-line
-  breakpoints, stepping, frames, typed values, raw float bits, events and input
-  files. Tutorial output matches raw interpretation. Inspection is read-only;
-  native-process debugging and foreign-C stepping are not implemented.
-- C/machine-code comparison through the same SDK, with explicit targets and
-  O0/O1/O2/O3 (optional Os/Oz/Og). Reports retain generated C, source locations,
-  actual instruction encodings, compiler commands/versions and binary hashes.
-  Focused CI inspects native AMD64 and cross ARM64 objects at all four levels.
-- Revised tutorials, [parser/compiler guide](compiler-pipeline.md), ownership and
-  tail-recursion proposals, benchmark methods and historical explanations.
-  Examples introduce notation and show why their output follows. Proposed weak
-  references and guaranteed tail recursion are not presented as implemented APIs.
+Runner measurements compare recursive fwp with an explicit fwp loop, not C/Rust.
+On Linux AMD64/Xeon 6973P-C/GCC 13.3, all eight variants have one 10-byte request
+(16 charged bytes), zero retains and zero final charge at both 1,000 and 1,000,000
+iterations. O0 recursive/explicit medians: tracing 3.60/5.85 ms; ARC 3.54/5.98 ms,
+including process startup/output/shutdown. **O2 eliminates the recursive countdown
+but retains the explicit loop**, so its timings do not establish equivalent
+executed-loop performance. All eight actual binary hashes match their disassembly
+in `/private/tmp/fwp-pr168-7bc0-evidence`. No general speedup is claimed.
+
+## Local checks
+
+Checks use `python3 scripts/local-guard.py`; no local compiler build or full suite.
+The guard initially refused an artifact download below 64 GiB free disk. After
+free space recovered above the unchanged limit:
+
+- `cargo fmt --all`: pass, 1.59 seconds.
+- `python3 scripts/test-native-test-runner.py`: nine tests pass, 3.88 seconds;
+  the deliberate timeout fails, kills its child and preserves later coverage.
+
+Cross-platform compiler/runtime verification remains on GitHub runners.
 
 ## Roadmap status
 
@@ -124,75 +96,5 @@ solely for bookkeeping; fold it into required repairs or keep a local handoff.
 
 The seven project work areas in [PLAN.md](../PLAN.md) remain open. Default tracing
 removal is unfinished. JIT is excluded. After this delivery, the next substantial
-work is cycle-safe ownership contracts and eligible tail-recursion elimination,
-selected and checked against representative programs.
-
-## Cached-map measurements
-
-The workload builds 500,000 entries and makes two million queries. Eight variants
-compare retained/borrowed access, joined/separate map storage and tracing/ARC.
-Each has 24 fresh-process samples in balanced rotating order. Timing includes
-startup, map construction, lookups, output and teardown; profiling is separate.
-This compares fwp revisions, not fwp with C/Rust.
-
-[Run 39128516933](https://github.com/e6qu/fun-with-pipes/actions/runs/39128516933)
-at `e1fb8ba3375f5765ef1448ed5c58fa1322d37c1f` passed all five jobs. Audit checked
-80 actual ELF/source/profile records and 60 focused tests. On the original
-Xeon 8573C, the retained joined layout reproduces the old slowdown: 1.0425 times
-the separate-layout time. Joined borrowing takes 0.9336 times the retained joined
-time, and 0.9733 times the old separate-layout time: 2.67% faster overall.
-The paired-bootstrap 95% interval for that overall ratio is 0.9659–0.9882.
-
-Retains fall from 2,000,001 to one; allocation/live-byte counts are unchanged,
-and final charged bytes are zero. Joined borrowing improves both modes on every
-measured host. Preserve the slower comparisons too: separate-layout borrowing
-has slower cells, and Neoverse N2's combined ARC comparison is 1.0174.
-[The benchmark guide](benchmarks.md#rechecking-the-original-xeon-slowdown) explains
-all comparisons and links raw reports. This settles the named map regression,
-not all layout or performance goals.
-
-Earlier integrated run `39125883230` at `085626f3` also passed all five jobs,
-80 binary/source/profile records and 60 checks, including Intel 8370C/6973P-C.
-Repeat run `39129855448` at `f957980a` passes all five jobs and 60 checks.
-Audit verified all 80 binaries/profiles and generated C; all match earlier
-same-architecture artifacts byte for byte. Two more Xeon samples give combined
-tracing ratios 0.9731 and 0.9702. All raw faster/slower results are retained in
-[the repeat report](measurements/cached-map-repeat-2026-10-18.json).
-Audits `/private/tmp/fwp-audit-map-borrow-f957.py` (31.90 s) and
-`/private/tmp/fwp-compare-map-programs.py` (0.15 s) pass through the unchanged guard.
-
-## Local evidence and workspaces
-
-Root `/Users/zardoz/projects/fun-with-pipes`, branch `clarify-docs-and-benchmarks`,
-is based on accepted PR #166 merge `de678a7d42af803948835cfbc43b4862b63164da`.
-[History](roadmap-history.md#numeric-map-and-set-construction-pr-166) records its
-nine production jobs and docs: 3,670 passed, zero failed, 72 ignored. This PR has
-not merged. The shared local `target/debug/fwp` is the older preparation compiler
-`774d838c8afccddf01cb2d3c0de498857c0d6f86`, not the current branch compiler.
-
-All local checks use `python3 scripts/local-guard.py COMMAND...`, serially,
-with unchanged limits. Recent results:
-
-- `python3 /private/tmp/fwp-python-import-audit.py`: 71 Python files compile,
-  imports at the top, empty initializers, AGENTS under 100 lines; PASS, 0.33 s.
-- `python3 /private/tmp/fwp-audit-map-borrow-e1.py`: actual map evidence audit;
-  PASS, 35.83 s. Raw artifacts: `/private/tmp/fwp-map-borrow-e1`.
-- `python3 /private/tmp/fwp-xeon-confidence.py`: paired-bootstrap calculation
-  from retained samples; PASS, 0.26 s. No new benchmark execution locally.
-- `cargo fmt --all -- --check`: PASS, 1.38 s.
-- `python3 /private/tmp/fwp-doc-audit.py`: Markdown links/tutorial copies;
-  PASS, 0.39 s. `scripts/check-roadmap.py`: 106 immutable preparation anchors,
-  seven roadmap areas and commit subjects; PASS, 2.70 s.
-- `python3 scripts/check-primitive-inventory.py`: PASS, 1.39 s; 394 declarations,
-  371 contracts, 19 IR templates, three flat scalars and one reviewed symbol.
-- JavaScript syntax: PASS, 0.21 s. `git diff --check` passes.
-
-Earlier guarded tutorial/native checks used the explicitly identified preparation
-compiler; remote focused checks above validate the integrated compiler. Earlier
-build, terminal-harness and process-cleanup failures were repaired and rerun;
-there is no known outstanding failure at `63a0b99b`.
-
-Full builds, tests and benchmarks belong on GitHub. A prior guard permission error
-passed unchanged on retry; do not bypass enforcement. A prior disk refusal was
-resolved by deleting verified regenerable disassembly while retaining binaries,
-sources and reports; manifest `/private/tmp/fwp-regenerable-disassembly-cleanup.json`.
+work is the next ownership/performance gap selected from representative programs
+and the measured results of this batch. Do not repeat this batch as a new task.

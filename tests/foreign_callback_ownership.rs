@@ -92,7 +92,7 @@ main = [
             assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
             assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
             code = format!("{runtime}{}", main
-                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t foreign_budget=fwp_gc.budget;\n")
+                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t foreign_budget=fwp_gc.budget_given;\n")
                 .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_foreign_callbacks || fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < foreign_budget) { fprintf(stderr,\"foreign bytes left: %ld\\n\",(long)(foreign_budget-fwp_gc.budget)); exit(193); }\n"));
         }
         for opt in ["-O1", "-O2"] {

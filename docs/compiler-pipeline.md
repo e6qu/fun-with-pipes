@@ -17,7 +17,7 @@ for a runnable macro example. An **AST** is a tree of source expressions; an
 | Infer and check | Expressions → ordinary types, effects, resource checks and resolved calls | `src/infer.rs`, `src/types.rs` |
 | Specialize and lower | Reachable concrete uses → typed IR; evaluate `comptime` expressions | `src/mono.rs`, `src/ir.rs` |
 | Preserve resources | Record original resource scopes before transformations | `src/resource.rs` |
-| Optimize | Matrix specialization → general simplification/inlining → known callback specialization → fusion | `src/fuse.rs`, `src/opt.rs` |
+| Optimize | Matrix specialization → simplification/inlining → known callback specialization → fusion → self-tail proof | `src/fuse.rs`, `src/opt.rs`, `src/tailrec.rs` |
 | Interpret | Execute the typed IR directly | `src/interp.rs` |
 | Or generate native code | Select representations, insert reference operations, check ARC eligibility when requested, emit C/runtime | `src/cgen.rs`, `src/rc.rs`, `src/ownership.rs` |
 | Compile and link | Generated C and required libraries → native executable/library or supported WebAssembly module | C toolchain, selected by `src/cgen.rs` |
@@ -27,7 +27,14 @@ must themselves be compiled before they can generate the final program. Thus
 “macros run before type checking” means before checking the final expanded user
 program, not that macro implementations are untyped.
 
-`FWP_NO_OPT=1` skips the four optimization stages listed above; it does not skip
+Self-tail analysis follows fusion, before native reference-count insertion.
+It marks eligible functions without changing their expression trees: native
+representation selection still sees their original record/variant fields and
+wide-number operations. Both backends reuse the marked frame after preparing
+all next arguments. [The recursion contract](design.md#tail-calls-and-recursion)
+explains eligibility, preserved cleanup and the raw/debugger exceptions.
+
+`FWP_NO_OPT=1` skips the optimization stages listed above; it does not skip
 parsing, expansion, type checking, lowering or resource preservation. Native
 ownership lowering is separate. Debug builds also validate local types after
 passes and check inserted reference operations. The interpreter uses Rust-owned

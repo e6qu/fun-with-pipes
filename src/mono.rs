@@ -1739,6 +1739,7 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
         check(&prog, "specializing");
         crate::fuse::fuse(&mut prog);
         check(&prog, "fusing");
+        crate::tailrec::analyze(&mut prog);
     }
     // In debug builds, check the reference-count insertion also used by native
     // code generation before passing the program to an execution backend.

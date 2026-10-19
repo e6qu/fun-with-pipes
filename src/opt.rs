@@ -35,7 +35,7 @@ fn size(e: &Expr) -> usize {
     }
 }
 
-fn calls(e: &Expr, id: FuncId) -> bool {
+pub(crate) fn calls(e: &Expr, id: FuncId) -> bool {
     match e {
         Expr::Trace(_, b)
         | Expr::Dup(_, b)
