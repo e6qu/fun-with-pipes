@@ -8,6 +8,10 @@ PR #173 remains the only active PR; its primary-checkout handoff owns acceptance
 The hash batch must follow it before this preparation is delivered. Do not push
 these changes onto either tested head or open a competing PR.
 
+The initial ARM probe `39326880740` at `72865856` was still queued when a
+local check caught the protocol fixture missing its required `# expose: cli`.
+That fixture is fixed; cancel the obsolete queued probe and dispatch this head.
+
 Next: run six native `integer-output` jobs and both-Linux `wasi-arc` checks on
 this source, inspect every failure, and retain actual binaries/allocation results.
 No full compiler integration or timing improvement is established yet.
@@ -38,6 +42,10 @@ unchanged limits. No full compiler build or benchmark ran locally.
   decimal formatting at O0/O2 in 1.03 seconds, including signed/unsigned extrema.
 - Accepted interpreter ran the 19-line fixture in 0.27 seconds; formatting passed
   in 0.01 seconds. These do not validate the new compiler recognition path.
+- Raw count, sharing, trap-order and binary-output fixture expectations passed
+  with the accepted interpreter in 0.61 seconds after the exposure fix.
+- The target-to-shard check passed in 0.15 seconds; documentation passed 61 sets,
+  106 anchors and seven work areas in 2.54 seconds.
 - Focused compiler/native integration, WASI, allocation controls and binary
   inspection remain pending; record their source and run IDs after dispatch.
 
