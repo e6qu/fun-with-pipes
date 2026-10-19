@@ -154,6 +154,8 @@ not the remaining container allocation or necessary sharing.
 control that restores wasted slots. Existing failure-injection tests cover
 partial construction, updates, aliases and cleanup. Constants, nested sets,
 JSON, text/binary decoding, hashing and WASI have regression coverage.
+[Measured storage](benchmarks.md#compact-set-storage-measured-allocation-size)
+records six-host byte counts and the binary inspection, separately from timing.
 [The handoff](development-state.md) distinguishes added checks from passing runs.
 
 ## Cached numeric map reads

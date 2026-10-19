@@ -22,13 +22,16 @@ Six-host collection run `39303492049` now checks the same preparation. Audit all
 hosts, then dispatch `suite=collection-report` with that run and its source ID.
 Keep evidence on its measured source; final PR acceptance still requires all
 nine production jobs and documentation for the eventual PR head.
+ARM macOS passed all 44 tests and all nine cases; the other five hosts are queued.
 
 The preparation passed Linux all-target Clippy, all 44 collection tests and all
 nine measurement cases. Both WASI hosts passed 24 tests each, including actual
 32-bit oversized-set rejection; no tests were ignored. Reports/logs are in
 `/private/tmp/fwp-range-linux-report.json`, `/private/tmp/fwp-range-set-linux.log`
-and `/private/tmp/fwp-range-wasi-{amd,arm}.log`. PR #172's six-host binary audit
-also passed; its report is `/private/tmp/fwp-compact-report.json`.
+and `/private/tmp/fwp-range-wasi-{amd,arm}.log`. The
+[Linux report](measurements/range-sets-linux-2026-10-19.json) and PR #172's
+[six-host binary audit](measurements/compact-sets-2026-10-19.json) are retained
+in the repository. They record their measured revisions, not this eventual PR head.
 
 ## Current batch
 
@@ -50,7 +53,7 @@ range-set binaries per host, and compares ordinary/direct construction at
 32/4,096/65,536 keys. It hashes every key and records eight timing samples per
 version. The collector audits all targets, allocations and binary formats.
 The [benchmark explanation](benchmarks.md#direct-integer-range-sets-comparison-in-preparation)
-distinguishes those pending timings from local allocation counts.
+distinguishes the initial Linux timings, pending full report and allocation counts.
 
 `bench/range-set` adds a million-key C/Rust/fwp comparison to the existing
 production benchmark gate. All three hash the same canonical bytes; the report
@@ -93,6 +96,11 @@ on GitHub. All local workloads use the primary checkout's shared
   Small-input samples overlap; retain the slightly slower small-input result.
   The largest case measured 2.112 ms versus 6.021 ms. These are whole-process
   fwp/fwp measurements, not C/Rust comparisons or a universal speed claim.
+- The guard stopped a later documentation check below 64 GiB free disk. Removed
+  only old downloaded artifacts from `/private/tmp/fwp-server-entry-evidence/39078070919`
+  after verifying all 24 originals remain available on GitHub; the tracked report
+  and source worktrees remain intact. Free disk returned to 65 GiB. The unchanged
+  guard then passed `python3 scripts/check-roadmap.py` in 2.73 seconds.
 
 ## Roadmap status
 
