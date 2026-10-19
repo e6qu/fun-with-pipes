@@ -2,113 +2,91 @@
 
 ## Next action
 
-This is the `specialize-numeric-hashes` preparation in
-`/private/tmp/fwp-specialize-numeric-hashes`, based on PR #173's head
-`3e4d0a372a79461d5482503b4d1b454ed7b7e347`. PR #173 remains the only active PR;
-its acceptance handoff is in the primary checkout. Production `39312560218`
-has passed benchmarks and both ARM macOS gates, with six platform jobs running; documentation
-`39312560173` passed. Do not replace that tested head.
+This is `specialize-numeric-hashes` in
+`/private/tmp/fwp-specialize-numeric-hashes`, based on PR #173's tested head
+`3e4d0a372a79461d5482503b4d1b454ed7b7e347`. PR #173 remains the only active PR.
+Eight of its nine production jobs passed in `39312560218`; Linux AMD64 is running.
+Documentation `39312560173` passed. Its acceptance handoff is in the primary
+checkout. Preserve that head, audit every gate and squash-merge only after all
+nine plus documentation pass. Use an explicit one-line subject and empty body.
 
-Preparation `6ffd2385a8207078cadd046d7dc2e3f3c389675f` is published. The initial
-Linux `hash` run `39314998423` passed 69 tests, none ignored, at `c05e592e`.
-Its compiler/runtime is unchanged; the latest fixture adds NaN/infinity cases.
-At `6ffd2385`, six-host `hash` run `39317215955` passed. Four completed logs
-were audited under the guard: 69 tests each, none ignored. ARM WASI passed all
-24 tests in run `39317221484`; AMD64 remains queued. Three of four `hash-costs`
-jobs in `39317226192` passed; Linux AMD64 remains queued. Inspect individual
-jobs: a workflow can say queued while some of its jobs have already passed.
-
-Next: finish auditing all three matrix runs. Fix every failure. Run `hash-report` with
-those exact test/cost run IDs and source revision, then inspect the saved inner
-loops before deciding whether to adopt the change. Its collector checks all
-69 tests per host, 96 correctness binaries and 48 measured fwp binaries.
-Run `hash-specialization-repeat` against the completed cost run at the same
-source: ARM macOS's small case is slower in its first median, with broad overlap.
-The repeat verifies exact saved binaries and takes 24 balanced samples after two
-warmups, comparing specialized ARC, generic ARC, C and Rust without rebuilding.
-Keep one active PR. After #173 passes and merges, replay accepted preparation
-on main, update the plan/evidence and require all final-head production gates.
+Next: finish documenting the completed hash measurements below, then replay this
+preparation on merged main and publish the next substantial PR. Require its own
+nine final-head production gates and documentation. Focused evidence is not a
+replacement for those gates. No focused failures remain.
 
 ## Prepared change
 
 The compiler emits direct hashing code for inline integers, F32/F64, their flat
 lists/arrays/sets, numeric maps and records composed of those types. Other types
-keep descriptor traversal. The original value remains borrowed; there is no
-new syntax, owner or encoded buffer. Packed/full-word array storage and slices
-have explicit loads; canonical widths, float bits, field/key order and length
-encoding remain unchanged. `FWP_TYPED_HASH=0` selects general traversal for
-controlled comparisons. Recursive type shapes are not expanded indefinitely.
+keep descriptor traversal. Hashing borrows its input, with no new owner or encoded
+buffer. Canonical widths, float bits, field/key order and length encoding stay
+unchanged. Packed/full-word arrays and slices use their actual storage widths.
+`FWP_TYPED_HASH=0` selects general traversal for controlled comparisons.
+Recursive type shapes are not expanded indefinitely. No syntax or API changes.
 
-The motivation is measured code, not an assumed universal speedup. PR #173's
-large range-set binaries still call the general visitor once per key. Linux
-AMD64 and ARM macOS disassembly is in
-`/private/tmp/fwp-range-cost-{ubuntu-latest,macos-15}.asm`, from report artifact
-`12215946946` and source `7901a576`. Earlier hash comparisons also retain
-small-input C/Rust gaps in [the benchmark guide](benchmarks.md#repeating-the-allocation-and-borrowing-changes-together).
-The final-head million-key benchmark passed too: tracing fwp takes 6.1%/6.9%
-more whole-process median time than C/Rust on its Linux AMD64 runner. The
-[complete report](measurements/range-set-peers-2026-10-19.md) retains all samples
-and the other five programs; this is a baseline, not a specialization result.
+The tests compare raw interpretation with ARC and stressed tracing at O0/O2,
+with specialization and array packing independently on/off. They cover scalar
+boundaries, NaN/infinity, slices, aliases, mixed map widths and named records.
+Negative controls must detect deliberately inserted allocation and retain calls.
+WASI runs the same fixture, including shutdown cleanup.
 
-One added test covers scalar boundaries, packed/full-word arrays, slices,
-sharing, mixed map widths and named records. It compares raw interpretation
-with generated ARC/stressed-tracing O0/O2 code, with specialization on/off.
-A second probe asserts no allocation or reference-count operations inside the
-new bodies, and must detect deliberately added allocation/retain calls.
-The WASI shutdown corpus now includes the same fixture. All six native jobs
-passed the expanded fixture and negative controls; AMD64 WASI remains pending.
+## Completed evidence
 
-The measurement script compares specialized ARC/tracing, generic ARC, buffered
-ARC, C and Rust in twelve balanced samples. It keeps the two array cases and
-adds 65,536-key sets hashed 64 times, with their three-byte length prefix recorded
-correctly. Buffered hashing explicitly disables specialization so that its
-control still measures the encoded buffer. Rust imports were moved out of the
-measurement program's main function. Initial reports are in
-`/private/tmp/fwp-numeric-hash-{arm,macos-15,macos-15-intel}-report.json`.
-On Neoverse N2, large-array/set CPU ratios versus generic ARC are 0.980/0.983,
-with non-overlapping samples and unchanged allocation/owner profiles. Small
-ARC still takes 28.7%/12.7% more CPU than C/Rust. ARM macOS's small median is
-10.1% slower than generic ARC; all its ranges overlap widely, so repeat before
-acceptance. Intel macOS also has broad overlap. No cross-platform speed claim.
-The inspected ARM set hash body (`f7`, 0x2130–0x2240) has no calls or stack
-accesses; the general visitor recursively calls itself per key. The caller still
-stores a stack tuple and calls once per hash. Native binary sizes fall on all
-three measured hosts. Counters remain two managed requests and zero retains;
-the complete report must retain exact sizes, scopes and raw samples.
+Measured source `6ffd2385a8207078cadd046d7dc2e3f3c389675f` is preserved by
+`roadmap/revision-numeric-hash-6ffd2385`. Compiler generation is unchanged since
+`c05e592e`; later ownership edits only move imports and correct a slice comment.
+Collector/repeat source `524e917d46bc25e7c78a5ed09a3d25581411bc47` is preserved by
+`roadmap/revision-numeric-hash-report-524e917d`.
+
+- Six-native-host run `39317215955`: 69 tests per host, 414 total, none ignored.
+  Both-Linux WASI run `39317221484`: 24 tests per architecture, none ignored.
+- Four-host costs `39317226192` and report `39322404918` passed. The collector
+  checks complete logs, source/binary hashes, sample balance, ownership counts,
+  native sections and tracing symbols: 96 correctness and 48 measured binaries.
+  [Initial report](measurements/numeric-hashing-2026-10-19.json).
+- Repeat `39322408959` passed all four hosts using those verified binaries:
+  24 balanced samples after two warmups, 1,152 timed executions.
+  [Repeated report](measurements/numeric-hashing-repeat-2026-10-19.json).
+- Linux ARM64 large-array/set repeated CPU medians improve 2.1%/1.5%; all 24
+  pairs improve. Other hosts have overlapping samples. The first ARM macOS
+  small-case slowdown does not repeat. Linux AMD64 sets remain 0.13%/0.21%
+  slower in the two medians with overlapping ranges: no speedup or established
+  regression there. AMD64 hardware changed from EPYC 9V45 to 9V74 between runs.
+- Specialized/general ARC profiles match: two managed requests, zero retains,
+  zero charge after cleanup. Output formatting accounts for the second request.
+  C/Rust profiles count only their application input buffer. Small fwp workloads
+  still cost up to 36.6% more CPU than C and 22.6% more than Rust.
+- Actual code sections shrink 1,432–1,952 bytes. Inspected ARM inner loops have
+  no calls or stack accesses; AMD64 saves a register around the function. The
+  caller still stores a stack tuple and calls once per hash. No zero-stack,
+  zero-heap or universal C/Rust parity claim follows.
+
+[The benchmark guide](benchmarks.md#numeric-hash-specialization) explains workloads,
+scopes, ratios and remaining costs. The separate
+[production baseline](measurements/range-set-peers-2026-10-19.md) retains all six
+benchmark programs from PR #173, including raw samples and slower results.
 
 ## Local checks and repairs
 
-All workloads use the primary checkout's `python3 scripts/local-guard.py`, with
-unchanged limits. No new compiler build or full benchmark ran locally.
+All workloads use the primary checkout's `python3 scripts/local-guard.py` with
+unchanged limits. Full compiler builds and benchmarks ran only on GitHub.
 
-- `cargo fmt --all` passed in 1.55/1.42 seconds during preparation.
-- Python syntax checks passed in 0.15 seconds; the documentation audit passed
-  60 document sets, 106 immutable anchors and seven work areas in 2.87 seconds.
-- Latest fixture formatting passed in 0.01 seconds and documentation in 2.54
-  seconds. `scripts/test-hash-evidence.py` passed three rejection/audit checks
-  in 0.22 seconds; complete binary inspection runs on GitHub.
-- The accepted compiler at `/private/tmp/fwp-170-accepted-macos/fwp-macos-arm64/fwp`
-  ran the original 18-line fixture in 0.27 seconds. Its first syntax check correctly
-  required explicit `Hash[a]` and `make Samples`; both were fixed. Formatting passed.
-- Added F32/F64 NaN and infinity cases: all 20 output lines pass raw interpretation
-  (`FWP_NO_OPT=1`) in 0.27 seconds. These additions postdate the first queued run.
-- `/private/tmp/fwp-check-numeric-hash-generator.py` passed 128 comparisons against
-  existing canonical runtime hashing in 2.51 seconds, at O0/O2 with packing on/off.
-  It extracts the actual generator function into a small type-model harness and
-  uses accepted C scaffolding; it does not establish full compiler integration.
-  Cases cover slices, zero/129 lengths, NaN bits, mixed map widths and records;
-  recursive shapes and wide arrays remain unexpanded.
-- `/private/tmp/fwp-check-hash-peer-source.py` compiled the edited Rust measurement
-  sources with warnings as errors and checked a 16-key allocation ledger in 1.58
-  seconds. This is a tiny correctness check, not a local benchmark.
-- Review caught that arrays can disable packing. Generated loads now select
-  the actual storage width, and the new native matrix tests both settings.
-- Reference-count instrumentation includes retain, share, drop and last-release;
-  allocation instrumentation includes native allocation fast paths and libc calls.
-  All six native jobs passed their negative controls.
-- Review also corrected an obsolete claim that all slices copy storage: array
-  views retain their backing owner. Moved primitive-contract imports out of the
-  function. Formatting passed in 1.59 seconds; these changes do not alter contracts.
+- Formatting, Python syntax and documentation checks passed during preparation.
+- Extracted actual numeric generator: 128 runtime-reference comparisons passed
+  at O0/O2 with packed/full-word storage in 2.51 seconds. CI verifies integration.
+- Raw interpretation of the 20-line fixture passed in 0.27 seconds; tiny Rust
+  measurement-source/allocator checks passed in 1.58 seconds.
+- Completed native/WASI log audit passed in 0.22 seconds. Report download and
+  validation passed in 6.81 seconds; all four repeat reports in 6.84 seconds.
+- Review fixed full-word array loads and the three-byte set length prefix. It
+  also corrected an obsolete claim that all slices copy: views retain backing
+  owners. Primitive-contract and measurement-source imports now stay at the top.
+- `scripts/test-hash-evidence.py` passed four checks in 0.22 seconds: incomplete
+  logs, wrong revision/status, changed saved binaries, and balanced repeat order.
+- Documentation audit passed 61 document sets, 106 immutable anchors and seven
+  work areas in 2.45 seconds. Its first run caught a missing roadmap-status table
+  in the shortened handoff; restoring the table fixed it.
 
 ## Roadmap status
 
@@ -122,5 +100,8 @@ unchanged limits. No new compiler build or full benchmark ran locally.
 | 6 | In progress | Reproducible comparisons and regression budgets |
 | 7 | In progress | Representative larger applications |
 
-All seven areas in [PLAN.md](../PLAN.md) remain open. Do not treat preparation,
-a skipped check or a timing median alone as completed support. JIT is excluded.
+All seven areas in [PLAN.md](../PLAN.md) remain open: ownership/tracing removal,
+functional costs, machine performance, autodiff, numerical kernels, dependable
+comparisons and larger applications. Persistent subscriptions, unknown retained
+captures, resource-owning tail frames and mutual recursion still need proofs.
+JIT is excluded. Completed measurements do not complete these work areas.
