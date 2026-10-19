@@ -215,6 +215,7 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
         ("text-decoders", include_str!("fixtures/text_decoder_ownership.fwp")),
         ("metrics", include_str!("fixtures/metrics_ownership.fwp")),
         ("cpu-kernels", include_str!("fixtures/cpu_kernel_ownership.fwp")),
+        ("mixed-tail-recursion", include_str!("fixtures/mixed_tail_recursion.fwp")),
         ("fresh-numerics", r#"
 main = [
     range 0 16 | map (const [1u128, 340282366920938463463374607431768211455u128] | map (checked.add 1u128)) | echo,
@@ -226,7 +227,12 @@ main = [
     ];
     for (name, program) in programs {
         let source = dir.join(format!("{name}.fwp"));
-        std::fs::write(&source, program).unwrap();
+        let reference_program = if name == "mixed-tail-recursion" {
+            program.replace("200000", "20").replace("200001", "21")
+        } else {
+            program.to_string()
+        };
+        std::fs::write(&source, reference_program).unwrap();
         let reference = checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
                 .args(["run", "--interp"])
@@ -234,6 +240,7 @@ main = [
                 .arg(&source)
                 .current_dir(dir.path()),
         );
+        std::fs::write(&source, program).unwrap();
         let code = emit(&source, &dir.join("program.c"), &[], "wasm32-wasi");
         let instrumented = measured_program(&code);
         let needle = "    free((void *)(uintptr_t)value);";
@@ -259,7 +266,12 @@ main = [
             assert_ne!(missing_metrics_shutdown, instrumented);
             candidates.push((&missing_metrics_shutdown, 244));
         }
-        for opt in ["-O1", "-O2"] {
+        let levels = if name == "mixed-tail-recursion" {
+            ["-O0", "-O2"]
+        } else {
+            ["-O1", "-O2"]
+        };
+        for opt in levels {
             for &(candidate, expected) in &candidates {
                 let binary = dir.join("program.wasm");
                 fwp::cgen::compile_for(

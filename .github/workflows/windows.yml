@@ -27,6 +27,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_UDP_ARTIFACTS: ownership-evidence/udp
+      FWP_TAIL_ARTIFACTS: ownership-evidence/tail
     steps:
       - uses: actions/checkout@v7
         with:
@@ -197,3 +198,4 @@ jobs:
             windows-host.txt
             windows-probe.log
             ownership-evidence/udp/
+            ownership-evidence/tail/

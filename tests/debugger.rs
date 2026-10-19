@@ -65,6 +65,66 @@ fn protocol_steps_inspects_and_traces_without_mixing_program_output() {
 }
 
 #[test]
+fn mixed_recursion_keeps_debugger_calls_and_return_order() {
+    let dir = fwp::cgen::TempDir::new("debugger-recursion").unwrap();
+    let source = dir.join("program.fwp");
+    std::fs::write(
+        &source,
+        "rec mixed : I64 -> I64\nmixed = match\n    0 -> 0\n    1 -> 0 | mixed | add 1\n    _ -> sub 1 | mixed\nmain = 4 | mixed | echo\n",
+    )
+    .unwrap();
+    let mut process = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .args(["debug", "--json"])
+        .arg(&source)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    process
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(
+            b"{\"id\":1,\"command\":\"trace\",\"argument\":\"call return\"}\n{\"id\":2,\"command\":\"continue\"}\n",
+        )
+        .unwrap();
+    let output = process.wait_with_output().unwrap();
+    assert!(output.status.success(), "{output:?}");
+    assert!(output.stderr.is_empty(), "{output:?}");
+    let messages: Vec<_> = std::str::from_utf8(&output.stdout)
+        .unwrap()
+        .lines()
+        .map(|line| Json::parse(line).unwrap())
+        .collect();
+    let events: Vec<_> = messages
+        .iter()
+        .filter(|message| message.get("function").and_then(Json::as_str) == Some("mixed"))
+        .collect();
+    assert_eq!(events.len(), 10, "{events:?}");
+    let mut depths = Vec::new();
+    for event in &events[..5] {
+        assert_eq!(event.get("event").and_then(Json::as_str), Some("call"));
+        let Json::Num(depth) = event.get("depth").unwrap() else {
+            panic!("missing call depth: {event}")
+        };
+        depths.push(depth.parse::<usize>().unwrap());
+    }
+    assert!(
+        depths.windows(2).all(|pair| pair[0] < pair[1]),
+        "{depths:?}"
+    );
+    for (event, depth) in events[5..].iter().zip(depths.into_iter().rev()) {
+        assert_eq!(event.get("event").and_then(Json::as_str), Some("return"));
+        assert_eq!(event.get("depth"), Some(&Json::Num(depth.to_string())));
+    }
+    assert!(messages.iter().any(|message| {
+        message.get("event").and_then(Json::as_str) == Some("output")
+            && message.get("text").and_then(Json::as_str) == Some("1\n")
+    }));
+}
+
+#[test]
 fn disassembly_keeps_encoding_and_assembly_separate() {
     let text = "Disassembly of section .text:\n0000000000000000 <worker>:\n       0: 48 01 c0   \tadd\t%rax, %rax\n       3: c3         \tretq\n";
     let parsed = fwp::disassemble::parse(text);

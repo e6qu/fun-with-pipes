@@ -23,6 +23,15 @@ including native O0 builds.
 `count-back` keeps ordinary recursion because additions remain pending. Other
 calls inside an iteration can still recurse or allocate.
 
+A function can contain both kinds of call. In `mixed`, the `1` branch calls
+`mixed` on zero and then adds one; that call needs an ordinary frame. The `_`
+branch subtracts one and returns the recursive result directly, so it reuses
+its frame. Starting from four follows `4 → 3 → 2 → 1 → 0` and returns one.
+Even a much larger positive input leaves only one addition pending. By contrast,
+`count-back` leaves one pending addition per step. Calls used to compute another
+call's arguments also need ordinary frames: this optimization does not make
+arbitrary recursion use constant stack space.
+
 Resource cleanup, task/channel owners and unknown closure captures can prevent
 this proof. `FWP_DUMP_IR=1` explains lowering decisions. The raw interpreter
 (`FWP_NO_OPT=1`) and source debugger preserve original recursive calls; use the
@@ -86,6 +95,12 @@ count-back = match
     0 -> 0
     _ -> sub 1 | count-back | add 1
 
+rec mixed : I64 -> I64
+mixed = match
+    0 -> 0
+    1 -> 0 | mixed | add 1
+    _ -> sub 1 | mixed
+
 down-step : I64 -> Step[I64, I64]
 down-step = match
     0 -> Stop 0
@@ -101,6 +116,7 @@ ring =
 main = [
     4 | down | echo,
     4 | count-back | echo,
+    4 | mixed | echo,
     100000 | down-loop | echo,
     [1, 2, 3] | preserve-old | echo,
     ring | map .next | echo,
@@ -112,6 +128,7 @@ main = [
 ```text
 0
 4
+1
 0
 ([1, 2, 3], [2, 3, 4])
 [[1], [0]]
@@ -122,7 +139,7 @@ without an outside owner. fwp's [proposed cycle policy](../../ownership.md#propo
 explores scoped owners and explicit weak links. Weak-reference APIs are not
 implemented; this lesson uses only existing language features.
 The [tail-call design](../../design.md#tail-calls-and-recursion) describes the
-planned compiler/interpreter guarantee and the cleanup rules it must preserve.
+implemented frame reuse, remaining limits and cleanup rules.
 
 ---
 

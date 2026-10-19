@@ -89,6 +89,6 @@ obligation after a defined roadmap milestone is complete.
 
 [Ownership contracts](ownership.md#proposed-cycle-policy) explain callback and
 channel restrictions, weak references and scoped cleanup.
-[Tail calls](design.md#tail-calls-and-recursion) separate existing native
-optimizations from the proposed constant-stack guarantee.
+[Tail calls](design.md#tail-calls-and-recursion) explain implemented self-tail
+frame reuse and the limits of extending it to other calls.
 The [plan](../PLAN.md) owns priorities; this page owns their feasibility limits.

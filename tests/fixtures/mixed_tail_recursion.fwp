@@ -1,0 +1,53 @@
+rec mixed : I64 -> I64
+mixed = match
+    0 -> 0
+    1 -> 0 | mixed | add 1
+    _ -> sub 1 | mixed
+
+rec mixed-swap : (I64, String, String) -> (String, String)
+mixed-swap =
+    if
+        (.0 | eq 0)
+        (both .1 .2)
+        (if
+            (.0 | eq 1)
+            (make { 0 = const 0, 1 = .1, 2 = .2 }
+                | mixed-swap
+                | both (.0 | concat "!") .1)
+            (make { 0 = .0 | sub 1, 1 = .2, 2 = .1 } | mixed-swap))
+
+rec nested : I64 -> I64
+nested = match
+    0 -> 0
+    _ -> sub 1 | nested | nested
+
+rec observed : I64 -> I64 ! {IO, Error[String]}
+observed = match
+    0 -> "stop" | fail
+    1 -> 1 | tap echo | const 0 | observed | add 1
+    _ -> tap echo | sub 1 | observed
+
+rec ordered : I64 -> I64 -> I64 ! {IO, Error[String]}
+ordered = curry (if
+    (.0 | eq 0)
+    (const "argument" | fail)
+    (fork ordered (fork ordered (.0 | sub 1) .1) (.1 | tap echo)))
+
+rec wide-mixed : I128 -> I128
+wide-mixed = match
+    0 -> 0i128
+    1 -> 0i128 | wide-mixed | add 1i128
+    _ -> sub 1i128 | wide-mixed
+
+main = [
+    200000 | mixed | echo,
+    (200001, "left", "right") | mixed-swap | echo,
+    "shared"
+    | string.repeat 2
+    | both id (make { 0 = const 200001, 1 = id, 2 = id } | mixed-swap)
+    | echo,
+    6 | nested | echo,
+    3 | attempt observed | echo,
+    (1, 99) | attempt (uncurry ordered) | echo,
+    200000i128 | wide-mixed | echo,
+] | ignore

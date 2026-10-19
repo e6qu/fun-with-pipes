@@ -311,6 +311,22 @@ fn session_keeps_tail_recursion_proofs_when_function_ids_change() {
                 Some("0")
             );
         }
+        session
+            .submit(
+                "rec mixed : I64 -> I64\nmixed = match\n    0 -> 0\n    1 -> 0 | mixed | add 1\n    _ -> sub 1 | mixed",
+                &mut output,
+            )
+            .unwrap();
+        for _ in 0..2 {
+            assert_eq!(
+                session
+                    .submit("200000 | mixed", &mut output)
+                    .unwrap()
+                    .value
+                    .as_deref(),
+                Some("1")
+            );
+        }
         assert_eq!(output, b"42\n");
     });
 }

@@ -12,6 +12,24 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Acyclic nested channel ownership (PR #170)
+
+[PR #170](https://github.com/e6qu/fun-with-pipes/pull/170) merged as
+`903482e856e33f4206a04f1cd1ddf73123fc6c29`, with the same files as tested head
+`142117d22e140049032dba4e2c61676210649373`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39259766176)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39259766267)
+passed before the squash merge.
+
+Checked ARC now accepts a queue containing another channel when payload types
+prove that ownership cannot loop back. Native and WebAssembly tests cover aliases,
+undrained queues, failure and cancellation. Both Windows checks were repaired to
+use the compiler's explicit `.exe` filename for execution and symbol inspection.
+The preceding run's only failures were that filename mismatch on Windows.
+This removes a compile-time rejection, not allocation or reference-count work;
+unknown captures and arbitrary owning cycles remain excluded. Lesson 23 explains
+the accepted routing pattern.
+
 ## Static constants and complete shutdown checks (PR #169)
 
 [PR #169](https://github.com/e6qu/fun-with-pipes/pull/169) merged as

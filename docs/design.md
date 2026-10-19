@@ -615,16 +615,24 @@ bounded call-stack space for the recurrence, including native O0 builds.
 The current revision's [handoff](development-state.md) records validation;
 implementation is not itself platform acceptance.
 
-Eligibility requires every self reference to be a direct tail call and the
-frame's types to describe plain immutable data. Closures with unknown captures,
-resource/task/channel owners, calls nested in arguments and remaining work after
-a call keep ordinary recursion. Resource regions cannot be discarded. Function
+Eligibility requires at least one direct self call in tail position and the
+frame's types to describe plain immutable data. A function may also contain
+ordinary recursive calls: calls used to compute arguments, bindings, match
+scrutinees or a later calculation keep their own frames. Only a chain of eligible
+tail transfers has bounded stack use; other recursion can still grow the stack.
+For example, [lesson 22](tutorials/22-recursion-and-sharing/README.md) mixes a
+tail countdown with a branch that performs one addition after a recursive call.
+
+Closures with unknown captures and resource/task/channel owners still prevent
+frame reuse. Resource regions and debugger frames cannot be discarded. Function
 parameters are prepared in their original order before becoming next-iteration
 state, including swaps and multiple curried arguments. This adds no source
 syntax or intermediate `Step` values. Native record/variant arguments keep their
 existing field layout; the interpreter keeps its ordinary value objects. Native
 frames selected for reuse do not allocate local stack objects that could become
-next-iteration state. Direct fields remain available without such objects.
+next-iteration state. Direct fields remain available without such objects. This
+restriction can leave heap allocations that a non-reused frame could place on
+the stack; broader eligibility is not by itself proof of lower total cost.
 
 `FWP_DUMP_IR=1 fwp run --interp program.fwp` reports each direct-self-recursion
 lowering decision. A rejection states what prevents the proof; it does not say
@@ -681,8 +689,12 @@ interpreter/native agreement, all supported native architectures and supported
 WebAssembly modes, applicable optimization levels, checked ARC and tracing,
 aliases, argument swaps, resource/handler cleanup, cancellation and negative
 eligibility cases. Inspect generated C and machine code; a deep run alone does
-not identify which transformation occurred. This section records source review
-and proposed work, not new execution or performance evidence.
+not identify which transformation occurred. Native regression tests retain generated C, executables and disassembly when
+`FWP_TAIL_ARTIFACTS` names an output directory. Mixed-call tests compare deep
+optimized execution with a smaller raw-interpreter reference, including O0/O2,
+aliases, failure order and cancellation. These are correctness checks, not timing
+comparisons; the [handoff](development-state.md) distinguishes pending checks from
+accepted results.
 
 ## Numerical specialization
 
