@@ -1295,6 +1295,82 @@ fn scalar(mt: &MT) -> Option<Scalar> {
     })
 }
 
+/// Emit canonical hashing for inline numbers, their flat collections and
+/// records containing those values. The input stays borrowed throughout.
+/// Other representations retain their descriptor-based traversal.
+fn numeric_hash_body(
+    shapes: &Shapes,
+    ty: &MT,
+    value: &str,
+    active: &mut Vec<MT>,
+) -> Option<String> {
+    let bytes = |ty| match scalar(ty)? {
+        Scalar::Signed(bits) | Scalar::Unsigned(bits) => Some(bits / 8),
+        Scalar::F32 => Some(4),
+        Scalar::F64 => Some(8),
+    };
+    if let Some(width) = bytes(ty) {
+        return Some(format!(
+            "hash_state = fwp_hash_le(hash_state, {value}, {width});\n"
+        ));
+    }
+    if active.contains(ty) {
+        return None;
+    }
+    let depth = active.len();
+    active.push(ty.clone());
+    let v = format!("hash_value{depth}");
+    let i = format!("hash_index{depth}");
+    let n = format!("hash_length{depth}");
+    let result = (|| {
+        let fields = match ty {
+            MT::Record(fields) => Some(fields),
+            _ => match shapes.get(ty) {
+                Some(TypeShape::Record(fields)) => Some(fields),
+                _ => None,
+            },
+        };
+        if let Some(fields) = fields {
+            let mut body = format!("{{ V {v} = {value}; (void){v};\n");
+            for (index, (_, field)) in fields.iter().enumerate() {
+                body.push_str(&numeric_hash_body(
+                    shapes,
+                    field,
+                    &format!("OBJ({v})->f[{index}]"),
+                    active,
+                )?);
+            }
+            body.push_str("}\n");
+            return Some(body);
+        }
+        let MT::Con(name, elements) = ty else {
+            return None;
+        };
+        let widths = elements.iter().map(bytes).collect::<Option<Vec<_>>>()?;
+        let mut body = format!("{{ V {v} = {value};\n");
+        match (name.as_str(), widths.as_slice()) {
+            ("std::Array", [width]) => {
+                let bits = width * 8;
+                body.push_str(&format!("uint64_t {n} = fwp_array_len({v});\nconst unsigned char *hash_data{depth} = fwp_array_data({v});\nhash_state = fwp_hash_leb128(hash_state, {n});\nfor (uint64_t {i} = 0; {i} < {n}; {i}++) {{\n#if FWP_PACKED_ARRAYS\nuint{bits}_t hash_word{depth};\n#else\nV hash_word{depth};\n#endif\nmemcpy(&hash_word{depth}, hash_data{depth} + {i} * sizeof hash_word{depth}, sizeof hash_word{depth});\nhash_state = fwp_hash_le(hash_state, hash_word{depth}, {width});\n}}\n"));
+            }
+            ("std::List", [width]) => {
+                body.push_str(&format!("hash_state = fwp_hash_leb128(hash_state, fwp_list_len({v}));\nwhile ({v}) {{\nhash_state = fwp_hash_le(hash_state, OBJ({v})->f[0], {width});\n{v} = OBJ({v})->f[1];\n}}\n"));
+            }
+            ("std::Set", [width]) => {
+                body.push_str(&format!("uint64_t {n} = MAP({v})->len;\nhash_state = fwp_hash_leb128(hash_state, {n});\nfor (uint64_t {i} = 0; {i} < {n}; {i}++)\nhash_state = fwp_hash_le(hash_state, MAP({v})->d[{i}], {width});\n"));
+            }
+            ("std::Map", [key, item]) => {
+                body.push_str(&format!("uint64_t {n} = MAP({v})->len;\nhash_state = fwp_hash_leb128(hash_state, {n});\nfor (uint64_t {i} = 0; {i} < {n}; {i}++) {{\nhash_state = fwp_hash_le(hash_state, MAP({v})->d[2 * {i}], {key});\nhash_state = fwp_hash_le(hash_state, MAP({v})->d[2 * {i} + 1], {item});\n}}\n"));
+            }
+            _ => return None,
+        }
+        body.push_str("}\n");
+        Some(body)
+    })();
+    active.pop();
+    result
+}
+
 impl Scalar {
     /// The C type a value of this type is computed in.
     fn c(self) -> &'static str {
@@ -6498,7 +6574,17 @@ impl<'p> Gen<'p> {
                     if sym == "min" { "<=" } else { ">=" }
                 )
             }
-            "hash" => format!("return fwp_hash(l0, {});", self.desc(&p(0))),
+            "hash" => {
+                let body = if std::env::var("FWP_TYPED_HASH").map_or(true, |v| v != "0") {
+                    numeric_hash_body(&self.prog.shapes, &p(0), "l0", &mut Vec::new())
+                } else {
+                    None
+                };
+                match body {
+                    Some(body) => format!("/* numeric hash without type dispatch */\nuint64_t hash_state = 0xcbf29ce484222325ULL;\n{body}return hash_state;"),
+                    None => format!("return fwp_hash(l0, {});", self.desc(&p(0))),
+                }
+            }
             "not" => "return l0 == FWP_TRUE ? FWP_FALSE : FWP_TRUE;".into(),
             "and" => "return (l0 == FWP_TRUE && l1 == FWP_TRUE) ? FWP_TRUE : FWP_FALSE;".into(),
             "or" => "return (l0 == FWP_TRUE || l1 == FWP_TRUE) ? FWP_TRUE : FWP_FALSE;".into(),
