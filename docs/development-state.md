@@ -20,6 +20,8 @@ Both failed Windows logs were audited: their only failed test is
 bypasses fwp's binary-stream setup, so Windows translated `\n` to `\r\n`.
 The probe now selects binary stdout explicitly; arithmetic checks are unchanged.
 Both this target and integer output now join permanent Windows production CI.
+Both multi-target Windows preflight commands finish their targets after a test
+failure, so one failed target cannot hide failures in the others.
 The WASI allocation diagnostics also advance the output phase for the new print
 function, preserving useful leak locations. Neither repair changes generated code.
 
@@ -59,8 +61,11 @@ with its exact `evidence_run` and `source_revision`. Do not use the failed
 seven tests on all six hosts, rejects ignored/missing cases, verifies source
 identity and inspects 144 actual binaries and their tracing symbols. It records
 assembly and section sizes; inspect the output code before making stack claims.
+Both original WASI jobs (`39330737723`) passed 24 tests each, none ignored.
+The rerun still verifies the repaired diagnostic instrumentation at `7876237a`.
 No complete collector result exists yet. Its three validation tests pass in
 0.16 seconds, and the four existing hash-audit tests pass in 0.15 seconds.
+The six existing collection-audit tests also pass in 0.22 seconds.
 
 A guarded read-only inspection of twelve saved ARM macOS O2 binaries passed in
 3.19 seconds. The direct print-then-trap program has no scan/mark/sweep symbols
