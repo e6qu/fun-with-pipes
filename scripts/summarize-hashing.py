@@ -97,6 +97,7 @@ def main():
                 assert case['canonicalBytesPerHash'] == 8 + max(1, (n.bit_length() + 6) // 7) + 8*n
                 assert (directory / name / 'hash.fwp').read_text() == case['source']
                 assert set(case['variants']) == {'fwp-tracing', 'fwp-arc', 'fwp-arc-generic', 'fwp-arc-buffered', 'c', 'rust'}
+                assert case['variants']['fwp-arc']['profile'] == case['variants']['fwp-arc-generic']['profile'], (host, name, 'specialization changed allocation or owner counts')
                 for label, variant in case['variants'].items():
                     folder = directory / name
                     source = folder / ('reference.rs' if label == 'rust' else label + '.c')
