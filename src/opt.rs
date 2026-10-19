@@ -108,6 +108,7 @@ impl<'p> Opt<'p> {
                     | crate::value::Value::Record(_)
                     | crate::value::Value::Array(_)
                     | crate::value::Value::Map(_)
+                    | crate::value::Value::Set(_)
                     | crate::value::Value::Closure(_)
             ),
             _ => false,
@@ -919,6 +920,7 @@ fn bind_captures(
                     | crate::value::Value::Record(_)
                     | crate::value::Value::Array(_)
                     | crate::value::Value::Map(_)
+                    | crate::value::Value::Set(_)
                     | crate::value::Value::Closure(_)
             ) =>
         {

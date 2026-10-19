@@ -304,15 +304,19 @@ impl<'a> P<'a> {
                     let is_set = prim(mt) == "Set";
                     self.expect(if is_set { "set" } else { "map" })?;
                     let (kt, vt) = (arg(mt, 0), arg(mt, 1));
+                    if is_set {
+                        let mut values = std::collections::BTreeSet::new();
+                        self.list_of("{", "}", |p| {
+                            values.insert(p.value(&kt, false)?);
+                            Ok(())
+                        })?;
+                        return Ok(Value::Set(Rc::new(values)));
+                    }
                     let mut m = BTreeMap::new();
                     self.list_of("{", "}", |p| {
                         let k = p.value(&kt, false)?;
-                        let v = if is_set {
-                            Value::unit()
-                        } else {
-                            p.expect(":")?;
-                            p.value(&vt, false)?
-                        };
+                        p.expect(":")?;
+                        let v = p.value(&vt, false)?;
                         m.insert(k, v);
                         Ok(())
                     })?;

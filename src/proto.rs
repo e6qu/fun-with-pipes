@@ -98,15 +98,19 @@ pub fn encode(out: &mut Vec<u8>, v: &Value, mt: &MT, prog: &Program) {
                 encode(out, x, &t, prog);
             }
         }
+        Value::Set(items) => {
+            leb128(out, items.len() as u64);
+            let key = elem(mt, 0);
+            for value in items.iter() {
+                encode(out, value, &key, prog);
+            }
+        }
         Value::Map(m) => {
             leb128(out, m.len() as u64);
-            let is_set = matches!(mt, MT::Con(n, _) if n == "std::Set");
             let (kt, vt) = (elem(mt, 0), elem(mt, 1));
             for (k, x) in m.iter() {
                 encode(out, k, &kt, prog);
-                if !is_set {
-                    encode(out, x, &vt, prog);
-                }
+                encode(out, x, &vt, prog);
             }
         }
         Value::Closure(_) | Value::File(_) | Value::Native(_) => {}
@@ -295,14 +299,17 @@ pub fn decode(r: &mut Reader, mt: &MT, prog: &Program) -> Result<Value, String> 
                 let empty_wire =
                     wire_empty(&kt, prog) && (prim(mt) == "Set" || wire_empty(&vt, prog));
                 let n = r.count(empty_wire, true)?;
+                if prim(mt) == "Set" {
+                    let mut values = std::collections::BTreeSet::new();
+                    for _ in 0..n {
+                        values.insert(decode(r, &kt, prog)?);
+                    }
+                    return Ok(Value::Set(std::rc::Rc::new(values)));
+                }
                 let mut m = std::collections::BTreeMap::new();
                 for _ in 0..n {
                     let k = decode(r, &kt, prog)?;
-                    let v = if prim(mt) == "Map" {
-                        decode(r, &vt, prog)?
-                    } else {
-                        Value::unit()
-                    };
+                    let v = decode(r, &vt, prog)?;
                     m.insert(k, v);
                 }
                 Value::Map(std::rc::Rc::new(m))

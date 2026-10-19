@@ -2,86 +2,90 @@
 
 ## Next action
 
-Branch: `mixed-tail-recursion`, following accepted
-[PR #170](https://github.com/e6qu/fun-with-pipes/pull/170). Its squash merge
-`903482e856e33f4206a04f1cd1ddf73123fc6c29` has identical files to tested head
-`142117d22e140049032dba4e2c61676210649373`. All nine production jobs
-(`39259766176`) and documentation (`39259766267`) passed before merging.
-[History](roadmap-history.md#acyclic-nested-channel-ownership-pr-170) records the
-channel proof and Windows filename repair. The old run has no separate failures.
-Duplicate post-merge production run `39275352369` was cancelled on the identical
-accepted tree; cancellation is not acceptance.
+[PR #172](https://github.com/e6qu/fun-with-pipes/pull/172), branch
+`compact-set-storage`, is ready. This revision fixes empty-set construction:
+return the static empty set before allocating temporary storage.
 
-[PR #171](https://github.com/e6qu/fun-with-pipes/pull/171) contains this batch.
-The first head `bbd0ec0180f8db7a04c76fed6c84b5219bf6ac4e` started production
-`39275968728` and docs `39275968351`. Additional REPL and debugger checks now
-complete its coverage; that earlier run is not final-head acceptance.
-Next: audit every production job and the documentation check on the updated head,
-fix every failure, then squash-merge with an explicit subject and empty body.
-The new compiler behavior has not yet been rebuilt or executed. Full builds,
-suites and benchmarks belong on GitHub runners. Do not repeat the accepted
-channel work as a new task or claim the pending recursion checks have passed.
+Next: publish this repair, run the six-host collection matrix, and replace
+superseded production run `39294160658`. After the collection run succeeds,
+run `suite=collection-report` on GitHub with its run ID and exact source revision.
+Inspect its binary report there and download the resulting JSON. Require all
+nine production jobs and documentation for the final head, including actual WASI
+execution, before squash merge. Supply a one-line subject and empty body.
+Full builds and large evidence collection stay on GitHub runners.
 
 ## Current batch
 
-The compiler now considers tail calls independently of ordinary recursive calls
-in the same function. A call used to compute an argument, binding, match condition
-or later calculation keeps its ordinary frame. A direct self call whose result
-is returned without further work can reuse the frame when its local types prove
-plain immutable data. Resource, task, channel and unknown-capture restrictions
-remain. Next arguments are evaluated before replacing the current frame; native
-cleanup tokens and interpreter cancellation checks retain their existing paths.
+Sets now store keys without unused unit-value slots. Maps keep key/value pairs,
+including maps with unit values. The interpreter distinguishes sets from maps,
+so compile-time constants generate the correct layout. Native construction,
+updates, set operations, cleanup, decoders, JSON, comparisons and hashing use the
+appropriate entry size. Logical values and evaluation order stay unchanged.
 
-Tests add a 200,000-step countdown with one pending addition, swapped/shared
-strings, nested argument calls, effect/failure order, curried arguments and I128.
-A small raw-interpreter run supplies an independent result reference. Deep runs
-exercise the optimized interpreter, native tracing/ARC at O0/O2 and actual WASI
-ARC at O0/O2. Native cleanup ledgers, tracing/reuse stress, WASI allocation checks
-and omitted-free controls remain required. Both pure and mixed tail loops have
-cancellation tests. Proof tests retain ordinary work and reject cleanup/debugger
-regions. The REPL repeats deep mixed calls after remapping function IDs; a source
-debugger test checks all five recursive entries and reverse-order returns. CI retains generated C, executable and disassembly artifacts through
-`FWP_TAIL_ARTIFACTS`.
+A freshly built set of `n` distinct keys requests `8 + 8*n` container bytes,
+previously `8 + 16*n`. Empty sets use static storage and skip construction scratch.
+These figures exclude allocator headers, rounding, scratch and separately
+allocated keys. Insertion can reserve capacity. No elapsed-time or C/Rust parity
+claim follows from this change.
 
-Lesson 22 explains mixed calls with a small executable example. The design,
-compiler pipeline and benchmark guide distinguish bounded tail transfers from
-ordinary recursion. Selecting frame reuse can prevent some local objects from
-using stack storage; direct field representations remain available. This batch
-makes no elapsed-time, zero-allocation or C/Rust parity claim. General tail calls,
-mutual recursion and resource-owning frames remain separate work.
+Tests cover raw/optimized interpretation, native ARC/tracing at O0/O2, nested and
+wide-number keys, sharing, JSON, protocol round trips, REPL linking, constants and
+WASI. A probe checks allocation requests for 0, 1, 7, 257 and 4096 keys; restoring
+an unused slot must fail. Existing allocation/retain failures, cancellation and
+reuse checks remain. The report collector requires all 41 focused tests per host
+and inspects generated C, executables, disassembly and byte counts.
 
-## Checks and limits
+## CI evidence and unresolved checks
 
-Every local command below ran through `python3 scripts/local-guard.py`, serially.
-The existing `target/debug/fwp` predates this change: it validates source syntax
-and small-case semantics, not the new proof or deep execution.
+- Accepted [PR #171](roadmap-history.md#mixed-tail-recursion-pr-171) merged as
+  `f3f3bd811c6d3935cd84fca2f7e6e877dc13c3d0`, identical to tested head
+  `13210b757db74379c4f1d9893fd0049d2e774916`. All nine jobs and documentation passed.
+- Initial focused Linux run `39292052172` passed 39/41. Both test assumptions were
+  repaired: select `--fn build-set` for inspection, and arm the omitted-drop
+  control only during injected failures. Both repairs passed on all six hosts.
+- Six-host run [39294156070](https://github.com/e6qu/fun-with-pipes/actions/runs/39294156070)
+  tested `8c5e3851383a3924122b2c517979c8bfc0be6160`. Every host passed 40 tests,
+  failed only the empty-set allocation assertion, and ignored none. All six
+  complete logs were audited: 240 passed, six instances of that one failure.
+  The runtime repair keeps the strict zero-request assertion.
+- The map/set failure probe cleaned every injected exit: 104 points normally,
+  106 with reuse poisoning. Smaller sets fit more entries before needing growth.
+  Both deliberately omitted-cleanup controls still failed as required.
+- Documentation `39294160469` passed. The empty-set repair still needs complete
+  CI validation; no new compiler was built locally.
+- Older superseded production `39292969344` was cancelled; its available logs had
+  no additional failures. Cancellation and partial passes are not acceptance.
 
-- `env FWP_NO_OPT=1 target/debug/fwp run --interp /private/tmp/fwp-mixed-tail-small.fwp`:
-  passed in 0.73 seconds with the explicitly expected ten output lines. The file
-  reduces 200000/200001 to 20/21 while preserving parity and results.
-- `cargo fmt --all`: passed in 1.60 seconds after the test updates.
-- `target/debug/fwp fmt tests/fixtures/mixed_tail_recursion.fwp docs/tutorials/22-recursion-and-sharing/main.fwp`:
-  passed in 0.15 seconds.
-- `env FWP_NO_OPT=1 target/debug/fwp run --interp docs/tutorials/22-recursion-and-sharing/main.fwp`:
-  passed in 1.18 seconds; all six lines match `main.out`.
-- The existing compiler's optimized small fixture also produced the same ten
-  lines (0.60 seconds). It has no new tail proof, so this is not acceptance.
-- `python3 scripts/check-roadmap.py`: passed in 3.29 seconds (60 document sets,
-  106 immutable anchors and seven work areas). `git diff --check` passed.
-  Final-head CI is next.
-- The old local compiler has no `debug` command. Downloaded the accepted ARM Mac
-  compiler from PR #170 instead of rebuilding locally. Its package manifest
-  identifies head `142117d2`. A small protocol check through
-  `python3 /private/tmp/fwp-check-debugger-recursion.py` passed in 0.72 seconds:
-  five `mixed` calls have increasing depths and return in reverse order, printing
-  one. This verifies the debugger reference only; the new compiled test awaits CI.
-- `cargo fmt --all` after the interactive checks: passed in 1.54 seconds.
+## Local checks
+
+All workloads used `python3 scripts/local-guard.py`, serially, with unchanged
+limits. The accepted ARM Mac compiler at
+`/private/tmp/fwp-170-accepted-macos/fwp-macos-arm64/fwp` identifies head
+`142117d2`; it supplied reference output and C scaffolding, not a new compiler.
+
+- Rust/fwp formatting, `git diff --check` and the documentation audit pass.
+  The audit checks 60 document sets, 106 immutable anchors and seven work areas.
+- `python3 scripts/test-collection-evidence.py`: five tests pass. They reject
+  missing/failed targets, cancelled runs, extra slots and incomplete byte counts.
+- Raw interpretation of `tests/fixtures/compact_sets.fwp` supplied its twelve-line
+  reference output. Explicit `build --emit-c --gc arc --fn build-set` retains the
+  selected builder.
+- `/private/tmp/fwp-selected-set-probe.c` uses that builder scaffold with current
+  runtime sections and the explicit one-column operations record. Guarded Clang
+  O0/O2 builds pass in 0.51/0.85 seconds; executions pass in 0.50/0.26 seconds.
+  Requests are 0/16/64/2064/32776 bytes at the five sizes; allocator charges are
+  0/16/64/2560/32776. ARC charge returns to its starting value after each result.
+  This checks the runtime path, not the new compiler's generated wrapper.
+- An earlier direct-runtime probe passed at O0/O2; restoring a wasted slot exited
+  211 as required. Its ARM64 disassembly showed eight-byte indexed key access.
+- `/private/tmp/fwp-audit-172-failures.py` verified all six complete CI logs in
+  0.22 seconds. The documentation audit after this repair passed in 3.07 seconds.
 
 ## Roadmap status
 
 | Step | Status | Remaining focus |
 |---|---|---|
-| 1 | In progress | Ownership/cycle contracts, tracing removal and limited ARC |
+| 1 | In progress | Ownership contracts, tracing removal and limited ARC |
 | 2 | In progress | Functional intermediates, copies and eligible tail recursion |
 | 3 | In progress | Equivalent-work C/Rust gaps and machine-code costs |
 | 4 | In progress | Derivative precision, speed and storage |
@@ -89,8 +93,7 @@ and small-case semantics, not the new proof or deep execution.
 | 6 | In progress | Reproducible comparisons and regression budgets |
 | 7 | In progress | Representative larger applications |
 
-All seven work areas in [PLAN.md](../PLAN.md) remain open. JIT is excluded.
-After this batch, use representative applications to select the next ownership
-or performance gap. Persistent subscriptions and weak handles remain design
-work; default tracing removal is unfinished. Keep one current handoff and move
-accepted delivery evidence to history.
+All seven areas in [PLAN.md](../PLAN.md) remain open. Persistent subscriptions,
+unknown retained captures, resource-owning tail frames and mutual recursion need
+further proofs. JIT is excluded. Select the next cost using representative
+programs and equivalent-work measurements; move accepted evidence to history.

@@ -63,6 +63,9 @@ export make-user : String -> User
 make-user = make User { name = id, age = const 7u8, tags = const ["a", "b"] }
 export shape : F64 -> Shape
 shape = Circle
+export sets : I64 -> (Set[Set[I64]], Set[String], Map[String, ()])
+sets = const ([[2, 1], [1, 2], [3]] | map set.from-list | set.from-list,
+    ["b", "a", "b"] | set.from-list, [("a", ())] | map.from-list)
 export misc : I64 -> (Option[I128], Map[String, F32], Bytes, TInt[3])
 misc = const (Some -5i128, map.from-list [("k", 1.5f32)], string.to-bytes "hi", 0t+-0)
 "#;
@@ -105,6 +108,7 @@ fn encode_decode_round_trip() {
         ("make-user", Value::str("Ada")),
         ("shape", Value::F64(2.5)),
         ("misc", Value::I64(0)),
+        ("sets", Value::I64(0)),
     ] {
         let mt = result_type(&prog, name);
         let v = value_of(&prog, name, arg);

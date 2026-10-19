@@ -781,21 +781,22 @@ impl<'p> Interp<'p> {
                     Value::Array(Rc::new(v))
                 }
                 // ----- maps and sets
-                "map.empty" | "set.empty" => Value::Map(Rc::new(BTreeMap::new())),
+                "map.empty" => Value::Map(Rc::new(BTreeMap::new())),
+                "set.empty" => Value::Set(Rc::new(BTreeSet::new())),
                 "map.insert" => {
                     let mut m = map(&a[2]);
                     m.insert(a[0].clone(), a[1].clone());
                     Value::Map(Rc::new(m))
                 }
                 "map.get" => opt(map_ref(&a[1]).get(&a[0]).cloned()),
-                "map.remove" | "set.remove" => {
+                "map.remove" => {
                     let mut m = map(&a[1]);
                     m.remove(&a[0]);
                     Value::Map(Rc::new(m))
                 }
-                "map.contains" | "set.contains" => Value::bool(map_ref(&a[1]).contains_key(&a[0])),
-                "map.size" | "set.size" => Value::I64(map_ref(&a[0]).len() as i64),
-                "map.keys" | "set.to-list" => Value::list(map_ref(&a[0]).keys().cloned().collect()),
+                "map.contains" => Value::bool(map_ref(&a[1]).contains_key(&a[0])),
+                "map.size" => Value::I64(map_ref(&a[0]).len() as i64),
+                "map.keys" => Value::list(map_ref(&a[0]).keys().cloned().collect()),
                 "map.values" => Value::list(map_ref(&a[0]).values().cloned().collect()),
                 "map.to-list" => Value::list(
                     map_ref(&a[0])
@@ -821,15 +822,17 @@ impl<'p> Interp<'p> {
                             values.push(self.apply(callback.clone(), vec![input])?);
                         }
                     }
-                    let mut result = BTreeMap::new();
-                    for value in values {
-                        if sym.starts_with("set.") {
-                            result.insert(value, Value::unit());
-                        } else if let Value::Record(fields) = &value {
-                            result.insert(fields[0].clone(), fields[1].clone());
+                    if sym.starts_with("set.") {
+                        Value::Set(Rc::new(values.into_iter().collect()))
+                    } else {
+                        let mut result = BTreeMap::new();
+                        for value in values {
+                            if let Value::Record(fields) = &value {
+                                result.insert(fields[0].clone(), fields[1].clone());
+                            }
                         }
+                        Value::Map(Rc::new(result))
                     }
-                    Value::Map(Rc::new(result))
                 }
                 "map.from-list" => {
                     let mut m = BTreeMap::new();
@@ -856,36 +859,27 @@ impl<'p> Interp<'p> {
                     Value::Map(Rc::new(out))
                 }
                 "set.insert" => {
-                    let mut m = map(&a[1]);
-                    m.insert(a[0].clone(), Value::unit());
-                    Value::Map(Rc::new(m))
+                    let mut values = set(&a[1]).clone();
+                    values.insert(a[0].clone());
+                    Value::Set(Rc::new(values))
                 }
-                "set.from-list" => Value::Map(Rc::new(
-                    a[0].list_items()
-                        .into_iter()
-                        .map(|k| (k, Value::unit()))
-                        .collect(),
-                )),
+                "set.remove" => {
+                    let mut values = set(&a[1]).clone();
+                    values.remove(&a[0]);
+                    Value::Set(Rc::new(values))
+                }
+                "set.contains" => Value::bool(set(&a[1]).contains(&a[0])),
+                "set.size" => Value::I64(set(&a[0]).len() as i64),
+                "set.to-list" => Value::list(set(&a[0]).iter().cloned().collect()),
+                "set.from-list" => Value::Set(Rc::new(a[0].list_items().into_iter().collect())),
                 "set.union" | "set.intersect" | "set.diff" => {
-                    let (other, this) = (map_ref(&a[0]), map_ref(&a[1]));
-                    let out: BTreeMap<Value, Value> = match sym {
-                        "set.union" => this
-                            .iter()
-                            .chain(other.iter())
-                            .map(|(k, v)| (k.clone(), v.clone()))
-                            .collect(),
-                        "set.intersect" => this
-                            .iter()
-                            .filter(|(k, _)| other.contains_key(k))
-                            .map(|(k, v)| (k.clone(), v.clone()))
-                            .collect(),
-                        _ => this
-                            .iter()
-                            .filter(|(k, _)| !other.contains_key(k))
-                            .map(|(k, v)| (k.clone(), v.clone()))
-                            .collect(),
+                    let (other, this) = (set(&a[0]), set(&a[1]));
+                    let values = match sym {
+                        "set.union" => this.union(other).cloned().collect(),
+                        "set.intersect" => this.intersection(other).cloned().collect(),
+                        _ => this.difference(other).cloned().collect(),
                     };
-                    Value::Map(Rc::new(out))
+                    Value::Set(Rc::new(values))
                 }
                 // ----- bytes
                 "bytes.from-list" => Value::Bytes(Rc::from(
@@ -1122,4 +1116,11 @@ fn format_placeholders(tmpl: &str) -> usize {
         }
     }
     n
+}
+
+fn set(value: &Value) -> &BTreeSet<Value> {
+    let Value::Set(values) = value else {
+        panic!("expected set")
+    };
+    values
 }

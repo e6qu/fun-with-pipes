@@ -1803,8 +1803,11 @@ Set requests fall 131,077 → 4; map requests 196,614 → 5. Peak counted bytes 
 4,718,600 → 1,053,696 for sets and 6,815,752 → 2,102,272 for maps. Retains, final
 charge and collections are zero. Counters exclude allocator capacity/process RAM.
 At 32 inputs ratios span 0.861–1.078 with overlapping ranges: no consistent gain.
-Temporary storage still grows with input length; final sets still have unused
-value slots and small integers still occupy full words.
+Temporary storage still grows with input length. The measured revision stored
+unused value slots in final sets; the current compact-set change removes those
+slots, but these historical timings do not measure that change. Small integers
+still occupy full words. See [current validation](development-state.md) and the
+[storage contract](ownership.md#compact-set-storage).
 
 All 78 focused tests and 120 binary checks pass, including allocation failure,
 callback error/cancellation and alias preservation. [PR #166](roadmap-history.md#numeric-map-and-set-construction-pr-166)
@@ -1867,7 +1870,9 @@ The six-host joined-layout run initially timed out rebuilding the compiler on
 Intel macOS. Reusing the already-built integration-test compiler fixes that
 redundancy without changing coverage or limits. Replacement `39108116774` passes;
 [the report](measurements/collection-joined-storage-2026-10-18.json) audits all
-120 binaries. PR #166 is accepted, but the Xeon timing issue remains unresolved.
+120 binaries. PR #166 left the Xeon timing issue unresolved; the later
+[matching-host comparison](#rechecking-the-original-xeon-slowdown) verifies its
+repair in the combined compiler.
 
 The PR #166 compiler makes 2,000,001 retains in this workload. A
 [hand-edited borrowing prototype](measurements/large-map-borrow-prototype-2026-10-18.json)
@@ -1905,11 +1910,11 @@ unchanged, and final counted bytes remain zero. This removes bookkeeping rather
 than map storage. These hosts do not establish an Intel result or resolve the
 Xeon 8573C regression.
 
-PR #167 integrates this compiler and repairs an additional result-representation
-bug: returning a tuple or variant after the borrow could create an unnecessary
-heap box. The prepared measurements predate that repair and full production
-acceptance. [The handoff](development-state.md) records current checks and pending
-measurements. Reproduce with `suite=map-borrow`, `evidence_run=39106005017`, and
+PR #167 integrated this compiler and also removed an unnecessary heap box when
+returning a tuple or variant after the borrow. These prepared measurements predate
+that repair. [Delivery history](roadmap-history.md#interactive-tools-and-cached-map-borrows-pr-167)
+records production acceptance; the later matching-host measurements below cover
+the integrated compiler. Reproduce with `suite=map-borrow`, `evidence_run=39106005017`, and
 `source_revision=93cb93a0f717b317814ecfc162de0c2f516dbfbd`; the workflow compiles the
 current branch and uses the saved baseline sources, checking identical inputs,
 outputs, counts and binary identities before recording times.

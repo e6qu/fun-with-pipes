@@ -136,6 +136,26 @@ Generated ownership helpers distinguish those cases. An absent external slot is
 not proof that a freshly allocated wide integer is immortal. Physical storage
 checks and a control restoring that mistaken early return cover this boundary.
 
+## Compact set storage
+
+`["b", "a", "b"] | set.from-list` makes `set{"a", "b"}`: each distinct key
+appears once, in sorted order. A native set now stores its length followed by
+one eight-byte slot per key. Maps retain two slots per entry, including maps whose values
+are `()`. The interpreter also distinguishes sets from maps; this distinction
+lets compile-time constants use the correct native layout.
+
+Inserting or removing a key can reuse uniquely owned storage. If an older value
+is still live, the result owns a separate container and shares keys through their
+typed ownership operations. Dropping a set releases each managed key once;
+inline integers need no retain/release. The change removes empty value slots,
+not the remaining container allocation or necessary sharing.
+
+`tests/map_set_ownership.rs` checks actual allocation requests and rejects a
+control that restores wasted slots. Existing failure-injection tests cover
+partial construction, updates, aliases and cleanup. Constants, nested sets,
+JSON, text/binary decoding, hashing and WASI have regression coverage.
+[The handoff](development-state.md) distinguishes added checks from passing runs.
+
 ## Cached numeric map reads
 
 A top-level computed map has a cache owner, released at program teardown. For

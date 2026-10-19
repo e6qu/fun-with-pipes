@@ -12,6 +12,23 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Mixed tail recursion (PR #171)
+
+[PR #171](https://github.com/e6qu/fun-with-pipes/pull/171) merged as
+`f3f3bd811c6d3935cd84fca2f7e6e877dc13c3d0`, with identical files to tested head
+`13210b757db74379c4f1d9893fd0049d2e774916`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39276733207)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39276733233)
+passed.
+
+A function can now reuse its frame for eligible self-tail calls even if another
+branch makes ordinary recursive calls. Tests cover a 200,000-step countdown,
+shared strings, argument and trap order, cancellation, REPL linking and debugger
+frames in the interpreter, native execution and WASI. Generated C and machine
+code accompany the checks. Calls with work left afterward retain their frames;
+resource-owning frames and mutual recursion still need separate proofs.
+This establishes bounded tail transfers, not zero allocation or C/Rust speed parity.
+
 ## Acyclic nested channel ownership (PR #170)
 
 [PR #170](https://github.com/e6qu/fun-with-pipes/pull/170) merged as
@@ -138,8 +155,8 @@ Numeric map/set construction skips temporary lists and eligible tuples, calls
 known callbacks directly, and joins related buffers. At 65,536 inputs with at
 most 257 keys, map requests fall 196,614 → 5 and set requests 131,077 → 4.
 An unnecessary second compiler build caused the Intel macOS timeout and was
-removed without reducing coverage. **Xeon 8573C full-map tracing remains
-4.4–4.6% slower**; allocation savings do not resolve that result. Cached-map
+removed without reducing coverage. **At this revision, Xeon 8573C full-map tracing
+was 4.4–4.6% slower**; allocation savings do not resolve that result. Cached-map
 borrowing candidate `774d838c` is not part of this merge. PR #167 above supplies
 the subsequent implementation and matching-host repair evidence.
 

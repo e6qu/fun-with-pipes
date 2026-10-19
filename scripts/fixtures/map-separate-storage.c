@@ -19,18 +19,18 @@ static V fwp_map_build_typed(V *keys, V *vals, size_t n, const fwp_map_ops *ops,
         if (tv) tv[len] = vals[j - 1];
         i = j;
     }
-    V result = fwp_map_typed_new(len);
+    V result = fwp_map_typed_new(len, ops->columns);
     MAP(result)->len = 0;
     fwp_value_owner owner = {result, ops->drop_map};
     fwp_cleanup cleanup;
     fwp_value_protect(&owner, &cleanup);
     for (size_t i = 0; i < len; i++) {
         if (ops->dup_key) ops->dup_key(tk[i]);
-        MAP(result)->d[2 * i] = tk[i];
+        MAP(result)->d[ops->columns * i] = tk[i];
         MAP(result)->len = i + 1;
         V value = tv ? tv[i] : 0;
         if (ops->dup_value) ops->dup_value(value);
-        MAP(result)->d[2 * i + 1] = value;
+        if (ops->columns == 2) MAP(result)->d[ops->columns * i + 1] = value;
     }
     fwp_value_finish(&owner, &cleanup);
     if (tv) fwp_scratch_finish(&tv, &tv_cleanup);

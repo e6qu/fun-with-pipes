@@ -30,7 +30,7 @@ static uint64_t map_probe_stamp(const char *stage, uint64_t before, size_t n, co
     for before, label, pointers in [
         ('    fwp_msort(keys,', 'scratch-allocation', 'tk, tv'),
         ('    size_t len = 0;', 'sort', 'keys, vals'),
-        ('    V result = fwp_map_typed_new(len);', 'deduplicate', 'tk, tv'),
+        ('    V result = fwp_map_typed_new(len, ops->columns);', 'deduplicate', 'tk, tv'),
         ('    MAP(result)->len = 0;', 'result-allocation', '(void *)(uintptr_t)result, NULL'),
         ('    fwp_value_finish(&owner, &cleanup);', 'materialize', '(void *)(uintptr_t)result, NULL'),
         ('    FWP_KEEP_ALIVE(keys); FWP_KEEP_ALIVE(vals);', 'release-scratch', 'NULL, NULL'),

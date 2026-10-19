@@ -114,7 +114,7 @@ int main(void) {
     old_roots[4] = fwp_array_typed_new(2, ARRAY_ELEMENT);
     ARR(old_roots[4])->d[0] = fwp_rc_fresh(fwp_cstr("array zero"));
     ARR(old_roots[4])->d[1] = fwp_rc_fresh(fwp_cstr("array one"));
-    old_roots[5] = fwp_map_typed_new(1);
+    old_roots[5] = fwp_map_typed_new(1, 2);
     MAP(old_roots[5])->d[0] = fwp_rc_fresh(fwp_cstr("key"));
     MAP(old_roots[5])->d[1] = fwp_rc_fresh(fwp_cstr("value"));
     child = fwp_rc_fresh(fwp_cstr("runtime child"));

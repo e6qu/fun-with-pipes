@@ -2336,8 +2336,9 @@ static fwp_map fwp_empty_map = {0};
 #define FWP_EMPTY_MAP PTR(&fwp_empty_map)
 
 
-static V fwp_map_alloc(uint64_t len) {
-    fwp_map *m = (fwp_map *)fwp_alloc(sizeof(fwp_map) + 2 * len * sizeof(V));
+static V fwp_map_alloc(uint64_t len, size_t columns) {
+    if (len > (SIZE_MAX - sizeof(fwp_map)) / (columns * sizeof(V))) fwp_trap("map too large");
+    fwp_map *m = (fwp_map *)fwp_alloc(sizeof(fwp_map) + columns * len * sizeof(V));
     m->len = len;
     return PTR(m);
 }
@@ -2345,13 +2346,13 @@ static V fwp_map_alloc(uint64_t len) {
 /* a map from interleaved key/value pairs already in key order */
 static V fwp_map_from_sorted(uint64_t len, const V *kv) {
     if (len == 0) return PTR(&fwp_empty_map);
-    V m = fwp_map_alloc(len);
+    V m = fwp_map_alloc(len, 2);
     memcpy(MAP(m)->d, kv, 2 * len * sizeof(V));
     return m;
 }
 
 /* index of key or insertion point (found flag) */
-static uint64_t fwp_map_find(V m, V k, const fwp_desc *kd, int *found) {
+static uint64_t fwp_map_find(V m, V k, const fwp_desc *kd, int *found, size_t columns) {
     uint64_t lo = 0, hi = MAP(m)->len;
     /* integer keys: compared inline, without the descriptor */
     switch (kd->kind) {
@@ -2360,7 +2361,7 @@ static uint64_t fwp_map_find(V m, V k, const fwp_desc *kd, int *found) {
         const V *d = MAP(m)->d;
         while (lo < hi) {
             uint64_t mid = (lo + hi) / 2;
-            int64_t y = (int64_t)d[2 * mid];
+            int64_t y = (int64_t)d[columns * mid];
             if (y == x) { *found = 1; return mid; }
             if (y < x) lo = mid + 1; else hi = mid;
         }
@@ -2371,7 +2372,7 @@ static uint64_t fwp_map_find(V m, V k, const fwp_desc *kd, int *found) {
         const V *d = MAP(m)->d;
         while (lo < hi) {
             uint64_t mid = (lo + hi) / 2;
-            V y = d[2 * mid];
+            V y = d[columns * mid];
             if (y == k) { *found = 1; return mid; }
             if (y < k) lo = mid + 1; else hi = mid;
         }
@@ -2382,7 +2383,7 @@ static uint64_t fwp_map_find(V m, V k, const fwp_desc *kd, int *found) {
     }
     while (lo < hi) {
         uint64_t mid = (lo + hi) / 2;
-        int c = fwp_cmp(MAP(m)->d[2 * mid], k, kd);
+        int c = fwp_cmp(MAP(m)->d[columns * mid], k, kd);
         if (c == 0) { *found = 1; return mid; }
         if (c < 0) lo = mid + 1; else hi = mid;
     }
@@ -2390,52 +2391,52 @@ static uint64_t fwp_map_find(V m, V k, const fwp_desc *kd, int *found) {
     return lo;
 }
 
-static V fwp_p_map_insert(V k, V v, V m, const fwp_desc *kd) {
+static V fwp_p_map_insert(V k, V v, V m, const fwp_desc *kd, size_t columns) {
     int found;
-    uint64_t i = fwp_map_find(m, k, kd, &found);
+    uint64_t i = fwp_map_find(m, k, kd, &found, columns);
     uint64_t n = MAP(m)->len;
-    V r = fwp_map_alloc(found ? n : n + 1);
+    V r = fwp_map_alloc(found ? n : n + 1, columns);
     if (found) {
-        memcpy(MAP(r)->d, MAP(m)->d, 2 * n * sizeof(V));
-        MAP(r)->d[2 * i + 1] = v;
+        memcpy(MAP(r)->d, MAP(m)->d, columns * n * sizeof(V));
+        if (columns == 2) MAP(r)->d[columns * i + 1] = v;
     } else {
-        memcpy(MAP(r)->d, MAP(m)->d, 2 * i * sizeof(V));
-        MAP(r)->d[2 * i] = k;
-        MAP(r)->d[2 * i + 1] = v;
-        memcpy(MAP(r)->d + 2 * i + 2, MAP(m)->d + 2 * i, 2 * (n - i) * sizeof(V));
+        memcpy(MAP(r)->d, MAP(m)->d, columns * i * sizeof(V));
+        MAP(r)->d[columns * i] = k;
+        if (columns == 2) MAP(r)->d[columns * i + 1] = v;
+        memcpy(MAP(r)->d + columns * (i + 1), MAP(m)->d + columns * i, columns * (n - i) * sizeof(V));
     }
     return r;
 }
 
 static V fwp_p_map_get(V k, V m, const fwp_desc *kd) {
     int found;
-    uint64_t i = fwp_map_find(m, k, kd, &found);
+    uint64_t i = fwp_map_find(m, k, kd, &found, 2);
     return found ? fwp_some(MAP(m)->d[2 * i + 1]) : FWP_NONE;
 }
 
-static V fwp_p_map_remove(V k, V m, const fwp_desc *kd) {
+static V fwp_p_map_remove(V k, V m, const fwp_desc *kd, size_t columns) {
     int found;
-    uint64_t i = fwp_map_find(m, k, kd, &found);
+    uint64_t i = fwp_map_find(m, k, kd, &found, columns);
     if (!found) return m;
     uint64_t n = MAP(m)->len;
-    V r = fwp_map_alloc(n - 1);
-    memcpy(MAP(r)->d, MAP(m)->d, 2 * i * sizeof(V));
-    memcpy(MAP(r)->d + 2 * i, MAP(m)->d + 2 * i + 2, 2 * (n - i - 1) * sizeof(V));
+    V r = fwp_map_alloc(n - 1, columns);
+    memcpy(MAP(r)->d, MAP(m)->d, columns * i * sizeof(V));
+    memcpy(MAP(r)->d + columns * i, MAP(m)->d + columns * (i + 1), columns * (n - i - 1) * sizeof(V));
     return r;
 }
 
-static V fwp_p_map_contains(V k, V m, const fwp_desc *kd) {
+static V fwp_p_map_contains(V k, V m, const fwp_desc *kd, size_t columns) {
     int found;
-    fwp_map_find(m, k, kd, &found);
+    fwp_map_find(m, k, kd, &found, columns);
     return found ? FWP_TRUE : FWP_FALSE;
 }
 
 static V fwp_p_map_size(V m) { return (V)(int64_t)MAP(m)->len; }
 
-static V fwp_p_map_column(V m, int col) {
+static V fwp_p_map_column(V m, int col, size_t columns) {
     uint64_t n = MAP(m)->len;
     V *a = (V *)fwp_alloc((n + 1) * sizeof(V));
-    for (uint64_t i = 0; i < n; i++) a[i] = MAP(m)->d[2 * i + col];
+    for (uint64_t i = 0; i < n; i++) a[i] = MAP(m)->d[columns * i + col];
     return fwp_list_from(a, n);
 }
 
@@ -2449,7 +2450,7 @@ static V fwp_p_map_to_list(V m) {
 /* A map of n keys and values in list order, sorted once (stable), where a
  * repeated key keeps its first occurrence and the last value, as inserting
  * them one by one would: O(n log n) instead of a copy per insert. */
-static V fwp_map_build(V *keys, V *vals, size_t n, const fwp_desc *kd) {
+static V fwp_map_build(V *keys, V *vals, size_t n, const fwp_desc *kd, size_t columns) {
     if (n == 0) return FWP_EMPTY_MAP;
     V *tk = (V *)fwp_alloc((n + 1) * sizeof(V));
     V *tv = (V *)fwp_alloc((n + 1) * sizeof(V));
@@ -2462,10 +2463,10 @@ static V fwp_map_build(V *keys, V *vals, size_t n, const fwp_desc *kd) {
         tv[len] = vals[j - 1];
         i = j;
     }
-    V m = fwp_map_alloc(len);
+    V m = fwp_map_alloc(len, columns);
     for (size_t i = 0; i < len; i++) {
-        MAP(m)->d[2 * i] = tk[i];
-        MAP(m)->d[2 * i + 1] = tv[i];
+        MAP(m)->d[columns * i] = tk[i];
+        if (columns == 2) MAP(m)->d[columns * i + 1] = tv[i];
     }
     return m;
 }
@@ -2479,19 +2480,19 @@ static V fwp_p_map_from_list(V xs, const fwp_desc *kd) {
         keys[i] = OBJ(p)->f[0];
         vals[i] = OBJ(p)->f[1];
     }
-    return fwp_map_build(keys, vals, n, kd);
+    return fwp_map_build(keys, vals, n, kd, 2);
 }
 
 static V fwp_p_map_update(V k, V f, V d, V m, const fwp_desc *kd) {
     int found;
-    uint64_t i = fwp_map_find(m, k, kd, &found);
+    uint64_t i = fwp_map_find(m, k, kd, &found, 2);
     V cur = found ? MAP(m)->d[2 * i + 1] : d;
-    return fwp_p_map_insert(k, fwp_apply1(f, cur), m, kd);
+    return fwp_p_map_insert(k, fwp_apply1(f, cur), m, kd, 2);
 }
 
 static V fwp_p_map_map_values(V f, V m) {
     uint64_t n = MAP(m)->len;
-    V r = fwp_map_alloc(n);
+    V r = fwp_map_alloc(n, 2);
     for (uint64_t i = 0; i < n; i++) {
         MAP(r)->d[2 * i] = MAP(m)->d[2 * i];
         MAP(r)->d[2 * i + 1] = fwp_apply1(f, MAP(m)->d[2 * i + 1]);
@@ -2499,7 +2500,7 @@ static V fwp_p_map_map_values(V f, V m) {
     return r;
 }
 
-static V fwp_p_set_insert(V k, V s, const fwp_desc *kd) { return fwp_p_map_insert(k, 0, s, kd); }
+static V fwp_p_set_insert(V k, V s, const fwp_desc *kd) { return fwp_p_map_insert(k, 0, s, kd, 1); }
 
 /* `map.insert`, `map.remove`, `map.update`, `set.insert` and `set.remove`
  * given the only reference to the map (src/rc.rs): written in place when
@@ -2511,63 +2512,62 @@ static V fwp_map_given_up(V m, int u, V r) {
     return fwp_rc_fresh(r);
 }
 
-static V fwp_p_map_insert_own(V k, V v, V m, const fwp_desc *kd) {
+static V fwp_p_map_insert_own(V k, V v, V m, const fwp_desc *kd, size_t columns) {
     int found;
-    uint64_t i = fwp_map_find(m, k, kd, &found);
+    uint64_t i = fwp_map_find(m, k, kd, &found, columns);
     uint64_t n = MAP(m)->len;
     int u = fwp_rc_unique_mut(m);
     if (u == 1 && found) {
-        MAP(m)->d[2 * i + 1] = v;
+        if (columns == 2) MAP(m)->d[columns * i + 1] = v;
         return m;
     }
-    if (u == 1 && fwp_rc_capacity(m) >= sizeof(fwp_map) + 2 * (n + 1) * sizeof(V)) {
-        memmove(MAP(m)->d + 2 * i + 2, MAP(m)->d + 2 * i, 2 * (n - i) * sizeof(V));
-        MAP(m)->d[2 * i] = k;
-        MAP(m)->d[2 * i + 1] = v;
+    if (u == 1 && fwp_rc_capacity(m) >= sizeof(fwp_map) + columns * (n + 1) * sizeof(V)) {
+        memmove(MAP(m)->d + columns * (i + 1), MAP(m)->d + columns * i, columns * (n - i) * sizeof(V));
+        MAP(m)->d[columns * i] = k;
+        if (columns == 2) MAP(m)->d[columns * i + 1] = v;
         MAP(m)->len = n + 1;
         return m;
     }
-    if (u != 1 || found) return fwp_map_given_up(m, u, fwp_p_map_insert(k, v, m, kd));
-    V r = fwp_map_alloc(n < 4 ? 4 : 2 * n);
-    memcpy(MAP(r)->d, MAP(m)->d, 2 * i * sizeof(V));
-    MAP(r)->d[2 * i] = k;
-    MAP(r)->d[2 * i + 1] = v;
-    memcpy(MAP(r)->d + 2 * i + 2, MAP(m)->d + 2 * i, 2 * (n - i) * sizeof(V));
+    if (u != 1 || found) return fwp_map_given_up(m, u, fwp_p_map_insert(k, v, m, kd, columns));
+    V r = fwp_map_alloc(n < 4 ? 4 : 2 * n, columns);
+    memcpy(MAP(r)->d, MAP(m)->d, columns * i * sizeof(V));
+    MAP(r)->d[columns * i] = k;
+    if (columns == 2) MAP(r)->d[columns * i + 1] = v;
+    memcpy(MAP(r)->d + columns * (i + 1), MAP(m)->d + columns * i, columns * (n - i) * sizeof(V));
     MAP(r)->len = n + 1;
     return fwp_map_given_up(m, u, r);
 }
 
-static V fwp_p_map_remove_own(V k, V m, const fwp_desc *kd) {
+static V fwp_p_map_remove_own(V k, V m, const fwp_desc *kd, size_t columns) {
     int found;
-    uint64_t i = fwp_map_find(m, k, kd, &found);
+    uint64_t i = fwp_map_find(m, k, kd, &found, columns);
     if (!found) return m;
     uint64_t n = MAP(m)->len;
     int u = fwp_rc_unique_mut(m);
     if (u == 1) {
-        memmove(MAP(m)->d + 2 * i, MAP(m)->d + 2 * i + 2, 2 * (n - i - 1) * sizeof(V));
+        memmove(MAP(m)->d + columns * i, MAP(m)->d + columns * (i + 1), columns * (n - i - 1) * sizeof(V));
         /* the freed pair keeps nothing alive */
-        MAP(m)->d[2 * n - 2] = 0;
-        MAP(m)->d[2 * n - 1] = 0;
+        memset(MAP(m)->d + columns * (n - 1), 0, columns * sizeof(V));
         MAP(m)->len = n - 1;
         return m;
     }
-    return fwp_map_given_up(m, u, fwp_p_map_remove(k, m, kd));
+    return fwp_map_given_up(m, u, fwp_p_map_remove(k, m, kd, columns));
 }
 
 static V fwp_p_map_update_own(V k, V f, V d, V m, const fwp_desc *kd) {
     int found;
-    uint64_t i = fwp_map_find(m, k, kd, &found);
+    uint64_t i = fwp_map_find(m, k, kd, &found, 2);
     V cur = found ? MAP(m)->d[2 * i + 1] : d;
-    return fwp_p_map_insert_own(k, fwp_apply1(f, cur), m, kd);
+    return fwp_p_map_insert_own(k, fwp_apply1(f, cur), m, kd, 2);
 }
 
-static V fwp_p_set_insert_own(V k, V s, const fwp_desc *kd) { return fwp_p_map_insert_own(k, 0, s, kd); }
+static V fwp_p_set_insert_own(V k, V s, const fwp_desc *kd) { return fwp_p_map_insert_own(k, 0, s, kd, 1); }
 
 static V fwp_p_set_from_list(V xs, const fwp_desc *kd) {
     size_t n;
     V *keys = fwp_list_items(xs, &n);
     V *vals = (V *)fwp_alloc((n + 1) * sizeof(V));
-    return fwp_map_build(keys, vals, n, kd);
+    return fwp_map_build(keys, vals, n, kd, 1);
 }
 
 /* op: 0 union, 1 intersect, 2 diff; `other` is the argument, `this` the
@@ -2577,24 +2577,23 @@ static V fwp_p_set_op(V other, V this_, int op, const fwp_desc *kd) {
     uint64_t a = MAP(this_)->len, b = MAP(other)->len, i = 0, j = 0, n = 0;
     V *out = (V *)fwp_alloc((a + b + 1) * sizeof(V));
     while (i < a || j < b) {
-        int c = i == a ? 1 : j == b ? -1 : fwp_cmp(MAP(this_)->d[2 * i], MAP(other)->d[2 * j], kd);
+        int c = i == a ? 1 : j == b ? -1 : fwp_cmp(MAP(this_)->d[i], MAP(other)->d[j], kd);
         if (c < 0) {
-            if (op != 1) out[n++] = MAP(this_)->d[2 * i];
+            if (op != 1) out[n++] = MAP(this_)->d[i];
             i++;
         } else if (c > 0) {
-            if (op == 0) out[n++] = MAP(other)->d[2 * j];
+            if (op == 0) out[n++] = MAP(other)->d[j];
             j++;
         } else {
-            if (op != 2) out[n++] = MAP(this_)->d[2 * i];
+            if (op != 2) out[n++] = MAP(this_)->d[i];
             i++;
             j++;
         }
     }
     if (n == 0) return FWP_EMPTY_MAP;
-    V r = fwp_map_alloc(n);
+    V r = fwp_map_alloc(n, 1);
     for (uint64_t k = 0; k < n; k++) {
-        MAP(r)->d[2 * k] = out[k];
-        MAP(r)->d[2 * k + 1] = 0;
+        MAP(r)->d[k] = out[k];
     }
     return r;
 }
@@ -2605,27 +2604,28 @@ static V fwp_p_set_op(V other, V this_, int op, const fwp_desc *kd) {
 typedef struct {
     void (*dup_key)(V), (*dup_value)(V);
     void (*drop_key)(V), (*drop_value)(V), (*drop_map)(V), (*drop_result)(V);
+    size_t columns; /* one key word for sets, key/value pairs for maps */
 } fwp_map_ops;
-static V fwp_map_typed_new(size_t capacity) {
+static V fwp_map_typed_new(size_t capacity, size_t columns) {
     if (!capacity) return FWP_EMPTY_MAP;
-    if (capacity > (SIZE_MAX - sizeof(fwp_map)) / (2 * sizeof(V))) fwp_trap("map too large");
-    return fwp_rc_fresh(fwp_map_alloc(capacity));
+    if (capacity > (SIZE_MAX - sizeof(fwp_map)) / (columns * sizeof(V))) fwp_trap("map too large");
+    return fwp_rc_fresh(fwp_map_alloc(capacity, columns));
 }
 static V fwp_map_typed_copy(V m, size_t capacity, int retain, const fwp_map_ops *ops) {
     if (!capacity) return FWP_EMPTY_MAP;
-    V result = fwp_map_typed_new(capacity);
+    V result = fwp_map_typed_new(capacity, ops->columns);
     MAP(result)->len = 0;
     fwp_value_owner owner = {result, ops->drop_map};
     fwp_cleanup cleanup;
     fwp_value_protect(&owner, &cleanup);
     size_t n = MAP(m)->len;
     for (size_t i = 0; i < n; i++) {
-        V key = MAP(m)->d[2 * i], value = MAP(m)->d[2 * i + 1];
+        V key = MAP(m)->d[ops->columns * i], value = ops->columns == 2 ? MAP(m)->d[ops->columns * i + 1] : 0;
         if (retain && ops->dup_key) ops->dup_key(key);
-        MAP(result)->d[2 * i] = key;
+        MAP(result)->d[ops->columns * i] = key;
         MAP(result)->len = i + 1;
         if (retain && ops->dup_value) ops->dup_value(value);
-        MAP(result)->d[2 * i + 1] = value;
+        if (ops->columns == 2) MAP(result)->d[ops->columns * i + 1] = value;
     }
     FWP_KEEP_ALIVE(m);
     return fwp_value_finish(&owner, &cleanup);
@@ -2635,17 +2635,17 @@ static V fwp_p_map_insert_typed(V k, V v, V m, const fwp_map_ops *ops, const fwp
     fwp_cleanup cleanup;
     fwp_value_protect(&owner, &cleanup);
     int found;
-    size_t i = fwp_map_find(m, k, kd, &found), n = MAP(m)->len;
+    size_t i = fwp_map_find(m, k, kd, &found, ops->columns), n = MAP(m)->len;
     int unique = fwp_rc_unique_mut(m);
     V result = m;
     size_t capacity = n;
     if (!found) {
-        size_t max = (SIZE_MAX - sizeof(fwp_map)) / (2 * sizeof(V));
+        size_t max = (SIZE_MAX - sizeof(fwp_map)) / (ops->columns * sizeof(V));
         if (n >= max) fwp_trap("map too large");
         capacity = n + 1;
         if (unique && n <= max / 2) capacity = n < 4 ? 4 : 2 * n;
     }
-    if (unique != 1 || (!found && fwp_rc_capacity(m) < sizeof(fwp_map) + 2 * (n + 1) * sizeof(V))) {
+    if (unique != 1 || (!found && fwp_rc_capacity(m) < sizeof(fwp_map) + ops->columns * (n + 1) * sizeof(V))) {
         result = fwp_map_typed_copy(m, capacity, !unique, ops);
         if (unique) MAP(m)->len = 0;
         owner.value = result;
@@ -2655,16 +2655,16 @@ static V fwp_p_map_insert_typed(V k, V v, V m, const fwp_map_ops *ops, const fwp
     fwp_value_owner pending = {v, ops->drop_value};
     fwp_cleanup pending_cleanup;
     fwp_value_protect(&pending, &pending_cleanup);
-    if (found) {
-        V old = MAP(result)->d[2 * i + 1];
-        MAP(result)->d[2 * i + 1] = v;
+    if (found && ops->columns == 2) {
+        V old = MAP(result)->d[ops->columns * i + 1];
+        MAP(result)->d[ops->columns * i + 1] = v;
         pending.value = 0;
         if (ops->drop_value) ops->drop_value(old);
-    } else {
+    } else if (!found) {
         if (ops->dup_key) ops->dup_key(k);
-        memmove(MAP(result)->d + 2 * i + 2, MAP(result)->d + 2 * i, 2 * (n - i) * sizeof(V));
-        MAP(result)->d[2 * i] = k;
-        MAP(result)->d[2 * i + 1] = v;
+        memmove(MAP(result)->d + ops->columns * (i + 1), MAP(result)->d + ops->columns * i, ops->columns * (n - i) * sizeof(V));
+        MAP(result)->d[ops->columns * i] = k;
+        if (ops->columns == 2) MAP(result)->d[ops->columns * i + 1] = v;
         MAP(result)->len = n + 1;
         pending.value = 0;
     }
@@ -2680,34 +2680,35 @@ static V fwp_p_map_remove_typed(V k, V m, const fwp_map_ops *ops, const fwp_desc
     fwp_cleanup input_cleanup;
     fwp_value_protect(&input, &input_cleanup);
     int found;
-    size_t i = fwp_map_find(m, k, kd, &found), n = MAP(m)->len;
+    size_t i = fwp_map_find(m, k, kd, &found, ops->columns), n = MAP(m)->len;
     if (!found) return fwp_value_finish(&input, &input_cleanup);
     int unique = fwp_rc_unique_mut(m);
     if (unique == 1) {
-        V old_key = MAP(m)->d[2 * i], old_value = MAP(m)->d[2 * i + 1];
-        memmove(MAP(m)->d + 2 * i, MAP(m)->d + 2 * i + 2, 2 * (n - i - 1) * sizeof(V));
+        V old_key = MAP(m)->d[ops->columns * i], old_value = ops->columns == 2 ? MAP(m)->d[ops->columns * i + 1] : 0;
+        memmove(MAP(m)->d + ops->columns * i, MAP(m)->d + ops->columns * (i + 1), ops->columns * (n - i - 1) * sizeof(V));
         MAP(m)->len = n - 1;
-        MAP(m)->d[2 * n - 2] = MAP(m)->d[2 * n - 1] = 0;
+        memset(MAP(m)->d + ops->columns * (n - 1), 0, ops->columns * sizeof(V));
         if (ops->drop_key) ops->drop_key(old_key);
         if (ops->drop_value) ops->drop_value(old_value);
         return fwp_value_finish(&input, &input_cleanup);
     }
-    V result = fwp_map_typed_new(n - 1);
+    V result = fwp_map_typed_new(n - 1, ops->columns);
     if (n > 1) MAP(result)->len = 0;
     fwp_value_owner output = {result, ops->drop_map};
     fwp_cleanup output_cleanup;
     fwp_value_protect(&output, &output_cleanup);
     for (size_t j = 0, out = 0; j < n; j++) {
         if (j == i) continue;
-        V key = MAP(m)->d[2 * j], value = MAP(m)->d[2 * j + 1];
+        V key = MAP(m)->d[ops->columns * j], value = ops->columns == 2 ? MAP(m)->d[ops->columns * j + 1] : 0;
         if (!unique && ops->dup_key) ops->dup_key(key);
-        MAP(result)->d[2 * out] = key;
+        MAP(result)->d[ops->columns * out] = key;
         MAP(result)->len = out + 1;
         if (!unique && ops->dup_value) ops->dup_value(value);
-        MAP(result)->d[2 * out++ + 1] = value;
+        if (ops->columns == 2) MAP(result)->d[ops->columns * out + 1] = value;
+        out++;
     }
     if (unique) {
-        V old_key = MAP(m)->d[2 * i], old_value = MAP(m)->d[2 * i + 1];
+        V old_key = MAP(m)->d[ops->columns * i], old_value = ops->columns == 2 ? MAP(m)->d[ops->columns * i + 1] : 0;
         MAP(m)->len = 0;
         if (ops->drop_key) ops->drop_key(old_key);
         if (ops->drop_value) ops->drop_value(old_value);
@@ -2723,7 +2724,7 @@ static V fwp_p_set_remove_typed(V k, V s, const fwp_map_ops *ops, const fwp_desc
 }
 static V fwp_p_map_get_typed(V k, V m, const fwp_map_ops *ops, const fwp_desc *kd) {
     int found;
-    size_t i = fwp_map_find(m, k, kd, &found);
+    size_t i = fwp_map_find(m, k, kd, &found, 2);
     if (!found) return FWP_NONE;
     V value = MAP(m)->d[2 * i + 1];
     if (ops->dup_value) ops->dup_value(value);
@@ -2740,7 +2741,7 @@ static V fwp_map_column_typed(V m, int col, const fwp_map_ops *ops) {
     fwp_cleanup output_cleanup;
     fwp_value_protect(&output, &output_cleanup);
     for (size_t i = MAP(m)->len; i; i--) {
-        V value = MAP(m)->d[2 * (i - 1) + col];
+        V value = MAP(m)->d[ops->columns * (i - 1) + col];
         void (*dup)(V) = col ? ops->dup_value : ops->dup_key;
         if (dup) dup(value);
         fwp_value_owner pending = {value, col ? ops->drop_value : ops->drop_key};
@@ -2784,7 +2785,7 @@ static V fwp_p_map_to_list_typed(V m, const fwp_map_ops *ops) {
 }
 /* keys/vals are caller-owned scratch containing borrowed child words.
  * A set passes NULL values: sorting aliases key/value lanes and scratch, then
- * materialization writes unit into the final container's value slots. */
+ * materialization stores only keys in the final set. */
 static V fwp_map_build_typed(V *keys, V *vals, size_t n, const fwp_map_ops *ops, const fwp_desc *kd) {
     if (!n) return FWP_EMPTY_MAP;
     /* Related lanes share one owner and no allocator-sized gap. */
@@ -2803,18 +2804,18 @@ static V fwp_map_build_typed(V *keys, V *vals, size_t n, const fwp_map_ops *ops,
         if (tv) tv[len] = vals[j - 1];
         i = j;
     }
-    V result = fwp_map_typed_new(len);
+    V result = fwp_map_typed_new(len, ops->columns);
     MAP(result)->len = 0;
     fwp_value_owner owner = {result, ops->drop_map};
     fwp_cleanup cleanup;
     fwp_value_protect(&owner, &cleanup);
     for (size_t i = 0; i < len; i++) {
         if (ops->dup_key) ops->dup_key(tk[i]);
-        MAP(result)->d[2 * i] = tk[i];
+        MAP(result)->d[ops->columns * i] = tk[i];
         MAP(result)->len = i + 1;
         V value = tv ? tv[i] : 0;
         if (ops->dup_value) ops->dup_value(value);
-        MAP(result)->d[2 * i + 1] = value;
+        if (ops->columns == 2) MAP(result)->d[ops->columns * i + 1] = value;
     }
     fwp_value_finish(&owner, &cleanup);
     fwp_scratch_finish(&tk, &tk_cleanup);
@@ -2839,6 +2840,7 @@ static V fwp_p_map_from_list_typed(V xs, const fwp_map_ops *ops, const fwp_desc 
     return result;
 }
 static V fwp_p_set_from_list_typed(V xs, const fwp_map_ops *ops, const fwp_desc *kd) {
+    if (!xs) return FWP_EMPTY_MAP;
     V source = xs;
     size_t n;
     V *keys = fwp_map_items(xs, &n);
@@ -2854,7 +2856,7 @@ static V fwp_p_map_update_typed(V k, V f, V d, V m, const fwp_map_ops *ops, cons
     fwp_cleanup input_cleanup;
     fwp_value_protect(&input, &input_cleanup);
     int found;
-    size_t i = fwp_map_find(m, k, kd, &found);
+    size_t i = fwp_map_find(m, k, kd, &found, 2);
     V current = found ? MAP(m)->d[2 * i + 1] : d;
     V value = fwp_apply_borrowed(f, 1, &current);
     fwp_value_owner pending = {value, ops->drop_value};
@@ -2870,7 +2872,7 @@ static V fwp_p_map_update_typed(V k, V f, V d, V m, const fwp_map_ops *ops, cons
 static V fwp_p_map_map_values_typed(V f, V m, const fwp_map_ops *ops) {
     size_t n = MAP(m)->len;
     if (!n) return FWP_EMPTY_MAP;
-    V result = fwp_map_typed_new(n);
+    V result = fwp_map_typed_new(n, ops->columns);
     MAP(result)->len = 0;
     fwp_value_owner owner = {result, ops->drop_map};
     fwp_cleanup cleanup;
@@ -2893,19 +2895,19 @@ static V fwp_set_op_typed(V other, V this_, int op, const fwp_map_ops *ops, cons
     fwp_cleanup scratch_cleanup;
     fwp_scratch_protect(&out, &scratch_cleanup);
     while (i < a || j < b) {
-        int c = i == a ? 1 : j == b ? -1 : fwp_cmp(MAP(this_)->d[2 * i], MAP(other)->d[2 * j], kd);
-        if (c < 0) { if (op != 1) out[n++] = MAP(this_)->d[2 * i]; i++; }
-        else if (c > 0) { if (op == 0) out[n++] = MAP(other)->d[2 * j]; j++; }
-        else { if (op != 2) out[n++] = MAP(this_)->d[2 * i]; i++; j++; }
+        int c = i == a ? 1 : j == b ? -1 : fwp_cmp(MAP(this_)->d[i], MAP(other)->d[j], kd);
+        if (c < 0) { if (op != 1) out[n++] = MAP(this_)->d[i]; i++; }
+        else if (c > 0) { if (op == 0) out[n++] = MAP(other)->d[j]; j++; }
+        else { if (op != 2) out[n++] = MAP(this_)->d[i]; i++; j++; }
     }
-    V result = fwp_map_typed_new(n);
+    V result = fwp_map_typed_new(n, ops->columns);
     if (n) MAP(result)->len = 0;
     fwp_value_owner owner = {result, ops->drop_map};
     fwp_cleanup cleanup;
     fwp_value_protect(&owner, &cleanup);
     for (size_t k = 0; k < n; k++) {
         if (ops->dup_key) ops->dup_key(out[k]);
-        MAP(result)->d[2 * k] = out[k]; MAP(result)->d[2 * k + 1] = 0;
+        MAP(result)->d[k] = out[k];
         MAP(result)->len = k + 1;
     }
     fwp_value_finish(&owner, &cleanup);

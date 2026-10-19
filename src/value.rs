@@ -3,7 +3,7 @@
 
 use std::cell::RefCell;
 use std::cmp::Ordering;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
 use crate::ir::{FuncId, TypeShape, MT};
@@ -35,6 +35,7 @@ pub enum Value {
     Closure(Rc<Closure>),
     Array(Rc<Vec<Value>>),
     Map(Rc<BTreeMap<Value, Value>>),
+    Set(Rc<BTreeSet<Value>>),
     Bytes(Rc<[u8]>),
     /// Balanced ternary integer (value; the width is in the type).
     TInt(i64),
@@ -236,6 +237,7 @@ impl Value {
             Value::F16(_) => 23,
             Value::BF16(_) => 24,
             Value::F128(_) => 25,
+            Value::Set(_) => 26,
         }
     }
 }
@@ -267,6 +269,7 @@ impl Ord for Value {
             (Record(a), Record(b)) => a.iter().cmp(b.iter()),
             (Array(a), Array(b)) => a.iter().cmp(b.iter()),
             (Map(a), Map(b)) => a.iter().cmp(b.iter()),
+            (Set(a), Set(b)) => a.iter().cmp(b.iter()),
             (Bytes(a), Bytes(b)) => a.cmp(b),
             (TInt(a), TInt(b)) => a.cmp(b),
             (Trit(a), Trit(b)) => a.cmp(b),
@@ -569,23 +572,33 @@ fn write_value(out: &mut String, v: &Value, mt: &MT, shapes: &dyn Shapes, top: b
             }
             out.push(']');
         }
+        Value::Set(items) => {
+            let key = match mt {
+                MT::Con(_, args) => args[0].clone(),
+                _ => MT::unit(),
+            };
+            out.push_str("set{");
+            for (i, value) in items.iter().enumerate() {
+                if i > 0 {
+                    out.push_str(", ");
+                }
+                write_value(out, value, &key, shapes, false, false);
+            }
+            out.push('}');
+        }
         Value::Map(m) => {
             let (k, vt) = match mt {
                 MT::Con(_, args) if args.len() == 2 => (args[0].clone(), args[1].clone()),
-                MT::Con(_, args) if args.len() == 1 => (args[0].clone(), MT::unit()),
                 _ => (MT::unit(), MT::unit()),
             };
-            let is_set = matches!(mt, MT::Con(n, _) if n == "std::Set");
-            out.push_str(if is_set { "set{" } else { "map{" });
+            out.push_str("map{");
             for (i, (key, val)) in m.iter().enumerate() {
                 if i > 0 {
                     out.push_str(", ");
                 }
                 write_value(out, key, &k, shapes, false, false);
-                if !is_set {
-                    out.push_str(": ");
-                    write_value(out, val, &vt, shapes, false, false);
-                }
+                out.push_str(": ");
+                write_value(out, val, &vt, shapes, false, false);
             }
             out.push('}');
         }

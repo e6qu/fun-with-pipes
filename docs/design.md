@@ -299,9 +299,13 @@ lane in each allocation, sharing the sorter's key/value lanes rather than storin
 unused values. The sorter copies shared output lanes once. Ordinary typed maps
 use the joined layout too, and empty maps avoid scratch allocation. Both forms
 allocate the final exact-size owned container after sorting. Peak storage grows with input length even when
-most keys are duplicates. Small integer fields occupy full words, and sets currently
-share the map representation's value slots. These remain memory costs to measure
-and reduce; the optimization removes intermediate list nodes and eligible tuples.
+most keys are duplicates. Small integer fields still occupy full words.
+Final sets now store one word per key, while maps store a key/value pair per entry.
+Both have an eight-byte length header. For example, a newly built three-key set
+requests 32 bytes instead of the previous 56; allocator metadata, padding and any
+separately allocated keys add to this amount. Unique insertion may reserve extra
+capacity. [The ownership contract](ownership.md#compact-set-storage) explains
+shared updates and cleanup; [the handoff](development-state.md) records validation.
 
 `FWP_MAP_BUILD=0` disables this transformation for controlled comparisons.
 Focused local checks cover raw/optimized interpretation, native O1/O2, ARC,
@@ -309,8 +313,10 @@ stressed tracing, aliases, every injected allocation failure and cancellation.
 The [six-host measurements](benchmarks.md#building-numeric-maps-and-sets-without-temporary-lists)
 verify the joined layout, allocation counts and actual instructions.
 [PR #166](roadmap-history.md#numeric-map-and-set-construction-pr-166) records full
-production acceptance. Large-map timings still include an unresolved Xeon
-slowdown; reduced allocation counts do not establish universal speed gains.
+production acceptance. Its large-map Xeon slowdown was subsequently repaired
+for the measured workload by [cached-map borrowing](benchmarks.md#rechecking-the-original-xeon-slowdown).
+Other layouts and workloads can still be slower; reduced allocation counts do
+not establish universal speed gains.
 
 ### Numeric pairs immediately mapped
 

@@ -96,12 +96,11 @@ outside the benchmark suite.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.
-2. Extend [tail-recursion elimination](docs/design.md#tail-calls-and-recursion)
-   to functions mixing eligible tail calls with ordinary recursion. Validate
-   argument order, aliases, cleanup and cancellation in native and WebAssembly
-   execution; retain C and machine-code evidence. Calls with work left afterward
-   must keep ordinary frames. Resource-owning frames and known mutually recursive
-   groups need separate proofs; do not promise general tail calls.
+2. Remove the unused value word from each set entry. Preserve shared values,
+   ordering, decoding, hashing and compile-time constants; verify actual allocation
+   requests, cleanup and machine code on native targets and WASI. The preceding
+   [mixed-tail-recursion delivery](docs/roadmap-history.md#mixed-tail-recursion-pr-171)
+   passed; resource-owning tail frames and mutual recursion need separate proofs.
 3. Use representative applications and equivalent-work measurements to select
    the next costs to remove: dynamic closures/calls, input copies, container
    layout, numerical workspace and derivative recording. Investigate known
