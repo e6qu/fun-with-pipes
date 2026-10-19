@@ -8,9 +8,11 @@ PR #173 merged after all gates passed. PR #174, `numeric-hash-delivery`, is now
 the only active PR; the primary checkout owns its final acceptance. Keep this
 candidate isolated until the hash batch is delivered.
 
-Next: rerun the ARM `integer-output` probe, then all six native hosts and both-Linux
-`wasi-arc` on this corrected source. Inspect every failure and retain actual binaries
-and allocation results. No full integration or timing improvement is established.
+Next: audit six-native-host `integer-output` run `39330733812` and both-Linux
+`wasi-arc` run `39330737723`, both at `d4c5b39f994b72b9991e8ffd09698aa63e0c5d84`.
+Fix every failure, then retain actual binaries/allocation results. The narrower
+ARM probe `39329770583` was cancelled while still queued to use the complete
+matrix instead. No full integration or timing improvement is established.
 
 Run `39327804456` at `3a864f4d` passed all-target Clippy and four existing
 protocol/trap tests, but all three new output tests failed: ownership lowering
@@ -39,6 +41,17 @@ keeps printed diagnostics separate from framed results. A string-allocation prob
 requires zero immediate-output strings versus one in the control; deliberately
 adding a string must fail. Native binaries/C are retained by the focused suite.
 The same boundary fixture joins the actual WASI shutdown corpus.
+
+## Binary audit preparation
+
+After the six-host test run passes, dispatch `integer-output-report` from the
+collector head with `evidence_run=39330733812` and
+`source_revision=d4c5b39f994b72b9991e8ffd09698aa63e0c5d84`. Update these inputs if
+any compiler/test repair changes the measured head. The collector requires all
+seven tests on all six hosts, rejects ignored/missing cases, verifies source
+identity and inspects 144 actual binaries and their tracing symbols. It records
+assembly and section sizes; inspect the output code before making stack claims.
+No collector result exists yet. Its two validation tests pass in 0.22 seconds.
 
 ## Checks
 
