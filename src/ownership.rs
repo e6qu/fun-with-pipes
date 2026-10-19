@@ -567,7 +567,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             &[2],
         ),
         "string.length" | "string.byte-length" | "bytes.length" | "print" | "write" | "eprint"
-        | "ewrite" => (&[B], R, None, &[]),
+        | "ewrite" | "print._integer" => (&[B], R, None, &[]),
         "string.contains" | "starts-with" | "ends-with" | "eq" | "ne" | "lt" | "le" | "gt"
         | "ge" | "compare" => (&[B, B], R, None, &[]),
         "array.from-list" | "array.to-list" | "array.sort" => (

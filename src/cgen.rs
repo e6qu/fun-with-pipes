@@ -500,6 +500,99 @@ fn reuse_enabled() -> bool {
     std::env::var("FWP_REUSE").map_or(true, |v| v != "0")
 }
 
+/// Replace only immediate integer show/print pairs before inserting ownership
+/// temporaries. The backend-only primitive takes the original scalar and returns
+/// unit, so normal ownership analysis never creates a String owner for it.
+fn integer_output_program(prog: &Program) -> Program {
+    fn rewrite(
+        e: &mut Expr,
+        funcs: &[Func],
+        made: &mut Vec<Func>,
+        targets: &mut HashMap<FuncId, FuncId>,
+    ) {
+        match e {
+            Expr::Trace(_, body)
+            | Expr::Dup(_, body)
+            | Expr::Drop(_, body)
+            | Expr::BorrowGlobal(_, _, body)
+            | Expr::ResourceRegion { body, .. } => rewrite(body, funcs, made, targets),
+            Expr::Call(_, args) | Expr::Construct(_, args) | Expr::Record(args) => {
+                for arg in args {
+                    rewrite(arg, funcs, made, targets);
+                }
+            }
+            Expr::Apply(function, args) => {
+                rewrite(function, funcs, made, targets);
+                for arg in args {
+                    rewrite(arg, funcs, made, targets);
+                }
+            }
+            Expr::Field(record, _) => rewrite(record, funcs, made, targets),
+            Expr::SetFields(record, fields) => {
+                rewrite(record, funcs, made, targets);
+                for (_, value) in fields {
+                    rewrite(value, funcs, made, targets);
+                }
+            }
+            Expr::Let(_, value, body) => {
+                rewrite(value, funcs, made, targets);
+                rewrite(body, funcs, made, targets);
+            }
+            Expr::Match(value, arms) => {
+                rewrite(value, funcs, made, targets);
+                for (_, body) in arms {
+                    rewrite(body, funcs, made, targets);
+                }
+            }
+            Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => {}
+        }
+        let Expr::Call(print, args) = e else {
+            return;
+        };
+        if *print >= funcs.len() || !matches!(&funcs[*print].body, Body::Prim(s) if s == "print") {
+            return;
+        }
+        let [Expr::Call(show, values)] = args.as_mut_slice() else {
+            return;
+        };
+        if *show >= funcs.len()
+            || !matches!(&funcs[*show].body, Body::Prim(s) if s == "show")
+            || values.len() != 1
+        {
+            return;
+        }
+        let argument = funcs[*show].ty.params(1).0[0];
+        if int64_kind(argument).is_none() {
+            return;
+        }
+        let target = *targets.entry(*show).or_insert_with(|| {
+            let id = funcs.len() + made.len();
+            made.push(Func {
+                name: "print._integer".into(),
+                arity: 1,
+                locals: vec![argument.clone()],
+                ty: MT::Fun(
+                    Box::new(argument.clone()),
+                    Box::new(funcs[*print].ty.params(1).1.clone()),
+                ),
+                body: Body::Prim("print._integer".into()),
+            });
+            id
+        });
+        *e = Expr::Call(target, std::mem::take(values));
+    }
+    let mut lowered = prog.clone();
+    let mut made = Vec::new();
+    let mut targets = HashMap::new();
+    for function in &mut lowered.funcs {
+        if let Body::Expr(body) = &mut function.body {
+            rewrite(body, &prog.funcs, &mut made, &mut targets);
+        }
+    }
+    lowered.funcs.extend(made);
+    lowered
+}
+
 /// `prog` with its function bodies' references counted (`src/rc.rs`).
 fn counted_program(prog: &Program) -> Program {
     let mut p = prog.clone();
@@ -5039,29 +5132,6 @@ impl<'g, 'p> FnGen<'g, 'p> {
         Some(format!("fwp_drop{}", self.g.drop_id(t)))
     }
 
-    /// An immediately printed inline integer does not need an owned String.
-    /// Match resolved primitives so user-defined display functions keep running.
-    fn print_without_string(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
-        if std::env::var("FWP_DIRECT_INTEGER_PRINT").is_ok_and(|value| value == "0")
-            || !matches!(&self.g.prog.funcs[id].body, Body::Prim(name) if name == "print")
-        {
-            return None;
-        }
-        let [Expr::Call(show, values)] = args else {
-            return None;
-        };
-        let function = &self.g.prog.funcs[*show];
-        if !matches!(&function.body, Body::Prim(name) if name == "show") {
-            return None;
-        }
-        let [value] = values.as_slice() else {
-            return None;
-        };
-        let signed = int64_kind(function.ty.params(1).0[0])?;
-        let value = self.expr(value);
-        Some(format!("fwp_print_integer({value}, {})", u8::from(signed)))
-    }
-
     /// `string.length` of a `concat` or of an integer's `show`: the sum of
     /// the parts' lengths, or the count of the digits, without building
     /// the string. The parts are evaluated in the same order.
@@ -5554,10 +5624,6 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if let Some(n) = self.length_without_string(id, args) {
             self.tail_tokens(tail);
             return self.bind(format!("(V)(int64_t)({})", n));
-        }
-        if let Some(call) = self.print_without_string(id, args) {
-            self.tail_tokens(tail);
-            return self.bind(call);
         }
         if let Some(abi) = self.g.abis[id].clone() {
             let xs = self.worker_args(id, &abi, args);
@@ -6615,6 +6681,10 @@ impl<'p> Gen<'p> {
             "not" => "return l0 == FWP_TRUE ? FWP_FALSE : FWP_TRUE;".into(),
             "and" => "return (l0 == FWP_TRUE && l1 == FWP_TRUE) ? FWP_TRUE : FWP_FALSE;".into(),
             "or" => "return (l0 == FWP_TRUE || l1 == FWP_TRUE) ? FWP_TRUE : FWP_FALSE;".into(),
+            "print._integer" => format!(
+                "return fwp_print_integer(l0, {});",
+                u8::from(int64_kind(&p(0)).expect("integer output requires an inline integer"))
+            ),
             "show" => match int64_kind(&p(0)) {
                 Some(true) => "return fwp_show_i64(l0);".into(),
                 Some(false) => "return fwp_show_u64(l0);".into(),
@@ -9302,6 +9372,13 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
 }
 
 fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
+    // Fuse before ownership lowering separates the temporary String from print.
+    let direct_output = if std::env::var("FWP_DIRECT_INTEGER_PRINT").is_ok_and(|v| v == "0") {
+        None
+    } else {
+        Some(integer_output_program(prog))
+    };
+    let prog = direct_output.as_ref().unwrap_or(prog);
     let arc = native_options().arc;
     if arc {
         if !matches!(

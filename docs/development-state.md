@@ -4,22 +4,25 @@
 
 This is isolated `direct-integer-output` preparation in
 `/private/tmp/fwp-direct-integer-output`, based on hash preparation `c9b07366`.
-PR #173 remains the only active PR; its primary-checkout handoff owns acceptance.
-The hash batch must follow it before this preparation is delivered. Do not push
-these changes onto either tested head or open a competing PR.
+PR #173 merged after all gates passed. PR #174, `numeric-hash-delivery`, is now
+the only active PR; the primary checkout owns its final acceptance. Keep this
+candidate isolated until the hash batch is delivered.
 
-The initial ARM probe `39326880740` at `72865856` was still queued when a
-local check caught the protocol fixture missing its required `# expose: cli`.
-That fixture is fixed; the obsolete queued probe was cancelled.
-Corrected run `39327114349` at `d8d98a1f` failed Clippy on an unnecessary borrowed
-type reference before tests ran. Removed that borrow. Its second failure was an
-artifact upload expecting files from the skipped test step; upload now depends
-on that step running, and records the source before testing. Rerun the full probe;
-these repairs do not establish that the integration tests pass.
+Next: rerun the ARM `integer-output` probe, then all six native hosts and both-Linux
+`wasi-arc` on this corrected source. Inspect every failure and retain actual binaries
+and allocation results. No full integration or timing improvement is established.
 
-Next: run six native `integer-output` jobs and both-Linux `wasi-arc` checks on
-this source, inspect every failure, and retain actual binaries/allocation results.
-No full compiler integration or timing improvement is established yet.
+Run `39327804456` at `3a864f4d` passed all-target Clippy and four existing
+protocol/trap tests, but all three new output tests failed: ownership lowering
+separated `show` from `print` before the generator matcher ran. The fix moves
+recognition before ownership lowering, introducing a typed backend-only print
+operation with an explicit borrowed argument/unit result. Ordinary ownership
+analysis now never creates the eliminated String; no cleanup is bypassed.
+
+Earlier `39326880740` was cancelled while queued after fixing the CLI fixture's
+missing `# expose: cli`. Run `39327114349` then caught a needless type borrow;
+that and its secondary missing-artifact upload failure were repaired together.
+The next run must validate the semantic fix; these repairs alone are not support.
 
 ## Prepared change
 
@@ -51,6 +54,9 @@ unchanged limits. No full compiler build or benchmark ran locally.
   with the accepted interpreter in 0.61 seconds after the exposure fix.
 - The target-to-shard check passed in 0.15 seconds; documentation passed 61 sets,
   106 anchors and seven work areas in 2.54 seconds.
+- The extracted actual lowering passed typed fusion, shared-string preservation,
+  target reuse and unsupported-float checks in 1.23 seconds. Accepted-compiler IR
+  inspection confirms that show/print are adjacent before ownership lowering.
 - Focused compiler/native integration, WASI, allocation controls and binary
   inspection remain pending; record their source and run IDs after dispatch.
 
