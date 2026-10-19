@@ -96,11 +96,13 @@ outside the benchmark suite.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.
-2. Validate direct construction of immediately consumed integer range sets.
+2. Validate numeric hashing without repeated per-element type dispatch.
    [Compact key-only sets](docs/roadmap-history.md#compact-set-storage-pr-172)
-   passed all production gates. Remove the range's temporary list
-   and sorting buffers; preserve bound order and aliases, check storage limits
-   before allocation, and compare allocation counts and actual binaries. The
+   and [direct integer range sets](docs/roadmap-history.md#direct-integer-range-sets-pr-173)
+   passed all production gates. The hash preparation preserves canonical bytes
+   and borrowing, with unchanged allocation profiles and smaller code sections.
+   Finish final-head acceptance; retain mixed timing results and C/Rust gaps in
+   [the measurements](docs/benchmarks.md#numeric-hash-specialization). The
    [mixed-tail-recursion delivery](docs/roadmap-history.md#mixed-tail-recursion-pr-171)
    passed; resource-owning tail frames and mutual recursion need separate proofs.
 3. Use representative applications and equivalent-work measurements to select

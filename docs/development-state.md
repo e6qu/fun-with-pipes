@@ -2,20 +2,27 @@
 
 ## Next action
 
-This is `specialize-numeric-hashes` in
-`/private/tmp/fwp-specialize-numeric-hashes`, based on PR #173's tested head
-`3e4d0a372a79461d5482503b4d1b454ed7b7e347`. PR #173 remains the only active PR.
-Eight of its nine production jobs passed in `39312560218`; Linux AMD64 is running.
-Documentation `39312560173` passed. Its acceptance handoff is in the primary
-checkout. Preserve that head, audit every gate and squash-merge only after all
-nine plus documentation pass. Use an explicit one-line subject and empty body.
+Current delivery branch: `numeric-hash-delivery`, replayed onto merged main.
+[PR #173](roadmap-history.md#direct-integer-range-sets-pr-173) passed all nine
+production jobs and documentation, then merged as
+`eb03eb58fb642500234b9bbe647adbcf59765415`. Its one-line message and identical
+files were verified. Redundant same-tree production run `39328932163` was cancelled.
 
-Next: finish documenting the completed hash measurements below, then replay this
-preparation on merged main and publish the next substantial PR. Require its own
-nine final-head production gates and documentation. Focused evidence is not a
-replacement for those gates. No focused failures remain.
+Next: publish this numeric-hash batch as the only active PR, then audit all nine
+production jobs and documentation for its exact final head. Fix every failure
+before squash merge with an explicit one-line subject and empty body. Focused
+evidence below does not replace these gates. No focused hash failures remain.
 
-## Prepared change
+Independent subsequent preparation is `/private/tmp/fwp-direct-integer-output`,
+branch `direct-integer-output`, at `3a864f4d`. Its first integration run
+`39327804456` passed existing protocol/trap tests but failed all three new output
+tests: ownership lowering separates `show` from `print` before the matcher runs.
+Move recognition before that lowering and preserve all three failure controls;
+its own handoff holds the preparation details. It is not accepted support and
+must not replace this delivery's tested head. Earlier fixture/Clippy/artifact
+issues were repaired; do not mistake those repairs for passing integration.
+
+## Current batch
 
 The compiler emits direct hashing code for inline integers, F32/F64, their flat
 lists/arrays/sets, numeric maps and records composed of those types. Other types

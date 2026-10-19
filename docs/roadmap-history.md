@@ -12,6 +12,30 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Direct integer range sets (PR #173)
+
+[PR #173](https://github.com/e6qu/fun-with-pipes/pull/173) merged as
+`eb03eb58fb642500234b9bbe647adbcf59765415`, with identical files to tested head
+`3e4d0a372a79461d5482503b4d1b454ed7b7e347`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39312560218)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39312560173)
+passed before squash merge. The one-line message and identical tree were checked;
+only redundant post-merge production run `39328932163` was cancelled.
+
+`range lo hi | set.from-list` writes eligible integer ranges directly into their
+final buffer. For 4,096 keys, construction falls from 4,099 requests / 196,624 bytes
+to one request / 32,776 bytes. Empty/descending ranges allocate nothing. Bounds
+keep their order; size checks include actual 32-bit WASI execution. Boxed integers
+and shared input lists keep their ordinary construction paths.
+
+Focused checks passed 264 tests across six native hosts and 24 WASI tests per
+Linux architecture. The [binary audit](https://github.com/e6qu/fun-with-pipes/actions/runs/39311772543)
+checked 228 actual binaries. [Measurements](benchmarks.md#direct-integer-range-sets)
+retain slower small-case medians and overlapping Windows samples. A separate
+[million-key comparison](measurements/range-set-peers-2026-10-19.md) measured
+tracing fwp at 6.1%/6.9% more whole-process median time than C/Rust on its Linux
+AMD64 runner. This removes construction intermediates, not all collection costs.
+
 ## Compact set storage (PR #172)
 
 [PR #172](https://github.com/e6qu/fun-with-pipes/pull/172) merged as
