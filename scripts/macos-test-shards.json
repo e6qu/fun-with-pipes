@@ -19,6 +19,7 @@
     "golden_check",
     "services",
     "hash_ownership",
+    "integer_output",
     "numeric_array_fusion",
     "state_sequence_ownership",
     "text_file_tools",

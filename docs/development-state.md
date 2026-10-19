@@ -2,91 +2,44 @@
 
 ## Next action
 
-This is `specialize-numeric-hashes` in
-`/private/tmp/fwp-specialize-numeric-hashes`, based on PR #173's tested head
-`3e4d0a372a79461d5482503b4d1b454ed7b7e347`. PR #173 remains the only active PR.
-Eight of its nine production jobs passed in `39312560218`; Linux AMD64 is running.
-Documentation `39312560173` passed. Its acceptance handoff is in the primary
-checkout. Preserve that head, audit every gate and squash-merge only after all
-nine plus documentation pass. Use an explicit one-line subject and empty body.
+This is isolated `direct-integer-output` preparation in
+`/private/tmp/fwp-direct-integer-output`, based on hash preparation `c9b07366`.
+PR #173 remains the only active PR; its primary-checkout handoff owns acceptance.
+The hash batch must follow it before this preparation is delivered. Do not push
+these changes onto either tested head or open a competing PR.
 
-Next: finish documenting the completed hash measurements below, then replay this
-preparation on merged main and publish the next substantial PR. Require its own
-nine final-head production gates and documentation. Focused evidence is not a
-replacement for those gates. No focused failures remain.
+Next: run six native `integer-output` jobs and both-Linux `wasi-arc` checks on
+this source, inspect every failure, and retain actual binaries/allocation results.
+No full compiler integration or timing improvement is established yet.
 
 ## Prepared change
 
-The compiler emits direct hashing code for inline integers, F32/F64, their flat
-lists/arrays/sets, numeric maps and records composed of those types. Other types
-keep descriptor traversal. Hashing borrows its input, with no new owner or encoded
-buffer. Canonical widths, float bits, field/key order and length encoding stay
-unchanged. Packed/full-word arrays and slices use their actual storage widths.
-`FWP_TYPED_HASH=0` selects general traversal for controlled comparisons.
-Recursive type shapes are not expanded indefinitely. No syntax or API changes.
+An immediately consumed integer `show | print` uses a 24-byte stack buffer and
+writes the same digits/newline to `fwp_prog_out`. This removes the temporary owned
+String visible as the second managed request in the hash comparisons. It applies
+only to resolved primitive show/print for inline signed/unsigned integers up to
+64 bits. Stored/shared strings, wide numbers and other displays keep their work.
+`FWP_DIRECT_INTEGER_PRINT=0` provides an explicit comparison control. No new syntax.
 
-The tests compare raw interpretation with ARC and stressed tracing at O0/O2,
-with specialization and array packing independently on/off. They cover scalar
-boundaries, NaN/infinity, slices, aliases, mixed map widths and named records.
-Negative controls must detect deliberately inserted allocation and retain calls.
-WASI runs the same fixture, including shutdown cleanup.
+Tests compare raw interpretation with ARC/stressed tracing at O0/O2, both switch
+settings, integer bounds, shared strings and trap order. A binary-protocol test
+keeps printed diagnostics separate from framed results. A string-allocation probe
+requires zero immediate-output strings versus one in the control; deliberately
+adding a string must fail. Native binaries/C are retained by the focused suite.
+The same boundary fixture joins the actual WASI shutdown corpus.
 
-## Completed evidence
+## Checks
 
-Measured source `6ffd2385a8207078cadd046d7dc2e3f3c389675f` is preserved by
-`roadmap/revision-numeric-hash-6ffd2385`. Compiler generation is unchanged since
-`c05e592e`; later ownership edits only move imports and correct a slice comment.
-Collector/repeat source `524e917d46bc25e7c78a5ed09a3d25581411bc47` is preserved by
-`roadmap/revision-numeric-hash-report-524e917d`.
+All local checks use the primary checkout's `python3 scripts/local-guard.py` with
+unchanged limits. No full compiler build or benchmark ran locally.
 
-- Six-native-host run `39317215955`: 69 tests per host, 414 total, none ignored.
-  Both-Linux WASI run `39317221484`: 24 tests per architecture, none ignored.
-- Four-host costs `39317226192` and report `39322404918` passed. The collector
-  checks complete logs, source/binary hashes, sample balance, ownership counts,
-  native sections and tracing symbols: 96 correctness and 48 measured binaries.
-  [Initial report](measurements/numeric-hashing-2026-10-19.json).
-- Repeat `39322408959` passed all four hosts using those verified binaries:
-  24 balanced samples after two warmups, 1,152 timed executions.
-  [Repeated report](measurements/numeric-hashing-repeat-2026-10-19.json).
-- Linux ARM64 large-array/set repeated CPU medians improve 2.1%/1.5%; all 24
-  pairs improve. Other hosts have overlapping samples. The first ARM macOS
-  small-case slowdown does not repeat. Linux AMD64 sets remain 0.13%/0.21%
-  slower in the two medians with overlapping ranges: no speedup or established
-  regression there. AMD64 hardware changed from EPYC 9V45 to 9V74 between runs.
-- Specialized/general ARC profiles match: two managed requests, zero retains,
-  zero charge after cleanup. Output formatting accounts for the second request.
-  C/Rust profiles count only their application input buffer. Small fwp workloads
-  still cost up to 36.6% more CPU than C and 22.6% more than Rust.
-- Actual code sections shrink 1,432–1,952 bytes. Inspected ARM inner loops have
-  no calls or stack accesses; AMD64 saves a register around the function. The
-  caller still stores a stack tuple and calls once per hash. No zero-stack,
-  zero-heap or universal C/Rust parity claim follows.
-
-[The benchmark guide](benchmarks.md#numeric-hash-specialization) explains workloads,
-scopes, ratios and remaining costs. The separate
-[production baseline](measurements/range-set-peers-2026-10-19.md) retains all six
-benchmark programs from PR #173, including raw samples and slower results.
-
-## Local checks and repairs
-
-All workloads use the primary checkout's `python3 scripts/local-guard.py` with
-unchanged limits. Full compiler builds and benchmarks ran only on GitHub.
-
-- Formatting, Python syntax and documentation checks passed during preparation.
-- Extracted actual numeric generator: 128 runtime-reference comparisons passed
-  at O0/O2 with packed/full-word storage in 2.51 seconds. CI verifies integration.
-- Raw interpretation of the 20-line fixture passed in 0.27 seconds; tiny Rust
-  measurement-source/allocator checks passed in 1.58 seconds.
-- Completed native/WASI log audit passed in 0.22 seconds. Report download and
-  validation passed in 6.81 seconds; all four repeat reports in 6.84 seconds.
-- Review fixed full-word array loads and the three-byte set length prefix. It
-  also corrected an obsolete claim that all slices copy: views retain backing
-  owners. Primitive-contract and measurement-source imports now stay at the top.
-- `scripts/test-hash-evidence.py` passed four checks in 0.22 seconds: incomplete
-  logs, wrong revision/status, changed saved binaries, and balanced repeat order.
-- Documentation audit passed 61 document sets, 106 immutable anchors and seven
-  work areas in 2.45 seconds. Its first run caught a missing roadmap-status table
-  in the shortened handoff; restoring the table fixed it.
+- `cargo fmt --all` passed in 1.34 seconds.
+- The extracted actual runtime formatter passed 56 comparisons with standard C
+  decimal formatting at O0/O2 in 1.03 seconds, including signed/unsigned extrema.
+- Accepted interpreter ran the 19-line fixture in 0.27 seconds; formatting passed
+  in 0.01 seconds. These do not validate the new compiler recognition path.
+- Focused compiler/native integration, WASI, allocation controls and binary
+  inspection remain pending; record their source and run IDs after dispatch.
 
 ## Roadmap status
 
