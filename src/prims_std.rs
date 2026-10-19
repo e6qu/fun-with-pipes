@@ -236,16 +236,20 @@ impl<'p> Interp<'p> {
                     }
                     Value::tuple(vec![Value::list(l), Value::list(r)])
                 }
-                "range" | "array._range" => {
+                "range" | "array._range" | "set._range" => {
                     // `i < hi` before each step, so `i + 1` cannot overflow
-                    if sym == "array._range" {
+                    if sym != "range" {
                         let lo = a[0].as_i128().unwrap();
                         let hi = a[1].as_i128().unwrap();
                         let count = (hi - lo).max(0) as u128;
                         let limit =
                             (usize::MAX - std::mem::size_of::<u64>()) / std::mem::size_of::<u64>();
                         if count > limit as u128 {
-                            return trap("array too large");
+                            return trap(if sym == "array._range" {
+                                "array too large"
+                            } else {
+                                "map too large"
+                            });
                         }
                     }
                     let mut out = Vec::new();
@@ -266,6 +270,8 @@ impl<'p> Interp<'p> {
                     }
                     if sym == "array._range" {
                         Value::Array(Rc::new(out))
+                    } else if sym == "set._range" {
+                        Value::Set(Rc::new(out.into_iter().collect()))
                     } else {
                         Value::list(out)
                     }

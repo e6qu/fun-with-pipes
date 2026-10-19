@@ -1082,6 +1082,18 @@ impl Fuser<'_> {
             if !fields.iter().all(unboxed_numeric) {
                 return None;
             }
+            // Integer ranges are already sorted and distinct. Preserve bound
+            // evaluation, but construct their sole set consumer directly.
+            if name == "std::Set" {
+                if let Expr::Call(range, bounds) = &args[0] {
+                    if prim_sym(self.funcs, *range) == Some("range") && bounds.len() == 2 {
+                        let parameters = self.funcs[*range].ty.params(2).0;
+                        let ty = fun2(parameters[0], parameters[1], &result);
+                        let direct = self.prim("set._range", ty, 2);
+                        return Some(Expr::Call(direct, bounds.clone()));
+                    }
+                }
+            }
             let Expr::Call(map, inputs) = &args[0] else {
                 return None;
             };

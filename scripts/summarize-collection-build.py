@@ -56,7 +56,7 @@ def audit_tests(log):
                 'collection_construction': 3, 'decoder_partial': 1,
                 'inline_caf_ownership': 2, 'map_set_ownership': 6,
                 'mapped_array_construction': 3, 'numeric_array_fusion': 2,
-                'protocol': 9, 'repl': 8, 'static_constants': 1}
+                'protocol': 9, 'range_set': 3, 'repl': 8, 'static_constants': 1}
     # Cargo's target headers use stderr; harness summaries use stdout. GitHub
     # can place the next header before the preceding summary, so audit the two
     # ordered streams separately instead of splitting on headers.
@@ -108,6 +108,38 @@ def compact_sets(directory, host, llvm):
                      'These instrumented executions are not a speed benchmark.'}
 
 
+def range_requests(path, direct):
+    rows = []
+    for line in path.read_text().splitlines():
+        match = re.fullmatch(r'keys=(\d+) requests=(\d+) requested_bytes=(\d+)', line)
+        assert match, (path, line)
+        keys, requests, requested = map(int, match.groups())
+        expected_requests = (1 if direct else keys + 3) if keys else 0
+        expected_bytes = (8 + 8 * keys if direct else 16 + 48 * keys) if keys else 0
+        assert (requests, requested) == (expected_requests, expected_bytes), (path, line)
+        rows.append({'keys': keys, 'requests': requests, 'requestedBytes': requested})
+    assert [row['keys'] for row in rows] == [0, 1, 7, 257, 4096], path
+    return rows
+
+
+def range_sets(directory, host, llvm):
+    runs = []
+    for mode in ['arc', 'tracing']:
+        for opt in ['-O0', '-O2']:
+            for direct in ['0', '1']:
+                label = f'{mode}{opt}-direct-{direct}'
+                runs.append({'mode': mode, 'optimization': opt, 'direct': direct == '1',
+                             'sizes': range_requests(directory / f'{label}.txt', direct == '1'),
+                             'generatedSha256': digest(directory / f'{label}.c'),
+                             'binaryInspection': inspect(directory / f'{label}.exe', host, mode, llvm)})
+    return {'runs': runs,
+            'scope': 'Observed managed allocation requests while an exported function builds '
+                     'an I64 range set. Includes input list and scratch construction; excludes '
+                     'startup, output, allocator headers and rounding. Both implementations '
+                     'produce and check every key. ARC charge returns to baseline after release. '
+                     'No timing claim follows from these instrumented executions.'}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run', required=True, type=int)
@@ -145,9 +177,9 @@ def main():
         costs = directory / 'costs'
         report = json.loads((costs / 'report.json').read_text())
         assert report['source'] == args.head
-        assert len(report['cases']) == 6
+        assert len(report['cases']) == 9
         assert {(case['kind'], case['inputs']) for case in report['cases']} == {
-            (kind, count) for kind in ['map', 'set'] for count in [32, 4096, 65536]}
+            (kind, count) for kind in ['map', 'set', 'range-set'] for count in [32, 4096, 65536]}
         for case in report['cases']:
             assert set(case['variants']) == {'0', '1'}
             assert len(case['executionOrder']) == 8
@@ -157,6 +189,8 @@ def main():
                 assert counters['retains'] == counters['finalChargedBytes'] == counters['collections'] == 0
                 count = case['inputs']
                 expected = (4 if fused == '1' else 2 * count + 5) if case['kind'] == 'set' else (5 if fused == '1' else 3 * count + 6)
+                if case['kind'] == 'range-set':
+                    expected = 2 if fused == '1' else count + 4
                 assert counters['requests'] == expected, (host, case['kind'], count, fused, counters)
                 assert len(variant['processWallNs']) == 8 and min(variant['processWallNs']) > 0
                 assert variant['medianProcessWallNs'] == statistics.median(variant['processWallNs'])
@@ -187,17 +221,20 @@ def main():
                      'failureConfigurations': exits, 'cleanupControls': 4,
                      'failureBinaries': binaries,
                      'compactSets': compact_sets(directory / 'sets', host, args.llvm_bin),
+                     'rangeSets': range_sets(directory / 'sets/range-sets', host, args.llvm_bin),
                      'measurements': report})
-        print(host, sum(completed_tests.values()), 'tests, 24 actual binaries, six cost cases verified', flush=True)
+        print(host, sum(completed_tests.values()), 'tests, 38 actual binaries, nine cost cases verified', flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps({
         'source': args.head, 'run': args.run,
         'collectorSource': command('git', 'rev-parse', 'HEAD').strip(),
         'completeNativeMatrix': True,
         'scope': 'Actual binaries are inspected as data, never executed by this collector. '
-                 'Each host has 41 focused tests, six failure configurations, four deliberately '
-                 'broken cleanup controls, four compact-set configurations, an extra-slot '
-                 'control and six paired cost cases. Timing compares fused and '
+                 'Each host has 44 focused tests, six failure configurations, four deliberately '
+                 'broken builder cleanup controls, four compact-set configurations, an extra-slot '
+                 'control, eight range-set allocation configurations and nine paired cost cases. '
+                 'Range-set tests also reject missing size guards, missing releases and ordinary '
+                 'construction under a one-allocation budget. Timing compares fused and '
                  'ordinary fwp, not C/Rust. Native section sizes are recorded; assembly must be '
                  'reviewed before any claim about register placement or vectorization. '
                  'Passing focused evidence does not replace production acceptance.',

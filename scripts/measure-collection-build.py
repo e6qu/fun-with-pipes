@@ -54,13 +54,17 @@ def main():
         for kind, expression in [
             ('set', 'map (rem 257) | set.from-list | set.size'),
             ('map', 'map (fork (curry id) (rem 257) id) | map.from-list | map.get 5'),
+            ('range-set', 'set.from-list | hash'),
         ]:
             source = out / f'{kind}-{inputs}.fwp'
             source.write_text(f'main = range 0 {inputs} | {expression} | echo\n')
             # The raw interpreter is the semantic reference, not a timing peer.
             reference = run([compiler, 'run', '--interp', source], dict(env, FWP_NO_OPT='1')).stdout
-            expected = str(min(inputs, 257)) if kind == 'set' else f'Some {5 + ((inputs - 6) // 257) * 257}'
-            assert reference == expected + '\n', (kind, inputs, reference)
+            if kind != 'range-set':
+                expected = str(min(inputs, 257)) if kind == 'set' else f'Some {5 + ((inputs - 6) // 257) * 257}'
+                assert reference == expected + '\n', (kind, inputs, reference)
+            else:
+                assert reference.strip().isdecimal(), (kind, inputs, reference)
             variants = {}
             for fused in ['0', '1']:
                 label = f'{kind}-{inputs}-fused-{fused}'
@@ -68,8 +72,9 @@ def main():
                 cfile = out / (label + '.c')
                 run([compiler, 'build', '--gc', 'arc', '-O2', '--emit-c', source, '-o', cfile], build_env)
                 code = cfile.read_text()
-                marker = ('/* numeric map: direct callback fields */' if kind == 'map'
-                          else '/* numeric set: direct callback */')
+                marker = {'map': '/* numeric map: direct callback fields */',
+                          'set': '/* numeric set: direct callback */',
+                          'range-set': 'return fwp_p_set_range(l0, l1,'}[kind]
                 assert (marker in code) == (fused == '1')
                 profile = out / (label + '-profile.c')
                 profile.write_text(iteration.instrument(code))
@@ -137,7 +142,9 @@ def main():
         'scope': 'Same fwp program and explicitly selected compiler with numeric collection fusion enabled or disabled, '
                  'checked ARC, native -O2, no tracing or reuse poisoning. Inputs are compiled constants; '
                  'range construction, callbacks, sorting, deduplication, one query, startup and output '
-                 'are included in whole-process time. Both variants use the same map sorting algorithm. '
+                 'are included in whole-process time. Map and mapped-set variants use the same sorting algorithm. '
+                 'Range-set cases hash all distinct keys: ordinary construction builds a list and sorts it, '
+                 'whereas direct construction writes already ordered integers into one final buffer. '
                  'The map keeps the last value for each duplicate key; the set keeps distinct keys. '
                  'Memory uses separate instrumented executables and includes main and shutdown; '
                  'charged storage excludes allocator capacity and process RSS. Eight samples per '

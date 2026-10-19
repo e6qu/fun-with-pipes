@@ -1,0 +1,26 @@
+# A range includes its lower bound and excludes its upper bound.
+# Sets keep these already ordered, distinct integers; aliases keep old values.
+main = [
+    range -128i8 -124i8 | set.from-list | set.to-list | echo,
+    range 252u8 255u8 | set.from-list | set.to-list | echo,
+    range -32768i16 -32765i16 | set.from-list | set.to-list | echo,
+    range 65532u16 65535u16 | set.from-list | set.to-list | echo,
+    range -2147483648i32 -2147483645i32 | set.from-list | set.to-list | echo,
+    range 4294967292u32 4294967295u32 | set.from-list | set.to-list | echo,
+    range -9223372036854775808 -9223372036854775805
+    | set.from-list
+    | set.to-list
+    | echo,
+    range 18446744073709551612u64 18446744073709551615u64
+    | set.from-list
+    | set.to-list
+    | echo,
+    range -2 3 | set.from-list | both id (set.remove 0 | set.insert 9) | echo,
+    range 7 7 | set.from-list | set.to-list | echo,
+    range 8 3 | set.from-list | set.to-list | echo,
+    range 18446744073709551615u64 0u64 | set.from-list | set.to-list | echo,
+    range 0 64
+    | map (const (range -4 4 | set.from-list) | both id (set.remove 0))
+    | length
+    | echo,
+] | ignore
