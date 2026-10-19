@@ -6,19 +6,26 @@ This is the `specialize-numeric-hashes` preparation in
 `/private/tmp/fwp-specialize-numeric-hashes`, based on PR #173's head
 `3e4d0a372a79461d5482503b4d1b454ed7b7e347`. PR #173 remains the only active PR;
 its acceptance handoff is in the primary checkout. Production `39312560218`
-has passed its benchmark job, with eight platform jobs running; documentation
+has passed benchmarks and both ARM macOS gates, with six platform jobs running; documentation
 `39312560173` passed. Do not replace that tested head.
 
 Preparation `6ffd2385a8207078cadd046d7dc2e3f3c389675f` is published. The initial
 Linux `hash` run `39314998423` passed 69 tests, none ignored, at `c05e592e`.
 Its compiler/runtime is unchanged; the latest fixture adds NaN/infinity cases.
-At `6ffd2385`, six-host `hash` run `39317215955`, both-Linux `wasi-arc` run
-`39317221484` and four-host `hash-costs` run `39317226192` are queued.
+At `6ffd2385`, six-host `hash` run `39317215955` passed. Four completed logs
+were audited under the guard: 69 tests each, none ignored. ARM WASI passed all
+24 tests in run `39317221484`; AMD64 remains queued. Three of four `hash-costs`
+jobs in `39317226192` passed; Linux AMD64 remains queued. Inspect individual
+jobs: a workflow can say queued while some of its jobs have already passed.
 
-Next: audit all three matrix runs. Fix every failure. Run `hash-report` with
+Next: finish auditing all three matrix runs. Fix every failure. Run `hash-report` with
 those exact test/cost run IDs and source revision, then inspect the saved inner
 loops before deciding whether to adopt the change. Its collector checks all
 69 tests per host, 96 correctness binaries and 48 measured fwp binaries.
+Run `hash-specialization-repeat` against the completed cost run at the same
+source: ARM macOS's small case is slower in its first median, with broad overlap.
+The repeat verifies exact saved binaries and takes 24 balanced samples after two
+warmups, comparing specialized ARC, generic ARC, C and Rust without rebuilding.
 Keep one active PR. After #173 passes and merges, replay accepted preparation
 on main, update the plan/evidence and require all final-head production gates.
 
@@ -48,15 +55,26 @@ sharing, mixed map widths and named records. It compares raw interpretation
 with generated ARC/stressed-tracing O0/O2 code, with specialization on/off.
 A second probe asserts no allocation or reference-count operations inside the
 new bodies, and must detect deliberately added allocation/retain calls.
-The WASI shutdown corpus now includes the same fixture. The initial Linux run
-passed both new native tests; the expanded fixture still needs the full matrix.
+The WASI shutdown corpus now includes the same fixture. All six native jobs
+passed the expanded fixture and negative controls; AMD64 WASI remains pending.
 
 The measurement script compares specialized ARC/tracing, generic ARC, buffered
 ARC, C and Rust in twelve balanced samples. It keeps the two array cases and
 adds 65,536-key sets hashed 64 times, with their three-byte length prefix recorded
 correctly. Buffered hashing explicitly disables specialization so that its
 control still measures the encoded buffer. Rust imports were moved out of the
-measurement program's main function. No new performance result exists yet.
+measurement program's main function. Initial reports are in
+`/private/tmp/fwp-numeric-hash-{arm,macos-15,macos-15-intel}-report.json`.
+On Neoverse N2, large-array/set CPU ratios versus generic ARC are 0.980/0.983,
+with non-overlapping samples and unchanged allocation/owner profiles. Small
+ARC still takes 28.7%/12.7% more CPU than C/Rust. ARM macOS's small median is
+10.1% slower than generic ARC; all its ranges overlap widely, so repeat before
+acceptance. Intel macOS also has broad overlap. No cross-platform speed claim.
+The inspected ARM set hash body (`f7`, 0x2130–0x2240) has no calls or stack
+accesses; the general visitor recursively calls itself per key. The caller still
+stores a stack tuple and calls once per hash. Native binary sizes fall on all
+three measured hosts. Counters remain two managed requests and zero retains;
+the complete report must retain exact sizes, scopes and raw samples.
 
 ## Local checks and repairs
 
@@ -87,7 +105,7 @@ unchanged limits. No new compiler build or full benchmark ran locally.
   the actual storage width, and the new native matrix tests both settings.
 - Reference-count instrumentation includes retain, share, drop and last-release;
   allocation instrumentation includes native allocation fast paths and libc calls.
-  The initial Linux run passed their negative controls; the six-host run remains pending.
+  All six native jobs passed their negative controls.
 - Review also corrected an obsolete claim that all slices copy storage: array
   views retain their backing owner. Moved primitive-contract imports out of the
   function. Formatting passed in 1.59 seconds; these changes do not alter contracts.
