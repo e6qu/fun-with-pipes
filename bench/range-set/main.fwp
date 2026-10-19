@@ -1,0 +1,2 @@
+# Build the ordered distinct integers 0 through 999,999, then hash every key.
+main = range 0 1000000 | set.from-list | hash | echo
