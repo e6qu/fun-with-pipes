@@ -1028,117 +1028,118 @@ printing and generic hash traversal remain in the measured interval.
 
 ### Numeric hash specialization
 
-The [production baseline](measurements/range-set-peers-2026-10-19.md) at `3e4d0a37`
-includes a million-key range set followed by canonical hashing. On Linux AMD64
-EPYC 7763, with GCC 13.3/O2 and Rust 1.99.1/O2, six-run medians were C 12.260 ms,
-Rust 12.165 ms and tracing fwp 13.009 ms. That is 6.1%/6.9% extra whole-process
-time, including construction, startup and output. Some sample ranges overlap;
-these figures do not isolate hashing or establish a general language overhead.
-The report comes from [production job 118265645528](https://github.com/e6qu/fun-with-pipes/actions/runs/39312560218/job/118265645528),
-artifact `12217338696`, and also retains the other five benchmark programs.
+Hashing turns a value's encoded bytes into a 64-bit fingerprint. The compiler
+can emit a loop for known numeric types instead of asking a general runtime
+visitor for each element's type. This preserves the bytes and hash result;
+`FWP_TYPED_HASH=1/0` selects specialized/general traversal for comparison.
 
-`scripts/measure-hashing.py` compares direct numeric hash loops with general
-type-descriptor traversal, using the same fwp compiler and `FWP_TYPED_HASH=1/0`.
-It also times C/Rust implementations of the same encoding and a separate fwp
-control that first constructs an encoded byte buffer. The buffered control uses
-general traversal explicitly; it does not stand in for the specialization cost.
+The current [initial report](measurements/numeric-hashing-2026-10-20.json) and
+[repeat](measurements/numeric-hashing-repeat-2026-10-20.json) measure source
+`0bb385ab`, including the C aliasing repair and direct integer output. The
+[older initial](measurements/numeric-hashing-2026-10-19.json) and
+[older repeat](measurements/numeric-hashing-repeat-2026-10-19.json) preserve the
+pre-repair samples. Those earlier Clang results did not expose the GCC defect
+and are not acceptance evidence for the repaired compiler.
 
-Each program constructs one I64 collection `0..N-1`. At each iteration it hashes
-the tuple `(iteration, collection)` and combines results with XOR. Array cases
-use 16 elements with 4,096 repetitions, or 4,096 elements with 1,024 repetitions.
-The set case uses 65,536 ordered keys with 64 repetitions. C/Rust store those
-same keys in an array/vector; no version needs sorting. The prefix changes each
-hash. All versions encode the same eight-byte integers and unsigned LEB128
-length. Both ARC and tracing versions of specialized fwp are measured.
+Each program builds one I64 collection containing `0..N-1`, repeatedly hashes
+`(iteration, collection)` and combines results with XOR. The iteration prefix
+changes each hash. All versions encode the same eight-byte integers and unsigned
+LEB128 length (a variable-length integer encoding).
 
-After one warmup, twelve balanced rotating/reversed samples include startup,
+| Case | Elements | Hashes per process |
+|---|---:|---:|
+| Small array | 16 | 4,096 |
+| Large array | 4,096 | 1,024 |
+| Ordered set | 65,536 | 64 |
+
+C/Rust store the same ordered keys in an array/vector; no version sorts them.
+The initial run compares specialized tracing/ARC, general ARC, C/Rust, and a
+separate general-ARC control that constructs an encoded byte buffer. That slower
+buffered control does not stand in for general traversal. All fwp variants
+explicitly enable array/collection fusion and direct integer output.
+
+One warmup precedes twelve balanced rotating/reversed samples. The repeat reuses
+the exact saved specialized ARC, general ARC and C/Rust executables: two warmups,
+then 24 balanced samples, 1,152 timed executions in total. Both include startup,
 input construction, hashing and output. Compilation and instrumented allocation
-profiles are separate. All builds use O2; C uses `-ffp-contract=off`. Reports
-retain hardware, compilers, raw wall/child-CPU samples, allocation/live-memory
-counts, process RSS and actual binaries/disassembly. Child CPU is the processor
-time charged to the program; wall time also includes waiting for the host.
+profiles are separate. Child CPU is processor time charged to the program; wall
+time also includes waiting for the host. Raw reports retain both, with compiler
+versions/commands, hardware, RSS, profiles and binary hashes. Builds use O2 and
+C `-ffp-contract=off`.
 
-The [initial report](measurements/numeric-hashing-2026-10-19.json) at `6ffd2385`
-contains all four hosts, 414 passing native tests and 144 inspected binaries.
-The [repeat report](measurements/numeric-hashing-repeat-2026-10-19.json) reuses
-those exact binaries for 24 balanced samples after two warmups: 1,152 timed
-executions. Linux used Clang 18.1.3; macOS used Apple Clang 17. All use O2.
-The reports retain exact compiler versions and command lines, including Rust.
+Each cell below is **initial / repeated child-CPU median**, specialized ARC divided
+by general ARC. For example, 0.968 means 3.2% less CPU. This compares fwp with fwp.
 
-Below, each cell is **initial / repeated child-CPU median**, specialized ARC
-divided by general ARC. A ratio of 0.98 means 2% less CPU; 1.01 means 1% more.
-These compare fwp with fwp, not with C or Rust.
-
-| Host and processor | 16-element array | 4,096-element array | 65,536-key set |
+| Host and processor | Small array | Large array | Set |
 |---|---:|---:|---:|
-| Linux AMD64, EPYC 9V45 / 9V74 | 0.945 / 0.961 | 0.990 / 0.987 | 1.001 / 1.002 |
-| Linux ARM64, Neoverse N2 | 0.909 / 0.929 | 0.980 / 0.979 | 0.983 / 0.985 |
-| macOS ARM64, virtual Apple M1 | 1.101 / 0.996 | 0.922 / 0.979 | 0.943 / 0.962 |
-| macOS AMD64, Core i7-8700B | 0.996 / 0.922 | 0.840 / 0.933 | 0.963 / 0.930 |
+| Linux AMD64, Xeon 8573C / EPYC 9V74 | 0.863 / 0.996 | 0.998 / 0.994 | 0.991 / 1.001 |
+| Linux ARM64, Neoverse N2 | 0.954 / 0.925 | 0.968 / 0.968 | 0.987 / 0.986 |
+| macOS ARM64, virtual Apple M1 | 0.895 / 0.983 | 0.987 / 0.964 | 0.940 / 0.987 |
+| macOS AMD64, Core i7-8700B | 0.946 / 0.948 | 0.968 / 0.853 | 0.994 / 0.926 |
 
-The AMD64 repeat ran on an EPYC 9V74 rather than the initial EPYC 9V45. Both
-versions in each comparison ran on the same host; absolute times across the two
-runs are not directly comparable. Linux ARM64 was faster in all 24 paired samples
-for every case; its large-array
-and set ranges were separated. Other hosts had overlapping ranges. In particular,
-the first ARM macOS small-case slowdown of 10.1% did not repeat: repeated wall
-time was 0.2% higher and CPU 0.4% lower. That small-case result is inconclusive.
-Linux AMD64 sets were 0.13% and 0.21% slower in the two medians, with only 9 of
-24 repeated pairs faster. Its repeated CPU ranges were 37.889–38.369 ms versus
-37.803–38.363 ms. These overlapping samples do not establish a regression or a
-speedup there. Keep both observations; no universal improvement follows.
+Linux AMD64 changed processor between runs; within each run every variant uses
+the same host. Do not compare absolute times across those processors. Repeated
+Linux ARM64 large-array/set results are faster in all 24 pairs with separated
+ranges. Other ranges overlap. AMD64 sets are 0.11% slower in the repeat, with
+12 of 24 pairs faster: 37.776–38.376 ms versus 37.806–38.211 ms. That result is
+inconclusive. Initial ARM macOS small-case wall time is 3.8% higher despite a
+lower CPU median; its repeated wall median is 3.0% lower. Keep both observations.
 
-The remaining **CPU overhead against C / Rust** in the repeated samples is:
+Remaining **repeated CPU overhead against C / Rust** is:
 
 | Host | Small array | Large array | Set |
 |---|---:|---:|---:|
-| Linux AMD64 | +36.6% / +22.6% | +1.8% / +1.5% | +1.7% / +1.5% |
-| Linux ARM64 | +31.3% / +17.3% | +1.0% / +0.6% | +1.1% / +0.7% |
-| macOS ARM64 | +10.9% / −0.7% | +1.8% / +1.0% | +0.03% / +0.7% |
-| macOS AMD64 | +22.6% / +7.3% | +0.4% / +0.4% | +1.7% / +1.9% |
+| Linux AMD64 | +28.1% / +13.5% | +1.7% / +1.3% | +1.5% / +1.2% |
+| Linux ARM64 | +32.1% / +18.3% | +0.7% / +0.5% | +0.8% / +0.5% |
+| macOS ARM64 | +15.8% / −1.5% | +2.3% / +1.7% | +0.7% / −1.1% |
+| macOS AMD64 | +17.5% / −0.8% | +2.8% / +1.5% | +3.6% / −1.0% |
 
-Negative overhead means the measured fwp median was lower; overlapping samples
-do not establish superiority or parity. These whole-process figures are specific
-to these programs and runners. They are not an overhead percentage for fwp as a
-language. The million-key production baseline above uses a different compiler,
-memory mode and workload, so its percentage cannot be subtracted from this table.
+Negative overhead means a lower observed fwp median; overlapping samples do not
+establish superiority or parity. These are costs of these programs on these
+runners, not an overhead percentage for the language. The separate million-key
+[PR #173 production baseline](measurements/range-set-peers-2026-10-19.md) and
+[pre-repair PR #174 results](measurements/numeric-hash-pre-repair-peers-2026-10-19.md)
+use GCC and tracing, with different workloads. Their percentages cannot be
+subtracted from this table. Both retain all six production benchmark programs.
 
-Memory profiles are identical for specialized and general ARC: two managed
-requests, zero retains and zero charge after cleanup. Small/large/set programs
-request 165 / 32,805 / 524,324 bytes and peak at 144 / 32,776 / 524,296 bytes.
-The requests cover the input buffer and formatted output; C/Rust profiles count
-one application input buffer and exclude printing allocations. Counters exclude
-allocator metadata. Hash bodies themselves allocate nothing and perform no
-retain/release operations, as checked by tests that deliberately insert them.
+Specialized and general ARC profiles now match at **one managed allocation**,
+zero retains and zero charge after cleanup. Small/large/set programs request
+136 / 32,776 / 524,296 bytes and peak at 144 / 32,776 / 524,296 bytes. This is
+the input buffer; direct integer printing removes the earlier second request.
+C/Rust count one application buffer of 128 / 32,768 / 524,288 bytes. fwp's extra
+eight requested bytes store length; charged storage can include rounding.
+Counters exclude allocator metadata and libc output storage. Hash bodies add
+no allocation or retain/release operation; deliberate added operations must fail
+the corresponding tests. This does not establish zero whole-process heap use.
 
-Saved ARC binaries have no tracing symbols, and their executable code sections
-shrink by 1,432–1,952 bytes. Inspected ARM64 array/set inner loops contain no
-calls or stack accesses; AMD64 saves a callee-saved register around its function,
-not inside the element loop. The caller still builds a stack tuple and calls
-once per complete hash. Each eight-byte key still requires eight dependent
-FNV-1a byte steps. Removing dispatch does not remove that work, input storage,
-startup, output allocation or final ownership cleanup.
+The collector inspects 96 correctness binaries and 48 measured fwp binaries.
+Specialized ARC executable code sections are 1,432–1,952 bytes smaller than
+general ARC. The inspected Linux ARM64 set loop has no calls or stack accesses;
+AMD64 saves one register around the function, outside the element loop. The
+caller still builds a stack tuple and calls once per hash. Eight dependent
+FNV-1a byte steps per key remain; removing type dispatch cannot remove them.
 
-Repeat with the `hash` and `hash-costs` evidence suites at the same revision.
-After both pass, `hash-report` takes their `evidence_run` / `costs_run` IDs and
-the full `source_revision`. It audits every host's tests, checks saved-file hashes,
-sample balance and medians, and inspects native sections and tracing symbols.
-It retains disassembly for review; a passing collector alone does not establish
-that an inner loop has no calls, spills or avoidable instructions.
+The [output report](measurements/integer-output-2026-10-20.json) inspects another
+144 binaries from the same 456-test native run. For its small print-then-trap
+example, ARC/O2 code sections shrink by 3,536–3,712 bytes across the six hosts.
+ARM macOS reserves 112 bytes for the whole main-thread frame, including startup;
+the formatter's 24-byte buffer is not a whole-frame or whole-program bound.
+ARC binaries exclude tracing functions, but runtime initialization remains.
 
-Acceptance requires identical canonical results, zero allocation/count operations
-inside hashing, and unchanged whole-program ARC allocation/owner profiles versus
-general traversal. The performance target is lower time on the large array and
-set cases without a reproducible small-case regression. Overlapping samples need
-a repeat on the same verified binaries before a speed claim; report C/Rust gaps
-and binary sizes even when the targeted dispatch is removed.
+To reproduce, run `hash` and `hash-costs` at one source revision. After they pass,
+`hash-report` takes their `evidence_run` / `costs_run` IDs and `source_revision`.
+It checks complete tests, saved-file hashes, sample balance, medians and actual
+binary sections/tracing symbols. `integer-output-report` uses the same test run
+and inspects the direct/ordinary output binaries. `hash-specialization-repeat`
+uses the completed cost run as `evidence_run` and the same source revision.
+Inspect saved assembly before claiming that a loop avoids calls or stack spills.
 
-If a result is inconclusive, `hash-specialization-repeat` takes the completed
-cost run as `evidence_run` and its full `source_revision`. It verifies and reruns
-the saved specialized ARC, general ARC, C and Rust binaries without recompilation:
-two warmups, then 24 balanced samples. This repeat excludes the slower buffered
-control and the separate tracing variant. Keep both runs, including any slower
-medians; the repeat does not replace or erase the first observation.
+Acceptance requires identical canonical results, no allocation/count traffic
+inside hashing, and unchanged ARC profiles versus general traversal. Target
+lower time on the large array and set without a reproducible small-case
+regression. Overlapping results require investigation; retain slower samples,
+C/Rust gaps and code-size costs. A passing collector does not replace full
+production acceptance.
 
 ## CPU tensor output storage
 

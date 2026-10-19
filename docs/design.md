@@ -398,8 +398,9 @@ little-endian scalar bytes, original floating-point bits and key/field order.
 Packed and full-word arrays use their respective storage widths; slices borrow
 their existing data address. Hashing adds no owners or temporary encoded buffer.
 The [measurements](benchmarks.md#numeric-hash-specialization) retain native/WASI
-checks, unchanged allocation counts and mixed timing results against general
-traversal and C/Rust. Removing dispatch does not guarantee a speed improvement.
+checks, matching allocation counts for specialized/general traversal and mixed
+timing results against C/Rust. Direct output separately removes a temporary
+String. Removing dispatch does not guarantee a speed improvement.
 
 ### Printing integers without an owned temporary
 
@@ -412,7 +413,9 @@ For example, `-17 | echo` prints `-17` on one line without requiring an owned
 String solely for that print. The argument still evaluates before output.
 Shared strings and displays for other types keep their normal evaluation.
 This removes one managed allocation; it does not promise allocation-free libc
-IO or a timing improvement. The [handoff](development-state.md) records validation.
+IO or a timing improvement. The [report](measurements/integer-output-2026-10-20.json)
+records the six-host checks and actual code sizes; the
+[handoff](development-state.md) records production acceptance.
 The combined `hash` evidence suite checks all six native hosts. Once it passes,
 `integer-output-report` takes its `evidence_run` and full `source_revision`, checks
 all 76 hash, output and neighboring ownership tests on each host, and inspects
