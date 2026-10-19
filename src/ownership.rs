@@ -4,6 +4,8 @@
 //! Array/map/set elements are typed owners. Spawned task thunks retain a counted
 //! callback owner. Synchronous service scopes borrow callbacks; detached children
 //! retain the shared settings they need for their independent lifetimes.
+use Argument::{Borrow as B, Consume as C};
+use ResultOwnership::Shared as R;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Argument {
@@ -152,11 +154,9 @@ pub fn borrows_without_escape(symbol: &str, index: usize) -> bool {
 /// Complete array/map/set contracts and selected String/Bytes contracts. Comparison-only keys
 /// borrow; arrays/maps/sets own typed element references.
 /// Synchronous list/container callbacks borrow;
-/// spawned/deadline thunks retain a counted owner; other retained callbacks share.
-/// Slices and set operations copy storage.
+/// spawned/deadline thunks and server handlers retain a counted owner.
+/// Array slices may retain a shared backing owner; small slices copy to limit retention.
 pub fn primitive(symbol: &str) -> Option<Contract> {
-    use Argument::{Borrow as B, Consume as C};
-    use ResultOwnership::Shared as R;
     let (arguments, result, callback, aliases): (
         &'static [Argument],
         ResultOwnership,
