@@ -15,10 +15,10 @@ fn typed_decoder_cleanup_survives_every_injected_construction_exit() {
     std::fs::write(
         &input,
         r#"
-Row = { name: String, items: List[String], packed: Array[String], sign: Trit }
+Row = { name: String, items: List[String], packed: Array[String], keys: Set[String], sign: Trit }
 read : String -> Result[Row, String]
 read = json.read
-main = "{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"],\"sign\":0}" | read | echo
+main = "{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"],\"keys\":[\"b\",\"a\",\"b\"],\"sign\":0}" | read | echo
 "#,
     )
     .unwrap();
@@ -47,8 +47,8 @@ int main(void) {{
     if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 253;
 #endif
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
-    V text=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"],\"sign\":0}}");
-    V invalid=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",3],\"packed\":[\"a\",\"b\"],\"sign\":0}}");
+    V text=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",\"two\"],\"packed\":[\"a\",\"b\"],\"keys\":[\"b\",\"a\",\"b\"],\"sign\":0}}");
+    V invalid=fwp_cstr("{{\"name\":\"owned\",\"items\":[\"one\",3],\"packed\":[\"a\",\"b\"],\"keys\":[\"b\",\"a\",\"b\"],\"sign\":0}}");
     intptr_t budget=fwp_gc.budget;
     jmp_buf trap; fwp_trap_jb=&trap; fwp_trap_cleanup=0; fwp_trap_recover=decode_recover;
     decode_probe_at=0; decode_probe_step=0;
@@ -65,8 +65,15 @@ int main(void) {{
     decode_probe_at=0;
     result=fwp_p_json_read(text,{descriptor});
     const fwp_desc *row=({descriptor})->vfields[0][0];
+    fwp_buf rendered={{0}}; fwp_write(&rendered,OBJ(result)->f[0],row,1);
     fwp_buf wire={{0}}; fwp_encode(&wire,OBJ(result)->f[0],row);
     ({descriptor})->drop(result);
+    V parsed=0;
+    if(!fwp_parse_text(rendered.d,rendered.len,row,&parsed)) return 200;
+    fwp_buf roundtrip={{0}}; fwp_encode(&roundtrip,parsed,row); row->drop(parsed);
+    if(roundtrip.len!=wire.len || memcmp(roundtrip.d,wire.d,wire.len)) return 201;
+    free(roundtrip.d); free(rendered.d);
+    if(fwp_cleanups || fwp_gc.budget!=budget) return 197;
     for(size_t n=0;n<=wire.len;n++) {{
         fwp_rd reader={{(const unsigned char *)wire.d,n,0}}; V value=0;
         int ok=fwp_decode(&reader,row,&value);
@@ -96,6 +103,7 @@ int main(void) {{
         .replace("                fwp_array_store(fields->aggregate, i, fields->values[0], d->elem);", "                decode_probe();\n                fwp_array_store(fields->aggregate, i, fields->values[0], d->elem);")
         .replace("        b->next = j->blocks; b->used = 0; b->capacity = capacity;", "        decode_scratch_live += sizeof *b + capacity;\n        b->next = j->blocks; b->used = 0; b->capacity = capacity;")
         .replace("        free(block);", "        decode_scratch_live -= sizeof *block + block->capacity;\n        free(block);")
+        .replace("        V previous = owner.value;", "        decode_probe();\n        V previous = owner.value;")
         .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
     let code = format!("{code}\n{probe}");
     let omitted = code.replace(

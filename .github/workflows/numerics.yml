@@ -422,7 +422,7 @@ jobs:
       - run: cargo clippy --all-targets -- -D warnings
       - name: Collection semantics, failures and cancellation
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test static_constants --test protocol --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test collection_construction --test map_set_ownership --test mapped_array_construction --test numeric_array_fusion -- --nocapture
+        run: cargo test --no-fail-fast --test static_constants --test protocol --test repl --test decoder_partial --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test collection_construction --test map_set_ownership --test mapped_array_construction --test numeric_array_fusion -- --nocapture
       - name: Use the compiler already built by the integration tests
         run: cargo build --bin fwp
       - name: Repeated construction costs and generated code

@@ -8,12 +8,17 @@ Branch: `compact-set-storage`, based on accepted PR #171 merge
 (`39276733207`) and documentation (`39276733233`) passed.
 [History](roadmap-history.md#mixed-tail-recursion-pr-171) records that delivery.
 
-Next: publish this batch as a draft PR and run the `collection-build` focused workflow
-on Linux first. Fix every failure, then run the complete native matrix, WASI
-checks and documentation gate. Merge only after all nine production jobs and
-documentation pass for the final head. No new compiler build has run locally;
-added tests are not acceptance evidence. Full builds and measurements belong on
-GitHub runners.
+[PR #172](https://github.com/e6qu/fun-with-pipes/pull/172) is a draft. The initial
+focused `collection-build` run `39291722740` queued without starting; the next
+revision adds the native decoder set/truncation checks found during review.
+Next: replace the queued run with the completed revision, fix every failure, then
+run the complete native matrix, WASI checks and documentation gate. Merge only
+after all nine production jobs and documentation pass for the final head.
+No new compiler build has run locally; added tests are not acceptance evidence.
+Full builds and measurements belong on GitHub runners.
+
+Duplicate post-merge run `39289648247` was cancelled on the identical accepted
+PR #171 tree. It had no failed jobs; cancellation is not acceptance.
 
 ## Current batch
 
@@ -50,7 +55,11 @@ limits. The downloaded accepted ARM Mac compiler at
 - `env FWP_NO_OPT=1 <accepted-compiler> run --interp tests/fixtures/compact_sets.fwp`:
   passed in 0.34 seconds; twelve output lines saved as the regression reference.
 - The documentation audit first caught a missing status table in this rewrite;
-  restored the seven-area table and explicit next action.
+  restored the seven-area table and explicit next action. The audit then passed
+  in 3.07 seconds (60 document sets, 106 anchors and seven work areas).
+- `cargo fmt --all` after the decoder extension passed. Native decoder coverage
+  now includes sets, text round trips, every truncated binary prefix and injected
+  failures during set insertion.
 - New Rust/C compilation, ownership probes and native/WASI execution are pending CI.
 
 ## Roadmap status
