@@ -1803,8 +1803,11 @@ Set requests fall 131,077 → 4; map requests 196,614 → 5. Peak counted bytes 
 4,718,600 → 1,053,696 for sets and 6,815,752 → 2,102,272 for maps. Retains, final
 charge and collections are zero. Counters exclude allocator capacity/process RAM.
 At 32 inputs ratios span 0.861–1.078 with overlapping ranges: no consistent gain.
-Temporary storage still grows with input length; final sets still have unused
-value slots and small integers still occupy full words.
+Temporary storage still grows with input length. The measured revision stored
+unused value slots in final sets; the current compact-set change removes those
+slots, but these historical timings do not measure that change. Small integers
+still occupy full words. See [current validation](development-state.md) and the
+[storage contract](ownership.md#compact-set-storage).
 
 All 78 focused tests and 120 binary checks pass, including allocation failure,
 callback error/cancellation and alias preservation. [PR #166](roadmap-history.md#numeric-map-and-set-construction-pr-166)

@@ -489,7 +489,7 @@ static void fwp_jt_write(fwp_buf *b, V v, const fwp_desc *d) {
         buf_putc(b, '[');
         for (uint64_t i = 0; i < MAP(v)->len; i++) {
             if (i) buf_putc(b, ',');
-            fwp_jt_write(b, MAP(v)->d[2 * i], d->elem);
+            fwp_jt_write(b, MAP(v)->d[i], d->elem);
         }
         buf_putc(b, ']');
         return;

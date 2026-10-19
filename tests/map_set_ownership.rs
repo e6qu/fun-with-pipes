@@ -321,7 +321,7 @@ int main(void) {
     V keys = fwp_cons(first_key, fwp_cons(later_key, 0));
     V owned_set = REF_SET_FROM(keys);
     if (MAP(owned_set)->len != 1 || MAP(owned_set)->d[0] != first_key ||
-        MAP(owned_set)->d[1] != 0 || *fwp_rc_slot(first_key) != 2 ||
+        *fwp_rc_slot(first_key) != 2 ||
         *fwp_rc_slot(later_key) != 1) return 6;
     DROP_REF_SET(owned_set);
     if (*fwp_rc_slot(first_key) != 1 || *fwp_rc_slot(later_key) != 1) return 7;
@@ -684,6 +684,122 @@ fn map_callbacks_can_change_value_types_and_fail_without_leaking() {
             assert_eq!(output.stdout, reference.stdout);
             save_map_evidence(&format!("callbacks-{mode}{opt}.txt"), &output.stdout);
             save_map_evidence(&format!("callbacks-{mode}{opt}.stderr"), &output.stderr);
+        }
+    }
+}
+
+#[test]
+fn compact_sets_preserve_values_and_request_only_key_storage() {
+    let dir = Scratch::new("compact");
+    let src = dir.0.join("sets.fwp");
+    std::fs::write(&src, include_str!("fixtures/compact_sets.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = include_str!("fixtures/compact_sets.out").as_bytes();
+    for optimize in ["0", "1"] {
+        let output = checked(
+            Command::new(compiler)
+                .env("FWP_NO_OPT", optimize)
+                .args(["run", "--interp"])
+                .arg(&src),
+        );
+        assert_eq!(
+            output.stdout, reference,
+            "interpreter FWP_NO_OPT={optimize}"
+        );
+    }
+    for mode in ["arc", "tracing"] {
+        let cfile = dir.0.join("sets.c");
+        checked(
+            Command::new(compiler)
+                .args(["build", "--emit-c", "--gc", mode])
+                .arg(&src)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        let start = code.find("/* build-set :").unwrap();
+        let function = code[start..]
+            .split("static V ")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let allocation = "static inline void *fwp_gc_alloc(size_t n, int leaf) {";
+        assert_eq!(code.matches(allocation).count(), 1);
+        let measured = code
+            .replace(
+                "typedef uint64_t V;",
+                "typedef uint64_t V;\nstatic size_t set_last_request;",
+            )
+            .replace(allocation, &format!("{allocation} set_last_request = n;"))
+            .replace(
+                "int main(int argc, char **argv)",
+                "int original_main(int argc, char **argv)",
+            );
+        let measured = format!(
+            "{measured}\n{}",
+            include_str!("fixtures/compact_set_storage.c").replace("BUILD_SET", function)
+        );
+        for opt in ["-O0", "-O2"] {
+            let exe = dir
+                .0
+                .join("sets")
+                .with_extension(std::env::consts::EXE_EXTENSION);
+            let verify = if mode == "arc" { "0" } else { "1" };
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            let output = checked(
+                Command::new(&exe)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", verify)
+                    .env("FWP_GC_VERIFY", verify)
+                    .env("FWP_REUSE_VERIFY", verify),
+            );
+            assert_eq!(output.stdout, reference, "{mode}/{opt}");
+            fwp::cgen::compile_c(&measured, &exe, opt).unwrap();
+            let output = checked(
+                Command::new(&exe)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0"),
+            );
+            save_map_evidence(&format!("compact-{mode}{opt}.txt"), &output.stdout);
+            save_map_evidence(&format!("compact-{mode}{opt}.c"), measured.as_bytes());
+            save_map_evidence(
+                &format!("compact-{mode}{opt}.exe"),
+                &std::fs::read(&exe).unwrap(),
+            );
+            if std::env::var_os("FWP_MAP_FAILURE_ARTIFACTS").is_some() {
+                let disassembly = if cfg!(target_os = "macos") {
+                    checked(Command::new("otool").arg("-tvV").arg(&exe))
+                } else if cfg!(target_os = "windows") {
+                    checked(Command::new("llvm-objdump").arg("-d").arg(&exe))
+                } else {
+                    checked(Command::new("objdump").arg("-d").arg(&exe))
+                };
+                save_map_evidence(&format!("compact-{mode}{opt}.asm"), &disassembly.stdout);
+            }
+            print!("{mode}/{opt}: {}", String::from_utf8_lossy(&output.stdout));
+            if mode == "arc" && opt == "-O0" {
+                // Restoring one wasted word per key must fail the request check.
+                let old = "fwp_alloc(sizeof(fwp_map) + columns * len * sizeof(V))";
+                assert_eq!(measured.matches(old).count(), 1);
+                let wasteful = measured.replace(
+                    old,
+                    "fwp_alloc(sizeof(fwp_map) + (columns + 1) * len * sizeof(V))",
+                );
+                fwp::cgen::compile_c(&wasteful, &exe, opt).unwrap();
+                let failed = Command::new(&exe)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                assert_eq!(failed.status.code(), Some(211), "{failed:?}");
+                save_map_evidence("compact-wasted-slot-control.txt", &failed.stderr);
+            }
         }
     }
 }

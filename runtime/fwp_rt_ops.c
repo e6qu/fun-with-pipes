@@ -281,7 +281,7 @@ static void fwp_write(fwp_buf *b, V v, const fwp_desc *d, int top) {
         buf_puts(b, d->kind == K_SET ? "set{" : "map{");
         for (uint64_t i = 0; i < MAP(v)->len; i++) {
             if (i) buf_puts(b, ", ");
-            fwp_write(b, MAP(v)->d[2 * i], d->elem, 0);
+            fwp_write(b, MAP(v)->d[(d->kind == K_SET ? 1 : 2) * i], d->elem, 0);
             if (d->kind == K_MAP) {
                 buf_puts(b, ": ");
                 fwp_write(b, MAP(v)->d[2 * i + 1], d->elem2, 0);
@@ -428,7 +428,7 @@ static int fwp_cmp(V a, V b, const fwp_desc *d) {
     case K_MAP: case K_SET: {
         uint64_t la = MAP(a)->len, lb = MAP(b)->len;
         for (uint64_t i = 0; i < la && i < lb; i++) {
-            int c = fwp_cmp(MAP(a)->d[2 * i], MAP(b)->d[2 * i], d->elem);
+            int c = fwp_cmp(MAP(a)->d[(d->kind == K_SET ? 1 : 2) * i], MAP(b)->d[(d->kind == K_SET ? 1 : 2) * i], d->elem);
             if (c) return c;
             if (d->kind == K_MAP) {
                 c = fwp_cmp(MAP(a)->d[2 * i + 1], MAP(b)->d[2 * i + 1], d->elem2);
@@ -557,7 +557,7 @@ static void fwp_encode(fwp_buf *b, V v, const fwp_desc *d) {
     case K_MAP: case K_SET:
         fwp_leb128(b, MAP(v)->len);
         for (uint64_t i = 0; i < MAP(v)->len; i++) {
-            fwp_encode(b, MAP(v)->d[2 * i], d->elem);
+            fwp_encode(b, MAP(v)->d[(d->kind == K_SET ? 1 : 2) * i], d->elem);
             if (d->kind == K_MAP) fwp_encode(b, MAP(v)->d[2 * i + 1], d->elem2);
         }
         return;
@@ -625,7 +625,7 @@ static uint64_t fwp_hash_value(uint64_t h, V v, const fwp_desc *d) {
     case K_MAP: case K_SET:
         h = fwp_hash_leb128(h, MAP(v)->len);
         for (uint64_t i = 0; i < MAP(v)->len; i++) {
-            h = fwp_hash_value(h, MAP(v)->d[2 * i], d->elem);
+            h = fwp_hash_value(h, MAP(v)->d[(d->kind == K_SET ? 1 : 2) * i], d->elem);
             if (d->kind == K_MAP) h = fwp_hash_value(h, MAP(v)->d[2 * i + 1], d->elem2);
         }
         return h;

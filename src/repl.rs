@@ -427,6 +427,9 @@ fn remap_value(value: &Value, ids: &[FuncId]) -> Value {
         Value::Array(values) => Value::Array(Rc::new(
             values.iter().map(|v| remap_value(v, ids)).collect(),
         )),
+        Value::Set(values) => Value::Set(Rc::new(
+            values.iter().map(|v| remap_value(v, ids)).collect(),
+        )),
         Value::Map(values) => Value::Map(Rc::new(
             values
                 .iter()

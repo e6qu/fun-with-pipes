@@ -330,3 +330,31 @@ fn session_keeps_tail_recursion_proofs_when_function_ids_change() {
         assert_eq!(output, b"42\n");
     });
 }
+
+#[test]
+fn sets_keep_their_type_and_contents_across_session_updates() {
+    fwp::driver::with_big_stack(|| {
+        let mut session = Session::new(std::env::current_dir().unwrap()).unwrap();
+        let mut output = Vec::new();
+        session
+            .submit(
+                "keys = comptime ([\"b\", \"a\", \"b\"] | set.from-list)",
+                &mut output,
+            )
+            .unwrap();
+        session
+            .submit("change = set.insert \"c\" | set.remove \"a\"", &mut output)
+            .unwrap();
+        for _ in 0..3 {
+            assert_eq!(
+                session
+                    .submit("keys | both id change", &mut output)
+                    .unwrap()
+                    .value
+                    .as_deref(),
+                Some("(set{\"a\", \"b\"}, set{\"b\", \"c\"})")
+            );
+        }
+        assert!(output.is_empty());
+    });
+}

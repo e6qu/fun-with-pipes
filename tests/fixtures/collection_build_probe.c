@@ -64,10 +64,11 @@ static int build_case(int op, int failure, int callback, int cancel, int *steps)
     } else {
         V result = build_operation(op);
         if (failure || callback) return 210;
-        if (MAP(result)->len != 3 || MAP(result)->d[0] != 0 ||
-            MAP(result)->d[2] != 1 || MAP(result)->d[4] != 2) return 211;
         int is_set = op == 1 || op == 3 || op == 6 || op == 7;
-        if (MAP(result)->d[1] != (is_set ? 0 : 3)) return 212;
+        size_t columns = is_set ? 1 : 2;
+        if (MAP(result)->len != 3 || MAP(result)->d[0] != 0 ||
+            MAP(result)->d[columns] != 1 || MAP(result)->d[2 * columns] != 2) return 211;
+        if (!is_set && MAP(result)->d[1] != 3) return 212;
         fwp_rc_free_obj(result);
     }
     build_armed = 0; fwp_cur = build_saved_task;
@@ -94,8 +95,8 @@ static int build_case(int op, int failure, int callback, int cancel, int *steps)
 static int build_bounds(void) {
     V keys[] = {7}, values[] = {11};
     const fwp_desc key = {.kind = K_I64};
-    const fwp_map_ops ops = {NULL, NULL, NULL, NULL, fwp_rc_free_obj, NULL};
-    for (int lanes = 1; lanes <= 2; lanes++) {
+    for (size_t lanes = 1; lanes <= 2; lanes++) {
+        const fwp_map_ops ops = {NULL, NULL, NULL, NULL, fwp_rc_free_obj, NULL, lanes};
         fwp_cleanup *boundary = fwp_cleanups;
         build_armed = 1; build_failure = build_step = 0;
         fwp_trap_recover = build_recover; fwp_trap_jb = &build_jump;

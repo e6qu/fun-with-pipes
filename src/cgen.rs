@@ -1112,7 +1112,7 @@ fn numeric_collection_body(
             {input}
             {callback}
         }}
-        const fwp_map_ops ops = {{NULL, NULL, NULL, NULL, fwp_rc_free_obj, NULL}};
+        const fwp_map_ops ops = {{NULL, NULL, NULL, NULL, fwp_rc_free_obj, NULL, {lanes}}};
         result = fwp_map_build_typed(keys, {value_argument}, n, &ops, {descriptor});
         fwp_scratch_finish(&keys, &keys_cleanup);
     }}"#
@@ -1813,7 +1813,9 @@ impl<'p> Gen<'p> {
                     for (i, ty) in types.iter().enumerate() {
                         if crate::rc::needs_rc(&self.prog.shapes, ty) {
                             let child = self.drop_id(ty);
-                            let _ = write!(fields, " fwp_drop{child}(MAP(v)->d[2 * i + {i}]);");
+                            let columns = types.len();
+                            let _ =
+                                write!(fields, " fwp_drop{child}(MAP(v)->d[{columns} * i + {i}]);");
                         }
                     }
                     if !fields.is_empty() {
@@ -2262,6 +2264,22 @@ impl<'p> Gen<'p> {
                 ));
                 for (i, value) in parts.iter().enumerate() {
                     let _ = writeln!(self.const_init, "    fwp_array_store(PTR(&fwp_constant{id}), {i}, {value}, &(const fwp_desc){{.kind = {kind}}});");
+                }
+                format!("PTR(&fwp_constant{id})")
+            }
+            Value::Set(values) => {
+                let payload = if values.is_empty() {
+                    String::new()
+                } else {
+                    format!(" V d[{}];", values.len())
+                };
+                self.consts.push(format!(
+                    "static struct {{ uint64_t len;{payload} }} fwp_constant{id} = {{.len = {}}};",
+                    values.len()
+                ));
+                for (i, value) in values.iter().enumerate() {
+                    let value = self.const_expr(value);
+                    let _ = writeln!(self.const_init, "    fwp_constant{id}.d[{i}] = {value};");
                 }
                 format!("PTR(&fwp_constant{id})")
             }
@@ -3400,7 +3418,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     let descriptor = self.g.desc(&key);
                     let found = self.fresh();
                     let at = self.fresh();
-                    self.line(&format!("int {found}; uint64_t {at} = fwp_map_find({}, {}, {descriptor}, &{found});", values[1], values[0]));
+                    self.line(&format!("int {found}; uint64_t {at} = fwp_map_find({}, {}, {descriptor}, &{found}, 2);", values[1], values[0]));
                     let value =
                         self.bind(format!("{found} ? MAP({})->d[2 * {at} + 1] : 0", values[1]));
                     (found, value)
@@ -5827,7 +5845,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             self.load_array(&args[1], &xs, &found, &kd)
         } else {
             self.line(&format!(
-                "int {found}; uint64_t {at} = fwp_map_find({}, {}, {kd}, &{found});",
+                "int {found}; uint64_t {at} = fwp_map_find({}, {}, {kd}, &{found}, 2);",
                 xs[1], xs[0]
             ));
             self.bind(format!("{found} ? MAP({})->d[2 * {at} + 1] : 0", xs[1]))
@@ -6553,13 +6571,15 @@ impl<'p> Gen<'p> {
                 let (k, _, _) = nk(&elem(&result, 0));
                 format!("return fwp_p_parse_float(l0, {});", k)
             }
-            "map.insert" => format!("return fwp_p_map_insert(l0, l1, l2, {});", self.desc(&p(0))),
+            "map.insert" => format!("return fwp_p_map_insert(l0, l1, l2, {}, 2);", self.desc(&p(0))),
             "map.get" => format!("return fwp_p_map_get(l0, l1, {});", self.desc(&p(0))),
             "map.remove" | "set.remove" => {
-                format!("return fwp_p_map_remove(l0, l1, {});", self.desc(&p(0)))
+                let columns = if sym == "set.remove" { 1 } else { 2 };
+                format!("return fwp_p_map_remove(l0, l1, {}, {columns});", self.desc(&p(0)))
             }
             "map.contains" | "set.contains" => {
-                format!("return fwp_p_map_contains(l0, l1, {});", self.desc(&p(0)))
+                let columns = if sym == "set.contains" { 1 } else { 2 };
+                format!("return fwp_p_map_contains(l0, l1, {}, {columns});", self.desc(&p(0)))
             }
             "map.from-list" => {
                 let kt = match elem(&p(0), 0) {
@@ -6821,9 +6841,9 @@ impl<'p> Gen<'p> {
                     ("set.empty", "FWP_EMPTY_MAP"),
                     ("map.size", "fwp_p_map_size(l0)"),
                     ("set.size", "fwp_p_map_size(l0)"),
-                    ("map.keys", "fwp_p_map_column(l0, 0)"),
-                    ("set.to-list", "fwp_p_map_column(l0, 0)"),
-                    ("map.values", "fwp_p_map_column(l0, 1)"),
+                    ("map.keys", "fwp_p_map_column(l0, 0, 2)"),
+                    ("set.to-list", "fwp_p_map_column(l0, 0, 1)"),
+                    ("map.values", "fwp_p_map_column(l0, 1, 2)"),
                     ("map.to-list", "fwp_p_map_to_list(l0)"),
                     ("map.map-values", "fwp_p_map_map_values(l0, l1)"),
                     ("bytes.from-list", "fwp_p_bytes_from_list(l0)"),
@@ -7880,7 +7900,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                 } else {
                                     "NULL".into()
                                 };
-                                let ops = format!("&(const fwp_map_ops){{{dk}, {dv}, {drop_key}, {drop_value}, {drop_map}, {drop_result}}}");
+                                let columns = types.len();
+                                let ops = format!("&(const fwp_map_ops){{{dk}, {dv}, {drop_key}, {drop_value}, {drop_map}, {drop_result}, {columns}}}");
                                 let mut args: Vec<String> =
                                     (0..func.arity).map(|i| format!("l{i}")).collect();
                                 args.push(ops);
@@ -9103,6 +9124,7 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
             }
             Value::Data(_, fs) | Value::Record(fs) => fs.iter().for_each(|x| value_refs(x, out)),
             Value::Array(xs) => xs.iter().for_each(|x| value_refs(x, out)),
+            Value::Set(values) => values.iter().for_each(|value| value_refs(value, out)),
             Value::Map(m) => m.iter().for_each(|(k, x)| {
                 value_refs(k, out);
                 value_refs(x, out);

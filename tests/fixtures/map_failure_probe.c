@@ -118,12 +118,12 @@ int main(void) {
     fwp_gc_start(__builtin_frame_address(0)); fwp_fns = fwp_fn_table; fwp_init_consts();
     const char *texts[] = {"a", "b", "c", "first", "second", "third"};
     for (size_t i = 0; i < 6; i++) map_test_leaf[i] = fwp_rc_fresh(fwp_cstr(texts[i]));
-    map_test_base = fwp_map_typed_new(2); map_test_set = fwp_map_typed_new(2); map_test_other = fwp_map_typed_new(2);
+    map_test_base = fwp_map_typed_new(2, 2); map_test_set = fwp_map_typed_new(2, 1); map_test_other = fwp_map_typed_new(2, 1);
     for (size_t i = 0; i < 2; i++) {
         fwp_rc_dup(map_test_leaf[i]); fwp_rc_dup(map_test_leaf[i + 3]);
         MAP(map_test_base)->d[2*i] = map_test_leaf[i]; MAP(map_test_base)->d[2*i+1] = map_test_leaf[i+3];
-        fwp_rc_dup(map_test_leaf[i]); MAP(map_test_set)->d[2*i] = map_test_leaf[i];
-        fwp_rc_dup(map_test_leaf[i+1]); MAP(map_test_other)->d[2*i] = map_test_leaf[i+1];
+        fwp_rc_dup(map_test_leaf[i]); MAP(map_test_set)->d[i] = map_test_leaf[i];
+        fwp_rc_dup(map_test_leaf[i+1]); MAP(map_test_other)->d[i] = map_test_leaf[i+1];
     }
     /* These test-only input spines borrow the independently rooted leaves. */
     for (size_t i = 2; i; i--) {

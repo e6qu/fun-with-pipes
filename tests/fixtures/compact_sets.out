@@ -1,0 +1,12 @@
+(set{"apple", "pear", "plum"}, set{"apple", "orange", "plum"}, set{"apple", "fig", "pear", "plum"}, set{"pear", "plum"})
+(True, False)
+set{"plum"}
+Ok set{"apple", "pear", "plum"}
+Ok set{"a", "b"}
+Err "$[1]: expected a string, got 7"
+(Ok set{set{1, 2}, set{3}}, Ok 15623721952721336134)
+(7005963960230724589, "[\"apple\",\"pear\",\"plum\"]")
+[["apple","pear","plum"],["fig"]]
+(set{1, 3}, 14666585349657437703)
+[-1.5, 2.5]
+(257, True)

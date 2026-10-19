@@ -218,12 +218,12 @@ static V fwp_decode_sequence(fwp_decode_fields *f, const fwp_desc *d) {
 /* A decoder owns its map exclusively. Insertion retains borrowed fields and
  * consumes the previous map; the field vector drops discarded duplicate keys. */
 static V fwp_decode_map(fwp_decode_fields *f, const fwp_desc *d) {
+    size_t stride = d->kind == K_SET ? 1 : 2;
     fwp_map_ops ops = {d->elem->dup, d->elem2 ? d->elem2->dup : NULL,
-        d->elem->drop, d->elem2 ? d->elem2->drop : NULL, d->drop ? d->drop : fwp_rc_drop, NULL};
+        d->elem->drop, d->elem2 ? d->elem2->drop : NULL, d->drop ? d->drop : fwp_rc_drop, NULL, stride};
     fwp_value_owner owner = {FWP_EMPTY_MAP, d->drop};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_value_release, &owner);
-    size_t stride = d->kind == K_SET ? 1 : 2;
     for (size_t i = 0; i < f->count; i += stride) {
         V previous = owner.value;
         owner.value = 0; /* insertion takes this owner, including on unwind */

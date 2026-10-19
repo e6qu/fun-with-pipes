@@ -1,0 +1,37 @@
+export build-set : I64 -> Set[I64]
+build-set = range 0 | set.from-list
+
+read-keys : String -> Result[Set[String], String]
+read-keys = json.read
+read-nested : String -> Result[Set[Set[I64]], String]
+read-nested = json.read
+
+base = comptime (["pear", "apple", "pear", "plum"] | set.from-list)
+views : Set[String] -> (Set[String], Set[String], Set[String], Set[String])
+views = make {
+    0 = id,
+    1 = set.insert "orange" | set.remove "pear",
+    2 = set.union (["pear", "fig"] | set.from-list),
+    3 = set.diff (["apple", "missing"] | set.from-list),
+}
+grow : (I64, Set[I64]) -> Step[(I64, Set[I64]), Set[I64]]
+grow =
+    if
+        (.0 | eq 0)
+        (.1 | Stop)
+        (make { 0 = .0 | sub 1, 1 = fork set.insert .0 .1 } | Again)
+
+main = [
+    base | views | echo,
+    base | both (set.contains "plum") (set.contains "missing") | echo,
+    base | set.intersect (["plum", "fig"] | set.from-list) | echo,
+    base | json.write | read-keys | echo,
+    "[\"b\", \"a\", \"b\"]" | read-keys | echo,
+    "[\"a\", 7]" | read-keys | echo,
+    "[[2,1,2],[1,2],[3]]" | read-nested | both id (result.map hash) | echo,
+    base | both hash json.write | echo,
+    [base, ["fig"] | set.from-list] | set.from-list | json.write | echo,
+    [3u128, 1u128, 3u128] | set.from-list | both id hash | echo,
+    [2.5f128, -1.5f128, 2.5f128] | set.from-list | set.to-list | echo,
+    (257, set.empty) | loop grow | both set.size (set.contains 257) | echo,
+] | ignore

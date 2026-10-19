@@ -198,6 +198,10 @@ impl Proof<'_> {
                 .iter()
                 .flat_map(|field| self.constant(field))
                 .collect(),
+            Value::Set(fields) => fields
+                .iter()
+                .flat_map(|field| self.constant(field))
+                .collect(),
             Value::Map(fields) => fields
                 .iter()
                 .flat_map(|(key, value)| {

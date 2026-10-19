@@ -332,8 +332,8 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) -> Result<(), 
             _ => out.push_str("[]"),
         },
         Shape::Set(t) => match v {
-            Value::Map(m) => {
-                let keys: Vec<Value> = m.keys().cloned().collect();
+            Value::Set(items) => {
+                let keys: Vec<Value> = items.iter().cloned().collect();
                 write_items(out, &keys, &t, prog)?
             }
             _ => out.push_str("[]"),
@@ -901,9 +901,7 @@ fn decode(r: &Json, mt: &MT, prog: &Program, path: &mut String) -> Result<Value,
             match shape(mt, prog) {
                 Shape::List(_) => Value::list(items),
                 Shape::Array(_) => Value::Array(Rc::new(items)),
-                _ => Value::Map(Rc::new(
-                    items.into_iter().map(|k| (k, Value::unit())).collect(),
-                )),
+                _ => Value::Set(Rc::new(items.into_iter().collect())),
             }
         }
         Shape::Map(kt, vt) => {

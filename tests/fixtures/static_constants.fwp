@@ -6,18 +6,31 @@ halves = comptime ([1.5f16, -2.0f16] | array.from-list)
 words : Array[U32]
 words = comptime ([0u32, 4294967295u32] | array.from-list)
 quads : Array[F128]
-quads = comptime ([1.0000000000000000000000000000000002f128, 1e4000f128] | array.from-list)
+quads = comptime ([1.0000000000000000000000000000000002f128, 1e4000f128]
+    | array.from-list)
 wide : (I128, U128)
-wide = comptime (-170141183460469231731687303715884105728i128, 340282366920938463463374607431768211455u128)
+wide = comptime (
+    -170141183460469231731687303715884105728i128,
+    340282366920938463463374607431768211455u128,
+)
 record = comptime { label = "table", values = [Some (1, "first"), None] }
-table = comptime ([ ("a", [1, 2]), ("b", [3]) ] | map.from-list)
+table = comptime ([("a", [1, 2]), ("b", [3])] | map.from-list)
 handlers : Map[String, String -> String]
-handlers = comptime ([ ("fixed", const "constant"), ("upper", upper) ] | map.from-list)
+handlers =
+    comptime ([("fixed", const "constant"), ("upper", upper)] | map.from-list)
 empty : Array[I64]
 empty = comptime ([] | array.from-list)
 empty-map : Map[String, I64]
 empty-map = comptime map.empty
+keys = comptime (["b", "a", "b"] | set.from-list)
+empty-set : Set[I64]
+empty-set = comptime set.empty
+unit-map : Map[String, ()]
+unit-map = comptime ([("a", ()), ("b", ())] | map.from-list)
 main = [
+    keys | both id (set.insert "c" | set.remove "a") | echo,
+    empty-set | set.insert 42 | echo,
+    unit-map | map.to-list | echo,
     small | echo,
     small | array.set 1 9i8 | echo,
     small | echo,
