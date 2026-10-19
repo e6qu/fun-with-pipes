@@ -67,7 +67,7 @@ fn nested_reverse_derivatives_match_analytic_values_and_both_engines() {
                 .unwrap();
             let (runtime, main) = code.split_at(start);
             let checked_code = format!("{runtime}{}", main
-                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t nested_budget=fwp_gc.budget;\n")
+                .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t nested_budget=fwp_gc.budget_given;\n")
                 .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_owned_tapes)exit(193);\n    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(194);\n#if FWP_ARC_ONLY\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget<nested_budget)exit(195);\n#endif\n"));
             let binary = dir.join("nested.exe");
             fwp::cgen::compile_c(&checked_code, &binary, opt).unwrap();

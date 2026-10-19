@@ -10397,6 +10397,9 @@ static void *fwp_main_thread(void *arg) {{
 {run}
     fwp_caf_finish();
 #ifndef FWP_FIBERS
+#ifdef FWP_GCTX_OWNERS
+    g_connections_finish();
+#endif
     fwp_native_tasks_finish();
 #endif
     fwp_cl_finish();

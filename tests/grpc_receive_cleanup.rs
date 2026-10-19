@@ -2,9 +2,9 @@
 use fwp::ir::*;
 use std::process::Command;
 
-fn receive_runtime() -> String {
+fn receive_program() -> Program {
     let unit = MT::unit();
-    let program = Program {
+    Program {
         funcs: vec![
             Func {
                 name: "available".into(),
@@ -23,8 +23,11 @@ fn receive_runtime() -> String {
         ],
         exports: vec![("available".into(), 0)],
         ..Program::default()
-    };
-    let (generated, _) = fwp::cgen::generate_library(&program, "grpc_receive").unwrap();
+    }
+}
+
+fn receive_runtime() -> String {
+    let (generated, _) = fwp::cgen::generate_library(&receive_program(), "grpc_receive").unwrap();
     generated
 }
 
@@ -34,11 +37,21 @@ fn library_unload_closes_idle_connections_before_draining_tasks() {
     for (before, after) in [
         ("static void g_conn_final(void *p) {", "static void g_conn_final(void *p) { if(p==watched_connection)connection_finalized++;"),
         ("static void fwp_library_tasks_finish(void) {", "static void fwp_library_tasks_finish(void) { int64_t test_deadline=fwp_now_ns()+1000000000LL;"),
-        ("        while (fwp_gc_tasks) {", "        while (fwp_gc_tasks) { if(fwp_now_ns()>=test_deadline)_Exit(209);"),
     ] {
         assert_eq!(generated.matches(before).count(), 1, "{before}");
         generated = generated.replacen(before, after, 1);
     }
+    let library = generated
+        .find("static void fwp_library_tasks_finish(void) {")
+        .unwrap();
+    let drain = generated[library..]
+        .find("        while (fwp_gc_tasks) {")
+        .unwrap()
+        + library;
+    generated.insert_str(
+        drain + "        while (fwp_gc_tasks) {".len(),
+        " if(fwp_now_ns()>=test_deadline)_Exit(209);",
+    );
     let fixture = r#"
 int main(int argc,char **argv){
  if(argc!=2)return 201;int unpooled=atoi(argv[1]);
@@ -72,6 +85,83 @@ int main(int argc,char **argv){
     for opt in ["-O1", "-O2"] {
         for (source, expected) in [(&broken, 209), (&generated, 0)] {
             fwp::cgen::compile_c(&format!("{hooks}\n{source}\n{fixture}"), &binary, opt).unwrap();
+            for unpooled in ["0", "1"] {
+                for gc in ["off", "on"] {
+                    let out = Command::new(&binary)
+                        .arg(unpooled)
+                        .env("FWP_GC", gc)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", "1")
+                        .output()
+                        .unwrap();
+                    assert_eq!(
+                        out.status.code(),
+                        Some(expected),
+                        "{opt}/{unpooled}/{gc}: {out:?}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn executable_shutdown_closes_idle_connections_before_draining_tasks() {
+    let mut program = receive_program();
+    program.main = Some(program.funcs.len());
+    program.exports.clear();
+    program.funcs.push(Func {
+        name: "main".into(),
+        arity: 0,
+        locals: vec![],
+        ty: MT::unit(),
+        body: Body::Expr(Expr::Record(vec![])),
+    });
+    let generated = fwp::cgen::generate(&program).unwrap();
+    let setup = r#"
+static int watched_unpooled, connection_finalized;
+static void *watched_connection;
+"#;
+    let prepare = r#"
+    fwp_tasks_init();
+    V listener=fwp_p_tcp_listen(fwp_cstr("127.0.0.1:0"),0);
+    V address=fwp_p_local_addr(listener);char *error=0;
+    g_conn *c=g_connect(STR(address)->d,0,&error);
+    if(!c||error||g_pool!=c)exit(202);watched_connection=c;
+    fwp_p_task_sleep(fwp_record(1,(V[]){1000000}));
+    int readers=0,writers=0;
+    for(fwp_task *t=fwp_gc_tasks;t;t=t->gc_next){
+        if(t->done||!t->unwinding)exit(203);
+        readers+=t->cfn==g_reader;writers+=t->cfn==g_writer;
+    }
+    if(readers!=1||writers!=1||c->refs!=2||c->dead)exit(204);
+    if(watched_unpooled){g_pool=c->next_pool;c->next_pool=0;g_conn_drop(c);}
+    g_conn_drop(c);
+"#;
+    let mut generated = format!("{setup}\n{generated}");
+    for (before, after) in [
+        ("static void g_conn_final(void *p) {".to_string(), "static void g_conn_final(void *p) { if(p==watched_connection)connection_finalized++;".to_string()),
+        ("static void fwp_native_tasks_finish(void) {".to_string(), "static void fwp_native_tasks_finish(void) { int64_t test_deadline=fwp_now_ns()+1000000000LL;".to_string()),
+        ("        while (fwp_gc_tasks) {".to_string(), "        while (fwp_gc_tasks) { if(fwp_now_ns()>=test_deadline)_Exit(209);".to_string()),
+        ("    fwp_init_consts();".to_string(), format!("    fwp_init_consts();\n{prepare}")),
+        ("    fwp_cl_finish();".to_string(), "    fwp_cl_finish(); FWP_KEEP_ALIVE(listener); if(connection_finalized!=1||g_pool||fwp_cur||fwp_gc_tasks)exit(205);".to_string()),
+        ("int main(int argc, char **argv)".to_string(), "int original_main(int argc, char **argv)".to_string()),
+    ] {
+        // The library drain is present in the runtime source, but disabled in
+        // this executable. Instrument only the native function's first loop.
+        assert!(generated.contains(&before), "{before}");
+        generated = generated.replacen(&before, &after, 1);
+    }
+    generated.push_str("\nint main(int argc,char **argv){if(argc!=2)return 201;watched_unpooled=atoi(argv[1]);return original_main(argc,argv); }\n");
+    let finish = "    g_connections_finish();";
+    assert_eq!(generated.matches(finish).count(), 1);
+    let broken = generated.replace(finish, "    /* omitted connection shutdown */");
+    let dir = fwp::cgen::TempDir::new("grpc-executable-shutdown").unwrap();
+    let binary = dir.join("probe");
+    for opt in ["-O1", "-O2"] {
+        for (source, expected) in [(&broken, 209), (&generated, 0)] {
+            fwp::cgen::compile_c(source, &binary, opt).unwrap();
             for unpooled in ["0", "1"] {
                 for gc in ["off", "on"] {
                     let out = Command::new(&binary)

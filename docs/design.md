@@ -492,8 +492,8 @@ this path needs no task reference-count updates. Language-visible task handles
 retain the shared-owner policy because callers can keep independent aliases.
 Server jobs also have explicit owners, including the accepted HTTP extension. Connection records
 can outlive their sockets while response readers retain status information;
-the pool, I/O tasks and callers hold separate storage owners. Library teardown
-closes these connections before waiting for their tasks. The
+the pool, I/O tasks and callers hold separate storage owners. Executable and library teardown
+close these connections before waiting for their tasks. The
 [ownership guide](ownership.md) and [measured comparison](benchmarks.md#freeing-closed-connections-and-finished-tasks)
 describe the limits. Checked gRPC client/service builds add iterator scope
 checks and use these owners; [PR #161](roadmap-history.md#remote-calls-without-tracing-and-record-field-moves-pr-161)

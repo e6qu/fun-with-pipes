@@ -74,7 +74,7 @@ jobs:
       - name: Language formatting preflight
         run: cargo run --bin fwp -- fmt --check lib examples docs/tutorials bench
       - name: Regular macOS test shard
-        run: python3 scripts/run-native-tests.py --shard regular --logs "$RUNNER_TEMP/macos-regular-tests"
+        run: python3 scripts/run-native-tests.py --timeout 1800 --shard regular --logs "$RUNNER_TEMP/macos-regular-tests"
       - name: Publish individual regular test logs
         if: always()
         uses: actions/upload-artifact@v7
@@ -180,7 +180,7 @@ jobs:
           path: ${{ runner.temp }}/gc-stress.log
       - name: Second macOS test shard
         if: ${{ !cancelled() }}
-        run: python3 scripts/run-native-tests.py --shard gc --logs "$RUNNER_TEMP/macos-gc-tests"
+        run: python3 scripts/run-native-tests.py --timeout 1800 --shard gc --logs "$RUNNER_TEMP/macos-gc-tests"
       - name: Publish individual gc test logs
         if: always()
         uses: actions/upload-artifact@v7
@@ -276,7 +276,7 @@ jobs:
           FWP_REQUIRE_WASI_ARC: "1"
           FWP_REQUIRE_WASI_GOLDENS: "1"
           FWP_REQUIRE_FLOAT_WASI: "1"
-        run: python3 scripts/run-native-tests.py --all --logs "$RUNNER_TEMP/linux-tests"
+        run: python3 scripts/run-native-tests.py --timeout 1800 --all --logs "$RUNNER_TEMP/linux-tests"
       - uses: actions/upload-artifact@v7
         if: always()
         with:

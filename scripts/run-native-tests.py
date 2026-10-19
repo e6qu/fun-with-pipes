@@ -4,7 +4,9 @@
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import json
+import os
 from pathlib import Path
+import signal
 import subprocess
 import sys
 import time
@@ -106,7 +108,9 @@ def test_executables(output, metadata, shard, selected):
                   (1, order[item[0][1]]) if item[0][0] == "test" else (0, *item[0]))
 
 
-def run_tests(executables, test_args, logs):
+def run_tests(executables, test_args, logs, timeout):
+    if timeout <= 0:
+        raise ValueError("test target timeout must be positive")
     logs.mkdir(parents=True, exist_ok=True)
 
     def run(item):
@@ -117,12 +121,25 @@ def run_tests(executables, test_args, logs):
         # Two executable workers, each with one harness thread. Individual tests
         # keep their existing internal parallelism (for example golden programs).
         with log.open("wb") as output:
-            result = subprocess.run([executable, "--test-threads=1", *test_args],
-                                    cwd=ROOT, stdout=output, stderr=subprocess.STDOUT)
-        print(f"Finished {kind}/{name}: exit {result.returncode}, "
+            with subprocess.Popen([executable, "--test-threads=1", *test_args],
+                                  cwd=ROOT, stdout=output, stderr=subprocess.STDOUT,
+                                  start_new_session=True) as process:
+                try:
+                    code = process.wait(timeout=timeout)
+                except subprocess.TimeoutExpired:
+                    # Kill the whole target's group, including native clients and
+                    # servers, so timed-out tests cannot occupy later workers.
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass  # The group exited between the deadline and kill.
+                    process.wait()
+                    output.write(f"\nTarget timed out after {timeout}s\n".encode())
+                    code = 124
+        print(f"Finished {kind}/{name}: exit {code}, "
               f"{time.monotonic() - started:.2f}s", flush=True)
         print(log.read_text(errors="replace"), end="", flush=True)
-        return result.returncode
+        return code
 
     with ThreadPoolExecutor(max_workers=2) as workers:
         codes = list(workers.map(run, executables))
@@ -135,7 +152,11 @@ def main():
     selection.add_argument("--shard", choices=SHARDS)
     selection.add_argument("--all", action="store_true")
     parser.add_argument("--logs", type=Path, required=True)
+    parser.add_argument("--timeout", type=int, required=True,
+                        help="maximum seconds per test executable, including its children")
     options = parser.parse_args()
+    if options.timeout <= 0:
+        parser.error("--timeout must be positive")
     metadata = json.loads(subprocess.check_output(
         ["cargo", "metadata", "--no-deps", "--format-version", "1"], cwd=ROOT))
     selected_group = "all" if options.all else options.shard
@@ -151,7 +172,7 @@ def main():
         print(built.stdout, end="", file=sys.stderr)
         built.check_returncode()
     executables = test_executables(built.stdout, metadata, selected_group, selected)
-    return run_tests(executables, args[split + 1:], options.logs)
+    return run_tests(executables, args[split + 1:], options.logs, options.timeout)
 
 
 if __name__ == "__main__":

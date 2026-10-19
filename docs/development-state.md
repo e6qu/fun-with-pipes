@@ -2,76 +2,85 @@
 
 ## Next action
 
-PR #167 is merged as `e8e22f1901e5396e1bf3555073ebeb9d5c65da41`, with the same
-Git tree as tested head `7cb899faa86d3cafb1192529d7fd357e7067ca4b`. All nine
-production jobs, documentation, four terminal probes and tools/browser checks
-passed and their completed logs were audited. Duplicate queued post-merge runs
-`39151593383` and `39151593381` were cancelled after checking tree identity.
-[Delivery history](roadmap-history.md#interactive-tools-and-cached-map-borrows-pr-167)
-records the acceptance links and limitations.
+[PR #168](https://github.com/e6qu/fun-with-pipes/pull/168), branch
+`ownership-tail-recursion`, is draft while fixing CI. PR #167 is merged; its
+[delivery record](roadmap-history.md#interactive-tools-and-cached-map-borrows-pr-167)
+contains the accepted revision and evidence.
 
-Current branch: `ownership-tail-recursion`, based on that merge.
-[PR #168](https://github.com/e6qu/fun-with-pipes/pull/168).
-Next: run the expanded focused language suite for the complete CI repair,
-then require all nine production jobs plus documentation on that exact head.
-Keep the PR draft during the focused repair check to avoid repeating full gates
-before the compiler and every previously failing target pass. Do not merge yet.
+Next: publish the shutdown repair, dispatch `numerics.yml` with `suite=shutdown`
+and `suite=language`, and audit every result. Then mark the PR ready to run the
+complete production matrix. Require all nine production jobs, documentation and
+both focused suites on the final head before squash merging. Use a one-line
+subject of at most 80 characters and an explicitly empty body.
 
-## Current batch and CI repair
+## Current batch
 
 PR #168 adds eligible self-tail frame reuse, cycle-proof diagnostics and lesson
-23's callback/channel/cancellation/graph examples. Default tracing removal and
-all seven roadmap areas remain unfinished.
+23's scoped callback, channel, cancellation and graph examples. The compiler
+keeps the original expression trees so native record, variant and wide-number
+layouts remain available. It prepares arguments before replacing locals, retires
+reuse tokens and preserves cancellation checks. REPL remapping retains the proof.
+Native executable teardown also releases scheduler storage exposed by lesson 23.
+Default tracing removal and all seven roadmap areas remain unfinished.
 
-All eleven jobs at `8c9f1c8095f9df1d84f1c61c00fa10cd652c5155` were audited:
-production `39153169076`, focused `39153117778`, docs `39153113800`.
-The eight production execution jobs and focused job fail. Benchmarks, docs,
-eleven Python SDK tests and the real browser pass. Logs are preserved in
-`/private/tmp/fwp-pr168-8c9f`. Distinct failures and repairs:
+## CI failures and repair
 
-- The typed-loop rewrite hid record/variant fields and wide-number operations
-  from native representation selection. It broke both wide-worker tests, record
-  conversion coverage and variant-alias coverage. The repair proves eligible
-  self calls after fusion without changing their expression trees. Interpreter
-  and native execution reuse the existing frame directly; native count insertion
-  and record/variant/wide-worker selection keep their original inputs. Arguments
-  are prepared before overwrite, reuse tokens retire before the jump, and entry
-  cancellation checks remain. REPL function-ID remapping preserves these proofs.
-- Native scheduler root storage survived executable shutdown. Lesson 23 exposed
-  it through the ARC ledger (1536 bytes on Linux, 768 on Windows). The repair
-  drains remaining tasks, releases native scheduler/root storage and keeps the
-  existing library/fiber shutdown paths. A negative control must detect omission.
-- ARC rejects reuse verification because it intentionally retains freed storage.
-  The recursion harness now enables all three stress/verification controls only
-  for tracing. ARC verifies real reclamation through its allocation ledger.
-- Raw preemption coverage exceeded the stack in an unoptimized Rust build. Its
-  independent scheduling reference now uses 200 recursive calls, while ordinary
-  coverage keeps 4000 and dedicated tail-recursion coverage keeps 200000.
+All jobs at `7bc07ff662220d53ae4d01b36ba60cd600d0f0e6` were audited.
+[Production run 39178860004](https://github.com/e6qu/fun-with-pipes/actions/runs/39178860004)
+**failed acceptance**: all eight execution jobs timed out, with failures before
+the stalls. Benchmarks passed. Linux stalled in `aot` and `examples`; regular
+macOS in `aot` and `services`; GC macOS in `examples` and `web`. Windows stalled
+in native networking after reporting seven test failures. Queues are not the cause.
+Logs: `/private/tmp/fwp-pr168-7bc0` and `/private/tmp/fwp-pr168-stalls`.
 
-The expanded focused job includes every failing target plus task ownership,
-reuse, scheduling, REPL/debugger and numerical/tool checks. The runner-only
-recursion comparison retains actual binaries/disassembly, stack-use estimates,
-allocations/live bytes and repeated timing against an explicit fwp loop. Earlier
-measurement results describe the superseded rewrite and cannot validate this
-repair. No C/Rust parity or universal tail-call guarantee is claimed.
+Repairs awaiting runner verification:
+
+- Network I/O tasks defer cancellation. Executable teardown now closes their
+  connections before draining tasks, as library teardown already does. A new
+  native regression covers pooled and unpooled connections at O1/O2 with GC
+  enabled/disabled; deliberately omitting connection closure must time out.
+- Ten final-memory ledgers used an allowance for the scheduler root that teardown
+  now frees. They now require release of the full initial allocation budget,
+  so a freed root cannot hide leaked task results or command arguments.
+- Collection and map tests now insert their ledger check after closure cleanup
+  without assuming it immediately follows CAF cleanup. The library shutdown
+  negative control targets its own drain loop, not the new executable loop.
+- The cached-map test preserves status and stderr when a rejected runtime setting
+  closes stdin before the parent writes; all expected diagnostics remain checked.
+- The native test runner has an explicit per-target deadline: 1800 seconds in
+  production, 900 in focused shutdown checks. It kills the timed-out process
+  group, records failure and continues other targets. Coverage is unchanged.
+
+The new `shutdown` suite covers every failed/stalled target and every changed
+ledger on Linux AMD64 and macOS ARM64. It does not replace full native acceptance.
+
+## Existing evidence and limits
+
+At `7bc07ff6`, [focused run 39178030845](https://github.com/e6qu/fun-with-pipes/actions/runs/39178030845)
+passed formatting, all-target Clippy, 49 Rust tests (zero skips), eleven Python
+checks, the real browser and recursion measurements. Documentation `39178000702`
+also passed. These results do not verify the current shutdown repair.
+
+Runner measurements compare recursive fwp with an explicit fwp loop, not C/Rust.
+On Linux AMD64/Xeon 6973P-C/GCC 13.3, all eight variants have one 10-byte request
+(16 charged bytes), zero retains and zero final charge at both 1,000 and 1,000,000
+iterations. O0 recursive/explicit medians: tracing 3.60/5.85 ms; ARC 3.54/5.98 ms,
+including process startup/output/shutdown. **O2 eliminates the recursive countdown
+but retains the explicit loop**, so its timings do not establish equivalent
+executed-loop performance. All eight actual binary hashes match their disassembly
+in `/private/tmp/fwp-pr168-7bc0-evidence`. No general speedup is claimed.
 
 ## Local checks
 
-All checks use `python3 scripts/local-guard.py`; no local compiler build or full
-suite. The exact CI-generated lesson-23 C was downloaded from the macOS ARM64
-ownership artifact. A diagnostic reproduced the retained scheduler root; a
-focused C build with the repaired runtime shutdown passes the ARC ledger and
-prints the four expected lines. Commands:
+Checks use `python3 scripts/local-guard.py`; no local compiler build or full suite.
+The guard initially refused an artifact download below 64 GiB free disk. After
+free space recovered above the unchanged limit:
 
-- `cc -O1 -std=gnu11 /private/tmp/fwp-arc-shutdown-fixed.c -o /private/tmp/fwp-arc-shutdown-fixed -lm -lpthread`: pass, 0.98 seconds.
-- `env FWP_GC_STRESS=0 FWP_GC_VERIFY=0 FWP_REUSE_VERIFY=0 /private/tmp/fwp-arc-shutdown-fixed`: pass, 0.50 seconds.
-- `cargo fmt --all`: pass, 1.42 seconds after the final test edits.
-- `/private/tmp/fwp-doc-audit.py`: all 60 Markdown sets and tutorial copies pass, 0.37 seconds.
-- `/private/tmp/fwp-python-import-audit.py`: all 72 Python files, top-level imports, empty initializers and AGENTS length pass, 0.37 seconds.
-- `scripts/check-roadmap.py`: roadmap links, anchors, handoff and commit subjects pass.
+- `cargo fmt --all`: pass, 1.59 seconds.
+- `python3 scripts/test-native-test-runner.py`: nine tests pass, 3.88 seconds;
+  the deliberate timeout fails, kills its child and preserves later coverage.
 
-This verifies the isolated shutdown repair on this host, not the current Rust
-compiler or the cross-platform change. Those require runner acceptance.
+Cross-platform compiler/runtime verification remains on GitHub runners.
 
 ## Roadmap status
 

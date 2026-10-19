@@ -1,5 +1,5 @@
 //! Scoped cached reads preserve initialization, ownership and reentrant callers.
-use std::io::Write;
+use std::io::{ErrorKind, Write};
 use std::process::{Command, Output, Stdio};
 
 fn run(command: &mut Command, input: &[u8]) -> Output {
@@ -9,7 +9,11 @@ fn run(command: &mut Command, input: &[u8]) -> Output {
         .stderr(Stdio::piped())
         .spawn()
         .unwrap();
-    child.stdin.take().unwrap().write_all(input).unwrap();
+    if let Err(error) = child.stdin.take().unwrap().write_all(input) {
+        // Rejected runtime settings exit before reading stdin. Keep the exit
+        // status and diagnostic so each caller still checks the actual failure.
+        assert_eq!(error.kind(), ErrorKind::BrokenPipe, "{error}");
+    }
     child.wait_with_output().unwrap()
 }
 

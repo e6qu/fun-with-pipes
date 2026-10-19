@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import subprocess
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -113,7 +114,7 @@ class Coverage(unittest.TestCase):
                     SHARDS.assignment(path)
 
     def test_failed_test_command_is_not_reported_as_success(self):
-        with patch("sys.argv", ["run-native-tests.py", "--shard", "gc", "--logs", "/unused"]), \
+        with patch("sys.argv", ["run-native-tests.py", "--shard", "gc", "--logs", "/unused", "--timeout", "30"]), \
              patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "gc": ["b"]}), \
              patch.object(SHARDS.subprocess, "check_output", return_value=json.dumps(metadata(["a", "b"])).encode()), \
              patch.object(SHARDS.subprocess, "run", side_effect=subprocess.CalledProcessError(1, ["cargo", "test"])):
@@ -163,14 +164,39 @@ class Coverage(unittest.TestCase):
                 executable.chmod(0o755)
                 executables.append((("test", str(index)), str(executable)))
             code = SHARDS.run_tests(executables,
-                                    ["--skip", "golden_programs_under_gc_stress"], root / "logs")
+                                    ["--skip", "golden_programs_under_gc_stress"], root / "logs", 10)
             self.assertEqual(code, 1)
             for index in range(3):
                 self.assertTrue((root / f"started-{index}").exists())
                 self.assertEqual((root / "logs" / f"test-{index}.log").read_text(),
                                  f"executed {index}\n")
-            with patch.object(SHARDS.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)):
-                self.assertEqual(SHARDS.run_tests(executables, [], root / "passing"), 0)
+            self.assertEqual(SHARDS.run_tests([executables[0]],
+                ["--skip", "golden_programs_under_gc_stress"], root / "passing", 10), 0)
+
+    def test_timeout_kills_children_preserves_logs_and_runs_remaining_targets(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            marker = root / "survived"
+            hung = root / "hung"
+            hung.write_text("#!/usr/bin/env python3\nimport subprocess,sys,time\n" +
+                f"subprocess.Popen([sys.executable, '-c', \"import pathlib,time; time.sleep(2); pathlib.Path({str(marker)!r}).touch()\"])\n" +
+                "print('before hang', flush=True)\ntime.sleep(30)\n")
+            hung.chmod(0o755)
+            passed = root / "passed"
+            passed.write_text("#!/usr/bin/env python3\nprint('finished')\n")
+            passed.chmod(0o755)
+            targets = [(("test", "hung"), str(hung)),
+                       (("test", "second"), str(passed)),
+                       (("test", "third"), str(passed))]
+            self.assertEqual(SHARDS.run_tests(targets, [], root / "logs", 1), 1)
+            time.sleep(2)
+            self.assertFalse(marker.exists(), "timed-out child escaped termination")
+            self.assertEqual((root / "logs/test-hung.log").read_text(),
+                             "before hang\n\nTarget timed out after 1s\n")
+            for name in ["second", "third"]:
+                self.assertEqual((root / f"logs/test-{name}.log").read_text(), "finished\n")
+            with self.assertRaises(ValueError):
+                SHARDS.run_tests(targets, [], root / "invalid", 0)
 
 
 if __name__ == "__main__":
