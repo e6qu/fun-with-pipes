@@ -1795,9 +1795,10 @@ All 41 focused tests passed on each host, with none ignored. The report audits
 Linux AMD64 and macOS ARM64 set-copy loops use eight-byte key spacing; the ARM
 loop also uses paired vector copies for larger inputs. This establishes the
 representation, not optimal register allocation or a speed advantage over C.
-Full production acceptance is tracked separately in [the handoff](development-state.md).
+[PR #172](roadmap-history.md#compact-set-storage-pr-172) records full production
+acceptance, including WASI execution.
 
-### Direct integer range sets: comparison in preparation
+### Direct integer range sets
 
 `range 0 n | set.from-list` builds the distinct integers from zero through
 `n - 1`. Ordinary construction allocates a list and two scratch buffers before
@@ -1805,15 +1806,15 @@ the final set; direct construction writes already sorted keys into that set.
 Both preserve the same values. [The design](design.md#constructing-integer-range-sets-directly)
 limits this transformation to inline integer ranges consumed immediately.
 
-The focused runtime probe observes the following requests for 4,096 keys:
+The [six-host report](measurements/range-sets-2026-10-19.json), measured at
+`7901a576`, confirms these construction requests for 4,096 keys:
 
 | Construction | Allocation requests | Total requested bytes | Final container bytes |
 |---|---:|---:|---:|
 | Ordinary list, scratch and set | 4,099 | 196,624 | 32,776 |
 | Direct set | 1 | 32,776 | 32,776 |
 
-Bounded O0/O2 runtime checks using accepted compiler scaffolding first established
-these counts; Linux compiler integration at `7901a576` confirmed them. Counts exclude
+These counts agree at O0/O2 in ARC and tracing modes on all six hosts. They exclude
 startup/output, allocator headers and rounding; ARC charge returns to baseline
 after releasing each result. Zero keys make no requests in either version.
 
@@ -1822,19 +1823,37 @@ at 32, 4,096 and 65,536 keys. It hashes every key, checks output against raw
 interpretation and records eight whole-process timing samples per version.
 Construction, hashing, startup and output are included. Separate instrumented
 executables count allocations and memory. This is fwp versus fwp, not a C/Rust
-baseline. The [first Linux report](measurements/range-sets-linux-2026-10-19.json)
-used an AMD EPYC 7763, Clang 18.1.3 and ARC/O2:
+baseline. Timings use ARC/O2, Clang 18.1.3 on Linux, Apple Clang 17 on macOS and
+Clang 23.1.3 on Windows. At 65,536 keys:
 
-| Keys | Ordinary median | Direct median | Direct / ordinary |
+| Host / CPU | Ordinary median | Direct median | Direct / ordinary |
 |---|---:|---:|---:|
-| 32 | 1.405 ms | 1.446 ms | 1.030 |
-| 4,096 | 1.816 ms | 1.539 ms | 0.848 |
-| 65,536 | 6.021 ms | 2.112 ms | 0.351 |
+| Linux AMD64 / Xeon 8573C | 6.389 ms | 2.515 ms | 0.394 |
+| Linux ARM64 / Neoverse N2 | 5.190 ms | 1.788 ms | 0.345 |
+| macOS ARM64 / virtual M1 | 6.084 ms | 3.660 ms | 0.602 |
+| macOS AMD64 / i7-8700B | 19.501 ms | 10.608 ms | 0.544 |
+| Windows AMD64 / EPYC 7763 | 17.768 ms | 13.373 ms | 0.753 |
+| Windows ARM64 / Cobalt 100 | 17.450 ms | 14.505 ms | 0.831 |
 
-The two smaller cases have overlapping sample ranges; the 32-key median is
-slower. Only the largest case has separated ranges in this run. These results
-do not establish a general speedup. [The handoff](development-state.md) records
-the measured source, pending six-host report and final validation status.
+Linux/macOS sample ranges are separated at this size; Windows ranges overlap.
+At 32 keys, ratios span 0.945–1.047 with overlapping ranges, including four slower
+medians. Do not generalize the larger-input gain to small programs. The
+[earlier Linux run](measurements/range-sets-linux-2026-10-19.json) on an EPYC 7763
+also had a slightly slower 32-key median.
+
+Including output, 65,536 keys use 2 allocation requests / 524,322 requested bytes,
+versus 65,540 requests / 3,145,770 bytes. Peak charged storage falls from 3,670,032
+to 524,296 bytes. Both versions have zero measured retains, final charge and
+collections. These are managed-storage counts, not process RAM.
+
+All 264 focused tests passed with none ignored. The audit inspected 228 binaries,
+including 48 range-set allocation probes. In O2 ARC probes, Linux AMD64 `e0`
+uses packed integer addition and vector stores (`0x4b60` onward); ARM macOS `_e0`
+uses vector addition and paired stores (`0x100002140` onward). Neither filling loop
+calls a function or accesses the stack; scalar tails handle leftover keys.
+The surrounding function still allocates and manages its result owner. This is
+evidence for these loops, not universally optimal registers or zero heap use.
+[The handoff](development-state.md) records pending final production acceptance.
 
 ### Mapped lists: accepted earlier measurements
 

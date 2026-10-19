@@ -97,8 +97,8 @@ outside the benchmark suite.
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.
 2. Validate direct construction of immediately consumed integer range sets.
-   Compact key-only set storage is the preceding delivery, still awaiting final
-   acceptance while this batch is prepared. Remove the range's temporary list
+   [Compact key-only sets](docs/roadmap-history.md#compact-set-storage-pr-172)
+   passed all production gates. Remove the range's temporary list
    and sorting buffers; preserve bound order and aliases, check storage limits
    before allocation, and compare allocation counts and actual binaries. The
    [mixed-tail-recursion delivery](docs/roadmap-history.md#mixed-tail-recursion-pr-171)
