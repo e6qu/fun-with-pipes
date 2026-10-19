@@ -1776,6 +1776,27 @@ records acceptance; `scripts/summarize-map-failures.py` audits the artifacts.
 
 ## Building numeric maps and sets without temporary lists
 
+### Compact set storage: measured allocation size
+
+Sets need one key per entry; the former map-shaped layout also reserved an
+unused value word. The [six-host report](measurements/compact-sets-2026-10-19.json)
+checks the compact layout at `a6dd7609` on Linux, macOS and Windows, each on
+ARM64/AMD64. This is a storage check, not a before/after timing comparison.
+
+For 4,096 distinct inline integer keys, the final container requests 32,776 bytes
+(`8 + 8*n`). The previous layout's formula gives 65,544 bytes (`8 + 16*n`).
+The probe measures the new requests at 0, 1, 7, 257 and 4,096 keys in ARC/tracing
+at O0/O2; empty sets make no request. Allocator headers, rounding, construction
+scratch and separately allocated keys are additional. Maps still store both
+keys and values, even when every value is `()`.
+
+All 41 focused tests passed on each host, with none ignored. The report audits
+144 actual binaries, their formats, sections and tracing symbols. Inspected O2
+Linux AMD64 and macOS ARM64 set-copy loops use eight-byte key spacing; the ARM
+loop also uses paired vector copies for larger inputs. This establishes the
+representation, not optimal register allocation or a speed advantage over C.
+Full production acceptance is tracked separately in [the handoff](development-state.md).
+
 ### Direct integer range sets: comparison in preparation
 
 `range 0 n | set.from-list` builds the distinct integers from zero through
@@ -1791,8 +1812,8 @@ The focused runtime probe observes the following requests for 4,096 keys:
 | Ordinary list, scratch and set | 4,099 | 196,624 | 32,776 |
 | Direct set | 1 | 32,776 | 32,776 |
 
-These are bounded O0/O2 runtime checks using accepted compiler scaffolding, not
-acceptance of the new compiler path or a timing comparison. Counts exclude
+Bounded O0/O2 runtime checks using accepted compiler scaffolding first established
+these counts; Linux compiler integration at `7901a576` confirmed them. Counts exclude
 startup/output, allocator headers and rounding; ARC charge returns to baseline
 after releasing each result. Zero keys make no requests in either version.
 
@@ -1801,8 +1822,19 @@ at 32, 4,096 and 65,536 keys. It hashes every key, checks output against raw
 interpretation and records eight whole-process timing samples per version.
 Construction, hashing, startup and output are included. Separate instrumented
 executables count allocations and memory. This is fwp versus fwp, not a C/Rust
-baseline. [The handoff](development-state.md) records validation status; no
-speedup is claimed before those measurements complete.
+baseline. The [first Linux report](measurements/range-sets-linux-2026-10-19.json)
+used an AMD EPYC 7763, Clang 18.1.3 and ARC/O2:
+
+| Keys | Ordinary median | Direct median | Direct / ordinary |
+|---|---:|---:|---:|
+| 32 | 1.405 ms | 1.446 ms | 1.030 |
+| 4,096 | 1.816 ms | 1.539 ms | 0.848 |
+| 65,536 | 6.021 ms | 2.112 ms | 0.351 |
+
+The two smaller cases have overlapping sample ranges; the 32-key median is
+slower. Only the largest case has separated ranges in this run. These results
+do not establish a general speedup. [The handoff](development-state.md) records
+the measured source, pending six-host report and final validation status.
 
 ### Mapped lists: accepted earlier measurements
 

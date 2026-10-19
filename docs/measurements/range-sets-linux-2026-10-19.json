@@ -1,0 +1,1561 @@
+{
+  "source": "7901a576019a01c490efe248c15730fac0602701",
+  "hardware": {
+    "system": "Linux",
+    "node": "runnervm8k3b6",
+    "release": "6.17.0-1022-azure",
+    "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+    "machine": "x86_64",
+    "processor": "x86_64"
+  },
+  "processor": "x86_64",
+  "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.86\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+  "compiler": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+  "fwpCompiler": {
+    "path": "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+    "sha256": "848c0bd37350abe06f263b7de59d3ba1cc98876a6bf5414f2abae08fd1438105"
+  },
+  "scope": "Same fwp program and explicitly selected compiler with numeric collection fusion enabled or disabled, checked ARC, native -O2, no tracing or reuse poisoning. Inputs are compiled constants; range construction, callbacks, sorting, deduplication, one query, startup and output are included in whole-process time. Map and mapped-set variants use the same sorting algorithm. Range-set cases hash all distinct keys: ordinary construction builds a list and sorts it, whereas direct construction writes already ordered integers into one final buffer. The map keeps the last value for each duplicate key; the set keeps distinct keys. Memory uses separate instrumented executables and includes main and shutdown; charged storage excludes allocator capacity and process RSS. Eight samples per variant use recorded randomized order; small inputs may be dominated by startup. Native compilation times exclude fwp C generation; the compiler executable need not itself be a release build to produce the measured native -O2 programs. No C/Rust timing parity, universal speed threshold or register-placement claim follows from this report.",
+  "cases": [
+    {
+      "kind": "set",
+      "inputs": 32,
+      "output": "32\n",
+      "sourceSha256": "5f2f83ac5d57e9f70ab4646d3a8699f7f1a8ed3205e483d3648004ef0caffff9",
+      "executionOrder": [
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ]
+      ],
+      "variants": {
+        "0": {
+          "binary": "set-32-fused-0",
+          "binaryBytes": 51840,
+          "binarySha256": "0311164fbcddf27fcbed1eea8712cdacb6c8f9eefa6ac4e02c4ea9c241c5fa32",
+          "generatedSha256": "5d9f43487404a353cf529751331c6d814c7dac22e020f2cd02f3ab7120a9bb7d",
+          "counters": {
+            "requests": 69,
+            "requestedBytes": 2595,
+            "retains": 0,
+            "peakChargedBytes": 2368,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-32-fused-0.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-32-fused-0",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-32-fused-0-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-32-fused-0-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 677761182,
+          "profileCompileNs": 688461806,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-32-fused-0.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-32-fused-0.s"
+          ],
+          "processWallNs": [
+            1475965,
+            1673744,
+            1456513,
+            1313949,
+            1653084,
+            1430678,
+            1291170,
+            1801003
+          ],
+          "medianProcessWallNs": 1466239.0
+        },
+        "1": {
+          "binary": "set-32-fused-1",
+          "binaryBytes": 51616,
+          "binarySha256": "5955297b5a1c79ef556a675a211b57ed16b082b53d5ac020bfa5cdb6c733da84",
+          "generatedSha256": "b768d9fbdea6e02f796efdc4c9072cdba5aadb4ecd0860e69ccd52accad16fda",
+          "counters": {
+            "requests": 4,
+            "requestedBytes": 787,
+            "retains": 0,
+            "peakChargedBytes": 832,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-32-fused-1.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-32-fused-1",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-32-fused-1-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-32-fused-1-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 620541066,
+          "profileCompileNs": 632093286,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-32-fused-1.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-32-fused-1.s"
+          ],
+          "processWallNs": [
+            1668864,
+            1572741,
+            1322739,
+            1384774,
+            1400514,
+            1414191,
+            1440398,
+            1752680
+          ],
+          "medianProcessWallNs": 1427294.5
+        }
+      },
+      "fusedToOrdinaryTimeRatio": 0.9734391869265515
+    },
+    {
+      "kind": "map",
+      "inputs": 32,
+      "output": "Some 5\n",
+      "sourceSha256": "2bd51c52a67ad7551cea03ae2ad5627894684feca78367ec7f64559305b3c592",
+      "executionOrder": [
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ]
+      ],
+      "variants": {
+        "0": {
+          "binary": "map-32-fused-0",
+          "binaryBytes": 65232,
+          "binarySha256": "4058f49ec9e349a0e7a77e74a16553d60e88455d73c110b0e9d8dc212535f6a2",
+          "generatedSha256": "e5ce0c82a956390a593784b933aa84a3df5a262c70dd2a3168c6b80aadfa0d1d",
+          "counters": {
+            "requests": 102,
+            "requestedBytes": 4143,
+            "retains": 0,
+            "peakChargedBytes": 3712,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-32-fused-0.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-32-fused-0",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-32-fused-0-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-32-fused-0-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 881449005,
+          "profileCompileNs": 874523048,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-32-fused-0.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-32-fused-0.s"
+          ],
+          "processWallNs": [
+            1786475,
+            1242870,
+            1298484,
+            1513786,
+            1450318,
+            1495967,
+            1989827,
+            1541340
+          ],
+          "medianProcessWallNs": 1504876.5
+        },
+        "1": {
+          "binary": "map-32-fused-1",
+          "binaryBytes": 64944,
+          "binarySha256": "2fd9a73d6af826dbe2917ef17f7aa20f7b4d1ed8608fad3780285ecc78edd902",
+          "generatedSha256": "805d31553eec5ca8f01d666b39ab7c917cac43934e9455382f636282cfdea72c",
+          "counters": {
+            "requests": 5,
+            "requestedBytes": 1575,
+            "retains": 0,
+            "peakChargedBytes": 1664,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-32-fused-1.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-32-fused-1",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-32-fused-1-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-32-fused-1-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 819190489,
+          "profileCompileNs": 803629921,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-32-fused-1.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-32-fused-1.s"
+          ],
+          "processWallNs": [
+            2199322,
+            1510298,
+            1477646,
+            1346083,
+            1365429,
+            1809828,
+            1478178,
+            1298566
+          ],
+          "medianProcessWallNs": 1477912.0
+        }
+      },
+      "fusedToOrdinaryTimeRatio": 0.9820819183501105
+    },
+    {
+      "kind": "range-set",
+      "inputs": 32,
+      "output": "10062628312183848319\n",
+      "sourceSha256": "f84eeb184cdccee52245decc9f796f70b28009338edcde22e0f68cbce2000b2b",
+      "executionOrder": [
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ]
+      ],
+      "variants": {
+        "0": {
+          "binary": "range-set-32-fused-0",
+          "binaryBytes": 42720,
+          "binarySha256": "3f919595aa1fc34fe17ddbb10092b9c7f290f0dbf6c1ea0ba8873e877e7b7b49",
+          "generatedSha256": "1cbb42c5b0761e4c649258d18b7846dc33c1b68ad8557c19034d48d50b463f6e",
+          "counters": {
+            "requests": 36,
+            "requestedBytes": 1581,
+            "retains": 0,
+            "peakChargedBytes": 1920,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-32-fused-0.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-32-fused-0",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-32-fused-0-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-32-fused-0-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 595860336,
+          "profileCompileNs": 613206648,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-32-fused-0.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-32-fused-0.s"
+          ],
+          "processWallNs": [
+            1336104,
+            1940421,
+            1470123,
+            1219305,
+            1334560,
+            1436313,
+            1373370,
+            1485401
+          ],
+          "medianProcessWallNs": 1404841.5
+        },
+        "1": {
+          "binary": "range-set-32-fused-1",
+          "binaryBytes": 38344,
+          "binarySha256": "4d9453a05752098182760b5c38918f4e4855ba172256448b0f545919a63c5fd5",
+          "generatedSha256": "18404f2bccd6e27f51c5dbc38ac3038e2554f99ce8b9136d439b93e3b50bc932",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 293,
+            "retains": 0,
+            "peakChargedBytes": 320,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-32-fused-1.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-32-fused-1",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-32-fused-1-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-32-fused-1-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 500923489,
+          "profileCompileNs": 509669600,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-32-fused-1.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-32-fused-1.s"
+          ],
+          "processWallNs": [
+            1525152,
+            1316928,
+            1327756,
+            1440851,
+            1451979,
+            1773259,
+            1569391,
+            1388855
+          ],
+          "medianProcessWallNs": 1446415.0
+        }
+      },
+      "fusedToOrdinaryTimeRatio": 1.0295930181447515
+    },
+    {
+      "kind": "set",
+      "inputs": 4096,
+      "output": "257\n",
+      "sourceSha256": "aabbd95c19937847cc987900c31d7b756a009134005ddbf03a56baf5982ce66d",
+      "executionOrder": [
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ]
+      ],
+      "variants": {
+        "0": {
+          "binary": "set-4096-fused-0",
+          "binaryBytes": 51848,
+          "binarySha256": "462f20ec9b21132f9bed8983af3174f3dca00733fafeb9f1c9855a1fa2ebcd07",
+          "generatedSha256": "2a82622a0b07b79aec576fc2d3a0b295810e4ad8d4bb4b9f296b1385d2513e9f",
+          "counters": {
+            "requests": 8197,
+            "requestedBytes": 297004,
+            "retains": 0,
+            "peakChargedBytes": 294920,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-4096-fused-0.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-4096-fused-0",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-4096-fused-0-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-4096-fused-0-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 676830682,
+          "profileCompileNs": 679561256,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-4096-fused-0.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-4096-fused-0.s"
+          ],
+          "processWallNs": [
+            2501028,
+            2057394,
+            1698467,
+            2879357,
+            1633700,
+            1519867,
+            1675930,
+            1604274
+          ],
+          "medianProcessWallNs": 1687198.5
+        },
+        "1": {
+          "binary": "set-4096-fused-1",
+          "binaryBytes": 51616,
+          "binarySha256": "4f4477ba501cca3124eccd1c04213aaeeca2a4c550af000876ed5bdab20ae040",
+          "generatedSha256": "f521582b7e72feb0587fef56f23f193233e761ac72782d932e3f538275a1fd3b",
+          "counters": {
+            "requests": 4,
+            "requestedBytes": 67612,
+            "retains": 0,
+            "peakChargedBytes": 68096,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-4096-fused-1.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-4096-fused-1",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-4096-fused-1-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-4096-fused-1-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 646568387,
+          "profileCompileNs": 635196811,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-4096-fused-1.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-4096-fused-1.s"
+          ],
+          "processWallNs": [
+            1980222,
+            1491506,
+            2114162,
+            1370390,
+            1364116,
+            1433055,
+            1576873,
+            1560621
+          ],
+          "medianProcessWallNs": 1526063.5
+        }
+      },
+      "fusedToOrdinaryTimeRatio": 0.9044955291271299
+    },
+    {
+      "kind": "map",
+      "inputs": 4096,
+      "output": "Some 3860\n",
+      "sourceSha256": "08c8c36b7c5ecca859037385137e673ddce7c0ed040be013c36fb64116914291",
+      "executionOrder": [
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ]
+      ],
+      "variants": {
+        "0": {
+          "binary": "map-4096-fused-0",
+          "binaryBytes": 65240,
+          "binarySha256": "7e11fbd8cea2fd304e23d3bf68f4f470b165a3cbc4a1277bde931b5ee022f1b0",
+          "generatedSha256": "a5933312a2a63780e55aec022aa108ca5072f278617a884affa2d7059b093fb5",
+          "counters": {
+            "requests": 12294,
+            "requestedBytes": 462914,
+            "retains": 0,
+            "peakChargedBytes": 425992,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-4096-fused-0.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-4096-fused-0",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-4096-fused-0-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-4096-fused-0-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 890808870,
+          "profileCompileNs": 887439811,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-4096-fused-0.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-4096-fused-0.s"
+          ],
+          "processWallNs": [
+            2305180,
+            1838598,
+            2263357,
+            1693322,
+            2013939,
+            1562126,
+            2870424,
+            2296436
+          ],
+          "medianProcessWallNs": 2138648.0
+        },
+        "1": {
+          "binary": "map-4096-fused-1",
+          "binaryBytes": 64944,
+          "binarySha256": "86f73e1d8048b5d552d370b98ffd306b0f186e5c18568e860b76704c46853296",
+          "generatedSha256": "fe8e7179ab3489fd552430500b4bbdf32deb583bb8a6207d9885ec83d8283c59",
+          "counters": {
+            "requests": 5,
+            "requestedBytes": 135226,
+            "retains": 0,
+            "peakChargedBytes": 136192,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-4096-fused-1.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-4096-fused-1",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-4096-fused-1-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-4096-fused-1-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 817684726,
+          "profileCompileNs": 814242623,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-4096-fused-1.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-4096-fused-1.s"
+          ],
+          "processWallNs": [
+            1883458,
+            1970311,
+            1466123,
+            1799642,
+            1444026,
+            1903305,
+            2120808,
+            1546985
+          ],
+          "medianProcessWallNs": 1841550.0
+        }
+      },
+      "fusedToOrdinaryTimeRatio": 0.8610813934784967
+    },
+    {
+      "kind": "range-set",
+      "inputs": 4096,
+      "output": "17306479573251762893\n",
+      "sourceSha256": "0eb721af3bd9d258f7aed50a32b1bb7615f9736f907e61d0aff97b1ef9d92970",
+      "executionOrder": [
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ]
+      ],
+      "variants": {
+        "0": {
+          "binary": "range-set-4096-fused-0",
+          "binaryBytes": 42720,
+          "binarySha256": "a97a6cf0a0a55a01ed1399b957c36e23dbd9fdd97c70a248689de882959e3569",
+          "generatedSha256": "4f5730fa248d9372e587862c15ef2dfa2b8d0ee68345893159b6bef2d410682b",
+          "counters": {
+            "requests": 4100,
+            "requestedBytes": 196653,
+            "retains": 0,
+            "peakChargedBytes": 229392,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-4096-fused-0.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-4096-fused-0",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-4096-fused-0-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-4096-fused-0-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 588567517,
+          "profileCompileNs": 603129304,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-4096-fused-0.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-4096-fused-0.s"
+          ],
+          "processWallNs": [
+            1831746,
+            1938944,
+            1799317,
+            1634027,
+            1565679,
+            1851303,
+            1670427,
+            1920181
+          ],
+          "medianProcessWallNs": 1815531.5
+        },
+        "1": {
+          "binary": "range-set-4096-fused-1",
+          "binaryBytes": 38352,
+          "binarySha256": "b3c293e2b02be78465564e482f889cd4d39502d59acf1f0f39a87c21b565d026",
+          "generatedSha256": "2de9870b9c48e3d21951fb98fecf7875c631ac33a093ad2f6ddd5089badd1b09",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 32805,
+            "retains": 0,
+            "peakChargedBytes": 32776,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-4096-fused-1.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-4096-fused-1",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-4096-fused-1-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-4096-fused-1-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 493904211,
+          "profileCompileNs": 505613727,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-4096-fused-1.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-4096-fused-1.s"
+          ],
+          "processWallNs": [
+            1550020,
+            1807633,
+            1313457,
+            1527959,
+            1580546,
+            2094357,
+            1448960,
+            1507908
+          ],
+          "medianProcessWallNs": 1538989.5
+        }
+      },
+      "fusedToOrdinaryTimeRatio": 0.8476798667497645
+    },
+    {
+      "kind": "set",
+      "inputs": 65536,
+      "output": "257\n",
+      "sourceSha256": "c63cc9c26431c8511a9c85486542e39fb52dfd4bd0d2109b09653e17fcb39cc4",
+      "executionOrder": [
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ]
+      ],
+      "variants": {
+        "0": {
+          "binary": "set-65536-fused-0",
+          "binaryBytes": 51848,
+          "binarySha256": "90d0d674ad7cf7042b99789b0294ca38afe1ab3d0343e4aa36f9f42525183501",
+          "generatedSha256": "55254b9b5d0e1ce3ef91836cb404515425d5b2dae7b8343dd0e5becdc7564888",
+          "counters": {
+            "requests": 131077,
+            "requestedBytes": 4720684,
+            "retains": 0,
+            "peakChargedBytes": 4718600,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-65536-fused-0.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-65536-fused-0",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-65536-fused-0-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-65536-fused-0-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 672582378,
+          "profileCompileNs": 670883617,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-65536-fused-0.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-65536-fused-0.s"
+          ],
+          "processWallNs": [
+            6889613,
+            7265784,
+            6730788,
+            6935087,
+            6545254,
+            6822582,
+            7324924,
+            6942844
+          ],
+          "medianProcessWallNs": 6912350.0
+        },
+        "1": {
+          "binary": "set-65536-fused-1",
+          "binaryBytes": 51616,
+          "binarySha256": "da33202f367ab04c791c7ffab052dcec51ff06edabd16dc98bc1830ccdfb4d8e",
+          "generatedSha256": "666e2f53dc20f7908c7ca1009ea5080a3ef5013e7cd81edcb4b3712d05b4534a",
+          "counters": {
+            "requests": 4,
+            "requestedBytes": 1050652,
+            "retains": 0,
+            "peakChargedBytes": 1051136,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-65536-fused-1.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-65536-fused-1",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-65536-fused-1-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-65536-fused-1-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 619042376,
+          "profileCompileNs": 626756423,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-65536-fused-1.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/set-65536-fused-1.s"
+          ],
+          "processWallNs": [
+            3407638,
+            4834037,
+            3063454,
+            3978129,
+            3266066,
+            3174025,
+            4720718,
+            3635899
+          ],
+          "medianProcessWallNs": 3521768.5
+        }
+      },
+      "fusedToOrdinaryTimeRatio": 0.5094893198405752
+    },
+    {
+      "kind": "map",
+      "inputs": 65536,
+      "output": "Some 65283\n",
+      "sourceSha256": "97fddd0ffdb8f9a60d20726ae1a68a6eef0741f70a19230a1031b54bc218b7ab",
+      "executionOrder": [
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ]
+      ],
+      "variants": {
+        "0": {
+          "binary": "map-65536-fused-0",
+          "binaryBytes": 65240,
+          "binarySha256": "de3c6a8ff91f864b4113330ee7c7a189eb51afb899c3e9a351dd5f273af1d317",
+          "generatedSha256": "e0da2c208160cb0a68e753b2fcd354824bce8c96718bcf3a27882b6afacc631c",
+          "counters": {
+            "requests": 196614,
+            "requestedBytes": 7344195,
+            "retains": 0,
+            "peakChargedBytes": 6815752,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-65536-fused-0.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-65536-fused-0",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-65536-fused-0-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-65536-fused-0-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 864961549,
+          "profileCompileNs": 869846951,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-65536-fused-0.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-65536-fused-0.s"
+          ],
+          "processWallNs": [
+            9784881,
+            9782391,
+            9686675,
+            8939303,
+            9230046,
+            13956585,
+            8893768,
+            12207370
+          ],
+          "medianProcessWallNs": 9734533.0
+        },
+        "1": {
+          "binary": "map-65536-fused-1",
+          "binaryBytes": 64944,
+          "binarySha256": "a3a1b00d929982598f8833e543b36d0eb60536e5d3cd5be43a29a1778c822d03",
+          "generatedSha256": "0fe41b0383b49eadb2c544ae6e4741e50dc9956aac84a040b6d24b08574beb09",
+          "counters": {
+            "requests": 5,
+            "requestedBytes": 2101307,
+            "retains": 0,
+            "peakChargedBytes": 2102272,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-65536-fused-1.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-65536-fused-1",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-65536-fused-1-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-65536-fused-1-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 799952645,
+          "profileCompileNs": 806738368,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-65536-fused-1.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/map-65536-fused-1.s"
+          ],
+          "processWallNs": [
+            5920047,
+            4719777,
+            3938071,
+            3843352,
+            4135481,
+            4113440,
+            5269946,
+            3883384
+          ],
+          "medianProcessWallNs": 4124460.5
+        }
+      },
+      "fusedToOrdinaryTimeRatio": 0.42369372007881634
+    },
+    {
+      "kind": "range-set",
+      "inputs": 65536,
+      "output": "75965663256044267\n",
+      "sourceSha256": "0a7db2e04b57823a8db2332390f1ce7980092053a193d5d005899c6e9b72a6aa",
+      "executionOrder": [
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "1"
+        ]
+      ],
+      "variants": {
+        "0": {
+          "binary": "range-set-65536-fused-0",
+          "binaryBytes": 42720,
+          "binarySha256": "27dab8f7957113e80fffbe06d3d9ba2805c6795e690a2ed083d1305745828e50",
+          "generatedSha256": "444b845349530fcb479a9e62af41d055d448b5bee1cae5d5b5f51644d68a0676",
+          "counters": {
+            "requests": 65540,
+            "requestedBytes": 3145770,
+            "retains": 0,
+            "peakChargedBytes": 3670032,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-65536-fused-0.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-65536-fused-0",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-65536-fused-0-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-65536-fused-0-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 588845721,
+          "profileCompileNs": 612301522,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-65536-fused-0.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-65536-fused-0.s"
+          ],
+          "processWallNs": [
+            6371619,
+            5673994,
+            7829421,
+            5942852,
+            8047169,
+            5681678,
+            5257103,
+            6099429
+          ],
+          "medianProcessWallNs": 6021140.5
+        },
+        "1": {
+          "binary": "range-set-65536-fused-1",
+          "binaryBytes": 38352,
+          "binarySha256": "49e959b3501fd7ba952deec81b63296bed2e7701864db776bf9060721bb15f1e",
+          "generatedSha256": "86b2d36e45ad5cd808bb01fbedc61e576636c91929b031f7759fe40f8f67fb4c",
+          "counters": {
+            "requests": 2,
+            "requestedBytes": 524322,
+            "retains": 0,
+            "peakChargedBytes": 524296,
+            "finalChargedBytes": 0,
+            "collections": 0
+          },
+          "commands": [
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-65536-fused-1.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-65536-fused-1",
+              "-lm",
+              "-lpthread"
+            ],
+            [
+              "clang",
+              "-O2",
+              "-std=gnu11",
+              "-ffp-contract=off",
+              "-w",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-65536-fused-1-profile.c",
+              "-o",
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-65536-fused-1-profile",
+              "-lm",
+              "-lpthread"
+            ]
+          ],
+          "nativeCompileNs": 493921085,
+          "profileCompileNs": 502896046,
+          "assemblyCommand": [
+            "clang",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "-S",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-65536-fused-1.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/collection-build-evidence/costs/range-set-65536-fused-1.s"
+          ],
+          "processWallNs": [
+            2138059,
+            2133669,
+            2138331,
+            2089979,
+            2497782,
+            2044099,
+            1970386,
+            2033254
+          ],
+          "medianProcessWallNs": 2111824.0
+        }
+      },
+      "fusedToOrdinaryTimeRatio": 0.35073488153946913
+    }
+  ]
+}
