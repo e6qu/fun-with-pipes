@@ -8,11 +8,20 @@ PR #173 merged after all gates passed. PR #174, `numeric-hash-delivery`, is now
 the only active PR; the primary checkout owns its final acceptance. Keep this
 candidate isolated until the hash batch is delivered.
 
-Next: audit six-native-host `integer-output` run `39330733812` and both-Linux
-`wasi-arc` run `39330737723`, both at `d4c5b39f994b72b9991e8ffd09698aa63e0c5d84`.
-Fix every failure, then retain actual binaries/allocation results. The narrower
-ARM probe `39329770583` was cancelled while still queued to use the complete
-matrix instead. No full integration or timing improvement is established.
+Next: rerun the complete native and WASI matrices with the combined test repairs
+below, then audit and retain actual binaries/allocation results. The new output
+tests passed on all six hosts at `d4c5b39f994b72b9991e8ffd09698aa63e0c5d84` in
+`39330733812`, but both Windows jobs failed an existing arithmetic probe's
+newline assertion. Both-Linux WASI `39330737723` is still running at that source.
+No complete acceptance or timing improvement is established.
+
+Both failed Windows logs were audited: their only failed test is
+`full_width_unsigned_products_have_defined_overflow`. Its standalone C main
+bypasses fwp's binary-stream setup, so Windows translated `\n` to `\r\n`.
+The probe now selects binary stdout explicitly; arithmetic checks are unchanged.
+Both this target and integer output now join permanent Windows production CI.
+The WASI allocation diagnostics also advance the output phase for the new print
+function, preserving useful leak locations. Neither repair changes generated code.
 
 Run `39327804456` at `3a864f4d` passed all-target Clippy and four existing
 protocol/trap tests, but all three new output tests failed: ownership lowering
@@ -44,10 +53,9 @@ The same boundary fixture joins the actual WASI shutdown corpus.
 
 ## Binary audit preparation
 
-After the six-host test run passes, dispatch `integer-output-report` from the
-collector head with `evidence_run=39330733812` and
-`source_revision=d4c5b39f994b72b9991e8ffd09698aa63e0c5d84`. Update these inputs if
-any compiler/test repair changes the measured head. The collector requires all
+After the repaired six-host test run passes, dispatch `integer-output-report`
+with its exact `evidence_run` and `source_revision`. Do not use the failed
+`39330733812` run as complete acceptance. The collector requires all
 seven tests on all six hosts, rejects ignored/missing cases, verifies source
 identity and inspects 144 actual binaries and their tracing symbols. It records
 assembly and section sizes; inspect the output code before making stack claims.

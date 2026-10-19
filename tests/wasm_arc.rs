@@ -382,9 +382,14 @@ static void wasm_arc_check_shutdown(void) {
     let measured = thread.replace(begin, &format!("{begin}    wasm_arc_base_live = wasm_arc_live; wasm_arc_base_bytes = wasm_arc_bytes; wasm_arc_base_counts = fwp_wasm_counts_live;\n    if (atexit(wasm_arc_check_shutdown)) _Exit(245);\n"));
     let mut result = code.to_owned();
     result.replace_range(start..finish, &format!("{observer}\n{measured}"));
-    let print = "static V fwp_p_print(V s) {";
-    assert_eq!(result.matches(print).count(), 1);
-    result.replace(print, &format!("{print} wasm_arc_phase++;"))
+    for print in [
+        "static V fwp_p_print(V s) {",
+        "static V fwp_print_integer(V value, int is_signed) {",
+    ] {
+        assert_eq!(result.matches(print).count(), 1);
+        result = result.replace(print, &format!("{print} wasm_arc_phase++;"));
+    }
+    result
 }
 
 #[test]

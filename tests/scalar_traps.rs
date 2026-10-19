@@ -138,6 +138,10 @@ fn full_width_unsigned_products_have_defined_overflow() {
             r#"
 int main(int argc, char **argv) {
     if (argc != 3) return 2;
+#ifdef _WIN32
+    /* Match generated fwp entries: compare bytes without CRT newline rewriting. */
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 3;
+#endif
     V a = strtoull(argv[1], 0, 10), b = strtoull(argv[2], 0, 10), out = 0;
     int err = 0, ok = fwp_arith_raw(K_U64, OP_MUL, a, b, 0, &out, &err);
     printf("%d %d %llu\n", ok, err, (unsigned long long)out);
