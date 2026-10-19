@@ -28,7 +28,7 @@ def main():
     parser.add_argument('--after', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    keys = (['elements', 'repetitions', 'canonicalBytesPerHash'] if args.workload == 'hash'
+    keys = (['collection', 'elements', 'repetitions', 'canonicalBytesPerHash'] if args.workload == 'hash'
             else ['lanes', 'repetitions'])
     filename = 'hash.fwp' if args.workload == 'hash' else 'lanes.fwp'
     instrument = hashing.profile if args.workload == 'hash' else hashing.iteration.instrument

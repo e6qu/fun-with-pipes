@@ -107,12 +107,16 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     out = parser.parse_args().output.resolve(); out.mkdir(parents=True, exist_ok=True)
     compiler = ROOT / 'target/release/fwp'; cc = os.environ['CC']
-    env = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    env = dict(os.environ, FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0',
+               FWP_ARRAY_FUSION='1', FWP_MAP_BUILD='1')
     env.pop('FWP_NO_OPT', None); env.pop('FWP_GC', None)
     result = {}
-    for name, n, repeats in [('small', 16, 4096), ('large', 4096, 1024)]:
+    for name, n, repeats, collection in [('small', 16, 4096, 'array'),
+                                        ('large', 4096, 1024, 'array'),
+                                        ('set', 65536, 64, 'set')]:
         directory = out / name; directory.mkdir(exist_ok=True)
-        program = f'main = range 0 {repeats} | map (both id (const (range 0 {n} | array.from-list)) | hash) | fold bit.xor 0u64 | echo\n'
+        constructor = {'array': 'array.from-list', 'set': 'set.from-list'}[collection]
+        program = f'main = range 0 {repeats} | map (both id (const (range 0 {n} | {constructor})) | hash) | fold bit.xor 0u64 | echo\n'
         source = directory / 'hash.fwp'; source.write_text(program)
         expected = run([compiler, 'run', '--interp', source], dict(env, FWP_NO_OPT='1')).stdout
         variants, binaries = {}, {}
@@ -125,6 +129,7 @@ def main():
                 before = time.perf_counter_ns(); run([compiler, 'build', '--gc', memory, '--emit-c', source, '-o', cfile], dict(env, FWP_TYPED_HASH=typed))
                 emit_ns = time.perf_counter_ns()-before; code = cfile.read_text()
                 assert ('/* numeric hash without type dispatch */' in code) == (typed == '1'), label
+                assert f'return fwp_p_{collection}_range(l0, l1,' in code, (name, label)
                 if label.endswith('buffered'):
                     needle = 'return fwp_hash_value(0xcbf29ce484222325ULL, v, d);'; assert code.count(needle) == 1
                     code = code.replace(needle, BUFFERED); cfile.write_text(code)
@@ -176,11 +181,12 @@ def main():
         ratios = {label:{reference:{'wall':row['medianWallNs']/variants[reference]['medianWallNs'],
                                    'cpu':row['medianChildCpuNs']/variants[reference]['medianChildCpuNs']}
                          for reference in ['c','rust','fwp-arc-generic','fwp-arc-buffered']} for label,row in variants.items() if label.startswith('fwp')}
-        result[name]=dict(elements=n,repetitions=repeats,canonicalBytesPerHash=8+(1 if n<128 else 2)+8*n,source=program,expected=expected,variants=variants,ratios=ratios)
+        length_bytes = max(1, (n.bit_length() + 6) // 7)
+        result[name]=dict(collection=collection,elements=n,repetitions=repeats,canonicalBytesPerHash=8+length_bytes+8*n,source=program,expected=expected,variants=variants,ratios=ratios)
     report=dict(head=run(['git','rev-parse','HEAD']).stdout.strip(),hardware=platform.uname()._asdict(),
                 cpu=run(['sysctl','-n','machdep.cpu.brand_string'] if platform.system()=='Darwin' else ['lscpu']).stdout,
                 cCompiler=run([cc,'--version']).stdout,rustCompiler=run(['rustc','--version','--verbose']).stdout,results=result,
-                scope='All programs build one I64 array containing 0..N, hash the canonical tuple (iteration, array) with wrapping FNV-1a, and XOR the hashes. C/Rust encode the same schema directly. fwp-tracing and fwp-arc use type-specialized loops (FWP_TYPED_HASH=1); fwp-arc-generic uses descriptor dispatch (FWP_TYPED_HASH=0). The buffered control also selects generic dispatch and restores an encoded byte buffer. The iteration prefix changes each hash. One unprofiled RSS/warmup process precedes twelve balanced rotating/reversed wall/child-CPU samples including startup, input construction and printing; compilation and allocation profiles are separate. All use optimization level 2; C uses -ffp-contract=off. All fwp variants use the same compiler. fwp counters distinguish managed storage from hash encoding-buffer requests/capacity; collection is disabled only for ownership profiles. C counts its explicit successful application malloc; Rust counts actual application allocator calls while its vector is live. These exclude allocator-internal and stdio storage; fwp managed counts can include output values. Peak RSS comes from uninstrumented programs. Ratios above one mean extra fwp time; no parity or universal speedup is assumed.')
+                scope='Each case builds one ordered I64 array or set containing 0..N-1, hashes the canonical tuple (iteration, collection) with wrapping FNV-1a, and XORs the hashes. C/Rust store the same ordered keys in an array/vector and encode the same schema directly; there is no sorting in any construction. fwp-tracing and fwp-arc use type-specialized loops (FWP_TYPED_HASH=1); fwp-arc-generic uses descriptor dispatch (FWP_TYPED_HASH=0). The buffered control also selects generic dispatch and restores an encoded byte buffer. The iteration prefix changes each hash. One unprofiled RSS/warmup process precedes twelve balanced rotating/reversed wall/child-CPU samples including startup, input construction and printing; compilation and allocation profiles are separate. All use optimization level 2; C uses -ffp-contract=off. All fwp variants use the same compiler with array and collection fusion explicitly enabled. fwp counters distinguish managed storage from hash encoding-buffer requests/capacity; collection is disabled only for ownership profiles. C counts its explicit successful application malloc; Rust counts actual application allocator calls while its vector is live. These exclude allocator-internal and stdio storage; fwp managed counts can include output values. Peak RSS comes from uninstrumented programs. Ratios above one mean extra fwp time; no parity or universal speedup is assumed.')
     (out/'report.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps({name:case['ratios'] for name,case in result.items()},indent=2))
 
