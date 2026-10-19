@@ -1026,6 +1026,27 @@ For example, small Linux ARM64 work still takes 37.3% more CPU than C, despite
 removing the targeted allocations and retains. Startup, input construction,
 printing and generic hash traversal remain in the measured interval.
 
+### Numeric hash specialization: measurement in preparation
+
+`scripts/measure-hashing.py` compares direct numeric hash loops with general
+type-descriptor traversal, using the same fwp compiler and `FWP_TYPED_HASH=1/0`.
+It also times C/Rust implementations of the same encoding and a separate fwp
+control that first constructs an encoded byte buffer. The buffered control uses
+general traversal explicitly; it does not stand in for the specialization cost.
+
+Each program constructs one I64 array `0..N-1`. At each iteration it hashes the
+tuple `(iteration, array)` and combines results with XOR. Inputs are 16 elements
+with 4,096 repetitions, or 4,096 elements with 1,024 repetitions. The prefix
+changes each hash. C/Rust use the same eight-byte integers and unsigned LEB128
+array length. Both ARC and tracing versions of specialized fwp are measured.
+
+After one warmup, twelve balanced rotating/reversed samples include startup,
+input construction, hashing and output. Compilation and instrumented allocation
+profiles are separate. All builds use O2; C uses `-ffp-contract=off`. Reports
+retain hardware, compilers, raw wall/child-CPU samples, allocation/live-memory
+counts, process RSS and actual binaries/disassembly. No new timing claim is made
+until [the handoff](development-state.md) records completed runs.
+
 ## CPU tensor output storage
 
 **Comparison:** previous versus direct-output fwp executors, with only that runtime

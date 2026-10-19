@@ -379,6 +379,25 @@ allocating an encoded copy or adjusting their reference counts. The interpreter'
 buffered encoder remains an independent reference. [PR #151](roadmap-history.md#synchronous-wasi-ownership-and-streaming-hashes-pr-151)
 records acceptance; allocation removal alone does not establish a timing improvement.
 
+### Hashing numeric layouts without repeated type dispatch
+
+For example, hashing `(3, range 0 16 | array.from-list)` reads the eight-byte
+integer `3`, the array length and sixteen eight-byte elements. Those types are
+known when C is generated. The compiler can emit that traversal directly instead
+of asking the general hash visitor to identify each element's type at runtime.
+
+The preparation covers inline integers, F32/F64, flat numeric lists/arrays/sets,
+maps with numeric keys and values, and records composed of those types. Other
+representations keep their existing descriptor traversal. It introduces no
+new source syntax. `FWP_TYPED_HASH=0` selects general traversal for comparison.
+
+The generated loops retain the canonical encoding: unsigned LEB128 lengths,
+little-endian scalar bytes, original floating-point bits and key/field order.
+Packed and full-word arrays use their respective storage widths; slices borrow
+their existing data address. Hashing adds no owners or temporary encoded buffer.
+The [handoff](development-state.md) records which checks and measurements have
+actually passed; implementation alone does not establish a speed improvement.
+
 ## Runtime
 
 The runtime supplies operations generated programs cannot express as simple C

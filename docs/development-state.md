@@ -2,85 +2,65 @@
 
 ## Next action
 
-Branch `direct-integer-range-sets` contains the next delivery on accepted main.
-[PR #172](roadmap-history.md#compact-set-storage-pr-172) passed all nine production
-jobs and documentation, then merged as `c3f7f75591a0a073f443fed45855a1b084963729`.
-Its one-line squash message and identical tested tree were verified. Redundant
-post-merge production run `39311332528` was cancelled; its PR gates remain intact.
+This is the `specialize-numeric-hashes` preparation in
+`/private/tmp/fwp-specialize-numeric-hashes`, based on PR #173's head
+`3e4d0a372a79461d5482503b4d1b454ed7b7e347`. PR #173 remains the only active PR;
+its acceptance handoff is in the primary checkout. Production `39312560218`
+and documentation `39312560173` are pending. Do not replace that tested head.
 
-Next: publish this batch and audit every final-head production job and the
-new C/Rust benchmark. Fix every failure before merging. Require all nine jobs
-and documentation for the exact final commit; use a one-line squash subject
-and an empty body. Focused evidence below does not replace those gates.
+Next: publish this preparation and run the focused `hash` suite first on Linux,
+then on all six native hosts; run `wasi-arc` and `hash-costs` on GitHub. Audit all
+failures and actual binary loops before deciding whether to adopt the change.
+Keep one active PR. After #173 passes and merges, replay accepted preparation
+on main, update the plan/evidence and require all final-head production gates.
 
-## Current batch
+## Prepared change
 
-`range lo hi | set.from-list` writes inline integer keys directly into one owned
-set buffer. Empty/descending ranges use static storage. Bounds keep their order;
-byte limits are checked before narrowing to the target's size type, including
-32-bit WASI. Boxed integers and shared input lists keep their existing paths.
-There is no new syntax or public API.
+The compiler emits direct hashing code for inline integers, F32/F64, their flat
+lists/arrays/sets, numeric maps and records composed of those types. Other types
+keep descriptor traversal. The original value remains borrowed; there is no
+new syntax, owner or encoded buffer. Packed/full-word array storage and slices
+have explicit loads; canonical widths, float bits, field/key order and length
+encoding remain unchanged. `FWP_TYPED_HASH=0` selects general traversal for
+controlled comparisons. Recursive type shapes are not expanded indefinitely.
 
-Three native tests cover values, integer widths, bound effects/traps, sharing,
-allocation counts and failure cleanup in ARC/tracing at O0/O2. Deliberately
-missing size guards or releases must fail; ordinary construction must fail a
-one-allocation budget. WASI adds real execution and oversized-container checks.
-`bench/range-set` adds a million-key C/Rust/fwp comparison with matching canonical
-hashing. Its full timings and the latest ISize/USize/shared-list fixture additions
-still need final-head production validation.
+The motivation is measured code, not an assumed universal speedup. PR #173's
+large range-set binaries still call the general visitor once per key. Linux
+AMD64 and ARM macOS disassembly is in
+`/private/tmp/fwp-range-cost-{ubuntu-latest,macos-15}.asm`, from report artifact
+`12215946946` and source `7901a576`. Earlier hash comparisons also retain
+small-input C/Rust gaps in [the benchmark guide](benchmarks.md#repeating-the-allocation-and-borrowing-changes-together).
 
-## Evidence and limits
+One added test covers scalar boundaries, packed/full-word arrays, slices,
+sharing, mixed map widths and named records. It compares raw interpretation
+with generated ARC/stressed-tracing O0/O2 code, with specialization on/off.
+A second probe asserts no allocation or reference-count operations inside the
+new bodies, and must detect deliberately added allocation/retain calls.
+The WASI shutdown corpus now includes the same fixture. None of the new native
+checks has run yet; compiler integration belongs on CI.
 
-- All six hosts passed [collection run 39303492049](https://github.com/e6qu/fun-with-pipes/actions/runs/39303492049)
-  at `7901a576019a01c490efe248c15730fac0602701`, preserved by
-  `roadmap/revision-range-sets-7901a576`. All-target Clippy, 44 tests per host
-  and nine paired cost cases passed. No focused test was ignored.
-- [Report run 39311772543](https://github.com/e6qu/fun-with-pipes/actions/runs/39311772543)
-  audited all 264 tests and inspected 228 actual binaries. Its collector is
-  `b0b2b6ae8dcfaabbb6430ac5a70ae6f89540fd8f`, preserved by
-  `roadmap/revision-range-report-b0b2b6ae`. The
-  [complete report](measurements/range-sets-2026-10-19.json) retains samples,
-  hardware, compilers, commands, counts and binary hashes/sections/symbols.
-- Linux WASI run `39300774252` passed 24 tests on each architecture, none ignored,
-  including actual 32-bit storage-limit rejection. The earlier Linux-only run
-  `39300769086` also passed; its [report](measurements/range-sets-linux-2026-10-19.json)
-  is a separate measurement on an EPYC 7763.
-- The current compiler/runtime matches the measured revision exactly:
-  `git diff 7901a576 -- src runtime` is empty. Later changes add benchmark sources,
-  explicit tracing selection in the general benchmark runner, fixture cases,
-  documentation and reports. They still require final-head testing.
+The measurement script compares specialized ARC/tracing, generic ARC, buffered
+ARC, C and Rust in twelve balanced samples. The two array sizes and byte schemas
+are unchanged. Buffered hashing explicitly disables specialization so that its
+control still measures the encoded buffer. Rust imports were moved out of the
+measurement program's main function. No new performance result exists yet.
 
-For 4,096 keys, construction falls from 4,099 requests / 196,624 requested bytes
-to one request / 32,776 bytes. Empty sets make no request. Counters exclude
-allocator overhead; releasing results restores ARC charge to baseline.
-At 65,536 keys, direct/ordinary whole-process median ratios span 0.345–0.831.
-Windows ranges overlap; 32-key medians are slightly slower on four hosts.
-[The benchmark guide](benchmarks.md#direct-integer-range-sets) explains timing
-scope, differences from C/Rust, memory and inspected SIMD loops. No universal
-speedup, zero-heap or optimal-register claim follows.
+## Local checks and repairs
 
-## Local checks
+All workloads use the primary checkout's `python3 scripts/local-guard.py`, with
+unchanged limits. No new compiler build or full benchmark ran locally.
 
-All workloads used the primary checkout's `python3 scripts/local-guard.py`,
-serially with unchanged limits. No full compiler build or benchmark ran locally.
-
-- Rust/fwp formatting, Python syntax and `git diff --check` pass.
-- `python3 scripts/test-collection-evidence.py`: six tests pass.
-- `python3 scripts/test-native-test-runner.py Coverage.test_repository_targets_are_assigned_exactly_once`:
-  passes; the new test target belongs to exactly one macOS shard.
-- `python3 scripts/check-roadmap.py`: 60 document sets, 106 immutable anchors
-  and seven work areas passed in 3.37 seconds after adding the final report.
+- `cargo fmt --all` passed in 1.55/1.42 seconds during preparation.
+- Python syntax checks passed in 0.15 seconds; the documentation audit passed
+  60 document sets, 106 immutable anchors and seven work areas in 2.87 seconds.
 - The accepted compiler at `/private/tmp/fwp-170-accepted-macos/fwp-macos-arm64/fwp`
-  ran the sixteen-line boundary/shared-input fixture. Guarded runtime probes
-  checked O0/O2 counts and failing negative controls; CI now confirms integration.
-- `/private/tmp/fwp-check-range-peers.py` passed in 3.05 seconds: C/Rust/raw-fwp
-  outputs agree at 0/1/257 keys, with C/Rust warnings treated as errors.
-- `/private/tmp/fwp-read-range-six-hosts.py` downloaded only the report and two
-  disassemblies in 6.36 seconds. Full inspection ran on GitHub.
-- The guard once refused below 64 GiB free disk. Removed only old downloaded
-  copies in `/private/tmp/fwp-server-entry-evidence/39078070919` after verifying
-  all 24 originals remain on GitHub. Reports/worktrees remain intact; free disk
-  returned to 65 GiB and the unchanged guard passed afterward.
+  ran the 18-line fixture in 0.27 seconds. Its first syntax check correctly
+  required explicit `Hash[a]` and `make Samples`; both were fixed. Formatting passed.
+- Review caught that arrays can disable packing. Generated loads now select
+  the actual storage width, and the new native matrix tests both settings.
+- Reference-count instrumentation includes retain, share, drop and last-release;
+  allocation instrumentation includes native allocation fast paths and libc calls.
+  Their negative controls still need CI execution.
 
 ## Roadmap status
 
@@ -94,7 +74,5 @@ serially with unchanged limits. No full compiler build or benchmark ran locally.
 | 6 | In progress | Reproducible comparisons and regression budgets |
 | 7 | In progress | Representative larger applications |
 
-All seven areas in [PLAN.md](../PLAN.md) remain open. Persistent subscriptions,
-unknown retained captures, resource-owning tail frames and mutual recursion need
-further proofs. JIT is excluded. Keep one live next action; preserve accepted
-measurements in history instead of carrying obsolete instructions forward.
+All seven areas in [PLAN.md](../PLAN.md) remain open. Do not treat preparation,
+a skipped check or a timing median alone as completed support. JIT is excluded.
