@@ -2840,6 +2840,7 @@ static V fwp_p_map_from_list_typed(V xs, const fwp_map_ops *ops, const fwp_desc 
     return result;
 }
 static V fwp_p_set_from_list_typed(V xs, const fwp_map_ops *ops, const fwp_desc *kd) {
+    if (!xs) return FWP_EMPTY_MAP;
     V source = xs;
     size_t n;
     V *keys = fwp_map_items(xs, &n);

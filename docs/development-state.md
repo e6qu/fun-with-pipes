@@ -2,104 +2,84 @@
 
 ## Next action
 
-Branch: `compact-set-storage`, based on accepted PR #171 merge
-`f3f3bd811c6d3935cd84fca2f7e6e877dc13c3d0`. Its files match tested head
-`13210b757db74379c4f1d9893fd0049d2e774916`; all nine production jobs
-(`39276733207`) and documentation (`39276733233`) passed.
-[History](roadmap-history.md#mixed-tail-recursion-pr-171) records that delivery.
+[PR #172](https://github.com/e6qu/fun-with-pipes/pull/172), branch
+`compact-set-storage`, is ready. This revision fixes empty-set construction:
+return the static empty set before allocating temporary storage.
 
-[PR #172](https://github.com/e6qu/fun-with-pipes/pull/172) is a draft. Focused run
-[39292052172](https://github.com/e6qu/fun-with-pipes/actions/runs/39292052172)
-on `dcdf8f82094dc5763e99454ae60bf1231c1d4651` passed formatting, all-target
-Clippy and 39 of 41 tests. Documentation `39292057238` passed. Both test failures
-were reviewed: the allocation probe selected an unused export from a main-only
-build, and the omitted-drop control leaked duplicate set keys before fault
-injection began. The probe now explicitly builds `--fn build-set`; the control
-omits drops only while an injected fault is armed. These repairs await CI.
-
-Next: publish both repairs with the report/documentation updates and run the
-six-host collection matrix. The first Linux run already checked all targets;
-repeating only that host would add a cycle before platform coverage. Fix every
-reported failure, collect the report, then start the complete production matrix.
-Use `suite=collection-report` on GitHub to audit the six-host run and inspect its
-saved binaries. Include actual WASI checks. Require all nine production jobs and
-documentation for the final head before squash merge. Full compiler builds and
-large evidence collection stay on GitHub runners.
-
-The report collector now requires all 41 tests and four compact-set allocation
-and binary configurations per host. Map failure counts are 104 normally and 106
-with reuse poisoning: smaller sets fit more entries before a growth allocation.
-The two cleanup controls still failed as intended. Earlier run `39291722740` was
-cancelled before starting; draft production jobs are skipped, not passed.
-
-Duplicate post-merge run `39289648247` was cancelled on the identical accepted
-PR #171 tree. It had no failed jobs; cancellation is not acceptance.
+Next: publish this repair, run the six-host collection matrix, and replace
+superseded production run `39294160658`. After the collection run succeeds,
+run `suite=collection-report` on GitHub with its run ID and exact source revision.
+Inspect its binary report there and download the resulting JSON. Require all
+nine production jobs and documentation for the final head, including actual WASI
+execution, before squash merge. Supply a one-line subject and empty body.
+Full builds and large evidence collection stay on GitHub runners.
 
 ## Current batch
 
-Sets store keys without unused unit-value slots. Maps keep key/value pairs,
-including maps with unit values. The interpreter uses a distinct set value so
-compile-time constants generate the right layout. Native construction, updates,
-set operations, typed cleanup, decoders, JSON, comparisons and hashing use the
-appropriate stride. Logical values and evaluation order remain unchanged.
+Sets now store keys without unused unit-value slots. Maps keep key/value pairs,
+including maps with unit values. The interpreter distinguishes sets from maps,
+so compile-time constants generate the correct layout. Native construction,
+updates, set operations, cleanup, decoders, JSON, comparisons and hashing use the
+appropriate entry size. Logical values and evaluation order stay unchanged.
 
-For a freshly built set of `n` distinct keys, requested container storage changes
-from `8 + 16*n` to `8 + 8*n` bytes. Empty sets use static storage. This excludes
-allocator headers, rounding, scratch and separately allocated keys. Insertion can
-reserve capacity. There is no elapsed-time or C/Rust parity claim.
+A freshly built set of `n` distinct keys requests `8 + 8*n` container bytes,
+previously `8 + 16*n`. Empty sets use static storage and skip construction scratch.
+These figures exclude allocator headers, rounding, scratch and separately
+allocated keys. Insertion can reserve capacity. No elapsed-time or C/Rust parity
+claim follows from this change.
 
-Tests compare raw/optimized interpretation and native ARC/tracing at O0/O2 with
-an independent output reference from the accepted compiler. Coverage includes
-nested/string/wide-number keys, shared updates, JSON, hashing, protocol round
-trips, REPL linking, compile-time constants and actual WASI execution. A native
-probe observes allocation requests for 0, 1, 7, 257 and 4096 keys; a deliberate
-extra-slot control must fail. Existing exhaustive allocation/retain failures and
-cancellation checks remain. Focused CI saves generated C, executables,
-disassembly, requested bytes and allocator-charged bytes.
+Tests cover raw/optimized interpretation, native ARC/tracing at O0/O2, nested and
+wide-number keys, sharing, JSON, protocol round trips, REPL linking, constants and
+WASI. A probe checks allocation requests for 0, 1, 7, 257 and 4096 keys; restoring
+an unused slot must fail. Existing allocation/retain failures, cancellation and
+reuse checks remain. The report collector requires all 41 focused tests per host
+and inspects generated C, executables, disassembly and byte counts.
 
-## Checks and limits
+## CI evidence and unresolved checks
 
-All local workloads use `python3 scripts/local-guard.py`, serially, with unchanged
-limits. The downloaded accepted ARM Mac compiler at
+- Accepted [PR #171](roadmap-history.md#mixed-tail-recursion-pr-171) merged as
+  `f3f3bd811c6d3935cd84fca2f7e6e877dc13c3d0`, identical to tested head
+  `13210b757db74379c4f1d9893fd0049d2e774916`. All nine jobs and documentation passed.
+- Initial focused Linux run `39292052172` passed 39/41. Both test assumptions were
+  repaired: select `--fn build-set` for inspection, and arm the omitted-drop
+  control only during injected failures. Both repairs passed on all six hosts.
+- Six-host run [39294156070](https://github.com/e6qu/fun-with-pipes/actions/runs/39294156070)
+  tested `8c5e3851383a3924122b2c517979c8bfc0be6160`. Every host passed 40 tests,
+  failed only the empty-set allocation assertion, and ignored none. All six
+  complete logs were audited: 240 passed, six instances of that one failure.
+  The runtime repair keeps the strict zero-request assertion.
+- The map/set failure probe cleaned every injected exit: 104 points normally,
+  106 with reuse poisoning. Smaller sets fit more entries before needing growth.
+  Both deliberately omitted-cleanup controls still failed as required.
+- Documentation `39294160469` passed. The empty-set repair still needs complete
+  CI validation; no new compiler was built locally.
+- Older superseded production `39292969344` was cancelled; its available logs had
+  no additional failures. Cancellation and partial passes are not acceptance.
+
+## Local checks
+
+All workloads used `python3 scripts/local-guard.py`, serially, with unchanged
+limits. The accepted ARM Mac compiler at
 `/private/tmp/fwp-170-accepted-macos/fwp-macos-arm64/fwp` identifies head
-`142117d2`; it supplies reference behavior, not validation of new code.
+`142117d2`; it supplied reference output and C scaffolding, not a new compiler.
 
-- `cargo fmt --all`: passed in 1.55 seconds.
-- Accepted compiler `fmt tests/fixtures/compact_sets.fwp tests/fixtures/static_constants.fwp`:
-  passed in 0.01 seconds.
-- `env FWP_NO_OPT=1 <accepted-compiler> run --interp tests/fixtures/compact_sets.fwp`:
-  passed in 0.34 seconds; twelve output lines saved as the regression reference.
-- The documentation audit first caught a missing status table in this rewrite;
-  restored the seven-area table and explicit next action. The audit then passed
-  in 3.07 seconds (60 document sets, 106 anchors and seven work areas).
-- `cargo fmt --all` after the decoder extension passed. Native decoder coverage
-  now includes sets, text round trips, every truncated binary prefix and injected
-  failures during set insertion.
-- `clang -fsyntax-only -std=gnu11 /private/tmp/fwp-runtime-syntax.c`: passed in
-  0.37 seconds. A tiny accepted-compiler translation unit supplied scaffolding;
-  its four changed runtime sections were replaced verbatim with current sources.
-- `clang -std=gnu11 -O0 /private/tmp/fwp-compact-runtime.c -lm -o /private/tmp/fwp-compact-runtime`
-  and the corresponding O2 build passed (0.26/0.38 seconds). These focused C
-  probes call the current runtime builder directly, not the new compiler's
-  generated wrapper. Both executions passed: requests for 0/1/7/257/4096 keys
-  were 0/16/64/2064/32776 bytes; charged bytes were 0/16/64/2560/32776.
-  ARC charge returned to its starting value after every result was freed.
-- `otool -tvV /private/tmp/fwp-compact-runtime-o2`: passed; saved assembly shows
-  eight-byte indexed key loads/stores. This is ARM64 runtime evidence only.
-- The control restoring an extra word per key exited 211 as required: one key
-  requested 24 bytes instead of 16. Its bounded build/run took 0.14/0.37 seconds.
-- Final documentation audit passed in 3.06 seconds; `git diff --check` passed.
-- CI passed raw/optimized set output, typed map/set aliases and failures, protocol,
-  REPL, constants and collection construction checks. The new compact allocation
-  probe did not reach execution; decoder positive cases passed before its control
-  assertion failed. All native/WASI acceptance remains pending.
-- The accepted compiler `build --emit-c --gc arc --fn build-set` retained the
-  selected builder (0.27 seconds); this checks the repaired selection only.
-- The documentation audit passed in 3.00 seconds after replacing stale current
-  claims about the Xeon regression with links to its later accepted repair.
-- `python3 scripts/test-collection-evidence.py`: all five report checks passed in
-  0.34 seconds. They reject missing/failed tests, cancelled runs, extra set slots,
-  incorrect charges and incomplete measurements.
+- Rust/fwp formatting, `git diff --check` and the documentation audit pass.
+  The audit checks 60 document sets, 106 immutable anchors and seven work areas.
+- `python3 scripts/test-collection-evidence.py`: five tests pass. They reject
+  missing/failed targets, cancelled runs, extra slots and incomplete byte counts.
+- Raw interpretation of `tests/fixtures/compact_sets.fwp` supplied its twelve-line
+  reference output. Explicit `build --emit-c --gc arc --fn build-set` retains the
+  selected builder.
+- `/private/tmp/fwp-selected-set-probe.c` uses that builder scaffold with current
+  runtime sections and the explicit one-column operations record. Guarded Clang
+  O0/O2 builds pass in 0.51/0.85 seconds; executions pass in 0.50/0.26 seconds.
+  Requests are 0/16/64/2064/32776 bytes at the five sizes; allocator charges are
+  0/16/64/2560/32776. ARC charge returns to its starting value after each result.
+  This checks the runtime path, not the new compiler's generated wrapper.
+- An earlier direct-runtime probe passed at O0/O2; restoring a wasted slot exited
+  211 as required. Its ARM64 disassembly showed eight-byte indexed key access.
+- `/private/tmp/fwp-audit-172-failures.py` verified all six complete CI logs in
+  0.22 seconds. The documentation audit after this repair passed in 3.07 seconds.
 
 ## Roadmap status
 
@@ -113,10 +93,7 @@ limits. The downloaded accepted ARM Mac compiler at
 | 6 | In progress | Reproducible comparisons and regression budgets |
 | 7 | In progress | Representative larger applications |
 
-All seven areas in [PLAN.md](../PLAN.md) remain open: remove tracing and limit ARC;
-remove avoidable functional costs; close measured machine-level gaps; improve
-differentiation; strengthen numerical kernels; establish dependable performance
-budgets; validate larger applications. Persistent subscriptions, unknown retained
-captures, resource-owning tail frames and mutual recursion need further proofs.
-JIT is excluded. Use representative applications and equivalent-work measurements
-to choose the next cost after this batch, and move accepted evidence to history.
+All seven areas in [PLAN.md](../PLAN.md) remain open. Persistent subscriptions,
+unknown retained captures, resource-owning tail frames and mutual recursion need
+further proofs. JIT is excluded. Select the next cost using representative
+programs and equivalent-work measurements; move accepted evidence to history.
