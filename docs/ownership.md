@@ -250,6 +250,42 @@ Closing an admitted channel still preserves queued messages for receiving.
 Releasing its last owner destroys the remaining queue and its typed contents;
 cancelled blocked operations release their wait registrations and owners first.
 
+### Next proof: functions stored in channels
+
+This is design work; checked ARC still rejects function payloads. A partial
+application such as `add 3` is a function that adds three to its next input. It
+keeps the integer `3` as a **capture**, a value saved for the later call. Storing
+that function in a channel cannot create a cycle through this integer. Receiving
+it and applying it to `5` produces `8`; the interpreter already supports this.
+
+The type `I64 -> I64` describes input and output, not captures. Another function
+of that type could retain the sending channel. Accepting all functions with this
+signature would therefore be unsafe. The next proof needs two linked analyses:
+
+- Identify each possible stored function and its captures, following returned
+  functions, nested containers and partial applications. Follow owning captures
+  back toward the queue; reject unproved or cyclic relationships. Runtime-created
+  closures and foreign producers need contracts too. No known producer is not
+  the same as a proof that a function captures nothing.
+- Carry those possible functions through sends and receives. Check State and
+  autodiff operations in the scope where the received function runs. A queue
+  must not silently extend the lifetime of the sender's temporary scope.
+
+`src/arc.rs` already follows channel payload types. `src/arc_scope.rs` tracks
+possible function targets and saved arguments for scope checks, but does not yet
+connect senders to receivers. Extend that finite analysis until no new targets
+are discovered. Do not infer capture freedom from an arrow type or inspect only
+source-level partial applications; runtime constructors can also create closures.
+
+Acceptance needs scalar/string captures, returned and nested callbacks, aliases,
+undrained/closed queues, failure, cancellation and repeated bounded-live work.
+Reject self-queue and two-queue cycles, hidden captures, unknown foreign producers
+and calls outside a required State/autodiff scope. Keep task and HTTP-stream
+payload restrictions until their hidden owners have separate proofs. Compare
+interpretation, native ARC/tracing and WASI, including cleanup counts and controls
+that deliberately omit a release. This targets a provable subset, not perfect
+cycle inference for arbitrary programs; it adds no proposed surface syntax.
+
 ## Ownership contract checks
 
 The tests inventory declarations, resolved runtime symbols and

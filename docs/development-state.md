@@ -82,6 +82,9 @@ unchanged limits. No full compiler build or benchmark ran locally.
 - Cache review confirmed that `src/aot.rs` hashes generated C before selecting
   an executable. Both the integer-output and numeric-hash switches change that
   source; neither can accidentally reuse the other setting's executable.
+- The next queued-function proof now lives in
+  [ownership](ownership.md#next-proof-functions-stored-in-channels), rather than
+  temporary session notes. It changes no eligibility rule or public API.
 - The extracted actual runtime formatter passed 56 comparisons with standard C
   decimal formatting at O0/O2 in 1.03 seconds, including signed/unsigned extrema.
 - Accepted interpreter ran the 19-line fixture in 0.27 seconds; formatting passed

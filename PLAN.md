@@ -93,6 +93,8 @@ outside the benchmark suite.
    Acyclic nested channel types now have native and WebAssembly acceptance,
    including queued owners, aliases, failure and cancellation. Persistent
    subscriptions and unknown retained captures still need ownership contracts.
+   The [queued-function proof](docs/ownership.md#next-proof-functions-stored-in-channels)
+   specifies the next capture and call-scope analysis without new syntax.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.
