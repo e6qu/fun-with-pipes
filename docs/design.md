@@ -230,6 +230,23 @@ arithmetic checks the existing array size limit before converting to a machine
 size, including on 32-bit WASI. Boxed I128/U128 elements keep their existing path.
 The ordinary array-fusion comparison switch also controls this transformation.
 
+### Constructing integer range sets directly
+
+`range -2 3 | set.from-list` produces `set{-2, -1, 0, 1, 2}`. Its integers
+are already ordered and distinct. For an immediately consumed range of inline
+integers (I8 through I64, U8 through U64, ISize and USize), the compiler writes
+the keys directly into one owned set buffer. It avoids the temporary list and sorting buffers.
+This internal operation is called `set._range`; it is not a new library API.
+
+Both bounds retain their original evaluation order. Equal or descending bounds
+return the static empty set. Wide intermediate arithmetic checks the complete
+container size before converting to a target-sized integer, including on 32-bit
+WASI. Once allocation succeeds, filling inline keys cannot call user code,
+allocate or fail. Boxed I128/U128 keys keep ordinary construction. Aliased lists
+also keep their storage; the transformation requires an immediate range input.
+`FWP_MAP_BUILD=0` disables this transformation for controlled comparisons.
+[The handoff](development-state.md) distinguishes implementation from acceptance.
+
 ## Borrowing array data inside loops
 
 An array slice can store a pointer into another array rather than copying its

@@ -5,7 +5,7 @@ the program, the implementation used for comparison, compiler settings and the
 machine. This page separates two different questions:
 
 1. **How long do these fwp programs take compared with C and Rust programs?**
-   The five examples in `bench/` answer this for complete executable runs.
+   The examples in `bench/` answer this for complete executable runs.
 2. **Does a particular fwp optimization reduce work or storage?** The reports
    under `docs/measurements/` usually compare two fwp implementations. Those
    fwp-only comparisons do not measure overhead relative to another language;
@@ -76,7 +76,7 @@ storage. Neither cost is quantified by the countdown comparison.
 
 Each directory in [`bench/`](../bench) contains `main.fwp`, `main.c` and
 `main.rs`. The programs must print the same result. The runner builds native
-executables with `fwp build -O2`, `cc -O2` and `rustc -O`. After one warmup per
+executables with `fwp build --gc tracing -O2`, `cc -O2` and `rustc -O`. After one warmup per
 executable, it measures six runs each and reports the median: the average of
 the two middle times after sorting. Execution order rotates C/Rust/fwp,
 Rust/fwp/C and fwp/C/Rust, twice. “Native” means machine code;
@@ -88,8 +88,8 @@ inner calculation, startup alone or peak memory. The report separately records
 one compilation time and the executable file size for each implementation.
 Compilation includes tool startup and linking; it excludes building the fwp
 compiler itself. Binary sizes include differing runtime and linking choices.
-The fwp build uses its normal native memory mode, which includes a tracing
-garbage collector; this is not a comparison of checked ARC against Rust.
+The fwp build explicitly selects tracing, matching earlier runs' native memory
+mode; this is not a comparison of checked ARC against Rust.
 ARC means automatic reference counting, which releases objects when their last
 owning reference disappears.
 
@@ -108,6 +108,7 @@ cannot establish what their machine instructions looked like.
 | `fib` | Compute `fib(35)`, with `fib(0)=0`, `fib(1)=1`, otherwise `fib(n-1)+fib(n-2)` | Same recurrence. Compilers can transform calls differently. fwp checks integer overflow; these C and optimized Rust builds do not have the same overflow guarantees. These inputs fit all three. |
 | `loop` | Start `(i, sum)=(100000000, 0)`; add `(i*3)%7`, decrement `i`, stop at zero | fwp expresses the loop state as a pair; its compiler can turn that into local variables. C and Rust write the loop directly. Checked arithmetic and generated code can still differ. |
 | `map` | Build `(key(i), i)` for `i=0..499999`, where `key(i)=(i*7919)%1000003`; sum 2 million lookups using the same key formula, missing values as zero | All three use contiguous sorted pairs searched by bisection. C uses `qsort`, Rust `sort_unstable_by_key`, fwp its map builder; construction/sorting costs differ. This compares complete implementations, not an isolated lookup operation. |
+| `range-set` | Build the distinct keys `0..999999`, then compute FNV-1a over the canonical set encoding: unsigned LEB128 count followed by eight little-endian bytes per key | All three start with ordered keys and need no sorting. C uses a heap buffer, Rust a vector, fwp a set. Hash multiplication wraps modulo 2^64 in all three. Optimizers may remove storage or combine loops; inspect retained binaries before claiming equal allocations. Runtime startup, allocation, hashing and output are timed together; the general runner uses fwp's tracing mode. |
 | `pipeline` | For `0..999999`, multiply by 3, keep even results and sum; sum 20 rounds | fwp can combine the stages into one traversal without intermediate lists. C explicitly fills arrays; Rust constructs vectors and filters them. Eliminating that work can outweigh language overhead. |
 | `strings` | For `i=0..1999999`, concatenate decimal `i`, decimal `3*i` and `#`; sum text lengths | fwp can calculate some formatted lengths without creating the string. C uses `snprintf` and `strlen`; Rust uses `format!` and byte length. All characters here are ASCII, so the lengths agree. The programs need not perform the same formatting or allocation work. |
 
@@ -1774,6 +1775,87 @@ was made. [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-16
 records acceptance; `scripts/summarize-map-failures.py` audits the artifacts.
 
 ## Building numeric maps and sets without temporary lists
+
+### Compact set storage: measured allocation size
+
+Sets need one key per entry; the former map-shaped layout also reserved an
+unused value word. The [six-host report](measurements/compact-sets-2026-10-19.json)
+checks the compact layout at `a6dd7609` on Linux, macOS and Windows, each on
+ARM64/AMD64. This is a storage check, not a before/after timing comparison.
+
+For 4,096 distinct inline integer keys, the final container requests 32,776 bytes
+(`8 + 8*n`). The previous layout's formula gives 65,544 bytes (`8 + 16*n`).
+The probe measures the new requests at 0, 1, 7, 257 and 4,096 keys in ARC/tracing
+at O0/O2; empty sets make no request. Allocator headers, rounding, construction
+scratch and separately allocated keys are additional. Maps still store both
+keys and values, even when every value is `()`.
+
+All 41 focused tests passed on each host, with none ignored. The report audits
+144 actual binaries, their formats, sections and tracing symbols. Inspected O2
+Linux AMD64 and macOS ARM64 set-copy loops use eight-byte key spacing; the ARM
+loop also uses paired vector copies for larger inputs. This establishes the
+representation, not optimal register allocation or a speed advantage over C.
+[PR #172](roadmap-history.md#compact-set-storage-pr-172) records full production
+acceptance, including WASI execution.
+
+### Direct integer range sets
+
+`range 0 n | set.from-list` builds the distinct integers from zero through
+`n - 1`. Ordinary construction allocates a list and two scratch buffers before
+the final set; direct construction writes already sorted keys into that set.
+Both preserve the same values. [The design](design.md#constructing-integer-range-sets-directly)
+limits this transformation to inline integer ranges consumed immediately.
+
+The [six-host report](measurements/range-sets-2026-10-19.json), measured at
+`7901a576`, confirms these construction requests for 4,096 keys:
+
+| Construction | Allocation requests | Total requested bytes | Final container bytes |
+|---|---:|---:|---:|
+| Ordinary list, scratch and set | 4,099 | 196,624 | 32,776 |
+| Direct set | 1 | 32,776 | 32,776 |
+
+These counts agree at O0/O2 in ARC and tracing modes on all six hosts. They exclude
+startup/output, allocator headers and rounding; ARC charge returns to baseline
+after releasing each result. Zero keys make no requests in either version.
+
+The runner measurement compares the same fwp program with `FWP_MAP_BUILD=0/1`,
+at 32, 4,096 and 65,536 keys. It hashes every key, checks output against raw
+interpretation and records eight whole-process timing samples per version.
+Construction, hashing, startup and output are included. Separate instrumented
+executables count allocations and memory. This is fwp versus fwp, not a C/Rust
+baseline. Timings use ARC/O2, Clang 18.1.3 on Linux, Apple Clang 17 on macOS and
+Clang 23.1.3 on Windows. At 65,536 keys:
+
+| Host / CPU | Ordinary median | Direct median | Direct / ordinary |
+|---|---:|---:|---:|
+| Linux AMD64 / Xeon 8573C | 6.389 ms | 2.515 ms | 0.394 |
+| Linux ARM64 / Neoverse N2 | 5.190 ms | 1.788 ms | 0.345 |
+| macOS ARM64 / virtual M1 | 6.084 ms | 3.660 ms | 0.602 |
+| macOS AMD64 / i7-8700B | 19.501 ms | 10.608 ms | 0.544 |
+| Windows AMD64 / EPYC 7763 | 17.768 ms | 13.373 ms | 0.753 |
+| Windows ARM64 / Cobalt 100 | 17.450 ms | 14.505 ms | 0.831 |
+
+Linux/macOS sample ranges are separated at this size; Windows ranges overlap.
+At 32 keys, ratios span 0.945–1.047 with overlapping ranges, including four slower
+medians. Do not generalize the larger-input gain to small programs. The
+[earlier Linux run](measurements/range-sets-linux-2026-10-19.json) on an EPYC 7763
+also had a slightly slower 32-key median.
+
+Including output, 65,536 keys use 2 allocation requests / 524,322 requested bytes,
+versus 65,540 requests / 3,145,770 bytes. Peak charged storage falls from 3,670,032
+to 524,296 bytes. Both versions have zero measured retains, final charge and
+collections. These are managed-storage counts, not process RAM.
+
+All 264 focused tests passed with none ignored. The audit inspected 228 binaries,
+including 48 range-set allocation probes. In O2 ARC probes, Linux AMD64 `e0`
+uses packed integer addition and vector stores (`0x4b60` onward); ARM macOS `_e0`
+uses vector addition and paired stores (`0x100002140` onward). Neither filling loop
+calls a function or accesses the stack; scalar tails handle leftover keys.
+The surrounding function still allocates and manages its result owner. This is
+evidence for these loops, not universally optimal registers or zero heap use.
+[The handoff](development-state.md) records pending final production acceptance.
+
+### Mapped lists: accepted earlier measurements
 
 **Work:** construct a set or map from a range of integers reduced modulo 257,
 so there are at most 257 distinct keys. The set prints its size; the map stores

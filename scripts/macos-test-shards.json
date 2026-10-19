@@ -25,6 +25,7 @@
     "autodiff_workspace",
     "grpc_capture_resources",
     "range_array",
+    "range_set",
     "array_size_limits",
     "native_sockets",
     "macos",

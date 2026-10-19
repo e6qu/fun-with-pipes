@@ -6080,21 +6080,26 @@ impl<'p> Gen<'p> {
             let descriptor = self.desc(&result);
             return Ok(format!("return fwp_p_metrics_snapshot({descriptor});"));
         }
-        if sym == "array._range" {
-            let MT::Con(name, elements) = &result else {
-                return Err("direct range array result has no element type".into());
+        if matches!(sym, "array._range" | "set._range") {
+            let (container, helper) = if sym == "array._range" {
+                ("std::Array", "fwp_p_array_range")
+            } else {
+                ("std::Set", "fwp_p_set_range")
             };
-            if name != "std::Array"
+            let MT::Con(name, elements) = &result else {
+                return Err("direct range result has no element type".into());
+            };
+            if name != container
                 || elements.len() != 1
                 || !matches!(
                     scalar(&elements[0]),
                     Some(Scalar::Signed(_)) | Some(Scalar::Unsigned(_))
                 )
             {
-                return Err("direct range array requires an inline integer result".into());
+                return Err("direct range requires an inline integer result".into());
             }
             let descriptor = self.desc(&elements[0]);
-            return Ok(format!("return fwp_p_array_range(l0, l1, {descriptor});"));
+            return Ok(format!("return {helper}(l0, l1, {descriptor});"));
         }
         if matches!(
             sym,

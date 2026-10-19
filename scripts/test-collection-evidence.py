@@ -32,6 +32,8 @@ Running tests/numeric_array_fusion.rs (target/debug/deps/fusion)
 test result: ok. 2 passed; 0 failed; 0 ignored;
 Running tests/protocol.rs (target/debug/deps/protocol)
 test result: ok. 9 passed; 0 failed; 0 ignored;
+Running tests/range_set.rs (target/debug/deps/range_set)
+test result: ok. 3 passed; 0 failed; 0 ignored;
 Running tests/repl.rs (target/debug/deps/repl)
 test result: ok. 8 passed; 0 failed; 0 ignored;
 Running tests/static_constants.rs (target/debug/deps/constants)
@@ -40,6 +42,24 @@ test result: ok. 1 passed; 0 failed; 0 ignored;
 
 
 class CollectionEvidence(unittest.TestCase):
+    def test_range_requests_reject_extra_allocations_and_incomplete_sizes(self):
+        for direct in [False, True]:
+            good = "\n".join(
+                f"keys={n} requests={(1 if direct else n+3) if n else 0} "
+                f"requested_bytes={(8+8*n if direct else 16+48*n) if n else 0}"
+                for n in [0, 1, 7, 257, 4096]) + "\n"
+            with tempfile.TemporaryDirectory() as temporary:
+                path = Path(temporary) / 'requests.txt'
+                path.write_text(good)
+                rows = REPORT.range_requests(path, direct)
+                self.assertEqual(rows[-1]['requests'], 1 if direct else 4099)
+                for bad in [good.replace('keys=7', 'keys=8'), good + good,
+                            good.rsplit('keys=', 1)[0], good.replace('requests=0', 'requests=1'),
+                            good.replace('requested_bytes=0', 'requested_bytes=8')]:
+                    path.write_text(bad)
+                    with self.subTest(direct=direct, bad=bad), self.assertRaises(AssertionError):
+                        REPORT.range_requests(path, direct)
+
     def test_set_requests_reject_waste_and_incomplete_measurements(self):
         good = "\n".join(f"keys={n} requested={8+8*n if n else 0} charged={8+8*n if n else 0}"
                          for n in [0, 1, 7, 257, 4096]) + "\n"
@@ -78,7 +98,7 @@ class CollectionEvidence(unittest.TestCase):
     def test_interleaved_streams_and_windows_paths(self):
         for log in [LOG, LOG.replace("tests/", "tests\\").replace(
                 "Running", "\x1b[1;32mRunning\x1b[0m")]:
-            self.assertEqual(sum(REPORT.audit_tests(log).values()), 41)
+            self.assertEqual(sum(REPORT.audit_tests(log).values()), 44)
 
     def test_missing_wrong_and_duplicate_targets(self):
         for log in [LOG.rsplit("Running tests/", 1)[0],

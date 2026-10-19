@@ -75,6 +75,39 @@ fn allocator_source(source: &Path, cfile: &Path) -> String {
 }
 
 #[test]
+fn wasi_range_sets_check_32_bit_storage_before_allocation() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-range-set-limit").unwrap();
+    let source = dir.join("main.fwp");
+    for bounds in ["0 536870912", "0u64 18446744073709551615u64"] {
+        std::fs::write(
+            &source,
+            format!("main = range {bounds} | set.from-list | set.size | echo\n"),
+        )
+        .unwrap();
+        let code = emit(&source, &dir.join("main.c"), &[], "wasm32-wasi");
+        assert!(code.contains("return fwp_p_set_range(l0, l1,"));
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join("limit.wasm");
+            fwp::cgen::compile_for(&code, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+            let result = wasi(&binary, dir.path()).output().unwrap();
+            assert_eq!(
+                result.status.code(),
+                Some(101),
+                "{bounds}/{opt}: {result:?}"
+            );
+            assert!(result.stdout.is_empty());
+            assert!(
+                String::from_utf8_lossy(&result.stderr).contains("map too large"),
+                "{result:?}"
+            );
+        }
+    }
+}
+
+#[test]
 fn wasi_allocator_frees_graphs_and_rejects_escaped_counts() {
     let actual_wasi = available();
     let dir = fwp::cgen::TempDir::new("wasi-arc-counts").unwrap();
@@ -211,6 +244,7 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
         ("hash-fusion", include_str!("fixtures/hash_fusion.fwp")),
         ("hash-borrowed-fields", include_str!("fixtures/hash_borrowed_fields.fwp")),
         ("range-arrays", include_str!("fixtures/range_arrays.fwp")),
+        ("range-sets", include_str!("fixtures/range_sets.fwp")),
         ("vectors", include_str!("fixtures/vector_ownership.fwp")),
         ("ternary", include_str!("fixtures/ternary_ownership.fwp")),
         ("text-decoders", include_str!("fixtures/text_decoder_ownership.fwp")),

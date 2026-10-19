@@ -12,6 +12,29 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Compact set storage (PR #172)
+
+[PR #172](https://github.com/e6qu/fun-with-pipes/pull/172) merged as
+`c3f7f75591a0a073f443fed45855a1b084963729`, with identical files to tested head
+`a6dd760904c5d72c09a5fcf720d8f255a19de1f1`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39297062257)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39297062240)
+passed before the squash merge.
+
+Sets store one word per key instead of a key plus an unused value word. Maps
+keep both words. A freshly built 4,096-key integer set requests 32,776 container
+bytes rather than the former layout's 65,544; empty sets skip temporary allocation.
+Constants, updates, nested keys, decoders, hashing and cleanup use the new layout.
+Temporary construction storage and separately allocated keys are additional.
+
+All 41 focused tests passed on each of six native hosts, with none ignored.
+The [binary audit](https://github.com/e6qu/fun-with-pipes/actions/runs/39301336981)
+checked 144 executables. [Measured storage](benchmarks.md#compact-set-storage-measured-allocation-size)
+records exact counts and inspected key spacing. Production also exercised WASI.
+This establishes compact storage and cleanup, not a timing improvement or removal
+of all collection allocations. Redundant post-merge production run `39311332528`
+was cancelled only after verifying that the merged tree matched the tested tree.
+
 ## Mixed tail recursion (PR #171)
 
 [PR #171](https://github.com/e6qu/fun-with-pipes/pull/171) merged as

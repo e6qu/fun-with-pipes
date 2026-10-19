@@ -79,6 +79,12 @@ contain only inline numeric fields, although dynamic map callbacks can still
 allocate the containing tuple. Unfinished buffers have scoped cleanup. These are internal
 representations of ordinary `map` followed by construction, not new library APIs.
 
+`set._range` borrows two inline integer bounds and returns an owned set, or the
+static empty set. Its ordered, distinct keys need no callbacks, retains or child
+cleanup. It checks storage limits before allocation and cannot fail while filling
+the allocated buffer. The compiler uses this only for an immediately consumed
+`range | set.from-list`; boxed integer keys keep ordinary construction.
+
 Comparison-only keys never escape into fwp_map_find or structural fwp_cmp;
 these functions read values, allocate nothing and invoke no user callbacks.
 Their wrappers omit fwp_rc_share(key). Typed destruction releases keys/elements

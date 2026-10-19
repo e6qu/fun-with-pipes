@@ -96,9 +96,11 @@ outside the benchmark suite.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.
-2. Remove the unused value word from each set entry. Preserve shared values,
-   ordering, decoding, hashing and compile-time constants; verify actual allocation
-   requests, cleanup and machine code on native targets and WASI. The preceding
+2. Validate direct construction of immediately consumed integer range sets.
+   [Compact key-only sets](docs/roadmap-history.md#compact-set-storage-pr-172)
+   passed all production gates. Remove the range's temporary list
+   and sorting buffers; preserve bound order and aliases, check storage limits
+   before allocation, and compare allocation counts and actual binaries. The
    [mixed-tail-recursion delivery](docs/roadmap-history.md#mixed-tail-recursion-pr-171)
    passed; resource-owning tail frames and mutual recursion need separate proofs.
 3. Use representative applications and equivalent-work measurements to select
