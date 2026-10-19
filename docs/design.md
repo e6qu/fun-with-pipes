@@ -559,6 +559,28 @@ preserve aliasing and alignment rules while exposing loads/stores to the C
 compiler's vectorizer. Shape validation bounds each access; floating-point
 accumulation order and separate multiplication/addition remain unchanged.
 
+## Compile-time values in static storage
+
+A value produced by `comptime` is already known when C is generated. For example,
+`table = comptime ([1i8, 2i8] | array.from-list)` needs storage for two bytes and
+an array header, but does not need to allocate that storage on the heap at startup.
+The current change places compound constants, wide numeric literals and closures
+with constant captures in static program storage. Strings already use this model.
+
+Records and variants keep their tag/count headers. Arrays preserve the selected
+packed or word layout; F128 elements keep all 128 bits. Maps keep their sorted
+interleaved keys and values. Signed and unsigned 128-bit scalar globals have the
+alignment of their C types. Pointer fields are filled during existing constant
+initialization, which also works on wasm32 without widening pointers in C static
+initializers. Every child of these graphs is itself a compile-time value.
+
+These objects have no heap ownership count and cannot be uniquely reused.
+Updating a constant array or map creates owned storage and leaves the constant
+unchanged. Program data size and initialization stores remain costs; this is not
+zero memory use or a claim that all cached values avoid allocation. Values computed
+at runtime retain their existing ownership rules. The
+[handoff](development-state.md) records verification of this change.
+
 ## Tail calls and recursion
 
 A tail call returns the called function's result without further work. Reusing

@@ -3,6 +3,7 @@
     "rest",
     "golden_run",
     "arc_corpus",
+    "static_constants",
     "reuse",
     "cli",
     "aot",

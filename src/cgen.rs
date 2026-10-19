@@ -2153,7 +2153,7 @@ impl<'p> Gen<'p> {
     }
 
     /// C expression for a constant value (complex values are built once at
-    /// startup into a global).
+    /// startup in static storage, without managed heap allocation).
     fn const_expr(&mut self, v: &Value) -> String {
         match v {
             Value::I8(x) => format!("(V)(int64_t){}", x),
@@ -2183,40 +2183,48 @@ impl<'p> Gen<'p> {
             _ => {
                 let id = self.consts.len();
                 self.consts.push(format!("static V c{};", id));
-                let init = self.const_build(v);
+                let init = self.const_build(v, id);
                 let _ = writeln!(self.const_init, "    c{} = {};", id, init);
                 format!("c{}", id)
             }
         }
     }
 
-    fn const_build(&mut self, v: &Value) -> String {
+    fn const_build(&mut self, v: &Value, id: usize) -> String {
         match v {
             Value::I128(x) => {
                 let (hi, lo) = ((*x as u128 >> 64) as u64, *x as u128 as u64);
-                format!("fwp_box_i128((i128)(((u128){}ULL << 64) | {}ULL))", hi, lo)
+                self.consts.push(format!(
+                    "static i128 fwp_constant{id} = (i128)(((u128){hi}ULL << 64) | {lo}ULL);"
+                ));
+                format!("PTR(&fwp_constant{id})")
             }
             Value::U128(x) => {
                 let (hi, lo) = ((x >> 64) as u64, *x as u64);
-                format!("fwp_box_u128(((u128){}ULL << 64) | {}ULL)", hi, lo)
+                self.consts.push(format!(
+                    "static u128 fwp_constant{id} = ((u128){hi}ULL << 64) | {lo}ULL;"
+                ));
+                format!("PTR(&fwp_constant{id})")
             }
-            Value::F128(x) => format!(
-                "fwp_box_f128((float128_t){{{{{}ULL, {}ULL}}}})",
-                x.to_bits() as u64,
-                (x.to_bits() >> 64) as u64
-            ),
-            Value::Data(tag, fs) => {
-                let parts: Vec<String> = fs.iter().map(|f| self.const_expr(f)).collect();
-                format!(
-                    "fwp_data({}, {}, (V[]){{{}}})",
-                    tag,
-                    fs.len(),
-                    parts.join(", ")
-                )
+            Value::F128(x) => {
+                self.consts.push(format!(
+                    "static float128_t fwp_constant{id} = {{{{{}ULL, {}ULL}}}};",
+                    x.to_bits() as u64,
+                    (x.to_bits() >> 64) as u64
+                ));
+                format!("PTR(&fwp_constant{id})")
             }
-            Value::Record(fs) => {
-                let parts: Vec<String> = fs.iter().map(|f| self.const_expr(f)).collect();
-                format!("fwp_record({}, (V[]){{{}}})", fs.len(), parts.join(", "))
+            Value::Data(_, fs) | Value::Record(fs) => {
+                let tag = match v {
+                    Value::Data(tag, _) => *tag,
+                    _ => 0,
+                };
+                self.consts.push(format!("static struct {{ uint32_t tag, n; V f[{}]; }} fwp_constant{id} = {{{tag}, {}, {{0}}}};", fs.len(), fs.len()));
+                for (i, field) in fs.iter().enumerate() {
+                    let value = self.const_expr(field);
+                    let _ = writeln!(self.const_init, "    fwp_constant{id}.f[{i}] = {value};");
+                }
+                format!("PTR(&fwp_constant{id})")
             }
             Value::Array(items) => {
                 let parts: Vec<String> = items.iter().map(|f| self.const_expr(f)).collect();
@@ -2236,31 +2244,47 @@ impl<'p> Gen<'p> {
                     Some(Value::F128(_)) => "K_F128",
                     _ => "K_OPAQUE",
                 };
-                format!(
-                    "fwp_array_from_words((V[]){{{}}}, {}, &(const fwp_desc){{.kind = {kind}}})",
-                    if parts.is_empty() {
-                        "0".into()
-                    } else {
-                        parts.join(", ")
-                    },
-                    items.len()
-                )
+                let stride = match kind {
+                    "K_F128" => "16",
+                    "K_I8" | "K_U8" => "(FWP_PACKED_ARRAYS ? 1 : 8)",
+                    "K_I16" | "K_U16" | "K_F16" | "K_BF16" => "(FWP_PACKED_ARRAYS ? 2 : 8)",
+                    "K_I32" | "K_U32" | "K_F32" => "(FWP_PACKED_ARRAYS ? 4 : 8)",
+                    _ => "8",
+                };
+                let payload = if parts.is_empty() {
+                    String::new()
+                } else {
+                    format!(" unsigned char d[{} * {stride}];", parts.len())
+                };
+                self.consts.push(format!(
+                    "static struct {{ uint64_t len;{payload} }} fwp_constant{id} = {{.len = {}}};",
+                    parts.len()
+                ));
+                for (i, value) in parts.iter().enumerate() {
+                    let _ = writeln!(self.const_init, "    fwp_array_store(PTR(&fwp_constant{id}), {i}, {value}, &(const fwp_desc){{.kind = {kind}}});");
+                }
+                format!("PTR(&fwp_constant{id})")
             }
             Value::Map(m) => {
-                let mut parts = Vec::new();
-                for (k, v) in m.iter() {
-                    parts.push(self.const_expr(k));
-                    parts.push(self.const_expr(v));
-                }
-                format!(
-                    "fwp_map_from_sorted({}, (V[]){{{}}})",
-                    m.len(),
-                    if parts.is_empty() {
-                        "0".into()
-                    } else {
-                        parts.join(", ")
+                let payload = if m.is_empty() {
+                    String::new()
+                } else {
+                    format!(" V d[{}];", m.len() * 2)
+                };
+                self.consts.push(format!(
+                    "static struct {{ uint64_t len;{payload} }} fwp_constant{id} = {{.len = {}}};",
+                    m.len()
+                ));
+                for (i, (key, value)) in m.iter().enumerate() {
+                    for (offset, field) in [(2 * i, key), (2 * i + 1, value)] {
+                        let value = self.const_expr(field);
+                        let _ = writeln!(
+                            self.const_init,
+                            "    fwp_constant{id}.d[{offset}] = {value};"
+                        );
                     }
-                )
+                }
+                format!("PTR(&fwp_constant{id})")
             }
             Value::File(_) | Value::Native(_) => "0".into(),
             Value::Closure(c) => {
@@ -2286,12 +2310,11 @@ impl<'p> Gen<'p> {
                 if parts.is_empty() {
                     format!("PTR(&fc{})", c.func)
                 } else {
-                    format!(
-                        "fwp_pap({}, {}, (V[]){{{}}})",
-                        c.func,
-                        parts.len(),
-                        parts.join(", ")
-                    )
+                    self.consts.push(format!("static struct {{ uint32_t fn, n; V a[{}]; }} fwp_constant{id} = {{{}, {}, {{0}}}};", parts.len(), c.func, parts.len()));
+                    for (i, value) in parts.iter().enumerate() {
+                        let _ = writeln!(self.const_init, "    fwp_constant{id}.a[{i}] = {value};");
+                    }
+                    format!("PTR(&fwp_constant{id})")
                 }
             }
             // scalars and strings are handled by `const_expr`
