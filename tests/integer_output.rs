@@ -159,7 +159,7 @@ fn integer_print_keeps_binary_protocol_output_on_its_own_stream() {
     let input = dir.join("main.fwp");
     std::fs::write(
         &input,
-        "export number : I64 -> I64 ! {IO}\nnumber = tap echo\n",
+        "# expose: cli\nexport number : I64 -> I64 ! {IO}\nnumber = tap echo\n",
     )
     .unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
