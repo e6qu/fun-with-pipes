@@ -121,8 +121,10 @@ architectures. Preserve the complete matrix for each accepted revision; see
 Linux builds every Cargo test target once, then runs two test executables at a
 time with one harness thread each. All Linux stress tests remain enabled. Each
 executable has an uploaded log, and any failure fails the job. The explicit
-`--timeout 1800` limit gives each target 30 minutes. A timeout kills its process
-group, records failure and lets the remaining targets run; it never counts as a
+`--idle-timeout 1800` limit allows 30 minutes without a completed test case.
+Completed cases renew the deadline; arbitrary output does not. A large target
+can keep making progress without being cut off by its total duration. A timeout
+kills its process group, records failure and lets the remaining targets run; it never counts as a
 pass or a skip. The runner checks
 that Cargo produced every requested executable before starting tests. This
 scheduling change passed PR #154's complete acceptance matrix; that establishes

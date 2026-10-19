@@ -12,6 +12,29 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Self-tail recursion and shutdown repairs (PR #168)
+
+[PR #168](https://github.com/e6qu/fun-with-pipes/pull/168) was merged by the user
+as `5258c6efd0418f19add23f5e2a763563178af823`, with the same tree as
+`59845d042277a0ea04f990cb4751c6ba87aa0c1e`, before complete acceptance.
+It adds eligible self-tail frame reuse in both engines, cycle-proof diagnostics,
+lesson 23, scheduler disposal and network connection closure before task draining.
+
+[Language/tools](https://github.com/e6qu/fun-with-pipes/actions/runs/39211377606)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39211352992)
+passed. [Shutdown checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39211372965)
+finished on Linux AMD64 and macOS ARM64: network stalls were resolved, but stricter
+allocation ledgers exposed startup constants retained on the heap. Three generated-C
+instrumentation anchors also matched unrelated runtime calls. These failures are
+being repaired in the next batch; this merge is **not full platform acceptance**.
+Duplicate full runs `39215835611` and `39215850976` were cancelled on this known
+failing tree. The [handoff](development-state.md) tracks its successor.
+
+The countdown measurements compare two fwp implementations. O0 executes both
+loops; O2 eliminates the recursive countdown but retains the explicit loop, so
+its timings do not measure equivalent executed work. See the
+[measurement method](benchmarks.md#self-tail-recursion-compared-with-an-explicit-loop).
+
 ## Accepted deliveries
 
 Earlier deliveries established native macOS ([PR #74](https://github.com/e6qu/fun-with-pipes/pull/74)),

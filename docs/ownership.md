@@ -1120,3 +1120,12 @@ failure injection. [The comparison](benchmarks.md#moving-captured-values-instead
 records the saved retains and remaining costs.
 [PR #156](roadmap-history.md#released-stream-caches-and-moved-closure-captures-pr-156)
 records full production acceptance.
+
+## Compile-time storage
+
+Known compound constants and wide literals now use static program storage, like
+strings. They have no heap owner to retain or release; immutable updates still
+allocate a separate result. This removes startup heap allocations rather than
+adding an allowance for them to leak checks. Runtime-computed cached values still
+need their usual owners. See [layouts and initialization](design.md#compile-time-values-in-static-storage)
+and [current verification](development-state.md).

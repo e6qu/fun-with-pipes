@@ -1,0 +1,35 @@
+# Compile-time data stays immutable when a derived value is changed.
+small : Array[I8]
+small = comptime ([-3i8, 4i8, 7i8] | array.from-list)
+halves : Array[F16]
+halves = comptime ([1.5f16, -2.0f16] | array.from-list)
+words : Array[U32]
+words = comptime ([0u32, 4294967295u32] | array.from-list)
+quads : Array[F128]
+quads = comptime ([1.0000000000000000000000000000000002f128, 1e4000f128] | array.from-list)
+wide : (I128, U128)
+wide = comptime (-170141183460469231731687303715884105728i128, 340282366920938463463374607431768211455u128)
+record = comptime { label = "table", values = [Some (1, "first"), None] }
+table = comptime ([ ("a", [1, 2]), ("b", [3]) ] | map.from-list)
+handlers : Map[String, String -> String]
+handlers = comptime ([ ("fixed", const "constant"), ("upper", upper) ] | map.from-list)
+empty : Array[I64]
+empty = comptime ([] | array.from-list)
+empty-map : Map[String, I64]
+empty-map = comptime map.empty
+main = [
+    small | echo,
+    small | array.set 1 9i8 | echo,
+    small | echo,
+    halves | echo,
+    words | echo,
+    quads | echo,
+    wide | echo,
+    record | echo,
+    table | map.insert "a" [9] | echo,
+    table | echo,
+    handlers | map.get "fixed" | option.map (apply "ignored") | echo,
+    handlers | map.get "upper" | option.map (apply "pipes") | echo,
+    empty | echo,
+    empty-map | echo,
+] | ignore

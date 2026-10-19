@@ -284,8 +284,8 @@ int main(int argc,char **argv){{
             assert_eq!(String::from_utf8_lossy(&out.stdout), "main\nbad cleanup\n");
         }
         let broken = source.replacen(
-            "    fwp_caf_finish();\n    fwp_cl_finish();",
-            "    fwp_caf_finish(); /* missing executable GPU finish */",
+            "\n    fwp_cl_finish();\n",
+            "\n    /* missing executable GPU finish */\n",
             1,
         );
         assert_ne!(broken, source);

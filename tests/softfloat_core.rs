@@ -4,6 +4,13 @@ use std::process::Command;
 
 const PROBE: &str = r#"
 int main(void) {
+    const float128_t nans[] = {
+        f16_to_f128((float16_t){0x7c01}),
+        f32_to_f128((float32_t){UINT32_C(0x7f800001)}),
+        f64_to_f128((float64_t){UINT64_C(0x7ff0000000000001)}),
+    };
+    for (unsigned i=0;i<3;i++)
+        if(nans[i].v[0] || nans[i].v[1] != UINT64_C(0x7fff800000000000))return 59;
     float128_t one = {{0, UINT64_C(0x3fff000000000000)}};
     float128_t next = {{1, UINT64_C(0x3fff000000000000)}};
     float128_t difference = f128_sub(next, one);
@@ -104,7 +111,7 @@ fn exact_format_core_runs_as_native_c() {
     let dir = fwp::cgen::TempDir::new("fwp-softfloat-native").unwrap();
     let binary = dir.join(if cfg!(windows) { "probe.exe" } else { "probe" });
     let source = format!("{}\n{PROBE}", fwp::softfloat::C_SOURCE);
-    for opt in ["-O1", "-O2"] {
+    for opt in ["-O0", "-O1", "-O2"] {
         fwp::cgen::compile_c(&source, &binary, opt).unwrap();
         let out = Command::new(&binary).output().unwrap();
         assert!(out.status.success(), "{opt}: {out:?}");
@@ -119,7 +126,7 @@ fn exact_format_core_runs_as_wasm32() {
     }
     let wasm = dir.join("probe.wasm");
     let source = format!("{}\n{PROBE}", fwp::softfloat::C_SOURCE);
-    for opt in ["-O1", "-O2"] {
+    for opt in ["-O0", "-O1", "-O2"] {
         fwp::cgen::compile_for(&source, &wasm, opt, fwp::cgen::Target::Wasi).unwrap();
         let out = Command::new("node")
             .arg("--no-warnings")
