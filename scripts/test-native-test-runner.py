@@ -114,7 +114,7 @@ class Coverage(unittest.TestCase):
                     SHARDS.assignment(path)
 
     def test_failed_test_command_is_not_reported_as_success(self):
-        with patch("sys.argv", ["run-native-tests.py", "--shard", "gc", "--logs", "/unused", "--timeout", "30"]), \
+        with patch("sys.argv", ["run-native-tests.py", "--shard", "gc", "--logs", "/unused", "--idle-timeout", "30"]), \
              patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "gc": ["b"]}), \
              patch.object(SHARDS.subprocess, "check_output", return_value=json.dumps(metadata(["a", "b"])).encode()), \
              patch.object(SHARDS.subprocess, "run", side_effect=subprocess.CalledProcessError(1, ["cargo", "test"])):
@@ -173,6 +173,27 @@ class Coverage(unittest.TestCase):
             self.assertEqual(SHARDS.run_tests([executables[0]],
                 ["--skip", "golden_programs_under_gc_stress"], root / "passing", 10), 0)
 
+    def test_completed_cases_allow_a_long_target_to_continue(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            executable = root / "progress"
+            executable.write_text("#!/usr/bin/env python3\nimport time\n" +
+                "for i in range(4):\n    time.sleep(0.8)\n    print(f'test case_{i} ... ok', flush=True)\n")
+            executable.chmod(0o755)
+            self.assertEqual(SHARDS.run_tests([(("test", "progress"), str(executable))],
+                             [], root / "logs", 2), 0)
+
+    def test_output_without_completed_cases_cannot_extend_deadline(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            executable = root / "noisy"
+            executable.write_text("#!/usr/bin/env python3\nimport time\n" +
+                "while True:\n    print('still stuck', flush=True)\n    time.sleep(0.1)\n")
+            executable.chmod(0o755)
+            self.assertEqual(SHARDS.run_tests([(("test", "noisy"), str(executable))],
+                             [], root / "logs", 1), 1)
+            self.assertIn("target timed out", (root / "logs/test-noisy.log").read_text())
+
     def test_timeout_kills_children_preserves_logs_and_runs_remaining_targets(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -192,7 +213,7 @@ class Coverage(unittest.TestCase):
             time.sleep(2)
             self.assertFalse(marker.exists(), "timed-out child escaped termination")
             self.assertEqual((root / "logs/test-hung.log").read_text(),
-                             "before hang\n\nTarget timed out after 1s\n")
+                             "before hang\n\nNo completed test for 1s; target timed out\n")
             for name in ["second", "third"]:
                 self.assertEqual((root / f"logs/test-{name}.log").read_text(), "finished\n")
             with self.assertRaises(ValueError):

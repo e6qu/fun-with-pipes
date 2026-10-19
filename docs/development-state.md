@@ -7,12 +7,45 @@ Branch: `runtime-storage-completion`, based on merged PR #168 at
 The [delivery record](roadmap-history.md#self-tail-recursion-and-shutdown-repairs-pr-168)
 records passing checks and the remaining failures; the merge is not acceptance.
 
-Next: publish this batch as one draft PR. Dispatch `numerics.yml` with
-`suite=shutdown` and `suite=language`; audit every failed target and completed job.
-After focused checks pass, mark ready for all nine production jobs plus docs.
-Require the exact final head before squash merging with a one-line subject of
-at most 80 characters and an empty body. Do not weaken leak checks or repeat
-completed self-tail recursion work as a new task.
+[PR #169](https://github.com/e6qu/fun-with-pipes/pull/169) remains open.
+Next: publish the batched CI repairs below, dispatch focused shutdown and language
+runs, and audit all results. Focused shutdown now covers Linux AMD64 and both Mac
+architectures. Require all nine production jobs plus docs on the final head
+before squash merging with an explicit one-line subject and empty body.
+
+## Current CI repair
+
+Audited all nine jobs in full run `39218043349` at `0bb1d63d`, both focused
+shutdown jobs in `39216746539`, language `39216749928` and docs `39216745819`.
+Bench, language/tools and docs passed. All eight production execution jobs failed;
+focused Mac failed and focused Linux exhausted its job deadline. Complete target
+logs are in `/private/tmp/fwp-0bb-targets`; full logs are
+`/private/tmp/fwp-0bb-full.log` and `/private/tmp/fwp-0bb-shutdown.log`.
+
+Distinct failures and batched repairs:
+
+- Collection/map probes omitted a final newline before `#ifdef`. Restore it;
+  keep the exact-line anchors and strict zero-charge checks.
+- The library stack-release negative control changed the unused executable
+  cleanup routine. Restrict it to library teardown and require a unique match.
+- The OpenCL executable negative control assumed adjacent CAF/OpenCL cleanup.
+  Match the actual final OpenCL call; preserve the independent library control.
+- Unoptimized exact-float linking lacked `softfloat_commonNaNToF128UI` because
+  plain C `inline` requires an external definition. Configure header helpers as
+  `static inline`; test native and WASI O0 in addition to O1/O2, including NaN
+  conversions from F16/F32/F64 to F128.
+- Intel REST completed 20 cases before the target's 1800-second total limit.
+  Historical Intel runtime was already 1704 seconds. The runner now requires
+  explicit `--idle-timeout`: completed harness cases renew the deadline, while
+  arbitrary output cannot. It still kills stalled process groups, reports failure
+  and continues other targets. Full-job deadlines and local limits are unchanged.
+
+The stricter task, scope, socket, foreign-call, autodiff and golden-corpus ledgers
+passed after static storage was implemented. The new dedicated static-constant
+probe still needs a passing run after its O0 linking repair. Focused checks now
+include every failed code target and the runner deadline controls. Previously
+passing network/example targets remain in full production acceptance; removing
+their duplicate focused runs prevents another focused-job timeout.
 
 ## Current work
 
@@ -47,10 +80,13 @@ WebAssembly verification remain required; implementation alone is not support.
 
 All local checks use `python3 scripts/local-guard.py`; no local compiler build.
 
-- `cargo fmt --all`: pass, 1.38 seconds.
-- `/private/tmp/fwp-terminal-763-mac/fwp check tests/fixtures/static_constants.fwp`:
-  pass, 0.26 seconds. This accepted older compiler checks fixture syntax only;
-  it does not verify the current compiler change.
+- `python3 scripts/test-native-test-runner.py`: all eleven pass, 8.55 seconds.
+  The first new progress test was too tight under local throttling; its synthetic
+  timing now allows startup overhead while still running longer than its deadline.
+- `cc -std=c11 -O0 -I vendor/softfloat /private/tmp/fwp-nan-inline.c -o /private/tmp/fwp-nan-inline`:
+  pass, 0.39 seconds; `/private/tmp/fwp-nan-inline`: pass, 0.26 seconds. This directly
+  checks the missing helper's linkage and canonical F128 NaN bits, not the full compiler.
+- `cargo fmt --all`: pass. Full builds and native/WASI verification stay on runners.
 
 ## Measurement limits
 

@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 import json
 import os
 from pathlib import Path
+import re
 import signal
 import subprocess
 import sys
@@ -108,9 +109,9 @@ def test_executables(output, metadata, shard, selected):
                   (1, order[item[0][1]]) if item[0][0] == "test" else (0, *item[0]))
 
 
-def run_tests(executables, test_args, logs, timeout):
-    if timeout <= 0:
-        raise ValueError("test target timeout must be positive")
+def run_tests(executables, test_args, logs, idle_timeout):
+    if idle_timeout <= 0:
+        raise ValueError("test progress timeout must be positive")
     logs.mkdir(parents=True, exist_ok=True)
 
     def run(item):
@@ -124,18 +125,32 @@ def run_tests(executables, test_args, logs, timeout):
             with subprocess.Popen([executable, "--test-threads=1", *test_args],
                                   cwd=ROOT, stdout=output, stderr=subprocess.STDOUT,
                                   start_new_session=True) as process:
-                try:
-                    code = process.wait(timeout=timeout)
-                except subprocess.TimeoutExpired:
-                    # Kill the whole target's group, including native clients and
-                    # servers, so timed-out tests cannot occupy later workers.
-                    try:
-                        os.killpg(process.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass  # The group exited between the deadline and kill.
-                    process.wait()
-                    output.write(f"\nTarget timed out after {timeout}s\n".encode())
-                    code = 124
+                deadline = time.monotonic() + idle_timeout
+                pending = ""
+                with log.open(errors="replace") as progress:
+                    while True:
+                        try:
+                            code = process.wait(timeout=min(0.25, max(0, deadline - time.monotonic())))
+                            break
+                        except subprocess.TimeoutExpired:
+                            pending += progress.read()
+                            lines = pending.split("\n")
+                            pending = lines.pop()
+                            # Only completed harness cases renew the deadline.
+                            # Arbitrary output from a stuck test is not progress.
+                            if any(re.fullmatch(r"test .+ \.\.\. (?:ok|FAILED|ignored(?:,.*)?)", line)
+                                   for line in lines):
+                                deadline = time.monotonic() + idle_timeout
+                            if time.monotonic() < deadline:
+                                continue
+                            try:
+                                os.killpg(process.pid, signal.SIGKILL)
+                            except ProcessLookupError:
+                                pass  # The group exited between the deadline and kill.
+                            process.wait()
+                            output.write(f"\nNo completed test for {idle_timeout}s; target timed out\n".encode())
+                            code = 124
+                            break
         print(f"Finished {kind}/{name}: exit {code}, "
               f"{time.monotonic() - started:.2f}s", flush=True)
         print(log.read_text(errors="replace"), end="", flush=True)
@@ -152,11 +167,11 @@ def main():
     selection.add_argument("--shard", choices=SHARDS)
     selection.add_argument("--all", action="store_true")
     parser.add_argument("--logs", type=Path, required=True)
-    parser.add_argument("--timeout", type=int, required=True,
-                        help="maximum seconds per test executable, including its children")
+    parser.add_argument("--idle-timeout", type=int, required=True,
+                        help="maximum seconds without a completed test case")
     options = parser.parse_args()
-    if options.timeout <= 0:
-        parser.error("--timeout must be positive")
+    if options.idle_timeout <= 0:
+        parser.error("--idle-timeout must be positive")
     metadata = json.loads(subprocess.check_output(
         ["cargo", "metadata", "--no-deps", "--format-version", "1"], cwd=ROOT))
     selected_group = "all" if options.all else options.shard
@@ -172,7 +187,7 @@ def main():
         print(built.stdout, end="", file=sys.stderr)
         built.check_returncode()
     executables = test_executables(built.stdout, metadata, selected_group, selected)
-    return run_tests(executables, args[split + 1:], options.logs, options.timeout)
+    return run_tests(executables, args[split + 1:], options.logs, options.idle_timeout)
 
 
 if __name__ == "__main__":

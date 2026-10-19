@@ -292,7 +292,20 @@ int main(void) {{
                 library_source.contains(needle),
                 "missing negative control {needle}"
             );
-            let broken = library_source.replacen(needle, replacement, 1);
+            let start = if needle.starts_with("while (fwp_stack_pool_n)") {
+                library_source
+                    .find("static void fwp_library_tasks_finish(void) {")
+                    .unwrap()
+            } else {
+                0
+            };
+            let (prefix, cleanup) = library_source.split_at(start);
+            assert_eq!(
+                cleanup.matches(needle).count(),
+                1,
+                "ambiguous control {needle}"
+            );
+            let broken = format!("{prefix}{}", cleanup.replacen(needle, replacement, 1));
             fwp::cgen::compile_library(&broken, &header, &lib, opt, fwp::cgen::LibKind::Shared)
                 .unwrap();
             let out = Command::new(&exe).arg(&lib).output().unwrap();

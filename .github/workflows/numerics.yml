@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, macos-15]
+        runner: [ubuntu-latest, macos-15, macos-15-intel]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     env:
@@ -80,8 +80,8 @@ jobs:
                      'service_scope_ownership', 'collection_construction', 'map_set_ownership',
                      'cached_map_borrows', 'arc_corpus', 'arc_execution', 'udp_ownership',
                      'autodiff_nested', 'foreign_callback_ownership', 'autodiff_precision',
-                     'native_sockets', 'autodiff_checkpoint', 'tls', 'aot', 'examples',
-                     'web', 'services']
+                     'native_sockets', 'autodiff_checkpoint', 'library_unload',
+                     'opencl_lifetime', 'softfloat_core']
           metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--no-deps', '--format-version', '1']))
           command = ['cargo', 'test', '--no-run', '--message-format=json']
           for target in targets:

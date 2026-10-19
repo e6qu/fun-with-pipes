@@ -655,7 +655,7 @@ fn map_callbacks_can_change_value_types_and_fail_without_leaking() {
         if mode == "arc" {
             let finish = "\n    fwp_cl_finish();\n";
             assert_eq!(emitted.matches(finish).count(), 1);
-            emitted = emitted.replace(finish, &format!("{finish}\n    if (fwp_gc.budget_given != fwp_gc.budget) {{ fprintf(stderr, \"map callback storage leaked: %lld bytes\\n\", (long long)(fwp_gc.budget_given - fwp_gc.budget)); abort(); }}"));
+            emitted = emitted.replace(finish, &format!("{finish}\n    if (fwp_gc.budget_given != fwp_gc.budget) {{ fprintf(stderr, \"map callback storage leaked: %lld bytes\\n\", (long long)(fwp_gc.budget_given - fwp_gc.budget)); abort(); }}\n"));
         }
         save_map_evidence(&format!("callbacks-{mode}.c"), emitted.as_bytes());
         for opt in ["-O1", "-O2"] {
