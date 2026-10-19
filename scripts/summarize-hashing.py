@@ -79,7 +79,8 @@ def main():
                         assert ('/* numeric hash without type dispatch */' in source.read_text()) == (typed == '1')
                         binaries.append(dict(typed=typed, packed=packed, mode=mode, optimization=opt,
                             sourceSha256=digest(source),
-                            inspection=COLLECTIONS.inspect(source.with_suffix('.exe'), host, mode, args.llvm_bin)))
+                            inspection=COLLECTIONS.inspect(source.with_suffix('.exe'), host, mode, args.llvm_bin,
+                                                           require_tracing=mode == 'tracing')))
         row = dict(host=host, job=job['databaseId'], passedTests=count, binaries=binaries)
         if host in cost_hosts:
             cost_job = next(job for job in costs if job['name'] == f'ad_metadata ({host})')
@@ -116,7 +117,8 @@ def main():
                     assert sorted(sample['order'].index(label) for sample in samples) == sorted(list(range(6))*2)
                     if label.startswith('fwp'):
                         mode = 'tracing' if label == 'fwp-tracing' else 'arc'
-                        variant['inspection'] = COLLECTIONS.inspect(folder / label, host, mode, args.llvm_bin)
+                        variant['inspection'] = COLLECTIONS.inspect(folder / label, host, mode, args.llvm_bin,
+                                                                    require_tracing=mode == 'tracing')
                         buffers, managed = variant['profile']
                         assert managed['finalChargedBytes'] == managed['collections'] == 0
                         assert bool(buffers['hashBufferRequests']) == label.endswith('buffered')

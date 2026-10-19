@@ -8,8 +8,8 @@ PR #173 merged after all gates passed. PR #174, `numeric-hash-delivery`, is now
 the only active PR; the primary checkout owns its final acceptance. Keep this
 candidate isolated until the hash batch is delivered.
 
-Next: rerun the complete native and WASI matrices with the combined test repairs
-below, then audit and retain actual binaries/allocation results. The new output
+Next: audit native `39334254632` and WASI `39334258666` at repaired source
+`7876237a77730334316216328e19c08262d5e4ab`, then retain the binary report. The new output
 tests passed on all six hosts at `d4c5b39f994b72b9991e8ffd09698aa63e0c5d84` in
 `39330733812`, but both Windows jobs failed an existing arithmetic probe's
 newline assertion. Both-Linux WASI `39330737723` is still running at that source.
@@ -59,7 +59,16 @@ with its exact `evidence_run` and `source_revision`. Do not use the failed
 seven tests on all six hosts, rejects ignored/missing cases, verifies source
 identity and inspects 144 actual binaries and their tracing symbols. It records
 assembly and section sizes; inspect the output code before making stack claims.
-No collector result exists yet. Its two validation tests pass in 0.22 seconds.
+No complete collector result exists yet. Its three validation tests pass in
+0.16 seconds, and the four existing hash-audit tests pass in 0.15 seconds.
+
+A guarded read-only inspection of twelve saved ARM macOS O2 binaries passed in
+3.19 seconds. The direct print-then-trap program has no scan/mark/sweep symbols
+even in tracing mode: its unused collector code is eliminated. The audit now
+allows this specific O2 case, records the actual symbols, still requires them
+for allocation-using tracing controls, and rejects them in every ARC binary.
+The first inspection caught that invalid blanket assumption; it was not a
+runtime failure. This is not proof that all runtime setup or heap use disappears.
 
 ## Checks
 

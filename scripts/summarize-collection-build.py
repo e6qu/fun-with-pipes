@@ -27,13 +27,18 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def inspect(binary, host, mode, llvm):
+def inspect(binary, host, mode, llvm, *, require_tracing):
     names = command(llvm / 'llvm-nm', binary)
     symbols = {line.split()[-1].removeprefix('_') for line in names.splitlines() if line.split()}
     runtime = {name for name in symbols if name.startswith('fwp_')}
     assert len(runtime) > 10, (binary, 'missing internal symbols')
     tracing = sorted(symbols.intersection({'fwp_gc_scan', 'fwp_gc_mark_all', 'fwp_gc_sweep'}))
-    assert bool(tracing) == (mode == 'tracing'), (binary, tracing)
+    assert mode in {'arc', 'tracing'}
+    assert not require_tracing or mode == 'tracing'
+    if mode == 'arc':
+        assert not tracing, (binary, tracing)
+    elif require_tracing:
+        assert tracing, (binary, 'expected allocation-using tracing control')
     assembly = command(llvm / 'llvm-objdump', '-d', '--no-show-raw-insn', binary)
     assert 'file format ' + HOSTS[host] in assembly, binary
     binary.with_suffix(binary.suffix + '.disassembly.txt').write_text(assembly)
@@ -92,7 +97,8 @@ def compact_sets(directory, host, llvm):
         for opt in ['-O0', '-O2']:
             label = f'compact-{mode}{opt}'
             rows = set_requests(directory / f'{label}.txt')
-            binary = inspect(directory / f'{label}.exe', host, mode, llvm)
+            binary = inspect(directory / f'{label}.exe', host, mode, llvm,
+                             require_tracing=mode == 'tracing')
             source = directory / f'{label}.c'
             assert source.stat().st_size and (directory / f'{label}.asm').stat().st_size
             runs.append({'mode': mode, 'optimization': opt, 'sizes': rows,
@@ -131,7 +137,8 @@ def range_sets(directory, host, llvm):
                 runs.append({'mode': mode, 'optimization': opt, 'direct': direct == '1',
                              'sizes': range_requests(directory / f'{label}.txt', direct == '1'),
                              'generatedSha256': digest(directory / f'{label}.c'),
-                             'binaryInspection': inspect(directory / f'{label}.exe', host, mode, llvm)})
+                             'binaryInspection': inspect(directory / f'{label}.exe', host, mode, llvm,
+                                                         require_tracing=mode == 'tracing')})
     return {'runs': runs,
             'scope': 'Observed managed allocation requests while an exported function builds '
                      'an I64 range set. Includes input list and scratch construction; excludes '
@@ -200,7 +207,8 @@ def main():
                 label = f'{case["kind"]}-{count}-fused-{fused}'
                 assert digest(costs / f'{label}.c') == variant['generatedSha256']
                 assert digest(costs / f'{case["kind"]}-{count}.fwp') == case['sourceSha256']
-                variant['binaryInspection'] = inspect(binary, host, 'arc', args.llvm_bin)
+                variant['binaryInspection'] = inspect(binary, host, 'arc', args.llvm_bin,
+                                                       require_tracing=False)
             ratio = case['variants']['1']['medianProcessWallNs'] / case['variants']['0']['medianProcessWallNs']
             assert case['fusedToOrdinaryTimeRatio'] == ratio
         checks = directory / 'checks'
@@ -215,7 +223,8 @@ def main():
                 broken = (checks / f'missing-cleanup-{mode}{opt}.txt').read_text()
                 assert 'collection live allocations: 2' in broken, broken
                 for kind in ['failures', 'missing-cleanup']:
-                    binaries.append(inspect(checks / f'{kind}-{mode}{opt}.bin', host, mode, args.llvm_bin))
+                    binaries.append(inspect(checks / f'{kind}-{mode}{opt}.bin', host, mode, args.llvm_bin,
+                                            require_tracing=mode == 'tracing'))
         rows.append({'host': host, 'job': job['databaseId'], 'passedTests': sum(completed_tests.values()),
                      'completedTargets': completed_tests,
                      'failureConfigurations': exits, 'cleanupControls': 4,
