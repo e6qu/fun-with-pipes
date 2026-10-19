@@ -1026,7 +1026,7 @@ For example, small Linux ARM64 work still takes 37.3% more CPU than C, despite
 removing the targeted allocations and retains. Startup, input construction,
 printing and generic hash traversal remain in the measured interval.
 
-### Numeric hash specialization: measurement in preparation
+### Numeric hash specialization
 
 The [production baseline](measurements/range-set-peers-2026-10-19.md) at `3e4d0a37`
 includes a million-key range set followed by canonical hashing. On Linux AMD64
@@ -1055,8 +1055,69 @@ After one warmup, twelve balanced rotating/reversed samples include startup,
 input construction, hashing and output. Compilation and instrumented allocation
 profiles are separate. All builds use O2; C uses `-ffp-contract=off`. Reports
 retain hardware, compilers, raw wall/child-CPU samples, allocation/live-memory
-counts, process RSS and actual binaries/disassembly. No new timing claim is made
-until [the handoff](development-state.md) records completed runs.
+counts, process RSS and actual binaries/disassembly. Child CPU is the processor
+time charged to the program; wall time also includes waiting for the host.
+
+The [initial report](measurements/numeric-hashing-2026-10-19.json) at `6ffd2385`
+contains all four hosts, 414 passing native tests and 144 inspected binaries.
+The [repeat report](measurements/numeric-hashing-repeat-2026-10-19.json) reuses
+those exact binaries for 24 balanced samples after two warmups: 1,152 timed
+executions. Linux used Clang 18.1.3; macOS used Apple Clang 17. All use O2.
+The reports retain exact compiler versions and command lines, including Rust.
+
+Below, each cell is **initial / repeated child-CPU median**, specialized ARC
+divided by general ARC. A ratio of 0.98 means 2% less CPU; 1.01 means 1% more.
+These compare fwp with fwp, not with C or Rust.
+
+| Host and processor | 16-element array | 4,096-element array | 65,536-key set |
+|---|---:|---:|---:|
+| Linux AMD64, EPYC 9V45 / 9V74 | 0.945 / 0.961 | 0.990 / 0.987 | 1.001 / 1.002 |
+| Linux ARM64, Neoverse N2 | 0.909 / 0.929 | 0.980 / 0.979 | 0.983 / 0.985 |
+| macOS ARM64, virtual Apple M1 | 1.101 / 0.996 | 0.922 / 0.979 | 0.943 / 0.962 |
+| macOS AMD64, Core i7-8700B | 0.996 / 0.922 | 0.840 / 0.933 | 0.963 / 0.930 |
+
+The AMD64 repeat ran on an EPYC 9V74 rather than the initial EPYC 9V45. Both
+versions in each comparison ran on the same host; absolute times across the two
+runs are not directly comparable. Linux ARM64 was faster in all 24 paired samples
+for every case; its large-array
+and set ranges were separated. Other hosts had overlapping ranges. In particular,
+the first ARM macOS small-case slowdown of 10.1% did not repeat: repeated wall
+time was 0.2% higher and CPU 0.4% lower. That small-case result is inconclusive.
+Linux AMD64 sets were 0.13% and 0.21% slower in the two medians, with only 9 of
+24 repeated pairs faster. Its repeated CPU ranges were 37.889–38.369 ms versus
+37.803–38.363 ms. These overlapping samples do not establish a regression or a
+speedup there. Keep both observations; no universal improvement follows.
+
+The remaining **CPU overhead against C / Rust** in the repeated samples is:
+
+| Host | Small array | Large array | Set |
+|---|---:|---:|---:|
+| Linux AMD64 | +36.6% / +22.6% | +1.8% / +1.5% | +1.7% / +1.5% |
+| Linux ARM64 | +31.3% / +17.3% | +1.0% / +0.6% | +1.1% / +0.7% |
+| macOS ARM64 | +10.9% / −0.7% | +1.8% / +1.0% | +0.03% / +0.7% |
+| macOS AMD64 | +22.6% / +7.3% | +0.4% / +0.4% | +1.7% / +1.9% |
+
+Negative overhead means the measured fwp median was lower; overlapping samples
+do not establish superiority or parity. These whole-process figures are specific
+to these programs and runners. They are not an overhead percentage for fwp as a
+language. The million-key production baseline above uses a different compiler,
+memory mode and workload, so its percentage cannot be subtracted from this table.
+
+Memory profiles are identical for specialized and general ARC: two managed
+requests, zero retains and zero charge after cleanup. Small/large/set programs
+request 165 / 32,805 / 524,324 bytes and peak at 144 / 32,776 / 524,296 bytes.
+The requests cover the input buffer and formatted output; C/Rust profiles count
+one application input buffer and exclude printing allocations. Counters exclude
+allocator metadata. Hash bodies themselves allocate nothing and perform no
+retain/release operations, as checked by tests that deliberately insert them.
+
+Saved ARC binaries have no tracing symbols, and their executable code sections
+shrink by 1,432–1,952 bytes. Inspected ARM64 array/set inner loops contain no
+calls or stack accesses; AMD64 saves a callee-saved register around its function,
+not inside the element loop. The caller still builds a stack tuple and calls
+once per complete hash. Each eight-byte key still requires eight dependent
+FNV-1a byte steps. Removing dispatch does not remove that work, input storage,
+startup, output allocation or final ownership cleanup.
 
 Repeat with the `hash` and `hash-costs` evidence suites at the same revision.
 After both pass, `hash-report` takes their `evidence_run` / `costs_run` IDs and
