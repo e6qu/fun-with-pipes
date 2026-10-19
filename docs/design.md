@@ -411,6 +411,11 @@ String solely for that print. The argument still evaluates before output.
 Shared strings and displays for other types keep their normal evaluation.
 This removes one managed allocation; it does not promise allocation-free libc
 IO or a timing improvement. The [handoff](development-state.md) records validation.
+The `integer-output` evidence suite checks all six native hosts. Once it passes,
+`integer-output-report` takes its `evidence_run` and full `source_revision`, checks
+all seven tests on each host, and inspects the 144 saved semantic-test binaries.
+Allocation counts come from a separate test that detects an intentionally added
+String. The report does not infer whole-process heap use from that narrower check.
 
 ## Runtime
 

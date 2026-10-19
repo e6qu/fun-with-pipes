@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -422,6 +422,36 @@ jobs:
             collection-report/artifacts/*.log
             collection-report/artifacts/**/*.disassembly.txt
             collection-report/artifacts/**/*.symbols.txt
+          if-no-files-found: error
+  integer_output_report:
+    if: inputs.suite == 'integer-output-report'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_HEAD: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install binary inspection tools
+        run: sudo apt-get update && sudo apt-get install -y llvm
+      - name: Reject incomplete output evidence
+        run: python3 scripts/test-integer-output-evidence.py
+      - name: Audit six native hosts and their actual binaries
+        run: python3 scripts/summarize-integer-output.py --run "$EVIDENCE_RUN" --head "$EVIDENCE_HEAD" --artifacts integer-output-report/artifacts --llvm-bin /usr/bin --output integer-output-report/report.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-output-report
+          path: |
+            integer-output-report/report.json
+            integer-output-report/artifacts/*.json
+            integer-output-report/artifacts/*.log
+            integer-output-report/artifacts/**/*.disassembly.txt
+            integer-output-report/artifacts/**/*.symbols.txt
           if-no-files-found: error
   hash_specialization_repeat:
     if: inputs.suite == 'hash-specialization-repeat'
