@@ -88,6 +88,9 @@ unchanged limits. No new compiler build or full benchmark ran locally.
 - Reference-count instrumentation includes retain, share, drop and last-release;
   allocation instrumentation includes native allocation fast paths and libc calls.
   Their negative controls still need CI execution.
+- Review also corrected an obsolete claim that all slices copy storage: array
+  views retain their backing owner. Moved primitive-contract imports out of the
+  function. Formatting passed in 1.59 seconds; these changes do not alter contracts.
 
 ## Roadmap status
 
