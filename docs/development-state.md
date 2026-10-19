@@ -13,12 +13,40 @@ Post-merge docs `39247754197` also passed. Duplicate production run
 `39247754322` was cancelled after confirming identical files and complete PR-head
 acceptance, freeing its runners for the new batch; cancellation is not a pass.
 
-Next: finish and publish the acyclic-channel batch below. Run focused ownership
-checks and all nine production jobs plus documentation on its final head.
+[PR #170](https://github.com/e6qu/fun-with-pipes/pull/170) is open at
+`262a73b8a099d222e5d597f572ab6abaa5603e94`.
+Full production `39249106161` exposed the same executable-filename failure on
+both Windows hosts; docs `39249106113` passed. Next: publish the filename repair
+below and audit all nine production jobs plus documentation on the new head.
+The full matrix includes compiler proof units, native ownership controls and
+actual WebAssembly checks; no additional duplicate suite is needed.
 Squash-merge only after all required gates pass, with one explicit subject of at
 most 80 characters and an empty body. No trailers or attribution.
 
 ## Current batch
+
+### Windows inspection repair
+
+The new `arc_tasks` symbol check requested `arc-O1`, but Windows emitted
+`arc-O1.exe`. Execution had inferred the suffix; `nm` and artifact copying do not.
+The test now supplies an explicit `.exe` path to every consumer and asserts that
+the compiler produced that file. Tracing-symbol checks, cleanup ledgers and all
+negative controls remain intact. CONTRIBUTING records this portable convention.
+
+Audited both complete Windows ownership logs and all available Linux/Mac target
+logs in `/private/tmp/fwp-170-targets`. The only reported failure is this path in
+`arc_tasks`. Both Linux jobs, regular ARM Mac, both Mac GC jobs and benchmarks
+passed. The compiler proof units, all four Linux/Mac task-cleanup checks and
+actual Linux WebAssembly checks pass at the original head. Intel Mac regular
+and the remaining Windows AMD64 stages are still running; audit their results
+too. The full Windows ARM job has no other failed step. Full logs are retained
+in `/private/tmp/fwp-170-windows-arm.log`.
+
+Local `python3 scripts/local-guard.py cargo fmt --all -- --check` refused to run
+because free disk fell below 64 GiB. No limit was changed or bypassed; verify the
+repair on CI. `git diff --check` passes. No new local compiler build was attempted.
+
+### Acyclic channel proof
 
 Checked ARC previously rejected every channel inside another queue, even when
 its payload could not refer back. The compiler now checks each channel's reachable
@@ -58,10 +86,12 @@ runs verify fixture syntax/semantics only, not the new acceptance proof.
 - `target/debug/fwp check /private/tmp/fwp-mutual-channel.fwp`: pass, 0.72 seconds.
   The negative fixture reaches the ownership check, rather than a syntax error.
 - `cargo fmt --all`: pass, 1.42 seconds.
+  A final helper rename needed one line wrap; formatter reapplied in 1.54 seconds
+  and the correction was published before opening the PR.
 - `python3 scripts/check-roadmap.py`: pass, 2.70 seconds (60 document sets,
   106 immutable anchors and seven work areas). `git diff --check`: pass.
-- New compiler proof, native cleanup, WebAssembly execution and full platform
-  acceptance are pending CI. Implementation alone is not verified support.
+- CI results and the remaining Windows repair are recorded above. Final-head
+  full platform acceptance is still required.
 
 This batch removes a compile-time rejection, not allocation or ARC operations.
 It adds no runtime representation and makes no speed or C/Rust parity claim.

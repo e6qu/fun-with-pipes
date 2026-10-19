@@ -49,8 +49,11 @@ fn tasks_and_acyclic_channels_reclaim_after_join_and_cancellation() {
             code
         };
         for opt in ["-O1", "-O2"] {
-            let binary = dir.join(format!("{gc}{opt}"));
+            // Windows execution can infer .exe; symbol readers and file copies
+            // cannot. Use the actual filename for every consumer.
+            let binary = dir.join(format!("{gc}{opt}.exe"));
             fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
+            assert!(binary.is_file(), "compiler did not create {binary:?}");
             if gc == "arc" {
                 let symbols = checked(Command::new("nm").arg(&binary));
                 let text = String::from_utf8_lossy(&symbols.stdout);

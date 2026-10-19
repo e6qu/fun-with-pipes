@@ -190,6 +190,9 @@ instrumentation after an existing type or function declaration; do not prepend
 headers ahead of the runtime's Windows API definitions. Use plain stable labels
 for artifact filenames: Rust debug formatting adds quotes to strings, which
 Windows paths and GitHub artifact uploads reject.
+Give native probe executables an explicit `.exe` suffix on every platform and
+use that same path for compilation, execution, inspection and copying. Windows
+can infer the suffix when launching a program; symbol readers and file APIs cannot.
 
 - **Leave encountered code healthier.** Fix discovered bugs and issues even
   when they are outside the current roadmap item. Preserve semantic regression
