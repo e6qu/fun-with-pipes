@@ -20,9 +20,10 @@ REPO = COLLECTIONS.REPO
 def audit_tests(log):
     log = re.sub(r'\x1b\[[0-9;]*[A-Za-z]', '', log)
     targets = re.findall(r'Running tests[/\\]([a-z_]+)\.rs', log)
-    assert targets == ['arc_execution', 'hash_ownership', 'protocol', 'range_array'], targets
+    assert targets == ['arc_execution', 'exec_protocol_ownership', 'hash_ownership',
+                       'integer_output', 'protocol', 'range_array', 'scalar_traps'], targets
     summaries = re.findall(r'test result: (ok|FAILED)\. (\d+) passed; (\d+) failed; (\d+) ignored;', log)
-    counts = [38, 7, 2, 4, 6, 9, 3]
+    counts = [38, 7, 2, 4, 2, 6, 3, 9, 3, 2]
     assert summaries == [('ok', str(count), '0', '0') for count in counts], summaries
     assert 'panicked at' not in log
     for name in ['numeric_hash_loops_preserve_widths_slices_and_shared_values',
@@ -89,6 +90,8 @@ def main():
                     '--name', directory.name, '--dir', directory)
             report = json.loads((directory / 'report.json').read_text())
             assert report['head'] == args.head
+            assert report['generationSettings'] == dict(FWP_ARRAY_FUSION='1',
+                FWP_MAP_BUILD='1', FWP_DIRECT_INTEGER_PRINT='1')
             assert set(report['results']) == {'small', 'large', 'set'}
             for name, case in report['results'].items():
                 assert (case['collection'], case['elements'], case['repetitions']) == {

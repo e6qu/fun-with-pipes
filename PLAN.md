@@ -101,9 +101,10 @@ outside the benchmark suite.
 2. Validate numeric hashing without repeated per-element type dispatch.
    [Compact key-only sets](docs/roadmap-history.md#compact-set-storage-pr-172)
    and [direct integer range sets](docs/roadmap-history.md#direct-integer-range-sets-pr-173)
-   passed all production gates. The hash preparation preserves canonical bytes
-   and borrowing, with unchanged allocation profiles and smaller code sections.
-   Finish final-head acceptance; retain mixed timing results and C/Rust gaps in
+   passed all production gates. Repair the C aliasing defect exposed by GCC,
+   combine integer output without a temporary String, and refresh their correctness,
+   allocation and machine-code measurements. Finish final-head acceptance; retain
+   mixed timing results and C/Rust gaps in
    [the measurements](docs/benchmarks.md#numeric-hash-specialization). The
    [mixed-tail-recursion delivery](docs/roadmap-history.md#mixed-tail-recursion-pr-171)
    passed; resource-owning tail frames and mutual recursion need separate proofs.

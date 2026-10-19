@@ -2,107 +2,101 @@
 
 ## Next action
 
-This is isolated `direct-integer-output` preparation in
-`/private/tmp/fwp-direct-integer-output`, based on hash preparation `c9b07366`.
-PR #173 merged after all gates passed. PR #174, `numeric-hash-delivery`, is now
-the only active PR; the primary checkout owns its final acceptance. Keep this
-candidate isolated until the hash batch is delivered.
+[PR #174](https://github.com/e6qu/fun-with-pipes/pull/174) remains open on
+`numeric-hash-delivery`. Its published head `d8554041` failed both Linux jobs:
+**do not merge it**. Each complete Linux log contains 777 passed tests and one
+failure: a captured tuple hashes zero fields under GCC. The other seven production
+jobs and documentation passed. No other failure appeared in the complete logs.
 
-Next: audit native `39334254632` and WASI `39334258666` at repaired source
-`7876237a77730334316216328e19c08262d5e4ab`, then retain the binary report. The new output
-tests passed on all six hosts at `d4c5b39f994b72b9991e8ffd09698aa63e0c5d84` in
-`39330733812`, but both Windows jobs failed an existing arithmetic probe's
-newline assertion. Both-Linux WASI `39330737723` is still running at that source.
-No complete acceptance or timing improvement is established.
+The local branch combines the aliasing repair with integer-output preparation.
+Next: publish this combined candidate on a preparation branch; run the six-host
+`hash` suite, both-Linux `wasi-arc`, four-host `hash-costs` and both-Linux
+`hash-alias`. The combined hash suite runs 76 tests per host and saves both hash
+and output binaries, avoiding duplicate compiler builds. After these pass, run
+`hash-report`, `integer-output-report` and `hash-specialization-repeat` with the
+exact candidate revision and run IDs. Retain the reports, update the PR once,
+then require all nine production jobs and documentation on that final head.
 
-Both failed Windows logs were audited: their only failed test is
-`full_width_unsigned_products_have_defined_overflow`. Its standalone C main
-bypasses fwp's binary-stream setup, so Windows translated `\n` to `\r\n`.
-The probe now selects binary stdout explicitly; arithmetic checks are unchanged.
-Both this target and integer output now join permanent Windows production CI.
-Both multi-target Windows preflight commands finish their targets after a test
-failure, so one failed target cannot hide failures in the others.
-The WASI allocation diagnostics also advance the output phase for the new print
-function, preserving useful leak locations. Neither repair changes generated code.
+[PR #173](roadmap-history.md#direct-integer-range-sets-pr-173) merged as
+`eb03eb58fb642500234b9bbe647adbcf59765415` after all gates passed. Its one-line
+message and identical tested files were verified. All seven roadmap areas remain
+open; this batch does not finish ownership or tracing removal.
 
-Run `39327804456` at `3a864f4d` passed all-target Clippy and four existing
-protocol/trap tests, but all three new output tests failed: ownership lowering
-separated `show` from `print` before the generator matcher ran. The fix moves
-recognition before ownership lowering, introducing a typed backend-only print
-operation with an explicit borrowed argument/unit result. Ordinary ownership
-analysis now never creates the eliminated String; no cleanup is bypassed.
+## Changes and verification
 
-Earlier `39326880740` was cancelled while queued after fixing the CLI fixture's
-missing `# expose: cli`. Run `39327114349` then caught a needless type borrow;
-that and its secondary missing-artifact upload failure were repaired together.
-The next run must validate the semantic fix; these repairs alone are not support.
+Numeric hashing emits direct loops for supported scalar/collection shapes while
+preserving canonical bytes and borrowed ownership. `FWP_TYPED_HASH=0` is the
+comparison control. [The design](design.md#runtime) explains why generated stack
+and static structures need explicit C aliasing rules. Five runtime view types now
+use `__may_alias__`; their layout is unchanged and global alias analysis stays on.
 
-## Prepared change
+Repair source `facc68e1d68f440ba9adf91b028b6db2051673f1` passed both Linux hosts
+in run `39339268457`. Each compared 48 actual binaries across GCC/Clang,
+O1/O2/O3, ARC/tracing and four view settings. Former ARC views produced the wrong
+hash with GCC at all three levels on both architectures. Explicit views, an
+object-only diagnostic and disabling alias analysis on the former views all
+produced the correct result. Broader hash, static-value, closure, map/set and
+field-move tests passed under both compilers. This isolates the defect; final
+combined-source checks and performance measurements are still required.
 
-An immediately consumed integer `show | print` uses a 24-byte stack buffer and
-writes the same digits/newline to `fwp_prog_out`. This removes the temporary owned
-String visible as the second managed request in the hash comparisons. It applies
-only to resolved primitive show/print for inline signed/unsigned integers up to
-64 bits. Stored/shared strings, wide numbers and other displays keep their work.
-`FWP_DIRECT_INTEGER_PRINT=0` provides an explicit comparison control. No new syntax.
+Immediately consumed integer `show | print` (including inlined `echo`) now formats
+in a 24-byte local buffer, avoiding its temporary owned String. Recognition occurs
+before ownership lowering. Stored/shared strings and other displays retain their
+normal work. `FWP_DIRECT_INTEGER_PRINT=0` selects ordinary output for comparison.
+A 24-byte formatting buffer is not the whole machine frame or proof of no libc
+allocation. The tests check widths, sharing, trap order, framed-output routing and
+deliberately inserted allocation controls.
 
-Tests compare raw interpretation with ARC/stressed tracing at O0/O2, both switch
-settings, integer bounds, shared strings and trap order. A binary-protocol test
-keeps printed diagnostics separate from framed results. A string-allocation probe
-requires zero immediate-output strings versus one in the control; deliberately
-adding a string must fail. Native binaries/C are retained by the focused suite.
-The same boundary fixture joins the actual WASI shutdown corpus.
+Standalone output source `7876237a77730334316216328e19c08262d5e4ab` passed six-native
+run `39334254632` (42 tests), both-Linux WASI `39334258666` (48 tests) and 144-binary
+inspection `39338461279`, collector `f90251baef3b8166cdc582096f82a5e5feb330b3`.
+This precedes the aliasing repair and is not combined-source acceptance. Its report
+is in `/private/tmp/fwp-direct-integer-output/docs/measurements/` until refreshed.
+The Windows arithmetic probe now explicitly selects binary stdout; its arithmetic
+assertions are unchanged. Production Windows CI permanently covers this probe and
+integer output. Multi-target commands finish remaining targets after a failure.
+WASI diagnostics recognize the new output primitive. Binary audits permit collector
+elimination only in the specific O2 direct-print-then-trap case; ARC still requires
+absence of tracing, and allocation-using tracing controls require its presence.
 
-## Binary audit preparation
+## Measurements to refresh
 
-After the repaired six-host test run passes, dispatch `integer-output-report`
-with its exact `evidence_run` and `source_revision`. Do not use the failed
-`39330733812` run as complete acceptance. The collector requires all
-seven tests on all six hosts, rejects ignored/missing cases, verifies source
-identity and inspects 144 actual binaries and their tracing symbols. It records
-assembly and section sizes; inspect the output code before making stack claims.
-Both original WASI jobs (`39330737723`) passed 24 tests each, none ignored.
-The rerun still verifies the repaired diagnostic instrumentation at `7876237a`.
-No complete collector result exists yet. Its three validation tests pass in
-0.16 seconds, and the four existing hash-audit tests pass in 0.15 seconds.
-The six existing collection-audit tests also pass in 0.22 seconds.
+The existing [hash reports](benchmarks.md#numeric-hash-specialization) describe
+source `6ffd2385a8207078cadd046d7dc2e3f3c389675f`, before the alias repair and direct
+output. They preserve mixed timing results and remaining C/Rust costs, not current
+performance evidence. Initial/report/repeat runs: `39317226192`, `39322404918`,
+`39322408959`; six-native/WASI: `39317215955`, `39317221484`.
+The new measurement runner explicitly enables direct output. Check its allocation
+profile and saved machine code instead of carrying over the old two-request count.
 
-A guarded read-only inspection of twelve saved ARM macOS O2 binaries passed in
-3.19 seconds. The direct print-then-trap program has no scan/mark/sweep symbols
-even in tracing mode: its unused collector code is eliminated. The audit now
-allows this specific O2 case, records the actual symbols, still requires them
-for allocation-using tracing controls, and rejects them in every ARC binary.
-The first inspection caught that invalid blanket assumption; it was not a
-runtime failure. This is not proof that all runtime setup or heap use disappears.
+The failed production head's benchmark report is retained at
+`/private/tmp/fwp-174-production-bench.md`. All six programs remain recorded.
+Its pipeline median changed from 16.983 to 26.089 ms against PR #173, but saved
+pipeline C and all three executables were byte-identical. The guarded comparison
+passed in 7.26 seconds; changed pipeline code cannot explain that timing shift.
+This does not erase the remaining C/Rust gap. Retain the report as pre-repair
+measurement evidence when updating the accepted history.
 
-## Checks
+## Local checks
 
-All local checks use the primary checkout's `python3 scripts/local-guard.py` with
-unchanged limits. No full compiler build or benchmark ran locally.
+All local workloads use `python3 scripts/local-guard.py` with unchanged limits.
+Full builds, test gates and benchmarks run only on GitHub.
 
-- `cargo fmt --all` passed in 1.34 seconds.
-- Review corrected a stale runtime comment that still described sets with dummy
-  value slots. Sets have stored one word per key since accepted PR #172; this
-  comment-only repair does not change the measured output implementation.
-- Cache review confirmed that `src/aot.rs` hashes generated C before selecting
-  an executable. Both the integer-output and numeric-hash switches change that
-  source; neither can accidentally reuse the other setting's executable.
-- The next queued-function proof now lives in
-  [ownership](ownership.md#next-proof-functions-stored-in-channels), rather than
-  temporary session notes. It changes no eligibility rule or public API.
-- The extracted actual runtime formatter passed 56 comparisons with standard C
-  decimal formatting at O0/O2 in 1.03 seconds, including signed/unsigned extrema.
-- Accepted interpreter ran the 19-line fixture in 0.27 seconds; formatting passed
-  in 0.01 seconds. These do not validate the new compiler recognition path.
-- Raw count, sharing, trap-order and binary-output fixture expectations passed
-  with the accepted interpreter in 0.61 seconds after the exposure fix.
-- The target-to-shard check passed in 0.15 seconds; documentation passed 61 sets,
-  106 anchors and seven work areas in 2.54 seconds.
-- The extracted actual lowering passed typed fusion, shared-string preservation,
-  target reuse and unsupported-float checks in 1.23 seconds. Accepted-compiler IR
-  inspection confirms that show/print are adjacent before ownership lowering.
-- Focused compiler/native integration, WASI, allocation controls and binary
-  inspection remain pending; record their source and run IDs after dispatch.
+- `/private/tmp/fwp-audit-current.py`: both complete Linux failure logs and 96
+  alias-diagnostic binaries audited in 5.31 seconds. Only former GCC/ARC views
+  fail; new views and no-strict-alias controls pass.
+- `/private/tmp/fwp-audit-174-windows.py /private/tmp/fwp-174-windows-amd.log`:
+  379 tests pass, six separately scheduled measurements ignored, in 0.15 seconds.
+  ARM has the same counts. Two POSIX-only SDK terminal cases skip on Windows;
+  these skips do not establish Windows terminal support.
+- Both regular macOS logs: 489 tests and 11 SDK cases pass, none ignored.
+  Each GC shard: 294 pass, 15 separate measurements ignored.
+- Extracted runtime views retain layout and correct bidirectional access at O0/O2/O3
+  (1.19 seconds). Extracted integer formatter matches 56 C decimal cases (1.03 seconds).
+- Updated report validators: `scripts/test-hash-evidence.py` four tests,
+  `scripts/test-integer-output-evidence.py` three and
+  `scripts/test-collection-evidence.py` six pass (0.23/0.15/0.15 seconds).
+  These test rejection of incomplete evidence, not language correctness.
 
 ## Roadmap status
 
@@ -116,8 +110,8 @@ unchanged limits. No full compiler build or benchmark ran locally.
 | 6 | In progress | Reproducible comparisons and regression budgets |
 | 7 | In progress | Representative larger applications |
 
-All seven areas in [PLAN.md](../PLAN.md) remain open: ownership/tracing removal,
-functional costs, machine performance, autodiff, numerical kernels, dependable
-comparisons and larger applications. Persistent subscriptions, unknown retained
-captures, resource-owning tail frames and mutual recursion still need proofs.
-JIT is excluded. Completed measurements do not complete these work areas.
+The next ownership design is [functions stored in channels](ownership.md#next-proof-functions-stored-in-channels):
+prove both captured owners and where queued functions can be called. Arrow types
+alone do not describe captures. No callback eligibility rule has changed.
+Persistent subscriptions, unknown retained captures, resource-owning tail frames
+and mutual recursion still need proofs. JIT is excluded.

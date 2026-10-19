@@ -13,17 +13,13 @@ SPEC.loader.exec_module(HASH)
 
 
 def audit_tests(log):
+    count = HASH.audit_tests(log)
     log = re.sub(r'\x1b\[[0-9;]*[A-Za-z]', '', log)
-    targets = re.findall(r'Running tests[/\\]([a-z_]+)\.rs', log)
-    assert targets == ['exec_protocol_ownership', 'integer_output', 'scalar_traps'], targets
-    summaries = re.findall(r'test result: (ok|FAILED)\. (\d+) passed; (\d+) failed; (\d+) ignored;', log)
-    assert summaries == [('ok', str(count), '0', '0') for count in [2, 3, 2]], summaries
-    assert 'panicked at' not in log
     for name in ['integer_output_preserves_widths_shared_strings_and_trap_order',
                  'immediate_integer_output_does_not_allocate_a_string',
                  'integer_print_keeps_binary_protocol_output_on_its_own_stream']:
         assert len(re.findall(r'test ' + name + r' \.\.\. ok', log)) == 1, name
-    return 7
+    return count
 
 
 def main():

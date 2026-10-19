@@ -1,0 +1,22 @@
+test result: ok. 38 passed; 0 failed; 0 ignored;
+test result: ok. 7 passed; 0 failed; 0 ignored;
+test result: ok. 2 passed; 0 failed; 0 ignored;
+Running tests/arc_execution.rs (target/debug/deps/arc)
+test result: ok. 4 passed; 0 failed; 0 ignored;
+Running tests/exec_protocol_ownership.rs (target/debug/deps/exec)
+Running tests/hash_ownership.rs (target/debug/deps/hash)
+test result: ok. 2 passed; 0 failed; 0 ignored;
+test numeric_hash_loops_preserve_widths_slices_and_shared_values ... ok
+test numeric_hash_loops_allocate_nothing_and_do_not_adjust_reference_counts ... ok
+Running tests/integer_output.rs (target/debug/deps/output)
+test result: ok. 6 passed; 0 failed; 0 ignored;
+test integer_output_preserves_widths_shared_strings_and_trap_order ... ok
+test immediate_integer_output_does_not_allocate_a_string ... ok
+test integer_print_keeps_binary_protocol_output_on_its_own_stream ... ok
+test result: ok. 3 passed; 0 failed; 0 ignored;
+Running tests/protocol.rs (target/debug/deps/protocol)
+test result: ok. 9 passed; 0 failed; 0 ignored;
+Running tests/range_array.rs (target/debug/deps/range)
+Running tests/scalar_traps.rs (target/debug/deps/traps)
+test result: ok. 3 passed; 0 failed; 0 ignored;
+test result: ok. 2 passed; 0 failed; 0 ignored;

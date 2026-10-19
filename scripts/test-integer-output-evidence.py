@@ -11,16 +11,7 @@ SPEC = importlib.util.spec_from_file_location(
 REPORT = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(REPORT)
 
-LOG = '''Running tests/exec_protocol_ownership.rs (target/debug/deps/exec)
-Running tests/integer_output.rs (target/debug/deps/output)
-test result: ok. 2 passed; 0 failed; 0 ignored;
-test integer_output_preserves_widths_shared_strings_and_trap_order ... ok
-test immediate_integer_output_does_not_allocate_a_string ... ok
-test integer_print_keeps_binary_protocol_output_on_its_own_stream ... ok
-Running tests/scalar_traps.rs (target/debug/deps/traps)
-test result: ok. 3 passed; 0 failed; 0 ignored;
-test result: ok. 2 passed; 0 failed; 0 ignored;
-'''
+LOG = (Path(__file__).parent / 'fixtures' / 'numeric-tests.log').read_text()
 
 
 class OutputEvidence(unittest.TestCase):
@@ -60,7 +51,7 @@ class OutputEvidence(unittest.TestCase):
     def test_complete_interleaved_and_windows_logs(self):
         for log in [LOG, LOG.replace('tests/', 'tests\\').replace(
                 'Running', '\x1b[1;32mRunning\x1b[0m')]:
-            self.assertEqual(REPORT.audit_tests(log), 7)
+            self.assertEqual(REPORT.audit_tests(log), 76)
 
     def test_missing_failed_ignored_and_duplicate_results_are_rejected(self):
         for old, new in [
