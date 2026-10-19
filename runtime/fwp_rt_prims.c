@@ -2965,6 +2965,18 @@ static V fwp_p_bytes_slice(V start, V len, V b) {
 
 /* --------------------------------------------------------------------- io */
 
+/* Same decimal bytes and stream as show | print, without an owned string. */
+static V fwp_print_integer(V value, int is_signed) {
+    char buffer[24];
+    int negative = is_signed && (int64_t)value < 0;
+    uint64_t magnitude = negative ? (uint64_t)0 - value : value;
+    int length = fwp_u64_fmt(buffer + sizeof buffer, magnitude);
+    if (negative) buffer[sizeof buffer - ++length] = '-';
+    fwrite(buffer + sizeof buffer - length, 1, (size_t)length, fwp_prog_out);
+    fputc('\n', fwp_prog_out);
+    return FWP_UNIT;
+}
+
 static V fwp_p_print(V s) {
     fwrite(STR(s)->d, 1, STR(s)->len, fwp_prog_out);
     fputc('\n', fwp_prog_out);

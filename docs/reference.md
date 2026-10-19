@@ -919,6 +919,7 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_OPENSSL_DIR` | OpenSSL prefix for host native include/link paths and the interpreter's loader; ignored by Linux cross builds (see [tls.md](tls.md#openssl)) |
 | `FWP_NO_OPT=1` | disables the IR optimizer (inlining, specialization, fusion) |
 | `FWP_ARRAY_FUSION=0` | when compiling: retain separate numeric Array map/fold/length stages for comparison; normal fusion requires pure terminating callbacks with compatible trap behavior |
+| `FWP_DIRECT_INTEGER_PRINT=0` | when compiling: retain the temporary string in an immediate integer `show` followed by `print`, for controlled allocation comparisons |
 | `FWP_TYPED_HASH=0` | when compiling: use general type-descriptor hashing instead of specialized numeric loops, for controlled comparisons; encoded bytes and hash results are unchanged |
 | `FWP_MATRIX_BLOCKING=0` | when compiling: retain the library F64 matrix implementation for comparison; specialization checks runtime shape and preserves ascending inner-index arithmetic |
 | `FWP_AD_WORKSPACE=0` | interpreter and native programs: release detached tape capacity instead of retaining the single bounded 512 KiB workspace; tape identity and scope lifetimes are unchanged |

@@ -399,6 +399,17 @@ The [measurements](benchmarks.md#numeric-hash-specialization) retain native/WASI
 checks, unchanged allocation counts and mixed timing results against general
 traversal and C/Rust. Removing dispatch does not guarantee a speed improvement.
 
+### Printing integers without an owned temporary
+
+The direct-output preparation recognizes an immediately consumed integer
+`show | print`, including `echo` after inlining. It formats into a 24-byte local
+buffer, then writes the same digits and newline to the program output stream.
+For example, `-17 | echo` prints `-17` on one line without requiring an owned
+String solely for that print. The argument still evaluates before output.
+Shared strings and displays for other types keep their normal evaluation.
+This removes one managed allocation; it does not promise allocation-free libc
+IO or a timing improvement. The [handoff](development-state.md) records validation.
+
 ## Runtime
 
 The runtime supplies operations generated programs cannot express as simple C

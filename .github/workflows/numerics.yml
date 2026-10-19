@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -961,7 +961,7 @@ jobs:
           if-no-files-found: error
   paths:
     name: ${{ matrix.part == 'ownership' && format('HTTP ownership ({0})', matrix.runner) || matrix.part == 'comparisons' && format('HTTP comparisons ({0})', matrix.runner) || matrix.part == 'client' && format('client checks ({0})', matrix.runner) || matrix.part == 'server' && format('server checks ({0})', matrix.runner) || format('paths ({0})', matrix.runner) }}
-    if: inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc') || inputs.suite == 'chain-cleanup' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat')))) || inputs.suite == 'stream-storage' || inputs.suite == 'context-owners' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+    if: inputs.suite == 'http-clients' || inputs.suite == 'http-server-memory' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc') || inputs.suite == 'chain-cleanup' || (inputs.suite == 'stream-owners' || (inputs.suite == 'stream-clients' || (inputs.suite == 'stream-repeat' || (inputs.suite == 'connection-repeat' || inputs.suite == 'sender-repeat')))) || inputs.suite == 'stream-storage' || inputs.suite == 'context-owners' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux' || inputs.suite == 'service-values' || (inputs.suite == 'tcp' || inputs.suite == 'tcp-windows') || inputs.suite == 'udp' || inputs.suite == 'sockets' || inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders' || inputs.suite == 'vectors' || inputs.suite == 'paths' || inputs.suite == 'filesystem' || inputs.suite == 'fields' || inputs.suite == 'processes' || inputs.suite == 'mapped-arrays' || inputs.suite == 'zip-maps' || inputs.suite == 'zip-windows' || inputs.suite == 'hash' || inputs.suite == 'hash-windows' || inputs.suite == 'integer-output'
     strategy:
       fail-fast: false
       matrix:
@@ -1377,6 +1377,17 @@ jobs:
           name: vectors-${{ matrix.runner }}
           path: vector-evidence/
           if-no-files-found: ignore
+      - name: Direct integer output, ownership and binary protocol
+        if: inputs.suite == 'integer-output'
+        env:
+          FWP_INTEGER_OUTPUT_ARTIFACTS: integer-output-evidence
+        run: cargo test --no-fail-fast --test integer_output --test scalar_traps --test exec_protocol_ownership
+      - uses: actions/upload-artifact@v7
+        if: always() && inputs.suite == 'integer-output'
+        with:
+          name: integer-output-${{ matrix.runner }}
+          path: integer-output-evidence/
+          if-no-files-found: error
       - name: Streaming hash ownership and canonical protocol
         if: inputs.suite == 'hash' || inputs.suite == 'hash-windows'
         env:

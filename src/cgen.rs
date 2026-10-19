@@ -5039,6 +5039,29 @@ impl<'g, 'p> FnGen<'g, 'p> {
         Some(format!("fwp_drop{}", self.g.drop_id(t)))
     }
 
+    /// An immediately printed inline integer does not need an owned String.
+    /// Match resolved primitives so user-defined display functions keep running.
+    fn print_without_string(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
+        if std::env::var("FWP_DIRECT_INTEGER_PRINT").is_ok_and(|value| value == "0")
+            || !matches!(&self.g.prog.funcs[id].body, Body::Prim(name) if name == "print")
+        {
+            return None;
+        }
+        let [Expr::Call(show, values)] = args else {
+            return None;
+        };
+        let function = &self.g.prog.funcs[*show];
+        if !matches!(&function.body, Body::Prim(name) if name == "show") {
+            return None;
+        }
+        let [value] = values.as_slice() else {
+            return None;
+        };
+        let signed = int64_kind(&function.ty.params(1).0[0])?;
+        let value = self.expr(value);
+        Some(format!("fwp_print_integer({value}, {})", u8::from(signed)))
+    }
+
     /// `string.length` of a `concat` or of an integer's `show`: the sum of
     /// the parts' lengths, or the count of the digits, without building
     /// the string. The parts are evaluated in the same order.
@@ -5531,6 +5554,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if let Some(n) = self.length_without_string(id, args) {
             self.tail_tokens(tail);
             return self.bind(format!("(V)(int64_t)({})", n));
+        }
+        if let Some(call) = self.print_without_string(id, args) {
+            self.tail_tokens(tail);
+            return self.bind(call);
         }
         if let Some(abi) = self.g.abis[id].clone() {
             let xs = self.worker_args(id, &abi, args);
