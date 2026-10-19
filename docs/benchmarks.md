@@ -1072,6 +1072,13 @@ set cases without a reproducible small-case regression. Overlapping samples need
 a repeat on the same verified binaries before a speed claim; report C/Rust gaps
 and binary sizes even when the targeted dispatch is removed.
 
+If a result is inconclusive, `hash-specialization-repeat` takes the completed
+cost run as `evidence_run` and its full `source_revision`. It verifies and reruns
+the saved specialized ARC, general ARC, C and Rust binaries without recompilation:
+two warmups, then 24 balanced samples. This repeat excludes the slower buffered
+control and the separate tracing variant. Keep both runs, including any slower
+medians; the repeat does not replace or erase the first observation.
+
 ## CPU tensor output storage
 
 **Comparison:** previous versus direct-output fwp executors, with only that runtime
