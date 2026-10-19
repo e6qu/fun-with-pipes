@@ -7,6 +7,8 @@ main = [
     range 65532u16 65535u16 | set.from-list | set.to-list | echo,
     range -2147483648i32 -2147483645i32 | set.from-list | set.to-list | echo,
     range 4294967292u32 4294967295u32 | set.from-list | set.to-list | echo,
+    range -2isize 3isize | set.from-list | set.to-list | echo,
+    range 4294967292usize 4294967295usize | set.from-list | set.to-list | echo,
     range -9223372036854775808 -9223372036854775805
     | set.from-list
     | set.to-list
@@ -16,6 +18,7 @@ main = [
     | set.to-list
     | echo,
     range -2 3 | set.from-list | both id (set.remove 0 | set.insert 9) | echo,
+    range -2 3 | both id (set.from-list | set.to-list) | echo,
     range 7 7 | set.from-list | set.to-list | echo,
     range 8 3 | set.from-list | set.to-list | echo,
     range 18446744073709551615u64 0u64 | set.from-list | set.to-list | echo,

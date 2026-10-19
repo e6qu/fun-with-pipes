@@ -11,7 +11,8 @@ Do not merge this batch or count its base as accepted before that PR passes.
 Next: audit six-host collection run `39303492049`, which tests compiler/runtime
 revision `7901a576019a01c490efe248c15730fac0602701`, preserved at
 `roadmap/revision-range-sets-7901a576`. Later changes add C/Rust benchmark sources,
-explicit tracing selection in the general benchmark runner and documentation;
+explicit tracing selection in the general benchmark runner, ISize/USize and
+shared-input fixture cases, and documentation;
 they do not change the measured compiler or collection runtime.
 After PR #172 passes and merges, replay this change on main,
 record its accepted evidence and publish the next substantial PR. Require all
@@ -75,7 +76,9 @@ on GitHub. All local workloads use the primary checkout's shared
   and Rust formatting checks pass; the accepted formatter fixed the new fixture.
 - The accepted ARM Mac compiler at
   `/private/tmp/fwp-170-accepted-macos/fwp-macos-arm64/fwp` ran the thirteen-line
-  range-set fixture, including all eight inline integer types and alias updates.
+  original range-set fixture, including eight fixed-width integer types and
+  alias updates. Added ISize/USize cases also pass the raw accepted interpreter;
+  those two types and an explicit shared-list case await the final-head CI run.
 - `/private/tmp/fwp-count-range-set.py`, guarded Clang O2 and its executable
   counted ordinary construction: 4,099 requests/196,624 bytes for 4,096 keys.
   It counts initialized-allocation slow paths only once.

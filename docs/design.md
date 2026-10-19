@@ -234,8 +234,8 @@ The ordinary array-fusion comparison switch also controls this transformation.
 
 `range -2 3 | set.from-list` produces `set{-2, -1, 0, 1, 2}`. Its integers
 are already ordered and distinct. For an immediately consumed range of inline
-integers (I8 through I64, U8 through U64), the compiler writes the keys directly
-into one owned set buffer. It avoids the temporary list and sorting buffers.
+integers (I8 through I64, U8 through U64, ISize and USize), the compiler writes
+the keys directly into one owned set buffer. It avoids the temporary list and sorting buffers.
 This internal operation is called `set._range`; it is not a new library API.
 
 Both bounds retain their original evaluation order. Equal or descending bounds
