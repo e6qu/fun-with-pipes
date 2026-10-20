@@ -8,8 +8,8 @@ All focused checks and measurements pass. Published head
 `63a129f25cfb9a3b940baf7786036265bfdf831d` is on `move-matched-variant-owners`.
 Audit production `39438167856` and documentation `39438167895` with
 `/private/tmp/fwp-audit-179-combined.py`; its receipt is
-`/private/tmp/fwp-179-combined-acceptance.json`. Both Windows jobs, both regular macOS jobs and Linux ARM64 have started;
-the other production jobs and docs were still queued at the last check.
+`/private/tmp/fwp-179-combined-acceptance.json`. Documentation, benchmarks and regular ARM64 macOS pass; their complete logs are clean.
+Seven production jobs remain running, without reported failures.
 All **nine production jobs and docs** must pass.
 Keep the final head stable. Fix every failure; only squash-merge after exact-head
 acceptance, with an explicit one-line subject of at most 80 characters and an
@@ -34,14 +34,37 @@ The proposed rule therefore borrows such handles while leaving ARC's capture,
 cycle and scope checks unchanged. Resource scopes and last-use inputs remain
 excluded. This is preparation, not accepted support or part of PR #179.
 
-Added coverage: unit cases for function-bearing channels; a native sink-context
-destruction probe with aliases, consuming generic entries and a leaked-owner
-control; ARC failure after receiving/applying a queued function. The focused
-workflow also includes all queued-function capture/scope checks and the channel
-cycle regression. Formatting passes under the guard (1.62s); no build or suite
-has run for this preparation yet. Next preparation action: publish it and run
-`numerics.yml`, suite `channel-costs`, on ARM64/AMD64. Audit every failure and
-compare to the accepted-source artifacts below before claiming any savings.
+Function-channel source `d8c62e175aa0beab727bb15960718f0bfca9ec53` passes
+focused run `39440052683` on Linux ARM64/AMD64: 199 checks per host. Complete
+logs are clean; receipt `/private/tmp/fwp-function-channel-borrow-audit.json`.
+The native sink-context destruction probe covers aliases, consuming generic
+entries and a leaked-owner control. Tests also cover ARC failure after applying
+a queued function and existing capture, cycle and scope restrictions.
+All 180 profiles and 20 binaries are audited in
+`/private/tmp/fwp-function-channel-counts.json`; artifacts are in
+`/private/tmp/fwp-function-channel-costs`. Fresh-function retains fall from
+one/message to zero; allocation counts and peak charge stay unchanged. Other
+cases retain their costs. ARC exchange frames shrink from 248 to 56 bytes on
+AMD64 and 256 to 80 on ARM64, excluding callees (AMD64 also excludes the return
+address). No timing claim. Preserve this source with
+`roadmap/revision-function-channel-borrows-d8c62e17`.
+
+The same preparation now removes temporary integer text whose only consumer is
+`string.length`, including concatenations with literals. Real PR #179 benchmark
+binaries still build two integer strings and two concatenations per string-loop
+iteration; all six benchmark binaries match #178 exactly. New tests compare raw
+interpreter/native results, effects, traps, Unicode, widths and shared strings,
+and count leaf allocations with an intentionally allocating negative control.
+Native checks are pending. The new pass is `src/cgen/scalar_text.rs`; full integer
+output tests and the frozen primitive inventory are included in `channel-costs`.
+The existing diagnostic interpreter accepts every new fixture, including the
+failure order; guarded command
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-validate-text-length-fixtures.py`
+passes (12.43s). It emits C but does not compile it. No local build or full suite.
+Next: publish the combined preparation, run its focused checks on runners, audit
+all failures, inspect its binaries and collect equivalent-work measurements.
+`/private/tmp/fwp-compare-channel-stages.py` takes explicit current/baseline
+reports and artifact directories. Do not infer elapsed-time gains from counts.
 Do not open a new PR until #179 is accepted and merged. Preserve measured source
 with a tag; after the squash, transplant only commits after `63a129f2` onto the
 merged tree, then require a new final-head production matrix for that delivery.

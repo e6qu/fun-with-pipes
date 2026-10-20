@@ -43,6 +43,10 @@ values rather than executing the generated C reference-count machinery.
 Direct-call borrowing changes who keeps an argument alive during a call, without
 changing its source type. Its proof runs before reference operations are inserted;
 [the ownership design](design.md#ownership-implementation) explains the limits.
+Before either step, `src/cgen/scalar_text.rs` removes eligible temporary integer
+displays used only by printing or character counting. It preserves the scalar
+inputs and their evaluation order; [the text lowering rules](design.md#measuring-integer-text-without-building-it)
+explain which expressions qualify.
 
 ## What kind of parser is this?
 
