@@ -12,6 +12,35 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Loop state and known function calls (PR #176)
+
+Loops can now keep state fields in locals even when an action or branch precedes
+`Again`. For example, printing a string before updating `(count, text)` no longer
+forces a new state tuple on each iteration. Known capture-free function aliases
+also expose direct calls; constants that can evaluate or trap stay in order.
+[Examples and measurements](measurements/channel-loop-state.md) explain the
+five channel programs, counts, generated C and actual machine-code comparisons.
+Each saves one allocation per additional message from loop-state lowering.
+The alias change saves no further allocations or retains; it removes generic
+dispatch and reduces the fresh-text exchange frame by 48 bytes on both hosts.
+These are fwp count/representation comparisons, not timing or C/Rust parity claims.
+
+Focused ownership `39366497033` passes 62 integrations plus all compiler units
+on each of six native hosts and 18 checks on each WASI host. Counts `39366501786`
+pass both Linux architectures. Resource-field runs `39365324259`/`39365327202`
+pass 37 tests each with GCC. GC-reporting run `39368181540` passes on both Linux
+and macOS architectures: Linux-only resident-memory checks now explicitly report
+their restriction on macOS, and missing/failing compilers fail GC checks.
+
+The user merged [PR #176](https://github.com/e6qu/fun-with-pipes/pull/176) as
+`90f0ab9f6b30da75682f598ef5afd8f9fef7bfed` before production CI completed.
+Its tree equals head `ddff413a940b2c37e6ea3349b443fe59a232d953`, and its verified
+message is one line without trailers. [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39371117507)
+remains running; the benchmark gate and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39371117707)
+pass. This is merged work with unfinished acceptance, tracked in the
+[handoff](development-state.md). Only duplicate post-merge runs `39372193646`
+and `39372193575` were cancelled after tree verification.
+
 ## Function queues and cheaper sends (PR #175)
 
 Checked ARC accepts queued functions whose immutable captures are proved safe.

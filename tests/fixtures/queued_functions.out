@@ -8,3 +8,6 @@ None
 Some (Some "record")
 Some [Some "nested"]
 Some 11
+Some "timed"
+None
+Err "received failure"
