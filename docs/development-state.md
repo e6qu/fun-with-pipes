@@ -4,7 +4,8 @@
 
 [PR #175](https://github.com/e6qu/fun-with-pipes/pull/175) is the only active PR.
 Keep its head `6511a50f` stable while production run `39363423392` finishes.
-Documentation `39363423384`, the benchmark gate and regular ARM64 macOS pass.
+Documentation `39363423384`, the benchmark gate, regular ARM64 macOS and both
+macOS GC-stress gates pass.
 The complete macOS log has no failed/ignored Rust tests; its 11 SDK tests pass. All eight focused
 ownership jobs in `39362626916` pass, as do both count jobs in `39362629293`.
 Those focused runs use `f3c6f8d9`: compiler, runtime and integration-test source
@@ -19,9 +20,10 @@ message and identical tree before cancelling redundant post-merge production.
 The primary worktree `/Users/zardoz/projects/fun-with-pipes` holds that delivery.
 
 This worktree, `/private/tmp/fwp-channel-transfers`, holds the separate
-`flatten-channel-loop-state` preparation. Current implementation is `75da96b8`.
-Next: audit its ownership run `39366497033` and count run `39366501786`, including
-all failed tests, generated C and actual machine code. Do not open a second PR.
+`flatten-channel-loop-state` preparation. The measured compiler implementation is `75da96b8`; subsequent changes repair
+GC test reporting and move imports. Next: finish #175 acceptance, then publish
+this preparation as described below. All focused logs, count samples, generated
+C and actual machine code are audited. Do not open a second PR.
 After #175 is accepted, apply only this branch's difference from `6511a50f` to a
 fresh branch from accepted main, update the plan/history, and run full acceptance.
 
@@ -65,7 +67,9 @@ and callback effects. Both Linux count runs are now audited; full acceptance rem
   audited in 1.55s. All count/memory metrics match the loop-only revision; the
   fresh-text dispatch disappears and its exchange frame drops by 48 bytes on
   each architecture. Details are in the linked report. Ownership passes Linux,
-  Windows and ARM64 macOS plus both WASI hosts; Intel macOS remains running.
+  Windows and both macOS architectures plus both WASI hosts. The guarded full-log
+  audit passes in 0.14s: 62 integrations plus all units on each native host and
+  18 checks on each WASI host, none ignored or filtered.
 
 ## Local checks
 
@@ -86,7 +90,9 @@ audit in 2.43s. A guarded `du` inventory returned its sizes but stopped with
 `Operation not permitted` while controlling the system utility; it was not retried
 and no limit was changed. Three redundant, audited baseline/transfer/tap download
 directories were removed; their reports and GitHub artifacts remain. Integrated
-baseline and candidate binaries are retained locally for comparison.
+baseline and candidate binaries are retained locally for comparison. Guarded
+`cargo clean --profile dev` removed 573.7 MiB of stale local build output in
+0.58s before the disk floor was reached; do not rebuild the compiler locally.
 
 ## Accepted work and remaining goals
 
@@ -122,6 +128,9 @@ The ARM64 macOS production log exposes five Linux resident-memory tests that
 returned early but appeared as passes. The preparation now marks those tests
 ignored outside Linux with the exact `/proc` requirement, and rejects missing
 or failing C compilers instead of silently passing GC checks. A Unix import is
-moved to the file's import block. Repair `bd9eb989` is published; `gc-checks` run `39368181540` is pending
-on both Linux/macOS architectures; the full stress golden suite still runs on macOS. Historical
+moved to the file's import block. Repair `bd9eb989`, `gc-checks` run `39368181540`, passes on all four hosts:
+8 tests on each Linux architecture; 3 applicable tests and 5 explicitly ignored
+Linux-only tests on each macOS architecture. Missing and failing compiler
+controls pass on all four hosts; complete logs are audited. Subsequent changes
+only move inline imports and clarify temporary-directory comments; the full stress golden suite still runs on macOS. Historical
 macOS passes do not establish the Linux-only resident-memory measurements.

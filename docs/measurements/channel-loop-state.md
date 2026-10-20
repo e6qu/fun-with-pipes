@@ -94,8 +94,9 @@ host, with none ignored or filtered. Separate Linux resource-field runs
 
 ## Calling known functions directly
 
-After receiving a string, `option.map string.length` measures it when the receive
-result is `Some text`; it leaves `None` unchanged when no message is available.
+After receiving a string, `option.map string.length` turns `Some text` into
+`Some length` and leaves `None` unchanged. For this queue, a blocking receive
+returns `None` when the channel is closed and empty.
 The fresh-text program used generic function dispatch for that known length
 function. An internal local alias hid its target from the optimizer. Propagating
 a capture-free function reference exposes the direct call. Constant expressions
@@ -116,4 +117,7 @@ as above. The enclosing loop frames remain 296/288 bytes. The fresh-text `.text`
 section shrinks by 624/208 bytes, and the whole executable by 384/312 bytes,
 on AMD64/ARM64 respectively. The other four cases have unchanged file and
 section sizes. Neither code size nor frame size establishes a timing improvement.
-The combined candidate still needs its remaining cleanup and full platform gates.
+The combined candidate passes focused ownership run `39366497033`: 62
+integration tests plus all compiler units on each of six native hosts, and 18
+checks on each WASI host, none ignored or filtered. Full production acceptance
+is still required.
