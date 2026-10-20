@@ -222,6 +222,12 @@ promise of reproducibility. That `comptime` effect check is not a blanket macro
 sandbox: macro functions are invoked as ordinary interpreted functions, and the
 expander has no separate equivalent effect allowlist.
 
+The result must be data that can be embedded in the program. For example,
+`text = comptime (file.read "message.txt")` embeds the file's text. Returning
+`file.open "message.txt"` instead is rejected: its open handle belongs to the
+compiler process and cannot survive into a separately compiled executable.
+This restriction also applies to handles inside containers or function captures.
+
 Useful entry points: `driver::check_source`, `macros::expand`, `Expander::invoke`,
 `syntax::quote/from_value`, `mono::comptime` and `mono::lower`. Tests live in
 `tests/parse/`, `tests/run/` and [lesson 11](tutorials/11-comptime-and-macros/README.md).

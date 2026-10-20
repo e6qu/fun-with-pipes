@@ -104,6 +104,52 @@ pub struct FileState {
 }
 
 impl Value {
+    /// Constants must be portable data, never handles into the compiler process.
+    pub(crate) fn check_constant(&self) -> Result<(), String> {
+        let mut pending = vec![self];
+        while let Some(value) = pending.pop() {
+            match value {
+                Value::File(_) => return Err("constant contains a runtime File handle".into()),
+                Value::Native(n) => {
+                    return Err(format!(
+                        "constant contains a native runtime handle {}",
+                        n.describe()
+                    ));
+                }
+                Value::Data(_, fields) | Value::Record(fields) => pending.extend(fields.iter()),
+                Value::Closure(c) => pending.extend(&c.args),
+                Value::Array(a) => pending.extend(a.iter()),
+                Value::Set(s) => pending.extend(s.iter()),
+                Value::Map(m) => {
+                    for (key, value) in m.iter() {
+                        pending.push(key);
+                        pending.push(value);
+                    }
+                }
+                Value::I8(_)
+                | Value::I16(_)
+                | Value::I32(_)
+                | Value::I64(_)
+                | Value::I128(_)
+                | Value::U8(_)
+                | Value::U16(_)
+                | Value::U32(_)
+                | Value::U64(_)
+                | Value::U128(_)
+                | Value::F16(_)
+                | Value::BF16(_)
+                | Value::F32(_)
+                | Value::F64(_)
+                | Value::F128(_)
+                | Value::Str(_)
+                | Value::Bytes(_)
+                | Value::TInt(_)
+                | Value::Trit(_) => {}
+            }
+        }
+        Ok(())
+    }
+
     pub fn unit() -> Value {
         Value::Record(Rc::from(Vec::new()))
     }
@@ -687,6 +733,46 @@ fn write_value(out: &mut String, v: &Value, mt: &MT, shapes: &dyn Shapes, top: b
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn constants_reject_handles_in_every_container_and_capture() {
+        let file = Value::File(Rc::new(RefCell::new(FileState {
+            path: "closed-test-file".into(),
+            file: None,
+        })));
+        for value in [
+            file.clone(),
+            Value::data(1, vec![file.clone()]),
+            Value::tuple(vec![Value::I64(1), file.clone()]),
+            Value::Array(Rc::new(vec![file.clone()])),
+            Value::Set(Rc::new(BTreeSet::from([file.clone()]))),
+            Value::Map(Rc::new(BTreeMap::from([(file.clone(), Value::I64(1))]))),
+            Value::Map(Rc::new(BTreeMap::from([(Value::I64(1), file.clone())]))),
+            Value::Closure(Rc::new(Closure {
+                func: 0,
+                args: vec![Value::tuple(vec![file])],
+            })),
+        ] {
+            assert_eq!(
+                value.check_constant().unwrap_err(),
+                "constant contains a runtime File handle"
+            );
+        }
+        let socket = Value::Native(Rc::new(crate::sched::Native::Udp(RefCell::new(None))));
+        assert!(socket
+            .check_constant()
+            .unwrap_err()
+            .contains("<udp socket>"));
+        Value::list((0..10000).map(Value::I64).collect())
+            .check_constant()
+            .unwrap();
+        Value::Closure(Rc::new(Closure {
+            func: 0,
+            args: vec![Value::str("portable capture")],
+        }))
+        .check_constant()
+        .unwrap();
+    }
 
     #[test]
     fn floats_round_trip_shortest() {

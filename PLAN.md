@@ -94,15 +94,16 @@ outside the benchmark suite.
    WebAssembly acceptance. Explicit weak handles remain a proposal. Prefer
    borrowing and scoped cleanup; distinguish a definite cycle from a missing proof.
    Reject unproved retention rather than silently use tracing.
-2. Finish production acceptance for [moving matched variant payloads](docs/measurements/channel-variant-moves.md).
-   Focused counts, six native ownership suites and both WebAssembly suites pass.
+2. Complete one delivery of [matched payload moves](docs/measurements/channel-variant-moves.md)
+   and [borrowing across direct calls](docs/measurements/channel-direct-borrows.md).
+   The latter requires callers to need the same counted values after the call,
+   avoiding extra input retention. Verify success, failure and cancellation;
+   reproduce counts and inspect actual binaries before final production acceptance.
    [The accepted baseline](docs/roadmap-history.md#direct-matches-and-callbacks-pr-178)
    already removes temporary receive wrappers, loop-state tuples and eligible
-   callback objects. The new moves save retains, with unchanged allocations and
-   mixed binary-size results. The remaining channel retain across each measured
-   fresh-message call needs a caller/callee borrowing contract, including failure
-   and cancellation cleanup. Resource-owning tail frames and mutual recursion also
-   need separate proofs.
+   callback objects. Borrowing does not remove all runtime ownership checks or
+   sharing costs. Resource-owning tail frames and mutual recursion need separate
+   proofs.
 3. Use representative applications and equivalent-work measurements to select
    the next costs to remove: dynamic closures/calls, input copies, container
    layout, numerical workspace and derivative recording. Use the accepted

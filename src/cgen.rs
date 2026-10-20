@@ -2491,7 +2491,9 @@ impl<'p> Gen<'p> {
                 }
                 format!("PTR(&fwp_constant{id})")
             }
-            Value::File(_) | Value::Native(_) => "0".into(),
+            Value::File(_) | Value::Native(_) => {
+                unreachable!("runtime handles were rejected before C generation")
+            }
             Value::Closure(c) => {
                 if !c.args.is_empty() && c.args.len() < self.prog.funcs[c.func].arity as usize {
                     let captures: Option<Vec<_>> = c
@@ -9582,6 +9584,7 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
 }
 
 fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
+    crate::ir::check_locals(prog)?;
     // Fuse before ownership lowering separates the temporary String from print.
     let direct_output = if std::env::var("FWP_DIRECT_INTEGER_PRINT").is_ok_and(|v| v == "0") {
         None

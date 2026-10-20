@@ -414,7 +414,7 @@ impl crate::value::Shapes for Program {
 /// Check that every function's local types agree with its body: each
 /// local it uses has a type, its parameters have its type's parameter
 /// types, and a local bound to a value (or a pattern on one) whose type
-/// the value gives has that type.
+/// the value gives has that type. Constants must contain portable data.
 pub fn check_locals(prog: &Program) -> Result<(), String> {
     let func = |id: FuncId| &prog.funcs[id].ty;
     let shapes = &prog.shapes;
@@ -483,7 +483,8 @@ fn check_expr<'a>(
             check_expr(func, shapes, locals, b)
         }
         Expr::Local(l) => has(*l),
-        Expr::Const(_) | Expr::Func(_) => Ok(()),
+        Expr::Const(v) => v.check_constant(),
+        Expr::Func(_) => Ok(()),
         Expr::Call(_, a) | Expr::Construct(_, a) | Expr::Record(a) => a
             .iter()
             .try_for_each(|x| check_expr(func, shapes, locals, x)),
@@ -532,7 +533,8 @@ fn check_pat(shapes: &Shapes, locals: &[MT], p: &Pat, ty: Option<&MT>) -> Result
             }
             _ => Ok(()),
         },
-        Pat::Wild | Pat::Lit(_) => Ok(()),
+        Pat::Lit(v) => v.check_constant(),
+        Pat::Wild => Ok(()),
         Pat::Construct(_, ps) => ps
             .iter()
             .try_for_each(|p| check_pat(shapes, locals, p, None)),

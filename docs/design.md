@@ -663,6 +663,10 @@ A value produced by `comptime` is already known when C is generated. For example
 an array header, but does not need to allocate that storage on the heap at startup.
 The current change places compound constants, wide numeric literals and closures
 with constant captures in static program storage. Strings already use this model.
+Compile-time evaluation may read files, but its result cannot contain an open
+file or another runtime handle. Such handles belong to the compiler process;
+return file contents or other ordinary data instead. Nested containers and
+captures follow the same rule, checked before embedding constants.
 
 Records and variants keep their tag/count headers. Arrays preserve the selected
 packed or word layout; F128 elements keep all 128 bits. Maps keep their sorted
