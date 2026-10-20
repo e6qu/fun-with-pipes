@@ -19,7 +19,7 @@ for a runnable macro example. An **AST** is a tree of source expressions; an
 | Preserve resources | Record original resource scopes before transformations | `src/resource.rs` |
 | Optimize | Matrix specialization → simplification/inlining → known callback specialization → fusion → self-tail proof | `src/fuse.rs`, `src/opt.rs`, `src/tailrec.rs` |
 | Interpret | Execute the typed IR directly | `src/interp.rs` |
-| Or generate native code | Select representations, insert reference operations, check ARC eligibility when requested, emit C/runtime | `src/cgen.rs`, `src/rc.rs`, `src/ownership.rs` |
+| Or generate native code | Select representations, prove direct-call borrows, insert and verify reference operations, check ARC eligibility when requested, emit C/runtime | `src/cgen.rs`, `src/rc/borrows.rs`, `src/rc.rs`, `src/ownership.rs` |
 | Compile and link | Generated C and required libraries → native executable/library or supported WebAssembly module | C toolchain, selected by `src/cgen.rs` |
 
 Macro expansion has its own nested check/lower/interpret cycle: macro functions
@@ -40,6 +40,9 @@ parsing, expansion, type checking, lowering or resource preservation. Native
 ownership lowering is separate. Debug builds also validate local types after
 passes and check inserted reference operations. The interpreter uses Rust-owned
 values rather than executing the generated C reference-count machinery.
+Direct-call borrowing changes who keeps an argument alive during a call, without
+changing its source type. Its proof runs before reference operations are inserted;
+[the ownership design](design.md#ownership-implementation) explains the limits.
 
 ## What kind of parser is this?
 

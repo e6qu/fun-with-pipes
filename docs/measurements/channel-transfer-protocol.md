@@ -9,6 +9,11 @@ have measured count savings and passed
 [production acceptance in PR #175](../roadmap-history.md#function-queues-and-cheaper-sends-pr-175).
 No execution-time speedup is claimed.
 
+Later reports use this same protocol for [loop-state tuples](channel-loop-state.md),
+[direct matches](channel-match-results.md), [moving matched payloads](channel-variant-moves.md)
+and [borrowing across calls](channel-direct-borrows.md). Each identifies its
+comparison revision, measured savings, remaining costs and acceptance status.
+
 ## First measured baseline
 
 [Run 39354805966](https://github.com/e6qu/fun-with-pipes/actions/runs/39354805966)

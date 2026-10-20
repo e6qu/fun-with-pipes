@@ -4,9 +4,10 @@
 
 Next: finish [PR #179](https://github.com/e6qu/fun-with-pipes/pull/179) on
 `move-matched-variant-owners`, head `82bcf83f765e072afa6431cbf196532d433e3cad`.
-Production `39417913864` has passing benchmarks and both ARM macOS jobs;
-its other six native jobs are running without reported failure. Documentation
-`39417913929` passes. Four completed logs are audited in
+Production `39417913864` has passing benchmarks, both ARM macOS jobs and
+Intel macOS GC stress; its other five native jobs are running without reported
+failure. Documentation
+`39417913929` passes. Five completed logs are audited in
 `/private/tmp/fwp-179-acceptance.json`. Audit every completed log
 with `/private/tmp/fwp-audit-179.py`; fix every failure before squash merge.
 Require all nine production jobs and documentation on this exact head. Use an
@@ -73,41 +74,54 @@ free disk, target data below 2 GiB and sampled aggregate RSS below 1 GiB.
 ## Prepared direct-call borrowing
 
 `/private/tmp/fwp-direct-borrows`, branch `borrow-direct-function-arguments`,
-contains the next implementation, based on `e62cf232a1f1b87161e920c533d07a22eac4bce5`.
-No second PR is open. Both complete focused logs from `39421484177` were audited:
-`/private/tmp/fwp-direct-borrow-first-audit.json`. Each has the same two failures:
-a unit fixture omitted its tuple constant's type, and a native probe expected
-unwind cleanup without enabling generated unwind support. All other checks and
-the measurement steps pass; this failed run supplies no acceptance.
-The repair supplies explicit fixture types, adds a reachable async branch,
-tests cancellation at borrowed-worker entry, and adds a checked-ARC channel
-failure case at O0/O1/O2 with stack placement both enabled and disabled.
-Only live callers contribute borrowing contracts; explicit execution entries
-remain consuming. Run the repaired focused suite, audit both full logs, then
-run all six native and both WebAssembly ownership suites before the next PR.
-The compiler infers caller-owned parameters for eligible nonrecursive direct
-workers. One contract drives call lowering, callee ownership, verification,
-entry ticks and failure cleanup. Borrowed flat records need an independent
-nonescape proof; field views keep their original boxes visible to tracing.
-The existing generic entries still consume their arguments and release them
-on success/failure. Functions used as values, exports, resource scopes, recursive
-functions and workers without a supported representation retain owned arguments.
-Plain-data eligibility reuses the tail-recursion type proof. Channels additionally
-require every caller to keep that exact channel after the call; using another
-tuple field is insufficient. This preserves native sink-context destruction
-timing and does not admit new captures or channel cycles.
+contains implementation `ad3cd792c079bac8d04bc1dcab69936eb62e97e5`, preserved by
+`roadmap/revision-direct-borrows-ad3cd792`. No second PR is open.
+Focused run `39423983460` passes 185 checks on each Linux host, none ignored or
+filtered. Both complete logs are audited in
+`/private/tmp/fwp-direct-borrow-repair-audit.json`. Broader run `39424662531`
+passes 231 checks on ARM macOS; the other five native and two WebAssembly jobs
+remain pending. Audit all completed logs with
+`/private/tmp/fwp-audit-direct-borrow-proof.py` before publishing the next PR.
 
-New unit cases cover read-only fields, transitive direct calls, escaping values,
-function values, recursion and the distinction between borrowing and nonescape.
-A native probe checks exact counts at O0/O2, caller failure, independent aliases,
-generic boxed entries and a deliberately leaked-owner control. The ownership
-checker now rejects a borrowed argument whose owner was consumed by a later
-argument. Formatting passes under the guard (1.57s); the documentation audit passes
-(2.50s), and formatting after the channel proof passes (1.47s). Repair formatting passes (1.75s) and documentation audit passes (2.96s).
-No local build was run. Initial run `39420410381` was cancelled while both jobs were still queued,
-before compilation; it supplies no evidence. Validation and channel counts will run in
-`channel-costs`; review all
-steps and generated binaries before any performance claim or next PR.
+The compiler infers caller-owned arguments for eligible nonrecursive direct
+workers. One contract drives lowering, ownership verification, entry ticks and
+failure cleanup. Flat tuple views need an independent nonescape proof and keep
+original boxes visible to tracing. Generic entries still consume their inputs.
+Returns/stores, function-value uses, resource scopes, recursive functions and
+unsupported representations retain existing ownership. Channels additionally
+require every live caller to keep that exact channel after the call; later use
+of another tuple field is insufficient. This preserves hidden native sink-context
+destruction timing without admitting new resource captures or channel cycles.
+
+The verifier now rejects a borrowed argument whose owner is consumed while
+preparing a later argument. Native probes check unique/shared owners, boxed
+entries, failure, cancellation at worker entry and a deliberate leaked-owner
+control. A checked-ARC channel case fails after receiving and verifies full
+reclamation at O0/O1/O2, with stack placement both enabled and disabled.
+The first focused run `39421484177` failed in two fixtures: missing constant type
+context and missing generated unwind support. Both complete logs were audited
+and both fixtures repaired together; the passing run above verifies the fixes.
+Initial `39420410381` was cancelled while queued and supplies no evidence.
+
+Passing artifacts: `/private/tmp/fwp-direct-borrow-final-costs`. All 180 profiles
+and 20 ordinary binaries were audited using `scripts/summarize-channel-costs.py`
+(1.68s under the guard). They reproduce all earlier diagnostic profiles and
+100 code hashes. Fresh text falls from one retain/message to zero, with unchanged
+allocations and peak charge; the four other cases' ordinary binaries are unchanged.
+Actual fresh-text exchange frames fall from 216 to 40 bytes on AMD64 and 224 to
+64 on ARM64, excluding callees. There is no elapsed-time or C/Rust comparison.
+The preparation worktree contains the new `docs/measurements/channel-direct-borrows.md`
+report, its raw JSON and updated ownership/design/pipeline/benchmark explanations.
+Documentation-only changes extend the passing source; compiler/test/workflow
+files match it. The next PR description is prepared in
+`/private/tmp/fwp-direct-borrow-pr-body.md` and still needs final acceptance links. No local build was run. Guarded repair formatting
+passes (1.75s), and the documentation audit passes all 69 Markdown files after staging the new
+report (2.38s).
+
+Next: finish all broader logs; merge PR #179 only after its exact-head gates pass.
+Then record its accepted tree, rebase this preparation onto the actual merge,
+finish the current report/handoff, run the documentation audit, and open the
+next single PR. Keep all nine production gates and documentation for its final head.
 
 ## Roadmap status
 
