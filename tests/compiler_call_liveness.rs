@@ -5,6 +5,138 @@ use std::path::PathBuf;
 use std::process::{Command, Output};
 
 #[test]
+fn borrowed_function_channels_preserve_native_context_destruction() {
+    let channel = MT::Con(
+        "std::Channel".into(),
+        vec![MT::Fun(
+            Box::new(MT::unit()),
+            Box::new(MT::con("std::String")),
+        )],
+    );
+    let integer = MT::con("std::I64");
+    let arrow = |input: MT, output: MT| MT::Fun(Box::new(input), Box::new(output));
+    let program = Program {
+        main: Some(4),
+        funcs: vec![
+            Func {
+                name: "close".into(),
+                arity: 1,
+                locals: vec![channel.clone()],
+                ty: arrow(channel.clone(), MT::unit()),
+                body: Body::Prim("channel.close".into()),
+            },
+            Func {
+                name: "observe".into(),
+                arity: 1,
+                locals: vec![channel.clone(), MT::unit()],
+                ty: arrow(channel.clone(), integer.clone()),
+                body: Body::Expr(Expr::Let(
+                    1,
+                    Box::new(Expr::Call(0, vec![Expr::Local(0)])),
+                    Box::new(Expr::Const(Value::I64(7))),
+                )),
+            },
+            Func {
+                name: "keep".into(),
+                arity: 1,
+                locals: vec![channel.clone(), integer.clone()],
+                ty: arrow(channel.clone(), channel.clone()),
+                body: Body::Expr(Expr::Let(
+                    1,
+                    Box::new(Expr::Call(1, vec![Expr::Local(0)])),
+                    Box::new(Expr::Local(0)),
+                )),
+            },
+            Func {
+                name: "make".into(),
+                arity: 1,
+                locals: vec![integer.clone()],
+                ty: arrow(integer, channel.clone()),
+                body: Body::Prim("channel.make".into()),
+            },
+            Func {
+                name: "main".into(),
+                arity: 0,
+                locals: vec![channel.clone(), channel],
+                ty: MT::unit(),
+                body: Body::Expr(Expr::Let(
+                    0,
+                    Box::new(Expr::Call(3, vec![Expr::Const(Value::I64(1))])),
+                    Box::new(Expr::Let(
+                        1,
+                        Box::new(Expr::Call(2, vec![Expr::Local(0)])),
+                        Box::new(Expr::Call(0, vec![Expr::Local(1)])),
+                    )),
+                )),
+            },
+        ],
+        ..Program::default()
+    };
+    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(std::io::sink()));
+    assert_eq!(interpreter.call(4, vec![]).unwrap(), Value::unit());
+    let emitted = fwp::cgen::generate(&program).unwrap();
+    let marker = "/* caller-owned parameters: 0 */";
+    assert_eq!(emitted.matches(marker).count(), 1, "{emitted}");
+    let runtime = emitted.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let probe = r#"
+static int destroyed;
+static int probe_sink(void *context, V value) {(void)context;(void)value;return 0;}
+static void probe_drop(void *context) {if(context!=&destroyed)abort();destroyed++;}
+static V native_channel(void) {
+ V value=fwp_p_channel_make_owned(1,fwp_closure_drop);
+ fwp_chan *channel=(fwp_chan *)(uintptr_t)value;
+ channel->sink=probe_sink;channel->sink_ctx=&destroyed;channel->owner.sink_drop=probe_drop;
+ return value;
+}
+int main(void) {
+ fwp_gc_start(__builtin_frame_address(0));fwp_init_consts();fwp_fns=fwp_fn_table;fwp_tasks_init();
+ for(int alias=0;alias<2;alias++){
+  destroyed=0;V channel=native_channel();
+  if(alias)fwp_rc_dup(channel);
+  V returned=f2(channel);
+  if(destroyed||returned!=channel)return 10;
+  if(*fwp_rc_slot(channel)!=1+alias)return 11;
+  if(!((fwp_chan *)(uintptr_t)channel)->closed)return 12;
+  fwp_channel_drop(returned);
+  if(alias){if(destroyed)return 13;fwp_channel_drop(channel);}
+  if(destroyed!=1)return 14;
+ }
+ /* The existing generic entry still consumes its input after the borrowed
+  * worker finishes, so a last owner destroys its context before return. */
+ destroyed=0;V channel=native_channel();
+ if(f1(channel)!=7||destroyed!=1)return 15;
+ if(fwp_cleanups)return 16;
+ return 0;
+}
+"#;
+    let control = runtime.replace(marker, &format!("{marker}\nfwp_rc_dup(l0);"));
+    let dir = fwp::cgen::TempDir::new("borrowed-channel-context").unwrap();
+    let exe = dir.join("probe.exe");
+    for opt in ["-O0", "-O2"] {
+        for (code, status) in [(&runtime, 0), (&control, 11)] {
+            fwp::cgen::compile_c(&format!("{code}\n{probe}"), &exe, opt).unwrap();
+            for poison in ["0", "1"] {
+                let output = Command::new(&exe)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    output.status.code(),
+                    Some(status),
+                    "{opt}, poison {poison}: {output:?}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn direct_borrowed_fields_preserve_owners_on_success_failure_and_cancellation() {
     let string = MT::con("std::String");
     let integer = MT::con("std::I64");

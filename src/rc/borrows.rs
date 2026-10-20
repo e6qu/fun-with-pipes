@@ -93,9 +93,12 @@ fn recursive(id: FuncId, graph: &[BTreeSet<FuncId>]) -> bool {
 fn parameter_type(prog: &Program, ty: &MT) -> bool {
     fn leaf(prog: &Program, ty: &MT) -> bool {
         let plain = |ty| crate::tailrec::plain_data(&prog.shapes, ty, &mut HashSet::new());
-        (plain(ty)
-            || matches!(ty, MT::Con(name, args)
-            if name == "std::Channel" && args.len() == 1 && plain(&args[0])))
+        // Borrow the handle, not its queued values. The continuing owner keeps
+        // the whole queue and native sink context alive; payload cycle/capture
+        // eligibility remains the separate ARC proof.
+        (matches!(ty, MT::Con(name, args)
+            if name == "std::Channel" && args.len() == 1)
+            || plain(ty))
             && record_fields(&prog.shapes, ty).is_none()
             && !matches!(prog.shapes.get(ty), Some(TypeShape::Adt(_)))
     }
@@ -550,6 +553,17 @@ mod tests {
             (MT::con("std::String"), "string.length", MT::con("std::I64")),
             (
                 MT::Con("std::Channel".into(), vec![MT::con("std::String")]),
+                "channel.close",
+                MT::unit(),
+            ),
+            (
+                MT::Con(
+                    "std::Channel".into(),
+                    vec![MT::Fun(
+                        Box::new(MT::unit()),
+                        Box::new(MT::con("std::String")),
+                    )],
+                ),
                 "channel.close",
                 MT::unit(),
             ),
