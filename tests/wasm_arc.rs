@@ -656,6 +656,21 @@ fn wasm_entries_keep_cycle_checks_for_browser_and_wasi() {
         std::fs::write(&source, "main = 42 | echo\n").unwrap();
         emit(&source, &dir.join("entry.c"), &[], target);
         std::fs::write(&source, "functions : I64 -> Channel[() -> String] ! {Async}\nfunctions = channel.make\nmain = functions 1 | channel.close\n").unwrap();
+        emit(&source, &dir.join("empty-functions.c"), &[], target);
+        // An empty queue has no captured owner. Reject an actual callback
+        // retaining its own queue, rather than the old blanket function ban.
+        std::fs::write(
+            &source,
+            r#"
+callbacks : I64 -> Channel[() -> () ! {Async}] ! {Async}
+callbacks = channel.make
+keep : Channel[() -> () ! {Async}] -> () -> () ! {Async}
+keep = then2 const channel.close
+send-self = fork channel.send id keep
+main = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore
+"#,
+        )
+        .unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
             .args(["build", "--gc", "arc", "--emit-c", "--target", target])
             .arg(&source)
@@ -665,7 +680,7 @@ fn wasm_entries_keep_cycle_checks_for_browser_and_wasi() {
             .unwrap();
         assert!(!output.status.success(), "{target}: {output:?}");
         assert!(
-            String::from_utf8_lossy(&output.stderr).contains("channel payloads cannot contain"),
+            String::from_utf8_lossy(&output.stderr).contains("queued function's captured"),
             "{target}: {output:?}"
         );
     }
@@ -726,10 +741,10 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
             let drop = "c->owner.queue.drop(element);";
             assert_eq!(measured.matches(drop).count(), 1);
             let missing_queue = measured.replace(drop, "(void)element;");
-            let retained = if fixture == "tasks" {
-                &missing_state
+            let (retained_label, retained) = if fixture == "tasks" {
+                ("missing-state", &missing_state)
             } else {
-                &missing_queue
+                ("missing-queue", &missing_queue)
             };
             for asyncify in [false, true] {
                 if asyncify && !have_asyncify {
@@ -741,7 +756,7 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
                         ("ordinary", &ordinary, 0),
                         ("measured", &measured, 0),
                         ("omitted", &omitted, 244),
-                        ("retained-owner", retained, 244),
+                        (retained_label, retained, 244),
                     ] {
                         let mut code = if label == "ordinary" {
                             candidate.clone()

@@ -126,6 +126,12 @@ jobs:
         with:
           path: ${{ runner.temp }}/fwp-windows-deps
           key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Complete compiler unit tests with native TLS
+        if: ${{ !cancelled() && inputs.full && steps.windows_tls.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          cargo test --lib -- --nocapture 2>&1 | Tee-Object windows-unit-tests.log
+          exit $LASTEXITCODE
       - name: Native TLS and executable ownership
         id: tls_tests
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
@@ -203,4 +209,5 @@ jobs:
             windows-host.txt
             windows-probe.log
             ownership-evidence/udp/
+            windows-unit-tests.log
             ownership-evidence/tail/

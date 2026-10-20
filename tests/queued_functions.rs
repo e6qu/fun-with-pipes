@@ -72,6 +72,15 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     std::fs::write(path.join(format!("{label}.c")), &code).unwrap();
                     std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
                     std::fs::write(path.join(format!("{label}.stdout")), &actual.stdout).unwrap();
+                    let (tool, flag) = if cfg!(target_os = "macos") {
+                        ("otool", "-tvV")
+                    } else if cfg!(target_os = "windows") {
+                        ("llvm-objdump", "-d")
+                    } else {
+                        ("objdump", "-d")
+                    };
+                    let assembly = checked(Command::new(tool).arg(flag).arg(&binary));
+                    std::fs::write(path.join(format!("{label}.asm")), assembly.stdout).unwrap();
                 }
                 assert_eq!(
                     (&actual.stdout, &actual.stderr),
@@ -107,6 +116,7 @@ keep = then2 const channel.close
         ("returned", "returned = keep | const | apply ()\nsend-self = fork channel.send id returned\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n"),
         ("nested", "lists : I64 -> Channel[List[() -> () ! {Async}]] ! {Async}\nlists = channel.make\nmain = lists 1 | tap (flip channel.send [keep (callbacks 1)]) | channel.recv | ignore\n"),
         ("two-queues", "main = (callbacks 1, callbacks 1) | tap (fork channel.send .0 (.1 | keep)) | tap (fork channel.send .1 (.0 | keep)) | both (.0 | channel.recv) (.1 | channel.recv) | ignore\n"),
+        ("caught", "caught : Channel[() -> () ! {Async}] -> Result[(), () -> () ! {Async}]\ncaught = attempt (keep | fail)\nfrom-error = caught | match\n    Err _ -> id\n    Ok _ -> const task.yield\nmain = callbacks 1 | tap (fork channel.send id from-error) | channel.recv | option.map (apply ()) | ignore\n"),
     ] {
         let source = dir.join(format!("{name}.fwp"));
         std::fs::write(&source, format!("{prefix}\n{body}")).unwrap();
@@ -120,6 +130,51 @@ keep = then2 const channel.close
         assert!(!build.status.success(), "{name}: accepted an unproved captured channel");
         let error = String::from_utf8_lossy(&build.stderr);
         assert!(error.contains("queued function") && error.contains("captured") && error.contains("Channel"), "{name}: {error}");
+    }
+}
+
+#[test]
+fn queued_autodiff_functions_require_the_receivers_scope() {
+    let dir = fwp::cgen::TempDir::new("queued-ad-scope").unwrap();
+    let source = dir.join("main.fwp");
+    for (callback, accepted) in [("ad.scope (apply 1)", true), ("apply 1", false)] {
+        std::fs::write(&source, format!("callbacks : I64 -> Channel[I64 -> I64] ! {{Async}}\ncallbacks = channel.make\nmain = callbacks 1 | tap (flip channel.send ad.tape) | channel.recv | option.map ({callback}) | ignore\n")).unwrap();
+        let cfile = dir.join("main.c");
+        let built = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--gc", "arc", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile)
+            .output()
+            .unwrap();
+        assert_eq!(built.status.success(), accepted, "{callback}: {built:?}");
+        if accepted {
+            let reference = checked(
+                Command::new(env!("CARGO_BIN_EXE_fwp"))
+                    .env("FWP_NO_OPT", "1")
+                    .args(["run", "--interp"])
+                    .arg(&source),
+            );
+            let code = std::fs::read_to_string(cfile).unwrap();
+            let binary = dir.join("main.exe");
+            fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+            let actual = checked(
+                Command::new(binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0"),
+            );
+            assert_eq!(
+                (&actual.stdout, &actual.stderr),
+                (&reference.stdout, &reference.stderr)
+            );
+        } else {
+            assert!(
+                String::from_utf8_lossy(&built.stderr).contains("outside an autodiff scope"),
+                "{built:?}"
+            );
+        }
     }
 }
 

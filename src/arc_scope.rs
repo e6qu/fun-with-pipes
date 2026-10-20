@@ -1032,6 +1032,48 @@ mod tests {
     }
 
     #[test]
+    fn runtime_function_producers_and_external_queues_need_known_sources() {
+        let mut program = state_program(true);
+        let getter = program.funcs[1].ty.clone();
+        let unit = MT::unit();
+        program.funcs.push(Func {
+            name: "unmodeled-function-producer".into(),
+            arity: 1,
+            locals: vec![unit.clone()],
+            ty: arrow(unit, getter.clone()),
+            body: Body::Prim("unmodeled-function-producer".into()),
+        });
+        let mut proof = Proof {
+            program: &program,
+            captures: BTreeMap::new(),
+            inputs: BTreeMap::new(),
+            outputs: BTreeMap::new(),
+            callback_values: BTreeMap::new(),
+            channel_values: BTreeMap::new(),
+            changed: false,
+            validate: false,
+            state_values: Targets::new(),
+            error_values: Targets::new(),
+        };
+        let produced = proof.function(3, STATE, &[Targets::new()]).unwrap();
+        assert!(produced.contains(&Closure::Unknown));
+        assert!(proof
+            .queued_targets(&produced, &mut BTreeSet::new())
+            .is_err());
+        let channel = MT::Con("std::Channel".into(), vec![getter]);
+        program.funcs.push(Func {
+            name: "external-queue".into(),
+            arity: 1,
+            locals: vec![channel.clone()],
+            ty: arrow(channel.clone(), channel),
+            body: Body::Expr(Expr::Local(0)),
+        });
+        assert!(check(&program, &[4])
+            .unwrap_err()
+            .contains("external function-bearing channels"));
+    }
+
+    #[test]
     fn caught_error_payloads_keep_their_function_targets() {
         let mut program = state_program(false);
         let unit = MT::unit();
