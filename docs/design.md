@@ -474,6 +474,16 @@ operation; its effect on generated code and performance still needs measurement.
 Strict alias analysis remains enabled elsewhere. Byte reinterpretation, such as
 floating-point bits and packed array loads, continues to use `memcpy`.
 
+Errors use C's `setjmp` to save a handler and `longjmp` to return to it after
+releasing pending owners. C does not guarantee the value of a changed,
+non-volatile automatic object after that jump
+([C11 draft §7.13.2.1](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf)).
+The error value and its type descriptor are therefore volatile fields. Task
+scopes also keep their changing child list, count and capacity volatile: failure
+must still find every spawned task to cancel, join and release it. Unchanged
+links and saved depths do not need this qualification. This adds no heap object
+or source-language rule; it constrains C optimization of those accesses.
+
 When a record already exists as separate local fields, selecting its last-used
 field can transfer that field's ownership and release only the discarded fields.
 The new conversion path also checks whether a heap record has exactly one owner:
@@ -1017,6 +1027,16 @@ native sink context regardless of payload representation. This does not prove
 the payload graph acyclic: `arc.rs` and `arc_scope.rs` still check stored captures,
 cycles and call scopes independently. The extended handle proof is tracked in
 the handoff until native cleanup tests and measurements pass.
+
+Ownership lowering also forwards temporary aliases into borrowed call arguments.
+For example, an inlined call may name a channel field, use it to send, then keep
+the original field in the next loop state. The temporary needs no independent
+owner if that same field is required after the send. The proof follows enclosing
+`let` and match continuations, checks branches independently, and does not treat
+a later read of another field as sufficient. Calls, argument evaluation and
+traps stay in order. Consuming or unknown uses, escapes and resource scopes keep
+ordinary ownership. The [handoff](development-state.md) records actual validation;
+simple alias tests alone do not establish a count reduction in a larger program.
 
 The caller keeps borrowed values and original record boxes visible to tracing
 through the call, and remains responsible for failure and cancellation cleanup.

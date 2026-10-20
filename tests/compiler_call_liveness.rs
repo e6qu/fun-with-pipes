@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::process::{Command, Output};
 
 #[test]
-fn temporary_channel_fields_borrow_the_continuing_owner() {
+fn temporary_channel_fields_preserve_owners_and_nonlocal_cleanup() {
     let channel = MT::Con("std::Channel".into(), vec![MT::con("std::String")]);
     let integer = MT::con("std::I64");
     let pair = MT::Record(vec![
@@ -75,39 +75,72 @@ fn temporary_channel_fields_borrow_the_continuing_owner() {
     let code = code.replace(
         close,
         &format!(
-            "static int expected_owners;\n{close}\n\
-             if(expected_owners && *fwp_rc_slot(ch)!=expected_owners)exit(71);"
+            "static int expected_owners, close_mode;\n\
+             static fwp_task cancelled_alias_task;\n{close}\n\
+             if(expected_owners && *fwp_rc_slot(ch)!=expected_owners)exit(71);\n\
+             if(close_mode==1)fwp_fail(0,0);\n\
+             if(close_mode==2){{fwp_cur=&cancelled_alias_task;\
+             cancelled_alias_task.cancelled=1;fwp_check_cancel();}}"
         ),
     );
     let probe = r#"
+/* These changed automatic subobjects must survive longjmp even when a
+ * particular compiler happens to preserve their unqualified versions. */
+_Static_assert(_Generic(&((fwp_handler*)0)->value,volatile V*:1,default:0),"error value must survive longjmp");
+_Static_assert(_Generic(&((fwp_handler*)0)->desc,const fwp_desc *volatile *:1,default:0),"error type must survive longjmp");
+_Static_assert(_Generic(&((fwp_scope*)0)->tasks,fwp_task **volatile *:1,default:0),"scope tasks must survive longjmp");
+_Static_assert(_Generic(&((fwp_scope*)0)->n,volatile size_t*:1,default:0),"scope count must survive longjmp");
+_Static_assert(_Generic(&((fwp_scope*)0)->cap,volatile size_t*:1,default:0),"scope capacity must survive longjmp");
 static int destroyed;
+static volatile V live_channel;
 static int probe_sink(void *context,V value){(void)context;(void)value;return 0;}
 static void probe_drop(void *context){if(context!=&destroyed)abort();destroyed++;}
 int main(void){
  fwp_gc_start(__builtin_frame_address(0));fwp_init_consts();fwp_fns=fwp_fn_table;fwp_tasks_init();
- for(int alias=0;alias<2;alias++){
+ for(volatile int mode=0;mode<3;mode++)for(volatile int alias=0;alias<2;alias++){
   destroyed=0;
-  V channel=fwp_p_channel_make_owned(1,0);
-  fwp_chan *queue=(fwp_chan *)(uintptr_t)channel;
+  live_channel=fwp_p_channel_make_owned(1,0);
+  fwp_chan *queue=(fwp_chan *)(uintptr_t)live_channel;
   queue->sink=probe_sink;queue->sink_ctx=&destroyed;queue->owner.sink_drop=probe_drop;
-  if(alias)fwp_rc_dup(channel);
+  if(alias)fwp_rc_dup(live_channel);
   expected_owners=1+alias;
-  V returned=f1(fwp_rc_fresh(fwp_record(2,(V[]){channel,42})));
-  if(returned!=channel||destroyed||!queue->closed)return 72;
-  if(*fwp_rc_slot(returned)!=expected_owners)return 73;
-  fwp_channel_drop(returned);
-  if(alias){if(destroyed)return 74;fwp_channel_drop(channel);}
+  close_mode=mode;
+  fwp_task *previous=fwp_cur;
+  static fwp_handler h;h.prev=fwp_handlers;h.state_depth=fwp_state_len;h.cleanup=fwp_cleanups;
+  fwp_handlers=&h;
+  memset(&cancelled_alias_task,0,sizeof cancelled_alias_task);
+  if(mode==2){
+   if(!setjmp(cancelled_alias_task.base)){
+    (void)f1(fwp_rc_fresh(fwp_record(2,(V[]){live_channel,42})));return 76;
+   }
+   if(!cancelled_alias_task.unwinding)return 76;
+  }else if(!setjmp(h.jb)){
+   V returned=f1(fwp_rc_fresh(fwp_record(2,(V[]){live_channel,42})));
+   if(mode || returned!=live_channel||destroyed||!queue->closed)return 72;
+   if(*fwp_rc_slot(returned)!=expected_owners)return 73;
+   fwp_channel_drop(returned);
+  }else{
+   if(mode!=1)return 76;
+  }
+  if(mode && alias && *fwp_rc_slot(live_channel)!=1)return 77;
+  fwp_cur=previous;fwp_handlers=h.prev;close_mode=0;
+  if(alias){if(destroyed)return 74;fwp_channel_drop(live_channel);}
   if(destroyed!=1||fwp_cleanups)return 75;
  }
  return 0;
 }
 "#;
     let control = code.replace(close, &format!("{close}\nfwp_rc_dup(ch);"));
+    let leaked = probe.replace("fwp_channel_drop(returned);", "(void)returned;");
     let dir = fwp::cgen::TempDir::new("borrowed-field-context").unwrap();
     let exe = dir.join("probe.exe");
-    for opt in ["-O0", "-O2"] {
-        for (candidate, status) in [(&code, 0), (&control, 71)] {
-            fwp::cgen::compile_c(&format!("{candidate}\n{probe}"), &exe, opt).unwrap();
+    for opt in ["-O0", "-O2", "-O3"] {
+        for (candidate, case_probe, status) in [
+            (&code, probe, 0),
+            (&control, probe, 71),
+            (&code, leaked.as_str(), 75),
+        ] {
+            fwp::cgen::compile_c(&format!("{candidate}\n{case_probe}"), &exe, opt).unwrap();
             for poison in ["0", "1"] {
                 let output = Command::new(&exe)
                     .env_remove("FWP_GC")

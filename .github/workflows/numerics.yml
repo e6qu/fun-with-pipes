@@ -122,13 +122,13 @@ jobs:
           FWP_INVENTORY_EXPECTED_HEAD: ${{ github.sha }}
         run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output channel-cost-evidence/ownership-inventory.json
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --lib --test channel_transfer_costs --test call_effects --test inline_caf_ownership --test variant_alias_ownership --test variant_conversion_ownership --test compiler_call_liveness --test worker_preparation_ownership --test arc_execution --test queued_functions --test channel_cycle_ownership --test integer_output -- -D warnings
+      - run: cargo clippy --lib --test channel_transfer_costs --test call_effects --test inline_caf_ownership --test variant_alias_ownership --test variant_conversion_ownership --test compiler_call_liveness --test worker_preparation_ownership --test arc_execution --test queued_functions --test channel_cycle_ownership --test integer_output --test task_ownership -- -D warnings
       - name: Verify direct-call borrowing proofs
         if: ${{ !cancelled() }}
         run: cargo test --lib
       - name: Verify callback effects and variant ownership
         if: ${{ !cancelled() }}
-        run: cargo test --no-fail-fast --test call_effects --test golden_check --test inline_caf_ownership --test variant_alias_ownership --test variant_conversion_ownership --test compiler_call_liveness --test worker_preparation_ownership --test arc_execution --test queued_functions --test channel_cycle_ownership --test integer_output
+        run: cargo test --no-fail-fast --test call_effects --test golden_check --test inline_caf_ownership --test variant_alias_ownership --test variant_conversion_ownership --test compiler_call_liveness --test worker_preparation_ownership --test arc_execution --test queued_functions --test channel_cycle_ownership --test integer_output --test task_ownership
       - name: Compare results and count allocations and retains
         if: ${{ !cancelled() }}
         run: cargo test --test channel_transfer_costs -- --ignored --nocapture
