@@ -11,16 +11,21 @@ empty body. Verify the resulting tree/message before cancelling redundant CI.
 
 Independent preparation is on `measure-channel-transfers`, worktree
 `/private/tmp/fwp-channel-transfers`. Keep one active PR. The next concrete action
-here is runner validation of the channel operation-count fixtures and the effect
-inference repair they exposed. Do not claim a runtime optimization yet.
-Next: run the explicit `channel-costs` evidence suite, audit every job and fix
-all failures while preserving PR #175's final head.
+here is an ownership-transfer implementation selected from the measured counts.
+Next: make typed sends consume their message owner, preserve aliases and all
+failure/cancellation checks, then repeat counts while preserving PR #175's head.
 [The protocol](measurements/channel-transfer-protocol.md) defines what is counted.
 
 The new examples exposed later-stage Error/IO effects leaking into an earlier
 stored callback's type during composition. Open both temporary call rows with
 known effects from the other stage; keep the stored callback's own effects intact.
-Regression checks include missing-IO rejection. Full validation is pending.
+Run `39354805966` at immutable `2b56fd1c` passed on Linux ARM64 and AMD64:
+nine callback-effect checks, all type snapshots and five count-profile cases on
+each host. All completed logs were audited. The report validates 180 samples and
+20 ordinary binaries. Fresh payloads have one owner yet incur one queue retain
+per message; shared payloads have multiple owners. ARC ends with zero charged
+storage and no collections. Full production validation of this repair remains
+required in its eventual delivery.
 Local guarded fixture checks: three cases pass interpretation and ARC C emission;
 the two function-receive cases reproduce the old inference failure. The saved
 compiler predates the repair. Formatting passed; no local compiler/native build

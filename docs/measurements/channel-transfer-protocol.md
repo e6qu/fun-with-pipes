@@ -6,6 +6,31 @@ value alive. A temporary value may be movable into the queue; a value still used
 elsewhere needs sharing. Measurements must distinguish those cases before a
 transfer optimization is selected. No runtime change or speedup is claimed yet.
 
+## First measured baseline
+
+[Run 39354805966](https://github.com/e6qu/fun-with-pipes/actions/runs/39354805966)
+passed on both Linux architectures at source `2b56fd1c`, preserved by
+`roadmap/revision-channel-counts-2b56fd1c`. Each host passed nine callback-effect
+tests, the complete type-checker snapshots and all five measured programs.
+[The audited report](channel-count-baseline-2026-10-20.json) retains 180 count
+samples and hashes of 20 ordinary binaries, their C and disassembly.
+
+Every fresh text/function message had one counted owner at queue insertion,
+yet the queue performed one retain per message. Total ARC retains were four
+per fresh-text exchange and five per fresh-function exchange. Deliberately shared
+text/function cases used seven/nine total retains per exchange, with one inside
+the queue; their payloads already had multiple owners. Closed sends performed
+zero queue retains and two other retains per attempt. All ARC cases finished
+with zero charged storage and no collections.
+
+The fresh cases' peak charge rose by 48 bytes between 16 and 1024 messages:
+the first input reaches 16-character messages, while the larger input reaches
+the full 64-character cycle. Shared cases had unchanged peak charge. This
+identifies a bounded payload-size difference, not accumulating queue storage.
+It does not measure total process memory. The next change should transfer the
+sender's existing owner into the queue and preserve independent aliases, then
+repeat these profiles and failure/cancellation checks.
+
 ## Programs and inputs
 
 `tests/fixtures/channel_transfer_*.fwp` contain five small programs. Each exported
