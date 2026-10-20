@@ -310,12 +310,13 @@ requires every live caller to use that same channel after the call; later use
 of another tuple field does not qualify. Resource captures, recursive workers,
 unknown calls and escaping arguments retain their existing ownership rules.
 
-The follow-on proof also permits borrowing a handle whose queue contains
+The proof also permits borrowing a handle whose queue contains
 functions. It borrows the channel itself; it does not borrow, move or grant
 permission to store its messages. The caller's continuing owner keeps the queue
 and its native callback context alive. The separate checks for queued captures,
 cycles and State/autodiff scopes still apply in ARC mode. Resource scopes still
-prevent selection. This extension is under validation in the handoff.
+prevent selection. The [function-channel measurements](measurements/function-channel-borrows.md)
+record passing focused Linux checks, including native-context destruction.
 
 Failure or cancellation releases caller-owned storage through the caller's
 cleanup scope. Generic function entries still consume their inputs, including
@@ -323,9 +324,10 @@ boxed tuples. Tests exercise these boundaries with independent aliases,
 collector stress, reuse poisoning and an intentionally leaked-owner control.
 An ARC case checks complete reclamation after an exchange fails. Passing those
 focused Linux checks and [binary measurements](measurements/channel-direct-borrows.md)
-show zero retains per fresh-text exchange, with unchanged allocations and peak
-charged storage. Other cases keep their measured counts. Broader platform and
-final production acceptance remain tracked in the handoff.
+show zero retains per fresh-text exchange; the handle extension also removes
+the fresh-function exchange's remaining retain. Allocations and peak charged
+storage are unchanged. Shared and closed cases keep their measured counts.
+Broader platform and final production acceptance remain tracked in the handoff.
 
 ### Functions stored in channels
 

@@ -439,8 +439,10 @@ and traps. A static bound proves that combining the lengths fits I64; the
 generated sum still uses ordinary checked addition. Shared strings, unknown
 string producers, floating-point displays and wider integers keep their storage.
 The private integer-length operation has no source-language declaration.
-This preparation needs the checks recorded in the [handoff](development-state.md)
-before any allocation or speed claim.
+The [Linux measurements](measurements/integer-text.md) record zero managed leaf
+allocations in the probe, actual machine code and comparison with direct
+character counting in C/Rust. The [handoff](development-state.md) tracks full
+production acceptance.
 
 ## Runtime
 
