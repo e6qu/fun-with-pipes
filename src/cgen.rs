@@ -4,6 +4,8 @@
 
 use std::collections::HashMap;
 use std::fmt::Write;
+#[cfg(unix)]
+use std::os::unix::process::ExitStatusExt;
 
 use crate::ir::*;
 use crate::value::Value;
@@ -10949,7 +10951,6 @@ pub(crate) fn compiler_failure(context: &str, output: &std::process::Output) -> 
     write!(message, "compiler status: {}", output.status).unwrap();
     #[cfg(unix)]
     {
-        use std::os::unix::process::ExitStatusExt;
         write!(
             message,
             " (signal={:?}, core_dumped={})",

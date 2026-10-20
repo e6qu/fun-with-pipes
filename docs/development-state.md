@@ -2,32 +2,42 @@
 
 ## Next action
 
-The active delivery branch is `queued-function-delivery`, based on accepted main.
-Use `gh pr view queued-function-delivery` for its PR and current checks.
-Next: require all nine production jobs and documentation for its exact final
-head, repair every failure, then squash merge with a one-line subject and empty
-body. Verify the merged tree/message before cancelling redundant post-merge CI.
-Preserve passing heads while remaining gates run; audit every failed job and
-completed target before a combined repair push.
+PR [#175](https://github.com/e6qu/fun-with-pipes/pull/175), branch
+`queued-function-delivery`, is frozen at `d1df84d96642c5f097f915f63cb58bf82fcb855f`.
+Production run `39353280539` has passed benchmarks; eight native jobs remain in
+progress. Documentation run `39353280537` passed. Require every final-head gate,
+audit failures together, then squash merge with an explicit one-line subject and
+empty body. Verify the resulting tree/message before cancelling redundant CI.
 
-Compiler/test source `c04f01fbeb1dc0f1a1efc07473bcc894b864175a` is preserved by
-`roadmap/revision-queued-functions-c04f01fb`. Focused macOS ARM64 run `39352725240`
-passes 144 unit, seven queue and one generated-entry check, none ignored. Linux
-AMD64 counterpart `39352728274` passes the same 152 checks. Subsequent delivery edits are
-documentation only. Full final-head native/WASI acceptance is still required.
+Independent preparation is on `measure-channel-transfers`, worktree
+`/private/tmp/fwp-channel-transfers`. Keep one active PR. The next concrete action
+here is runner validation of the channel operation-count fixtures and the effect
+inference repair they exposed. Do not claim a runtime optimization yet.
+Next: run the explicit `channel-costs` evidence suite, audit every job and fix
+all failures while preserving PR #175's final head.
+[The protocol](measurements/channel-transfer-protocol.md) defines what is counted.
 
-[PR #174](https://github.com/e6qu/fun-with-pipes/pull/174) is accepted as
-`3ec71969089a7ab95ff065f7b611c74534fbe326`. All nine jobs and docs passed; its
-merge tree matches tested head `67f23346`. The message is one line, 73 characters,
-without body or trailers. Redundant post-merge production `39351187907` was
-cancelled after verification. [History](roadmap-history.md#numeric-hashing-and-integer-output-pr-174)
-and [the C/Rust comparison](measurements/numeric-output-peers-2026-10-20.md)
-retain actual results and remaining performance gaps.
+The new examples exposed later-stage Error/IO effects leaking into an earlier
+stored callback's type during composition. Open both temporary call rows with
+known effects from the other stage; keep the stored callback's own effects intact.
+Regression checks include missing-IO rejection. Full validation is pending.
+Local guarded fixture checks: three cases pass interpretation and ARC C emission;
+the two function-receive cases reproduce the old inference failure. The saved
+compiler predates the repair. Formatting passed; no local compiler/native build
+or timing run was performed. The five fixtures use explicit constant-stack loops,
+without building an input list. Incidental function-local imports in `cgen.rs`
+and `tests/exec.rs` were moved to their module import blocks.
 
-Preparation branch `prove-queued-function-ownership` remains in
-`/private/tmp/fwp-channel-functions`; the primary branch contains its changes
-on accepted main and now owns further work. Do not resume the older worktree.
-Immutable `roadmap/revision-queued-functions-ca3c9c0f` preserves earlier evidence.
+PR #175 compiler source `c04f01fbeb1dc0f1a1efc07473bcc894b864175a` is preserved by
+`roadmap/revision-queued-functions-c04f01fb`. Focused macOS ARM64 `39352725240` and
+Linux AMD64 `39352728274` each pass 144 unit, seven queue and one generated-entry
+check, none ignored. Later delivery changes are documentation only.
+
+PR [#174](https://github.com/e6qu/fun-with-pipes/pull/174) is accepted as
+`3ec71969089a7ab95ff065f7b611c74534fbe326`: all nine jobs and docs passed;
+merge tree/message were verified. [History](roadmap-history.md#numeric-hashing-and-integer-output-pr-174)
+retains results. Older `prove-queued-function-ownership` preparation is historical;
+do not resume it.
 
 ## Implementation
 
@@ -76,8 +86,8 @@ pass on the focused macOS runner.
   the empty-origin repair before the additional recursive-type regression.
 - Final compiler source `c04f01fb`, focused run `39352725240`: all 152 checks
   pass on each of macOS ARM64 and Linux AMD64, including the two additional
-  program regressions and recursive type units. There is no new accepted platform
-  support is accepted until the final production gates pass.
+  program regressions and recursive type units. No new platform support is accepted
+  until the final production gates pass.
 
 Tests cover returned/nested functions, scopes, errors, cancelled transfers,
 closed/undrained queues and repeated work. A C probe checks unchanged charged

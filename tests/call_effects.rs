@@ -235,3 +235,25 @@ fn argument_mismatch_reports_the_value_without_permitted_effects() {
         }
     }
 }
+
+#[test]
+fn later_stages_do_not_change_stored_callback_effects() {
+    for source in [
+        "call : (() -> String) -> () ! {IO}\ncall = apply () | print\n",
+        "call : Option[() -> String] -> () ! {IO}\ncall = option.map (apply ()) | echo\n",
+        "call : Channel[() -> String] -> () ! {Async, IO}\ncall = channel.recv | option.map (apply ()) | echo\n",
+        "call : (() -> String) -> String ! {Error[String]}\ncall = apply () | if (eq \"bad\") fail id\n",
+    ] {
+        check_source("later-callback-effects.fwp", source, None)
+            .unwrap_or_else(|error| panic!("{}", error.rendered));
+    }
+    for source in [
+        "bad : (() -> String ! {IO}) -> String\nbad = apply () | id\n",
+        "bad : (() -> String ! {IO}) -> String ! {Error[String]}\nbad = apply () | if (eq \"bad\") fail id\n",
+    ] {
+        let error = check_source("missing-callback-io.fwp", source, None)
+            .err()
+            .unwrap_or_else(|| panic!("accepted missing callback IO"));
+        assert!(error.rendered.contains("IO"), "{}", error.rendered);
+    }
+}

@@ -1,0 +1,22 @@
+# Each message is a new constant function capturing a newly allocated string.
+# Receiving and applying it must recover the string of the expected length.
+callbacks : I64 -> Channel[() -> String] ! {Async}
+callbacks = channel.make
+width : I64 -> I64
+width = rem 64 | add 1
+give : String -> () -> String
+give = const
+message = width | flip string.repeat "x" | give
+exchange : (Channel[() -> String], I64) -> () ! {Async, Error[String]}
+exchange =
+    tap (fork channel.send .0 (.1 | message))
+    | both (.0 | channel.recv | option.map (apply () | string.length) | option.unwrap-or 0) (.1 | width)
+    | uncurry eq
+    | if id (const ()) (const "wrong queue value" | fail)
+step : (Channel[() -> String], I64, I64) -> Step[(Channel[() -> String], I64, I64), I64] ! {Async, Error[String]}
+step = if (fork lt .2 .1)
+    (tap (both .0 .1 | exchange) | make { 0 = .0, 1 = .1 | add 1, 2 = .2 } | Again)
+    (tap (.0 | channel.close) | .1 | Stop)
+export work : I64 -> I64 ! {Async, Error[String]}
+work = make { 0 = const 1 | callbacks, 1 = const 0, 2 = id } | loop step
+main = 16 | work | echo
