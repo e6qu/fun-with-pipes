@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, hash, hash-windows, hash-costs, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -18,15 +18,55 @@ on:
         options: [all, checks, api, stdio, http-rest, http-mcp]
         default: all
       source_revision:
-        description: Full source commit for CI profiling or a server recheck
+        description: Full source commit for profiling, evidence audits or server rechecks
         type: string
       evidence_run:
-        description: Completed evidence run to use for generated-code comparisons
+        description: Completed test or measurement run consumed by the selected suite
+        type: string
+      costs_run:
+        description: Completed hash-costs run for the hash evidence audit
         type: string
       baseline_run:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  hash_alias:
+    if: inputs.suite == 'hash-alias'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Record source and build the probe compiler
+        run: |
+          mkdir -p hash-alias-evidence
+          git rev-parse HEAD > hash-alias-evidence/source.txt
+          cargo build --bin fwp
+      - name: Compare GCC and Clang aliasing behavior
+        run: python3 scripts/probe-hash-aliasing.py --fwp target/debug/fwp --cc gcc --cc clang --optimization=-O1 --optimization=-O2 --optimization=-O3 --output hash-alias-evidence
+      - name: Complete hash ownership tests with GCC
+        if: ${{ !cancelled() }}
+        env:
+          CC: gcc
+        run: cargo test --no-fail-fast --test hash_ownership --test static_constants --test closure_ownership --test map_set_ownership --test field_moves
+      - name: Complete hash ownership tests with Clang
+        if: ${{ !cancelled() }}
+        env:
+          CC: clang
+        run: cargo test --no-fail-fast --test hash_ownership --test static_constants --test closure_ownership --test map_set_ownership --test field_moves
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: hash-alias-${{ matrix.runner }}
+          path: hash-alias-evidence/
+          if-no-files-found: error
   shutdown:
     if: inputs.suite == 'shutdown'
     strategy:
@@ -382,6 +422,96 @@ jobs:
             collection-report/artifacts/*.log
             collection-report/artifacts/**/*.disassembly.txt
             collection-report/artifacts/**/*.symbols.txt
+          if-no-files-found: error
+  integer_output_report:
+    if: inputs.suite == 'integer-output-report'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_HEAD: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install binary inspection tools
+        run: sudo apt-get update && sudo apt-get install -y llvm
+      - name: Reject incomplete output evidence
+        run: python3 scripts/test-integer-output-evidence.py
+      - name: Audit six native hosts and their actual binaries
+        run: python3 scripts/summarize-integer-output.py --run "$EVIDENCE_RUN" --head "$EVIDENCE_HEAD" --artifacts integer-output-report/artifacts --llvm-bin /usr/bin --output integer-output-report/report.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-output-report
+          path: |
+            integer-output-report/report.json
+            integer-output-report/artifacts/*.json
+            integer-output-report/artifacts/*.log
+            integer-output-report/artifacts/**/*.disassembly.txt
+            integer-output-report/artifacts/**/*.symbols.txt
+          if-no-files-found: error
+  hash_specialization_repeat:
+    if: inputs.suite == 'hash-specialization-repeat'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_HEAD: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check binary verification and sample balance
+        run: python3 scripts/test-hash-evidence.py
+      - name: Repeat the same hash binaries with C and Rust
+        run: python3 scripts/repeat-hash-specialization.py --run "$EVIDENCE_RUN" --source "$EVIDENCE_HEAD" --host "${{ matrix.runner }}" --samples 24 --warmups 2 --output hash-repeat
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: hash-specialization-repeat-${{ matrix.runner }}
+          path: |
+            hash-repeat/report.json
+            hash-repeat/source-run.json
+          if-no-files-found: error
+  hash_report:
+    if: inputs.suite == 'hash-report'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      COSTS_RUN: ${{ inputs.costs_run }}
+      EVIDENCE_HEAD: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install binary inspection tools
+        run: sudo apt-get update && sudo apt-get install -y llvm
+      - name: Check incomplete evidence rejection
+        run: python3 scripts/test-hash-evidence.py
+      - name: Audit native hash checks, measurements and saved binaries
+        run: python3 scripts/summarize-hashing.py --tests-run "$EVIDENCE_RUN" --costs-run "$COSTS_RUN" --head "$EVIDENCE_HEAD" --artifacts hash-report/artifacts --llvm-bin /usr/bin --output hash-report/report.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: hash-report
+          path: |
+            hash-report/report.json
+            hash-report/artifacts/*.json
+            hash-report/artifacts/*.log
+            hash-report/artifacts/**/*.disassembly.txt
+            hash-report/artifacts/**/*.symbols.txt
           if-no-files-found: error
   collection_build:
     if: inputs.suite == 'collection-build'
@@ -1277,15 +1407,26 @@ jobs:
           name: vectors-${{ matrix.runner }}
           path: vector-evidence/
           if-no-files-found: ignore
-      - name: Streaming hash ownership and canonical protocol
+      - name: Numeric hashing, direct output and ownership
+        id: numeric_check
         if: inputs.suite == 'hash' || inputs.suite == 'hash-windows'
+        shell: bash
         env:
+          FWP_INTEGER_OUTPUT_ARTIFACTS: integer-output-evidence
           FWP_HASH_ARTIFACTS: hash-evidence
         run: |
+          mkdir -p integer-output-evidence
+          git rev-parse HEAD > integer-output-evidence/source.txt
           cargo test --lib rc::tests
           cargo test --lib escape::tests
           cargo test --lib ownership::tests
-          cargo test --no-fail-fast --test range_array --test hash_ownership --test protocol --test arc_execution
+          cargo test --no-fail-fast --test range_array --test hash_ownership --test protocol --test arc_execution --test integer_output --test scalar_traps --test exec_protocol_ownership
+      - uses: actions/upload-artifact@v7
+        if: always() && (inputs.suite == 'hash' || inputs.suite == 'hash-windows') && steps.numeric_check.outcome != 'skipped'
+        with:
+          name: integer-output-${{ matrix.runner }}
+          path: integer-output-evidence/
+          if-no-files-found: error
       - uses: actions/upload-artifact@v7
         if: always() && (inputs.suite == 'hash' || inputs.suite == 'hash-windows')
         with:

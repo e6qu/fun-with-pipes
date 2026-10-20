@@ -135,8 +135,10 @@ constraint excludes functions and resources. Integer `bit.and`, `bit.or`,
 `bit.xor` and `bit.not` are also total: every valid input has a result. The existing
 fusion analysis recognizes these contracts, so `map hash | fold bit.xor 0u64`
 can avoid its intermediate result list. It keeps captured inputs alive through
-the ordinary ownership rules. Hash still uses its runtime type description. Its separately reviewed nonescape
-contract proves that the input object is used only during the call, allowing
+the ordinary ownership rules. Numeric layouts can use the
+[specialized traversal](#hashing-numeric-layouts-without-repeated-type-dispatch);
+other layouts use a runtime type description. A separate nonescape contract
+proves that the input object is used only during the call, allowing
 existing stack placement for temporary tuples. Borrowing alone does not imply
 this guarantee: other borrowed inputs can be returned or retained.
 
@@ -379,6 +381,48 @@ allocating an encoded copy or adjusting their reference counts. The interpreter'
 buffered encoder remains an independent reference. [PR #151](roadmap-history.md#synchronous-wasi-ownership-and-streaming-hashes-pr-151)
 records acceptance; allocation removal alone does not establish a timing improvement.
 
+### Hashing numeric layouts without repeated type dispatch
+
+For example, hashing `(3, range 0 16 | array.from-list)` reads the eight-byte
+integer `3`, the array length and sixteen eight-byte elements. Those types are
+known when C is generated. The compiler can emit that traversal directly instead
+of asking the general hash visitor to identify each element's type at runtime.
+
+This covers inline integers, F32/F64, flat numeric lists/arrays/sets,
+maps with numeric keys and values, and records composed of those types. Other
+representations keep their existing descriptor traversal. It introduces no
+new source syntax. `FWP_TYPED_HASH=0` selects general traversal for comparison.
+
+The generated loops retain the canonical encoding: unsigned LEB128 lengths,
+little-endian scalar bytes, original floating-point bits and key/field order.
+Packed and full-word arrays use their respective storage widths; slices borrow
+their existing data address. Hashing adds no owners or temporary encoded buffer.
+The [measurements](benchmarks.md#numeric-hash-specialization) retain native/WASI
+checks, matching allocation counts for specialized/general traversal and mixed
+timing results against C/Rust. Direct output separately removes a temporary
+String. Removing dispatch does not guarantee a speed improvement.
+
+### Printing integers without an owned temporary
+
+The direct-output preparation recognizes an immediately consumed integer
+`show | print`, including `echo` after inlining. Before ownership lowering adds
+String temporaries, it replaces that pair with a typed backend-only print
+operation that borrows the integer and returns unit. It formats into a 24-byte local
+buffer, then writes the same digits and newline to the program output stream.
+For example, `-17 | echo` prints `-17` on one line without requiring an owned
+String solely for that print. The argument still evaluates before output.
+Shared strings and displays for other types keep their normal evaluation.
+This removes one managed allocation; it does not promise allocation-free libc
+IO or a timing improvement. The [report](measurements/integer-output-2026-10-20.json)
+records the six-host checks and actual code sizes; the
+[handoff](development-state.md) records production acceptance.
+The combined `hash` evidence suite checks all six native hosts. Once it passes,
+`integer-output-report` takes its `evidence_run` and full `source_revision`, checks
+all 76 hash, output and neighboring ownership tests on each host, and inspects
+the 144 saved output semantic-test binaries.
+Allocation counts come from a separate test that detects an intentionally added
+String. The report does not infer whole-process heap use from that narrower check.
+
 ## Runtime
 
 The runtime supplies operations generated programs cannot express as simple C
@@ -392,6 +436,22 @@ number bits that resemble an address must not be reference-counted as a pointer.
 Specialized numeric functions use concrete C types instead. Records, variants
 and partially applied functions may need heap objects, but eligible local values
 can remain as separate fields, C structs or stack storage.
+
+Two C pointers **alias** when they can access the same storage. C compilers may
+assume that pointers to unrelated structure types do not alias, even if the
+structures have identical field offsets. fwp emits fixed-size structures for
+stack and static values, then accesses them through runtime structures with
+variable-length trailing arrays. Those views need an explicit aliasing contract.
+
+The object, closure, string, array and map view types use `__may_alias__`, supported
+by [GCC](https://gcc.gnu.org/onlinedocs/gcc/Common-Attributes.html) and
+[Clang](https://clang.llvm.org/docs/UsersManual.html). Their pointers can then
+access the concrete generated structures without allowing the optimizer to
+discard the stores that initialized them. Field sizes, offsets and alignment
+remain the same. This annotation changes compiler assumptions and adds no runtime
+operation; its effect on generated code and performance still needs measurement.
+Strict alias analysis remains enabled elsewhere. Byte reinterpretation, such as
+floating-point bits and packed array loads, continues to use `memcpy`.
 
 When a record already exists as separate local fields, selecting its last-used
 field can transfer that field's ownership and release only the discarded fields.

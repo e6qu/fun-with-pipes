@@ -2,85 +2,101 @@
 
 ## Next action
 
-Branch `direct-integer-range-sets` contains the next delivery on accepted main.
-[PR #172](roadmap-history.md#compact-set-storage-pr-172) passed all nine production
-jobs and documentation, then merged as `c3f7f75591a0a073f443fed45855a1b084963729`.
-Its one-line squash message and identical tested tree were verified. Redundant
-post-merge production run `39311332528` was cancelled; its PR gates remain intact.
+[PR #174](https://github.com/e6qu/fun-with-pipes/pull/174) remains open on
+`numeric-hash-delivery`. The initial head `d8554041` failed both Linux jobs and
+is superseded by the combined repair. Each complete log has 777 passed tests and one failed
+captured-tuple hash check. The other seven production jobs and documentation
+passed. All failures were audited before preparing the combined repair.
 
-Next: publish this batch and audit every final-head production job and the
-new C/Rust benchmark. Fix every failure before merging. Require all nine jobs
-and documentation for the exact final commit; use a one-line squash subject
-and an empty body. Focused evidence below does not replace those gates.
+Candidate `0bb385ab3fd35e5c1ff85f3af4923bbcf8d7afd8`, preserved by
+`roadmap/revision-numeric-output-0bb385ab`, combines numeric hashing, explicit C
+aliasing rules and integer printing without a temporary String. Its focused
+checks and measurements pass. Binary collectors `39342427055` (hash) and
+`39342433339` (output) also pass, inspecting 144 binaries each.
 
-## Current batch
+Next: finish production acceptance of the final PR update. Read the current head
+and checks with `gh pr view 174 --json headRefOid,statusCheckRollup`; require all
+nine production jobs plus documentation for that exact head before squash merge.
+Keep the one-line commit subject at most 80 characters with an empty body.
+The next ownership task is the queued-function proof linked below.
 
-`range lo hi | set.from-list` writes inline integer keys directly into one owned
-set buffer. Empty/descending ranges use static storage. Bounds keep their order;
-byte limits are checked before narrowing to the target's size type, including
-32-bit WASI. Boxed integers and shared input lists keep their existing paths.
-There is no new syntax or public API.
+## Current evidence
 
-Three native tests cover values, integer widths, bound effects/traps, sharing,
-allocation counts and failure cleanup in ARC/tracing at O0/O2. Deliberately
-missing size guards or releases must fail; ordinary construction must fail a
-one-allocation budget. WASI adds real execution and oversized-container checks.
-`bench/range-set` adds a million-key C/Rust/fwp comparison with matching canonical
-hashing. Its full timings and the latest ISize/USize/shared-list fixture additions
-still need final-head production validation.
+All entries below use candidate `0bb385ab`; full builds and benchmarks run on
+GitHub. Sharing one six-host compiler build for hashing/output reduces CI work.
 
-## Evidence and limits
+| Check | Run | Result |
+|---|---|---|
+| Six native hosts | `39340918706` | 76 tests per host, 456 total; none ignored |
+| Both-Linux WASI | `39340923998` | 24 tests per architecture; none ignored |
+| GCC and Clang, both Linux architectures | `39340935160` | 34 tests per host plus 48 diagnostic binaries each |
+| Four-host C/Rust comparisons | `39340929383` | All four pass; profiles and saved binaries retained |
+| Same-binary repeat | `39341754517` | Four hosts, 24 balanced samples, 1,152 timed executions |
+| Hash/output binary collectors | `39342427055` / `39342433339` | Complete logs, 288 binaries, source identities and tracing checks pass |
 
-- All six hosts passed [collection run 39303492049](https://github.com/e6qu/fun-with-pipes/actions/runs/39303492049)
-  at `7901a576019a01c490efe248c15730fac0602701`, preserved by
-  `roadmap/revision-range-sets-7901a576`. All-target Clippy, 44 tests per host
-  and nine paired cost cases passed. No focused test was ignored.
-- [Report run 39311772543](https://github.com/e6qu/fun-with-pipes/actions/runs/39311772543)
-  audited all 264 tests and inspected 228 actual binaries. Its collector is
-  `b0b2b6ae8dcfaabbb6430ac5a70ae6f89540fd8f`, preserved by
-  `roadmap/revision-range-report-b0b2b6ae`. The
-  [complete report](measurements/range-sets-2026-10-19.json) retains samples,
-  hardware, compilers, commands, counts and binary hashes/sections/symbols.
-- Linux WASI run `39300774252` passed 24 tests on each architecture, none ignored,
-  including actual 32-bit storage-limit rejection. The earlier Linux-only run
-  `39300769086` also passed; its [report](measurements/range-sets-linux-2026-10-19.json)
-  is a separate measurement on an EPYC 7763.
-- The current compiler/runtime matches the measured revision exactly:
-  `git diff 7901a576 -- src runtime` is empty. Later changes add benchmark sources,
-  explicit tracing selection in the general benchmark runner, fixture cases,
-  documentation and reports. They still require final-head testing.
+[Aliasing diagnostics](measurements/numeric-aliasing-2026-10-20.json) reproduce
+the old GCC/ARC wrong hash at O1/O2/O3 on both architectures. Explicit runtime
+views and the diagnostic no-strict-alias control produce the correct result.
+Earlier source `facc68e1` passed the same comparison in `39339268457`. Its saved
+O2 assembly shows that GCC removed tuple-field initialization stores with the
+former views and keeps them with the repair. Five runtime view types now carry
+`__may_alias__`; field widths, offsets and alignment do not change. Global alias
+analysis stays enabled. See [the runtime explanation](design.md#runtime).
 
-For 4,096 keys, construction falls from 4,099 requests / 196,624 requested bytes
-to one request / 32,776 bytes. Empty sets make no request. Counters exclude
-allocator overhead; releasing results restores ARC charge to baseline.
-At 65,536 keys, direct/ordinary whole-process median ratios span 0.345–0.831.
-Windows ranges overlap; 32-key medians are slightly slower on four hosts.
-[The benchmark guide](benchmarks.md#direct-integer-range-sets) explains timing
-scope, differences from C/Rust, memory and inspected SIMD loops. No universal
-speedup, zero-heap or optimal-register claim follows.
+Direct integer output recognizes resolved `show | print`, including inlined
+`echo`, before ownership lowering. It formats in a 24-byte local buffer and
+preserves digits, stream routing and evaluation/trap order. Shared strings and
+other displays keep their work. This is not the whole machine frame and does not
+prove allocation-free libc output. `FWP_DIRECT_INTEGER_PRINT=0` and
+`FWP_TYPED_HASH=0` are explicit ordinary-output/general-hash comparison controls.
+The Windows arithmetic probe now selects binary stdout; production permanently
+covers it and integer output. Multi-target preflight commands continue after
+failures. WASI allocation diagnostics recognize the new output operation.
+
+## Measurement interpretation
+
+[The benchmark guide](benchmarks.md#numeric-hash-specialization) explains inputs,
+C/Rust differences, timing scope and overhead. Current specialized/general ARC
+profiles match: one managed input allocation, zero retains, no remaining charge.
+Direct output removes the earlier second request. Counts exclude allocator
+metadata and libc storage. Current results must replace earlier performance
+claims; the pre-repair JSON reports remain linked as historical measurements.
+
+[Repeated results](measurements/numeric-hashing-repeat-2026-10-20.json) show Linux
+ARM64 large-array/set CPU medians 3.2%/1.4% lower, all 24 pairs faster with separated
+ranges. Other hosts overlap. Linux AMD64 set median is 0.11% higher, with 12/24
+pairs faster: inconclusive. Small fwp programs still use up to 32.1% more CPU than
+C and 18.3% more than Rust. AMD64 changed from Xeon 8573C to EPYC 9V74 between
+initial/repeat; each within-run comparison uses one host. No universal speedup.
+
+The [failed head's six-program report](measurements/numeric-hash-pre-repair-peers-2026-10-19.md)
+is retained. Its pipeline median moved from 16.983 to 26.089 ms against PR #173,
+but pipeline C and all three executables were byte-identical. Changed code cannot
+explain that timing shift; it does not erase the remaining C/Rust gap.
 
 ## Local checks
 
-All workloads used the primary checkout's `python3 scripts/local-guard.py`,
-serially with unchanged limits. No full compiler build or benchmark ran locally.
+Every workload uses `python3 scripts/local-guard.py` with unchanged limits.
+No full compiler build or benchmark ran locally.
 
-- Rust/fwp formatting, Python syntax and `git diff --check` pass.
-- `python3 scripts/test-collection-evidence.py`: six tests pass.
-- `python3 scripts/test-native-test-runner.py Coverage.test_repository_targets_are_assigned_exactly_once`:
-  passes; the new test target belongs to exactly one macOS shard.
-- `python3 scripts/check-roadmap.py`: 60 document sets, 106 immutable anchors
-  and seven work areas passed in 3.37 seconds after adding the final report.
-- The accepted compiler at `/private/tmp/fwp-170-accepted-macos/fwp-macos-arm64/fwp`
-  ran the sixteen-line boundary/shared-input fixture. Guarded runtime probes
-  checked O0/O2 counts and failing negative controls; CI now confirms integration.
-- `/private/tmp/fwp-check-range-peers.py` passed in 3.05 seconds: C/Rust/raw-fwp
-  outputs agree at 0/1/257 keys, with C/Rust warnings treated as errors.
-- `/private/tmp/fwp-read-range-six-hosts.py` downloaded only the report and two
-  disassemblies in 6.36 seconds. Full inspection ran on GitHub.
-- The guard once refused below 64 GiB free disk. Removed only old downloaded
-  copies in `/private/tmp/fwp-server-entry-evidence/39078070919` after verifying
-  all 24 originals remain on GitHub. Reports/worktrees remain intact; free disk
-  returned to 65 GiB and the unchanged guard passed afterward.
+- `cargo fmt --all -- --check`: pass, 1.51 seconds.
+- `scripts/check-roadmap.py`: 62 link sets, 106 anchors and seven work areas,
+  2.63 seconds with the retained reports and current documentation.
+- Hash/output/collection evidence validators: 4/3/6 pass, 0.23/0.15/0.15 seconds.
+- `/private/tmp/fwp-check-candidate-scripts.py`: seven changed Python scripts
+  parse, 0.23 seconds. Real ARM macOS log audit: all 76 checks, 0.21 seconds.
+- `/private/tmp/fwp-audit-candidate-wasi.py`: both complete logs pass, 3.76 seconds.
+- `/private/tmp/fwp-retain-candidate-alias.py`: 96 diagnostic binaries and 68
+  GCC/Clang tests audited, 9.45 seconds. Its first local audit needed terminal
+  color stripping; no runtime result or assertion was weakened.
+- `/private/tmp/fwp-retain-candidate-repeats.py`: all binary/source hashes,
+  balanced samples and medians verified before retention, 6.76 seconds.
+- `/private/tmp/fwp-retain-candidate-report.py hash 12229472801` and
+  `output 12229656881`: source, count and profile checks pass, 8.01/3.24 seconds.
+  Actual disassembly extraction passes in 9.51 seconds. Reviewed Linux set loops
+  have no inner-loop calls or spills; AMD64 saves one register around the function.
+  The caller still constructs a stack tuple. ARM macOS print-then-trap reserves
+  112 bytes for its main-thread frame; runtime startup remains.
 
 ## Roadmap status
 
@@ -94,7 +110,10 @@ serially with unchanged limits. No full compiler build or benchmark ran locally.
 | 6 | In progress | Reproducible comparisons and regression budgets |
 | 7 | In progress | Representative larger applications |
 
-All seven areas in [PLAN.md](../PLAN.md) remain open. Persistent subscriptions,
-unknown retained captures, resource-owning tail frames and mutual recursion need
-further proofs. JIT is excluded. Keep one live next action; preserve accepted
-measurements in history instead of carrying obsolete instructions forward.
+[PR #173](roadmap-history.md#direct-integer-range-sets-pr-173) merged as
+`eb03eb58fb642500234b9bbe647adbcf59765415` after all gates passed; its one-line
+message and identical tested files were verified. All seven areas remain open.
+The [queued-function proof](ownership.md#next-proof-functions-stored-in-channels)
+must follow captured owners and calls through queues. No eligibility rule has
+changed. Persistent subscriptions, unknown retained captures, resource-owning
+tail frames and mutual recursion still need proofs. JIT is excluded.

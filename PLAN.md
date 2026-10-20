@@ -93,14 +93,19 @@ outside the benchmark suite.
    Acyclic nested channel types now have native and WebAssembly acceptance,
    including queued owners, aliases, failure and cancellation. Persistent
    subscriptions and unknown retained captures still need ownership contracts.
+   The [queued-function proof](docs/ownership.md#next-proof-functions-stored-in-channels)
+   specifies the next capture and call-scope analysis without new syntax.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.
-2. Validate direct construction of immediately consumed integer range sets.
+2. Validate numeric hashing without repeated per-element type dispatch.
    [Compact key-only sets](docs/roadmap-history.md#compact-set-storage-pr-172)
-   passed all production gates. Remove the range's temporary list
-   and sorting buffers; preserve bound order and aliases, check storage limits
-   before allocation, and compare allocation counts and actual binaries. The
+   and [direct integer range sets](docs/roadmap-history.md#direct-integer-range-sets-pr-173)
+   passed all production gates. Repair the C aliasing defect exposed by GCC,
+   combine integer output without a temporary String, and refresh their correctness,
+   allocation and machine-code measurements. Finish final-head acceptance; retain
+   mixed timing results and C/Rust gaps in
+   [the measurements](docs/benchmarks.md#numeric-hash-specialization). The
    [mixed-tail-recursion delivery](docs/roadmap-history.md#mixed-tail-recursion-pr-171)
    passed; resource-owning tail frames and mutual recursion need separate proofs.
 3. Use representative applications and equivalent-work measurements to select

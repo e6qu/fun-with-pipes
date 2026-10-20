@@ -119,12 +119,17 @@ static uintptr_t fwp_stack_low = 0;
 
 /* ---------------------------------------------------------------- objects */
 
-typedef struct { uint32_t tag; uint32_t n; V f[]; } fwp_obj;
-typedef struct { uint64_t len; char d[]; } fwp_str;
-typedef struct { uint32_t fn; uint32_t n; V a[]; } fwp_clo;
-typedef struct { uint64_t len; V d[]; } fwp_arr;
-/* map: len entries, keys and values interleaved; sets use values of 0 */
-typedef struct { uint64_t len; V d[]; } fwp_map;
+/* Generated stack and static values have fixed-size trailing arrays. These
+ * runtime views must alias their concrete structure types, including after
+ * inlining. GCC and Clang otherwise may discard stores to the concrete object
+ * before a read through the flexible-array view. This is a representation
+ * contract, not a global disabling of strict alias analysis. */
+typedef struct __attribute__((__may_alias__)) { uint32_t tag; uint32_t n; V f[]; } fwp_obj;
+typedef struct __attribute__((__may_alias__)) { uint64_t len; char d[]; } fwp_str;
+typedef struct __attribute__((__may_alias__)) { uint32_t fn; uint32_t n; V a[]; } fwp_clo;
+typedef struct __attribute__((__may_alias__)) { uint64_t len; V d[]; } fwp_arr;
+/* Maps interleave key/value words; sets store one word per key. */
+typedef struct __attribute__((__may_alias__)) { uint64_t len; V d[]; } fwp_map;
 typedef struct { FILE *f; uint64_t refs; char path[]; } fwp_file;
 
 #define OBJ(v) ((fwp_obj *)(uintptr_t)(v))

@@ -500,6 +500,99 @@ fn reuse_enabled() -> bool {
     std::env::var("FWP_REUSE").map_or(true, |v| v != "0")
 }
 
+/// Replace only immediate integer show/print pairs before inserting ownership
+/// temporaries. The backend-only primitive takes the original scalar and returns
+/// unit, so normal ownership analysis never creates a String owner for it.
+fn integer_output_program(prog: &Program) -> Program {
+    fn rewrite(
+        e: &mut Expr,
+        funcs: &[Func],
+        made: &mut Vec<Func>,
+        targets: &mut HashMap<FuncId, FuncId>,
+    ) {
+        match e {
+            Expr::Trace(_, body)
+            | Expr::Dup(_, body)
+            | Expr::Drop(_, body)
+            | Expr::BorrowGlobal(_, _, body)
+            | Expr::ResourceRegion { body, .. } => rewrite(body, funcs, made, targets),
+            Expr::Call(_, args) | Expr::Construct(_, args) | Expr::Record(args) => {
+                for arg in args {
+                    rewrite(arg, funcs, made, targets);
+                }
+            }
+            Expr::Apply(function, args) => {
+                rewrite(function, funcs, made, targets);
+                for arg in args {
+                    rewrite(arg, funcs, made, targets);
+                }
+            }
+            Expr::Field(record, _) => rewrite(record, funcs, made, targets),
+            Expr::SetFields(record, fields) => {
+                rewrite(record, funcs, made, targets);
+                for (_, value) in fields {
+                    rewrite(value, funcs, made, targets);
+                }
+            }
+            Expr::Let(_, value, body) => {
+                rewrite(value, funcs, made, targets);
+                rewrite(body, funcs, made, targets);
+            }
+            Expr::Match(value, arms) => {
+                rewrite(value, funcs, made, targets);
+                for (_, body) in arms {
+                    rewrite(body, funcs, made, targets);
+                }
+            }
+            Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => {}
+        }
+        let Expr::Call(print, args) = e else {
+            return;
+        };
+        if *print >= funcs.len() || !matches!(&funcs[*print].body, Body::Prim(s) if s == "print") {
+            return;
+        }
+        let [Expr::Call(show, values)] = args.as_mut_slice() else {
+            return;
+        };
+        if *show >= funcs.len()
+            || !matches!(&funcs[*show].body, Body::Prim(s) if s == "show")
+            || values.len() != 1
+        {
+            return;
+        }
+        let argument = funcs[*show].ty.params(1).0[0];
+        if int64_kind(argument).is_none() {
+            return;
+        }
+        let target = *targets.entry(*show).or_insert_with(|| {
+            let id = funcs.len() + made.len();
+            made.push(Func {
+                name: "print._integer".into(),
+                arity: 1,
+                locals: vec![argument.clone()],
+                ty: MT::Fun(
+                    Box::new(argument.clone()),
+                    Box::new(funcs[*print].ty.params(1).1.clone()),
+                ),
+                body: Body::Prim("print._integer".into()),
+            });
+            id
+        });
+        *e = Expr::Call(target, std::mem::take(values));
+    }
+    let mut lowered = prog.clone();
+    let mut made = Vec::new();
+    let mut targets = HashMap::new();
+    for function in &mut lowered.funcs {
+        if let Body::Expr(body) = &mut function.body {
+            rewrite(body, &prog.funcs, &mut made, &mut targets);
+        }
+    }
+    lowered.funcs.extend(made);
+    lowered
+}
+
 /// `prog` with its function bodies' references counted (`src/rc.rs`).
 fn counted_program(prog: &Program) -> Program {
     let mut p = prog.clone();
@@ -1293,6 +1386,82 @@ fn scalar(mt: &MT) -> Option<Scalar> {
         "F64" => Scalar::F64,
         _ => return None,
     })
+}
+
+/// Emit canonical hashing for inline numbers, their flat collections and
+/// records containing those values. The input stays borrowed throughout.
+/// Other representations retain their descriptor-based traversal.
+fn numeric_hash_body(
+    shapes: &Shapes,
+    ty: &MT,
+    value: &str,
+    active: &mut Vec<MT>,
+) -> Option<String> {
+    let bytes = |ty| match scalar(ty)? {
+        Scalar::Signed(bits) | Scalar::Unsigned(bits) => Some(bits / 8),
+        Scalar::F32 => Some(4),
+        Scalar::F64 => Some(8),
+    };
+    if let Some(width) = bytes(ty) {
+        return Some(format!(
+            "hash_state = fwp_hash_le(hash_state, {value}, {width});\n"
+        ));
+    }
+    if active.contains(ty) {
+        return None;
+    }
+    let depth = active.len();
+    active.push(ty.clone());
+    let v = format!("hash_value{depth}");
+    let i = format!("hash_index{depth}");
+    let n = format!("hash_length{depth}");
+    let result = (|| {
+        let fields = match ty {
+            MT::Record(fields) => Some(fields),
+            _ => match shapes.get(ty) {
+                Some(TypeShape::Record(fields)) => Some(fields),
+                _ => None,
+            },
+        };
+        if let Some(fields) = fields {
+            let mut body = format!("{{ V {v} = {value}; (void){v};\n");
+            for (index, (_, field)) in fields.iter().enumerate() {
+                body.push_str(&numeric_hash_body(
+                    shapes,
+                    field,
+                    &format!("OBJ({v})->f[{index}]"),
+                    active,
+                )?);
+            }
+            body.push_str("}\n");
+            return Some(body);
+        }
+        let MT::Con(name, elements) = ty else {
+            return None;
+        };
+        let widths = elements.iter().map(bytes).collect::<Option<Vec<_>>>()?;
+        let mut body = format!("{{ V {v} = {value};\n");
+        match (name.as_str(), widths.as_slice()) {
+            ("std::Array", [width]) => {
+                let bits = width * 8;
+                body.push_str(&format!("uint64_t {n} = fwp_array_len({v});\nconst unsigned char *hash_data{depth} = fwp_array_data({v});\nhash_state = fwp_hash_leb128(hash_state, {n});\nfor (uint64_t {i} = 0; {i} < {n}; {i}++) {{\n#if FWP_PACKED_ARRAYS\nuint{bits}_t hash_word{depth};\n#else\nV hash_word{depth};\n#endif\nmemcpy(&hash_word{depth}, hash_data{depth} + {i} * sizeof hash_word{depth}, sizeof hash_word{depth});\nhash_state = fwp_hash_le(hash_state, hash_word{depth}, {width});\n}}\n"));
+            }
+            ("std::List", [width]) => {
+                body.push_str(&format!("hash_state = fwp_hash_leb128(hash_state, fwp_list_len({v}));\nwhile ({v}) {{\nhash_state = fwp_hash_le(hash_state, OBJ({v})->f[0], {width});\n{v} = OBJ({v})->f[1];\n}}\n"));
+            }
+            ("std::Set", [width]) => {
+                body.push_str(&format!("uint64_t {n} = MAP({v})->len;\nhash_state = fwp_hash_leb128(hash_state, {n});\nfor (uint64_t {i} = 0; {i} < {n}; {i}++)\nhash_state = fwp_hash_le(hash_state, MAP({v})->d[{i}], {width});\n"));
+            }
+            ("std::Map", [key, item]) => {
+                body.push_str(&format!("uint64_t {n} = MAP({v})->len;\nhash_state = fwp_hash_leb128(hash_state, {n});\nfor (uint64_t {i} = 0; {i} < {n}; {i}++) {{\nhash_state = fwp_hash_le(hash_state, MAP({v})->d[2 * {i}], {key});\nhash_state = fwp_hash_le(hash_state, MAP({v})->d[2 * {i} + 1], {item});\n}}\n"));
+            }
+            _ => return None,
+        }
+        body.push_str("}\n");
+        Some(body)
+    })();
+    active.pop();
+    result
 }
 
 impl Scalar {
@@ -6498,10 +6667,24 @@ impl<'p> Gen<'p> {
                     if sym == "min" { "<=" } else { ">=" }
                 )
             }
-            "hash" => format!("return fwp_hash(l0, {});", self.desc(&p(0))),
+            "hash" => {
+                let body = if std::env::var("FWP_TYPED_HASH").map_or(true, |v| v != "0") {
+                    numeric_hash_body(&self.prog.shapes, &p(0), "l0", &mut Vec::new())
+                } else {
+                    None
+                };
+                match body {
+                    Some(body) => format!("/* numeric hash without type dispatch */\nuint64_t hash_state = 0xcbf29ce484222325ULL;\n{body}return hash_state;"),
+                    None => format!("return fwp_hash(l0, {});", self.desc(&p(0))),
+                }
+            }
             "not" => "return l0 == FWP_TRUE ? FWP_FALSE : FWP_TRUE;".into(),
             "and" => "return (l0 == FWP_TRUE && l1 == FWP_TRUE) ? FWP_TRUE : FWP_FALSE;".into(),
             "or" => "return (l0 == FWP_TRUE || l1 == FWP_TRUE) ? FWP_TRUE : FWP_FALSE;".into(),
+            "print._integer" => format!(
+                "return fwp_print_integer(l0, {});",
+                u8::from(int64_kind(&p(0)).expect("integer output requires an inline integer"))
+            ),
             "show" => match int64_kind(&p(0)) {
                 Some(true) => "return fwp_show_i64(l0);".into(),
                 Some(false) => "return fwp_show_u64(l0);".into(),
@@ -9189,6 +9372,13 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
 }
 
 fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
+    // Fuse before ownership lowering separates the temporary String from print.
+    let direct_output = if std::env::var("FWP_DIRECT_INTEGER_PRINT").is_ok_and(|v| v == "0") {
+        None
+    } else {
+        Some(integer_output_program(prog))
+    };
+    let prog = direct_output.as_ref().unwrap_or(prog);
     let arc = native_options().arc;
     if arc {
         if !matches!(

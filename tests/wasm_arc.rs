@@ -241,6 +241,8 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
 "#),
         ("compact-sets", include_str!("fixtures/compact_sets.fwp")),
         ("hashes", include_str!("fixtures/hash_values.fwp")),
+        ("numeric-hashes", include_str!("fixtures/numeric_hashes.fwp")),
+        ("integer-output", include_str!("fixtures/integer_output.fwp")),
         ("hash-fusion", include_str!("fixtures/hash_fusion.fwp")),
         ("hash-borrowed-fields", include_str!("fixtures/hash_borrowed_fields.fwp")),
         ("range-arrays", include_str!("fixtures/range_arrays.fwp")),
@@ -380,9 +382,14 @@ static void wasm_arc_check_shutdown(void) {
     let measured = thread.replace(begin, &format!("{begin}    wasm_arc_base_live = wasm_arc_live; wasm_arc_base_bytes = wasm_arc_bytes; wasm_arc_base_counts = fwp_wasm_counts_live;\n    if (atexit(wasm_arc_check_shutdown)) _Exit(245);\n"));
     let mut result = code.to_owned();
     result.replace_range(start..finish, &format!("{observer}\n{measured}"));
-    let print = "static V fwp_p_print(V s) {";
-    assert_eq!(result.matches(print).count(), 1);
-    result.replace(print, &format!("{print} wasm_arc_phase++;"))
+    for print in [
+        "static V fwp_p_print(V s) {",
+        "static V fwp_print_integer(V value, int is_signed) {",
+    ] {
+        assert_eq!(result.matches(print).count(), 1);
+        result = result.replace(print, &format!("{print} wasm_arc_phase++;"));
+    }
+    result
 }
 
 #[test]

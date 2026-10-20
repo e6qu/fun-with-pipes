@@ -1,0 +1,22 @@
+# Each value prints its decimal digits and one newline, including both extremes.
+main = [
+    -128i8 | echo,
+    127i8 | echo,
+    255u8 | echo,
+    -32768i16 | echo,
+    32767i16 | echo,
+    65535u16 | echo,
+    -2147483648i32 | echo,
+    2147483647i32 | echo,
+    4294967295u32 | echo,
+    -9223372036854775808 | echo,
+    9223372036854775807 | echo,
+    18446744073709551615u64 | echo,
+    -1isize | echo,
+    2147483647isize | echo,
+    4294967295usize | echo,
+    0 | echo,
+    0u64 | echo,
+    123456789012345678901234567890i128 | echo,
+    1.25 | echo,
+] | ignore

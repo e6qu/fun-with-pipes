@@ -7,6 +7,144 @@ fn checked(command: &mut Command) -> Output {
 }
 const SOURCE: &str = include_str!("fixtures/hash_values.fwp");
 const OBSERVER: &str = include_str!("fixtures/hash_observer.c");
+
+#[test]
+fn numeric_hash_loops_preserve_widths_slices_and_shared_values() {
+    let dir = fwp::cgen::TempDir::new("numeric-hashes").unwrap();
+    let input = dir.join("values.fwp");
+    std::fs::write(&input, include_str!("fixtures/numeric_hashes.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let raw = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    for typed in ["0", "1"] {
+        for packed in ["0", "1"] {
+            for memory in ["arc", "tracing"] {
+                let cfile = dir.join("values.c");
+                checked(
+                    Command::new(compiler)
+                        .env_remove("FWP_NO_OPT")
+                        .env("FWP_TYPED_HASH", typed)
+                        .env("FWP_PACKED_ARRAYS", packed)
+                        .args(["build", "--gc", memory, "--emit-c"])
+                        .arg(&input)
+                        .arg("-o")
+                        .arg(&cfile),
+                );
+                let code = std::fs::read_to_string(cfile).unwrap();
+                assert_eq!(
+                    code.contains("/* numeric hash without type dispatch */"),
+                    typed == "1"
+                );
+                for opt in ["-O0", "-O2"] {
+                    let binary = dir.join("values.exe");
+                    fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                    let stress = if memory == "arc" { "0" } else { "1" };
+                    let actual = checked(
+                        Command::new(&binary)
+                            .env_remove("FWP_GC")
+                            .env("FWP_GC_STRESS", stress)
+                            .env("FWP_GC_VERIFY", stress)
+                            .env("FWP_REUSE_VERIFY", stress),
+                    );
+                    assert_eq!(actual.stdout, raw.stdout, "{typed}/{packed}/{memory}/{opt}");
+                    assert_eq!(actual.stderr, raw.stderr, "{typed}/{packed}/{memory}/{opt}");
+                    if let Some(root) = std::env::var_os("FWP_HASH_ARTIFACTS") {
+                        let root = std::path::Path::new(&root).join("numeric");
+                        std::fs::create_dir_all(&root).unwrap();
+                        let label = format!("typed-{typed}-packed-{packed}-{memory}{opt}");
+                        std::fs::write(root.join(format!("{label}.c")), &code).unwrap();
+                        std::fs::copy(&binary, root.join(format!("{label}.exe"))).unwrap();
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn numeric_hash_loops_allocate_nothing_and_do_not_adjust_reference_counts() {
+    let dir = fwp::cgen::TempDir::new("numeric-hash-counts").unwrap();
+    let input = dir.join("values.fwp");
+    std::fs::write(&input, include_str!("fixtures/numeric_hashes.fwp")).unwrap();
+    for memory in ["arc", "tracing"] {
+        let cfile = dir.join("values.c");
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_TYPED_HASH", "1")
+                .env("FWP_PACKED_ARRAYS", "1")
+                .args(["build", "--gc", memory, "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(cfile).unwrap();
+        let preamble =
+            "#if defined(_WIN32) && !defined(_WIN32_WINNT)\n#define _WIN32_WINNT 0x0a00\n#endif\n";
+        assert_eq!(code.matches(preamble).count(), 1);
+        let mut code = code.replacen(
+            preamble,
+            &format!("{preamble}{OBSERVER}\nstatic volatile uint64_t hash_refops;\n"),
+            1,
+        );
+        for signature in [
+            "static inline void fwp_rc_dup(V v) {",
+            "static inline void fwp_rc_drop(V v) {",
+            "static inline int fwp_rc_release_last(V v) {",
+            "static void fwp_rc_share(V v) {",
+        ] {
+            assert!(code.contains(signature));
+            code = code.replace(
+                signature,
+                &format!("{signature} if(hash_tracking)hash_refops++;"),
+            );
+        }
+        for signature in [
+            "static inline void *fwp_gc_alloc(size_t n, int leaf) {",
+            "static inline void *fwp_alloc_init(size_t n) {",
+        ] {
+            assert!(code.contains(signature));
+            code = code.replace(
+                signature,
+                &format!("{signature} if(hash_tracking)hash_requests++;"),
+            );
+        }
+        let begin = "/* numeric hash without type dispatch */";
+        assert!(code.contains(begin));
+        let start = "hash_tracking=1; hash_requests=0; hash_refops=0;";
+        code = code.replace(begin, &format!("{begin} {start}"));
+        code = code.replace("return hash_state;",
+            "if(hash_requests)exit(247); if(hash_refops)exit(248); hash_tracking=0; return hash_state;");
+        let allocated = code.replace(
+            start,
+            &format!("{start} void *unneeded=malloc(1); free(unneeded);"),
+        );
+        let counted = code.replace(start, &format!("{start} fwp_rc_dup(0);"));
+        for opt in ["-O0", "-O2"] {
+            for (candidate, status) in [(&code, 0), (&allocated, 247), (&counted, 248)] {
+                let binary = dir.join("probe.exe");
+                fwp::cgen::compile_c(candidate, &binary, opt).unwrap();
+                let actual = Command::new(&binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    actual.status.code(),
+                    Some(status),
+                    "{memory}/{opt}: {actual:?}"
+                );
+            }
+        }
+    }
+}
+
 #[test]
 fn hashes_match_typed_interpretation_and_preserve_aliases() {
     let dir = fwp::cgen::TempDir::new("hash-values").unwrap();
@@ -177,15 +315,7 @@ input : () -> List[I64] ! {IO}
 input = const [1, 2, 3] | tap (const "input" | echo)
 main = input () | map (both (const (left ())) (const (right ())) | hash) | fold bit.xor 0u64 | echo
 "#, true, 0),
-        ("consumer-order", r#"
-seed : () -> U64 ! {IO}
-seed = const 0u64 | tap (const "seed" | echo)
-capture : () -> I64 ! {IO}
-capture = const 7 | tap (const "capture" | echo)
-input : () -> List[I64] ! {IO}
-input = const [1, 2, 3] | tap (const "input" | echo)
-main = input () | map (both id (const (capture ())) | hash) | fold bit.xor (seed ()) | echo
-"#, false, 0),
+        ("consumer-order", include_str!("fixtures/hash_capture_order.fwp"), false, 0),
         ("capture-trap", r#"
 input : () -> List[I64] ! {IO}
 input = const [] | tap (const "input" | echo)
