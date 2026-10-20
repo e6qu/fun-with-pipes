@@ -1176,9 +1176,11 @@ owner. Native sinks and closed channels retain no local reply owner. Caught
 status errors own both their record and message. Tests omit these owners
 separately and require a failure, in addition to normal and cancellation checks.
 
-Messages encode data, not managed pointers or callable captures. Data-only
-channel payload rules still exclude tasks, functions, HTTP stream handles and
-nested channels that could create a mutable ownership cycle. Request/connection owners and borrowed
+Wire messages encode data, not managed pointers or callable captures. Local
+queues follow their separate [capture proof](#next-proof-functions-stored-in-channels);
+the new function subset does not add serialization of functions. Queue payloads
+still exclude tasks, HTTP stream handles and recursive channel ownership.
+Request/connection owners and borrowed
 task links retain their existing contracts. ARC binaries still allocate and
 count shared owners; removing the collector does not make networking a zero-cost
 abstraction. Repeated server measurements compare identical fwp programs across

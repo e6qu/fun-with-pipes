@@ -160,7 +160,7 @@ fn queued_remote_iterators_reject_hidden_stream_owners() {
         let result = build
             .arg(&source)
             .arg("-o")
-            .arg(dir.join("main.c"))
+            .arg(dir.join(format!("remote-{remote}-{memory}")))
             .output()
             .unwrap();
         assert_eq!(

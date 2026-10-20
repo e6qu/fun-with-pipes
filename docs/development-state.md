@@ -5,20 +5,23 @@
 Preparation branch `prove-queued-function-ownership` lives in
 `/private/tmp/fwp-channel-functions`, based on PR #174 head
 `67f233467bc68fe9a690373af219253d45f4e3f8`. The primary checkout owns that PR.
-Production `39342938663` has six passing jobs; both Linux jobs and Windows ARM
-remain running. Documentation `39342938600` passes. Keep its head unchanged.
+Production `39342938663` has eight passing jobs; Linux ARM64 remains running.
+Documentation `39342938600` passes. Keep its head unchanged.
 Require all nine production jobs and documentation, squash merge, then verify
 identical trees and a one-line message. The prepared final audit is
 `/private/tmp/fwp-audit-174-combined-final.py` (run from the primary checkout
 through its local guard). Only then publish the next ownership PR.
 
-Next: validate the function-type refinement and gRPC capture
-regression. All six native failures in `39348144254` were audited: each has
-19 passing integration checks and one false rejection of a queued autodiff
-function. All unit checks pass (142 on Linux/macOS, 143 on Windows). Both WASI
-jobs pass. Server run `39348422141` at `a3cdf5d8` found a
-misplaced exposure annotation in the new test fixture; it now sits above the
-export it describes. The remaining server checks pass; REST API is running.
+Next: finish native/WASI run `39349638508` and server run `39349641747`, both
+at `ca3c9c0f6c33b79885c936996f3e4f72e3031cf9`. The autodiff repair passes on
+all six native hosts. Each has 20 passing integration checks; its only failure
+is the added gRPC test reusing a C-file path for a split-build directory.
+All six complete logs were audited. Distinct output paths repair that test.
+The compiler itself is unchanged; the next PR's full native gates must execute
+the repaired case. Keep the current WASI/server runs for their unchanged source.
+Earlier server run `39348422141` is fully audited: its new fixture's exposure
+annotation was misplaced and is fixed in `ca3c9c0f`; all other entry checks and
+all three REST API/authentication/multipart checks pass.
 Audit every completed target and failure before the next repair push. No new
 platform support is accepted yet.
 
@@ -59,7 +62,8 @@ Full builds and suites run on GitHub. Earlier preparation:
   function queue; replaced with acceptance plus real cyclic-capture rejection.
 - `e497f639` / `39348144254`: TLS setup repairs pass on all six native hosts.
   Only the new receiver-autodiff check fails; all six complete native logs were
-  audited. The type refinement addresses its cause. Both full WASI jobs pass.
+  audited (19 integration checks pass per host). The type refinement addresses
+  its cause. Both full WASI jobs pass all 14 tests, with none ignored.
 - `a3cdf5d8` replaces the same obsolete blanket rejection in REST/MCP entry tests,
   executes a queued function through MCP, and rejects captured channels. It is
   test-only; the measured compiler matches `e497f639`.
@@ -72,13 +76,17 @@ shutdown and exercises JSPI/Asyncify. Native artifacts retain C, binaries and
 actual disassembly. These are cleanup checks, not speed or zero-allocation claims.
 
 All local workloads used the primary `scripts/local-guard.py`. Formatting last
-passed in 1.39s. `python3 scripts/check-roadmap.py` passes in 2.46s after restoring
+passed in 1.55s. `python3 scripts/check-roadmap.py` passes in 2.61s after restoring
 the required status table and next-action marker; an initial mistyped script name
 did not run a check. Saved-compiler raw interpretation
 validated the value/task fixtures, five rejection examples and updated tutorial;
 it does not validate the new proof. Saved-compiler C emission for the remote
 iterator fixture passed in 0.40s, without compiling native code. No local compiler
 build or benchmark ran. Full logs are under `/private/tmp/fwp-queued-corrected-*`.
+The earlier ARM64 artifact (`e497f639`, 17 MiB unpacked) was inspected locally:
+ARC disassemblies have no collector routines, while allocation, dynamic calls
+and count operations remain. It is partial evidence from a failed preflight;
+the current compiler still needs complete acceptance.
 
 The final PR #174 benchmark is retained in
 [the C/Rust comparison](measurements/numeric-output-peers-2026-10-20.md), including
