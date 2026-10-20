@@ -5,6 +5,128 @@ use std::path::PathBuf;
 use std::process::{Command, Output};
 
 #[test]
+fn temporary_channel_fields_borrow_the_continuing_owner() {
+    let channel = MT::Con("std::Channel".into(), vec![MT::con("std::String")]);
+    let integer = MT::con("std::I64");
+    let pair = MT::Record(vec![
+        ("0".into(), channel.clone()),
+        ("1".into(), integer.clone()),
+    ]);
+    let arrow = |input: MT, output: MT| MT::Fun(Box::new(input), Box::new(output));
+    let program = Program {
+        main: Some(3),
+        funcs: vec![
+            Func {
+                name: "close".into(),
+                arity: 1,
+                locals: vec![channel.clone()],
+                ty: arrow(channel.clone(), MT::unit()),
+                body: Body::Prim("channel.close".into()),
+            },
+            Func {
+                name: "keep-field".into(),
+                arity: 1,
+                locals: vec![pair.clone(), channel.clone(), MT::unit()],
+                ty: arrow(pair, channel.clone()),
+                body: Body::Expr(Expr::Let(
+                    1,
+                    Box::new(Expr::Field(Box::new(Expr::Local(0)), 0)),
+                    Box::new(Expr::Let(
+                        2,
+                        Box::new(Expr::Call(0, vec![Expr::Local(1)])),
+                        Box::new(Expr::Field(Box::new(Expr::Local(0)), 0)),
+                    )),
+                )),
+            },
+            Func {
+                name: "make".into(),
+                arity: 1,
+                locals: vec![integer.clone()],
+                ty: arrow(integer, channel),
+                body: Body::Prim("channel.make".into()),
+            },
+            Func {
+                name: "main".into(),
+                arity: 0,
+                locals: vec![],
+                ty: MT::unit(),
+                body: Body::Expr(Expr::Call(
+                    0,
+                    vec![Expr::Call(
+                        1,
+                        vec![Expr::Record(vec![
+                            Expr::Call(2, vec![Expr::Const(Value::I64(1))]),
+                            Expr::Const(Value::I64(42)),
+                        ])],
+                    )],
+                )),
+            },
+        ],
+        ..Program::default()
+    };
+    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(std::io::sink()));
+    assert_eq!(interpreter.call(3, vec![]).unwrap(), Value::unit());
+    let code = fwp::cgen::generate(&program).unwrap().replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let close = "static V fwp_p_channel_close(V ch) {";
+    assert_eq!(code.matches(close).count(), 1);
+    let code = code.replace(
+        close,
+        &format!(
+            "static int expected_owners;\n{close}\n\
+             if(expected_owners && *fwp_rc_slot(ch)!=expected_owners)exit(71);"
+        ),
+    );
+    let probe = r#"
+static int destroyed;
+static int probe_sink(void *context,V value){(void)context;(void)value;return 0;}
+static void probe_drop(void *context){if(context!=&destroyed)abort();destroyed++;}
+int main(void){
+ fwp_gc_start(__builtin_frame_address(0));fwp_init_consts();fwp_fns=fwp_fn_table;fwp_tasks_init();
+ for(int alias=0;alias<2;alias++){
+  destroyed=0;
+  V channel=fwp_p_channel_make_owned(1,0);
+  fwp_chan *queue=(fwp_chan *)(uintptr_t)channel;
+  queue->sink=probe_sink;queue->sink_ctx=&destroyed;queue->owner.sink_drop=probe_drop;
+  if(alias)fwp_rc_dup(channel);
+  expected_owners=1+alias;
+  V returned=f1(fwp_record(2,(V[]){channel,42}));
+  if(returned!=channel||destroyed||!queue->closed)return 72;
+  if(*fwp_rc_slot(returned)!=expected_owners)return 73;
+  fwp_channel_drop(returned);
+  if(alias){if(destroyed)return 74;fwp_channel_drop(channel);}
+  if(destroyed!=1||fwp_cleanups)return 75;
+ }
+ return 0;
+}
+"#;
+    let control = code.replace(close, &format!("{close}\nfwp_rc_dup(ch);"));
+    let dir = fwp::cgen::TempDir::new("borrowed-field-context").unwrap();
+    let exe = dir.join("probe.exe");
+    for opt in ["-O0", "-O2"] {
+        for (candidate, status) in [(&code, 0), (&control, 71)] {
+            fwp::cgen::compile_c(&format!("{candidate}\n{probe}"), &exe, opt).unwrap();
+            for poison in ["0", "1"] {
+                let output = Command::new(&exe)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    output.status.code(),
+                    Some(status),
+                    "{opt}/{poison}: {output:?}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn borrowed_function_channels_preserve_native_context_destruction() {
     let channel = MT::Con(
         "std::Channel".into(),
