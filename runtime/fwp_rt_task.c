@@ -1596,8 +1596,9 @@ typedef enum {
     FWP_CHANNEL_RESULT_BOXED,
     FWP_CHANNEL_RESULT_FIELDS
 } fwp_channel_result_form;
-static int fwp_chan_recv_owned(V ch, int64_t at, void (*dup)(V),
-                               fwp_channel_result_form form, V *value) {
+typedef struct { V tag, value; } fwp_channel_result;
+static fwp_channel_result fwp_chan_recv_owned(V ch, int64_t at, void (*dup)(V),
+                                             fwp_channel_result_form form) {
     fwp_tasks_init();
     fwp_chan *c = (fwp_chan *)(uintptr_t)ch;
     for (;;) {
@@ -1612,25 +1613,20 @@ static int fwp_chan_recv_owned(V ch, int64_t at, void (*dup)(V),
             c->head = (c->head + 1) % c->size;
             c->len--;
             fwp_wake_all(&c->sendq);
-            *value = result;
-            return 1;
+            return (fwp_channel_result){1, result};
         }
-        if (c->closed || c->sink) { *value = FWP_NONE; return 0; }
+        if (c->closed || c->sink) return (fwp_channel_result){0, FWP_NONE};
         fwp_check_cancel();
-        if (at && fwp_now_ns() >= at) { *value = FWP_NONE; return 0; }
+        if (at && fwp_now_ns() >= at) return (fwp_channel_result){0, FWP_NONE};
         fwp_park(&c->recvq, at);
         fwp_check_cancel();
     }
 }
 static V fwp_p_channel_recv_owned(V ch, void (*dup)(V)) {
-    V value;
-    fwp_chan_recv_owned(ch, 0, dup, FWP_CHANNEL_RESULT_BOXED, &value);
-    return value;
+    return fwp_chan_recv_owned(ch, 0, dup, FWP_CHANNEL_RESULT_BOXED).value;
 }
 static V fwp_p_channel_recv_for_owned(V d, V ch, void (*dup)(V)) {
-    V value;
-    fwp_chan_recv_owned(ch, fwp_after(d), dup, FWP_CHANNEL_RESULT_BOXED, &value);
-    return value;
+    return fwp_chan_recv_owned(ch, fwp_after(d), dup, FWP_CHANNEL_RESULT_BOXED).value;
 }
 
 static V fwp_p_channel_close(V ch) {

@@ -3673,12 +3673,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 } else {
                     (&values[0], "0".into())
                 };
-                let value = self.fresh();
-                let tag = self.fresh();
-                self.line(&format!("V {value}; V {tag} = fwp_chan_recv_owned({channel}, {deadline}, {duplicate}, FWP_CHANNEL_RESULT_FIELDS, &{value});"));
+                let result = self.fresh();
+                self.line(&format!("fwp_channel_result {result} = fwp_chan_recv_owned({channel}, {deadline}, {duplicate}, FWP_CHANNEL_RESULT_FIELDS);"));
                 self.keep_borrowed_args(*id, &values);
                 self.end_call(pending);
-                (tag, vec![value])
+                (format!("{result}.tag"), vec![format!("{result}.value")])
             }
             Expr::Call(id, args) if self.g.abis[*id].as_ref().and_then(|a| a.vret) == Some(m) => {
                 let abi = self.g.abis[*id].clone().unwrap();

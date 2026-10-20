@@ -86,7 +86,7 @@ static void worker(void *arg,int failed){
  fwp_value_owner ch_owner={blocking_ch,fwp_channel_drop};
  fwp_cleanup ch_cleanup;fwp_value_protect(&ch_owner,&ch_cleanup);
  if(send_mode){if(fSEND(blocking_ch,blocking_value)!=FWP_FALSE)fwp_trap("expected closed send");}
- else if(field_mode){V value;if(fwp_chan_recv_owned(blocking_ch,0,fwp_rc_dup,FWP_CHANNEL_RESULT_FIELDS,&value))fwp_trap("expected closed field receive");}
+ else if(field_mode){if(fwp_chan_recv_owned(blocking_ch,0,fwp_rc_dup,FWP_CHANNEL_RESULT_FIELDS).tag)fwp_trap("expected closed field receive");}
  else if(fRECV(blocking_ch)!=FWP_NONE)fwp_trap("expected closed receive");
  fwp_value_finish(&ch_owner,&ch_cleanup);fwp_channel_drop(blocking_ch);worker_completed=1;
 }
@@ -145,14 +145,17 @@ int main(void){
  if(OBJ(received)->f[0]!=value||*fwp_rc_slot(value)!=1)return 39;option_drop(received);fwp_channel_drop(ch);
  // Direct fields move exactly one owner, allocate no Option and distinguish Some 0.
  ch=fMAKE(1);value=fwp_rc_fresh(fwp_str_new("fields",6));fSEND(ch,value);
- fail_option=1;V field;intptr_t before_fields=fwp_gc.budget;
- if(!fwp_chan_recv_owned(ch,fwp_after(duration),fwp_rc_dup,FWP_CHANNEL_RESULT_FIELDS,&field)||field!=value||*fwp_rc_slot(value)!=1)return 43;
+ fail_option=1;intptr_t before_fields=fwp_gc.budget;
+ fwp_channel_result fields=fwp_chan_recv_owned(ch,fwp_after(duration),fwp_rc_dup,FWP_CHANNEL_RESULT_FIELDS);
+ V field=fields.value;
+ if(!fields.tag||field!=value||*fwp_rc_slot(value)!=1)return 43;
  if(!fail_option||before_fields!=fwp_gc.budget||((fwp_chan *)(uintptr_t)ch)->len)return 44;
  fail_option=0;fwp_channel_drop(ch);if(STR(field)->len!=6)return 45;text_drop(field);if(!dead(value))return 46;
  ch=fWORD(1);fSENDWORD(ch,0);
- if(!fwp_chan_recv_owned(ch,0,NULL,FWP_CHANNEL_RESULT_FIELDS,&field)||field!=0)return 47;
- if(fwp_chan_recv_owned(ch,fwp_after(duration),NULL,FWP_CHANNEL_RESULT_FIELDS,&field))return 48;
- fCLOSE(ch);if(fwp_chan_recv_owned(ch,0,NULL,FWP_CHANNEL_RESULT_FIELDS,&field))return 49;fwp_channel_drop(ch);
+ fields=fwp_chan_recv_owned(ch,0,NULL,FWP_CHANNEL_RESULT_FIELDS);
+ if(!fields.tag||fields.value!=0)return 47;
+ if(fwp_chan_recv_owned(ch,fwp_after(duration),NULL,FWP_CHANNEL_RESULT_FIELDS).tag)return 48;
+ fCLOSE(ch);if(fwp_chan_recv_owned(ch,0,NULL,FWP_CHANNEL_RESULT_FIELDS).tag)return 49;fwp_channel_drop(ch);
  // Queue function captures and task caches retain their typed descendants.
  value=fwp_rc_fresh(fwp_str_new("function",8));V fn=fwp_rc_fresh(fwp_pap(GIVE,1,&value));
  ch=fwp_p_channel_make_owned(1,fwp_closure_drop);fwp_p_channel_send_owned(ch,fn,fwp_closure_drop);

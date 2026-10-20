@@ -2,12 +2,13 @@
 
 ## Next action
 
-Next: finish [PR #176](https://github.com/e6qu/fun-with-pipes/pull/176), the only
-active PR, on `flatten-channel-loop-state-delivery`. Require all nine production
-jobs and documentation on its exact final head. Focused checks below pass;
-full acceptance starts when this PR is marked ready. Fix every failure, audit completed
-logs, then squash merge with an explicit one-line subject of at most 80 characters
-and empty body. Verify the merged tree/message before cancelling redundant runs.
+The user merged [PR #176](https://github.com/e6qu/fun-with-pipes/pull/176) as
+`90f0ab9f6b30da75682f598ef5afd8f9fef7bfed` before production CI completed.
+Its tree equals `ddff413a`; its message is one line with no trailers. Keep its
+original production run `39371117507` running and fix any failures. Its focused
+checks, benchmark gate and documentation pass; platform acceptance is unfinished.
+Future merges still require all final-head gates, an explicit one-line subject
+of at most 80 characters and empty body.
 
 [PR #175](https://github.com/e6qu/fun-with-pipes/pull/175) is accepted as
 `b9cfbbe656baacf30864c8a84b0184ca683ff5b6`, the base of this branch.
@@ -21,9 +22,9 @@ Do not reopen their preparation branches as new work.
 ## Receive-result preparation
 
 This worktree `/private/tmp/fwp-channel-receives`, branch
-`unbox-channel-receives`, prepares the next change independently. Do not open a
-second PR or move PR #176's stable head. Next: run focused ownership and count
-checks on this preparation; fix all failures before making any support claim.
+`unbox-channel-receives`, prepares the next change independently. Next: finish the struct-return comparison, audit focused ownership
+`39371669060` on `78dc983e`, then publish the complete next delivery from merged
+main. Fix every failure; #176's unfinished acceptance is still required evidence.
 
 The shared-text loop still allocated `Some message` after each receive. The
 candidate gives immediately matched receives their tag and payload directly,
@@ -38,7 +39,8 @@ messages separately from empty results, verify timed ready/empty receives, and
 confirm that direct fields move one owner without allocating an Option. Existing
 boxed allocation-failure and negative cleanup controls remain. The shared native
 and WASI fixture adds timed function receives and a failure after calling one.
-These changes are not yet compiled or verified on runners. Review also found the
+Linux Clippy and callback-effect checks pass; native/WASI ownership and counts
+are still running. Review also found the
 uncounted tracing receive removed its message before allocating `Some`; it now
 reserves the result first, with a forced-failure/retry regression. Runs
 `39371506883`/`39371509365` at `c4cc467d` were still entirely queued when replaced
@@ -47,10 +49,21 @@ to include this repair, so they provide no execution evidence.
 The saved diagnostic interpreter rejects the new unannotated callback pipe with
 an effect-row mismatch. An explicitly typed intermediate function runs with the
 expected output (guarded 0.86s), but is not used to conceal the issue. The original
-pipe remains in the fixture and callback-effect regression; runner checks will
-establish whether the accepted compiler's existing inference repair handles it.
-Any remaining inference defect must be fixed. No local compiler build was run.
+pipe remains in the fixture and callback-effect regression; the current compiler is checked independently on runners.
+Both Linux callback-effect gates now pass on `78dc983e`, including the original
+expression: the accepted compiler's repair already handles it. No new wrapper or
+inference workaround was added. No local compiler build was run.
 
+The [receive report](measurements/channel-receive-results.md) records the first
+180 audited samples (guarded audit 1.54s), code sections and actual frames.
+Text receives save one allocation per message; function-message counts do not
+change. The receive helper's 16-byte frame increase motivates a two-word struct
+return experiment. Its compiler/runtime/tests are changed locally, not measured
+yet. Guarded formatting passes (1.76s). The previous measured revision is retained
+as a revision tag before publication.
+
+Duplicate post-merge runs `39372193646` and `39372193575` were cancelled only
+after verifying #176's identical tree. Its original acceptance remains running.
 Production PR #176 run `39371117507` is in progress on `ddff413a`;
 documentation `39371117707` passes. The draft synchronization run `39371117777`
 skipped its jobs and is not acceptance. All seven roadmap areas remain open.
@@ -70,8 +83,7 @@ All seven areas in [PLAN.md](../PLAN.md) remain open.
 | 7 | In progress | Larger applications |
 
 Persistent subscriptions, resource captures, resource-owning tail frames and
-mutual recursion need further proofs. Shared-text channel exchange still allocates
-its receive result; removing it would need evidence for failure, cancellation and
-call boundaries. That change is not implemented in this delivery. JIT is excluded.
+mutual recursion need further proofs. Direct receive results are measured in this preparation, but full native/WASI
+cleanup checks and final production acceptance remain required. JIT is excluded.
 Follow [AGENTS.md](../AGENTS.md): one active PR, final-head gates, bounded local
 work and one-line commits without trailers.
