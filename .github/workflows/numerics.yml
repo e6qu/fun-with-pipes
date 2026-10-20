@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, channel-costs, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, channel-costs, scalar-text, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -89,7 +89,7 @@ jobs:
           path: gc-checks.log
           if-no-files-found: error
   channel_transfer_costs:
-    if: inputs.suite == 'channel-costs'
+    if: inputs.suite == 'channel-costs' || inputs.suite == 'scalar-text'
     strategy:
       fail-fast: false
       matrix:
@@ -101,6 +101,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 1
       FWP_CHANNEL_COST_ARTIFACTS: channel-cost-evidence
+      FWP_INTEGER_LENGTH_ARTIFACTS: channel-cost-evidence/text-length
       FWP_LTO: '0'
     steps:
       - uses: actions/checkout@v7
@@ -131,6 +132,26 @@ jobs:
       - name: Compare results and count allocations and retains
         if: ${{ !cancelled() }}
         run: cargo test --test channel_transfer_costs -- --ignored --nocapture
+      - name: Inspect integer-length test binaries
+        if: ${{ !cancelled() && inputs.suite == 'scalar-text' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(find channel-cost-evidence/text-length -name '*.exe' | wc -l)" -eq 12
+          for binary in channel-cost-evidence/text-length/*.exe; do
+            objdump -d "$binary" > "${binary%.exe}.asm"
+          done
+      - name: Compare complete programs with C and Rust
+        if: ${{ !cancelled() && inputs.suite == 'scalar-text' }}
+        run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
+      - uses: actions/upload-artifact@v7
+        if: ${{ always() && inputs.suite == 'scalar-text' }}
+        with:
+          name: scalar-text-bench-${{ matrix.runner }}
+          path: |
+            target/bench.md
+            target/bench-evidence/
+          if-no-files-found: error
       - uses: actions/upload-artifact@v7
         if: always()
         with:

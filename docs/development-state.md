@@ -8,8 +8,8 @@ All focused checks and measurements pass. Published head
 `63a129f25cfb9a3b940baf7786036265bfdf831d` is on `move-matched-variant-owners`.
 Audit production `39438167856` and documentation `39438167895` with
 `/private/tmp/fwp-audit-179-combined.py`; its receipt is
-`/private/tmp/fwp-179-combined-acceptance.json`. Documentation, benchmarks and regular ARM64 macOS pass; their complete logs are clean.
-Seven production jobs remain running, without reported failures.
+`/private/tmp/fwp-179-combined-acceptance.json`. Documentation, benchmarks and both ARM64 macOS gates pass; their complete logs are clean.
+Six production jobs remain running, without reported failures.
 All **nine production jobs and docs** must pass.
 Keep the final head stable. Fix every failure; only squash-merge after exact-head
 acceptance, with an explicit one-line subject of at most 80 characters and an
@@ -61,8 +61,15 @@ The existing diagnostic interpreter accepts every new fixture, including the
 failure order; guarded command
 `python3 scripts/local-guard.py python3 /private/tmp/fwp-validate-text-length-fixtures.py`
 passes (12.43s). It emits C but does not compile it. No local build or full suite.
-Next: publish the combined preparation, run its focused checks on runners, audit
-all failures, inspect its binaries and collect equivalent-work measurements.
+IR inspection caught an incorrect new `add` primitive name; it is repaired to
+`prim.add`. Superseded run `39445706902` at `a428f962` was cancelled while both
+jobs were still queued (no executed steps, no acceptance claim). The replacement
+`scalar-text` suite also saves 12 semantic/allocation-check binaries and runs the
+complete C/Rust benchmark comparison on GCC for both Linux architectures.
+The new `text-length` benchmark uses direct digit counting in C/Rust with checked
+multiplication and sums. It complements `strings`, whose peers still format text.
+Next: publish the corrected preparation, run `scalar-text`, audit all failures,
+inspect its binaries and record measured costs. No timing result is claimed yet.
 `/private/tmp/fwp-compare-channel-stages.py` takes explicit current/baseline
 reports and artifact directories. Do not infer elapsed-time gains from counts.
 Do not open a new PR until #179 is accepted and merged. Preserve measured source

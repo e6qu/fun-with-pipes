@@ -194,8 +194,10 @@ fn benchmarks() {
          Matching output does not imply equal work: maps use sorted pairs in\n\
          all three but sorting implementations differ; pipelines can remove collections, and\n\
          fwp can remove string formatting when only its length is needed.\n\
-         fwp checks integer overflow; the C and optimized Rust baselines do not\n\
-         provide the same overflow guarantees. No allocation or peak-memory\n\
+         fwp checks integer overflow; except for text-length, the C and optimized\n\
+         Rust baselines do not provide the same overflow guarantees. text-length\n\
+         counts decimal digits directly in C/Rust and checks multiplication/sums.\n\
+         No allocation or peak-memory\n\
          counters are collected by this comparison. See docs/benchmarks.md.\n\n\
          The measured executables and source inputs are retained in `target/bench-evidence`.\n\
          Generated fwp C is emitted separately after timing with the same compiler/settings;\n\
