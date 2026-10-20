@@ -10,9 +10,10 @@ the production benchmark job. Do not modify or merge that PR without auditing
 all nine exact-head jobs. Its measured compiler is `0bb385ab`; the difference
 is retained reports and documentation only.
 
-Next: complete the queued-function capture proof, add positive/negative lifetime
-and cleanup tests, then run focused checks on runners. This preparation is not
-accepted support. ARC still rejects function channel payloads in `src/arc.rs`.
+Next: run the new queued-function integration checks, fix every failure, then
+extend lifetime/cancellation coverage and validate on all native hosts and WASI.
+This preparation is not accepted support. `src/arc.rs` now permits function
+payload types only with the separate capture and call-scope proof.
 
 ## In-progress implementation
 
@@ -25,11 +26,17 @@ Unit checks cover receiver State scope, mixed known/unknown targets, nested
 capture owners and functions carried by caught errors. The prototype follows
 error payloads separately from ordinary returns and rejects unknown producers.
 It checks immutable captures recursively, rejecting resource captures for now.
-Formatting passed under the primary guard (last run 1.54 seconds). Compiler
-integration is not tested yet; dispatch `channel-proof` on the preparation branch.
-No runtime or eligibility relaxation has been made.
+Initial proof-only source `4ad0107a` ran in `39344388657`: both Linux architectures
+passed 141 compiler unit checks and all 16 existing integration checks. Both
+failed Clippy solely on an unused pattern binding; the complete logs were audited
+and that binding is removed. Formatting passed under the primary guard (1.57s).
+The new eligibility change and integration checks have not run yet. They compare
+raw interpretation with ARC/tracing O0/O2, check undrained capture reclamation,
+require an omitted-release control to fail, inspect collector symbols, and reject
+self, returned and nested channel captures. WASI's physical-allocation suite now
+includes the same positive fixture. No runtime implementation has changed.
 
-Still required before relaxing rejection:
+Still required before claiming support:
 
 - Verify the implemented capture and unknown-source rules against real lowered
   programs, including external inputs and modeled gRPC iterator constructors.
@@ -38,9 +45,9 @@ Still required before relaxing rejection:
 - Verify activation for function-bearing channels even without State/AD and
   distinction between empty queues and unknown functions. Check every send,
   nested/returned/error-carried callback, aggregate, alias and partial application.
-- Only then permit proved function payloads in `src/arc.rs`, update obsolete
-  blanket-rejection tests, and add native/WASI lifetime, failure, cancellation,
-  undrained/closed-queue and repeated bounded-live evidence. Negative controls
+- Verify the new eligibility rule and replacement of obsolete blanket-rejection
+  tests; add native/WASI lifetime, failure, cancellation and repeated bounded-live
+  evidence. Negative controls
   must include self/two-queue cycles, unknown sources and calls after State/AD
   scopes end. Keep task/HTTP-stream payload restrictions.
 
