@@ -4,7 +4,8 @@
 //! it produces.
 //!
 //! The ownership discipline:
-//! - Ordinary functions own their parameters and return an owned value;
+//! - Ordinary functions own their parameters and return an owned value.
+//!   Proved direct-call parameters can instead remain owned by the caller;
 //!   constructors own their fields. A primitive's explicit contract says which
 //!   arguments it borrows, consumes or shares. C and remote calls borrow their
 //!   arguments; the caller keeps their owners through the call.
@@ -28,6 +29,8 @@ use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use crate::ir::*;
+
+pub(crate) mod borrows;
 
 type Set = BTreeSet<Local>;
 
@@ -82,15 +85,18 @@ fn unknown() -> MT {
     MT::Con("?".into(), vec![])
 }
 
-/// Whether a call of `id` takes ownership of its arguments.
-fn consumes(funcs: &[Func], id: FuncId) -> bool {
-    matches!(funcs[id].body, Body::Expr(_) | Body::Ctor(_))
-}
-
 /// Whether a call takes ownership of argument `j`: ordinary function/constructor
-/// arguments and the arguments marked Consume in a primitive's contract.
-pub fn consumes_arg(funcs: &[Func], id: FuncId, j: usize) -> bool {
-    consumes(funcs, id) || matches!(&funcs[id].body, Body::Prim(s) if prim_consumes(s, j))
+/// arguments without a proved borrow, and primitive Consume arguments.
+pub fn consumes_arg(prog: &Program, id: FuncId, j: usize) -> bool {
+    match &prog.funcs[id].body {
+        Body::Expr(_) => !prog
+            .borrowed_parameters
+            .get(&id)
+            .is_some_and(|ps| ps.contains(&(j as Local))),
+        Body::Ctor(_) => true,
+        Body::Prim(s) => prim_consumes(s, j),
+        _ => false,
+    }
 }
 
 /// Arrays, maps and sets: what the runtime allocates and some primitives
@@ -112,10 +118,12 @@ pub fn prim_reads_only(sym: &str, j: usize) -> bool {
 }
 
 /// A direct temporary record can borrow its fields through a single-argument
-/// primitive with an explicit nonescape proof. The sequence pass keeps their
+/// primitive or direct worker with an explicit nonescape proof. The sequence pass keeps their
 /// owners alive; the verifier and backend use this same representation rule.
 /// Other records still consume their fields, including with stack storage off.
-pub fn borrows_record_argument(funcs: &[Func], id: FuncId, j: usize, e: &Expr) -> bool {
+pub fn borrows_record_argument(prog: &Program, id: FuncId, j: usize, e: &Expr) -> bool {
+    let funcs = &prog.funcs;
+    let borrowed = &prog.borrowed_parameters;
     if funcs[id].arity != 1 || j != 0 || !matches!(e, Expr::Record(xs) if !xs.is_empty()) {
         return false;
     }
@@ -125,10 +133,12 @@ pub fn borrows_record_argument(funcs: &[Func], id: FuncId, j: usize, e: &Expr) -
     ) {
         return false;
     }
-    matches!(&funcs[id].body, Body::Prim(symbol)
+    (matches!(&funcs[id].body, Body::Expr(_))
+        && borrowed.get(&id).is_some_and(|ps| ps.contains(&0))
+        || matches!(&funcs[id].body, Body::Prim(symbol)
         if crate::ownership::borrows_without_escape(symbol, j)
             && crate::ownership::primitive(symbol)
-                .is_some_and(|c| c.argument(j) == crate::ownership::Argument::Borrow))
+                .is_some_and(|c| c.argument(j) == crate::ownership::Argument::Borrow)))
         && crate::escape::stack_enabled()
 }
 
@@ -346,14 +356,14 @@ fn cached_map_span(
 }
 
 struct Pass<'a> {
-    funcs: &'a [Func],
-    shapes: &'a Shapes,
+    prog: &'a Program,
+    borrowed_parameters: &'a [Local],
     locals: Vec<MT>,
 }
 
 impl Pass<'_> {
     fn counted(&self, l: Local) -> bool {
-        needs_rc(self.shapes, &self.locals[l as usize])
+        needs_rc(&self.prog.shapes, &self.locals[l as usize])
     }
 
     fn fresh(&mut self, t: MT) -> Local {
@@ -362,8 +372,8 @@ impl Pass<'_> {
     }
 
     fn ty(&self, e: &Expr) -> MT {
-        let func = |id: FuncId| &self.funcs[id].ty;
-        type_of(&func, self.shapes, &self.locals, e).unwrap_or_else(unknown)
+        let func = |id: FuncId| &self.prog.funcs[id].ty;
+        type_of(&func, &self.prog.shapes, &self.locals, e).unwrap_or_else(unknown)
     }
 
     /// The counted locals `e` reads that it does not bind.
@@ -408,26 +418,12 @@ impl Pass<'_> {
         match e {
             Expr::Local(l) => self.take(*l, owned),
             Expr::Const(_) | Expr::Func(_) => e.clone(),
-            Expr::Call(id, args) if consumes(self.funcs, *id) => {
-                let modes = vec![Mode::Consume; args.len()];
-                let id = *id;
-                let types: Vec<MT> = self.funcs[id]
-                    .ty
-                    .params(args.len())
-                    .0
-                    .into_iter()
-                    .cloned()
-                    .collect();
-                self.seq_typed(args, &modes, &types, owned, borrowed, move |xs| {
-                    Expr::Call(id, xs)
-                })
-            }
             Expr::Call(id, args) => {
-                if args.len() == 1 && borrows_record_argument(self.funcs, *id, 0, &args[0]) {
+                if args.len() == 1 && borrows_record_argument(self.prog, *id, 0, &args[0]) {
                     let Expr::Record(fields) = &args[0] else {
                         unreachable!()
                     };
-                    let MT::Record(types) = self.funcs[*id].ty.params(1).0[0] else {
+                    let MT::Record(types) = self.prog.funcs[*id].ty.params(1).0[0] else {
                         unreachable!()
                     };
                     let types: Vec<_> = types.iter().map(|(_, ty)| ty.clone()).collect();
@@ -439,7 +435,7 @@ impl Pass<'_> {
                 }
                 let modes: Vec<Mode> = (0..args.len())
                     .map(|j| {
-                        if consumes_arg(self.funcs, *id, j) {
+                        if consumes_arg(self.prog, *id, j) {
                             Mode::Consume
                         } else {
                             Mode::Borrow
@@ -447,7 +443,7 @@ impl Pass<'_> {
                     })
                     .collect();
                 let id = *id;
-                let types: Vec<MT> = self.funcs[id]
+                let types: Vec<MT> = self.prog.funcs[id]
                     .ty
                     .params(args.len())
                     .0
@@ -461,7 +457,7 @@ impl Pass<'_> {
             Expr::Construct(tag, args) => {
                 let modes = vec![Mode::Consume; args.len()];
                 let tag = *tag;
-                let fields = match self.shapes.get(expected) {
+                let fields = match self.prog.shapes.get(expected) {
                     Some(TypeShape::Adt(vs)) => vs
                         .get(tag as usize)
                         .map(|(_, fs)| fs.clone())
@@ -474,7 +470,7 @@ impl Pass<'_> {
             }
             Expr::Record(args) => {
                 let modes = vec![Mode::Consume; args.len()];
-                let fields = record_fields(self.shapes, expected)
+                let fields = record_fields(&self.prog.shapes, expected)
                     .map(|fs| fs.iter().map(|(_, ty)| ty.clone()).collect::<Vec<_>>())
                     .unwrap_or_default();
                 self.seq_typed(args, &modes, &fields, owned, borrowed, Expr::Record)
@@ -505,7 +501,7 @@ impl Pass<'_> {
                 } else {
                     base
                 };
-                let fields = record_fields(self.shapes, &base);
+                let fields = record_fields(&self.prog.shapes, &base);
                 let mut types = vec![base.clone()];
                 types.extend(idx.iter().map(|i| {
                     fields
@@ -546,14 +542,31 @@ impl Pass<'_> {
                 }
             }
             Expr::Let(x, v, b) => {
+                if let Expr::Field(base, _) = &**v {
+                    if record_fields(&self.prog.shapes, &self.locals[*x as usize]).is_none()
+                        && matches!(&**base, Expr::Local(parent) if self.borrowed_parameters.contains(parent))
+                    {
+                        let mut aliases = borrowed.clone();
+                        aliases.insert(*x);
+                        let body = self.conv_typed(b, owned, &aliases, expected);
+                        return Expr::Let(*x, v.clone(), Box::new(body));
+                    }
+                }
                 let global = match &**v {
                     Expr::Func(id) => Some(*id),
                     Expr::Call(id, args) if args.is_empty() => Some(*id),
                     _ => None,
                 };
-                if let Some(id) = global
-                    .filter(|id| cached_map_span(self.funcs, self.shapes, &self.locals, *x, *id, b))
-                {
+                if let Some(id) = global.filter(|id| {
+                    cached_map_span(
+                        &self.prog.funcs,
+                        &self.prog.shapes,
+                        &self.locals,
+                        *x,
+                        *id,
+                        b,
+                    )
+                }) {
                     let mut scope = borrowed.clone();
                     scope.insert(*x);
                     let body = self.conv_typed(b, owned, &scope, expected);
@@ -571,7 +584,7 @@ impl Pass<'_> {
                     Expr::Call(id, args)
                         if args.len() == 1
                             && matches!(&args[0], Expr::Local(l) if l == x)
-                            && borrows_record_argument(self.funcs, *id, 0, v) =>
+                            && borrows_record_argument(self.prog, *id, 0, v) =>
                     {
                         Some(Expr::Call(*id, vec![(**v).clone()]))
                     }
@@ -697,7 +710,7 @@ impl Pass<'_> {
     fn forward_hash_field(&self, local: Local, value: &Expr, body: &Expr) -> Option<Expr> {
         let call = |e: &Expr| {
             let Expr::Call(id, args) = e else { return None };
-            if args.len() != 1 || !borrows_record_argument(self.funcs, *id, 0, &args[0]) {
+            if args.len() != 1 || !borrows_record_argument(self.prog, *id, 0, &args[0]) {
                 return None;
             }
             let Expr::Record(fields) = &args[0] else {
@@ -784,7 +797,7 @@ impl Pass<'_> {
             }
         }
         for ((p, mode), ty) in parts.iter().zip(modes).zip(&types) {
-            if matches!(mode, Mode::Borrow) && needs_rc(self.shapes, ty) {
+            if matches!(mode, Mode::Borrow) && needs_rc(&self.prog.shapes, ty) {
                 let owner = match p {
                     Expr::Local(l) => Some(l),
                     Expr::Field(base, _) => match &**base {
@@ -808,14 +821,17 @@ impl Pass<'_> {
         // their traps cannot strand earlier counted arguments.
         // A zero-argument function evaluates a CAF and returns an owned
         // cached value. It can allocate/trap, unlike a static function closure.
-        let funcs = self.funcs;
+        let funcs = &self.prog.funcs;
         let inline = |p: &Expr| {
             matches!(p, Expr::Local(_) | Expr::Const(_))
                 || matches!(p, Expr::Func(id) if funcs[*id].arity > 0)
         };
         // a borrowed part whose value is not counted needs no temporary:
         // nothing is dropped after the operation
-        let uncounted: Vec<bool> = types.iter().map(|t| !needs_rc(self.shapes, t)).collect();
+        let uncounted: Vec<bool> = types
+            .iter()
+            .map(|t| !needs_rc(&self.prog.shapes, t))
+            .collect();
         let last_bound = parts
             .iter()
             .zip(modes)
@@ -861,7 +877,9 @@ impl Pass<'_> {
                     xs.push(p.clone());
                 }
                 (Mode::Borrow, Expr::Const(_)) => xs.push(p.clone()),
-                (Mode::Borrow, Expr::Func(id)) if self.funcs[*id].arity > 0 => xs.push(p.clone()),
+                (Mode::Borrow, Expr::Func(id)) if self.prog.funcs[*id].arity > 0 => {
+                    xs.push(p.clone())
+                }
                 // computed in place, unless a later part is bound before
                 // the operation (then bound too, in order)
                 (Mode::Borrow, p) if uncounted[i] => {
@@ -1000,7 +1018,14 @@ fn pat_binds(p: &Pat, out: &mut Vec<Local>) {
 pub fn insert(prog: &Program) -> Vec<Option<(Expr, Vec<MT>)>> {
     prog.funcs
         .iter()
-        .map(|f| insert_function(prog, f, &[]))
+        .enumerate()
+        .map(|(id, f)| {
+            insert_function(
+                prog,
+                f,
+                prog.borrowed_parameters.get(&id).map_or(&[], Vec::as_slice),
+            )
+        })
         .collect()
 }
 
@@ -1014,8 +1039,8 @@ pub(crate) fn insert_function(
     assert!(borrowed_parameters.iter().all(|l| *l < f.arity));
     let Body::Expr(e) = &f.body else { return None };
     let mut p = Pass {
-        funcs: &prog.funcs,
-        shapes: &prog.shapes,
+        prog,
+        borrowed_parameters,
         locals: f.locals.clone(),
     };
     let borrowed: Set = borrowed_parameters
@@ -1046,8 +1071,7 @@ enum Held {
 struct Checker<'a> {
     /// The caller keeps these parameters alive, independently of local copies.
     borrowed_parameters: &'a [Local],
-    funcs: &'a [Func],
-    shapes: &'a Shapes,
+    prog: &'a Program,
     locals: &'a [MT],
     calls: Option<&'a RefCell<HashMap<*const Expr, CallLiveness>>>,
     include_values: bool,
@@ -1089,7 +1113,7 @@ impl Checker<'_> {
     }
 
     fn counted(&self, l: Local) -> bool {
-        needs_rc(self.shapes, &self.locals[l as usize])
+        needs_rc(&self.prog.shapes, &self.locals[l as usize])
     }
 
     fn alive(&self, st: &State, l: Local) -> bool {
@@ -1148,7 +1172,7 @@ impl Checker<'_> {
                 self.record_call(e, before, st);
                 Ok(())
             }
-            Expr::Func(id) if self.funcs[*id].arity == 0 => {
+            Expr::Func(id) if self.prog.funcs[*id].arity == 0 => {
                 let before = self.calls.map(|_| owned_references(st));
                 self.record_call(e, before, st);
                 Ok(())
@@ -1156,12 +1180,13 @@ impl Checker<'_> {
             Expr::Const(_) | Expr::Func(_) => Ok(()),
             Expr::Call(id, args) => {
                 let before = self.calls.map(|_| owned_references(st));
+                let mut borrowed_owners = Vec::new();
                 args.iter().enumerate().try_for_each(|(j, a)| {
-                    if borrows_record_argument(self.funcs, *id, j, a) {
+                    if borrows_record_argument(self.prog, *id, j, a) {
                         let Expr::Record(fields) = a else {
                             unreachable!()
                         };
-                        let MT::Record(types) = self.funcs[*id].ty.params(1).0[0] else {
+                        let MT::Record(types) = self.prog.funcs[*id].ty.params(1).0[0] else {
                             unreachable!()
                         };
                         if fields.len() != types.len() {
@@ -1169,7 +1194,7 @@ impl Checker<'_> {
                         }
                         let mut owners = Vec::new();
                         for (field, (_, ty)) in fields.iter().zip(types) {
-                            if needs_rc(self.shapes, ty) {
+                            if needs_rc(&self.prog.shapes, ty) {
                                 match field {
                                     Expr::Local(l) => owners.push(*l),
                                     Expr::Field(base, _) if matches!(&**base, Expr::Local(_)) => {
@@ -1194,9 +1219,28 @@ impl Checker<'_> {
                             self.need_alive(st, l, "is borrowed by a temporary record")
                         });
                     }
-                    let c = consumes_arg(self.funcs, *id, j);
+                    let c = consumes_arg(self.prog, *id, j);
+                    if !c
+                        && needs_rc(
+                            &self.prog.shapes,
+                            self.prog.funcs[*id].ty.params(args.len()).0[j],
+                        )
+                    {
+                        match a {
+                            Expr::Local(l) => borrowed_owners.push(*l),
+                            Expr::Field(base, _) => {
+                                if let Expr::Local(l) = &**base {
+                                    borrowed_owners.push(*l);
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
                     self.expr(a, st, c || !matches!(a, Expr::Local(_)))
                 })?;
+                for owner in borrowed_owners {
+                    self.need_alive(st, owner, "is borrowed at call entry")?;
+                }
                 self.record_call(e, before, st);
                 Ok(())
             }
@@ -1246,7 +1290,14 @@ impl Checker<'_> {
                 self.expr(b, st, consume)
             }
             Expr::BorrowGlobal(local, global, body) => {
-                if !cached_map_span(self.funcs, self.shapes, self.locals, *local, *global, body) {
+                if !cached_map_span(
+                    &self.prog.funcs,
+                    &self.prog.shapes,
+                    self.locals,
+                    *local,
+                    *global,
+                    body,
+                ) {
                     return Err(format!(
                         "local {} has no valid cached-map borrow span",
                         local
@@ -1401,8 +1452,7 @@ fn check_with_calls(
     assert!(borrowed_parameters.iter().all(|l| *l < f.arity));
     let c = Checker {
         borrowed_parameters,
-        funcs: &prog.funcs,
-        shapes: &prog.shapes,
+        prog,
         locals,
         calls,
         include_values,
@@ -1892,6 +1942,13 @@ mod tests {
         let call = borrowed_call(&body).unwrap() as *const Expr;
         let outer = &calls[&call];
         assert!(outer.at_entry.contains(&(0, 1)), "{outer:?}");
+        // Merely reading the field before the next argument is insufficient:
+        // its parent must remain owned when the borrowed operation starts.
+        let Body::Expr(unlowered) = &p.funcs[0].body else {
+            unreachable!()
+        };
+        let error = check(&p, &p.funcs[0], unlowered, &p.funcs[0].locals).unwrap_err();
+        assert!(error.contains("borrowed at call entry"), "{error}");
     }
 
     #[test]

@@ -2,11 +2,17 @@
 
 ## Next action
 
-Next: publish `move-matched-variant-owners` as the next delivery PR, then audit
-all nine final-head production jobs and documentation. Fix every failure before
-squash merge; use an explicit one-line subject of at most 80 characters and empty
-body. Worktree: `/private/tmp/fwp-variant-moves`. No second delivery PR is open.
+Next: finish [PR #179](https://github.com/e6qu/fun-with-pipes/pull/179) on
+`move-matched-variant-owners`, head `82bcf83f765e072afa6431cbf196532d433e3cad`.
+Production `39417913864` has a passing benchmark job; the native jobs are starting
+on their runners. Documentation `39417913929` passes. Audit every completed log
+with `/private/tmp/fwp-audit-179.py`; fix every failure before squash merge.
+Require all nine production jobs and documentation on this exact head. Use an
+explicit one-line subject of at most 80 characters and empty body, then verify
+the merge tree. Worktree: `/private/tmp/fwp-variant-moves`.
 Keep the final head stable while healthy gates run; record status here locally.
+Independent borrowing investigation is in `/private/tmp/fwp-direct-borrows`,
+branch `borrow-direct-function-arguments`; no second PR is open.
 
 ## Accepted baseline
 
@@ -62,17 +68,27 @@ from the worktree, use the guard's absolute path in the main checkout.
 Full compilation, suites and measurements belong on runners. Preserve 64 GiB
 free disk, target data below 2 GiB and sampled aggregate RSS below 1 GiB.
 
-## Next ownership investigation
+## Prepared direct-call borrowing
 
-The fresh-message loop still retains its channel when calling `exchange`.
-`src/rc.rs::consumes_arg` makes ordinary functions consume arguments. Existing
-fold generation already uses `insert_function` and `ownership_liveness` with
-borrowed parameters. Extending that proof to direct calls needs one shared
-caller/callee contract, borrowed field projections and caller-held cleanup through
-failure/cancellation. Dynamic calls, escaping results, original resource scopes
-and recursive frames need explicit handling. Removing only the caller's retain
-would let the callee release an owner it was never given. This is investigation,
-not implemented support.
+`/private/tmp/fwp-direct-borrows`, branch `borrow-direct-function-arguments`,
+contains the next implementation; no second PR is open. It is not yet verified.
+The compiler infers caller-owned parameters for eligible nonrecursive direct
+workers. One contract drives call lowering, callee ownership, verification,
+entry ticks and failure cleanup. Borrowed flat records need an independent
+nonescape proof; field views keep their original boxes visible to tracing.
+The existing generic entries still consume their arguments and release them
+on success/failure. Functions used as values, exports, resource scopes, recursive
+functions and workers without a supported representation retain owned arguments.
+
+New unit cases cover read-only fields, transitive direct calls, escaping values,
+function values, recursion and the distinction between borrowing and nonescape.
+A native probe checks exact counts at O0/O2, caller failure, independent aliases,
+generic boxed entries and a deliberately leaked-owner control. The ownership
+checker now rejects a borrowed argument whose owner was consumed by a later
+argument. Formatting passes under the guard (1.57s); the documentation audit passes
+(2.50s). No local build was run. Validation and channel counts will run in
+`channel-costs`; review all
+steps and generated binaries before any performance claim or next PR.
 
 ## Roadmap status
 

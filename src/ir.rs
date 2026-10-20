@@ -368,6 +368,9 @@ pub enum TypeShape {
 #[derive(Default, Clone, Debug)]
 pub struct Program {
     pub funcs: Vec<Func>,
+    /// Native-only argument contracts inferred before reference-count insertion.
+    /// These direct-call parameters stay owned by their callers through return.
+    pub borrowed_parameters: std::collections::BTreeMap<FuncId, Vec<Local>>,
     /// Proved self-tail functions; backends iterate without changing value layouts.
     pub self_tail: std::collections::BTreeSet<FuncId>,
     /// Canonical source bindings, for persistent interpreter sessions.

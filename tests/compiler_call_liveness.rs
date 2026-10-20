@@ -1,6 +1,171 @@
 //! Live caller owners survive normal calls and release on nonlocal unwind.
+use fwp::ir::*;
+use fwp::value::Value;
 use std::path::PathBuf;
 use std::process::{Command, Output};
+
+#[test]
+fn direct_borrowed_fields_keep_caller_owners_through_success_and_failure() {
+    let string = MT::con("std::String");
+    let integer = MT::con("std::I64");
+    let pair = MT::Record(vec![
+        ("0".into(), string.clone()),
+        ("1".into(), integer.clone()),
+    ]);
+    let function_type = |parameters: &[MT], result: MT| {
+        parameters.iter().rev().fold(result, |result, parameter| {
+            MT::Fun(Box::new(parameter.clone()), Box::new(result))
+        })
+    };
+    let mut p = Program::default();
+    p.funcs.push(Func {
+        name: "length".into(),
+        arity: 1,
+        locals: vec![string.clone()],
+        ty: function_type(std::slice::from_ref(&string), integer.clone()),
+        body: Body::Prim("string.length".into()),
+    });
+    p.funcs.push(Func {
+        name: "read".into(),
+        arity: 1,
+        locals: vec![pair.clone(), string.clone(), integer.clone()],
+        ty: function_type(&[pair], integer.clone()),
+        body: Body::Expr(Expr::Let(
+            1,
+            Box::new(Expr::Field(Box::new(Expr::Local(0)), 0)),
+            Box::new(Expr::Let(
+                2,
+                Box::new(Expr::Field(Box::new(Expr::Local(0)), 1)),
+                Box::new(Expr::Match(
+                    Box::new(Expr::Local(2)),
+                    vec![
+                        (Pat::Lit(Value::I64(0)), Expr::Call(0, vec![Expr::Local(1)])),
+                        (
+                            Pat::Wild,
+                            Expr::Call(3, vec![Expr::Const(Value::str("expected"))]),
+                        ),
+                    ],
+                )),
+            )),
+        )),
+    });
+    p.funcs.push(Func {
+        name: "caller".into(),
+        arity: 2,
+        locals: vec![string.clone(), integer.clone(), integer.clone()],
+        ty: function_type(&[string.clone(), integer.clone()], string.clone()),
+        body: Body::Expr(Expr::Let(
+            2,
+            Box::new(Expr::Call(
+                1,
+                vec![Expr::Record(vec![Expr::Local(0), Expr::Local(1)])],
+            )),
+            Box::new(Expr::Local(0)),
+        )),
+    });
+    p.funcs.push(Func {
+        name: "fail".into(),
+        arity: 1,
+        locals: vec![string.clone()],
+        ty: function_type(std::slice::from_ref(&string), integer),
+        body: Body::Prim("fail".into()),
+    });
+    p.funcs.push(Func {
+        name: "main".into(),
+        arity: 0,
+        locals: vec![],
+        ty: string,
+        body: Body::Expr(Expr::Call(
+            2,
+            vec![Expr::Const(Value::str("input")), Expr::Const(Value::I64(0))],
+        )),
+    });
+    p.main = Some(4);
+    fwp::ir::check_locals(&p).unwrap();
+    let mut interpreter = fwp::interp::Interp::new(&p, Box::new(Vec::new()));
+    assert_eq!(
+        interpreter
+            .call(2, vec![Value::str("input"), Value::I64(0)])
+            .unwrap(),
+        Value::str("input")
+    );
+    assert!(interpreter
+        .call(2, vec![Value::str("input"), Value::I64(1)])
+        .is_err());
+    let emitted = fwp::cgen::generate(&p).unwrap();
+    assert!(emitted.contains("/* caller-owned parameters: 0 */"));
+    let entry = "static V f0(V l0) {\n";
+    assert_eq!(emitted.matches(entry).count(), 1);
+    let runtime = emitted.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    ).replace(entry, &format!(
+        "static volatile unsigned expected_owners;\n{entry}if (*fwp_rc_slot(l0) != expected_owners) exit(20);\n"
+    ));
+    let probe = r#"
+static volatile V input_value;
+static int dead(V value) { return fwp_reuse_verify ? STR(value)->len==0 : *fwp_rc_slot(value)==0; }
+int main(void) {
+ fwp_gc_start(__builtin_frame_address(0)); fwp_init_consts(); fwp_fns=fwp_fn_table;
+ for(volatile int mode=0;mode<2;mode++) for(volatile int alias=0;alias<2;alias++) {
+  input_value=fwp_rc_fresh(fwp_str_new("input",5)); expected_owners=1+alias;
+  if(alias) fwp_rc_dup(input_value);
+  fwp_handler h; h.prev=fwp_handlers; h.state_depth=fwp_state_len; h.cleanup=fwp_cleanups;
+  fwp_handlers=&h;
+  if(!setjmp(h.jb)) {
+   V result=f2(input_value,mode);
+   if(mode || result!=input_value || *fwp_rc_slot(result)!=expected_owners) return 1;
+   if(alias && fwp_rc_release_last(input_value)) return 2;
+   if(!fwp_rc_release_last(result)) return 3;
+   fwp_rc_free_obj(result);
+  } else {
+   if(!mode) return 4;
+   if(alias) {
+    if(*fwp_rc_slot(input_value)!=1 || STR(input_value)->len!=5) return 5;
+    if(!fwp_rc_release_last(input_value)) return 6;
+    fwp_rc_free_obj(input_value);
+   }
+  }
+  fwp_handlers=h.prev;
+  if(fwp_cleanups || !dead(input_value)) return 7;
+ }
+ for(volatile int mode=0;mode<2;mode++) {
+  input_value=fwp_rc_fresh(fwp_str_new("input",5)); expected_owners=1;
+  V boxed=fwp_rc_fresh(fwp_record(2,(V[]){input_value,mode}));
+  fwp_handler h; h.prev=fwp_handlers; h.state_depth=fwp_state_len; h.cleanup=fwp_cleanups;
+  fwp_handlers=&h;
+  if(!setjmp(h.jb)) {
+   if(f1(boxed)!=5 || mode) return 8;
+  } else if(!mode) return 9;
+  fwp_handlers=h.prev;
+  if(fwp_cleanups || !dead(input_value)) return 10;
+ }
+ return 0;
+}
+"#;
+    let dir = fwp::cgen::TempDir::new("direct-borrowed-fields").unwrap();
+    let exe = dir.join("probe.exe");
+    let control = runtime.replace(entry, &format!("{entry}fwp_rc_dup(l0);\n"));
+    for opt in ["-O0", "-O2"] {
+        for (code, status) in [(&control, 20), (&runtime, 0)] {
+            fwp::cgen::compile_c(&format!("{code}\n{probe}"), &exe, opt).unwrap();
+            for poison in ["0", "1"] {
+                let output = Command::new(&exe)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    output.status.code(),
+                    Some(status),
+                    "{opt}, poison {poison}: {output:?}"
+                );
+            }
+        }
+    }
+}
 
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
