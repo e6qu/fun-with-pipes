@@ -337,8 +337,8 @@ The [local-borrow measurements](measurements/channel-local-borrows.md) remove
 the closed-send loop's final retain and one of three shared-text retains,
 with unchanged allocations and peak charge.
 Native tests cover normal return, failure, cancellation, independent aliases and
-deliberately broken cleanup. Broader platform and final production acceptance
-remain tracked in the handoff.
+deliberately broken cleanup. [PR #181 acceptance](roadmap-history.md#temporary-channel-borrows-and-failure-cleanup-pr-181)
+records passing production checks on all six native platforms.
 
 ### Functions stored in channels
 

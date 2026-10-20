@@ -2,111 +2,110 @@
 
 ## Next action
 
-Next: monitor [PR #181](https://github.com/e6qu/fun-with-pipes/pull/181), branch
-`borrow-local-channels-and-preserve-cleanup`, and audit every production job
-and complete log for its exact head. Publish these reports and mark the draft
-ready to start the full platform run. Focused
-Linux validation and measurement audits are complete. Require all nine production
-jobs and documentation before squash merge, with a one-line subject of at most
-80 characters and an empty body. Verify the merge tree and message afterward.
-Standing authorization covers publication, repairs and merge.
+Next: investigate the remaining integer-counting performance gap using controlled
+same-host measurements and actual generated instructions. Start from accepted
+merge `c98da7a5b3d859fee69120cf3452dcdecc904979`, branch
+`investigate-native-counting-costs`. No optimization is implemented on this branch;
+only acceptance, plan and handoff documents have changed. There is no open PR.
+Preserve existing inputs, checked arithmetic, trap order and every timing sample.
+Do not infer a compiler regression from different timings of identical binaries.
 
-The branch starts at accepted PR #180's merge `fe491a97`. Root implementation
-`f320ed01` has the same tree as focused source `62ed1045` before the report and
-handoff updates. The old preparation worktree `/private/tmp/fwp-local-channel-aliases`
-preserves source history; continue edits in the root checkout.
+All seven roadmap areas remain open. Default native execution still includes
+tracing GC; JIT is excluded. Retained resources, persistent subscriptions,
+resource-owning tail frames and mutual recursion need further proofs.
 
-## Current batch
+## Accepted delivery
 
-- Borrow temporary channel names through enclosing bindings, matches and
-  borrowing calculations inside record fields. Reject stored aliases,
-  consuming/unknown uses, different-field lifetime evidence and resource scopes.
-- Keep changed error payload/type fields and task-scope child metadata valid
-  across C `longjmp`, using volatile fields without adding heap objects.
-- Test normal return, failure and cancellation at O0/O2/O3, independent owners,
-  callback-context destruction, GC verification, reuse poisoning and deliberately
-  broken ownership controls. A separate test fails after spawning 65 children
-  and compares interpreter output and complete native cleanup four times.
-- Record counts, generated C, actual binaries, stack frames and equivalent-work
-  C/Rust comparisons. Saved-binary repeats retain elapsed and child CPU samples.
+[PR #181](https://github.com/e6qu/fun-with-pipes/pull/181) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39488574062)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39488538767)
+at `2038c926246cfcf8f741df7fdf0324fefc568b58`. Every complete log was audited;
+none contains a failed step, test error or panic. Acceptance and merge receipt:
+`/private/tmp/fwp-181-acceptance.json`.
 
-### Verified focused results
+Squash merge `c98da7a5b3d859fee69120cf3452dcdecc904979` has the same tree
+`2fc33e8e7b238402acfc30efe3aee753ac4a018c` and one parent, accepted PR #180's
+merge `fe491a97`. Its verified message is exactly:
 
-Source `62ed104504b9e9a032434223120785e3cc37a47f`
-(`roadmap/revision-record-borrows-62ed1045`) passes **217 checks per host**
-in [run 39469883481](https://github.com/e6qu/fun-with-pipes/actions/runs/39469883481):
-161 compiler checks, 54 integration checks and two measurements. Both full logs
-are clean. Receipt: `/private/tmp/fwp-record-alias-audit.json`; artifacts:
-`/private/tmp/fwp-record-alias-costs`.
+`Borrow temporary channel names and preserve failure cleanup`
 
-[The report](measurements/channel-local-borrows.md) audits 180 profiles and
-20 ordinary channel binaries. Relative to source `37de5ba4`, closed-function
-retains fall 1→0 and shared-text retains 3→2 per message. Allocations and peak
-charge are unchanged; ARC ends with zero charge and no collections. ARC loop
-frames shrink 424→344 / 416→352 bytes for closed sends and 552→456 / 512→432
-for shared text (AMD64 / ARM64). No channel execution-time claim.
+That is one line, 59 characters, with no body or trailers. Both remote and fetched
+Git trees were checked. The guarded merge/verification took 9.31s; the local
+base/tree check and branch switch took 0.13s. Post-merge documentation
+`39503544342` already passed. Duplicate production `39503544541`
+was cancelled after verifying the identical tree; all nine duplicate jobs are
+confirmed cancelled. The accepted PR checks remain successful.
 
-All seven numerical fwp binaries and their C/Rust peers are byte-identical to
-those from `37de5ba4` on each architecture. The final host models are EPYC 9V74
-and Neoverse-N2. Equivalent decimal-counting medians show fwp 7.8%/3.6% above C;
-keep the larger earlier EPYC 7763 gaps as well. The record-field extension changes
-only shared-text binaries/counts relative to intermediate source `b15488ad`.
+## What this batch establishes
 
-The [saved-binary repeat](measurements/local-borrows-repeat-2026-10-20.json)
-uses measurement source `373aa1902c7329be58c15fadbd782a5ec79c97c0`
-(`roadmap/revision-borrow-repeat-373aa190`),
-[run 39468533196](https://github.com/e6qu/fun-with-pipes/actions/runs/39468533196),
-and `b15488ad` binaries from run `39465380125`. Both logs and all artifacts are
-audited: 24 balanced timing rounds, two warmups, three separate RSS/count samples,
-source/binary hashes and an injected-allocation control. Receipts/artifacts:
-`/private/tmp/fwp-alias-repeat-audit.json`, `/private/tmp/fwp-alias-repeat-memory`.
+- Temporary channel aliases borrow their continuing owner through bindings,
+  matches and borrowing calculations inside record fields. Stored aliases,
+  consuming/unknown calls, different-field evidence and resource scopes remain
+  excluded from the proof.
+- Changed error payload/type fields and task-scope child metadata remain valid
+  across C `longjmp`, using volatile fields without new heap objects.
+- Native tests cover return, failure and cancellation at O0/O2/O3, independent
+  aliases, callback-context destruction, GC/reuse verification and deliberately
+  broken cleanup. Another test fails after spawning 65 children and verifies
+  interpreter/native output and complete cleanup over four repetitions.
+- [Measured Linux counts](measurements/channel-local-borrows.md): closed-function
+  retains 1→0 and shared-text retains 3→2 per message. Allocations and peak charge
+  are unchanged; ARC finishes with zero charge and no collections. ARC frames
+  shrink 424→344 / 416→352 bytes for closed sends and 552→456 / 512→432 for shared
+  text (AMD64 / ARM64). No channel execution-time improvement is claimed.
 
-On EPYC 7763, fwp's median elapsed time is 53.9% above C and child CPU time
-55.3% above C. The spread occurs in CPU time too; descheduling alone cannot
-explain it. Neoverse-N2 gaps are 3.7% elapsed and 3.8% CPU. The cause remains
-under investigation; no timing fix is implemented. Byte-identical benchmark
-binaries rule out this channel-borrow change as its cause. Inspect the generated
-counting loop and use controlled same-host comparisons before proposing a fix.
+## Evidence for the next measurement
 
-## Accepted baseline
+Focused source `62ed104504b9e9a032434223120785e3cc37a47f`, tag
+`roadmap/revision-record-borrows-62ed1045`, passes 217 checks per Linux GCC host
+in run `39469883481`. Artifacts: `/private/tmp/fwp-record-alias-costs`;
+receipt: `/private/tmp/fwp-record-alias-audit.json`. All 180 channel profiles,
+20 ordinary binaries and seven C/Rust/fwp comparisons are audited.
 
-[PR #180](https://github.com/e6qu/fun-with-pipes/pull/180) passed all nine
-production jobs in `39457866569` and documentation in `39457866666` at
-`64cfa0081dab2f6b19b6157e844c49481749a605`. All full logs were audited. Merge
-`fe491a97466d9b6d972059553c95886ad850aacb` has identical tree
-`38bdbac28bbd381b98b5b326c4fea3af1efb1530` and the verified one-line message
-`Borrow function channels and eliminate temporary integer text`.
-Receipt: `/private/tmp/fwp-180-acceptance.json`. Only duplicate post-merge
-runs `39470377254` and `39470376880` were cancelled.
-See [delivery history](roadmap-history.md#function-channel-borrows-and-integer-text-pr-180).
+The final-head production benchmark is saved in `/private/tmp/fwp-181-benchmarks`;
+its audited report is `/private/tmp/fwp-181-benchmark-report.json`. All 21
+C/Rust/fwp executables match the focused source byte for byte, as do the seven
+generated C files. Sources, samples and medians pass. On EPYC 7763, decimal-counting
+C/Rust/fwp medians are 13.022/14.809/14.852 ms; fwp samples span 13.703–22.504 ms.
+Some saved focused Rust executables are now `*.codex-archive.gz`; their decoded
+bytes were compared explicitly without restoring files. Do not delete current
+evidence or assume archived paths are still ordinary executables.
+
+[Saved-binary repeats](measurements/local-borrows-repeat-2026-10-20.json) use
+measurement source `373aa1902c7329be58c15fadbd782a5ec79c97c0`, tagged
+`roadmap/revision-borrow-repeat-373aa190`, run `39468533196`, and binaries from
+`b15488ad` / run `39465380125`. Both hosts' complete logs and artifacts pass:
+24 balanced timing rounds, two warmups, three separate RSS/count samples,
+source/binary hashes and an injected-allocation control. On EPYC 7763, fwp is
+53.9% above C in median elapsed time and 55.3% above C in child CPU time; the
+spread therefore cannot be explained by descheduling alone. Neoverse-N2 gaps
+are 3.7% elapsed and 3.8% CPU. Artifacts: `/private/tmp/fwp-alias-repeat-memory`;
+receipt: `/private/tmp/fwp-alias-repeat-audit.json`. The cause remains unresolved.
 
 ## Local checks and resources
 
-Every local check uses `python3 scripts/local-guard.py`; full builds, suites,
-native compilation and benchmarks run on GitHub. Preserve 64 GiB free disk,
-target below 2 GiB, sampled aggregate RSS below 1 GiB and the 180-second limit.
-No limits were raised. Root target remains 4 KiB.
+Use `python3 scripts/local-guard.py` for every local check: 64 GiB free disk,
+target below 2 GiB, sampled aggregate RSS below 1 GiB and 180 seconds. Full
+builds, suites, native compilation and benchmarks run on GitHub. Root target is
+4 KiB. Guarded audits paused whenever the reserve failed and resumed only after
+recovery; no limits were raised and no unrelated process was stopped.
 
-After disk space fell below the reserve, checks stopped until it recovered.
-At the user's request, 1411 generated files from five obsolete CI download trees
-were removed only after verifying their remote artifacts remain available.
-Reclaimed 2.607 GiB; free space afterward was 72.210 GiB. Reports, logs, source
-examples, current evidence and working changes remain. Recovery manifest:
-`/private/tmp/fwp-disk-cleanup-2026-10-20.json`. No unrelated process was stopped.
+The user's cleanup request reclaimed 6.553 GiB of old generated downloads only
+after verifying their GitHub artifacts were available. Sources, reports, logs
+and current evidence were preserved. Recovery manifests are under `/private/tmp`:
+`fwp-disk-cleanup-2026-10-20.json`, `fwp-disk-cleanup-second-2026-10-20.json`,
+and `fwp-disk-cleanup-extra-generated-2026-10-20.json`.
 
-Recent guarded commands and results:
-
-- `python3 /private/tmp/fwp-audit-record-alias.py`: full logs clean, 3.28s.
-- `gh run download 39469883481 --dir /private/tmp/fwp-record-alias-costs`: 16.39s.
-- `python3 scripts/summarize-channel-costs.py --run 39469883481 --source 62ed104504b9e9a032434223120785e3cc37a47f --artifacts /private/tmp/fwp-record-alias-costs --output docs/measurements/channel-record-borrows-2026-10-20.json`: pass, 1.57s.
-- `python3 scripts/summarize-scalar-text.py --run 39469883481 --source 62ed104504b9e9a032434223120785e3cc37a47f --artifacts /private/tmp/fwp-record-alias-costs --output docs/measurements/record-borrows-benchmarks-2026-10-20.json`: pass, 2.04s.
-- `python3 /private/tmp/fwp-audit-record-comparison.py`: profiles, hashes and 217-check totals pass, 0.13s.
-- Saved C/assembly inspection: shared-text channel alias removed; recorded frames
-  verified from actual prologues, 0.13s each. No local native binaries executed.
-- `python3 scripts/check-roadmap.py`: previously caught a missing status table and
-  next-action marker; both restored, then 72 link sets, 106 tag pairs and seven
-  roadmap steps passed in 2.89s. Final reports, whitespace and equality with the focused implementation
-  source then passed together in 3.28s.
+Recent guarded checks: final log audit 4.63s; final-head benchmark audit 0.35s;
+comparison of all 21 executables, including compressed Rust artifacts, 0.14s.
+A first generated-C comparison used a pre-cleanup source; correcting its source
+resolved that audit-only mismatch. Historical checks are in the accepted receipt
+and [delivery evidence](roadmap-history.md#temporary-channel-borrows-and-failure-cleanup-pr-181).
+The acceptance updates pass `python3 scripts/local-guard.py python3
+scripts/check-roadmap.py` in 2.67s: 72 link sets, 106 historical tag pairs,
+seven roadmap steps and commit messages. The whitespace check also passed
+in 0.13s under the unchanged guard with Python supervising Git; a direct Git
+launch had hit an OS process-group signal permission error.
 
 ## Roadmap status
 
@@ -119,10 +118,3 @@ Recent guarded commands and results:
 | 5 | In progress | Validate numerical kernels and ahead-of-time GPU policy. |
 | 6 | In progress | Establish equivalent-work comparisons and budgets. |
 | 7 | In progress | Validate larger programs and bounded live memory. |
-
-All seven areas in [PLAN.md](../PLAN.md) remain open. Default native execution
-still includes tracing GC; JIT is excluded. Persistent subscriptions, retained
-resources, resource-owning tail frames and mutual recursion need further proofs.
-Captured-channel eligibility needs provenance as well as payload types. Weak
-handles remain a proposal. Measured shared-message costs remain; completed
-microbenchmarks do not complete the roadmap.
