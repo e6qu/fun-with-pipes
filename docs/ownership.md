@@ -635,6 +635,13 @@ tracing code. It rejects unproved ownership instead of silently retaining it.
 Ordinary counted freeing must remain enabled; tracing stress and reuse poisoning
 are diagnostic modes incompatible with ARC.
 
+Native ARC preprocessing omits marking, root scanning and sweeping, including
+their scheduler and Windows fiber helpers. This must hold even at `-O0`: GCC
+previously kept unused tracing functions that Clang removed. Typed finalizers,
+explicit destruction and scheduler stack-position helpers remain. The
+[handoff](development-state.md) records validation of this repair; binary checks
+cover ARC exclusion and an ordinary tracing control.
+
 | Entry or boundary | Implemented contract | Evidence and limits |
 |---|---|---|
 | Native main, function executable, CLI | Each entry proves its own state/derivative scopes and releases owned results | [Reference](reference.md#checked-reference-counting) |

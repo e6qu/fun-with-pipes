@@ -85,7 +85,7 @@ main = range 0 129 | map (choose | checks) | length | echo
                 )
                 .unwrap();
             }
-            for opt in ["-O1", "-O2"] {
+            for opt in ["-O0", "-O1", "-O2"] {
                 let binary = dir.join(format!("{name}-{stack}-{memory}{opt}.exe"));
                 fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
                 let symbols = checked(Command::new("nm").arg(&binary));

@@ -3,13 +3,12 @@
 ## Next action
 
 [PR #175](https://github.com/e6qu/fun-with-pipes/pull/175) is the only active PR.
-The combined repair on `queued-function-delivery` includes
-`fd1275ea69c8bf6b3f08b4ecd106585ab94cf89f`, preserved by
-`roadmap/revision-nonreturning-proof`, plus documentation and coverage updates.
-Next: audit the repaired head's full CI and finish reviewing original production
-run `39353280539` at failed head `d1df84d9`. The workflows do not cancel older
-runs when the branch advances. All completed failures were audited before this
-repair push; review later results and fix any additional failures together.
+The remote branch `queued-function-delivery` is at `6b246748`; production
+`39359123801` is running and documentation `39359123712` passed. Local work fixes
+another failure exposed by original production `39353280539` at `d1df84d9`:
+GCC at `-O0` retained unused tracing routines in ARC binaries. Do not merge either
+head. Next: validate the preprocessing repair with GCC, audit remaining completed
+jobs, then publish all known repairs together and require new full acceptance.
 
 Require all nine production jobs and documentation on the final PR head before
 squash merge. Use an explicit one-line subject, at most 80 characters, and empty
@@ -20,7 +19,8 @@ body. Verify the merged tree/message before cancelling redundant post-merge CI.
 Checked ARC admits known functions with proved immutable captures: numbers,
 strings, containers and other proved functions. Captured channels, tasks, files,
 connections and streams remain rejected, even when a particular program might
-be safe. There is no new syntax or runtime implementation in this PR. See
+be safe. There is no new syntax. Runtime guards also remove tracing code from
+ARC builds before C optimization. See
 [the worked example and limits](ownership.md#next-proof-functions-stored-in-channels).
 
 The proof follows captures, returns, queues and caught errors. Calls use the
@@ -41,8 +41,11 @@ it locally. Its repaired native regression passed on focused runners.
   found one failure in `autodiff_nested`; stress ARM64 found three checkpoint
   failures and one F128 precision failure. All five reject `rev._vjp` because
   a trapping branch was treated as an unknown function producer. Both complete
-  logs were audited; remaining jobs are still running. Documentation
-  `39353280537` passed.
+  logs were audited. Intel macOS reports the same failures across its two jobs;
+  Windows ARM64 reports all five. Linux ARM64 reports those five plus the
+  `queued_functions` binary-symbol failure: GCC keeps unused collectors at
+  `-O0`. All completed logs are audited. Linux AMD64 and Windows AMD64 remain
+  running. Documentation `39353280537` passed.
 - Repair `fd1275ea`: focused macOS ARM64 `39357056381` and Linux AMD64
   `39357061326` each pass 158 checks: 145 units, eight queue cases, one generated
   entry, three checkpoint tests and one precision test. None ignored; the entry
@@ -52,6 +55,11 @@ it locally. Its repaired native regression passed on focused runners.
   failed autodiff targets, nested derivatives, tape cleanup, wrong-input cases,
   float formats and generated library documentation. Complete finished logs were
   audited. These focused runs do not replace final production acceptance.
+- `6b246748` production: benchmarks passed; other jobs continue. The newly found
+  GCC binary issue is expected here too. Local repair removes tracing functions
+  with preprocessor guards, preserving typed finalizers and scheduler helpers.
+  ARC checks now include O0/O1/O2, and ordinary tracing supplies a positive symbol
+  control. Focused Linux ownership jobs now explicitly use GCC, matching production.
 
 Existing checks compare raw interpretation with native ARC/stressed tracing,
 exercise closed/undrained queues, aliases, cancelled transfers and failed receive
@@ -75,11 +83,17 @@ exchange frame are recorded; no timing/C-or-Rust parity claim is made.
 All six native jobs in `39356046321` failed only two stale test expectations;
 other 26 integration cases passed. Both WASI jobs passed all 14 checks. Every
 complete log was audited. Combined repair `5d083f3f` includes those corrections
-and the primary non-returning proof fix. Runs `39357985210` (six native/two WASI,
-expanded autodiff/resource tests) and `39357990574` (counts) continue. Completed
-Linux ARM64 and Windows AMD64 logs pass all 38 integration checks but expose one
-remaining all-borrowed assertion in the contract inventory test. Its local repair
-passes the exact standalone unit test; other jobs still need complete audit.
+and the primary non-returning proof fix. Run `39357985210` passes all 38 integration
+checks on each native host and 18 on each WASI host. Only one stale contract unit
+assertion fails; it is fixed and its standalone check passes locally. All eight
+logs are audited. Count run `39357990574` reproduces all 180 samples and binary
+sizes on both Linux hosts. Preparation `f0747ab2` adds a narrow alias removal
+after `tap`, preserving its action before the continuation. Its counts run
+`39360310385` passes both hosts; artifacts still need comparison. Expanded loop
+cleanup run `39360304008` continues. Review found the new ARC test enabled
+incompatible stress flags; local correction keeps them only on tracing runs.
+Bring the primary collector-exclusion repair into this preparation before its
+next validation batch. The preparation's handoff has the detailed next action.
 Keep this preparation separate until PR #175 is accepted; keep one active PR.
 
 ## Local work and accepted base
@@ -88,7 +102,9 @@ Local checks use `python3 scripts/local-guard.py COMMAND...`, unchanged limits.
 `cargo fmt --all -- --check` and `python3 scripts/check-roadmap.py` pass under
 the guard. Guarded interpretation of the minimal
 trapping-branch regression prints `Some 3`; old ARC emission reproduces rejection.
-Reports audit downloaded data; no local compiler rebuild, native build or timing
+Guarded `/private/tmp/fwp-check-arc-preprocessing.py` passes C syntax and symbol
+exclusion/control checks in 0.63s, without producing a binary. Reports audit
+downloaded data; no local compiler rebuild, generated native build or timing
 run was performed. Free disk is close to the 64 GiB floor: avoid large downloads,
 monitor the guard and move additional heavy analysis to runners.
 
