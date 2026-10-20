@@ -73,6 +73,26 @@ allocation holds bytes rather than references to other managed values. An
 injected allocation makes each control exit with the expected failure code.
 This does not count libc allocations, raw runtime buffers, stacks or process RSS.
 
+For the full two-million-element benchmark, separate instrumented GCC O2 builds
+also record zero managed allocation requests, retains, collections and additional
+peak/final charged bytes, from constant initialization through language cleanup.
+An injected 16-byte allocation is detected in every control run. This is a
+measurement of managed storage, not a claim that the process uses no heap.
+
+Three fresh runs of each previously timed, unchanged executable measure peak
+resident memory (RSS: pages resident in physical memory) with GNU time:
+
+| Host | C peak RSS | Rust peak RSS | fwp peak RSS | fwp minus C median |
+|---|---:|---:|---:|---:|
+| AMD64 | 1640–1704 KiB | 2136–2224 KiB | 1996 KiB | +356 KiB |
+| ARM64 | 1364–1380 KiB | 1688–1692 KiB | 1668 KiB | +288 KiB |
+
+RSS includes startup, output, shutdown and shared code/libraries. Page granularity
+and process accounting limit this small comparison; it is not an allocator-call
+count or an improvement over older fwp. These separate memory runs contribute no
+samples to the timing table. The [memory report](integer-text-memory-2026-10-20.json)
+keeps all samples, binary hashes, environment details and controls.
+
 The timed fwp loop was inspected in both actual executables: digit counting and
 the running sum stay in CPU registers, with no calls, allocations or stack
 loads/stores in normal iterations. Arithmetic checks remain. Runtime setup and output still have costs;
@@ -98,4 +118,11 @@ artifacts, then use `scripts/summarize-scalar-text.py` with explicit `--run`,
 `--source`, `--artifacts` and `--output` arguments. It checks source inputs,
 architectures from executable files, timing samples, binary hashes and the
 primitive inventory.
+The separate `scalar-text-memory` suite reuses those artifacts with explicit
+`evidence_run` and `source_revision` inputs. Measurement source
+`fd1c1ec0292fa3c49a8f4f3cf37e76cb420058d6`, tagged
+`roadmap/revision-scalar-memory-fd1c1ec0`, passes
+[run 39455802373](https://github.com/e6qu/fun-with-pipes/actions/runs/39455802373)
+on both architectures. Both complete logs and archived inputs, generated
+instrumentation, binaries and raw RSS files were audited.
 The [handoff](../development-state.md) tracks full production acceptance.

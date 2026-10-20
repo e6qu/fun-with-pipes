@@ -2,131 +2,91 @@
 
 ## Next action
 
-Next: finish [PR #179](https://github.com/e6qu/fun-with-pipes/pull/179), then deliver the
-combined preparation below. Keep one active PR. All seven roadmap areas remain
+Next: publish `borrow-function-channels-and-count-text` and complete its nine
+production jobs plus documentation for the final commit. Audit every completed
+job's full log and fix all failures. Squash-merge only after all gates pass, with
+an explicit one-line subject of at most 80 characters and an empty body; verify
+the merged tree and message. Keep one active PR. All seven roadmap areas remain
 open; default native execution still includes tracing GC.
 
-PR #179's final head is `63a129f25cfb9a3b940baf7786036265bfdf831d` on
-`move-matched-variant-owners`. Production run `39438167856` and docs
-`39438167895` must pass for that exact source. Documentation, benchmarks, Linux
-ARM64, both ARM64 macOS gates and both Windows gates pass; their complete logs
-are clean. Linux AMD64 and the two Intel macOS gates remain running without
-reported failures. The PR is still open; keep its head stable.
+## Current delivery
 
-Audit with `python3 scripts/local-guard.py python3 /private/tmp/fwp-audit-179-combined.py`.
-Receipt: `/private/tmp/fwp-179-combined-acceptance.json`. Merge only when it says
-`EXACT HEAD ACCEPTED: True`: all nine production jobs and docs, with logs checked.
-Use squash merge, an explicit subject of at most 80 characters and an empty body;
-verify the merged tree and one-line message. No trailers or attribution. Cancel
-only redundant postmerge CI for the identical accepted tree.
+The branch starts at accepted PR #179's merge and contains:
 
-## Current delivery: PR #179
-
-The changes move matched variant payloads, borrow eligible direct-call arguments,
-and reject compile-time runtime handles that previously became zero in native C.
-The caller must need the same counted storage after a borrowed call. Generic
-entries still consume arguments. Resource scopes, recursion and escapes remain
-excluded; cleanup preserves failure, cancellation and observable lifetimes.
-Windows permanently includes the additional ownership checks and allows 150
-minutes, matching macOS. Its superseded 90-minute run finished tests but timed
-out during cleanup; that earlier head is not accepted.
-
-Compiler/test source `f3e05d27c8f0610f9614b1421f2c7dbedb89c16c` is preserved by
-`roadmap/revision-direct-borrows-f3e05d27`. Final head only adds reports/docs.
-Focused run `39436111385` passes 189 checks per Linux host; all logs are clean.
-Receipt: `/private/tmp/fwp-direct-borrow-final-audit.json`. See the
-[borrowing report](measurements/channel-direct-borrows.md) and
-[matched-payload report](measurements/channel-variant-moves.md) for methods,
-source revisions, allocation counts and inspected machine code.
-
-## Next combined preparation
-
-Worktree: `/private/tmp/fwp-direct-borrows`. Branch:
-`borrow-function-channel-handles`, based on PR #179's final head. Measured compiler/test
-source: `37de5ba40970f7729bf735b347527f5628117dc0`.
-Focused `scalar-text` run `39446896772` passes on both Linux architectures:
-205 tests per host, clean complete logs. Receipt `/private/tmp/fwp-scalar-text-audit.json`.
-The code is tagged `roadmap/revision-scalar-text-37de5ba4` on the remote.
-Artifacts: `/private/tmp/fwp-scalar-text-costs`. Both reports are audited:
-`docs/measurements/integer-text-2026-10-20.json` and
-`docs/measurements/function-channel-borrows-2026-10-20.json` in preparation.
-All 100 channel C/binary/disassembly files and profiles match the earlier d8 proof.
-
-Next independent action: publish the report/profiler changes and dispatch
-`numerics.yml` with `suite=scalar-text-memory`, `evidence_run=39446896772`,
-`source_revision=37de5ba40970f7729bf735b347527f5628117dc0`.
-This profiles the actual saved C/Rust/fwp binaries with GNU time and separate
-managed-allocation probes; it does not repeat the compiler suite. Record both
-complete logs and memory artifacts before finishing the report. The profiler
-is `scripts/measure-scalar-text-memory.py`; its syntax and instrumentation match
-both real C artifacts under the guard (0.13s). Native execution is pending.
-
-This batch contains:
-
-- **Borrow function-channel handles.** A continuing owner keeps the whole queue
-  and native sink context alive. Payload capture, cycle and scope checks remain
-  unchanged. Tests cover generic entries, aliases, native-context destruction,
-  failed queued calls and a deliberately leaked-owner control.
+- **Borrow function-channel handles.** A continuing caller owner keeps the queue
+  and native callback context alive. Capture, cycle and scope checks remain.
+  Tests cover aliases, generic consuming entries, context destruction, failed
+  queued calls and a deliberately leaked-owner control.
 - **Count integer text without building it.** `show | string.length` and eligible
-  concatenations count characters directly for integers up to 64 bits. The pass
-  preserves effects, traps, Unicode character counts and shared strings. New
-  native checks compare raw interpreter results and count leaf allocations with
-  an intentionally allocating control; 12 test binaries are retained for inspection.
-- **Compare equivalent calculations.** The new `text-length` benchmark uses the
-  same fwp program as `strings`, but C/Rust count digits directly and check
-  multiplication/sums. Existing `strings` peers still format text. The focused
-  suite runs all seven complete-program comparisons with GCC on both hosts.
-  The measured direct-counting gap is +8.9% versus C on AMD64 and +3.6% on ARM64;
-  fwp takes less time than these Rust peers. Raw samples and limits are in
-  `docs/measurements/integer-text.md`. Separate memory profiling is pending.
+  concatenations count characters directly for integers up to 64 bits. Effects,
+  traps, Unicode counts and shared strings keep their semantics. Tests compare
+  the unoptimized interpreter with native O0/O2, ARC and tracing execution.
+- **Compare equivalent calculations.** `text-length` adds direct digit-counting
+  C/Rust peers with checked multiplication/sums. Existing `strings` peers still
+  format text. Reports include repeated times, managed allocation counts, whole
+  process memory, binary size and inspected machine code.
 
-An incorrect arithmetic primitive name was caught by IR inspection and fixed
-to `prim.add` before these passing runs. All semantic/allocation controls pass.
-The timed fwp loops use registers without calls or stack traffic in normal
-iterations. The two text comparisons have identical generated C and executable
-code sections; whole-file hashes differ. No old-fwp timing speedup is claimed.
+Measured compiler/test source `37de5ba40970f7729bf735b347527f5628117dc0` is tagged
+`roadmap/revision-scalar-text-37de5ba4`. Focused
+[run 39446896772](https://github.com/e6qu/fun-with-pipes/actions/runs/39446896772)
+passes 205 checks per Linux host: 154 compiler tests, 49 integrations, channel
+measurement and seven-program C/Rust comparison. Both complete logs are clean.
+Receipt: `/private/tmp/fwp-scalar-text-audit.json`.
+Artifacts: `/private/tmp/fwp-scalar-text-costs`.
 
-The channel-only source `d8c62e175aa0beab727bb15960718f0bfca9ec53` is already
-verified by focused run `39440052683`: 199 passing checks per host, clean logs.
-It is tagged `roadmap/revision-function-channel-borrows-d8c62e17`. All 180 profiles
-and 20 binaries are audited in `/private/tmp/fwp-function-channel-counts.json`;
-artifacts: `/private/tmp/fwp-function-channel-costs`. Fresh-function retains fall
-from one/message to zero, with unchanged allocations and peak charged storage.
-ARC exchange frames shrink from 248 to 56 bytes on AMD64 and 256 to 80 on ARM64,
-excluding callees (AMD64 also excludes the return address). Other cases retain
-their costs. No elapsed-time claim. The closed-channel loop still creates an
-owned alias after inlining; this direct-call change does not eliminate it.
+Memory measurement source `fd1c1ec0292fa3c49a8f4f3cf37e76cb420058d6` is tagged
+`roadmap/revision-scalar-memory-fd1c1ec0`. Its
+[run 39455802373](https://github.com/e6qu/fun-with-pipes/actions/runs/39455802373)
+passes on both native Linux architectures, reusing the exact timed binaries.
+Both full logs and all saved inputs, binaries, generated instrumentation, RSS
+samples and allocation controls are audited. Receipt:
+`/private/tmp/fwp-scalar-memory-audit.json`; artifacts:
+`/private/tmp/fwp-scalar-text-memory`. There are no known unresolved failures.
+These focused runs do not replace final production acceptance.
 
-Compare with `/private/tmp/fwp-direct-borrow-accepted-costs` and the checked-in
-[baseline JSON](measurements/channel-direct-borrow-counts-2026-10-20.json).
-`/private/tmp/fwp-compare-channel-stages.py` requires explicit current/baseline
-report and artifact paths. The source/report validator is
-`scripts/summarize-channel-costs.py`.
+[Integer-text results](measurements/integer-text.md) retain the +8.9% AMD64 and
++3.6% ARM64 time gaps versus direct C counting. fwp has zero measured managed
+requests after initialization, but peak process memory exceeds the C median by
+356/288 KiB respectively. No universal speed or zero-heap claim follows.
+[Channel results](measurements/function-channel-borrows.md) remove one retain
+per fresh-function message, with unchanged allocations and peak charged storage.
+All 180 profiles and 20 binaries are audited; the combined change's 100 saved
+C/binary/disassembly files match earlier channel-only source `d8c62e17`.
+That source's focused run `39440052683` passes 199 checks per host and is tagged
+`roadmap/revision-function-channel-borrows-d8c62e17`.
 
-After #179 merges, preserve measured preparation heads with remote revision
-tags. Transplant only commits after `63a129f2` onto the accepted merge, update
-reports/plan and open the next substantial PR. Require its own exact-head nine
-production gates and docs. Root has only the live handoff edit. Preparation
-adds report/docs updates, `scripts/summarize-scalar-text.py`, the
-memory profiler and its focused workflow. The report audit passes both ELF
-architectures, source inputs, timings, 24 saved test binaries and the frozen
-contract inventory (1.95s). The channel report audits 180 profiles/20 binaries
-(1.68s). Do not change PR #179's healthy head for these preparation updates.
+The original preparation remains at `/private/tmp/fwp-direct-borrows`, branch
+`borrow-function-channel-handles`. Its four post-#179 commits were transplanted
+onto accepted main; measured objects remain available through remote tags.
+Use the root checkout for this delivery. The old worktree's handoff is obsolete.
 
-## Accepted baseline and local checks
+## Accepted baseline
 
-PR #178 merged as `2ee0159b941d7887d70f5d86342cfad08e4e35c2`, identical in tree
-to tested `732984c3fb6b8646f6f3ee4932c123eadb7f3555`. Its nine production gates,
-docs and one-line message were audited; receipt `/private/tmp/fwp-178-acceptance.json`.
-See [history](roadmap-history.md#direct-matches-and-callbacks-pr-178).
+[PR #179](https://github.com/e6qu/fun-with-pipes/pull/179) passed all nine
+production jobs in `39438167856` and documentation in `39438167895` at
+`63a129f25cfb9a3b940baf7786036265bfdf831d`. Complete logs are clean.
+Merge `2f2e3fa1baa3b8b298781d109bb4d6eb11a822d7` has the same tree and a verified
+one-line message without trailers. Receipt:
+`/private/tmp/fwp-179-combined-acceptance.json`. Only duplicate post-merge
+production `39456604708` was cancelled; post-merge documentation passed.
+See [history](roadmap-history.md#matched-payload-moves-and-direct-call-borrows-pr-179).
 
-No local build or full suite. Serial guarded checks pass: `cargo fmt --all`
-(1.64s), `python3 scripts/check-roadmap.py` (3.11s), and
-`python3 /private/tmp/fwp-validate-text-length-fixtures.py` (12.43s). Run these
-through `python3 scripts/local-guard.py COMMAND...`; use the guard's absolute
-path from the preparation worktree. Last observed: about 69 GiB free, root target
-4 KiB, no preparation target. Preserve 64 GiB free disk, target data below 2 GiB,
-aggregate RSS below 1 GiB and the 180-second deadline. Full work runs on GitHub.
+## Local checks and next investigation
+
+No local builds, full suites or native compilations. Use
+`python3 scripts/local-guard.py COMMAND...` serially. Guarded report audits pass:
+`python3 /private/tmp/fwp-audit-memory-artifacts.py` (0.62s),
+`python3 scripts/summarize-scalar-text.py` with explicit run/source/artifact/output
+arguments (1.95s), and channel-report audit (1.68s). `python3 scripts/check-roadmap.py` passes (3.26s);
+`cargo fmt --all -- --check` passes (1.64s). About 69 GiB free; root target is 4 KiB. Preserve the fixed
+64 GiB free disk, 2 GiB target, 1 GiB aggregate RSS and 180-second limits.
+
+While final production runs, investigate the closed-function channel's remaining
+retain: inlining leaves an owned temporary alias of a channel field while the
+original owner continues into the next loop state. Establish every-path lifetime
+and failure cleanup before removing it; do not prolong a resource lifetime or
+borrow through an owner that can be consumed. No change for this case is implemented.
+Use the five-program channel protocol and current reports as the baseline.
 
 ## Roadmap status
 
