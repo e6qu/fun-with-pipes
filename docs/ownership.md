@@ -307,9 +307,15 @@ invented callback. Unknown external function-bearing queues remain rejected.
 Queues with the same concrete payload type share a possible-target set. Aggregate
 fields also share a set, and caught errors are combined conservatively. These
 choices can reject safe programs with unrelated owners or scopes; they must not
-accept an unproved capture. More precise analysis can reduce those rejections
+accept an unproved capture. When a value is used as a function, its checked type
+excludes incompatible targets from neighboring fields; unknown sources remain
+unknown. For example, a scope wrapper taking a function must not be confused
+with that function taking an integer. More precise analysis can reduce other rejections
 later without changing source syntax. Native constructors need an explicit source
-model; an arrow type alone never proves capture freedom.
+model; an arrow type alone never proves capture freedom. A received gRPC
+iterator contains a continuation that keeps the network stream alive. The
+analysis follows its ordinary constructor and rejects that captured stream owner
+in a queue, even though the iterator's public type does not name the resource.
 
 Acceptance needs scalar/string captures, returned and nested callbacks, aliases,
 undrained/closed queues, failure, cancellation and repeated bounded-live work.

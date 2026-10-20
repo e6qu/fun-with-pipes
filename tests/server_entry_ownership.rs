@@ -296,9 +296,9 @@ fn generated_entries_accept_proved_functions_and_reject_channel_captures() {
     for interface in ["--rest", "--mcp"] {
         std::fs::write(
             &source,
-            r#"# expose: rest, mcp
-callbacks : I64 -> Channel[I64 -> I64] ! {Async}
+            r#"callbacks : I64 -> Channel[I64 -> I64] ! {Async}
 callbacks = channel.make
+# expose: rest, mcp
 export queued : I64 -> I64 ! {Async}
 queued = both id (const 1 | callbacks)
     | tap (fork channel.send .1 (.0 | add))
@@ -337,12 +337,12 @@ queued = both id (const 1 | callbacks)
         }
         std::fs::write(
             &source,
-            r#"# expose: rest, mcp
-callbacks : I64 -> Channel[() -> () ! {Async}] ! {Async}
+            r#"callbacks : I64 -> Channel[() -> () ! {Async}] ! {Async}
 callbacks = channel.make
 keep : Channel[() -> () ! {Async}] -> () -> () ! {Async}
 keep = then2 const channel.close
 send-self = fork channel.send id keep
+# expose: rest, mcp
 export rejected : () -> () ! {Async}
 rejected = const 1 | callbacks | tap send-self | channel.recv | option.map (apply ()) | ignore
 "#,

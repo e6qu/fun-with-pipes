@@ -134,6 +134,51 @@ keep = then2 const channel.close
 }
 
 #[test]
+fn queued_remote_iterators_reject_hidden_stream_owners() {
+    let dir = fwp::cgen::TempDir::new("queued-remote-iterator").unwrap();
+    std::fs::write(
+        dir.join("greeter.fwp"),
+        "export count : I64 -> Iterator[I64]\ncount = flip iter.take (iter.count-from 1)\n",
+    )
+    .unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(
+        &source,
+        "import greeter\nmain = channel.make 1 | tap (flip channel.send (3 | greeter.count)) | channel.recv | ignore\n",
+    )
+    .unwrap();
+    for (remote, memory, accepted) in [
+        (false, "arc", true),
+        (true, "tracing", true),
+        (true, "arc", false),
+    ] {
+        let mut build = Command::new(env!("CARGO_BIN_EXE_fwp"));
+        build.args(["build", "--gc", memory, "--emit-c"]);
+        if remote {
+            build.args(["--service", "greeter"]);
+        }
+        let result = build
+            .arg(&source)
+            .arg("-o")
+            .arg(dir.join("main.c"))
+            .output()
+            .unwrap();
+        assert_eq!(
+            result.status.success(),
+            accepted,
+            "remote={remote}/{memory}: {result:?}"
+        );
+        if !accepted {
+            let error = String::from_utf8_lossy(&result.stderr);
+            assert!(
+                error.contains("queued function") && error.contains("GrpcCell"),
+                "{error}"
+            );
+        }
+    }
+}
+
+#[test]
 fn queued_autodiff_functions_require_the_receivers_scope() {
     let dir = fwp::cgen::TempDir::new("queued-ad-scope").unwrap();
     let source = dir.join("main.fwp");

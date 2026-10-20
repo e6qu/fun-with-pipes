@@ -2,83 +2,87 @@
 
 ## Next action
 
-This is preparation on `prove-queued-function-ownership` in
+Preparation branch `prove-queued-function-ownership` lives in
 `/private/tmp/fwp-channel-functions`, based on PR #174 head
 `67f233467bc68fe9a690373af219253d45f4e3f8`. The primary checkout owns that PR.
-Production `39342938663` is running; documentation `39342938600`, benchmarks
-and both ARM macOS jobs pass. Keep that tested head unchanged. Require all nine
-production jobs and documentation before squash merge, then verify its tree and
-one-line message. The final-head benchmark is retained at
-`/private/tmp/fwp-174-final-production-bench.md` for the next documentation update.
+Production `39342938663` has six passing jobs; both Linux jobs and Windows ARM
+remain running. Documentation `39342938600` passes. Keep its head unchanged.
+Require all nine production jobs and documentation, squash merge, then verify
+identical trees and a one-line message. The prepared final audit is
+`/private/tmp/fwp-audit-174-combined-final.py` (run from the primary checkout
+through its local guard). Only then publish the next ownership PR.
 
-Next: finish repaired `channel-proof` run `39348144254` at `e497f639`; all eight
-jobs in the earlier `39346219500` were audited. Also validate the replaced
-server-entry rejection and a real MCP queued-function call in the focused
-server-entry suite. After PR #174 passes and merges, deliver this
-ownership work as the next single PR with current docs and full acceptance gates.
-No new platform support is accepted yet.
+Next: validate the function-type refinement and gRPC capture
+regression. All six native failures in `39348144254` were audited: each has
+19 passing integration checks and one false rejection of a queued autodiff
+function. All unit checks pass (142 on Linux/macOS, 143 on Windows). Both WASI
+jobs pass. Server run `39348422141` at `a3cdf5d8` found a
+misplaced exposure annotation in the new test fixture; it now sits above the
+export it describes. The remaining server checks pass; REST API is running.
+Audit every completed target and failure before the next repair push. No new
+platform support is accepted yet.
 
 ## Queued-function implementation
 
-The compiler now permits functions in ARC channel payloads when their actual
-captures are proved immutable. Numbers, strings, containers and other proved
-functions are supported by the new analysis. Captured channels, tasks, files,
-connections and streams remain rejected. This conservative restriction can reject
-safe programs; it is not a claim that all rejected programs contain cycles.
+ARC queues now admit known functions with proved immutable captures. This
+includes numbers, strings, containers and other proved functions. Captured
+channels, tasks, files, connections and streams remain rejected, even when a
+particular program might be safe. No new syntax or runtime implementation.
 
-`arc_scope.rs` tracks known functions and an explicit unknown source through
-captures, calls, queues and caught error values. Unknown sources survive union
-with known functions. Calls use the receiver's State/autodiff scope. Queues of
-one concrete type share a target set; aggregate fields and caught errors also
-merge conservatively. External function-bearing queues remain unproved. Native
-constructors need an explicit source model. There is no new syntax or runtime
-implementation. See [the proof](ownership.md#next-proof-functions-stored-in-channels).
+`arc_scope.rs` tracks known and unknown function sources through captures,
+calls, queues and caught errors. Unknown sources survive union with known ones.
+Calls use the receiver's State/autodiff scope. Queues of one concrete type,
+aggregate fields and caught errors merge conservatively. External function-bearing
+queues remain unproved. Native constructors need an explicit source model.
+See [the proof and worked example](ownership.md#next-proof-functions-stored-in-channels).
 
-## Checks and outstanding repair
+The latest repair uses checked function types to exclude incompatible targets
+mixed from neighboring fields. Previously, the wrapper in
+`option.map (ad.scope (apply 1))` was confused with queued `ad.tape`, falsely
+calling that target outside its scope. The original failing test remains; a
+unit assertion verifies that refining types never removes unknown sources.
+A new emit-only regression accepts a local iterator, accepts a remote iterator
+with tracing, and requires ARC to reject its captured `GrpcCell` stream owner.
+It does not make network requests or establish new gRPC execution support.
 
-All builds and full suites run on GitHub:
+## Validation and evidence
 
-- Initial proof `4ad0107a`, run `39344388657`: both Linux hosts passed 141 unit
-  and 16 integration checks. Clippy found one unused binding; fixed in `0e291839`.
-- `0e291839`, run `39345460745`: both Linux hosts passed Clippy, 141 unit and
+Full builds and suites run on GitHub. Earlier preparation:
+
+- `4ad0107a` / `39344388657`: both Linux jobs passed 141 unit and 16 integration
+  checks; unused-binding Clippy failure fixed in `0e291839`.
+- `0e291839` / `39345460745`: both Linux jobs passed Clippy, 141 unit and
   18 integration checks, none ignored.
-- Expanded source `67839578`, run `39346219500`: both Linux native jobs pass.
-  The three queued-function tests also pass on both Windows hosts and ARM macOS.
-  Complete logs exposed missing OpenSSL setup in those three jobs: the HTTP-body
-  unit check and State cleanup C probe could not compile. The pending batch adds
-  the existing Windows TLS setup/cache and explicit macOS OpenSSL configuration.
-  Windows production will also run its complete unit suite after dependency setup.
-- Both WASI jobs finish with 13 passed and one obsolete rejection check failed.
-  Actual execution/cleanup passes, including JSPI and Asyncify for WASI/Browser.
-  The old test rejected an empty function queue; the pending replacement accepts
-  that queue and rejects an actual self-capturing callback on both entry targets.
-- Intel macOS also passes: 141 unit and 19 integration checks, none ignored.
-  Every completed target on all eight hosts was audited before this repair.
+- `67839578` / `39346219500`: all eight jobs audited. Both Linux and Intel macOS
+  pass. ARM macOS and Windows lacked OpenSSL for two unrelated probes; fixed
+  in `e497f639`. Both WASI jobs passed 13 checks but rejected the now-valid empty
+  function queue; replaced with acceptance plus real cyclic-capture rejection.
+- `e497f639` / `39348144254`: TLS setup repairs pass on all six native hosts.
+  Only the new receiver-autodiff check fails; all six complete native logs were
+  audited. The type refinement addresses its cause. Both full WASI jobs pass.
+- `a3cdf5d8` replaces the same obsolete blanket rejection in REST/MCP entry tests,
+  executes a queued function through MCP, and rejects captured channels. It is
+  test-only; the measured compiler matches `e497f639`.
 
-Expanded tests cover records, nested queues, functions capturing functions,
-receiver State, caught errors, cancelled blocked sends/receives, closed sends,
-caught failure and undrained queues. A C probe checks unchanged charged memory
-after each of 256 transfer/close/failed-receive cases at O0/O2; omitted releases
-must fail. WASI separately counts physical allocations at shutdown. These are
-cleanup checks, not speed benchmarks or proof of zero heap/counting overhead.
+Tests cover returned/nested functions, State, autodiff, caught errors, cancelled
+blocked transfers, closed sends and undrained queues. A C probe checks unchanged
+charged memory after each of 256 transfer/close/failed-receive cases at O0/O2;
+omitted releases must fail. WASI separately counts physical allocations at
+shutdown and exercises JSPI/Asyncify. Native artifacts retain C, binaries and
+actual disassembly. These are cleanup checks, not speed or zero-allocation claims.
 
-The pending batch also adds explicit unknown-producer/external-queue unit checks,
-a caught-channel rejection and receiver autodiff test, plus a worked tutorial.
-Native artifacts retain disassembly as well as source/binaries. These new checks
-are running on the compiler. A follow-up scan found the same obsolete blanket
-rejection in REST/MCP entry tests. Its replacement checks an accepted queued
-function, executes it through MCP, and rejects a real channel capture on both
-entry types. This test-only follow-up leaves the measured compiler unchanged.
+All local workloads used the primary `scripts/local-guard.py`. Formatting last
+passed in 1.39s. `python3 scripts/check-roadmap.py` passes in 2.46s after restoring
+the required status table and next-action marker; an initial mistyped script name
+did not run a check. Saved-compiler raw interpretation
+validated the value/task fixtures, five rejection examples and updated tutorial;
+it does not validate the new proof. Saved-compiler C emission for the remote
+iterator fixture passed in 0.40s, without compiling native code. No local compiler
+build or benchmark ran. Full logs are under `/private/tmp/fwp-queued-corrected-*`.
 
-Local work uses the primary `scripts/local-guard.py`, with unchanged limits:
-formatting last passed in 1.62s; doc links/anchors passed in 2.56s; saved-compiler
-raw interpretation of value/task fixtures passed in 0.35/0.27s; all five negative
-fixtures are valid programs (0.86s); the updated tutorial output, formatting and
-source excerpts pass (0.29/0.01/0.23s). These interpreter runs do not validate the
-new ownership implementation. No local compiler build or benchmark ran.
-The final PR #174 production benchmark is now retained in
-`docs/measurements/numeric-output-peers-2026-10-20.md`, linked from the benchmark
-guide with its C/Rust overhead and measurement limits.
+The final PR #174 benchmark is retained in
+[the C/Rust comparison](measurements/numeric-output-peers-2026-10-20.md), including
+slower cases and measurement limits. The benchmark guide links it.
 
 ## Roadmap status
 
@@ -92,7 +96,7 @@ guide with its C/Rust overhead and measurement limits.
 | 6 | In progress | Reproducible comparisons and regression budgets |
 | 7 | In progress | Representative larger applications |
 
-All seven areas remain open. Persistent subscriptions, resource captures,
-resource-owning tail frames and mutual recursion need separate proofs. JIT is
-excluded. Follow [AGENTS.md](../AGENTS.md), including one active PR, all final-head
-gates, bounded local work and one-line commits without bodies or trailers.
+All seven areas in [PLAN.md](../PLAN.md) remain open. Persistent subscriptions,
+resource captures, resource-owning tail frames and mutual recursion need further
+proofs. JIT is excluded. Follow [AGENTS.md](../AGENTS.md): one active PR, all
+final-head gates, bounded local work and one-line commits without trailers.
