@@ -1,4 +1,4 @@
-//! Finite closure-flow proof for raw AD operations and typed State lifetimes.
+//! Finite closure-flow proof for queued captures, raw AD and typed State lifetimes.
 //!
 //! Function values are sets of (function, supplied-argument count). Captures and
 //! call summaries join monotonically. Aggregate fields conservatively share a
@@ -303,7 +303,7 @@ impl Proof<'_> {
         }
         let mut result = Targets::new();
         for &closure in functions {
-            let Closure::Known(id, supplied) = closure else {
+            let Closure::Known(id, _) = closure else {
                 if self.validate {
                     return Err(
                         "--gc arc: cannot prove the target of a call in an ownership program"
@@ -453,8 +453,8 @@ impl Proof<'_> {
             Body::Prim(symbol) if matches!(symbol.as_str(), "task.spawn" | "task.within") => {
                 // A child starts with independent State and AD stacks. Carry
                 // callable captures, but never its parent's dynamic scopes.
-                // Channel payloads exclude closures/tasks/streams, and raw
-                // addresses remain excluded by ARC eligibility,
+                // Queued closures exclude resource captures; task/stream
+                // payloads and raw addresses remain excluded by ARC eligibility,
                 // so no mutable back-edge can publish this task to its thunk.
                 let callback = usize::from(symbol == "task.within");
                 self.apply(&args[callback], &[Targets::new()], 0)

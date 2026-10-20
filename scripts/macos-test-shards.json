@@ -182,6 +182,7 @@
     "call_effects",
     "fold_unwind_ownership",
     "channel_queue_ownership",
+    "queued_functions",
     "closure_ownership",
     "dns_ownership",
     "stack",

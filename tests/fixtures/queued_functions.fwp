@@ -1,0 +1,38 @@
+# Channels hold values until they are received or the queue is released.
+# These functions capture only immutable numbers, strings or other such functions.
+callbacks : I64 -> Channel[I64 -> I64] ! {Async}
+callbacks = channel.make
+texts : I64 -> Channel[() -> String] ! {Async}
+texts = channel.make
+lists : I64 -> Channel[List[I64 -> I64]] ! {Async}
+lists = channel.make
+state-callbacks : I64 -> Channel[() -> I64 ! {State[I64]}] ! {Async}
+state-callbacks = channel.make
+Event = { callback: Option[I64 -> String] }
+events : I64 -> Channel[Event] ! {Async}
+events = channel.make
+nested : I64 -> Channel[List[Channel[() -> String]]] ! {Async}
+nested = channel.make
+give : String -> () -> String
+give = const
+owned : () -> String ! {IO}
+owned = args | length | add 2 | flip string.repeat "owner"
+call-state : Channel[() -> I64 ! {State[I64]}] -> Option[I64] ! {Async, State[I64]}
+call-state = channel.recv | option.map (apply ())
+caught : () -> Result[(), () -> String]
+caught = attempt (const (give "caught") | fail)
+from-error : () -> (() -> String)
+from-error = caught | match
+    Err _ -> id
+    Ok _ -> const (give "unused")
+main = [
+    callbacks 1 | tap (flip channel.send (add 3)) | channel.recv | option.map (apply 5) | echo,
+    texts 1 | tap (flip channel.send (give (owned ()))) | tap channel.close | channel.recv | option.map (apply ()) | echo,
+    lists 1 | tap (flip channel.send [add 1, mul 2]) | channel.recv | option.map (map (apply 3)) | echo,
+    texts 1 | tap (flip channel.send (from-error ())) | channel.recv | option.map (apply ()) | echo,
+    state-callbacks 1 | tap (flip channel.send get) | run-state 23 call-state | .0 | echo,
+    texts 1 | tap (flip channel.send (give (owned ()))) | ignore | const "undrained released" | echo,
+    callbacks 1 | tap channel.close | channel.recv | option.map (apply 5) | echo,
+    events 1 | channel.close,
+    nested 1 | channel.close,
+] | ignore
