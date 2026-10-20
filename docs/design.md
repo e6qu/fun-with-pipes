@@ -990,6 +990,13 @@ the same owner also preserves destruction of hidden native callback context,
 even when the element type is plain data. Dead functions do not change live
 call contracts.
 
+Channel handles do not need plain-data payloads for this call convention.
+Keeping the same channel owner after the call preserves its queued values and
+native sink context regardless of payload representation. This does not prove
+the payload graph acyclic: `arc.rs` and `arc_scope.rs` still check stored captures,
+cycles and call scopes independently. The extended handle proof is tracked in
+the handoff until native cleanup tests and measurements pass.
+
 The caller keeps borrowed values and original record boxes visible to tracing
 through the call, and remains responsible for failure and cancellation cleanup.
 Existing generic entries still consume arguments: they protect those owners

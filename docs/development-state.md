@@ -4,22 +4,47 @@
 
 Next: finish [PR #179](https://github.com/e6qu/fun-with-pipes/pull/179), containing
 matched payload moves, direct-call borrowing and compile-time handle rejection.
-All focused checks and measurements pass. Publish this combined head on
-`move-matched-variant-owners`, then audit its **nine production jobs and docs**.
+All focused checks and measurements pass. Published head
+`63a129f25cfb9a3b940baf7786036265bfdf831d` is on `move-matched-variant-owners`.
+Audit production `39438167856` and documentation `39438167895` with
+`/private/tmp/fwp-audit-179-combined.py`; its receipt is
+`/private/tmp/fwp-179-combined-acceptance.json`. Both Windows jobs, both regular macOS jobs and Linux ARM64 have started;
+the other production jobs and docs were still queued at the last check.
+All **nine production jobs and docs** must pass.
 Keep the final head stable. Fix every failure; only squash-merge after exact-head
 acceptance, with an explicit one-line subject of at most 80 characters and an
 empty body. Verify the merged tree. Do not open a second PR for this preparation.
 
 The measured compiler/test source is `f3e05d27c8f0610f9614b1421f2c7dbedb89c16c`,
-preserved by `roadmap/revision-direct-borrows-f3e05d27`. The final preparation
-commit only updates docs and the reproduced report. Worktree:
-`/private/tmp/fwp-direct-borrows`, branch `borrow-direct-function-arguments`.
-It descends from the PR branch in `/Users/zardoz/projects/fun-with-pipes`;
-fast-forward that branch without rebasing or a merge commit. Preserve the root's
-local handoff before switching and inspect both worktrees for other edits.
-The reviewed PR body is `/private/tmp/fwp-direct-borrow-pr-body.md`.
-After pushing, use `gh pr view 179 --json headRefOid` and `gh pr checks 179` to
-identify final-head runs; record their IDs here locally without restarting CI.
+preserved by `roadmap/revision-direct-borrows-f3e05d27`. Final head `63a129f2`
+only adds docs/report updates. Root branch: `move-matched-variant-owners`.
+Its previous local handoff is backed up at
+`/private/tmp/fwp-root-handoff-before-combined-179.md`. This live handoff is the
+only local root edit; do not publish a documentation-only change during CI.
+Use `gh pr view 179 --json headRefOid` and `gh pr checks 179` to confirm status.
+The published PR title/body cover the complete change.
+
+## Independent preparation while CI runs
+
+`/private/tmp/fwp-direct-borrows` now uses `borrow-function-channel-handles`,
+branched from the final PR head. It investigates the remaining fresh-function
+and closed-function channel retain. A continuing owner keeps the channel and
+its queued values/native sink context alive regardless of payload representation.
+The proposed rule therefore borrows such handles while leaving ARC's capture,
+cycle and scope checks unchanged. Resource scopes and last-use inputs remain
+excluded. This is preparation, not accepted support or part of PR #179.
+
+Added coverage: unit cases for function-bearing channels; a native sink-context
+destruction probe with aliases, consuming generic entries and a leaked-owner
+control; ARC failure after receiving/applying a queued function. The focused
+workflow also includes all queued-function capture/scope checks and the channel
+cycle regression. Formatting passes under the guard (1.62s); no build or suite
+has run for this preparation yet. Next preparation action: publish it and run
+`numerics.yml`, suite `channel-costs`, on ARM64/AMD64. Audit every failure and
+compare to the accepted-source artifacts below before claiming any savings.
+Do not open a new PR until #179 is accepted and merged. Preserve measured source
+with a tag; after the squash, transplant only commits after `63a129f2` onto the
+merged tree, then require a new final-head production matrix for that delivery.
 
 The previous PR head `82bcf83f765e072afa6431cbf196532d433e3cad` is **not accepted**:
 eight production jobs in `39417913864` pass, but Windows AMD64 timed out during

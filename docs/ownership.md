@@ -310,6 +310,13 @@ requires every live caller to use that same channel after the call; later use
 of another tuple field does not qualify. Resource captures, recursive workers,
 unknown calls and escaping arguments retain their existing ownership rules.
 
+The follow-on proof also permits borrowing a handle whose queue contains
+functions. It borrows the channel itself; it does not borrow, move or grant
+permission to store its messages. The caller's continuing owner keeps the queue
+and its native callback context alive. The separate checks for queued captures,
+cycles and State/autodiff scopes still apply in ARC mode. Resource scopes still
+prevent selection. This extension is under validation in the handoff.
+
 Failure or cancellation releases caller-owned storage through the caller's
 cleanup scope. Generic function entries still consume their inputs, including
 boxed tuples. Tests exercise these boundaries with independent aliases,
