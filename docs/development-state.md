@@ -11,8 +11,10 @@ production jobs and documentation before squash merge, then verify its tree and
 one-line message. The final-head benchmark is retained at
 `/private/tmp/fwp-174-final-production-bench.md` for the next documentation update.
 
-Next: publish the complete repair batch and rerun `channel-proof`; all eight
-jobs in `39346219500` have been audited. After PR #174 passes and merges, deliver this
+Next: finish repaired `channel-proof` run `39348144254` at `e497f639`; all eight
+jobs in the earlier `39346219500` were audited. Also validate the replaced
+server-entry rejection and a real MCP queued-function call in the focused
+server-entry suite. After PR #174 passes and merges, deliver this
 ownership work as the next single PR with current docs and full acceptance gates.
 No new platform support is accepted yet.
 
@@ -62,8 +64,11 @@ cleanup checks, not speed benchmarks or proof of zero heap/counting overhead.
 
 The pending batch also adds explicit unknown-producer/external-queue unit checks,
 a caught-channel rejection and receiver autodiff test, plus a worked tutorial.
-Native artifacts will retain disassembly as well as source/binaries. These new
-checks have not run on the compiler yet.
+Native artifacts retain disassembly as well as source/binaries. These new checks
+are running on the compiler. A follow-up scan found the same obsolete blanket
+rejection in REST/MCP entry tests. Its replacement checks an accepted queued
+function, executes it through MCP, and rejects a real channel capture on both
+entry types. This test-only follow-up leaves the measured compiler unchanged.
 
 Local work uses the primary `scripts/local-guard.py`, with unchanged limits:
 formatting last passed in 1.62s; doc links/anchors passed in 2.56s; saved-compiler

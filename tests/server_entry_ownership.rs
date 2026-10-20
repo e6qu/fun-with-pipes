@@ -290,11 +290,64 @@ fn mcp_stdio_aliases_errors_and_notifications_match_raw_interpreter() {
 }
 
 #[test]
-fn generated_entries_reject_unproved_channel_cycles() {
+fn generated_entries_accept_proved_functions_and_reject_channel_captures() {
     let dir = fwp::cgen::TempDir::new("entry-cycle").unwrap();
     let source = dir.join("cycle.fwp");
-    std::fs::write(&source, "# expose: rest, mcp\n\nfunctions : I64 -> Channel[() -> String] ! {Async}\nfunctions = channel.make\n\nexport rejected : () -> () ! {Async}\nrejected = const 1 | functions | channel.close\n").unwrap();
     for interface in ["--rest", "--mcp"] {
+        std::fs::write(
+            &source,
+            r#"# expose: rest, mcp
+callbacks : I64 -> Channel[I64 -> I64] ! {Async}
+callbacks = channel.make
+export queued : I64 -> I64 ! {Async}
+queued = both id (const 1 | callbacks)
+    | tap (fork channel.send .1 (.0 | add))
+    | .1
+    | channel.recv
+    | option.map (apply 5)
+    | option.unwrap-or 0
+"#,
+        )
+        .unwrap();
+        let cfile = dir.join("accepted.c");
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .args(["build", interface, "--gc", "arc", "--emit-c", "-o"])
+                .arg(&cfile)
+                .arg(&source),
+        );
+        if interface == "--mcp" {
+            let code = std::fs::read_to_string(&cfile).unwrap();
+            let binary = dir.join("queued.exe");
+            fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+            let result = run_input(
+                Command::new(binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0"),
+                tool(7, "queued", r#"{"input":3}"#),
+            );
+            let reply = Json::parse(String::from_utf8_lossy(&result.stdout).trim()).unwrap();
+            assert_eq!(
+                reply.at(&["result", "structuredContent", "result"]),
+                Some(&Json::Num("8".into())),
+                "{reply:?}"
+            );
+        }
+        std::fs::write(
+            &source,
+            r#"# expose: rest, mcp
+callbacks : I64 -> Channel[() -> () ! {Async}] ! {Async}
+callbacks = channel.make
+keep : Channel[() -> () ! {Async}] -> () -> () ! {Async}
+keep = then2 const channel.close
+send-self = fork channel.send id keep
+export rejected : () -> () ! {Async}
+rejected = const 1 | callbacks | tap send-self | channel.recv | option.map (apply ()) | ignore
+"#,
+        )
+        .unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
             .args(["build", interface, "--gc", "arc", "--emit-c", "-o"])
             .arg(dir.join("rejected.c"))
@@ -304,7 +357,7 @@ fn generated_entries_reject_unproved_channel_cycles() {
         assert!(!output.status.success());
         let error = String::from_utf8_lossy(&output.stderr);
         assert!(
-            error.contains("--gc arc") && error.contains("channel payloads cannot contain"),
+            error.contains("--gc arc") && error.contains("queued function's captured"),
             "{interface}: {error}"
         );
     }
