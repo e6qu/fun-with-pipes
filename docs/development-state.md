@@ -111,3 +111,13 @@ All seven areas in [PLAN.md](../PLAN.md) remain open.
 resource captures, resource-owning tail frames and mutual recursion need further
 proofs. JIT is excluded. Follow [AGENTS.md](../AGENTS.md): one active PR, all
 final-head gates, bounded local work and one-line commits without trailers.
+
+## Incidental test-reporting repair
+
+The ARM64 macOS production log exposes five Linux resident-memory tests that
+returned early but appeared as passes. The preparation now marks those tests
+ignored outside Linux with the exact `/proc` requirement, and rejects missing
+or failing C compilers instead of silently passing GC checks. A Unix import is
+moved to the file's import block. Validate `gc-checks` on both Linux/macOS
+architectures; the full stress golden suite still runs on macOS. Historical
+macOS passes do not establish the Linux-only resident-memory measurements.
