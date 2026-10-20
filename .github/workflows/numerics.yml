@@ -879,6 +879,9 @@ jobs:
       - name: Queued functions in generated entries
         if: ${{ !cancelled() && matrix.part == 'queued' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test server_entry_ownership generated_entries_accept_proved_functions_and_reject_channel_captures -- --exact --nocapture
+      - name: Ownership and recursive type proof unit tests
+        if: ${{ !cancelled() && matrix.part == 'queued' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
+        run: cargo test --lib
       - name: Queue capture and receiver-scope regressions
         if: ${{ !cancelled() && matrix.part == 'queued' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test queued_functions -- --nocapture

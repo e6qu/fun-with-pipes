@@ -3,6 +3,7 @@
 //! Every function value at runtime is a partial application of a known
 //! function: fwp code has no local binders, so lambda lifting is trivial.
 
+use std::collections::HashSet;
 use std::fmt;
 
 use crate::types::label_cmp;
@@ -282,30 +283,42 @@ pub fn record_fields<'a>(shapes: &'a Shapes, t: &'a MT) -> Option<&'a [(String, 
 }
 
 /// Whether two types have the same representation: equal, or a nominal
-/// record and a record with the same fields.
+/// record and a record with the same fields. Each pair is visited once, so
+/// recursive record shapes cannot expand the comparison indefinitely.
 pub fn same_type(shapes: &Shapes, a: &MT, b: &MT) -> bool {
-    if a == b {
-        return true;
-    }
-    let nominal =
-        |t: &MT| matches!(t, MT::Con(..)) && matches!(shapes.get(t), Some(TypeShape::Record(_)));
-    match (a, b) {
-        (MT::Con(x, xs), MT::Con(y, ys)) if x == y && !nominal(a) => {
-            xs.len() == ys.len() && xs.iter().zip(ys).all(|(x, y)| same_type(shapes, x, y))
+    fn compare<'a>(
+        shapes: &'a Shapes,
+        a: &'a MT,
+        b: &'a MT,
+        seen: &mut HashSet<(&'a MT, &'a MT)>,
+    ) -> bool {
+        if a == b || !seen.insert((a, b)) {
+            // Reaching the same pair through recursive record fields adds no
+            // new constraint. Other fields still have to match.
+            return true;
         }
-        (MT::Fun(a1, r1), MT::Fun(a2, r2)) => {
-            same_type(shapes, a1, a2) && same_type(shapes, r1, r2)
-        }
-        _ => match (record_fields(shapes, a), record_fields(shapes, b)) {
-            (Some(x), Some(y)) => {
-                x.len() == y.len()
-                    && x.iter()
-                        .zip(y)
-                        .all(|((l, s), (m, t))| l == m && same_type(shapes, s, t))
+        let nominal = |t: &MT| {
+            matches!(t, MT::Con(..)) && matches!(shapes.get(t), Some(TypeShape::Record(_)))
+        };
+        match (a, b) {
+            (MT::Con(x, xs), MT::Con(y, ys)) if x == y && !nominal(a) => {
+                xs.len() == ys.len() && xs.iter().zip(ys).all(|(x, y)| compare(shapes, x, y, seen))
             }
-            _ => false,
-        },
+            (MT::Fun(a1, r1), MT::Fun(a2, r2)) => {
+                compare(shapes, a1, a2, seen) && compare(shapes, r1, r2, seen)
+            }
+            _ => match (record_fields(shapes, a), record_fields(shapes, b)) {
+                (Some(x), Some(y)) => {
+                    x.len() == y.len()
+                        && x.iter()
+                            .zip(y)
+                            .all(|((l, s), (m, t))| l == m && compare(shapes, s, t, seen))
+                }
+                _ => false,
+            },
+        }
     }
+    compare(shapes, a, b, &mut HashSet::new())
 }
 
 /// The type of `e`, where it follows from the types of its parts: a local
@@ -528,5 +541,55 @@ fn check_pat(shapes: &Shapes, locals: &[MT], p: &Pat, ty: Option<&MT>) -> Result
                 .enumerate()
                 .try_for_each(|(i, p)| check_pat(shapes, locals, p, fs.map(|fs| &fs[i].1)))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn recursive_record_comparison_terminates_and_checks_remaining_fields() {
+        let a = MT::con("A");
+        let b = MT::con("B");
+        let c = MT::con("C");
+        let integer = MT::con("std::I64");
+        let string = MT::con("std::String");
+        let mut shapes = Shapes::new();
+        for (ty, payload) in [(&a, &integer), (&b, &integer), (&c, &string)] {
+            shapes.insert(
+                ty.clone(),
+                TypeShape::Record(vec![
+                    (
+                        "children".into(),
+                        MT::Con("std::List".into(), vec![ty.clone()]),
+                    ),
+                    ("payload".into(), payload.clone()),
+                ]),
+            );
+        }
+        assert!(same_type(&shapes, &a, &b));
+        assert!(same_type(&shapes, &b, &a));
+        assert!(!same_type(&shapes, &a, &c));
+        let callable = |ty| MT::Fun(Box::new(ty), Box::new(integer.clone()));
+        assert!(same_type(&shapes, &callable(a.clone()), &callable(b)));
+        assert!(!same_type(&shapes, &callable(a), &callable(c)));
+    }
+
+    #[test]
+    fn recursive_comparison_keeps_variant_names_distinct() {
+        let a = MT::con("A");
+        let b = MT::con("B");
+        let shapes = Shapes::from([
+            (
+                a.clone(),
+                TypeShape::Adt(vec![("Next".into(), vec![a.clone()])]),
+            ),
+            (
+                b.clone(),
+                TypeShape::Adt(vec![("Next".into(), vec![b.clone()])]),
+            ),
+        ]);
+        assert!(!same_type(&shapes, &a, &b));
     }
 }

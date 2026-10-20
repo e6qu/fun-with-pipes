@@ -296,6 +296,11 @@ It also records an explicit unknown source: combining it with a known function
 does not make it known. Captures, calls, queues and caught error payloads are
 revisited until no set gains another target. This is a finite, conservative
 analysis of the specialized program, not execution of the program.
+An empty origin set means no function value reaches that path, as when mapping
+over an empty collection of functions. It adds no call target. This differs from
+an unknown source, which remains a rejection even if known functions reach the
+same path. The compiler must explicitly mark unmodeled runtime and foreign
+producers as unknown; an empty set must not stand in for missing analysis.
 
 The first admitted subset allows immutable scalar, string and container captures,
 including other functions whose captures pass the same check. Captured channels,
@@ -310,7 +315,9 @@ choices can reject safe programs with unrelated owners or scopes; they must not
 accept an unproved capture. When a value is used as a function, its checked type
 excludes incompatible targets from neighboring fields; unknown sources remain
 unknown. For example, a scope wrapper taking a function must not be confused
-with that function taking an integer. More precise analysis can reduce other rejections
+with that function taking an integer. Comparing recursive record types visits
+each pair once; revisiting a pair does not skip checks on its other fields.
+More precise analysis can reduce other rejections
 later without changing source syntax. Native constructors need an explicit source
 model; an arrow type alone never proves capture freedom. A received gRPC
 iterator contains a continuation that keeps the network stream alive. The

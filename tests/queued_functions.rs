@@ -134,6 +134,102 @@ keep = then2 const channel.close
 }
 
 #[test]
+fn recursive_record_callable_types_have_a_finite_proof() {
+    let dir = fwp::cgen::TempDir::new("queued-recursive-types").unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(&source, r#"
+A = { tail: List[A] }
+B = { tail: List[B] }
+from-a : A -> I64
+from-a = const 1
+from-b : B -> I64
+from-b = const 2
+callbacks : I64 -> Channel[I64 -> I64] ! {Async}
+callbacks = channel.make
+main = [callbacks 1 | channel.close, apply (A { tail = [] }) ((from-a, from-b) | .0) | echo] | ignore
+"#).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    assert_eq!(reference.stdout, b"1\n");
+    let cfile = dir.join("main.c");
+    checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["build", "--gc", "arc", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let binary = dir.join("main.exe");
+    fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+    let actual = checked(
+        Command::new(binary)
+            .env_remove("FWP_GC")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0"),
+    );
+    assert_eq!(
+        (&actual.stdout, &actual.stderr),
+        (&reference.stdout, &reference.stderr)
+    );
+}
+
+#[test]
+fn empty_callable_collections_do_not_create_unknown_calls() {
+    let dir = fwp::cgen::TempDir::new("queued-empty-callable").unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(
+        &source,
+        r#"
+callbacks : I64 -> Channel[I64 -> I64] ! {Async}
+callbacks = channel.make
+calls : List[(I64 -> I64, I64)] -> List[I64]
+calls = map (uncurry id)
+main = [callbacks 1 | channel.close, [] | calls | echo] | ignore
+"#,
+    )
+    .unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    assert_eq!(reference.stdout, b"[]\n");
+    let cfile = dir.join("main.c");
+    checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["build", "--gc", "arc", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let binary = dir.join("main.exe");
+    fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+    let actual = checked(
+        Command::new(binary)
+            .env_remove("FWP_GC")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0"),
+    );
+    assert_eq!(
+        (&actual.stdout, &actual.stderr),
+        (&reference.stdout, &reference.stderr)
+    );
+}
+
+#[test]
 fn queued_remote_iterators_reject_hidden_stream_owners() {
     let dir = fwp::cgen::TempDir::new("queued-remote-iterator").unwrap();
     std::fs::write(
