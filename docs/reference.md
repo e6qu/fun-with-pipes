@@ -683,8 +683,10 @@ records their passing functional, memory and production checks.
 Channels are eligible when their ownership types cannot form a queue cycle.
 `Channel[String]` and `Channel[List[Channel[String]]]` are eligible: the inner
 channels hold strings, which cannot point back. `Channel[Task[String]]` is not,
-since a task could capture that channel. Functions and HTTP stream handles are
-excluded for the same hidden-capture reason. The compiler follows record,
+since a task could capture that channel. HTTP stream handles remain excluded
+for the same reason. The [function extension under validation](ownership.md#next-proof-functions-stored-in-channels)
+admits proved immutable captures; a function's input/output type alone cannot
+establish that proof. The compiler follows record,
 variant and container fields and rejects a path back to the same channel type;
 see the [proof and limits](ownership.md#ownership-boundaries).
 It requires normal counted
