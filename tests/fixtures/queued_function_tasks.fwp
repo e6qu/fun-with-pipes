@@ -1,0 +1,49 @@
+# A queued function owns its text. Closing, failure and cancellation must all
+# release that text once neither the queue nor a received function needs it.
+give : String -> () -> String
+give = const
+texts : I64 -> Channel[() -> String] ! {Async}
+texts = channel.make
+filled : I64 -> Channel[() -> String] ! {Async}
+filled = texts | tap (flip channel.send (give ("queued" | string.repeat 2)))
+send : Channel[() -> String] -> () -> Bool ! {Async}
+send = curry (.0 | flip channel.send (give ("pending" | string.repeat 2)))
+receive : Channel[() -> String] -> () -> Option[() -> String] ! {Async}
+receive = curry (.0 | channel.recv)
+queue-failure : I64 -> () ! {Async, Error[String]}
+queue-failure = filled | const "expected" | fail
+round : () -> () ! {Async, IO}
+round =
+    const 1
+    | filled
+    | send
+    | task.spawn
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
+    | echo
+    | const 1
+    | texts
+    | receive
+    | task.spawn
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
+    | option.map ignore
+    | echo
+    | const 1
+    | filled
+    | tap channel.close
+    | send
+    | apply ()
+    | echo
+    | const 1
+    | attempt queue-failure
+    | echo
+    | const 0
+    | flip range 64
+    | each (const 1 | filled | tap channel.close | ignore)
+    | const 0
+    | flip range 64
+    | each (const 1 | filled | channel.recv | option.map (apply ()) | ignore)
+main = () | round

@@ -973,6 +973,8 @@ static inline size_t fwp_rc_capacity(V v) {
 
 /* ----- marking */
 
+#ifndef FWP_ARC_ONLY
+/* Exclude tracing at preprocessing time, including unoptimized GCC builds. */
 static __attribute__((noinline)) void fwp_gc_push(char *p, size_t n) {
     if (fwp_gc.msp == fwp_gc.mcap) {
         fwp_gc.mcap = fwp_gc.mcap ? fwp_gc.mcap * 2 : 4096;
@@ -1184,6 +1186,7 @@ static int fwp_gc_marked(void *p) {
     size_t i = (size_t)((uintptr_t)p & (GC_CHUNK - 1)) / m->slot;
     return (m->bits[i >> 6] >> (i & 63)) & 1;
 }
+#endif
 
 /* Call `fn(obj)` when `obj` is found unreachable, before its memory is
  * reused. Finalizers release memory outside the heap (malloc'ed buffers
@@ -1213,6 +1216,7 @@ static void fwp_gc_forget_finalizer(void *obj) {
     }
 }
 
+#ifndef FWP_ARC_ONLY
 static void fwp_gc_finalize(void) {
     for (size_t i = 0; i < fwp_gc.nfins;) {
         gc_fin f = fwp_gc.fins[i];
@@ -1221,6 +1225,7 @@ static void fwp_gc_finalize(void) {
         f.fn(f.obj);
     }
 }
+#endif
 
 #ifdef FWP_LIBRARY
 /* The host has finished its calls and the scheduler has drained. Finalizers
@@ -1258,6 +1263,10 @@ static void fwp_gc_finish(void) {
 
 /* ----- sweeping */
 
+/* Native context switching also records stack positions in ARC mode. */
+static __attribute__((noinline)) char *fwp_gc_sp(void) { return (char *)__builtin_frame_address(0); }
+
+#ifndef FWP_ARC_ONLY
 static void fwp_gc_sweep(void) {
     memset(fwp_gc.lists, 0, sizeof fwp_gc.lists);
     size_t live = 0, nfree = 0;
@@ -1336,9 +1345,6 @@ static void fwp_gc_sweep(void) {
 }
 
 /* ----- collection */
-
-/* a stack address below the caller's frame */
-static __attribute__((noinline)) char *fwp_gc_sp(void) { return (char *)__builtin_frame_address(0); }
 
 static __attribute__((noinline)) void fwp_gc_mark_all(char *stack_start) {
     fwp_gc_scan_stacks(stack_start);
@@ -1431,6 +1437,7 @@ static void fwp_gc_verify_minor(char *stack_start) {
     free(saved_big);
     /* the full trace's marks stand: they are exact */
 }
+#endif
 
 static __attribute__((noinline)) void fwp_gc_collect(void) {
 #ifdef FWP_ARC_ONLY
@@ -1563,6 +1570,7 @@ static void fwp_gc_start(void *top) {
 #else
     fwp_gc.main_top = (char *)top;
 #endif
+#ifndef FWP_ARC_ONLY
 #ifdef __linux__
     dl_iterate_phdr(fwp_gc_find_data, 0);
 #elif defined(__APPLE__) || defined(_WIN32)
@@ -1570,6 +1578,7 @@ static void fwp_gc_start(void *top) {
 #endif
 #if defined(__linux__) || defined(__APPLE__) || defined(_WIN32)
     fwp_gc.armed = fwp_gc.enabled && fwp_gc.ndata > 0;
+#endif
 #endif
     if (fwp_gc.stats) atexit(fwp_gc_report);
 #ifdef FWP_STATIC_MEMORY

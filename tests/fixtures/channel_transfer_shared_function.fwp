@@ -1,0 +1,19 @@
+# One function captures a string made from the input; both remain live across
+# all exchanges. Applying the received function must return that same string.
+callbacks : I64 -> Channel[() -> String] ! {Async}
+callbacks = channel.make
+give : String -> () -> String
+give = const
+exchange : (Channel[() -> String], () -> String, I64) -> () ! {Async, Error[String]}
+exchange =
+    tap (fork channel.send .0 .1)
+    | both (.0 | channel.recv | option.map (apply ()) | option.unwrap-or "missing") (.2 | show)
+    | uncurry eq
+    | if id (const ()) (const "wrong queue value" | fail)
+step : (Channel[() -> String], I64, I64, () -> String) -> Step[(Channel[() -> String], I64, I64, () -> String), I64] ! {Async, Error[String]}
+step = if (fork lt .2 .1)
+    (tap (make { 0 = .0, 1 = .3, 2 = .2 } | exchange) | make { 0 = .0, 1 = .1 | add 1, 2 = .2, 3 = .3 } | Again)
+    (tap (.0 | channel.close) | .1 | Stop)
+export work : I64 -> I64 ! {Async, Error[String]}
+work = make { 0 = const 1 | callbacks, 1 = const 0, 2 = id, 3 = show | give } | loop step
+main = 16 | work | echo

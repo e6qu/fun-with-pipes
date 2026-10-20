@@ -85,7 +85,7 @@ main = range 0 129 | map (choose | checks) | length | echo
                 )
                 .unwrap();
             }
-            for opt in ["-O1", "-O2"] {
+            for opt in ["-O0", "-O1", "-O2"] {
                 let binary = dir.join(format!("{name}-{stack}-{memory}{opt}.exe"));
                 fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
                 let symbols = checked(Command::new("nm").arg(&binary));
@@ -252,14 +252,11 @@ fn arc_rejects_unproved_runtime_boundaries_and_disabled_counting() {
         ("custom-native","foreign \"fwp\" string.repeat : I64 -> I64 -> I64\nmain = 1 | string.repeat 2 | echo\n","no checked ownership signature"),
         ("foreign-callback","foreign \"C\" invoke : (I64 -> String) -> I64\nmain = invoke show | echo\n","foreign boundary has no checked ownership contract"),
         ("foreign-address","foreign \"C\" lookup : () -> Ptr[I64]\nmain = lookup () | ignore\n","tracing-free ownership contract"),
-        ("channel","fn-channel : I64 -> Channel[() -> String] ! {Async}\nfn-channel = channel.make\nmain = fn-channel 1 | channel.close\n","channel payloads cannot contain"),
         ("task-channel","tasks : I64 -> Channel[Task[String]] ! {Async}\ntasks = channel.make\nmain = tasks 1 | channel.close\n","channel payloads cannot contain"),
-        ("nested-callback-channel","nested : I64 -> Channel[List[Channel[() -> String]]] ! {Async}\nnested = channel.make\nmain = nested 1 | channel.close\n","function captures can retain"),
         ("http-stream-channel","streams : I64 -> Channel[H2Stream] ! {Async}\nstreams = channel.make\nmain = streams 1 | channel.close\n","channel payloads cannot contain"),
         ("wrapped-http-stream-channel","streams : I64 -> Channel[List[H2Stream]] ! {Async}\nstreams = channel.make\nmain = streams 1 | channel.close\n","channel payloads cannot contain"),
         ("cyclic-channel","Link = | Node (Channel[Link])\nlinks : I64 -> Channel[Link] ! {Async}\nlinks = channel.make\nmain = links 1 | channel.close\n","a queue can lead back to channel type"),
         ("mutual-channel","Left = | L (Channel[Right])\nRight = | R Left\nlinks : I64 -> Channel[Left] ! {Async}\nlinks = channel.make\nmain = links 1 | channel.close\n","a queue can lead back to channel type"),
-        ("record-channel","Event = { callback: Option[I64 -> String] }\nevents : I64 -> Channel[Event] ! {Async}\nevents = channel.make\nmain = events 1 | channel.close\n","payload.callback.Option[0]"),
         ("unscoped-tape","main = 1 | ad.tape | echo\n","tracing-free lifetime policy"),
     ] {
         let input=dir.join(format!("{name}.fwp"));

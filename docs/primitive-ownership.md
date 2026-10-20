@@ -141,8 +141,10 @@ boundary; it does not establish tracing-free eligibility.
 Channel close preserves queued values. Explicit drain breaks the tested counted
 cycle, while unreachable shared cycles still need tracing. Checked ARC admits
 nested channels when following their payload types cannot lead back to the same
-channel type. Functions, tasks and HTTP stream handles remain excluded at any
-nested position because their captures can hide such a path. The queue owns each
+channel type. Tasks and HTTP stream handles remain excluded at any nested
+position because their hidden owners can lead back to the queue. The
+[function extension under validation](ownership.md#next-proof-functions-stored-in-channels)
+checks actual captures and call scopes separately. The queue owns each
 retained message and the last channel owner releases remaining messages. See the
 [type proof](ownership.md#ownership-boundaries). Preserve callback, trap and task ordering when extending
 contracts. These contracts describe the current runtime. Checked ARC additionally
@@ -217,13 +219,15 @@ allocation rather than freeing an interior pointer from its bump heap.
 ## Task result and deadline boundaries
 
 The runtime owns fresh typed result wrappers from task.await, task.within and
-Channel receives. Wrappers retain pointer-bearing payload owners; scalar words
+channel receives. Wrappers own their pointer-bearing payloads; scalar words
 do not select reference destructors. task.deadline borrows its typed argument
 and retains the returned alias instead of forcing it into runtime sharing.
 It also retains spawn/deadline captures through entry, completion or
 cancellation and protects scope results through joining and unwind. Counted
 task handles own typed cached results; repeated awaits return separate owners.
-Typed channels retain queued elements and transfer them on receive; close
+Typed sends consume message owners and transfer them into the queue; the compiler
+retains independently live aliases before a send. Receive transfers the queued
+owner into its result, while failure before result allocation leaves it queued; close
 preserves the queue. These contracts do not establish automatic cycle
 reclamation, complete ARC or tracing-free execution.
 

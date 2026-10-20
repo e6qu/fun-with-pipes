@@ -44,7 +44,7 @@ static __attribute__((noinline)) void fwp_win_context_switch(
     memset(from->registers, 0, sizeof from->registers);
 }
 
-#if FWP_GC
+#if FWP_GC && !defined(FWP_ARC_ONLY)
 static void fwp_win_context_scan(const fwp_win_context *context) {
     if (!context->sp) return;
     fwp_gc_scan_root((char *)context->registers,

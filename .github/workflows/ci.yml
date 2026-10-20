@@ -223,6 +223,7 @@ jobs:
       FWP_AD_WORKSPACE_ARTIFACTS: ownership-evidence/workspaces
       FWP_AD_SCOPE_ARTIFACTS: ownership-evidence/scopes
       FWP_UDP_ARTIFACTS: ownership-evidence/udp
+      FWP_QUEUED_FUNCTION_ARTIFACTS: ownership-evidence/queued-functions
     strategy:
       fail-fast: false
       matrix:

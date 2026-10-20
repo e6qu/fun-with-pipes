@@ -4,6 +4,8 @@
 
 use std::collections::HashMap;
 use std::fmt::Write;
+#[cfg(unix)]
+use std::os::unix::process::ExitStatusExt;
 
 use crate::ir::*;
 use crate::value::Value;
@@ -7783,13 +7785,13 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                     "channel.make" => {
                                         s = s.replace(
                                             "fwp_p_channel_make(l0)",
-                                            &format!("fwp_p_channel_make_owned(l0, {drop}, {dup})"),
+                                            &format!("fwp_p_channel_make_owned(l0, {drop})"),
                                         )
                                     }
                                     "channel.send" => {
                                         s = s.replace(
                                             "fwp_p_channel_send(l0, l1)",
-                                            &format!("fwp_p_channel_send_owned(l0, l1, {dup})"),
+                                            &format!("fwp_p_channel_send_owned(l0, l1, {drop})"),
                                         )
                                     }
                                     "channel.recv" => {
@@ -10949,7 +10951,6 @@ pub(crate) fn compiler_failure(context: &str, output: &std::process::Output) -> 
     write!(message, "compiler status: {}", output.status).unwrap();
     #[cfg(unix)]
     {
-        use std::os::unix::process::ExitStatusExt;
         write!(
             message,
             " (signal={:?}, core_dumped={})",

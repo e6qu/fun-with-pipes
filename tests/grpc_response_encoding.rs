@@ -489,8 +489,8 @@ fn native_output_channels_borrow_values_and_release_context() {
             232,
         ),
         (
-            "return c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
-            "fwp_rc_share(x); return c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
+            "if (!c->closed) result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
+            "if (!c->closed) { fwp_rc_share(x); result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE; }",
             0,
             231,
         ),

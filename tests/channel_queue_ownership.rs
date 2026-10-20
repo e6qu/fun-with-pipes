@@ -70,6 +70,9 @@ main = [
     let runtime=runtime.replace("static V fwp_chan_recv_owned(",
         "static int fail_option;\nstatic V channel_option(V x){if(fail_option){fail_option=0;fwp_trap(\"allocation probe\");}return fwp_some(x); }\nstatic V fwp_chan_recv_owned(")
         .replace("fwp_rc_fresh(fwp_some(x))", "fwp_rc_fresh(channel_option(x))");
+    let grow = "static void fwp_chan_grow(fwp_chan *c) {";
+    assert_eq!(runtime.matches(grow).count(), 1);
+    let runtime = runtime.replace(grow, &format!("static int fail_grow;\n{grow}\nif(fail_grow){{fail_grow=0;fwp_trap(\"queue growth probe\");}}"));
     let probe = r#"
 static jmp_buf recovered;static int recover(void){return 1;}
 static V blocking_ch,blocking_value;static int send_mode,worker_completed;
@@ -79,12 +82,10 @@ static int sink(void *arg,V value){if(arg!=&sink_calls||!fwp_rc_last(value))_Exi
 static void sink_drop(void *arg){if(arg!=&sink_calls)_Exit(39);sink_drops++;}
 static void worker(void *arg,int failed){
  (void)arg;if(failed)return;
- fwp_value_owner ch_owner={blocking_ch,fwp_channel_drop},value_owner={blocking_value,text_drop};
- fwp_cleanup ch_cleanup,value_cleanup;fwp_value_protect(&ch_owner,&ch_cleanup);
- if(send_mode)fwp_value_protect(&value_owner,&value_cleanup);
+ fwp_value_owner ch_owner={blocking_ch,fwp_channel_drop};
+ fwp_cleanup ch_cleanup;fwp_value_protect(&ch_owner,&ch_cleanup);
  if(send_mode){if(fSEND(blocking_ch,blocking_value)!=FWP_FALSE)fwp_trap("expected closed send");}
  else if(fRECV(blocking_ch)!=FWP_NONE)fwp_trap("expected closed receive");
- if(send_mode){fwp_value_finish(&value_owner,&value_cleanup);text_drop(blocking_value);}
  fwp_value_finish(&ch_owner,&ch_cleanup);fwp_channel_drop(blocking_ch);worker_completed=1;
 }
 static int dead(V v){return fwp_reuse_verify?STR(v)->len==0:*fwp_rc_slot(v)==0;}
@@ -95,8 +96,7 @@ int main(void){
  V ch=fMAKE(32);if(*fwp_rc_slot(ch)!=1)return 1;
  V values[20];for(int i=0;i<20;i++){
   values[i]=fwp_rc_fresh(fwp_str_new("input",5));
-  if(fSEND(ch,values[i])!=FWP_TRUE||*fwp_rc_slot(ch)!=1||*fwp_rc_slot(values[i])!=2)return 2;
-  text_drop(values[i]);
+  if(fSEND(ch,values[i])!=FWP_TRUE||*fwp_rc_slot(ch)!=1||*fwp_rc_slot(values[i])!=1)return 2;
  }
  if(((fwp_chan *)(uintptr_t)ch)->size<20)return 3;
  fCLOSE(ch);V first=fRECV(ch);
@@ -106,11 +106,11 @@ int main(void){
  option_drop(first);if(!dead(values[0]))return 7;
  // Queue and external aliases are distinct owners, and closed sends retain nothing.
  ch=fMAKE(2);V value=fwp_rc_fresh(fwp_str_new("alias",5));fwp_rc_dup(value);
- fSEND(ch,value);if(*fwp_rc_slot(value)!=3)return 8;
- V received=fRECV(ch);if(*fwp_rc_slot(value)!=3)return 9;
- fCLOSE(ch);if(fSEND(ch,value)!=FWP_FALSE||*fwp_rc_slot(value)!=3)return 10;
- fwp_channel_drop(ch);option_drop(received);if(*fwp_rc_slot(value)!=2)return 11;
- text_drop(value);text_drop(value);if(!dead(value))return 12;
+ fSEND(ch,value);if(*fwp_rc_slot(value)!=2)return 8;
+ V received=fRECV(ch);if(*fwp_rc_slot(value)!=2)return 9;
+ fCLOSE(ch);fwp_rc_dup(value);if(fSEND(ch,value)!=FWP_FALSE||*fwp_rc_slot(value)!=2)return 10;
+ fwp_channel_drop(ch);option_drop(received);if(*fwp_rc_slot(value)!=1)return 11;
+ text_drop(value);if(!dead(value))return 12;
  // Scalar address bits receive neither heap duplication nor destruction.
  V scalar=fwp_rc_fresh(fwp_str_new("scalar",6));ch=fWORD(1);
  if(fSENDWORD(ch,scalar)!=FWP_TRUE||*fwp_rc_slot(scalar)!=1)return 13;
@@ -119,7 +119,7 @@ int main(void){
  // Blocked send/receive calls own their borrowed handles until wait links clear.
  for(int mode=0;mode<4;mode++)for(int early_drop=0;early_drop<2;early_drop++){
   blocking_ch=fMAKE(1);send_mode=mode<2;worker_completed=0;
-  V queued=0;if(send_mode){queued=fwp_rc_fresh(fwp_str_new("queued",6));fSEND(blocking_ch,queued);text_drop(queued);}
+  V queued=0;if(send_mode){queued=fwp_rc_fresh(fwp_str_new("queued",6));fSEND(blocking_ch,queued);}
   blocking_value=send_mode?fwp_rc_fresh(fwp_str_new("pending",7)):0;
   fwp_rc_dup(blocking_ch);fwp_task *t=fwp_spawn_task(0,worker,0,0,0);fwp_p_task_yield();
   fwp_chan *c=(fwp_chan *)(uintptr_t)blocking_ch;
@@ -138,58 +138,63 @@ int main(void){
  // Timed receive keeps ready values ahead of the deadline and returns None when empty.
  ch=fMAKE(1);V duration=fwp_record(1,(V[]){0});
  if(fwp_p_channel_recv_for_owned(duration,ch,fwp_rc_dup)!=FWP_NONE||*fwp_rc_slot(ch)!=1)return 38;
- value=fwp_rc_fresh(fwp_str_new("timed",5));fSEND(ch,value);text_drop(value);
+ value=fwp_rc_fresh(fwp_str_new("timed",5));fSEND(ch,value);
  received=fwp_p_channel_recv_for_owned(duration,ch,fwp_rc_dup);
  if(OBJ(received)->f[0]!=value||*fwp_rc_slot(value)!=1)return 39;option_drop(received);fwp_channel_drop(ch);
  // Queue function captures and task caches retain their typed descendants.
  value=fwp_rc_fresh(fwp_str_new("function",8));V fn=fwp_rc_fresh(fwp_pap(GIVE,1,&value));
- ch=fwp_p_channel_make_owned(1,fwp_closure_drop,fwp_rc_dup);fwp_p_channel_send_owned(ch,fn,fwp_rc_dup);fwp_closure_drop(fn);
+ ch=fwp_p_channel_make_owned(1,fwp_closure_drop);fwp_p_channel_send_owned(ch,fn,fwp_closure_drop);
  if(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(value)!=1)return 29;
  received=fwp_p_channel_recv_owned(ch,fwp_rc_dup);V unit=FWP_UNIT;
  V text=fwp_apply_borrowed(OBJ(received)->f[0],1,&unit);if(text!=value||*fwp_rc_slot(value)!=2)return 30;
  text_drop(text);fwp_channel_drop(ch);fwp_closure_drop(OBJ(received)->f[0]);fwp_rc_free_obj(received);if(!dead(value))return 31;
  value=fwp_rc_fresh(fwp_str_new("task",4));fn=fwp_rc_fresh(fwp_pap(GIVE,1,&value));
  fwp_task *task=(fwp_task *)(uintptr_t)fwp_p_task_spawn_retained(fn,text_drop);fwp_closure_drop(fn);
- ch=fwp_p_channel_make_owned(1,fwp_task_drop,fwp_rc_dup);fwp_p_channel_send_owned(ch,PTR(task),fwp_rc_dup);fwp_task_drop(PTR(task));fwp_tasks_finish();
+ ch=fwp_p_channel_make_owned(1,fwp_task_drop);fwp_p_channel_send_owned(ch,PTR(task),fwp_task_drop);fwp_tasks_finish();
  if(*fwp_rc_slot(PTR(task))!=1||*fwp_rc_slot(value)!=1)return 32;
  fwp_channel_drop(ch);if(!dead(value))return 33;
  // An old channel and buffer keep new queue elements alive through a minor GC.
- ch=fMAKE(2);value=fwp_rc_fresh(fwp_str_new("old",3));fSEND(ch,value);text_drop(value);received=fRECV(ch);option_drop(received);
+ ch=fMAKE(2);value=fwp_rc_fresh(fwp_str_new("old",3));fSEND(ch,value);received=fRECV(ch);option_drop(received);
  fwp_gc_collect();fwp_gc_collect();FWP_KEEP_ALIVE(ch);
- value=fwp_rc_fresh(fwp_str_new("young",5));fSEND(ch,value);text_drop(value);value=0;
+ value=fwp_rc_fresh(fwp_str_new("young",5));fSEND(ch,value);value=0;
  fwp_gc.major_next=0;size_t minors=fwp_gc.nminor;fwp_gc_collect();FWP_KEEP_ALIVE(ch);
  if(fwp_gc.nminor!=minors+1)return 34;received=fRECV(ch);if(STR(OBJ(received)->f[0])->len!=5)return 34;option_drop(received);fwp_channel_drop(ch);
  // Untyped queue channels and promoted handles keep tracing.
  for(int promoted=0;promoted<2;promoted++){
   ch=promoted?fMAKE(1):fwp_p_channel_make(1);if(promoted)fwp_rc_share(ch);
-  value=fwp_rc_fresh(fwp_str_new("shared",6));fSEND(ch,value);text_drop(value);
+  value=fwp_rc_fresh(fwp_str_new("shared",6));fSEND(ch,value);
   received=fRECV(ch);if(*fwp_rc_slot(value)||STR(OBJ(received)->f[0])->len!=6)return 35;
   fwp_channel_drop(ch);option_drop(received);
  }
- // Native sends borrow their values; the last channel alias releases context.
+ // Native sinks borrow during the call; send releases its owner afterward.
  ch=fMAKE(1);((fwp_chan *)(uintptr_t)ch)->sink=sink;((fwp_chan *)(uintptr_t)ch)->owner.sink_drop=sink_drop;((fwp_chan *)(uintptr_t)ch)->sink_ctx=&sink_calls;
  fwp_rc_dup(ch);
- value=fwp_rc_fresh(fwp_str_new("sink",4));if(fSEND(ch,value)!=FWP_TRUE||*fwp_rc_slot(value)!=1||sink_calls!=1)return 36;
- text_drop(value);if(!dead(value))return 38;
+ value=fwp_rc_fresh(fwp_str_new("sink",4));if(fSEND(ch,value)!=FWP_TRUE||sink_calls!=1)return 36;
+ if(!dead(value))return 38;
  fwp_channel_drop(ch);if(sink_drops||*fwp_rc_slot(ch)!=1)return 39;
- fCLOSE(ch);V rejected=fwp_rc_fresh(fwp_str_new("closed",6));if(fSEND(ch,rejected)!=FWP_FALSE||*fwp_rc_slot(rejected)!=1||sink_calls!=1)return 37;text_drop(rejected);
+ fCLOSE(ch);V rejected=fwp_rc_fresh(fwp_str_new("closed",6));if(fSEND(ch,rejected)!=FWP_FALSE||!dead(rejected)||sink_calls!=1)return 37;
  fwp_channel_drop(ch);if(sink_drops!=1)return 40;
- // Overflow acquires no queue owner and preserves the borrowed caller value.
+ // Moving a saturated count must not attempt an additional retain.
  ch=fMAKE(2);value=fwp_rc_fresh(fwp_str_new("overflow",8));uint8_t *slot=fwp_rc_slot(value);
  *slot=254;fwp_rc_dup(value);(*fwp_rc_wide_link(slot))->count=SIZE_MAX;
- fwp_trap_recover=recover;fwp_trap_jb=&recovered;fwp_trap_cleanup=0;
- if(setjmp(recovered)==0){fSEND(ch,value);return 22;}
- fwp_trap_recover=0;fwp_trap_jb=0;
- if(fwp_cleanups||((fwp_chan *)(uintptr_t)ch)->len||(*fwp_rc_wide_link(slot))->count!=SIZE_MAX)return 23;
- fwp_rc_forget_slot(slot);*slot=1;fwp_channel_drop(ch);text_drop(value);if(!dead(value))return 24;
+ if(fSEND(ch,value)!=FWP_TRUE||(*fwp_rc_wide_link(slot))->count!=SIZE_MAX)return 22;
+ received=fRECV(ch);if(OBJ(received)->f[0]!=value||(*fwp_rc_wide_link(slot))->count!=SIZE_MAX)return 23;
+ fwp_rc_forget_slot(slot);*slot=1;fwp_channel_drop(ch);option_drop(received);if(!dead(value))return 24;
  // A failed receive allocation leaves its element and queue owner intact.
- ch=fMAKE(1);value=fwp_rc_fresh(fwp_str_new("retry",5));fSEND(ch,value);text_drop(value);
+ ch=fMAKE(1);value=fwp_rc_fresh(fwp_str_new("retry",5));fSEND(ch,value);
  fail_option=1;fwp_trap_recover=recover;fwp_trap_jb=&recovered;fwp_trap_cleanup=0;
  if(setjmp(recovered)==0){fRECV(ch);return 25;}
  fwp_trap_recover=0;fwp_trap_jb=0;
  if(fwp_cleanups||((fwp_chan *)(uintptr_t)ch)->len!=1||*fwp_rc_slot(value)!=1)return 26;
  received=fRECV(ch);if(OBJ(received)->f[0]!=value||*fwp_rc_slot(value)!=1)return 27;
  fwp_channel_drop(ch);option_drop(received);if(!dead(value))return 28;
+ // A failed buffer allocation consumes the message but leaves the queue empty.
+ ch=fMAKE(1);value=fwp_rc_fresh(fwp_str_new("growth",6));
+ fail_grow=1;fwp_trap_recover=recover;fwp_trap_jb=&recovered;fwp_trap_cleanup=0;
+ if(setjmp(recovered)==0){fSEND(ch,value);return 41;}
+ fwp_trap_recover=0;fwp_trap_jb=0;
+ if(fwp_cleanups||((fwp_chan *)(uintptr_t)ch)->len||!dead(value))return 42;
+ fwp_channel_drop(ch);
  return 0;
 }
 "#.replace("GIVE",&id("give :"))
@@ -200,13 +205,17 @@ int main(void){
  .replace("SEND",&id("channel.send : Channel[String]"))
  .replace("CLOSE",&id("channel.close : Channel[String]"))
  .replace("RECV",&id("channel.recv : Channel[String]"));
-    let no_queue_retain = runtime.replace(
-        "if (c->owner.queue.dup) c->owner.queue.dup(x);",
-        "/* omit queue retain */",
+    let extra_queue_retain = runtime.replace(
+        "if ((!count || !*count) && drop) fwp_rc_share(x);",
+        "if (count && *count && drop) fwp_rc_dup(x); else if (drop) fwp_rc_share(x);",
     );
     let no_queue_drop = runtime.replace(
-        "c->owner.queue.drop(element);",
+        "c->owner.queue_drop(element);",
         "/* omit queued element release */",
+    );
+    let no_message_cleanup = runtime.replace(
+        "fwp_value_protect(&message, &message_cleanup);",
+        "message.drop = NULL; /* deliberately omit pending-message cleanup */",
     );
     let extra_receive = runtime.replace(
         "V result = fwp_rc_fresh(channel_option(x));",
@@ -220,11 +229,12 @@ int main(void){
         "/* omit native context release */",
     );
     let traced_sink_value = runtime.replace(
-        "return c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
-        "fwp_rc_share(x); return c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
+        "if (!c->closed) result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;",
+        "if (!c->closed) { result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE; fwp_rc_share(x); }",
     );
     for control in [
-        &no_queue_retain,
+        &extra_queue_retain,
+        &no_message_cleanup,
         &no_queue_drop,
         &extra_receive,
         &early_remove,
@@ -235,7 +245,8 @@ int main(void){
     }
     for opt in ["-O1", "-O2"] {
         for (control, code) in [
-            (&no_queue_retain, 2),
+            (&extra_queue_retain, 2),
+            (&no_message_cleanup, 19),
             (&no_queue_drop, 6),
             (&extra_receive, 4),
             (&early_remove, 26),

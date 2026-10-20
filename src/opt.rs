@@ -246,6 +246,21 @@ impl<'p> Opt<'p> {
                 if self.resource_locals.contains(&l) || crate::resource::anchored(&b, l) {
                     return Expr::Let(l, Box::new(v), Box::new(self.expr(*b, depth)));
                 }
+                // An effect followed by an unchanged local (for example tap)
+                // needs no alias for its result. Keep the single wildcard
+                // match and its scrutinee in place, then use the original local
+                // in the continuation. No action is dropped, moved or copied.
+                if let Expr::Match(scrutinee, arms) = &v {
+                    if let [(Pat::Wild, value @ Expr::Local(_))] = arms.as_slice() {
+                        let mut substitutions = vec![None; self.nlocals()];
+                        substitutions[l as usize] = Some(value.clone());
+                        let continuation = substitute(&b, &substitutions);
+                        return self.expr(
+                            Expr::Match(scrutinee.clone(), vec![(Pat::Wild, continuation)]),
+                            depth,
+                        );
+                    }
+                }
                 // `Let(l, v, Match(l, arms))` with `l` used nowhere else
                 // and `v` a record or variant built here: matched directly
                 // (backends may then avoid building `v`); any other `v`

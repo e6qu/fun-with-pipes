@@ -8,7 +8,8 @@ use std::collections::HashSet;
 /// `value_type` checks each reachable channel type independently, so every cycle
 /// through a queue is rejected, including cycles inside a nested queue. Immutable
 /// recursive types may repeat; `seen` bounds each search to the reachable type
-/// graph. Functions/tasks/streams hide owners not described by their field types.
+/// graph. Function captures have a separate value-flow proof in arc_scope;
+/// tasks and streams still hide owners without a queued-value contract.
 fn channel_payload(
     prog: &Program,
     ty: &MT,
@@ -25,9 +26,7 @@ fn channel_payload(
         return Ok(());
     }
     match ty {
-        MT::Fun(..) => Err(format!(
-            "{path}: function captures can retain the receiving channel"
-        )),
+        MT::Fun(..) => Ok(()),
         MT::Nat(_) => Ok(()),
         MT::Record(fields) => {
             for (name, ty) in fields {
@@ -105,7 +104,7 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
                         return Err(format!("channel type `{ty}` requires one payload type"));
                     };
                     return channel_payload(prog, payload, ty, &mut HashSet::new(), "payload").map_err(|path| format!(
-                        "type `{ty}` has no tracing-free ownership contract: channel payloads cannot contain functions, tasks, HTTP stream handles or recursive channel ownership\n  {path}\n  This is a missing cycle-freedom proof, not a demonstrated cycle. Keep callbacks and handles with an independent owner; queue data or non-owning IDs instead."
+                        "type `{ty}` has no tracing-free ownership contract: channel payloads cannot contain tasks, HTTP stream handles or recursive channel ownership\n  {path}\n  This is a missing cycle-freedom proof, not a demonstrated cycle. Keep callbacks and handles with an independent owner; queue data or non-owning IDs instead."
                     ));
                 }
                 "std::Bool" | "std::String" | "std::Bytes" | "std::File" | "std::UdpSocket"
@@ -289,10 +288,9 @@ mod tests {
     }
 
     #[test]
-    fn nested_queues_do_not_hide_callback_task_or_stream_captures() {
+    fn nested_queues_do_not_hide_task_or_stream_captures() {
         let prog = Program::default();
         for payload in [
-            MT::Fun(Box::new(MT::unit()), Box::new(MT::con("std::String"))),
             MT::Con("std::Task".into(), vec![MT::con("std::String")]),
             MT::con("std::H2Stream"),
         ] {

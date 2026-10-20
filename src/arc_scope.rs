@@ -1,4 +1,4 @@
-//! Finite closure-flow proof for raw AD operations and typed State lifetimes.
+//! Finite closure-flow proof for queued captures, raw AD and typed State lifetimes.
 //!
 //! Function values are sets of (function, supplied-argument count). Captures and
 //! call summaries join monotonically. Aggregate fields conservatively share a
@@ -8,7 +8,11 @@ use crate::ir::{Body, Expr, FuncId, Pat, Program, TypeShape, MT};
 use crate::value::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
-type Closure = (FuncId, usize);
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum Closure {
+    Known(FuncId, usize),
+    Unknown,
+}
 type Targets = BTreeSet<Closure>;
 type Context = (FuncId, u8);
 const AD: u8 = 1;
@@ -20,9 +24,11 @@ struct Proof<'a> {
     inputs: BTreeMap<Context, Vec<Targets>>,
     outputs: BTreeMap<Context, Targets>,
     callback_values: BTreeMap<Context, Targets>,
+    channel_values: BTreeMap<MT, Targets>,
     changed: bool,
     validate: bool,
     state_values: Targets,
+    error_values: Targets,
 }
 
 fn join(destination: &mut Targets, source: &Targets) -> bool {
@@ -59,7 +65,130 @@ fn has_functions(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
     }
 }
 
+fn has_function_channels(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
+    if !seen.insert(ty.clone()) {
+        return false;
+    }
+    match ty {
+        MT::Fun(a, b) => {
+            has_function_channels(program, a, seen) || has_function_channels(program, b, seen)
+        }
+        MT::Record(fields) => fields
+            .iter()
+            .any(|(_, field)| has_function_channels(program, field, seen)),
+        MT::Con(name, args) => {
+            (name == "std::Channel"
+                && args
+                    .iter()
+                    .any(|arg| has_functions(program, arg, &mut BTreeSet::new())))
+                || args
+                    .iter()
+                    .any(|arg| has_function_channels(program, arg, seen))
+                || match program.shapes.get(ty) {
+                    Some(TypeShape::Record(fields)) => fields
+                        .iter()
+                        .any(|(_, field)| has_function_channels(program, field, seen)),
+                    Some(TypeShape::Adt(variants)) => variants.iter().any(|(_, fields)| {
+                        fields
+                            .iter()
+                            .any(|field| has_function_channels(program, field, seen))
+                    }),
+                    _ => false,
+                }
+        }
+        MT::Nat(_) => false,
+    }
+}
+
+/// This first queued-function subset permits immutable data captures. Resources
+/// have independent lifetime rules; do not infer their hidden owners from an
+/// arrow type. Captured functions are checked by their actual origins below.
+fn queued_capture_type(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> Result<(), String> {
+    if !seen.insert(ty.clone()) {
+        return Ok(());
+    }
+    match ty {
+        MT::Fun(..) | MT::Nat(_) => Ok(()),
+        MT::Record(fields) => {
+            for (_, field) in fields {
+                queued_capture_type(program, field, seen)?;
+            }
+            Ok(())
+        }
+        MT::Con(name, args) => {
+            if matches!(
+                name.as_str(),
+                "?" | "std::Channel"
+                    | "std::Task"
+                    | "std::H2Stream"
+                    | "std::GrpcCell"
+                    | "std::File"
+                    | "std::Conn"
+                    | "std::Listener"
+                    | "std::UdpSocket"
+            ) {
+                return Err(format!("--gc arc: cannot prove a queued function's captured `{ty}` owner; queue immutable data or keep this owner outside the callback"));
+            }
+            for arg in args {
+                queued_capture_type(program, arg, seen)?;
+            }
+            match program.shapes.get(ty) {
+                Some(TypeShape::Record(fields)) => {
+                    for (_, field) in fields {
+                        queued_capture_type(program, field, seen)?;
+                    }
+                }
+                Some(TypeShape::Adt(variants)) => {
+                    for (_, fields) in variants {
+                        for field in fields {
+                            queued_capture_type(program, field, seen)?;
+                        }
+                    }
+                }
+                _ => {}
+            }
+            Ok(())
+        }
+    }
+}
+
 impl Proof<'_> {
+    fn queued_targets(
+        &self,
+        targets: &Targets,
+        seen: &mut BTreeSet<Closure>,
+    ) -> Result<(), String> {
+        for &closure in targets {
+            let Closure::Known(id, supplied) = closure else {
+                return Err("--gc arc: cannot prove the source of a queued function".into());
+            };
+            if !seen.insert(closure) || supplied == 0 {
+                continue;
+            }
+            let captures = self
+                .captures
+                .get(&closure)
+                .filter(|args| args.len() == supplied)
+                .ok_or_else(|| {
+                    "--gc arc: missing captured values for a queued function".to_string()
+                })?;
+            let types = self.program.funcs[id].ty.params(supplied).0;
+            for (ty, value) in types.iter().zip(captures) {
+                queued_capture_type(self.program, ty, &mut BTreeSet::new())?;
+                if matches!(ty, MT::Fun(..)) && value.is_empty() {
+                    return Err(
+                        "--gc arc: cannot prove a queued function's captured function source"
+                            .into(),
+                    );
+                }
+                if has_functions(self.program, ty, &mut BTreeSet::new()) {
+                    self.queued_targets(value, seen)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
     fn consume_iterator(
         &mut self,
         id: FuncId,
@@ -75,10 +204,18 @@ impl Proof<'_> {
                 .flatten()
                 .copied(),
         );
-        for &(target, supplied) in &steps {
+        for &closure in &steps {
+            let Closure::Known(target, supplied) = closure else {
+                if self.validate {
+                    return Err(
+                        "--gc arc: cannot prove a received iterator's function target".into(),
+                    );
+                }
+                continue;
+            };
             let count = self.program.funcs[target].arity as usize - supplied;
             let next = self.apply(
-                &BTreeSet::from([(target, supplied)]),
+                &BTreeSet::from([closure]),
                 &vec![Targets::new(); count],
                 scoped,
             )?;
@@ -106,7 +243,11 @@ impl Proof<'_> {
                         method.name
                     )
                 })?;
-                let input = self.apply(&BTreeSet::from([(iterator, 0)]), &[Targets::new()], 0)?;
+                let input = self.apply(
+                    &BTreeSet::from([Closure::Known(iterator, 0)]),
+                    &[Targets::new()],
+                    0,
+                )?;
                 let mut args = vec![Targets::new(); function.arity as usize];
                 args[0] = input;
                 self.request(method.func, 0, &args);
@@ -138,7 +279,7 @@ impl Proof<'_> {
     }
 
     fn partial(&mut self, id: FuncId, args: Vec<Targets>) -> Targets {
-        let key = (id, args.len());
+        let key = Closure::Known(id, args.len());
         let captured = self
             .captures
             .entry(key)
@@ -155,18 +296,23 @@ impl Proof<'_> {
         args: &[Targets],
         scoped: u8,
     ) -> Result<Targets, String> {
-        if self.validate && functions.is_empty() {
-            return Err(
-                "--gc arc: cannot prove the target of a call in a scoped ownership program".into(),
-            );
-        }
+        // An empty origin set contributes no call edge: for example, mapping
+        // over an empty collection never supplies a function-valued element.
+        // Unproved runtime/foreign inputs carry Unknown explicitly and are
+        // rejected below, even when joined with known targets.
         let mut result = Targets::new();
-        for &(id, supplied) in functions {
-            let mut all = self
-                .captures
-                .get(&(id, supplied))
-                .cloned()
-                .unwrap_or_default();
+        for &closure in functions {
+            let Closure::Known(id, _) = closure else {
+                if self.validate {
+                    return Err(
+                        "--gc arc: cannot prove the target of a call in an ownership program"
+                            .into(),
+                    );
+                }
+                result.insert(Closure::Unknown);
+                continue;
+            };
+            let mut all = self.captures.get(&closure).cloned().unwrap_or_default();
             all.extend_from_slice(args);
             let arity = self.program.funcs[id].arity as usize;
             let value = if all.len() < arity {
@@ -228,65 +374,96 @@ impl Proof<'_> {
         }
     }
 
-    fn expr(&mut self, expr: &Expr, locals: &mut [Targets], scoped: u8) -> Result<Targets, String> {
-        let result = match expr {
+    /// Fields share a conservative origin set, but a direct callable can only
+    /// have its checked monomorphic type. Keep unknown origins: knowing the
+    /// type alone does not establish a function's captures or lifetime.
+    fn refine_callable(&self, values: &mut Targets, ty: &MT) {
+        if !matches!(ty, MT::Fun(..)) {
+            return;
+        }
+        values.retain(|closure| match closure {
+            Closure::Unknown => true,
+            Closure::Known(id, supplied) => crate::ir::same_type(
+                &self.program.shapes,
+                self.program.funcs[*id].ty.params(*supplied).1,
+                ty,
+            ),
+        });
+    }
+
+    fn expr(
+        &mut self,
+        expr: &Expr,
+        locals: &mut [Targets],
+        local_types: &[MT],
+        scoped: u8,
+    ) -> Result<Targets, String> {
+        let mut result = match expr {
             Expr::Local(local) => locals[*local as usize].clone(),
             Expr::Const(value) => self.constant(value),
             Expr::Func(id) if self.program.funcs[*id].arity == 0 => self.request(*id, scoped, &[]),
-            Expr::Func(id) => BTreeSet::from([(*id, 0)]),
+            Expr::Func(id) => BTreeSet::from([Closure::Known(*id, 0)]),
             Expr::Call(id, args) => {
                 let values = args
                     .iter()
-                    .map(|arg| self.expr(arg, locals, scoped))
+                    .map(|arg| self.expr(arg, locals, local_types, scoped))
                     .collect::<Result<Vec<_>, _>>()?;
                 self.request(*id, scoped, &values)
             }
             Expr::Apply(function, args) => {
-                let function = self.expr(function, locals, scoped)?;
+                let function = self.expr(function, locals, local_types, scoped)?;
                 let args = args
                     .iter()
-                    .map(|arg| self.expr(arg, locals, scoped))
+                    .map(|arg| self.expr(arg, locals, local_types, scoped))
                     .collect::<Result<Vec<_>, _>>()?;
                 self.apply(&function, &args, scoped)?
             }
             Expr::Record(fields) | Expr::Construct(_, fields) => {
                 let mut result = Targets::new();
                 for field in fields {
-                    result.extend(self.expr(field, locals, scoped)?);
+                    result.extend(self.expr(field, locals, local_types, scoped)?);
                 }
                 result
             }
-            Expr::Field(value, _) => self.expr(value, locals, scoped)?,
+            Expr::Field(value, _) => self.expr(value, locals, local_types, scoped)?,
             Expr::SetFields(value, fields) => {
-                let mut result = self.expr(value, locals, scoped)?;
+                let mut result = self.expr(value, locals, local_types, scoped)?;
                 for (_, field) in fields {
-                    result.extend(self.expr(field, locals, scoped)?);
+                    result.extend(self.expr(field, locals, local_types, scoped)?);
                 }
                 result
             }
             Expr::BorrowGlobal(local, global, body) => {
                 locals[*local as usize] = self.request(*global, scoped, &[]);
-                self.expr(body, locals, scoped)?
+                self.expr(body, locals, local_types, scoped)?
             }
             Expr::Let(local, value, body) => {
-                locals[*local as usize] = self.expr(value, locals, scoped)?;
-                self.expr(body, locals, scoped)?
+                locals[*local as usize] = self.expr(value, locals, local_types, scoped)?;
+                self.expr(body, locals, local_types, scoped)?
             }
             Expr::Match(value, arms) => {
-                let value = self.expr(value, locals, scoped)?;
+                let value = self.expr(value, locals, local_types, scoped)?;
                 let mut result = Targets::new();
                 for (pattern, body) in arms {
                     let mut branch = locals.to_vec();
                     Self::bind(pattern, &value, &mut branch);
-                    result.extend(self.expr(body, &mut branch, scoped)?);
+                    result.extend(self.expr(body, &mut branch, local_types, scoped)?);
                 }
                 result
             }
             Expr::Trace(_, body)
             | Expr::Dup(_, body)
             | Expr::Drop(_, body)
-            | Expr::ResourceRegion { body, .. } => self.expr(body, locals, scoped)?,
+            | Expr::ResourceRegion { body, .. } => self.expr(body, locals, local_types, scoped)?,
         };
+        if let Some(ty) = crate::ir::type_of(
+            &|id| &self.program.funcs[id].ty,
+            &self.program.shapes,
+            local_types,
+            expr,
+        ) {
+            self.refine_callable(&mut result, &ty);
+        }
         Ok(result)
     }
 
@@ -298,7 +475,7 @@ impl Proof<'_> {
                 for (local, value) in locals.iter_mut().zip(args) {
                     *local = value.clone();
                 }
-                self.expr(body, &mut locals, scoped)
+                self.expr(body, &mut locals, &function.locals, scoped)
             }
             Body::Prim(symbol) if matches!(symbol.as_str(), "ad.scope" | "ad.scope2") => {
                 self.apply(&args[0], &args[1..], scoped | AD)
@@ -306,8 +483,8 @@ impl Proof<'_> {
             Body::Prim(symbol) if matches!(symbol.as_str(), "task.spawn" | "task.within") => {
                 // A child starts with independent State and AD stacks. Carry
                 // callable captures, but never its parent's dynamic scopes.
-                // Channel payloads exclude closures/tasks/streams, and raw
-                // addresses remain excluded by ARC eligibility,
+                // Queued closures exclude resource captures; task/stream
+                // payloads and raw addresses remain excluded by ARC eligibility,
                 // so no mutable back-edge can publish this task to its thunk.
                 let callback = usize::from(symbol == "task.within");
                 self.apply(&args[callback], &[Targets::new()], 0)
@@ -324,6 +501,43 @@ impl Proof<'_> {
                 self.changed |= join(&mut self.state_values, &args[0]);
                 let mut result = self.apply(&args[1], &args[2..], scoped | STATE)?;
                 result.extend(self.state_values.iter().copied());
+                Ok(result)
+            }
+            Body::Prim(symbol) if symbol == "channel.send" => {
+                let channel = function.ty.params(function.arity as usize).0[0].clone();
+                let payload = function.ty.params(function.arity as usize).0[1];
+                if self.validate && has_functions(self.program, payload, &mut BTreeSet::new()) {
+                    if matches!(payload, MT::Fun(..)) && args[1].is_empty() {
+                        return Err("--gc arc: cannot prove the source of a queued function".into());
+                    }
+                    self.queued_targets(&args[1], &mut BTreeSet::new())?;
+                }
+                self.changed |= join(self.channel_values.entry(channel).or_default(), &args[1]);
+                Ok(Targets::new())
+            }
+            Body::Prim(symbol)
+                if matches!(symbol.as_str(), "channel.recv" | "channel.recv-for") =>
+            {
+                let index = usize::from(symbol == "channel.recv-for");
+                let channel = function.ty.params(function.arity as usize).0[index];
+                let mut values = self
+                    .channel_values
+                    .get(channel)
+                    .cloned()
+                    .unwrap_or_default();
+                values.extend(args[index].iter().copied());
+                Ok(values)
+            }
+            Body::Prim(symbol) if matches!(symbol.as_str(), "channel.make" | "channel.close") => {
+                Ok(Targets::new())
+            }
+            Body::Prim(symbol) if symbol == "fail" => {
+                self.changed |= join(&mut self.error_values, &args[0]);
+                Ok(Targets::new())
+            }
+            Body::Prim(symbol) if symbol == "attempt" => {
+                let mut result = self.apply(&args[0], &args[1..], scoped)?;
+                result.extend(self.error_values.iter().copied());
                 Ok(result)
             }
             Body::Prim(symbol) if matches!(symbol.as_str(), "get" | "put" | "modify") => {
@@ -365,13 +579,15 @@ impl Proof<'_> {
                     if self.validate && args[0].is_empty() {
                         return Err("--gc arc: cannot prove managed tape callbacks".into());
                     }
-                    for &(target, supplied) in &args[0] {
+                    for &closure in &args[0] {
+                        let Closure::Known(target, supplied) = closure else {
+                            if self.validate {
+                                return Err("--gc arc: cannot prove managed tape callbacks".into());
+                            }
+                            continue;
+                        };
                         let count = self.program.funcs[target].arity as usize - supplied;
-                        self.apply(
-                            &BTreeSet::from([(target, supplied)]),
-                            &vec![Targets::new(); count],
-                            AD,
-                        )?;
+                        self.apply(&BTreeSet::from([closure]), &vec![Targets::new(); count], AD)?;
                     }
                 }
                 Ok(Targets::new())
@@ -381,10 +597,39 @@ impl Proof<'_> {
                 // an actual invocation reaches it. Invoking every such closure
                 // here would incorrectly run scoped work in its caller's scope.
                 let mut result: Targets = args.iter().flatten().copied().collect();
+                let contract = crate::ownership::primitive(symbol);
+                let returns_functions = has_functions(
+                    self.program,
+                    function.ty.params(function.arity as usize).1,
+                    &mut BTreeSet::new(),
+                );
+                if returns_functions {
+                    match contract {
+                        Some(c)
+                            if matches!(
+                                c.result,
+                                crate::ownership::ResultOwnership::Static
+                                    | crate::ownership::ResultOwnership::Never
+                            ) =>
+                        {
+                            result.clear()
+                        }
+                        Some(c)
+                            if !c.aliases.is_empty()
+                                || c.callback.is_some()
+                                || symbol == "list.ap" => {}
+                        // The ownership contract identifies input aliases and
+                        // callback-produced values. A fresh runtime producer
+                        // with neither source needs its own function model.
+                        _ => {
+                            result.insert(Closure::Unknown);
+                        }
+                    }
+                }
                 let callback = if symbol == "list.ap" {
                     Some(0) // The first list contains the functions to apply.
                 } else {
-                    crate::ownership::primitive(symbol).and_then(|c| {
+                    contract.and_then(|c| {
                         c.callback.map(|callback| match callback {
                             crate::ownership::Callback::Borrowed(i)
                             | crate::ownership::Callback::Retained(i)
@@ -394,13 +639,21 @@ impl Proof<'_> {
                 };
                 let Some(callback) = callback else {
                     // Unknown runtime boundaries retain the conservative proof.
-                    if crate::ownership::primitive(symbol).is_some() {
+                    if contract.is_some() {
                         return Ok(result);
                     }
-                    for &(target, supplied) in &result.clone() {
+                    for &closure in &result.clone() {
+                        let Closure::Known(target, supplied) = closure else {
+                            if self.validate {
+                                return Err(
+                                    "--gc arc: cannot prove a runtime callback target".into()
+                                );
+                            }
+                            continue;
+                        };
                         let count = self.program.funcs[target].arity as usize - supplied;
                         result.extend(self.apply(
-                            &BTreeSet::from([(target, supplied)]),
+                            &BTreeSet::from([closure]),
                             &vec![result.clone(); count],
                             scoped,
                         )?);
@@ -421,11 +674,17 @@ impl Proof<'_> {
                         .flatten()
                         .copied(),
                 );
-                for &(target, supplied) in &functions {
+                for &closure in &functions {
+                    let Closure::Known(target, supplied) = closure else {
+                        if self.validate {
+                            return Err("--gc arc: cannot prove a primitive callback target".into());
+                        }
+                        result.insert(Closure::Unknown);
+                        continue;
+                    };
                     let count = self.program.funcs[target].arity as usize - supplied;
                     let values = vec![data.clone(); count];
-                    let returned =
-                        self.apply(&BTreeSet::from([(target, supplied)]), &values, scoped)?;
+                    let returned = self.apply(&BTreeSet::from([closure]), &values, scoped)?;
                     // A fold/loop may feed a returned closure into a later
                     // iteration even if its eventual result contains none.
                     self.changed |= join(
@@ -450,7 +709,17 @@ impl Proof<'_> {
                         self.apply(&args[index], &vec![Targets::new(); count], scoped)?;
                     }
                 }
-                Ok(Targets::new())
+                Ok(
+                    if has_functions(
+                        self.program,
+                        function.ty.params(function.arity as usize).1,
+                        &mut BTreeSet::new(),
+                    ) {
+                        Targets::from([Closure::Unknown])
+                    } else {
+                        Targets::new()
+                    },
+                )
             }
             Body::Remote(remote) => {
                 let shape =
@@ -465,7 +734,11 @@ impl Proof<'_> {
                 if let Some(iterator) = remote.iter_fn {
                     // The received iterator's constructor runs in the caller;
                     // its returned continuations are data until consumed.
-                    self.apply(&BTreeSet::from([(iterator, 0)]), &[Targets::new()], scoped)
+                    self.apply(
+                        &BTreeSet::from([Closure::Known(iterator, 0)]),
+                        &[Targets::new()],
+                        scoped,
+                    )
                 } else {
                     Ok(Targets::new())
                 }
@@ -475,7 +748,15 @@ impl Proof<'_> {
 }
 
 pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String> {
-    if !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "ad.tape" | "ad.push" | "ad.backward" | "ad.tape-owned" | "ad.push-owned" | "ad.backward-owned" | "run-state" | "get" | "put" | "modify"))) {
+    let queued_functions = program.funcs.iter().any(|function| {
+        let mut seen = BTreeSet::new();
+        has_function_channels(program, &function.ty, &mut seen)
+            || function
+                .locals
+                .iter()
+                .any(|ty| has_function_channels(program, ty, &mut seen))
+    });
+    if !queued_functions && !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "ad.tape" | "ad.push" | "ad.backward" | "ad.tape-owned" | "ad.push-owned" | "ad.backward-owned" | "run-state" | "get" | "put" | "modify"))) {
         return Ok(());
     }
     let mut proof = Proof {
@@ -484,20 +765,56 @@ pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String>
         inputs: BTreeMap::new(),
         outputs: BTreeMap::new(),
         callback_values: BTreeMap::new(),
+        channel_values: BTreeMap::new(),
         changed: false,
         validate: false,
         state_values: Targets::new(),
+        error_values: Targets::new(),
     };
     for &entry in entries {
-        // Protocol inputs contain no known language closures. Any attempted
-        // dynamic callback call through an input remains an unproved target.
-        proof.request(entry, 0, &[]);
+        // Wire inputs have no language closures. An external function-valued
+        // input remains unknown, even if joined with a known function later.
+        // Served input iterators have an explicit runtime constructor below.
+        let received_iterator = program.service.as_ref().is_some_and(|service| {
+            service
+                .methods
+                .iter()
+                .any(|method| method.func == entry && method.iter_fn.is_some())
+        });
+        let function = &program.funcs[entry];
+        for ty in function.ty.params(function.arity as usize).0 {
+            if has_function_channels(program, ty, &mut BTreeSet::new()) {
+                return Err(
+                    "--gc arc: external function-bearing channels have no proved queue ownership"
+                        .into(),
+                );
+            }
+        }
+        let args: Vec<_> = function
+            .ty
+            .params(function.arity as usize)
+            .0
+            .iter()
+            .enumerate()
+            .map(|(index, ty)| {
+                if !(received_iterator && index == 0)
+                    && has_functions(program, ty, &mut BTreeSet::new())
+                {
+                    Targets::from([Closure::Unknown])
+                } else {
+                    Targets::new()
+                }
+            })
+            .collect();
+        proof.request(entry, 0, &args);
     }
     loop {
         proof.changed = false;
         proof.service_boundaries(entries)?;
         for ((id, scoped), args) in proof.inputs.clone() {
-            let mut result = proof.function(id, scoped, &args)?;
+            let mut result = proof.function(id, scoped, &args).map_err(|error| {
+                format!("{error}\n  while checking `{}`", program.funcs[id].name)
+            })?;
             let function = &program.funcs[id];
             if !has_functions(
                 program,
@@ -515,7 +832,9 @@ pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String>
     proof.validate = true;
     proof.service_boundaries(entries)?;
     for ((id, scoped), args) in proof.inputs.clone() {
-        proof.function(id, scoped, &args)?;
+        proof
+            .function(id, scoped, &args)
+            .map_err(|error| format!("{error}\n  while checking `{}`", program.funcs[id].name))?;
     }
     Ok(())
 }
@@ -583,6 +902,308 @@ mod tests {
         assert!(check(&state_program(false), &[0])
             .unwrap_err()
             .contains("tracing-free lifetime policy"));
+    }
+
+    #[test]
+    fn queued_functions_use_the_receivers_scope() {
+        // Sending get does not call it or retain a scope. The receiver must
+        // establish its own State handler before invoking the queued function.
+        for scoped in [false, true] {
+            let mut program = state_program(scoped);
+            let unit = MT::unit();
+            let string = MT::con("std::String");
+            let getter = arrow(unit.clone(), string.clone());
+            let channel = MT::Con("std::Channel".into(), vec![getter.clone()]);
+            let option = MT::Con("std::Option".into(), vec![getter.clone()]);
+            let boolean = MT::con("std::Bool");
+            let integer = MT::con("std::I64");
+            let reader = arrow(channel.clone(), string.clone());
+            let pair = MT::Record(vec![
+                ("0".into(), string.clone()),
+                ("1".into(), string.clone()),
+            ]);
+            program.funcs.extend([
+                Func {
+                    name: "queue".into(),
+                    arity: 1,
+                    locals: vec![integer.clone()],
+                    ty: arrow(integer, channel.clone()),
+                    body: Body::Prim("channel.make".into()),
+                },
+                Func {
+                    name: "send".into(),
+                    arity: 2,
+                    locals: vec![channel.clone(), getter.clone()],
+                    ty: arrow(channel.clone(), arrow(getter, boolean.clone())),
+                    body: Body::Prim("channel.send".into()),
+                },
+                Func {
+                    name: "receive".into(),
+                    arity: 1,
+                    locals: vec![channel.clone()],
+                    ty: arrow(channel.clone(), option),
+                    body: Body::Prim("channel.recv".into()),
+                },
+                Func {
+                    name: "call-received".into(),
+                    arity: 1,
+                    locals: vec![channel.clone()],
+                    ty: reader.clone(),
+                    body: Body::Expr(Expr::Apply(
+                        Box::new(Expr::Field(
+                            Box::new(Expr::Call(5, vec![Expr::Local(0)])),
+                            0,
+                        )),
+                        vec![Expr::Const(Value::unit())],
+                    )),
+                },
+            ]);
+            program.funcs[2].locals = vec![string.clone(), reader.clone(), channel.clone()];
+            program.funcs[2].ty = arrow(string, arrow(reader, arrow(channel.clone(), pair)));
+            program.funcs[0].locals = vec![channel, boolean];
+            program.funcs[0].body = Body::Expr(Expr::Let(
+                0,
+                Box::new(Expr::Call(3, vec![Expr::Const(Value::I64(1))])),
+                Box::new(Expr::Let(
+                    1,
+                    Box::new(Expr::Call(4, vec![Expr::Local(0), Expr::Func(1)])),
+                    Box::new(if scoped {
+                        Expr::Call(
+                            2,
+                            vec![
+                                Expr::Const(Value::str("receiver")),
+                                Expr::Func(6),
+                                Expr::Local(0),
+                            ],
+                        )
+                    } else {
+                        Expr::Call(6, vec![Expr::Local(0)])
+                    }),
+                )),
+            ));
+            if scoped {
+                check(&program, &[0]).unwrap();
+            } else {
+                assert!(check(&program, &[0])
+                    .unwrap_err()
+                    .contains("outside a State scope"));
+            }
+        }
+    }
+
+    #[test]
+    fn joining_a_known_target_does_not_hide_an_unknown_function() {
+        let program = state_program(true);
+        let mut proof = Proof {
+            program: &program,
+            captures: BTreeMap::new(),
+            inputs: BTreeMap::new(),
+            outputs: BTreeMap::new(),
+            callback_values: BTreeMap::new(),
+            channel_values: BTreeMap::new(),
+            changed: false,
+            validate: true,
+            state_values: Targets::new(),
+            error_values: Targets::new(),
+        };
+        let mut functions = Targets::from([Closure::Known(1, 0)]);
+        assert!(proof
+            .apply(&Targets::new(), &[Targets::new()], STATE)
+            .unwrap()
+            .is_empty());
+        assert!(join(&mut functions, &Targets::from([Closure::Unknown])));
+        functions.insert(Closure::Known(2, 0));
+        proof.refine_callable(&mut functions, &program.funcs[1].ty);
+        assert_eq!(
+            functions,
+            Targets::from([Closure::Known(1, 0), Closure::Unknown])
+        );
+        assert!(proof
+            .apply(&functions, &[Targets::new()], STATE)
+            .unwrap_err()
+            .contains("cannot prove the target"));
+        assert!(proof
+            .queued_targets(&functions, &mut BTreeSet::new())
+            .unwrap_err()
+            .contains("cannot prove the source"));
+    }
+
+    #[test]
+    fn nonreturning_primitives_do_not_produce_unknown_functions() {
+        for symbol in ["prim.trap", "exit", "unmodeled-function-producer"] {
+            let mut program = state_program(true);
+            let input = if symbol == "exit" {
+                Value::I64(1)
+            } else {
+                Value::str("stopped")
+            };
+            let input_type = if symbol == "exit" {
+                MT::con("std::I64")
+            } else {
+                MT::con("std::String")
+            };
+            program.funcs.push(Func {
+                name: symbol.into(),
+                arity: 1,
+                locals: vec![input_type.clone()],
+                ty: arrow(input_type, program.funcs[1].ty.clone()),
+                body: Body::Prim(symbol.into()),
+            });
+            program.funcs[0].body = Body::Expr(Expr::Apply(
+                Box::new(Expr::Call(3, vec![Expr::Const(input)])),
+                vec![Expr::Const(Value::unit())],
+            ));
+            let result = check(&program, &[0]);
+            if symbol == "unmodeled-function-producer" {
+                assert!(result.unwrap_err().contains("cannot prove"));
+            } else {
+                result.unwrap();
+            }
+        }
+    }
+
+    #[test]
+    fn queued_capture_proof_follows_nested_function_owners() {
+        for captured_type in [
+            MT::con("std::String"),
+            MT::con("std::File"),
+            MT::Con("std::Channel".into(), vec![MT::con("std::String")]),
+        ] {
+            let mut program = state_program(true);
+            let getter = program.funcs[1].ty.clone();
+            let unit = MT::unit();
+            program.funcs.extend([
+                Func {
+                    name: "capture-value".into(),
+                    arity: 2,
+                    locals: vec![captured_type.clone(), unit.clone()],
+                    ty: arrow(captured_type.clone(), getter.clone()),
+                    body: Body::Expr(Expr::Const(Value::str("result"))),
+                },
+                Func {
+                    name: "capture-function".into(),
+                    arity: 2,
+                    locals: vec![getter.clone(), unit],
+                    ty: arrow(getter.clone(), getter),
+                    body: Body::Expr(Expr::Apply(Box::new(Expr::Local(0)), vec![Expr::Local(1)])),
+                },
+            ]);
+            let mut proof = Proof {
+                program: &program,
+                captures: BTreeMap::new(),
+                inputs: BTreeMap::new(),
+                outputs: BTreeMap::new(),
+                callback_values: BTreeMap::new(),
+                channel_values: BTreeMap::new(),
+                changed: false,
+                validate: true,
+                state_values: Targets::new(),
+                error_values: Targets::new(),
+            };
+            let captured = proof.partial(3, vec![Targets::new()]);
+            let nested = proof.partial(4, vec![captured.clone()]);
+            for value in [captured, nested] {
+                let checked = proof.queued_targets(&value, &mut BTreeSet::new());
+                if captured_type == MT::con("std::String") {
+                    checked.unwrap();
+                } else {
+                    assert!(checked
+                        .unwrap_err()
+                        .contains("cannot prove a queued function's captured"));
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn runtime_function_producers_and_external_queues_need_known_sources() {
+        let mut program = state_program(true);
+        let getter = program.funcs[1].ty.clone();
+        let unit = MT::unit();
+        program.funcs.push(Func {
+            name: "unmodeled-function-producer".into(),
+            arity: 1,
+            locals: vec![unit.clone()],
+            ty: arrow(unit, getter.clone()),
+            body: Body::Prim("unmodeled-function-producer".into()),
+        });
+        let mut proof = Proof {
+            program: &program,
+            captures: BTreeMap::new(),
+            inputs: BTreeMap::new(),
+            outputs: BTreeMap::new(),
+            callback_values: BTreeMap::new(),
+            channel_values: BTreeMap::new(),
+            changed: false,
+            validate: false,
+            state_values: Targets::new(),
+            error_values: Targets::new(),
+        };
+        let produced = proof.function(3, STATE, &[Targets::new()]).unwrap();
+        assert!(produced.contains(&Closure::Unknown));
+        assert!(proof
+            .queued_targets(&produced, &mut BTreeSet::new())
+            .is_err());
+        let channel = MT::Con("std::Channel".into(), vec![getter]);
+        program.funcs.push(Func {
+            name: "external-queue".into(),
+            arity: 1,
+            locals: vec![channel.clone()],
+            ty: arrow(channel.clone(), channel),
+            body: Body::Expr(Expr::Local(0)),
+        });
+        assert!(check(&program, &[4])
+            .unwrap_err()
+            .contains("external function-bearing channels"));
+    }
+
+    #[test]
+    fn caught_error_payloads_keep_their_function_targets() {
+        let mut program = state_program(false);
+        let unit = MT::unit();
+        let getter = program.funcs[1].ty.clone();
+        let thunk = arrow(unit.clone(), unit.clone());
+        let result = MT::Con("std::Result".into(), vec![unit.clone(), getter.clone()]);
+        program.funcs.extend([
+            Func {
+                name: "fail-with-function".into(),
+                arity: 1,
+                locals: vec![getter.clone()],
+                ty: arrow(getter.clone(), unit.clone()),
+                body: Body::Prim("fail".into()),
+            },
+            Func {
+                name: "throw-getter".into(),
+                arity: 1,
+                locals: vec![unit.clone()],
+                ty: thunk.clone(),
+                body: Body::Expr(Expr::Call(3, vec![Expr::Func(1)])),
+            },
+            Func {
+                name: "catch-function".into(),
+                arity: 2,
+                locals: vec![thunk.clone(), unit.clone()],
+                ty: arrow(thunk, arrow(unit, result)),
+                body: Body::Prim("attempt".into()),
+            },
+        ]);
+        program.funcs[0].locals = vec![getter];
+        program.funcs[0].body = Body::Expr(Expr::Match(
+            Box::new(Expr::Call(
+                5,
+                vec![Expr::Func(4), Expr::Const(Value::unit())],
+            )),
+            vec![
+                (
+                    Pat::Construct(1, vec![Pat::Bind(0)]),
+                    Expr::Apply(Box::new(Expr::Local(0)), vec![Expr::Const(Value::unit())]),
+                ),
+                (Pat::Wild, Expr::Const(Value::str("unused success branch"))),
+            ],
+        ));
+        assert!(check(&program, &[0])
+            .unwrap_err()
+            .contains("outside a State scope"));
     }
 
     #[test]

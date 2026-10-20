@@ -124,7 +124,7 @@ traps. Unproved runtime sharing still uses tracing.
 | Arrays, maps and sets | Typed elements, counted storage, selected unique updates | Callback and alias contracts must be proved |
 | Strings and bytes | Counted leaves for proved copies/aliases | Unmodeled result families remain shared |
 | Closures | Owned captured arguments and typed call metadata; eligible functions with only fixed function captures use static records | Runtime-data captures retain ordinary ownership; retained unknown callbacks are not checked ARC |
-| Tasks and channels | Counted handles/results/queues; ARC admits nested channels with an acyclic ownership type graph | Function/task/HTTP stream captures and recursive channel ownership remain unproved |
+| Tasks and channels | Counted handles/results/queues; ARC admits acyclic nested channel types; proved queued functions are under validation | Resource-bearing or unknown queued captures, task/HTTP stream payloads and recursive channel ownership remain unproved |
 | Derivative tapes | Scoped owners and a bounded numeric workspace | Raw unscoped tape calls are not checked ARC |
 | External/network state | Explicit resource teardown where modeled | Freeing a C buffer does not prove the lifetime of every referenced fwp value |
 
@@ -215,6 +215,16 @@ Successful transfer removes the registration without releasing the transferred
 owner. Partially constructed records, callback arguments and decoder results
 must protect every acquired child until transfer succeeds.
 
+Typed channel sends now consume one message owner while borrowing the channel
+handle. A successful queue insertion transfers that owner without a retain.
+The compiler retains a separate owner first when an independently live alias
+needs the same value. Closed sends, native sinks, traps and cancelled waits release
+the consumed message; a sink borrows it only during its callback. Failed queue
+growth leaves no queued message. A failed receive allocation keeps the queued
+owner intact for retry. These transfer changes are implemented but await full
+native/WebAssembly acceptance. [Measured baselines](measurements/channel-transfer-protocol.md)
+show why the previous retain was avoidable for fresh messages.
+
 Counting cannot reclaim an unreachable cycle by itself. For example, a channel
 can contain a queued value holding that same channel. Closing it must preserve
 queued values for later receives. Explicit draining breaks the tested cycle;
@@ -236,7 +246,8 @@ example, `Link = | Node (Channel[Link])` is still rejected even if a particular
 program would drain every queue. This is a missing proof about all executions,
 not a claim that every value of `Link` is cyclic.
 
-Payloads still cannot contain functions, tasks or HTTP stream handles.
+Accepted deliveries exclude functions, tasks and HTTP stream handles from queue
+payloads; the function subset below is now under validation.
 A function or task can capture the sending channel; an HTTP stream handle can
 reach the channel through its connection-owned handler. These paths can form
 a cycle without mentioning the channel in the result type; the check therefore examines the complete payload type.
@@ -252,15 +263,33 @@ cancelled blocked operations release their wait registrations and owners first.
 
 ### Next proof: functions stored in channels
 
-This is design work; checked ARC still rejects function payloads. A partial
+This implementation is under validation in PR #175; it is not yet accepted
+platform support. A partial
 application such as `add 3` is a function that adds three to its next input. It
 keeps the integer `3` as a **capture**, a value saved for the later call. Storing
 that function in a channel cannot create a cycle through this integer. Receiving
 it and applying it to `5` produces `8`; the interpreter already supports this.
 
+Here `tap` sends while keeping the channel as the pipe's value. Receiving returns
+an `Option`: `Some` for a message, or `None` for a closed, empty queue.
+`option.map (apply 5)` calls a received function with `5`, when one is present.
+
+```fwp
+callbacks : I64 -> Channel[I64 -> I64] ! {Async}
+callbacks = channel.make
+main = callbacks 1
+    | tap (flip channel.send (add 3))
+    | channel.recv
+    | option.map (apply 5)
+    | echo
+```
+
+It prints `Some 8`. The `1` is queue capacity; `flip` puts the message before
+the piped channel in the send call. No ownership syntax is added to this program.
+
 The type `I64 -> I64` describes input and output, not captures. Another function
 of that type could retain the sending channel. Accepting all functions with this
-signature would therefore be unsafe. The next proof needs two linked analyses:
+signature would therefore be unsafe. The implementation uses two linked checks:
 
 - Identify each possible stored function and its captures, following returned
   functions, nested containers and partial applications. Follow owning captures
@@ -271,11 +300,39 @@ signature would therefore be unsafe. The next proof needs two linked analyses:
   autodiff operations in the scope where the received function runs. A queue
   must not silently extend the lifetime of the sender's temporary scope.
 
-`src/arc.rs` already follows channel payload types. `src/arc_scope.rs` tracks
-possible function targets and saved arguments for scope checks, but does not yet
-connect senders to receivers. Extend that finite analysis until no new targets
-are discovered. Do not infer capture freedom from an arrow type or inspect only
-source-level partial applications; runtime constructors can also create closures.
+`src/arc.rs` follows channel payload types. `src/arc_scope.rs` connects sends and
+receives and tracks each known function with its number of supplied arguments.
+It also records an explicit unknown source: combining it with a known function
+does not make it known. Captures, calls, queues and caught error payloads are
+revisited until no set gains another target. This is a finite, conservative
+analysis of the specialized program, not execution of the program.
+An empty origin set means no function value reaches that path, as when mapping
+over an empty collection of functions. It adds no call target. This differs from
+an unknown source, which remains a rejection even if known functions reach the
+same path. The compiler must explicitly mark unmodeled runtime and foreign
+producers as unknown; an empty set must not stand in for missing analysis.
+
+The first admitted subset allows immutable scalar, string and container captures,
+including other functions whose captures pass the same check. Captured channels,
+tasks, files, connections and streams remain rejected, even when a particular
+program might use them without a cycle. Functions in a queued list or record
+receive the same checks as functions queued directly. Empty containers need no
+invented callback. Unknown external function-bearing queues remain rejected.
+
+Queues with the same concrete payload type share a possible-target set. Aggregate
+fields also share a set, and caught errors are combined conservatively. These
+choices can reject safe programs with unrelated owners or scopes; they must not
+accept an unproved capture. When a value is used as a function, its checked type
+excludes incompatible targets from neighboring fields; unknown sources remain
+unknown. For example, a scope wrapper taking a function must not be confused
+with that function taking an integer. Comparing recursive record types visits
+each pair once; revisiting a pair does not skip checks on its other fields.
+More precise analysis can reduce other rejections
+later without changing source syntax. Native constructors need an explicit source
+model; an arrow type alone never proves capture freedom. A received gRPC
+iterator contains a continuation that keeps the network stream alive. The
+analysis follows its ordinary constructor and rejects that captured stream owner
+in a queue, even though the iterator's public type does not name the resource.
 
 Acceptance needs scalar/string captures, returned and nested callbacks, aliases,
 undrained/closed queues, failure, cancellation and repeated bounded-live work.
@@ -587,6 +644,13 @@ full acceptance separately from the focused memory checks.
 tracing code. It rejects unproved ownership instead of silently retaining it.
 Ordinary counted freeing must remain enabled; tracing stress and reuse poisoning
 are diagnostic modes incompatible with ARC.
+
+Native ARC preprocessing omits marking, root scanning and sweeping, including
+their scheduler and Windows fiber helpers. This must hold even at `-O0`: GCC
+previously kept unused tracing functions that Clang removed. Typed finalizers,
+explicit destruction and scheduler stack-position helpers remain. The
+[handoff](development-state.md) records validation of this repair; binary checks
+cover ARC exclusion and an ordinary tracing control.
 
 | Entry or boundary | Implemented contract | Evidence and limits |
 |---|---|---|
@@ -1000,9 +1064,13 @@ temporary function object. The ordinary entry remains the explicit no-reuse mode
 [Linux measurements](benchmarks.md#freeing-method-arguments-and-results-linux-measurement)
 record the memory reduction and mixed count/stack costs.
 
-A native output channel borrows each sent value only until its callback returns.
-A callback that keeps a value must acquire its own typed owner. Its payload lives
-after the unchanged 96-byte channel header in one allocation. Last-channel cleanup
+A native output channel's callback borrows each sent value until it returns.
+The typed send owns and releases the message; a callback that keeps it must
+acquire its own typed owner. The channel's payload lives
+after the channel header in one allocation. The transfer change removes an unused
+duplicate-function pointer; its native layout test requires 88 bytes, compared
+with the earlier measured 96-byte header. Final platform checks are pending.
+Last-channel cleanup
 releases request/connection references and then that allocation; construction
 protects partially acquired references. Queue and callback cleanup use alternative
 fields in the header, without another lookup on the send path.
@@ -1131,14 +1199,16 @@ Installing a handler inside the continuation is allowed.
 Remote arguments are borrowed while encoded or delivered. Retained input cursors
 acquire their own typed owners. A decoded single reply stays protected until the
 final status arrives; cancellation, extra replies and failed status release it.
-A channel send borrows its decoded value, while an accepting queue acquires an
-owner. Native sinks and closed channels retain no local reply owner. Caught
+A channel send consumes the decoder's owner and transfers it into an accepting
+queue. Native sinks and closed channels release that owner before returning. Caught
 status errors own both their record and message. Tests omit these owners
 separately and require a failure, in addition to normal and cancellation checks.
 
-Messages encode data, not managed pointers or callable captures. Data-only
-channel payload rules still exclude tasks, functions, HTTP stream handles and
-nested channels that could create a mutable ownership cycle. Request/connection owners and borrowed
+Wire messages encode data, not managed pointers or callable captures. Local
+queues follow their separate [capture proof](#next-proof-functions-stored-in-channels);
+the new function subset does not add serialization of functions. Queue payloads
+still exclude tasks, HTTP stream handles and recursive channel ownership.
+Request/connection owners and borrowed
 task links retain their existing contracts. ARC binaries still allocate and
 count shared owners; removing the collector does not make networking a zero-cost
 abstraction. Repeated server measurements compare identical fwp programs across

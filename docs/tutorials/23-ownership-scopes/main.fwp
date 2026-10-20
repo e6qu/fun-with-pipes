@@ -35,6 +35,16 @@ route-message =
     | channel.recv
     | option.map channel.recv
 
+callbacks : I64 -> Channel[I64 -> I64] ! {Async}
+callbacks = channel.make
+add-through-queue : () -> Option[I64] ! {Async}
+add-through-queue =
+    const 1
+    | callbacks
+    | tap (flip channel.send (add 3))
+    | channel.recv
+    | option.map (apply 5)
+
 Node = { label: String, links: List[I64] }
 graph : Map[I64, Node]
 graph =
@@ -52,6 +62,7 @@ main = [
     1 | channel.make | tap (produce | task.spawn) | channel.drain | sum | echo,
     1 | channel.make | cancel-worker | echo,
     () | route-message | echo,
+    () | add-through-queue | echo,
     graph
     | both (map.remove 1 | map.get 1) (map.get 0 | option.map .links)
     | echo,

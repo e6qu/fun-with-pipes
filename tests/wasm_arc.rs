@@ -243,6 +243,7 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
         ("hashes", include_str!("fixtures/hash_values.fwp")),
         ("numeric-hashes", include_str!("fixtures/numeric_hashes.fwp")),
         ("integer-output", include_str!("fixtures/integer_output.fwp")),
+        ("queued-functions", include_str!("fixtures/queued_functions.fwp")),
         ("hash-fusion", include_str!("fixtures/hash_fusion.fwp")),
         ("hash-borrowed-fields", include_str!("fixtures/hash_borrowed_fields.fwp")),
         ("range-arrays", include_str!("fixtures/range_arrays.fwp")),
@@ -655,6 +656,21 @@ fn wasm_entries_keep_cycle_checks_for_browser_and_wasi() {
         std::fs::write(&source, "main = 42 | echo\n").unwrap();
         emit(&source, &dir.join("entry.c"), &[], target);
         std::fs::write(&source, "functions : I64 -> Channel[() -> String] ! {Async}\nfunctions = channel.make\nmain = functions 1 | channel.close\n").unwrap();
+        emit(&source, &dir.join("empty-functions.c"), &[], target);
+        // An empty queue has no captured owner. Reject an actual callback
+        // retaining its own queue, rather than the old blanket function ban.
+        std::fs::write(
+            &source,
+            r#"
+callbacks : I64 -> Channel[() -> () ! {Async}] ! {Async}
+callbacks = channel.make
+keep : Channel[() -> () ! {Async}] -> () -> () ! {Async}
+keep = then2 const channel.close
+send-self = fork channel.send id keep
+main = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore
+"#,
+        )
+        .unwrap();
         let output = Command::new(env!("CARGO_BIN_EXE_fwp"))
             .args(["build", "--gc", "arc", "--emit-c", "--target", target])
             .arg(&source)
@@ -664,7 +680,7 @@ fn wasm_entries_keep_cycle_checks_for_browser_and_wasi() {
             .unwrap();
         assert!(!output.status.success(), "{target}: {output:?}");
         assert!(
-            String::from_utf8_lossy(&output.stderr).contains("channel payloads cannot contain"),
+            String::from_utf8_lossy(&output.stderr).contains("queued function's captured"),
             "{target}: {output:?}"
         );
     }
@@ -682,123 +698,141 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
     );
     let dir = fwp::cgen::TempDir::new("wasi-task-owners").unwrap();
     let source = dir.join("tasks.fwp");
-    let program = include_str!("fixtures/task_channel_ownership.fwp").replace(
-        "main = () | round",
-        "main = range 0 16 | each (const () | round)",
-    );
-    std::fs::write(&source, program).unwrap();
-    let reference = checked(
-        Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .args(["run", "--interp"])
-            .env("FWP_NO_OPT", "1")
-            .arg(&source),
-    );
-    assert_eq!(
-        reference.stdout,
-        include_bytes!("fixtures/task_channel_ownership.out").repeat(16)
-    );
     let mut failures = Vec::new();
-    for target in [fwp::cgen::Target::Wasi, fwp::cgen::Target::Browser] {
-        let target_name = if target == fwp::cgen::Target::Wasi {
-            "wasm32-wasi"
-        } else {
-            "wasm32-browser"
-        };
-        let ordinary = emit(&source, &dir.join("tasks.c"), &[], target_name);
-        let measured = measured_program(&ordinary);
-        let release = "    fwp_fiber_tasks_finish();";
-        assert_eq!(measured.matches(release).count(), 1);
-        let omitted = measured.replace(release, "    /* omit scheduler shutdown */");
-        let snapshot = "            fwp_leave(t); /* completed fiber storage */";
-        assert_eq!(measured.matches(snapshot).count(), 1);
-        let missing_state =
-            measured.replace(snapshot, "            /* omit finished state owner */");
-        for asyncify in [false, true] {
-            if asyncify && !have_asyncify {
-                continue;
-            }
-            let mode = if asyncify { "asyncify" } else { "jspi" };
-            for opt in ["-O1", "-O2"] {
-                for (label, candidate, status) in [
-                    ("ordinary", &ordinary, 0),
-                    ("measured", &measured, 0),
-                    ("omitted", &omitted, 244),
-                    ("missing-state", &missing_state, 244),
-                ] {
-                    let mut code = if label == "ordinary" {
-                        candidate.clone()
-                    } else {
-                        format!(
-                            "{}\n{candidate}",
-                            include_str!("fixtures/wasm_arc_allocations.c")
-                        )
-                    };
-                    if asyncify {
-                        code = format!("{}{code}", fwp::asyncify::ASYNCIFY_MARK);
-                    }
-                    let binary = dir.join("tasks.wasm");
-                    fwp::cgen::compile_for(&code, &binary, opt, target).unwrap();
-                    if asyncify {
-                        fwp::asyncify::apply(&binary, opt).unwrap();
-                    }
-                    let mut command = wasi(&binary, dir.path());
-                    if target == fwp::cgen::Target::Browser {
-                        command = Command::new("node");
-                        command
-                            .arg("--no-warnings")
-                            .arg(
-                                Path::new(env!("CARGO_MANIFEST_DIR"))
-                                    .join("tests/wasm/browser-run.mjs"),
+    for (fixture, program, expected) in [
+        (
+            "tasks",
+            include_str!("fixtures/task_channel_ownership.fwp"),
+            include_str!("fixtures/task_channel_ownership.out"),
+        ),
+        (
+            "queued-functions",
+            include_str!("fixtures/queued_function_tasks.fwp"),
+            include_str!("fixtures/queued_function_tasks.out"),
+        ),
+    ] {
+        let program = program.replace(
+            "main = () | round",
+            "main = range 0 16 | each (const () | round)",
+        );
+        std::fs::write(&source, program).unwrap();
+        let reference = checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .args(["run", "--interp"])
+                .env("FWP_NO_OPT", "1")
+                .arg(&source),
+        );
+        assert_eq!(reference.stdout, expected.as_bytes().repeat(16));
+        for target in [fwp::cgen::Target::Wasi, fwp::cgen::Target::Browser] {
+            let target_name = if target == fwp::cgen::Target::Wasi {
+                "wasm32-wasi"
+            } else {
+                "wasm32-browser"
+            };
+            let ordinary = emit(&source, &dir.join("tasks.c"), &[], target_name);
+            let measured = measured_program(&ordinary);
+            let release = "    fwp_fiber_tasks_finish();";
+            assert_eq!(measured.matches(release).count(), 1);
+            let omitted = measured.replace(release, "    /* omit scheduler shutdown */");
+            let snapshot = "            fwp_leave(t); /* completed fiber storage */";
+            assert_eq!(measured.matches(snapshot).count(), 1);
+            let missing_state =
+                measured.replace(snapshot, "            /* omit finished state owner */");
+            let drop = "c->owner.queue_drop(element);";
+            assert_eq!(measured.matches(drop).count(), 1);
+            let missing_queue = measured.replace(drop, "(void)element;");
+            let (retained_label, retained) = if fixture == "tasks" {
+                ("missing-state", &missing_state)
+            } else {
+                ("missing-queue", &missing_queue)
+            };
+            for asyncify in [false, true] {
+                if asyncify && !have_asyncify {
+                    continue;
+                }
+                let mode = if asyncify { "asyncify" } else { "jspi" };
+                for opt in ["-O1", "-O2"] {
+                    for (label, candidate, status) in [
+                        ("ordinary", &ordinary, 0),
+                        ("measured", &measured, 0),
+                        ("omitted", &omitted, 244),
+                        (retained_label, retained, 244),
+                    ] {
+                        let mut code = if label == "ordinary" {
+                            candidate.clone()
+                        } else {
+                            format!(
+                                "{}\n{candidate}",
+                                include_str!("fixtures/wasm_arc_allocations.c")
                             )
-                            .arg(binary.with_extension("js"))
-                            .env("FWP_GC", "off")
-                            .env("FWP_GC_STRESS", "0")
-                            .env("FWP_GC_VERIFY", "0")
-                            .env("FWP_REUSE_VERIFY", "0");
-                    }
-                    if asyncify {
-                        command.env("FWP_NO_JSPI", "1");
-                    }
-                    let output = command.output().unwrap();
-                    let name = format!("tasks-{target:?}-{mode}-{label}{opt}");
-                    if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
-                        let path = std::path::PathBuf::from(path);
-                        std::fs::create_dir_all(&path).unwrap();
-                        std::fs::write(path.join(format!("{name}.c")), &code).unwrap();
-                        std::fs::copy(&binary, path.join(format!("{name}.wasm"))).unwrap();
-                        std::fs::write(path.join(format!("{name}.stdout")), &output.stdout)
-                            .unwrap();
-                        std::fs::write(path.join(format!("{name}.stderr")), &output.stderr)
-                            .unwrap();
-                    }
-                    if output.status.code() != Some(status)
-                        || output.stdout != reference.stdout
-                        || (status == 0 && output.stderr != reference.stderr)
-                    {
-                        failures.push(format!("{name}: status {:?}, expected {status}; stdout matches: {}; stderr: {}",
-                            output.status.code(), output.stdout == reference.stdout, String::from_utf8_lossy(&output.stderr)));
-                        continue;
-                    }
-                    if status == 0 {
-                        let symbols =
-                            checked(Command::new("wasm-objdump").arg("--details").arg(&binary));
-                        let symbols = String::from_utf8_lossy(&symbols.stdout);
-                        if !symbols.contains("<_start>") || !symbols.contains("<fwp_") {
-                            failures.push(format!("{name}: runtime function names missing"));
+                        };
+                        if asyncify {
+                            code = format!("{}{code}", fwp::asyncify::ASYNCIFY_MARK);
                         }
-                        for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
-                            if symbols.contains(collector) {
-                                failures.push(format!("{name}: {collector} remains"));
-                            }
+                        let binary = dir.join("tasks.wasm");
+                        fwp::cgen::compile_for(&code, &binary, opt, target).unwrap();
+                        if asyncify {
+                            fwp::asyncify::apply(&binary, opt).unwrap();
                         }
+                        let mut command = wasi(&binary, dir.path());
+                        if target == fwp::cgen::Target::Browser {
+                            command = Command::new("node");
+                            command
+                                .arg("--no-warnings")
+                                .arg(
+                                    Path::new(env!("CARGO_MANIFEST_DIR"))
+                                        .join("tests/wasm/browser-run.mjs"),
+                                )
+                                .arg(binary.with_extension("js"))
+                                .env("FWP_GC", "off")
+                                .env("FWP_GC_STRESS", "0")
+                                .env("FWP_GC_VERIFY", "0")
+                                .env("FWP_REUSE_VERIFY", "0");
+                        }
+                        if asyncify {
+                            command.env("FWP_NO_JSPI", "1");
+                        }
+                        let output = command.output().unwrap();
+                        let name = format!("{fixture}-{target:?}-{mode}-{label}{opt}");
                         if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
                             let path = std::path::PathBuf::from(path);
                             std::fs::create_dir_all(&path).unwrap();
-                            std::fs::write(
-                                path.join(format!("{name}.symbols")),
-                                symbols.as_bytes(),
-                            )
-                            .unwrap();
+                            std::fs::write(path.join(format!("{name}.c")), &code).unwrap();
+                            std::fs::copy(&binary, path.join(format!("{name}.wasm"))).unwrap();
+                            std::fs::write(path.join(format!("{name}.stdout")), &output.stdout)
+                                .unwrap();
+                            std::fs::write(path.join(format!("{name}.stderr")), &output.stderr)
+                                .unwrap();
+                        }
+                        if output.status.code() != Some(status)
+                            || output.stdout != reference.stdout
+                            || (status == 0 && output.stderr != reference.stderr)
+                        {
+                            failures.push(format!("{name}: status {:?}, expected {status}; stdout matches: {}; stderr: {}",
+                            output.status.code(), output.stdout == reference.stdout, String::from_utf8_lossy(&output.stderr)));
+                            continue;
+                        }
+                        if status == 0 {
+                            let symbols =
+                                checked(Command::new("wasm-objdump").arg("--details").arg(&binary));
+                            let symbols = String::from_utf8_lossy(&symbols.stdout);
+                            if !symbols.contains("<_start>") || !symbols.contains("<fwp_") {
+                                failures.push(format!("{name}: runtime function names missing"));
+                            }
+                            for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                                if symbols.contains(collector) {
+                                    failures.push(format!("{name}: {collector} remains"));
+                                }
+                            }
+                            if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                                let path = std::path::PathBuf::from(path);
+                                std::fs::create_dir_all(&path).unwrap();
+                                std::fs::write(
+                                    path.join(format!("{name}.symbols")),
+                                    symbols.as_bytes(),
+                                )
+                                .unwrap();
+                            }
                         }
                     }
                 }

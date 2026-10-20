@@ -2,4 +2,5 @@
 6
 None
 Some (Some 42)
+Some 8
 (None, Some [1])
