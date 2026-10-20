@@ -107,7 +107,11 @@ outside the benchmark suite.
    while preserving field evaluation order. [The measured result](docs/measurements/channel-match-results.md)
    removes three allocations per fresh-function message and two per shared-function
    message, with one fewer retain each. Focused checks pass; finish full platform
-   acceptance before treating this delivery as supported.
+   acceptance before treating this delivery as supported. Independently prepared
+   [variant payload moves](docs/measurements/channel-variant-moves.md) remove
+   adjacent retain/releases and pass focused Linux checks; complete their broader
+   ownership checks before the next delivery. A channel retain remains at each
+   measured fresh-message call; borrowing across that call needs a separate proof.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.

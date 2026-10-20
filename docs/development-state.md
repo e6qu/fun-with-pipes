@@ -4,28 +4,42 @@
 
 Next: finish [PR #178](https://github.com/e6qu/fun-with-pipes/pull/178) on
 `simplify-local-match-inputs`. Final head is `732984c3fb6b8646f6f3ee4932c123eadb7f3555`.
-Production `39397311012` has all nine jobs: benchmark passes and eight platform
-jobs are active. Documentation `39397297724` passes. The two completed logs were
+Production `39397311012` has all nine jobs: benchmark and ARM macOS GC pass; seven platform
+jobs are active. Documentation `39397297724` passes. The completed logs were
 audited in `/private/tmp/fwp-178-acceptance.json` (5.91s). Audit every job and fix every failure. Merge only after exact-head
 acceptance, with an explicit one-line subject of at most 80 characters and empty
 body. Keep this head stable while healthy gates run.
 
 Independent preparation is in `/private/tmp/fwp-variant-moves`, branch
-`move-matched-variant-owners`, source `7136727a1788720c7bab873ba79d5c3c6e084e9a`.
-It removes an adjacent retain/drop pair for a sole payload already held in local
-variant fields, excluding protected resource slots. Tests cover scalar, record
-and variant results, unique/shared owners, O0/O2 and a deliberately leaked owner.
-Guarded formatting passes (1.45s); documentation audit passes (2.59s).
-Focused run `39398766302` fails on both hosts only because two test functions
-were unreachable from the fixture entry point and were correctly omitted from C.
-Both complete logs were audited (2.62s); all other tests and count checks pass.
-The fixture now references all three result forms from its entry point; the
-three-move assertion is unchanged. Formatting passes (1.58s). Repeat the focused
-run for this repair. Six-platform ownership/cancellation run `39398786993` still
-uses the original fixture; audit all of its results before a combined rerun.
-Neither failed nor pending runs establish acceptance.
-No second PR exists. Finish #178 before publishing the prepared next delivery.
-Keep this local status update for that delivery instead of restarting healthy CI.
+`move-matched-variant-owners`. Measured source `eecb4b5c11246e6b9223bd7eda84f7857daeef30`
+is preserved by `roadmap/revision-variant-moves-eecb4b5c`. It transfers a sole
+payload already held in local variant fields, removing an adjacent retain/drop
+pair outside protected resource slots. No second PR exists: finish #178 first.
+
+Focused repair run `39399972415` passes both Linux hosts: 21 checks each, none
+ignored or filtered. The 180 samples and 20 ordinary binaries are audited (1.80s),
+and reproduce all previously inspected counts/code hashes (0.13s). Log audit:
+`/private/tmp/fwp-variant-repair-audit.json`; final artifacts:
+`/private/tmp/fwp-variant-final-costs`. The next delivery's report is
+`docs/measurements/channel-variant-moves.md` in the preparation worktree.
+It records retain savings, unchanged allocation/peak-charge counts, smaller
+exchange frames and the mixed binary-size results. No timing or C/Rust claim.
+
+First focused run `39398766302` failed only because two test functions were
+unreachable and correctly omitted from C. The fixture now references all three
+result forms; its three-move assertion stays intact. Both full logs were audited.
+Five completed native jobs of broader run `39398786993` show only this same
+fixture failure; both WASI jobs pass. Audit the last Intel macOS job, then rerun
+the broader suite on the repaired source. Receipt:
+`/private/tmp/fwp-variant-first-proof-audit.json`. Do not treat failed runs as acceptance.
+
+Guarded formatting passes (1.58s). The disk guard stopped one download below
+64 GiB; no limit was raised. Verified old Actions download `39063863085` was
+removed only after confirming all six remote artifacts remain available. Recovery
+receipt: `/private/tmp/fwp-removed-download-39063863085.json`. The duplicate
+provisional #178 download was removed after checking 100 final-artifact hashes.
+The guarded final download then passed (6.07s); no local build was run.
+Keep local status updates for the next delivery instead of restarting healthy CI.
 
 ## Accepted baseline
 

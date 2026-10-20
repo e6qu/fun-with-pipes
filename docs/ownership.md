@@ -269,6 +269,22 @@ Closing an admitted channel still preserves queued messages for receiving.
 Releasing its last owner destroys the remaining queue and its typed contents;
 cancelled blocked operations release their wait registrations and owners first.
 
+### Moving a sole matched payload
+
+A variant such as `Some text` owns its payload, here a string. When the variant
+already lives in local fields and its match arm immediately retains `text` and
+releases the variant, the compiler transfers that existing owner instead.
+Another live alias of the string keeps its own owner. The rule requires one
+directly bound payload, adjacent count operations and no protected resource slot;
+boxed variants and other shapes keep their existing cleanup. It does not alter
+which channels or function captures checked ARC accepts.
+
+[The measurement](measurements/channel-variant-moves.md) removes one retain per
+fresh-text/fresh-function/shared-text message and two per shared-function message.
+Allocations and peak charged storage are unchanged. Focused Linux checks pass,
+including independent aliases and a deliberately leaked-owner control. Broader
+acceptance is tracked in the [handoff](development-state.md).
+
 ### Functions stored in channels
 
 [PR #175](roadmap-history.md#function-queues-and-cheaper-sends-pr-175) records
