@@ -236,7 +236,8 @@ example, `Link = | Node (Channel[Link])` is still rejected even if a particular
 program would drain every queue. This is a missing proof about all executions,
 not a claim that every value of `Link` is cyclic.
 
-Payloads still cannot contain functions, tasks or HTTP stream handles.
+Accepted deliveries exclude functions, tasks and HTTP stream handles from queue
+payloads; the function subset below is now under validation.
 A function or task can capture the sending channel; an HTTP stream handle can
 reach the channel through its connection-owned handler. These paths can form
 a cycle without mentioning the channel in the result type; the check therefore examines the complete payload type.
@@ -252,15 +253,33 @@ cancelled blocked operations release their wait registrations and owners first.
 
 ### Next proof: functions stored in channels
 
-This is design work; checked ARC still rejects function payloads. A partial
+This implementation is under validation on the preparation branch; it is not
+yet accepted platform support. A partial
 application such as `add 3` is a function that adds three to its next input. It
 keeps the integer `3` as a **capture**, a value saved for the later call. Storing
 that function in a channel cannot create a cycle through this integer. Receiving
 it and applying it to `5` produces `8`; the interpreter already supports this.
 
+Here `tap` sends while keeping the channel as the pipe's value. Receiving returns
+an `Option`: `Some` for a message, or `None` for a closed, empty queue.
+`option.map (apply 5)` calls a received function with `5`, when one is present.
+
+```fwp
+callbacks : I64 -> Channel[I64 -> I64] ! {Async}
+callbacks = channel.make
+main = callbacks 1
+    | tap (flip channel.send (add 3))
+    | channel.recv
+    | option.map (apply 5)
+    | echo
+```
+
+It prints `Some 8`. The `1` is queue capacity; `flip` puts the message before
+the piped channel in the send call. No ownership syntax is added to this program.
+
 The type `I64 -> I64` describes input and output, not captures. Another function
 of that type could retain the sending channel. Accepting all functions with this
-signature would therefore be unsafe. The next proof needs two linked analyses:
+signature would therefore be unsafe. The implementation uses two linked checks:
 
 - Identify each possible stored function and its captures, following returned
   functions, nested containers and partial applications. Follow owning captures
@@ -271,11 +290,26 @@ signature would therefore be unsafe. The next proof needs two linked analyses:
   autodiff operations in the scope where the received function runs. A queue
   must not silently extend the lifetime of the sender's temporary scope.
 
-`src/arc.rs` already follows channel payload types. `src/arc_scope.rs` tracks
-possible function targets and saved arguments for scope checks, but does not yet
-connect senders to receivers. Extend that finite analysis until no new targets
-are discovered. Do not infer capture freedom from an arrow type or inspect only
-source-level partial applications; runtime constructors can also create closures.
+`src/arc.rs` follows channel payload types. `src/arc_scope.rs` connects sends and
+receives and tracks each known function with its number of supplied arguments.
+It also records an explicit unknown source: combining it with a known function
+does not make it known. Captures, calls, queues and caught error payloads are
+revisited until no set gains another target. This is a finite, conservative
+analysis of the specialized program, not execution of the program.
+
+The first admitted subset allows immutable scalar, string and container captures,
+including other functions whose captures pass the same check. Captured channels,
+tasks, files, connections and streams remain rejected, even when a particular
+program might use them without a cycle. Functions in a queued list or record
+receive the same checks as functions queued directly. Empty containers need no
+invented callback. Unknown external function-bearing queues remain rejected.
+
+Queues with the same concrete payload type share a possible-target set. Aggregate
+fields also share a set, and caught errors are combined conservatively. These
+choices can reject safe programs with unrelated owners or scopes; they must not
+accept an unproved capture. More precise analysis can reduce those rejections
+later without changing source syntax. Native constructors need an explicit source
+model; an arrow type alone never proves capture freedom.
 
 Acceptance needs scalar/string captures, returned and nested callbacks, aliases,
 undrained/closed queues, failure, cancellation and repeated bounded-live work.

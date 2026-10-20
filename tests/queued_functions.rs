@@ -11,65 +11,83 @@ fn checked(command: &mut Command) -> Output {
 fn queued_functions_preserve_results_and_release_undrained_captures() {
     let dir = fwp::cgen::TempDir::new("queued-functions").unwrap();
     let source = dir.join("main.fwp");
-    std::fs::write(&source, include_str!("fixtures/queued_functions.fwp")).unwrap();
-    let compiler = env!("CARGO_BIN_EXE_fwp");
-    let reference = checked(
-        Command::new(compiler)
-            .env("FWP_NO_OPT", "1")
-            .args(["run", "--interp"])
-            .arg(&source),
-    );
-    assert_eq!(
-        reference.stdout,
-        include_bytes!("fixtures/queued_functions.out")
-    );
-    for memory in ["arc", "tracing"] {
-        let cfile = dir.join("main.c");
-        checked(
+    for (name, program, expected) in [
+        (
+            "values",
+            include_str!("fixtures/queued_functions.fwp"),
+            include_str!("fixtures/queued_functions.out"),
+        ),
+        (
+            "cancellation",
+            include_str!("fixtures/queued_function_tasks.fwp"),
+            include_str!("fixtures/queued_function_tasks.out"),
+        ),
+    ] {
+        std::fs::write(&source, program).unwrap();
+        let compiler = env!("CARGO_BIN_EXE_fwp");
+        let reference = checked(
             Command::new(compiler)
-                .env_remove("FWP_NO_OPT")
-                .args(["build", "--gc", memory, "--emit-c"])
-                .arg(&source)
-                .arg("-o")
-                .arg(&cfile),
+                .env("FWP_NO_OPT", "1")
+                .args(["run", "--interp"])
+                .arg(&source),
         );
-        let mut code = std::fs::read_to_string(cfile).unwrap();
-        if memory == "arc" {
-            let finish = "\n    fwp_cl_finish();\n";
-            assert_eq!(code.matches(finish).count(), 1);
-            code = code.replace(finish, &format!("{finish}    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget_given != fwp_gc.budget) exit(193);\n"));
-        }
-        let drop = "            c->owner.queue.drop(element);";
-        assert_eq!(code.matches(drop).count(), 1);
-        let missing_drop = code.replace(drop, "            (void)element;");
-        for opt in ["-O0", "-O2"] {
-            let binary = dir.join("main.exe");
-            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            let stress = if memory == "arc" { "0" } else { "1" };
-            let run = || {
-                let mut command = Command::new(&binary);
-                command
-                    .env_remove("FWP_GC")
-                    .env("FWP_GC_STRESS", stress)
-                    .env("FWP_GC_VERIFY", stress)
-                    .env("FWP_REUSE_VERIFY", stress);
-                command
-            };
-            let actual = checked(&mut run());
-            assert_eq!(
-                (&actual.stdout, &actual.stderr),
-                (&reference.stdout, &reference.stderr),
-                "{memory}/{opt}"
+        assert_eq!(reference.stdout, expected.as_bytes(), "{name}");
+        for memory in ["arc", "tracing"] {
+            let cfile = dir.join("main.c");
+            checked(
+                Command::new(compiler)
+                    .env_remove("FWP_NO_OPT")
+                    .args(["build", "--gc", memory, "--emit-c"])
+                    .arg(&source)
+                    .arg("-o")
+                    .arg(&cfile),
             );
+            let mut code = std::fs::read_to_string(cfile).unwrap();
             if memory == "arc" {
-                let symbols = checked(Command::new("nm").arg(&binary));
-                let symbols = String::from_utf8_lossy(&symbols.stdout);
-                for symbol in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
-                    assert!(!symbols.contains(symbol), "ARC binary retains {symbol}");
+                let finish = "\n    fwp_cl_finish();\n";
+                assert_eq!(code.matches(finish).count(), 1);
+                code = code.replace(finish, &format!("{finish}    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget_given != fwp_gc.budget) exit(193);\n"));
+            }
+            let drop = "            c->owner.queue.drop(element);";
+            assert_eq!(code.matches(drop).count(), 1);
+            let missing_drop = code.replace(drop, "            (void)element;");
+            for opt in ["-O0", "-O2"] {
+                let binary = dir.join("main.exe");
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let stress = if memory == "arc" { "0" } else { "1" };
+                let run = || {
+                    let mut command = Command::new(&binary);
+                    command
+                        .env_remove("FWP_GC")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", stress);
+                    command
+                };
+                let actual = checked(&mut run());
+                if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(path);
+                    std::fs::create_dir_all(&path).unwrap();
+                    let label = format!("{name}-{memory}{opt}");
+                    std::fs::write(path.join(format!("{label}.c")), &code).unwrap();
+                    std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                    std::fs::write(path.join(format!("{label}.stdout")), &actual.stdout).unwrap();
                 }
-                fwp::cgen::compile_c(&missing_drop, &binary, opt).unwrap();
-                let omitted = run().output().unwrap();
-                assert_eq!(omitted.status.code(), Some(193), "{opt}: {omitted:?}");
+                assert_eq!(
+                    (&actual.stdout, &actual.stderr),
+                    (&reference.stdout, &reference.stderr),
+                    "{memory}/{opt}"
+                );
+                if memory == "arc" {
+                    let symbols = checked(Command::new("nm").arg(&binary));
+                    let symbols = String::from_utf8_lossy(&symbols.stdout);
+                    for symbol in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                        assert!(!symbols.contains(symbol), "ARC binary retains {symbol}");
+                    }
+                    fwp::cgen::compile_c(&missing_drop, &binary, opt).unwrap();
+                    let omitted = run().output().unwrap();
+                    assert_eq!(omitted.status.code(), Some(193), "{opt}: {omitted:?}");
+                }
             }
         }
     }
@@ -88,6 +106,7 @@ keep = then2 const channel.close
         ("self", "send-self = fork channel.send id keep\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n"),
         ("returned", "returned = keep | const | apply ()\nsend-self = fork channel.send id returned\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n"),
         ("nested", "lists : I64 -> Channel[List[() -> () ! {Async}]] ! {Async}\nlists = channel.make\nmain = lists 1 | tap (flip channel.send [keep (callbacks 1)]) | channel.recv | ignore\n"),
+        ("two-queues", "main = (callbacks 1, callbacks 1) | tap (fork channel.send .0 (.1 | keep)) | tap (fork channel.send .1 (.0 | keep)) | both (.0 | channel.recv) (.1 | channel.recv) | ignore\n"),
     ] {
         let source = dir.join(format!("{name}.fwp"));
         std::fs::write(&source, format!("{prefix}\n{body}")).unwrap();
@@ -101,5 +120,108 @@ keep = then2 const channel.close
         assert!(!build.status.success(), "{name}: accepted an unproved captured channel");
         let error = String::from_utf8_lossy(&build.stderr);
         assert!(error.contains("queued function") && error.contains("captured") && error.contains("Channel"), "{name}: {error}");
+    }
+}
+
+#[test]
+fn queued_function_storage_is_bounded_across_transfers_close_and_failed_receive() {
+    let dir = fwp::cgen::TempDir::new("queued-function-storage").unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(&source, r#"
+give : String -> () -> String
+give = const
+texts : I64 -> Channel[() -> String] ! {Async}
+texts = channel.make
+main = texts 1 | tap (flip channel.send (give "capture")) | channel.recv | option.map (apply ()) | echo
+"#).unwrap();
+    let cfile = dir.join("main.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env("FWP_NO_OPT", "1")
+            .args(["build", "--gc", "arc", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let emitted = std::fs::read_to_string(cfile).unwrap();
+    let start = emitted.find("/* give :").unwrap();
+    let give = emitted[start..]
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let mut runtime = emitted.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let receive = "static V fwp_chan_recv_owned(";
+    assert_eq!(runtime.matches(receive).count(), 1);
+    runtime = runtime.replace(receive, &format!("static int fail_option;\nstatic V queue_option(V x) {{ if(fail_option) {{ fail_option=0; fwp_trap(\"queue allocation probe\"); }} return fwp_some(x); }}\n{receive}"));
+    let option = "fwp_rc_fresh(fwp_some(x))";
+    assert_eq!(runtime.matches(option).count(), 1);
+    runtime = runtime.replace(option, "fwp_rc_fresh(queue_option(x))");
+    let probe = r#"
+static jmp_buf recovered;
+static int recover(void){return 1;}
+static void text_drop(V v){if(fwp_rc_release_last(v))fwp_rc_free_obj(v);}
+int main(void){
+ fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
+ intptr_t baseline=fwp_gc.budget;
+ for(int iteration=0;iteration<64;iteration++)for(int mode=0;mode<4;mode++){
+  V value=fwp_rc_fresh(fwp_str_new("capture",7));
+  V fn=fwp_rc_fresh(fwp_pap(GIVE,1,&value));
+  V ch=fwp_p_channel_make_owned(1,fwp_closure_drop,fwp_rc_dup);
+  if(mode==2)fwp_p_channel_close(ch);
+  if(fwp_p_channel_send_owned(ch,fn,fwp_rc_dup)!=(mode==2?FWP_FALSE:FWP_TRUE))return 191;
+  if(*fwp_rc_slot(fn)!=(mode==2?1:2)||*fwp_rc_slot(value)!=1)return 192;
+  fwp_closure_drop(fn);
+  if(mode==0||mode==3){
+   if(mode==3){
+    fail_option=1;fwp_trap_recover=recover;fwp_trap_jb=&recovered;fwp_trap_cleanup=0;
+    if(setjmp(recovered)==0){fwp_p_channel_recv_owned(ch,fwp_rc_dup);return 193;}
+    fwp_trap_recover=0;fwp_trap_jb=0;
+    if(fwp_cleanups||((fwp_chan *)(uintptr_t)ch)->len!=1||*fwp_rc_slot(fn)!=1||*fwp_rc_slot(value)!=1)return 194;
+   }
+   V received=fwp_p_channel_recv_owned(ch,fwp_rc_dup),unit=FWP_UNIT;
+   if(received==FWP_NONE||OBJ(received)->f[0]!=fn)return 195;
+   V text=fwp_apply_borrowed(fn,1,&unit);
+   if(text!=value||*fwp_rc_slot(value)!=2)return 196;
+   text_drop(text);fwp_closure_drop(fn);fwp_rc_free_obj(received);
+  }
+  fwp_channel_drop(ch);
+  if(fwp_gc.ncollect||fwp_gc.enabled||fwp_gc.budget!=baseline){
+   fprintf(stderr,"queued closure storage iteration=%d mode=%d bytes=%lld\n",iteration,mode,(long long)(baseline-fwp_gc.budget));return 197;
+  }
+ }
+ return 0;
+}
+"#.replace("GIVE", give);
+    let code = format!("{runtime}\n{probe}");
+    let drop = "c->owner.queue.drop(element);";
+    assert_eq!(code.matches(drop).count(), 1);
+    let omitted = code.replace(drop, "(void)element;");
+    for opt in ["-O0", "-O2"] {
+        let binary = dir.join("probe.exe");
+        for (candidate, status) in [(&code, 0), (&omitted, 197)] {
+            fwp::cgen::compile_c(candidate, &binary, opt).unwrap();
+            let result = Command::new(&binary)
+                .env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", "0")
+                .env("FWP_GC_VERIFY", "0")
+                .env("FWP_REUSE_VERIFY", "0")
+                .output()
+                .unwrap();
+            assert_eq!(result.status.code(), Some(status), "{opt}: {result:?}");
+            if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
+                let path = std::path::PathBuf::from(path);
+                std::fs::create_dir_all(&path).unwrap();
+                let label = format!("bounded-{status}{opt}");
+                std::fs::write(path.join(format!("{label}.c")), candidate).unwrap();
+                std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                std::fs::write(path.join(format!("{label}.stderr")), &result.stderr).unwrap();
+            }
+        }
     }
 }

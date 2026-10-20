@@ -79,6 +79,11 @@ jobs:
         run: |
           cargo test --test golden_run interpreter_snapshots -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
+      - name: Queued function captures and cleanup
+        shell: pwsh
+        run: |
+          cargo test --test queued_functions -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          exit $LASTEXITCODE
       - name: Generated programs with native resources and ownership stress
         shell: pwsh
         run: |

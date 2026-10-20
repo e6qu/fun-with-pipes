@@ -15,6 +15,8 @@ nested : I64 -> Channel[List[Channel[() -> String]]] ! {Async}
 nested = channel.make
 give : String -> () -> String
 give = const
+twice : (I64 -> I64) -> I64 -> I64
+twice = fork compose id id
 owned : () -> String ! {IO}
 owned = args | length | add 2 | flip string.repeat "owner"
 call-state : Channel[() -> I64 ! {State[I64]}] -> Option[I64] ! {Async, State[I64]}
@@ -33,6 +35,9 @@ main = [
     state-callbacks 1 | tap (flip channel.send get) | run-state 23 call-state | .0 | echo,
     texts 1 | tap (flip channel.send (give (owned ()))) | ignore | const "undrained released" | echo,
     callbacks 1 | tap channel.close | channel.recv | option.map (apply 5) | echo,
+    events 1 | tap (flip channel.send (Event { callback = Some (const "record") })) | channel.recv | option.map (.callback | option.map (apply 9)) | echo,
+    nested 1 | tap (flip channel.send [texts 1 | tap (flip channel.send (give "nested"))]) | channel.recv | option.map (map (channel.recv | option.map (apply ()))) | echo,
+    callbacks 1 | tap (flip channel.send (twice (add 3))) | channel.recv | option.map (apply 5) | echo,
     events 1 | channel.close,
     nested 1 | channel.close,
 ] | ignore

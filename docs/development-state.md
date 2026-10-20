@@ -10,8 +10,8 @@ the production benchmark job. Do not modify or merge that PR without auditing
 all nine exact-head jobs. Its measured compiler is `0bb385ab`; the difference
 is retained reports and documentation only.
 
-Next: run the new queued-function integration checks, fix every failure, then
-extend lifetime/cancellation coverage and validate on all native hosts and WASI.
+Next: run the expanded queued-function checks on all six native hosts and both
+Linux WASI hosts, inspect every result, and fix any failure before publication.
 This preparation is not accepted support. `src/arc.rs` now permits function
 payload types only with the separate capture and call-scope proof.
 
@@ -30,11 +30,26 @@ Initial proof-only source `4ad0107a` ran in `39344388657`: both Linux architectu
 passed 141 compiler unit checks and all 16 existing integration checks. Both
 failed Clippy solely on an unused pattern binding; the complete logs were audited
 and that binding is removed. Formatting passed under the primary guard (1.57s).
-The new eligibility change and integration checks have not run yet. They compare
+Source `0e291839` then passed `39345460745` on both Linux architectures: Clippy,
+141 compiler unit checks and 18 integration checks each, none ignored. This
+verifies the initial eligibility subset and three rejection examples. They compare
 raw interpretation with ARC/tracing O0/O2, check undrained capture reclamation,
 require an omitted-release control to fail, inspect collector symbols, and reject
 self, returned and nested channel captures. WASI's physical-allocation suite now
 includes the same positive fixture. No runtime implementation has changed.
+
+The next source expands that fixture with nonempty records and nested queues,
+functions capturing functions, caught error values and receiver State scope.
+New tests cover cancelled blocked sends/receives, closed sends, caught failure,
+64 repeated drained/undrained batches, and a C probe checking constant charged
+memory after each of 256 transfer/close/failed-receive cases. Missing-release
+controls must fail. WASI/Browser checks run ordinary and instrumented binaries
+with JSPI and Asyncify; these additions are not verified yet. The runner jobs
+retain actual C/binaries and source IDs. Windows permanently runs the new test.
+
+Local checks use the primary guard: formatting 1.58s; saved-compiler raw
+interpretation of the task/expanded-value fixtures passes in 0.27/0.35s. These
+interpreter runs verify source semantics, not the new compiler's ownership proof.
 
 Still required before claiming support:
 
