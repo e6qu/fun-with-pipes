@@ -573,6 +573,16 @@ impl Pass<'_> {
                     return Expr::BorrowGlobal(*x, id, Box::new(body));
                 }
                 if self.counted(*x) && Self::plain_read(v) {
+                    if record_fields(&self.prog.shapes, &self.locals[*x as usize]).is_none()
+                        && borrows::parameter_type(self.prog, &self.locals[*x as usize])
+                        && !crate::resource::anchored(b, *x)
+                    {
+                        if let Some(exposed) =
+                            self.forward_borrowed_alias(*x, v, b, &BTreeSet::new())
+                        {
+                            return self.conv_typed(&exposed, owned, borrowed, expected);
+                        }
+                    }
                     if let Some(exposed) = self.forward_hash_field(*x, v, b) {
                         return self.conv_typed(&exposed, owned, borrowed, expected);
                     }
@@ -701,6 +711,81 @@ impl Pass<'_> {
     fn plain_read(e: &Expr) -> bool {
         matches!(e, Expr::Local(_) | Expr::Const(_))
             || matches!(e, Expr::Field(base, _) if matches!(&**base, Expr::Local(_)))
+    }
+
+    /// Replace a temporary alias's borrowed call arguments with the original
+    /// read, only while that same storage is needed after each call. This keeps
+    /// destruction timing and field-sensitive liveness unchanged. Calls, traps
+    /// and branch decisions stay in order; sequence lowering protects the owner
+    /// through argument evaluation and failure. Escapes and resource scopes do
+    /// not qualify.
+    fn forward_borrowed_alias(
+        &self,
+        local: Local,
+        value: &Expr,
+        body: &Expr,
+        after: &BTreeSet<borrows::ReadPath>,
+    ) -> Option<Expr> {
+        if !self.free(body).contains(&local) {
+            return Some(body.clone());
+        }
+        match body {
+            Expr::Call(id, args) if borrows::retained_read(value, after) => {
+                let mut forwarded = Vec::with_capacity(args.len());
+                for (j, arg) in args.iter().enumerate() {
+                    if !self.free(arg).contains(&local) {
+                        forwarded.push(arg.clone());
+                        continue;
+                    }
+                    let borrows = match &self.prog.funcs[*id].body {
+                        Body::Prim(symbol) => crate::ownership::primitive(symbol)
+                            .is_some_and(|c| c.argument(j) == crate::ownership::Argument::Borrow),
+                        Body::Expr(_) => !consumes_arg(self.prog, *id, j),
+                        _ => false,
+                    };
+                    if !borrows || !matches!(arg, Expr::Local(l) if *l == local) {
+                        return None;
+                    }
+                    forwarded.push(value.clone());
+                }
+                Some(Expr::Call(*id, forwarded))
+            }
+            Expr::Let(y, computation, tail) => {
+                let mut continuation = after.clone();
+                borrows::reads(tail, &mut continuation);
+                Some(Expr::Let(
+                    *y,
+                    Box::new(self.forward_borrowed_alias(
+                        local,
+                        value,
+                        computation,
+                        &continuation,
+                    )?),
+                    Box::new(self.forward_borrowed_alias(local, value, tail, after)?),
+                ))
+            }
+            Expr::Match(scrutinee, arms) => {
+                let mut continuation = after.clone();
+                let mut forwarded = Vec::with_capacity(arms.len());
+                for (pattern, arm) in arms {
+                    borrows::reads(arm, &mut continuation);
+                    forwarded.push((
+                        pattern.clone(),
+                        self.forward_borrowed_alias(local, value, arm, after)?,
+                    ));
+                }
+                Some(Expr::Match(
+                    Box::new(self.forward_borrowed_alias(
+                        local,
+                        value,
+                        scrutinee,
+                        &continuation,
+                    )?),
+                    forwarded,
+                ))
+            }
+            _ => None,
+        }
     }
 
     /// Forward a named pure field read into its immediate hash-only use. Only
@@ -1788,6 +1873,138 @@ mod tests {
             checked(&p, raw.clone()).is_err(),
             "accepted a field after its owner was consumed"
         );
+    }
+
+    fn borrowed_alias_program(tail: Expr) -> Program {
+        let string = MT::con("std::String");
+        let pair = MT::Record(vec![
+            ("0".into(), string.clone()),
+            ("1".into(), string.clone()),
+        ]);
+        let body = Expr::Let(
+            1,
+            Box::new(Expr::Field(Box::new(Expr::Local(0)), 0)),
+            Box::new(Expr::Let(
+                2,
+                Box::new(Expr::Call(1, vec![Expr::Local(1)])),
+                Box::new(tail),
+            )),
+        );
+        let mut p = prog(
+            vec![pair.clone()],
+            vec![string.clone(), MT::con("std::I64")],
+            body,
+        );
+        p.funcs[0].ty = MT::Fun(Box::new(pair.clone()), Box::new(pair));
+        p.funcs.push(Func {
+            name: "length".into(),
+            arity: 1,
+            locals: vec![string.clone()],
+            ty: MT::Fun(Box::new(string), Box::new(MT::con("std::I64"))),
+            body: Body::Prim("string.length".into()),
+        });
+        p
+    }
+
+    #[test]
+    fn borrowed_alias_uses_the_continuing_owner_without_a_second_reference() {
+        let p = borrowed_alias_program(Expr::Local(0));
+        let (body, _) = counted(&p);
+        assert!(!format!("{body:?}").contains("Dup("), "{body:?}");
+        assert!(!format!("{body:?}").contains("Let(1,"), "{body:?}");
+        // A later read of the same field also keeps its storage alive.
+        let mut p = borrowed_alias_program(Expr::Field(Box::new(Expr::Local(0)), 0));
+        p.funcs[0].ty = MT::Fun(
+            Box::new(p.funcs[0].locals[0].clone()),
+            Box::new(MT::con("std::String")),
+        );
+        let (body, _) = counted(&p);
+        assert!(!format!("{body:?}").contains("Let(1,"), "{body:?}");
+    }
+
+    #[test]
+    fn borrowed_alias_keeps_ownership_without_the_same_later_field() {
+        for tail in [
+            Expr::Const(Value::Str("done".into())),
+            Expr::Field(Box::new(Expr::Local(0)), 1),
+        ] {
+            let mut p = borrowed_alias_program(tail);
+            p.funcs[0].ty = MT::Fun(
+                Box::new(p.funcs[0].locals[0].clone()),
+                Box::new(MT::con("std::String")),
+            );
+            let (body, _) = counted(&p);
+            assert!(format!("{body:?}").contains("Let(1,"), "{body:?}");
+        }
+    }
+
+    #[test]
+    fn borrowed_alias_does_not_cross_consumption_escapes_or_resource_scopes() {
+        for call in [
+            Body::Expr(Expr::Const(Value::I64(0))),
+            Body::Prim("probe.unknown".into()),
+        ] {
+            let mut p = borrowed_alias_program(Expr::Local(0));
+            p.funcs[1].body = call;
+            let (body, _) = counted(&p);
+            assert!(format!("{body:?}").contains("Let(1,"), "{body:?}");
+        }
+
+        let mut p = borrowed_alias_program(Expr::Local(1));
+        p.funcs[0].ty = MT::Fun(
+            Box::new(p.funcs[0].locals[0].clone()),
+            Box::new(MT::con("std::String")),
+        );
+        let (body, _) = counted(&p);
+        assert!(format!("{body:?}").contains("Let(1,"), "{body:?}");
+
+        let mut p = borrowed_alias_program(Expr::Local(0));
+        let Body::Expr(Expr::Let(_, _, body)) = &mut p.funcs[0].body else {
+            unreachable!()
+        };
+        **body = Expr::ResourceRegion {
+            parameters: vec![],
+            bindings: vec![],
+            body: body.clone(),
+        };
+        let (body, _) = counted(&p);
+        assert!(format!("{body:?}").contains("Let(1,"), "{body:?}");
+    }
+
+    #[test]
+    fn borrowed_alias_checks_each_branch_independently() {
+        let mut p = borrowed_alias_program(Expr::Local(0));
+        let Body::Expr(Expr::Let(_, _, body)) = &mut p.funcs[0].body else {
+            unreachable!()
+        };
+        let original = body.clone();
+        **body = Expr::Match(
+            Box::new(Expr::Const(Value::I64(0))),
+            vec![
+                (Pat::Lit(Value::I64(0)), *original),
+                (Pat::Wild, Expr::Local(0)),
+            ],
+        );
+        let (body, _) = counted(&p);
+        assert!(!format!("{body:?}").contains("Let(1,"), "{body:?}");
+
+        // The alias's branch does not keep the owner; a sibling branch does.
+        // Its sibling must not justify borrowing in this branch.
+        let Body::Expr(Expr::Let(_, _, body)) = &mut p.funcs[0].body else {
+            unreachable!()
+        };
+        let Expr::Match(_, arms) = &mut **body else {
+            unreachable!()
+        };
+        let Expr::Let(_, _, tail) = &mut arms[0].1 else {
+            unreachable!()
+        };
+        **tail = Expr::Record(vec![
+            Expr::Const(Value::Str("a".into())),
+            Expr::Const(Value::Str("b".into())),
+        ]);
+        let (body, _) = counted(&p);
+        assert!(format!("{body:?}").contains("Let(1,"), "{body:?}");
     }
 
     #[test]

@@ -2,8 +2,12 @@
 
 ## Next action
 
-Next: publish `borrow-function-channels-and-count-text` and complete its nine
-production jobs plus documentation for the final commit. Audit every completed
+Next: finish [PR #180](https://github.com/e6qu/fun-with-pipes/pull/180) at
+`64cfa0081dab2f6b19b6157e844c49481749a605`. Production run `39457866569` and
+documentation `39457866666` check that exact source. Documentation passes; all
+nine production jobs are running without reported failures. Audit with
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-audit-180.py`; receipt
+`/private/tmp/fwp-180-acceptance.json`. Require all nine production jobs and docs. Audit every completed
 job's full log and fix all failures. Squash-merge only after all gates pass, with
 an explicit one-line subject of at most 80 characters and an empty body; verify
 the merged tree and message. Keep one active PR. All seven roadmap areas remain
@@ -59,6 +63,26 @@ The original preparation remains at `/private/tmp/fwp-direct-borrows`, branch
 `borrow-function-channel-handles`. Its four post-#179 commits were transplanted
 onto accepted main; measured objects remain available through remote tags.
 Use the root checkout for this delivery. The old worktree's handoff is obsolete.
+
+## Isolated alias preparation
+
+Worktree `/private/tmp/fwp-local-channel-aliases`, branch
+`borrow-local-channel-aliases`, starts at PR #180's final head. The ownership pass
+can replace temporary aliases in borrowed call arguments when the same source
+storage is used afterward. It keeps effects and traps in place and distinguishes
+record fields. Consuming/unknown calls, escapes and resource scopes are excluded.
+No new IR form or surface syntax is introduced. Existing sequence lowering and
+its verifier protect the original owner through argument evaluation and cleanup.
+
+Four unit checks cover continuing owners, different fields, independent branches,
+escapes, unknown/consuming calls and resource scopes. A native channel-context
+probe checks owner counts at the call, aliases and destruction at O0/O2 under GC
+stress/verification and reuse poisoning; an injected extra retain must fail.
+These changes are implemented but not yet verified by compilation or execution.
+Run the existing `channel-costs` focused suite on both Linux GCC hosts, inspect
+all logs and fix every failure. Compare all five channel programs against the
+PR #180 report; do not claim the closed-function retain is removed until measured.
+Local guarded formatting passes (1.77s); no local build or native compilation.
 
 ## Accepted baseline
 
