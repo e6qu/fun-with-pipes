@@ -4,7 +4,8 @@ The channel experiment found that each iteration allocated a tuple containing
 its channel and counters. The values were needed, but the tuple object was not:
 the loop only read individual fields and constructed the next state from them.
 This candidate lets the existing loop generator recognize that pattern after
-an action or branch. Platform cleanup validation is still in progress.
+an action or branch. Focused cleanup checks pass on all six native platforms
+and both WebAssembly hosts; full production acceptance is still pending.
 
 ## What changes
 
@@ -86,4 +87,33 @@ down from 464. The exchange worker remains 376/368 bytes on AMD64/ARM64.
 AMD64 counts exclude the return address; ARM64 counts include the saved link
 register. These are individual frames, excluding callees and total task-stack peaks.
 Generated C now uses three state slots and has no state-record allocation in
-the executing loop. Cleanup and platform gates must pass before acceptance.
+the executing loop. Focused ownership run `39364385408` passes 47 integration
+tests plus all compiler units on each native host, and 18 checks on each WASI
+host, with none ignored or filtered. Separate Linux resource-field runs
+`39365324259`/`39365327202` each pass 37 tests. Full acceptance is still required.
+
+## Calling known functions directly
+
+After receiving a string, `option.map string.length` measures it when the receive
+result is `Some text`; it leaves `None` unchanged when no message is available.
+The fresh-text program used generic function dispatch for that known length
+function. An internal local alias hid its target from the optimizer. Propagating
+a capture-free function reference exposes the direct call. Constant expressions
+that evaluate or trap remain at their original evaluation point.
+
+[Run 39366501786](https://github.com/e6qu/fun-with-pipes/actions/runs/39366501786)
+at `75da96b81e76a2c77f42af3cec3ded1fe6f643bd` repeats the same protocol on both
+Linux architectures. [Its audited 180 samples](channel-alias-counts-2026-10-20.json)
+have exactly the same allocation, retain and managed-memory counts as the
+loop-only revision above, at every input in both ARC and tracing modes.
+The alias change removes dispatch, not another allocation or retain.
+
+In ordinary ARC fresh-text binaries, the generated C calls the length function
+directly. The actual exchange worker no longer calls `fwp_apply_owned`; GCC
+inlines the UTF-8 character-count loop. Its own frame shrinks from 376 to 328
+bytes on AMD64 and from 368 to 320 on ARM64, using the same frame accounting
+as above. The enclosing loop frames remain 296/288 bytes. The fresh-text `.text`
+section shrinks by 624/208 bytes, and the whole executable by 384/312 bytes,
+on AMD64/ARM64 respectively. The other four cases have unchanged file and
+section sizes. Neither code size nor frame size establishes a timing improvement.
+The combined candidate still needs its remaining cleanup and full platform gates.

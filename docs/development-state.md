@@ -40,7 +40,7 @@ The optimizer now propagates capture-free function aliases, exposing direct
 calls. Arity-zero constants remain at their original evaluation point because
 they can allocate or trap. A new regression checks repeated calls and interpreter
 agreement; focused CI also covers constant evaluation order, temporary cleanup
-and callback effects. This additional change is not yet measured or accepted.
+and callback effects. Both Linux count runs are now audited; full acceptance remains pending.
 
 ## Evidence
 
@@ -54,14 +54,18 @@ and callback effects. This additional change is not yet measured or accepted.
   O2 with LTO disabled. The report includes file/code sizes and loop stack frames.
 - Loop-only ownership `39364385408`: Linux and Windows on both architectures,
   ARM64 macOS and both WASI hosts pass; their complete logs are audited. Intel
-  macOS remains running. Native hosts have 47 integration tests plus all compiler
+  macOS also passes; all eight complete logs pass a guarded audit in 0.22s. Native hosts have 47 integration tests plus all compiler
   units; each WASI host has 18 checks, with none ignored or filtered.
 - Resource-field runs `39365324259` (AMD64) and `39365327202` (ARM64) at
   `cc850204` pass with GCC. Each has 37 tests across 21 targets, none ignored or
   filtered. Both complete logs are audited. Compiler implementation matches the
   loop-only measured revision; comments, import placement and workflow differ.
 - Alias implementation `75da96b8`: focused `39366497033` and counts
-  `39366501786` are running. Do not apply loop-only counts to this revision.
+  `39366501786` now passes both hosts: 180 samples and 20 ordinary binaries
+  audited in 1.55s. All count/memory metrics match the loop-only revision; the
+  fresh-text dispatch disappears and its exchange frame drops by 48 bytes on
+  each architecture. Details are in the linked report. Ownership passes Linux,
+  Windows and ARM64 macOS plus both WASI hosts; Intel macOS remains running.
 
 ## Local checks
 
@@ -118,6 +122,6 @@ The ARM64 macOS production log exposes five Linux resident-memory tests that
 returned early but appeared as passes. The preparation now marks those tests
 ignored outside Linux with the exact `/proc` requirement, and rejects missing
 or failing C compilers instead of silently passing GC checks. A Unix import is
-moved to the file's import block. Validate `gc-checks` on both Linux/macOS
-architectures; the full stress golden suite still runs on macOS. Historical
+moved to the file's import block. Repair `bd9eb989` is published; `gc-checks` run `39368181540` is pending
+on both Linux/macOS architectures; the full stress golden suite still runs on macOS. Historical
 macOS passes do not establish the Linux-only resident-memory measurements.
