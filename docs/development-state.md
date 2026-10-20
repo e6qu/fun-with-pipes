@@ -3,10 +3,23 @@
 ## Next action
 
 Next: finish [PR #178](https://github.com/e6qu/fun-with-pipes/pull/178) on
-`simplify-local-match-inputs`. Publish the audited report, mark ready and run all
-nine production gates plus documentation on the final head. Fix every failure;
-merge only after exact-head acceptance, with an explicit one-line subject of at
-most 80 characters and an empty body. Keep one active delivery PR.
+`simplify-local-match-inputs`. Final head is `732984c3fb6b8646f6f3ee4932c123eadb7f3555`.
+Production `39397311012` has all nine jobs (some active, some queued); documentation
+is `39397297724`. Audit every job and fix every failure. Merge only after exact-head
+acceptance, with an explicit one-line subject of at most 80 characters and empty
+body. Keep this head stable while healthy gates run.
+
+Independent preparation is in `/private/tmp/fwp-variant-moves`, branch
+`move-matched-variant-owners`, based on this head. It investigates the remaining
+retain/drop pair when matching one owned variant payload. No second PR exists.
+The prepared code transfers a sole matched payload by removing an adjacent
+retain/drop pair, only for variants already held in local fields and outside
+resource slots. New tests cover scalar, record and variant results, unique/shared
+payloads, O0/O2 and an intentionally leaked-owner control. Existing queue failure
+and cancellation checks remain required. Guarded `cargo fmt --all -- --check` passes (1.45s) and
+`python3 scripts/check-roadmap.py` passes (2.59s). Native tests and fresh counts
+have not yet run; finish #178 first, then carry forward verified preparation. Keep this local status update for the next
+delivery rather than restarting healthy production for status alone.
 
 ## Accepted baseline
 
