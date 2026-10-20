@@ -51,14 +51,20 @@ to tacit holes before publication. This older binary does not verify new compile
 behavior. Current code, native cleanup and count savings still need runner checks.
 Both complete logs for first run `39394019143` at `a3baa690` were audited.
 The only failure on each host was the new test enabling tracing stress for ARC;
-the runtime correctly rejected that setting. The repair explicitly enables GC
-stress/verification only in tracing mode, with reuse checks in both. It also adds
+the runtime correctly rejected that setting. The first repair missed that reuse verification also retains released storage:
+run `39395145939` reported this same remaining test-setting error on both hosts,
+with all other targets (including the direct constant test) and counts passing.
+The complete option validation in `runtime/fwp_rt_gc.c` and existing queue tests
+has now been checked. All three flags are explicit: 1 for tracing, 0 for ARC.
+The test collects failures across all four memory/optimization combinations,
+instead of stopping at the first combination. The repair also adds
 the direct IR regression for an ignored trapping constant. All other completed
 targets and both count steps passed, but the failed workflow is not acceptance.
 Exploratory ARM64 counts show fresh-function allocations 5 → 2 and shared-function
 allocations 3 → 1, each with one fewer retain; other cases are unchanged. Repeat
 and audit on a passing run before publishing those as the selected result.
-The raw-example audit passes (5.40s); its temporary script first needed a blank-line
+The tacit example is also in the existing native/GC/WASI golden program; its
+formatter check passes (0.14s). The raw-example audit passes (5.40s); its temporary script first needed a blank-line
 parsing correction. No compiler or runtime change was needed for either check fix.
 
 Use `python3 scripts/local-guard.py COMMAND...` for focused serial checks.

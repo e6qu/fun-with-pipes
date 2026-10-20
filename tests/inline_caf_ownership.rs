@@ -346,7 +346,6 @@ fn matched_record_fields_preserve_effects_and_callback_results() {
     let dir = std::env::temp_dir().join(format!("fwp-matched-fields-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let src = dir.join("probe.fwp");
-    let exe = dir.join("probe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(
         &src,
@@ -389,8 +388,10 @@ main = [
     assert!(optimized.status.success(), "{optimized:?}");
     assert_eq!(optimized.stdout, reference.stdout);
     assert_eq!(optimized.stderr, reference.stderr);
+    let mut failures = Vec::new();
     for memory in ["arc", "tracing"] {
         for optimization in ["-O0", "-O2"] {
+            let exe = dir.join(format!("probe-{memory}{optimization}.exe"));
             let build = Command::new(fwp)
                 .arg("build")
                 .arg(&src)
@@ -398,22 +399,26 @@ main = [
                 .arg(&exe)
                 .output()
                 .unwrap();
-            assert!(build.status.success(), "{build:?}");
+            if !build.status.success() {
+                failures.push(format!("build {memory}, {optimization}: {build:?}"));
+                continue;
+            }
             let stress = if memory == "tracing" { "1" } else { "0" };
             let native = Command::new(&exe)
                 .env_remove("FWP_GC")
                 .env("FWP_GC_STRESS", stress)
                 .env("FWP_GC_VERIFY", stress)
-                .env("FWP_REUSE_VERIFY", "1")
+                .env("FWP_REUSE_VERIFY", stress)
                 .output()
                 .unwrap();
-            assert!(
-                native.status.success(),
-                "{memory}, {optimization}: {native:?}"
-            );
-            assert_eq!(native.stdout, reference.stdout);
-            assert_eq!(native.stderr, reference.stderr);
+            if !native.status.success()
+                || native.stdout != reference.stdout
+                || native.stderr != reference.stderr
+            {
+                failures.push(format!("run {memory}, {optimization}: {native:?}"));
+            }
         }
     }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
     std::fs::remove_dir_all(dir).unwrap();
 }

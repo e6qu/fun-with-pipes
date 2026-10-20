@@ -8,6 +8,13 @@ rec count-down = match
 
 pipeline = add 1 | mul 2 | flip sub 100 | show
 
+# Each hole supplies an argument to the arm. id returns the first function,
+# then the second hole's number becomes that function's input.
+choose : (I64 -> I64, Option[I64]) -> I64
+choose = match
+    (_, Some _) -> id
+    (_, None) -> const 0
+
 main = [
     # fork evaluates f before g, then combines: concat (f x) (g x)
     "x" | fork concat (concat "1" | loud) (concat "2" | loud) | print,
@@ -20,6 +27,9 @@ main = [
     [1, 2, 3] | map (add 1 | mul 2) | sum | echo,
     # deep (non-tail) recursion
     100000 | count-down | echo,
+    # A local callback/Option tuple should preserve both match branches.
+    (add 1, Some 4) | choose | echo,
+    (add 1, None) | choose | echo,
     # curry/uncurry/swap round trips
     (1, 2) | swap | uncurry (curry id) | echo,
 ] | ignore
