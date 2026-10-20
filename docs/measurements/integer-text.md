@@ -134,4 +134,5 @@ The separate `scalar-text-memory` suite reuses those artifacts with explicit
 [run 39455802373](https://github.com/e6qu/fun-with-pipes/actions/runs/39455802373)
 on both architectures. Both complete logs and archived inputs, generated
 instrumentation, binaries and raw RSS files were audited.
-The [handoff](../development-state.md) tracks full production acceptance.
+[PR #180](../roadmap-history.md#function-channel-borrows-and-integer-text-pr-180)
+records passing full production acceptance on all maintained platforms.

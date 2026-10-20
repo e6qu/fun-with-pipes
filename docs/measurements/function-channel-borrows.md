@@ -75,5 +75,6 @@ and 20 ordinary binaries. All 100 saved C/binary/disassembly hashes and every
 profile match the earlier channel-only source `d8c62e17`, whose focused run
 `39440052683` also passed. The combined source's integer-text lowering does not
 change these channel results. Reproduce the audit with
-`scripts/summarize-channel-costs.py`; the [handoff](../development-state.md)
-tracks the full production matrix.
+`scripts/summarize-channel-costs.py`.
+[PR #180](../roadmap-history.md#function-channel-borrows-and-integer-text-pr-180)
+records passing final production acceptance on all maintained platforms.

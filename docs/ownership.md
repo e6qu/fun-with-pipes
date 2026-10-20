@@ -334,7 +334,8 @@ temporary name inside a match's input can borrow a channel still needed in its
 selected arm. Another field's later use does not qualify. Consuming/unknown
 calls, escaping aliases and resource scopes keep their existing ownership.
 The [local-borrow measurements](measurements/channel-local-borrows.md) remove
-the closed-send loop's final retain, with unchanged allocations and peak charge.
+the closed-send loop's final retain and one of three shared-text retains,
+with unchanged allocations and peak charge.
 Native tests cover normal return, failure, cancellation, independent aliases and
 deliberately broken cleanup. Broader platform and final production acceptance
 remain tracked in the handoff.

@@ -1033,7 +1033,9 @@ For example, an inlined call may name a channel field, use it to send, then keep
 the original field in the next loop state. The temporary needs no independent
 owner if that same field is required after the send. The proof follows enclosing
 `let` and match continuations, checks branches independently, and does not treat
-a later read of another field as sufficient. Calls, argument evaluation and
+a later read of another field as sufficient. Borrowing calculations inside
+record fields can qualify; storing the alias itself in a field cannot.
+Calls, argument evaluation and
 traps stay in order. Consuming or unknown uses, escapes and resource scopes keep
 ordinary ownership. The [handoff](development-state.md) records actual validation;
 simple alias tests alone do not establish a count reduction in a larger program.
