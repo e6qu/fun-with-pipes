@@ -296,11 +296,10 @@ impl Proof<'_> {
         args: &[Targets],
         scoped: u8,
     ) -> Result<Targets, String> {
-        if self.validate && functions.is_empty() {
-            return Err(
-                "--gc arc: cannot prove the target of a call in a scoped ownership program".into(),
-            );
-        }
+        // An empty origin set contributes no call edge: for example, mapping
+        // over an empty collection never supplies a function-valued element.
+        // Unproved runtime/foreign inputs carry Unknown explicitly and are
+        // rejected below, even when joined with known targets.
         let mut result = Targets::new();
         for &closure in functions {
             let Closure::Known(id, _) = closure else {
@@ -1002,6 +1001,10 @@ mod tests {
             error_values: Targets::new(),
         };
         let mut functions = Targets::from([Closure::Known(1, 0)]);
+        assert!(proof
+            .apply(&Targets::new(), &[Targets::new()], STATE)
+            .unwrap()
+            .is_empty());
         assert!(join(&mut functions, &Targets::from([Closure::Unknown])));
         functions.insert(Closure::Known(2, 0));
         proof.refine_callable(&mut functions, &program.funcs[1].ty);
