@@ -1,0 +1,1278 @@
+{
+  "source": "b15488ad0edc3780fcec9ed5e03a42092cf213d7",
+  "run": 39465380125,
+  "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/39465380125",
+  "hosts": [
+    {
+      "host": "ubuntu-latest",
+      "cpu": "AMD EPYC 7763 64-Core Processor",
+      "kernel": "Linux runnervm8k3b6 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+      "cCompiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+      "rustCompiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "benchmarkReportSha256": "6a76bfb0cde4350de384ecfad31c8528c96f8df4b95490495db0d313e36b58c8",
+      "programs": [
+        {
+          "program": "fib",
+          "medianProcessMs": {
+            "c": 20.442,
+            "rust": 29.137,
+            "fwp": 12.937
+          },
+          "processSamplesMs": {
+            "c": [
+              20.402,
+              20.316,
+              20.379,
+              20.483,
+              20.504,
+              20.565
+            ],
+            "rust": [
+              28.981,
+              29.234,
+              29.04,
+              29.03,
+              29.477,
+              29.252
+            ],
+            "fwp": [
+              13.053,
+              12.121,
+              12.822,
+              12.355,
+              13.518,
+              17.672
+            ]
+          },
+          "fwpOverC": 0.632863711965561,
+          "fwpOverRust": 0.4440059031472011,
+          "files": {
+            "fib-c": {
+              "sha256": "ae736fce3ac88018bb92e5e742570caa6959c2dc983cf794d9ede18f9792d012",
+              "fileBytes": 15992,
+              "textSectionBytes": 1540,
+              "elfMachine": 62,
+              "textSectionSha256": "12f5b263cf9c00d6994910479f1419a573784b2f4f23aad378ac1fc18ff8564c"
+            },
+            "fib-source.c": {
+              "sha256": "f4e8e59d2b2a2d8261cbae1254038dfc1b1adfa4f7a62027a0e7e23143ec35af"
+            },
+            "fib-rs": {
+              "sha256": "09d6bd15ffc35febe9f45acea3c0e40d1ecc43f26bf6e5391242023d28c6e942",
+              "fileBytes": 4537784,
+              "textSectionBytes": 242035,
+              "elfMachine": 62,
+              "textSectionSha256": "4438c6467a280b00c7714cbe060041c091af013604f6102078d5148d7ae5e65a"
+            },
+            "fib-source.rs": {
+              "sha256": "8686b813d20111476775dcc1c8ca19b5443ca6e1c968caf5bb33875466b38feb"
+            },
+            "fib-fwp": {
+              "sha256": "4fb71cc7b725099581a759bb89a8b63e4d15f170e3fcf4ffc0575506f169aeda",
+              "fileBytes": 39256,
+              "textSectionBytes": 9586,
+              "elfMachine": 62,
+              "textSectionSha256": "2f0b51963a73f3e72ff3ab19ff8deb172a32dd513d63cbfe3b1d64ae25c4f78c"
+            },
+            "fib-source.fwp": {
+              "sha256": "f355a0193f3fc1ac38c993185fc5fbf255ed79cb0e21935e7306b82339d629a5"
+            },
+            "fib-generated.c": {
+              "sha256": "7aa7bb3a460f0a78f2e9180b65a08891076ef9f749ec82c6a31ea389918cd336"
+            }
+          }
+        },
+        {
+          "program": "loop",
+          "medianProcessMs": {
+            "c": 94.436,
+            "rust": 125.71,
+            "fwp": 126.588
+          },
+          "processSamplesMs": {
+            "c": [
+              94.433,
+              94.423,
+              94.448,
+              94.439,
+              94.446,
+              94.406
+            ],
+            "rust": [
+              125.776,
+              125.936,
+              125.602,
+              125.632,
+              125.785,
+              125.643
+            ],
+            "fwp": [
+              125.975,
+              126.611,
+              126.017,
+              132.958,
+              126.566,
+              126.911
+            ]
+          },
+          "fwpOverC": 1.3404633826083272,
+          "fwpOverRust": 1.0069843290112164,
+          "files": {
+            "loop-c": {
+              "sha256": "167ff809619a3c92da183f397c536f495755104569fbeab6bb5efc0c1b946c30",
+              "fileBytes": 15968,
+              "textSectionBytes": 345,
+              "elfMachine": 62,
+              "textSectionSha256": "5e2c2fd121a8ad6dca54c370bc9a81eaa443a3b89caeb3111b082ee5868a74f5"
+            },
+            "loop-source.c": {
+              "sha256": "4cd663537f57bb18ba9245f201ec855052b4bc7918351b8ff3f1ff3ef606e20c"
+            },
+            "loop-rs": {
+              "sha256": "be6598f5cfdd88dc1294ae6417a4d0c61d2e41b17feaf5c35f434e29e2bef8b2",
+              "fileBytes": 4537896,
+              "textSectionBytes": 242211,
+              "elfMachine": 62,
+              "textSectionSha256": "5bd66a658d5f32ad053fec1c620f636b64f6d65aa1c88444668f62b8085e0434"
+            },
+            "loop-source.rs": {
+              "sha256": "e8227ad3408f53486a35d2d08bf9ceddd68cf5e68dd2c397b07c83c8584731c0"
+            },
+            "loop-fwp": {
+              "sha256": "93a1817191ef0fe43e2a35b7bacfd1c81c95f5f31e8d1c11c4f4144ff24f8bb6",
+              "fileBytes": 61648,
+              "textSectionBytes": 24514,
+              "elfMachine": 62,
+              "textSectionSha256": "18a6d8d204b969b15d32cd08145af370bbe1ab6f3c9c32b27a6e8d16d8cf1672"
+            },
+            "loop-source.fwp": {
+              "sha256": "9bdaa22b8a61325f5b441352434608acba2a272ace83f15a1a1dd063b1c6c365"
+            },
+            "loop-generated.c": {
+              "sha256": "a4095575dd2d372a47a081934fb1c0724af93c5d3e2fd73ad72b187c3ece5d10"
+            }
+          }
+        },
+        {
+          "program": "map",
+          "medianProcessMs": {
+            "c": 387.503,
+            "rust": 314.013,
+            "fwp": 337.701
+          },
+          "processSamplesMs": {
+            "c": [
+              386.761,
+              388.278,
+              388.345,
+              387.825,
+              387.18,
+              386.509
+            ],
+            "rust": [
+              313.789,
+              315.779,
+              313.084,
+              319.682,
+              313.763,
+              314.238
+            ],
+            "fwp": [
+              333.817,
+              337.643,
+              336.904,
+              343.618,
+              341.735,
+              337.759
+            ]
+          },
+          "fwpOverC": 0.8714797046732542,
+          "fwpOverRust": 1.0754363672841571,
+          "files": {
+            "map-c": {
+              "sha256": "f4300eb2b4af54dd579acc84f9d7bdaac68c8696e009b62d3fccb59c5170c5fb",
+              "fileBytes": 16120,
+              "textSectionBytes": 633,
+              "elfMachine": 62,
+              "textSectionSha256": "af980adc4e6ef4cbfd601f90cb40eb7f69f9c340706f0e02dc8077ffb13f748c"
+            },
+            "map-source.c": {
+              "sha256": "f4ec5f7877e0d9718174e1900a89dd215eb8c3058c3e4397a45f471da6cfd5ee"
+            },
+            "map-rs": {
+              "sha256": "a0103293322c57aa73e3cfb14c3cbe1efc17688e4e6aed5f29bf4791866f08e7",
+              "fileBytes": 4543344,
+              "textSectionBytes": 246243,
+              "elfMachine": 62,
+              "textSectionSha256": "75c6e74d05f618ea6a95dcc34d35e382c03380233eb943bd1ec07ea3063593dc"
+            },
+            "map-source.rs": {
+              "sha256": "ce78c2e0df3778070af8b6a3ef27b9e8aa3ae0788fb2032c33c1a6fee036039c"
+            },
+            "map-fwp": {
+              "sha256": "301ef0153723d2b02af3f57712464044097dfd544288b8c61a631b097266faf2",
+              "fileBytes": 70768,
+              "textSectionBytes": 30850,
+              "elfMachine": 62,
+              "textSectionSha256": "af349c862b24d9d2685ff7db4ebb075ae6a09b2b6cf0dd8f4a0cd0259659145b"
+            },
+            "map-source.fwp": {
+              "sha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b"
+            },
+            "map-generated.c": {
+              "sha256": "421862b368132f55375468cd79f1a3bd7806d1ea49929c5dec8a026d3f6cd03a"
+            }
+          }
+        },
+        {
+          "program": "pipeline",
+          "medianProcessMs": {
+            "c": 27.613,
+            "rust": 14.869,
+            "fwp": 17.328
+          },
+          "processSamplesMs": {
+            "c": [
+              27.786,
+              30.161,
+              26.151,
+              27.44,
+              25.826,
+              28.01
+            ],
+            "rust": [
+              15.692,
+              14.825,
+              14.726,
+              14.907,
+              15.02,
+              14.83
+            ],
+            "fwp": [
+              26.875,
+              16.053,
+              17.267,
+              17.389,
+              26.333,
+              17.023
+            ]
+          },
+          "fwpOverC": 0.6275305109911998,
+          "fwpOverRust": 1.165377631313471,
+          "files": {
+            "pipeline-c": {
+              "sha256": "1678a74d7a43ad983b00cb4a74caff962ff9cb05342ca38b63e19443ee095762",
+              "fileBytes": 16048,
+              "textSectionBytes": 457,
+              "elfMachine": 62,
+              "textSectionSha256": "84c94dec3b95ed31e6faa1bf3425c9deb059a6a5f2996b5a1e041658448edcb0"
+            },
+            "pipeline-source.c": {
+              "sha256": "c978deaa089f0e837cd5601e9d142368afcc7cf28a23963ebd6449c918c1bc41"
+            },
+            "pipeline-rs": {
+              "sha256": "2ab20f101fe18c0b609211d54db8e1c4d0634d4d7af326fc1f7377c1f2778d9d",
+              "fileBytes": 4538088,
+              "textSectionBytes": 242387,
+              "elfMachine": 62,
+              "textSectionSha256": "7843c966302652c0ccc76e5724406efcdaafcacc68768f9d1be4575b5961942e"
+            },
+            "pipeline-source.rs": {
+              "sha256": "8cb2b664d27bb078331d981f525ff9a504388943e19cbc4947a99b2f78e3fccb"
+            },
+            "pipeline-fwp": {
+              "sha256": "712d61132792a9da4b928a7ed27bc76bc538af07cbe9072f4784e0ae8e73a9fd",
+              "fileBytes": 62168,
+              "textSectionBytes": 25682,
+              "elfMachine": 62,
+              "textSectionSha256": "e96a52601a18cf2f1b0b425f02f3cdde438bf69aa561fa4b7101ca81a91631c2"
+            },
+            "pipeline-source.fwp": {
+              "sha256": "67f2496bf898971c60fc854ca1bd52889902ba8edc817788977f3501ee184456"
+            },
+            "pipeline-generated.c": {
+              "sha256": "9159d91166a0e8e6429ed5ae1394796bb026d8bebd5b2aac5bd194015f3603c9"
+            }
+          }
+        },
+        {
+          "program": "range-set",
+          "medianProcessMs": {
+            "c": 12.186,
+            "rust": 12.079,
+            "fwp": 12.759
+          },
+          "processSamplesMs": {
+            "c": [
+              12.082,
+              12.342,
+              11.933,
+              11.736,
+              12.323,
+              12.289
+            ],
+            "rust": [
+              12.223,
+              12.298,
+              11.901,
+              11.862,
+              12.485,
+              11.935
+            ],
+            "fwp": [
+              13.153,
+              12.771,
+              12.746,
+              12.629,
+              12.563,
+              13.54
+            ]
+          },
+          "fwpOverC": 1.0470211718365339,
+          "fwpOverRust": 1.0562960509975992,
+          "files": {
+            "range-set-c": {
+              "sha256": "bfe66c1daf8321835766a6518c9b800f2a695b45d93538fa09a05fbad81869d9",
+              "fileBytes": 16048,
+              "textSectionBytes": 409,
+              "elfMachine": 62,
+              "textSectionSha256": "cbc0512251ba20e3d561edfb0b94e872d60e09e531827e0b640cd31337aae84d"
+            },
+            "range-set-source.c": {
+              "sha256": "c875255b715d55852c713a513c171f45960ae0930cdabfd5cc42dcc6169571a4"
+            },
+            "range-set-rs": {
+              "sha256": "4b8f85ad9af49b00fd84a5289b988e1a7d471d416f85acea124f2cc1b692786e",
+              "fileBytes": 4537696,
+              "textSectionBytes": 242147,
+              "elfMachine": 62,
+              "textSectionSha256": "bf5ca74ca5751674c07bc1e5fd67358f4a037a78cac99f09714ab620993ee1e2"
+            },
+            "range-set-source.rs": {
+              "sha256": "530f3958e4c5a58e0f4eca27c48859875cf9e20c62a2ceed6ba2bb9cf0b4e5b6"
+            },
+            "range-set-fwp": {
+              "sha256": "531017baac80b31aa82375a212274332a0b312d1494a6ea02241816aa9cc6008",
+              "fileBytes": 52416,
+              "textSectionBytes": 18530,
+              "elfMachine": 62,
+              "textSectionSha256": "99cd8cd72a1026f80432244064543d6e494e53afbcaf51998ffe525891b010bd"
+            },
+            "range-set-source.fwp": {
+              "sha256": "b18037978057f904f2af9d3911471180886b4e2d99e441c3b5e4d488abad9bce"
+            },
+            "range-set-generated.c": {
+              "sha256": "6bfe563492b2b946d894db9726b6e1484a17c39baada737697b068ce65937e6b"
+            }
+          }
+        },
+        {
+          "program": "strings",
+          "medianProcessMs": {
+            "c": 166.764,
+            "rust": 165.952,
+            "fwp": 14.806
+          },
+          "processSamplesMs": {
+            "c": [
+              166.921,
+              167.503,
+              167.075,
+              166.353,
+              166.606,
+              166.484
+            ],
+            "rust": [
+              167.666,
+              165.71,
+              166.349,
+              165.962,
+              165.754,
+              165.941
+            ],
+            "fwp": [
+              13.728,
+              14.758,
+              14.982,
+              13.857,
+              14.855,
+              22.334
+            ]
+          },
+          "fwpOverC": 0.08878415005636707,
+          "fwpOverRust": 0.08921856922483609,
+          "files": {
+            "strings-c": {
+              "sha256": "8db181cb67b68abded8e3d19ce875432a5a8a73569b15f462ddba379325e9bf3",
+              "fileBytes": 16112,
+              "textSectionBytes": 409,
+              "elfMachine": 62,
+              "textSectionSha256": "69956d690bc3681524f58fee9836fb78e7a2b45adfc5e756deb8e2ecea63daac"
+            },
+            "strings-source.c": {
+              "sha256": "cc33677fa6cfca033b5704c58b7adb3c203225fc8ddd65e59b9992cb769a94c1"
+            },
+            "strings-rs": {
+              "sha256": "26c8e594461ccf142c69a5484dde8163a54517bfe80ed79e8cf8fa356758e818",
+              "fileBytes": 4540016,
+              "textSectionBytes": 243011,
+              "elfMachine": 62,
+              "textSectionSha256": "e5bfcf0e2642beceeeae035ba694571724d0ec0fb21b6e0b0e1233c56e2f5154"
+            },
+            "strings-source.rs": {
+              "sha256": "1ff725f04caaddffe45e3e9f297483aa5ffbc286c45ac6641e52dcd9a2d6b132"
+            },
+            "strings-fwp": {
+              "sha256": "6ee69fdb0d1e8e103f6a8265010e08419ca569552ae7735db9960d999000d444",
+              "fileBytes": 61800,
+              "textSectionBytes": 25218,
+              "elfMachine": 62,
+              "textSectionSha256": "3c61a4beb8540ee49a875eedab816dfc1f12b875202ec5e00af74aef8a08ab1f"
+            },
+            "strings-source.fwp": {
+              "sha256": "92583f3601f22be8045078ca167e07a9a3f709ae71e14f062116e64c6533b21c"
+            },
+            "strings-generated.c": {
+              "sha256": "24f01e1df6b81da727450392841c3d801c9288c9e0d8a059cf9fd9e740b53bb6"
+            }
+          }
+        },
+        {
+          "program": "text-length",
+          "medianProcessMs": {
+            "c": 12.974,
+            "rust": 14.79,
+            "fwp": 18.655
+          },
+          "processSamplesMs": {
+            "c": [
+              13.024,
+              13.186,
+              12.954,
+              12.905,
+              12.915,
+              12.995
+            ],
+            "rust": [
+              14.631,
+              14.898,
+              14.834,
+              14.716,
+              14.913,
+              14.746
+            ],
+            "fwp": [
+              22.666,
+              22.571,
+              22.356,
+              14.293,
+              14.955,
+              14.48
+            ]
+          },
+          "fwpOverC": 1.437875751503006,
+          "fwpOverRust": 1.2613252197430698,
+          "files": {
+            "text-length-c": {
+              "sha256": "94f9fcd83827743175ebb58275d532ff39bca86ecb72fbffaa3610103a42f7d9",
+              "fileBytes": 16040,
+              "textSectionBytes": 489,
+              "elfMachine": 62,
+              "textSectionSha256": "41097af1d239637c424e3e1313c72af5c1a2c30d690a2c53764d57bd2ada012a"
+            },
+            "text-length-source.c": {
+              "sha256": "2e8d9de8c0fa10bf3172c7029d9c7319aae9e0bbb13b3fc2361a6e22be86c815"
+            },
+            "text-length-rs": {
+              "sha256": "0748ebba8f3aa052900dc86800a37d002460579e7192be828a5c1e6cbb49c857",
+              "fileBytes": 4538112,
+              "textSectionBytes": 242211,
+              "elfMachine": 62,
+              "textSectionSha256": "5def8e2c899ef5145846e1805243ae9ff179c5d5694df1fd2915a721c84d36f2"
+            },
+            "text-length-source.rs": {
+              "sha256": "948e348cda6c6acc7eaec530d4cf0af2758d9e0fbbbc889ec599213ce0eb4fc0"
+            },
+            "text-length-fwp": {
+              "sha256": "d45a7c289bfd99b082c17926030760a28414e95c14d9e2c67bf74a4300abbd42",
+              "fileBytes": 61808,
+              "textSectionBytes": 25218,
+              "elfMachine": 62,
+              "textSectionSha256": "3c61a4beb8540ee49a875eedab816dfc1f12b875202ec5e00af74aef8a08ab1f"
+            },
+            "text-length-source.fwp": {
+              "sha256": "074b69671f133cdecfda7fe113f89c4f5953f1507f88e9d9cb4ed819c6c3963a"
+            },
+            "text-length-generated.c": {
+              "sha256": "24f01e1df6b81da727450392841c3d801c9288c9e0d8a059cf9fd9e740b53bb6"
+            }
+          }
+        }
+      ],
+      "identicalFwpForBothTextComparisons": {
+        "fwp": false,
+        "generated.c": true,
+        "textSection": true
+      },
+      "testBinaries": [
+        {
+          "name": "allocation-check-arc-O0-exit-0",
+          "sha256": "48ea2321b7e37fcdc38b5412080e610c371908a7b656d7ec6ed0939e68682346",
+          "fileBytes": 423752,
+          "textSectionBytes": 287298,
+          "elfMachine": 62,
+          "textSectionSha256": "5f56d223c5f7ae619a265cfabea2e2fa2acf21b7e1019ca96c7df0ddbebec055",
+          "generatedSha256": "d203c05e0a3042c24566c0135fac78292ccfe4bec237498934f23ebca774007e",
+          "assemblySha256": "ef3e582631bd336ad01a103bd22c297af4f061b353a4c7f5bae4ce87eb9414ca"
+        },
+        {
+          "name": "allocation-check-arc-O0-exit-247",
+          "sha256": "34cac74eb3f38eac45b193b5a69eab9725755c3cb08d27f77bfdad82e8c39967",
+          "fileBytes": 423752,
+          "textSectionBytes": 287314,
+          "elfMachine": 62,
+          "textSectionSha256": "9c83dbe67aad24971ae229e362d34ba2a2a48eef4c7aedc49142b99ea5fb3e6e",
+          "generatedSha256": "7d2e2930a9bdb60d3690aa112a449d6f4eab094b1676874979d07ecaeadcedec",
+          "assemblySha256": "8a54a045fd6aa2f7f5dc9d2c21609d44de4866730f81df89cae190c17afd342f"
+        },
+        {
+          "name": "allocation-check-arc-O2-exit-0",
+          "sha256": "70f1c0ec5f5309eb10cf4d7d6f477ba68dd0820d09751787ad8d566313582e68",
+          "fileBytes": 53064,
+          "textSectionBytes": 17666,
+          "elfMachine": 62,
+          "textSectionSha256": "e8e6c6439c3ccbc950945597f39d329961e553b16019e34a2d63b4e12eb46128",
+          "generatedSha256": "d203c05e0a3042c24566c0135fac78292ccfe4bec237498934f23ebca774007e",
+          "assemblySha256": "b915b9e928cd8570218cac4c6db924abd83b8e631a3a57893a898a2b34a75e12"
+        },
+        {
+          "name": "allocation-check-arc-O2-exit-247",
+          "sha256": "926ea0af8888906ef2841a475c9efad959a100ef6da69a4b4afa04dc6cb873e2",
+          "fileBytes": 57208,
+          "textSectionBytes": 19202,
+          "elfMachine": 62,
+          "textSectionSha256": "33fd60aec33a6aa67187545f6960f4bd826f25b2321622c749e4b23014a5a688",
+          "generatedSha256": "7d2e2930a9bdb60d3690aa112a449d6f4eab094b1676874979d07ecaeadcedec",
+          "assemblySha256": "bc24c1033d33cc3ef5d7e423e162229cca1e4d18842121c4a79e9d73bb1be77d"
+        },
+        {
+          "name": "allocation-check-tracing-O0-exit-0",
+          "sha256": "02f2d0ca3b1a27e74b1b4f4a6cd8c8f3aeae2eed3bd23f2792eed9328b75d495",
+          "fileBytes": 432632,
+          "textSectionBytes": 294594,
+          "elfMachine": 62,
+          "textSectionSha256": "e89a353eec029e30f805a20494f1d3bcdc1a5a32a54c84db0dc1089d92bd4c16",
+          "generatedSha256": "769739787d4a51f8348fe39de90a42b9091dccb12e011ecd61184046a39223b7",
+          "assemblySha256": "4ed25303c86314b92497a9de000e4b0abf84d029f9b938d650f3f1452ec6db37"
+        },
+        {
+          "name": "allocation-check-tracing-O0-exit-247",
+          "sha256": "4a44851af246189be22348e68823e61c4096acb786cfc2855475fd2fa4b07840",
+          "fileBytes": 432632,
+          "textSectionBytes": 294610,
+          "elfMachine": 62,
+          "textSectionSha256": "6c807c69c4c0006a2a1631ffbf38a524237eaedafbd9e6ac676b378a2fe71d8a",
+          "generatedSha256": "5b692c451ce055586e3076ddbbb5c35d7c2e48fd709734aed031caa15f02d18b",
+          "assemblySha256": "34cfdabeb729669eb19f2c3699a2b4f3d930018bb04e4610f2b5485fa787125e"
+        },
+        {
+          "name": "allocation-check-tracing-O2-exit-0",
+          "sha256": "fc8a0500e65a014732d69e598f11a64633c4aca820fd75c1a60c2e27319c02bb",
+          "fileBytes": 61800,
+          "textSectionBytes": 25218,
+          "elfMachine": 62,
+          "textSectionSha256": "452c0a61b1332815e8edb85c49b30abdeb0227e0120894934a7d56a027c70248",
+          "generatedSha256": "769739787d4a51f8348fe39de90a42b9091dccb12e011ecd61184046a39223b7",
+          "assemblySha256": "3f7113cc87ab4e4cad5e6cc13bd11e23bdf74f55a0df49740151e3478186ca40"
+        },
+        {
+          "name": "allocation-check-tracing-O2-exit-247",
+          "sha256": "057c999a75eb1eade361f34976d89203c7cf3fc59fb57ad0ba6cc7d13afa32df",
+          "fileBytes": 61848,
+          "textSectionBytes": 26898,
+          "elfMachine": 62,
+          "textSectionSha256": "68d57c0e299bbc6b912ecd26730f073152682e06428ea4489c5e0cac65302fc1",
+          "generatedSha256": "5b692c451ce055586e3076ddbbb5c35d7c2e48fd709734aed031caa15f02d18b",
+          "assemblySha256": "4c529961fa35868269efe2626418084b8cb0a68795251afe400c78aba5a5b41e"
+        },
+        {
+          "name": "semantics-arc-O0",
+          "sha256": "fc8bb86c8431ccf2faf4093718af098d98625a726770ec4cd30df937a10957f7",
+          "fileBytes": 462200,
+          "textSectionBytes": 292034,
+          "elfMachine": 62,
+          "textSectionSha256": "54dd271b581655c30c13504393f5975a51b0fbef9e5ee64615e71b0bdd10ee2b",
+          "generatedSha256": "50bb728c598df443ab3a16be521f8bbda3df7c62ef8cffc00d7c4d2f966373f8",
+          "assemblySha256": "97162640b7357a677fc58b4d7306d8d4f2c8e07b97cc4a315c249ab9fd5d31c4"
+        },
+        {
+          "name": "semantics-arc-O2",
+          "sha256": "ccdce295b2a3ddc0d82e01d9d69a593febfe066505971c9b81ac915314cdce1b",
+          "fileBytes": 171336,
+          "textSectionBytes": 84018,
+          "elfMachine": 62,
+          "textSectionSha256": "21a7d021256bcf639e2298671cde0c073755ddf3785f1293288cc26bf1c48511",
+          "generatedSha256": "50bb728c598df443ab3a16be521f8bbda3df7c62ef8cffc00d7c4d2f966373f8",
+          "assemblySha256": "299c9076e6ff3608cdc807339f01a0037c35f27ed912c4c06fc6d7048cefbe0c"
+        },
+        {
+          "name": "semantics-tracing-O0",
+          "sha256": "db44dcbd03ec4749b5c7c9b104f60465b414f0fddf4da8a22455984551a4baff",
+          "fileBytes": 471080,
+          "textSectionBytes": 299394,
+          "elfMachine": 62,
+          "textSectionSha256": "873e5e8b4f6052355b2b0059cb17a5717c03842aeca3e9044a2de86b51bff891",
+          "generatedSha256": "65420d155f2df47153c41b9fbb268421cec671af589ebb0c6e6ea47192b87138",
+          "assemblySha256": "4d0c2142e6ed5fb76a5dd33cae7df2ecf1ec601f9cc9f257297b64acf342195a"
+        },
+        {
+          "name": "semantics-tracing-O2",
+          "sha256": "030f9f5237876fccc606e4bec39f27c8435302ed3d543aefc6edb71f4298a8e0",
+          "fileBytes": 175912,
+          "textSectionBytes": 90930,
+          "elfMachine": 62,
+          "textSectionSha256": "ac67571fca24f22e4bf6fb2afb136b5ab46a69a2a9a919ab39b40946817fb095",
+          "generatedSha256": "65420d155f2df47153c41b9fbb268421cec671af589ebb0c6e6ea47192b87138",
+          "assemblySha256": "db0c21579c2ba7da96436906fb467d773bb9358c6fa7825e12fc481e9195ec69"
+        }
+      ],
+      "inventorySha256": "ef53640b9692d6e1c52325cbc6e9ce7a522d6813b9721239abda2fb2ff0e6501"
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "cpu": "Neoverse-N2",
+      "kernel": "Linux runnervmidgih 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux",
+      "cCompiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+      "rustCompiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "benchmarkReportSha256": "b428fbbe8ad82333b842fbc9daf9d5a1fbd2c23e6c2a0318b03dd94ef06a332f",
+      "programs": [
+        {
+          "program": "fib",
+          "medianProcessMs": {
+            "c": 17.656,
+            "rust": 21.663,
+            "fwp": 6.881
+          },
+          "processSamplesMs": {
+            "c": [
+              17.664,
+              17.649,
+              17.764,
+              17.627,
+              17.669,
+              17.644
+            ],
+            "rust": [
+              21.656,
+              21.671,
+              21.749,
+              21.646,
+              21.807,
+              21.613
+            ],
+            "fwp": [
+              6.828,
+              6.893,
+              6.868,
+              6.85,
+              6.978,
+              6.944
+            ]
+          },
+          "fwpOverC": 0.3897258722247395,
+          "fwpOverRust": 0.31763836957023495,
+          "files": {
+            "fib-c": {
+              "sha256": "8be3880cd5067ea66388d985142c864bad1b379f467a1eb9cbb541bfa02cbced",
+              "fileBytes": 70376,
+              "textSectionBytes": 1504,
+              "elfMachine": 183,
+              "textSectionSha256": "246b1870c05094fa01c050378713d2e151bb3ccb5cdbdf13be72bababc99f33d"
+            },
+            "fib-source.c": {
+              "sha256": "f4e8e59d2b2a2d8261cbae1254038dfc1b1adfa4f7a62027a0e7e23143ec35af"
+            },
+            "fib-rs": {
+              "sha256": "c8ffdaa059dd2920439d8774292972b5e03d5785577f68e7e14fe477c66e9a17",
+              "fileBytes": 4620856,
+              "textSectionBytes": 218780,
+              "elfMachine": 183,
+              "textSectionSha256": "a2d8c84ccce00a2adcc94154a239c83a92bb31074ab987da3e79f5b377437e96"
+            },
+            "fib-source.rs": {
+              "sha256": "8686b813d20111476775dcc1c8ca19b5443ca6e1c968caf5bb33875466b38feb"
+            },
+            "fib-fwp": {
+              "sha256": "859d501f25957fcba627a02ca5cff8c8f70a16971e7180c1ef30f098c4c54971",
+              "fileBytes": 81352,
+              "textSectionBytes": 8588,
+              "elfMachine": 183,
+              "textSectionSha256": "8cff097a41de65258d6d250933e9bfd7c99548c19f92f6ad4c49ff35a39b5c12"
+            },
+            "fib-source.fwp": {
+              "sha256": "f355a0193f3fc1ac38c993185fc5fbf255ed79cb0e21935e7306b82339d629a5"
+            },
+            "fib-generated.c": {
+              "sha256": "7aa7bb3a460f0a78f2e9180b65a08891076ef9f749ec82c6a31ea389918cd336"
+            }
+          }
+        },
+        {
+          "program": "loop",
+          "medianProcessMs": {
+            "c": 90.51,
+            "rust": 86.531,
+            "fwp": 166.5
+          },
+          "processSamplesMs": {
+            "c": [
+              90.338,
+              90.651,
+              90.381,
+              90.629,
+              90.736,
+              90.392
+            ],
+            "rust": [
+              86.487,
+              86.543,
+              86.519,
+              86.588,
+              86.614,
+              86.46
+            ],
+            "fwp": [
+              166.396,
+              166.236,
+              166.608,
+              166.605,
+              166.319,
+              166.623
+            ]
+          },
+          "fwpOverC": 1.8395757374875703,
+          "fwpOverRust": 1.9241659058603273,
+          "files": {
+            "loop-c": {
+              "sha256": "98e2241d9f25e57a0786413b9cc4856f0d53f8ec557700ca1833bb7042d14b88",
+              "fileBytes": 70320,
+              "textSectionBytes": 408,
+              "elfMachine": 183,
+              "textSectionSha256": "57b9e5321728f9a3eb2192f4223227df4d79f5fa6f771bad65e76991380f521f"
+            },
+            "loop-source.c": {
+              "sha256": "4cd663537f57bb18ba9245f201ec855052b4bc7918351b8ff3f1ff3ef606e20c"
+            },
+            "loop-rs": {
+              "sha256": "c48a6b57263792427523259b1374cea63153c3ded3b44a83e2068720b92116b1",
+              "fileBytes": 4620776,
+              "textSectionBytes": 219068,
+              "elfMachine": 183,
+              "textSectionSha256": "6db96b69daf7d1679a9ecb8ea27dc4fe260d85646550f8f8b2b482e1c6e94a45"
+            },
+            "loop-source.rs": {
+              "sha256": "e8227ad3408f53486a35d2d08bf9ceddd68cf5e68dd2c397b07c83c8584731c0"
+            },
+            "loop-fwp": {
+              "sha256": "cdeecbaa9ea033790431b8e3e26b2bbfff60cb3e29e9ff4c95dbf93ca00246ae",
+              "fileBytes": 83280,
+              "textSectionBytes": 22380,
+              "elfMachine": 183,
+              "textSectionSha256": "ee64c0dc7b6faa99f0e7c6c690f95f87d2066773812a7e9bfc10b0223a2c9521"
+            },
+            "loop-source.fwp": {
+              "sha256": "9bdaa22b8a61325f5b441352434608acba2a272ace83f15a1a1dd063b1c6c365"
+            },
+            "loop-generated.c": {
+              "sha256": "a4095575dd2d372a47a081934fb1c0724af93c5d3e2fd73ad72b187c3ece5d10"
+            }
+          }
+        },
+        {
+          "program": "map",
+          "medianProcessMs": {
+            "c": 495.876,
+            "rust": 457.585,
+            "fwp": 463.858
+          },
+          "processSamplesMs": {
+            "c": [
+              496.228,
+              495.524,
+              494.369,
+              485.128,
+              501.561,
+              498.629
+            ],
+            "rust": [
+              464.245,
+              455.409,
+              456.509,
+              462.237,
+              457.003,
+              458.167
+            ],
+            "fwp": [
+              456.138,
+              461.637,
+              466.08,
+              488.314,
+              467.026,
+              453.435
+            ]
+          },
+          "fwpOverC": 0.9354314385047875,
+          "fwpOverRust": 1.0137089283958172,
+          "files": {
+            "map-c": {
+              "sha256": "666b84c3ad1465de2382c96ac7ab7851fdd2b0cda1a2abf2b3781a508081e17b",
+              "fileBytes": 70496,
+              "textSectionBytes": 760,
+              "elfMachine": 183,
+              "textSectionSha256": "1227b8070577fa2807432076a9049099259ffe166d0070480175efcb17903afa"
+            },
+            "map-source.c": {
+              "sha256": "f4ec5f7877e0d9718174e1900a89dd215eb8c3058c3e4397a45f471da6cfd5ee"
+            },
+            "map-rs": {
+              "sha256": "f06c581d3b3afaf86b3c2284f12ebf18c9a91707755c867daba128c1642c8a30",
+              "fileBytes": 4621880,
+              "textSectionBytes": 222476,
+              "elfMachine": 183,
+              "textSectionSha256": "225ef2d4165a945c756644b1b617f2f944a67890c2f947ef972ea57f1965b01d"
+            },
+            "map-source.rs": {
+              "sha256": "ce78c2e0df3778070af8b6a3ef27b9e8aa3ae0788fb2032c33c1a6fee036039c"
+            },
+            "map-fwp": {
+              "sha256": "8ec77af6b1c08efcb5a381d56e2e38a972607c707b0e318b80e82fe4a667a3dc",
+              "fileBytes": 84264,
+              "textSectionBytes": 28460,
+              "elfMachine": 183,
+              "textSectionSha256": "868fdc6960c11c8f01937f8850716e229f987c6fd27acaa66d479cc5e9019846"
+            },
+            "map-source.fwp": {
+              "sha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b"
+            },
+            "map-generated.c": {
+              "sha256": "421862b368132f55375468cd79f1a3bd7806d1ea49929c5dec8a026d3f6cd03a"
+            }
+          }
+        },
+        {
+          "program": "pipeline",
+          "medianProcessMs": {
+            "c": 27.009,
+            "rust": 20.202,
+            "fwp": 16.033
+          },
+          "processSamplesMs": {
+            "c": [
+              26.788,
+              26.971,
+              27.174,
+              26.977,
+              27.303,
+              27.041
+            ],
+            "rust": [
+              20.112,
+              19.922,
+              20.292,
+              20.611,
+              20.36,
+              19.933
+            ],
+            "fwp": [
+              17.338,
+              16.114,
+              15.807,
+              15.951,
+              16.563,
+              15.924
+            ]
+          },
+          "fwpOverC": 0.593616942500648,
+          "fwpOverRust": 0.7936342936342936,
+          "files": {
+            "pipeline-c": {
+              "sha256": "c12c20900851a329db4b23385b930e72a934f960d80c3153a93bb1a287e341ca",
+              "fileBytes": 70400,
+              "textSectionBytes": 536,
+              "elfMachine": 183,
+              "textSectionSha256": "f9fe5bdfd1e0d998c0e650ce816fda15dbd16b71c15feb42647a3b579760156c"
+            },
+            "pipeline-source.c": {
+              "sha256": "c978deaa089f0e837cd5601e9d142368afcc7cf28a23963ebd6449c918c1bc41"
+            },
+            "pipeline-rs": {
+              "sha256": "687c62c4262046b55d9261582ba2f6105f0e06a09d448e8f255e6eab0f68032c",
+              "fileBytes": 4620776,
+              "textSectionBytes": 219036,
+              "elfMachine": 183,
+              "textSectionSha256": "33d6c1d7c8f1190277c662cbf71437c9dfcfa6148f251f879003f082406237ae"
+            },
+            "pipeline-source.rs": {
+              "sha256": "8cb2b664d27bb078331d981f525ff9a504388943e19cbc4947a99b2f78e3fccb"
+            },
+            "pipeline-fwp": {
+              "sha256": "307911fd39c7afb6602d72726b7c7fea839826c5c2e9e4407c35fde46e4fc12b",
+              "fileBytes": 83800,
+              "textSectionBytes": 23596,
+              "elfMachine": 183,
+              "textSectionSha256": "709c5e73248eed9dc55b4189640d34e00988fe8c60f1ae99c504c176b370f014"
+            },
+            "pipeline-source.fwp": {
+              "sha256": "67f2496bf898971c60fc854ca1bd52889902ba8edc817788977f3501ee184456"
+            },
+            "pipeline-generated.c": {
+              "sha256": "9159d91166a0e8e6429ed5ae1394796bb026d8bebd5b2aac5bd194015f3603c9"
+            }
+          }
+        },
+        {
+          "program": "range-set",
+          "medianProcessMs": {
+            "c": 10.596,
+            "rust": 10.658,
+            "fwp": 11.052
+          },
+          "processSamplesMs": {
+            "c": [
+              10.629,
+              10.608,
+              10.569,
+              10.448,
+              10.584,
+              10.614
+            ],
+            "rust": [
+              10.62,
+              10.703,
+              10.697,
+              10.607,
+              10.612,
+              10.702
+            ],
+            "fwp": [
+              10.989,
+              11.015,
+              11.344,
+              10.962,
+              11.09,
+              11.407
+            ]
+          },
+          "fwpOverC": 1.0430351075877689,
+          "fwpOverRust": 1.0369675361231,
+          "files": {
+            "range-set-c": {
+              "sha256": "ba190c0ebc087facf7a8311fb4c24e6f10787de522dc277d25b743d596990c7e",
+              "fileBytes": 70400,
+              "textSectionBytes": 536,
+              "elfMachine": 183,
+              "textSectionSha256": "471f9e89a390a73e18ad267fec5652a310e7aeb4bcabde70741bb1d5bc60fd5e"
+            },
+            "range-set-source.c": {
+              "sha256": "c875255b715d55852c713a513c171f45960ae0930cdabfd5cc42dcc6169571a4"
+            },
+            "range-set-rs": {
+              "sha256": "acac077f669a507019883cc7dead7e76906d9b7f13ce0ff3ca1d114de066ae13",
+              "fileBytes": 4620600,
+              "textSectionBytes": 218620,
+              "elfMachine": 183,
+              "textSectionSha256": "2a36e381bcbe634a457d30bdf1d24593eb51cf7e1ab6ec9e8563cb9afcf29e65"
+            },
+            "range-set-source.rs": {
+              "sha256": "530f3958e4c5a58e0f4eca27c48859875cf9e20c62a2ceed6ba2bb9cf0b4e5b6"
+            },
+            "range-set-fwp": {
+              "sha256": "2a56c574a24edc6da6bf97b4b6901c0fd687e6c7e6eb5f4e0dc37d53c8290f1a",
+              "fileBytes": 82176,
+              "textSectionBytes": 16316,
+              "elfMachine": 183,
+              "textSectionSha256": "63e026b4b2738f773c7b3f04713994eb51fa03de1fc88857658f4c51ea9dd7f5"
+            },
+            "range-set-source.fwp": {
+              "sha256": "b18037978057f904f2af9d3911471180886b4e2d99e441c3b5e4d488abad9bce"
+            },
+            "range-set-generated.c": {
+              "sha256": "6bfe563492b2b946d894db9726b6e1484a17c39baada737697b068ce65937e6b"
+            }
+          }
+        },
+        {
+          "program": "strings",
+          "medianProcessMs": {
+            "c": 141.504,
+            "rust": 147.249,
+            "fwp": 14.488
+          },
+          "processSamplesMs": {
+            "c": [
+              142.258,
+              140.605,
+              140.858,
+              140.662,
+              142.281,
+              142.15
+            ],
+            "rust": [
+              147.314,
+              147.115,
+              147.28,
+              147.298,
+              147.162,
+              147.217
+            ],
+            "fwp": [
+              14.522,
+              14.438,
+              14.417,
+              14.484,
+              14.762,
+              14.493
+            ]
+          },
+          "fwpOverC": 0.10238579828132068,
+          "fwpOverRust": 0.09839116055117522,
+          "files": {
+            "strings-c": {
+              "sha256": "378b771832858689c9c8c5bc9d701f3c1f7f7bf73234ea78692e7b44b71fdd13",
+              "fileBytes": 70520,
+              "textSectionBytes": 536,
+              "elfMachine": 183,
+              "textSectionSha256": "49a5b254ac204808ca56fce7a448a0c97362979d8b0fdeeaadbd4f7e3a89cfb0"
+            },
+            "strings-source.c": {
+              "sha256": "cc33677fa6cfca033b5704c58b7adb3c203225fc8ddd65e59b9992cb769a94c1"
+            },
+            "strings-rs": {
+              "sha256": "ef6b363235db5b62314e27cea574e329f125a6d9c4705bddbc0734ed65cb4610",
+              "fileBytes": 4621480,
+              "textSectionBytes": 219740,
+              "elfMachine": 183,
+              "textSectionSha256": "f29ccb17500f09e34c7421b9febba076a6b02d9c42a7ef19ddf77c8d5758e103"
+            },
+            "strings-source.rs": {
+              "sha256": "1ff725f04caaddffe45e3e9f297483aa5ffbc286c45ac6641e52dcd9a2d6b132"
+            },
+            "strings-fwp": {
+              "sha256": "ccb0d0396f645e2af450b83f1e75c4b2776e09a34d99c9b92cd95e531f84751e",
+              "fileBytes": 83432,
+              "textSectionBytes": 22908,
+              "elfMachine": 183,
+              "textSectionSha256": "edc448d919922e5e29ab24c88ec39eb867a91bcf6abeb2cd4b10962cbe3771e6"
+            },
+            "strings-source.fwp": {
+              "sha256": "92583f3601f22be8045078ca167e07a9a3f709ae71e14f062116e64c6533b21c"
+            },
+            "strings-generated.c": {
+              "sha256": "24f01e1df6b81da727450392841c3d801c9288c9e0d8a059cf9fd9e740b53bb6"
+            }
+          }
+        },
+        {
+          "program": "text-length",
+          "medianProcessMs": {
+            "c": 13.766,
+            "rust": 14.527,
+            "fwp": 14.285
+          },
+          "processSamplesMs": {
+            "c": [
+              13.756,
+              13.776,
+              13.783,
+              13.713,
+              13.707,
+              13.804
+            ],
+            "rust": [
+              14.557,
+              14.831,
+              14.504,
+              14.499,
+              14.546,
+              14.508
+            ],
+            "fwp": [
+              14.231,
+              14.319,
+              14.306,
+              14.228,
+              14.282,
+              14.289
+            ]
+          },
+          "fwpOverC": 1.037701583611797,
+          "fwpOverRust": 0.9833413643560268,
+          "files": {
+            "text-length-c": {
+              "sha256": "0c2bcd1bd05ca8bf684623ce9cbe9904b102b2c9ba9e85fd306186d8dcbe88e4",
+              "fileBytes": 70320,
+              "textSectionBytes": 536,
+              "elfMachine": 183,
+              "textSectionSha256": "1c63eccdd2a521a6acd85f33f4f651cf6d2e10f9a279321aa8750936bc0eaf2e"
+            },
+            "text-length-source.c": {
+              "sha256": "2e8d9de8c0fa10bf3172c7029d9c7319aae9e0bbb13b3fc2361a6e22be86c815"
+            },
+            "text-length-rs": {
+              "sha256": "d319a59fa1bfb4231e3321ff83692b1828853bbf869d53659eb3e5e75cca4319",
+              "fileBytes": 4620896,
+              "textSectionBytes": 218908,
+              "elfMachine": 183,
+              "textSectionSha256": "c14679de23adbf442e43e4d31cf7e0f55e5bf1e1d2ebdc2b45f8a43e61f86ddc"
+            },
+            "text-length-source.rs": {
+              "sha256": "948e348cda6c6acc7eaec530d4cf0af2758d9e0fbbbc889ec599213ce0eb4fc0"
+            },
+            "text-length-fwp": {
+              "sha256": "d069cae6e1e84de46ce7817d6f7ea21647b7ea1dd6bf7dac9ebba0582b984b7a",
+              "fileBytes": 83440,
+              "textSectionBytes": 22908,
+              "elfMachine": 183,
+              "textSectionSha256": "edc448d919922e5e29ab24c88ec39eb867a91bcf6abeb2cd4b10962cbe3771e6"
+            },
+            "text-length-source.fwp": {
+              "sha256": "074b69671f133cdecfda7fe113f89c4f5953f1507f88e9d9cb4ed819c6c3963a"
+            },
+            "text-length-generated.c": {
+              "sha256": "24f01e1df6b81da727450392841c3d801c9288c9e0d8a059cf9fd9e740b53bb6"
+            }
+          }
+        }
+      ],
+      "identicalFwpForBothTextComparisons": {
+        "fwp": false,
+        "generated.c": true,
+        "textSection": true
+      },
+      "testBinaries": [
+        {
+          "name": "allocation-check-arc-O0-exit-0",
+          "sha256": "1fe2e90166fd2be3c24c6852aba82138cad7e193170df00772e2d90d20e14764",
+          "fileBytes": 455552,
+          "textSectionBytes": 299788,
+          "elfMachine": 183,
+          "textSectionSha256": "e35f463bb6250dba53d9617997a155feaf20b929d943b4143d77d29d20d450d9",
+          "generatedSha256": "d203c05e0a3042c24566c0135fac78292ccfe4bec237498934f23ebca774007e",
+          "assemblySha256": "754993d9f4d68d69ab4a42ec7054c6352f9bd5aecd73efeced78e74a595846dd"
+        },
+        {
+          "name": "allocation-check-arc-O0-exit-247",
+          "sha256": "98c957e4f819f325bafbafb6d8f745729438e83ca2fdf5ca7f64c1ad7032c0fc",
+          "fileBytes": 455552,
+          "textSectionBytes": 299804,
+          "elfMachine": 183,
+          "textSectionSha256": "8fd76dbace2ce032b9e633edae253646b8a61a943e96c28fcce549c44690070f",
+          "generatedSha256": "7d2e2930a9bdb60d3690aa112a449d6f4eab094b1676874979d07ecaeadcedec",
+          "assemblySha256": "47361062e726d1d67bc58e406d3ea0bb7587f35137e56a6ac3a3550893d6f976"
+        },
+        {
+          "name": "allocation-check-arc-O2-exit-0",
+          "sha256": "4b07173fa8a38a7a037e08e44a4f4137126a0472653f7fb2f372c04a96b160d0",
+          "fileBytes": 82976,
+          "textSectionBytes": 16620,
+          "elfMachine": 183,
+          "textSectionSha256": "7586aea0ac1eb4e68b90d06176093a37b021c58e6c9f8f78047e8d137d33078f",
+          "generatedSha256": "d203c05e0a3042c24566c0135fac78292ccfe4bec237498934f23ebca774007e",
+          "assemblySha256": "e8c3e1f1fdc752f20b9290981b5be7aeba9d36cbc8325d840b9e31adb0eea051"
+        },
+        {
+          "name": "allocation-check-arc-O2-exit-247",
+          "sha256": "4843e0b05f7413f13184ebc8307f2bef7f303e52c035f39d67e61d7cf1dfa519",
+          "fileBytes": 83016,
+          "textSectionBytes": 17916,
+          "elfMachine": 183,
+          "textSectionSha256": "22218a0a22109b5fb3ba76d0792cc400d3e5d58d8ad65538f61f06edcd6e30a9",
+          "generatedSha256": "7d2e2930a9bdb60d3690aa112a449d6f4eab094b1676874979d07ecaeadcedec",
+          "assemblySha256": "58e0f4a9dadd0c7f90bd2049192df56f4df4516970fef449434352165d9e434d"
+        },
+        {
+          "name": "allocation-check-tracing-O0-exit-0",
+          "sha256": "d1379f2c46af3e0cccef45085c812043a70858c2625ff86563c69610ba442e22",
+          "fileBytes": 456200,
+          "textSectionBytes": 308028,
+          "elfMachine": 183,
+          "textSectionSha256": "0dd18df192946e2fd7885dd61e94479849459474941938e143914eaafd415cb4",
+          "generatedSha256": "769739787d4a51f8348fe39de90a42b9091dccb12e011ecd61184046a39223b7",
+          "assemblySha256": "4d7d17004f9e7c3e2f63cfaa1316f70b9d4176d3292676a0da693626ea9a17e5"
+        },
+        {
+          "name": "allocation-check-tracing-O0-exit-247",
+          "sha256": "0dd26b0035077a3f73c7cdd1b981a2479918cd61ffd8bfdff3ddec152d4089e3",
+          "fileBytes": 456200,
+          "textSectionBytes": 308028,
+          "elfMachine": 183,
+          "textSectionSha256": "86197671492859bfefafc7bd209a035b5bf2cc100474ffaf60961bff0dc7ecbc",
+          "generatedSha256": "5b692c451ce055586e3076ddbbb5c35d7c2e48fd709734aed031caa15f02d18b",
+          "assemblySha256": "827162d9705882b73ae583aab4117a77c6b9290eb2bd65f6b70f1c90ff69f2b6"
+        },
+        {
+          "name": "allocation-check-tracing-O2-exit-0",
+          "sha256": "6fd5b68ef2113fe2f4e10128236fb45b9506cf195af985cf09ce4cd5596a6065",
+          "fileBytes": 83432,
+          "textSectionBytes": 22892,
+          "elfMachine": 183,
+          "textSectionSha256": "2bee33490785404a7ff8081d3b2c23fc3550647b382f732f6670e35ec65bafc5",
+          "generatedSha256": "769739787d4a51f8348fe39de90a42b9091dccb12e011ecd61184046a39223b7",
+          "assemblySha256": "6c2630df1a5a1abe48bcf058b6fe97643879d952920e7c8a7a85390cbcf8b121"
+        },
+        {
+          "name": "allocation-check-tracing-O2-exit-247",
+          "sha256": "1b84d62dab9bdd0a69ee6f29f41e637808c278e6a5e15c1af674811dbf22f176",
+          "fileBytes": 83472,
+          "textSectionBytes": 24156,
+          "elfMachine": 183,
+          "textSectionSha256": "c2c56e57cef2a9577267ba70935b3e506e85b43f3a3354d601b1eb3e305278ad",
+          "generatedSha256": "5b692c451ce055586e3076ddbbb5c35d7c2e48fd709734aed031caa15f02d18b",
+          "assemblySha256": "c1ea679b591039196010cc36a1aba3110d3434a5facd3ff6f51f76b2e2714930"
+        },
+        {
+          "name": "semantics-arc-O0",
+          "sha256": "94911a0927075d73fbc62e7291e59d59146567656a46b3f706c88b9b6c2ea52f",
+          "fileBytes": 526744,
+          "textSectionBytes": 299692,
+          "elfMachine": 183,
+          "textSectionSha256": "06d8a46cdcf20cca286a3d0e3c9a3d0f4d71d086b0614f680adae3922496d850",
+          "generatedSha256": "50bb728c598df443ab3a16be521f8bbda3df7c62ef8cffc00d7c4d2f966373f8",
+          "assemblySha256": "c47629d55717dc550e8bdf7336d8ed69a621c38eb4d045f87a071729acdb1361"
+        },
+        {
+          "name": "semantics-arc-O2",
+          "sha256": "0a4e537d10871eee585f61559f14e837d16d75af3678680b64d62f5705d94182",
+          "fileBytes": 225744,
+          "textSectionBytes": 79772,
+          "elfMachine": 183,
+          "textSectionSha256": "6135b978e72cca433932e618a47407f28f4af5ac598af48aa36d3254e42758f5",
+          "generatedSha256": "50bb728c598df443ab3a16be521f8bbda3df7c62ef8cffc00d7c4d2f966373f8",
+          "assemblySha256": "62219aeb9e5200b7cec5b0d3b6d18182ee09e62543d631d5e4fc22afc5bb1a59"
+        },
+        {
+          "name": "semantics-tracing-O0",
+          "sha256": "62b3df3d9fbba119a82212e79f6a09e421ffef44a941a44198cba83857d72500",
+          "fileBytes": 527392,
+          "textSectionBytes": 307964,
+          "elfMachine": 183,
+          "textSectionSha256": "5ab9b656414c84e4236fac4203d59b635713cbcbeebe7d393ff4e019cbe0d9a2",
+          "generatedSha256": "65420d155f2df47153c41b9fbb268421cec671af589ebb0c6e6ea47192b87138",
+          "assemblySha256": "c91f5571e861a658b252b751b64a88fe6bebbb5be9e67073cffcefa89bfe2d43"
+        },
+        {
+          "name": "semantics-tracing-O2",
+          "sha256": "676879f6c45a4dbd3de2c1893b313b80a4385cea152d8dca981f79e61ec17f73",
+          "fileBytes": 226080,
+          "textSectionBytes": 85404,
+          "elfMachine": 183,
+          "textSectionSha256": "bae4b8cc1ef76b6b099ab1e8116fdf4306bbb516acbef8912d8a4bd7cb37516b",
+          "generatedSha256": "65420d155f2df47153c41b9fbb268421cec671af589ebb0c6e6ea47192b87138",
+          "assemblySha256": "77ce8c0ac68d667ddb2d563748c16d63bd2f1ed0229b8aa96142c3da2605c2db"
+        }
+      ],
+      "inventorySha256": "ef53640b9692d6e1c52325cbc6e9ce7a522d6813b9721239abda2fb2ff0e6501"
+    }
+  ],
+  "scope": "Seven complete programs, one warmup and six rotating-order fresh-process samples per implementation. Medians and samples have 0.001 ms resolution. Native fwp uses tracing, GCC O2 and LTO off; C uses GCC O2, Rust uses -O. Compilation is excluded. text-length compares identical decimal-length calculations for i=0..1999999: fwp eliminates text; C/Rust count digits directly with checked multiplication and sums. strings peers still format. Separate O0/O2 ARC/tracing probes check results and zero managed leaf allocations after constant initialization, with allocating controls. They do not measure total allocations, RSS, peak memory or elapsed-time improvement over an earlier fwp revision. ELF .text includes layout costs; whole-file bytes include runtime and linking choices."
+}

@@ -41,7 +41,9 @@ The runtime's peak accounted storage is unchanged; every ARC profile finishes wi
 and no collections. These counters exclude raw buffers, allocator metadata and
 stacks. Shared-message parameters still include a consumed message. The closed
 case is inlined and still creates an owned alias inside its loop. Neither cost
-is removed by changing the direct-call convention.
+is removed by changing the direct-call convention. The
+[local-borrow report](channel-local-borrows.md) measures the subsequent removal
+of the closed case's temporary owner.
 
 ## Actual binary changes
 

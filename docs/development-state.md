@@ -4,8 +4,9 @@
 
 Next: finish [PR #180](https://github.com/e6qu/fun-with-pipes/pull/180) at
 `64cfa0081dab2f6b19b6157e844c49481749a605`. Production run `39457866569` and
-documentation `39457866666` check that exact source. Documentation passes; all
-nine production jobs are running without reported failures. Audit with
+documentation `39457866666` check that exact source. Documentation, benchmarks,
+both ARM64 macOS jobs, Intel macOS GC stress and Windows AMD64 pass; four jobs
+are running without reported failures. Audit with
 `python3 scripts/local-guard.py python3 /private/tmp/fwp-audit-180.py`; receipt
 `/private/tmp/fwp-180-acceptance.json`. Require all nine production jobs and docs. Audit every completed
 job's full log and fix all failures. Squash-merge only after all gates pass, with
@@ -76,7 +77,7 @@ are audited, but the five programs' counts and binaries are unchanged. The
 initial alias proof worked in simple tests but missed the real loop's enclosing
 match continuation. Do not claim that run removed its retain.
 
-Current unverified changes fix that gap before ownership insertion, tracking
+Current source `b15488ad0edc3780fcec9ed5e03a42092cf213d7` fixes that gap before ownership insertion, tracking
 later reads of the same storage through enclosing let/match continuations.
 Six unit checks cover same/different fields, branches, escapes, resource-bearing
 values and unknown/consuming calls. No new IR form or syntax is added.
@@ -91,9 +92,25 @@ failure test compares interpreter and native ARC/tracing at O0/O2/O3 and checks
 zero final ARC charge. Native static assertions check the C qualification.
 The focused workflow also includes all task-ownership tests.
 
-Next: publish this combined repair, run `scalar-text` on both Linux GCC hosts,
-audit every complete log and all channel/benchmark artifacts. Preserve PR #180's
-healthy head. All failures are work to fix. The earlier setup-only run
+Focused `scalar-text` run `39465380125` passes 216 checks on each Linux GCC
+host; both complete logs are clean. Receipt:
+`/private/tmp/fwp-alias-cleanup-audit.json`; artifacts:
+`/private/tmp/fwp-alias-cleanup-costs`. The
+[local-borrow report](measurements/channel-local-borrows.md) audits all 180
+profiles and 20 ordinary binaries. Closed sends remove one retain per message,
+with unchanged allocations/peak charge and zero final ARC charge. The closed
+loop's ARC frame shrinks 424→344 bytes on AMD64 and 416→352 on ARM64.
+No channel timing claim. Guards pass for count audit (1.77s), all seven C/Rust
+benchmarks and 24 integer-test binaries (2.11s), and baseline comparison (0.13s).
+The comparison initially assumed equal-size binaries were identical; inspection
+corrected that assumption: ARM64 error-handling instructions also change.
+
+All seven benchmark executables and their C/Rust peers are byte-identical to
+the earlier focused run, but the EPYC 7763 timing differs from EPYC 9V45.
+The text-length fwp samples split into 14–15 ms and 22–23 ms groups.
+Next: run the extended `scalar-text-memory` suite on these saved artifacts,
+with 24 balanced timing rounds, child CPU measurements and separate RSS/count
+checks. Keep every sample. Preserve PR #180's healthy head. The earlier setup-only run
 `39458970390` was cancelled before tests after correcting fresh-owner initialization
 in the native fixture. No local builds or native compilations. Guarded validation
 of the new scoped-failure example with the existing diagnostic interpreter and
@@ -116,7 +133,7 @@ one-line message without trailers. Receipt:
 production `39456604708` was cancelled; post-merge documentation passed.
 See [history](roadmap-history.md#matched-payload-moves-and-direct-call-borrows-pr-179).
 
-## Local checks and next investigation
+## Local checks
 
 No local builds, full suites or native compilations. Use
 `python3 scripts/local-guard.py COMMAND...` serially. Guarded report audits pass:
@@ -125,13 +142,6 @@ No local builds, full suites or native compilations. Use
 arguments (1.95s), and channel-report audit (1.68s). `python3 scripts/check-roadmap.py` passes (3.26s);
 `cargo fmt --all -- --check` passes (1.64s). About 69 GiB free; root target is 4 KiB. Preserve the fixed
 64 GiB free disk, 2 GiB target, 1 GiB aggregate RSS and 180-second limits.
-
-While final production runs, investigate the closed-function channel's remaining
-retain: inlining leaves an owned temporary alias of a channel field while the
-original owner continues into the next loop state. Establish every-path lifetime
-and failure cleanup before removing it; do not prolong a resource lifetime or
-borrow through an owner that can be consumed. No change for this case is implemented.
-Use the five-program channel protocol and current reports as the baseline.
 
 ## Roadmap status
 

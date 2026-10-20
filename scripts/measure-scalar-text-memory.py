@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure saved direct-counting binaries and managed fwp storage on native CI."""
+"""Remeasure saved counting binaries' time, process memory and managed storage."""
 import argparse
 import importlib.util
 import json
@@ -7,7 +7,10 @@ import os
 from pathlib import Path
 import platform
 import re
+import resource
+import statistics
 import subprocess
+import time
 
 ROOT = Path(__file__).resolve().parent.parent
 audit_spec = importlib.util.spec_from_file_location('scalar_text_audit', ROOT / 'scripts/summarize-scalar-text.py')
@@ -34,10 +37,15 @@ def main():
     parser.add_argument('--cc', required=True)
     parser.add_argument('--time', required=True, type=Path)
     parser.add_argument('--samples', required=True, type=int)
+    parser.add_argument('--timing-samples', required=True, type=int)
+    parser.add_argument('--warmups', required=True, type=int)
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     assert os.environ['GITHUB_ACTIONS'] == 'true' and platform.system() == 'Linux'
     assert args.samples >= 3 and re.fullmatch('[0-9a-f]{40}', args.source)
+    labels = ('c', 'rs', 'fwp')
+    assert args.timing_samples > 0 and args.timing_samples % (2 * len(labels)) == 0
+    assert args.warmups > 0
     machine, architecture = audit.HOSTS[args.host]
     assert platform.machine() == architecture
     out = args.output.resolve()
@@ -72,6 +80,33 @@ def main():
     for kind in ('c', 'rs', 'fwp'):
         (directory / ('text-length-' + kind)).chmod(0o755)
     reference = run([directory / 'text-length-c'], environment).stdout
+    timing = {kind: {'samples': []} for kind in labels}
+    for kind in labels:
+        for _ in range(args.warmups):
+            actual = run([directory / ('text-length-' + kind)], environment)
+            assert actual.stdout == reference and not actual.stderr
+    for sample in range(args.timing_samples):
+        offset = sample % len(labels)
+        order = labels[offset:] + labels[:offset]
+        if sample // len(labels) % 2:
+            order = order[::-1]
+        for kind in order:
+            cpu_start = resource.getrusage(resource.RUSAGE_CHILDREN)
+            wall_start = time.perf_counter_ns()
+            actual = run([directory / ('text-length-' + kind)], environment)
+            wall = time.perf_counter_ns() - wall_start
+            cpu_end = resource.getrusage(resource.RUSAGE_CHILDREN)
+            cpu = round((cpu_end.ru_utime + cpu_end.ru_stime
+                         - cpu_start.ru_utime - cpu_start.ru_stime) * 1e9)
+            assert actual.stdout == reference and not actual.stderr
+            assert wall > 0 and cpu > 0
+            timing[kind]['samples'].append(
+                {'round': sample, 'order': order, 'wallNs': wall, 'childCpuNs': cpu})
+    for kind, result in timing.items():
+        result.update(
+            binarySha256=audit.digest(directory / ('text-length-' + kind)),
+            medianWallNs=statistics.median(sample['wallNs'] for sample in result['samples']),
+            medianChildCpuNs=statistics.median(sample['childCpuNs'] for sample in result['samples']))
     rss = {}
     for kind in ('c', 'rs', 'fwp'):
         executable = directory / ('text-length-' + kind)
@@ -125,11 +160,21 @@ def main():
         'cCompiler': compiler,
         'timeTool': run([args.time.resolve(), '--version'], environment).stdout.decode().splitlines()[0],
         'expectedOutput': reference.decode(), 'processMemory': rss,
+        'timing': timing, 'timingSamples': args.timing_samples, 'warmups': args.warmups,
+        'fwpOverPeer': {
+            kind: {metric: timing['fwp'][metric] / timing[kind][metric]
+                   for metric in ('medianWallNs', 'medianChildCpuNs')}
+            for kind in ('c', 'rs')},
         'managedMemory': managed, 'sourceAuditSha256': audit.digest(source_audit),
         'scope': 'Three or more fresh runs of the actual previously timed direct-counting '
                  'C/Rust/fwp binaries, on the matching native architecture. GNU time records '
                  'whole-process peak RSS in KiB, including startup, output and shutdown. '
-                 'These separate memory runs are excluded from the timing comparison; RSS '
+                 'Separate balanced rotating/reversed timing rounds record whole-process '
+                 'elapsed and child user+system CPU time with explicit warmups/sample count. '
+                 'Elapsed includes Python subprocess launch, input/output and shutdown; '
+                 'child CPU excludes parent and descheduled time. No recompilation occurs '
+                 'inside either timed interval. Every sample is retained. These memory '
+                 'runs are excluded from the timing comparison; RSS '
                  'includes shared code/libraries and has page/accounting granularity. '
                  'Separate instrumented GCC O2 builds of saved fwp C count managed requests, '
                  'retains and peak/final charged bytes after constant initialization through '
@@ -138,7 +183,8 @@ def main():
                  'allocator-call count or peak-RSS improvement over older fwp is claimed.'}
     (out / 'report.json').write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps({'host': args.host, 'rss': {k: v['peakRssKiB'] for k, v in rss.items()},
-                      'managed': {k: v['profiles'] for k, v in managed.items()}}), flush=True)
+                      'managed': {k: v['profiles'] for k, v in managed.items()},
+                      'fwpOverPeer': result['fwpOverPeer']}), flush=True)
 
 
 if __name__ == '__main__':
