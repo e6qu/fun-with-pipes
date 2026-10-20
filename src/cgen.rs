@@ -2892,6 +2892,15 @@ fn again_record(e: &Expr) -> Option<Expr> {
         },
         Expr::Record(_) => Expr::Construct(0, vec![e.clone()]),
         Expr::Let(l, v, b) => Expr::Let(*l, v.clone(), Box::new(again_record(b)?)),
+        // A preceding action or branch can choose the next record. Keep its
+        // scrutinee and bindings in place, and expose each terminal record to
+        // the loop instead of boxing the match result before Again.
+        Expr::Match(value, arms) => Expr::Match(
+            value.clone(),
+            arms.iter()
+                .map(|(pattern, body)| Some((pattern.clone(), again_record(body)?)))
+                .collect::<Option<_>>()?,
+        ),
         Expr::Dup(l, b) => Expr::Dup(*l, Box::new(again_record(b)?)),
         Expr::Drop(l, b) => Expr::Drop(*l, Box::new(again_record(b)?)),
         _ => return None,
