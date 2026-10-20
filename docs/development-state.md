@@ -108,9 +108,24 @@ corrected that assumption: ARM64 error-handling instructions also change.
 All seven benchmark executables and their C/Rust peers are byte-identical to
 the earlier focused run, but the EPYC 7763 timing differs from EPYC 9V45.
 The text-length fwp samples split into 14–15 ms and 22–23 ms groups.
-Next: run the extended `scalar-text-memory` suite on these saved artifacts,
-with 24 balanced timing rounds, child CPU measurements and separate RSS/count
-checks. Keep every sample. Preserve PR #180's healthy head. The earlier setup-only run
+The extended `scalar-text-memory` suite is running as `39468533196` at
+`373aa1902c7329be58c15fadbd782a5ec79c97c0`, reusing the saved `b15488ad` artifacts.
+It uses 24 balanced timing rounds, child CPU measurements and separate RSS/count
+checks. Audit with `/private/tmp/fwp-audit-alias-repeat.py`; receipt
+`/private/tmp/fwp-alias-repeat-audit.json`. Next: download and audit both reports
+with `/private/tmp/fwp-audit-alias-repeat-artifacts.py`, retain every sample,
+then deliver the prepared batch after PR #180 passes and merges.
+Compiler source `b15488ad` is preserved by remote tag
+`roadmap/revision-local-borrows-b15488ad`.
+Generated C also exposed an owned channel alias inside a temporary record in
+the shared-text loop. An unverified extension now follows borrowing operations
+inside record fields while rejecting a field that stores the alias itself.
+A new compiler test covers both cases; the native destruction/failure/cancellation
+probe now exercises the nested record calculation. This extension needs the
+complete `scalar-text` suite before any additional count saving is claimed.
+The `b15488ad` report remains evidence for its measured source.
+Guarded script help (0.13s), documentation audit (3.12s) and whitespace check
+(0.01s) pass. Preserve PR #180's healthy head. The earlier setup-only run
 `39458970390` was cancelled before tests after correcting fresh-owner initialization
 in the native fixture. No local builds or native compilations. Guarded validation
 of the new scoped-failure example with the existing diagnostic interpreter and

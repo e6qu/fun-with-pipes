@@ -26,14 +26,24 @@ fn temporary_channel_fields_preserve_owners_and_nonlocal_cleanup() {
             Func {
                 name: "keep-field".into(),
                 arity: 1,
-                locals: vec![pair.clone(), channel.clone(), MT::unit()],
+                locals: vec![
+                    pair.clone(),
+                    channel.clone(),
+                    MT::Record(vec![
+                        ("0".into(), MT::unit()),
+                        ("1".into(), integer.clone()),
+                    ]),
+                ],
                 ty: arrow(pair, channel.clone()),
                 body: Body::Expr(Expr::Let(
                     1,
                     Box::new(Expr::Field(Box::new(Expr::Local(0)), 0)),
                     Box::new(Expr::Let(
                         2,
-                        Box::new(Expr::Call(0, vec![Expr::Local(1)])),
+                        Box::new(Expr::Record(vec![
+                            Expr::Call(0, vec![Expr::Local(1)]),
+                            Expr::Const(Value::I64(42)),
+                        ])),
                         Box::new(Expr::Field(Box::new(Expr::Local(0)), 0)),
                     )),
                 )),

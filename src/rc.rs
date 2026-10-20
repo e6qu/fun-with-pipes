@@ -853,6 +853,15 @@ impl Pass<'_> {
                     forwarded,
                 ))
             }
+            // A record can contain the result of a borrowing operation without
+            // storing the alias itself. Every field must satisfy the same
+            // proof; a direct alias field escapes and is rejected below.
+            Expr::Record(fields) => Some(Expr::Record(
+                fields
+                    .iter()
+                    .map(|field| self.forward_borrowed_alias(local, value, field, after))
+                    .collect::<Option<Vec<_>>>()?,
+            )),
             _ => None,
         }
     }
@@ -2099,6 +2108,41 @@ mod tests {
                 field == 1,
                 "{body:?}"
             );
+        }
+    }
+
+    #[test]
+    fn borrowed_alias_in_record_calculations_cannot_escape_as_a_field() {
+        for (fields, retained) in [
+            (
+                vec![
+                    Expr::Call(1, vec![Expr::Local(1)]),
+                    Expr::Const(Value::I64(42)),
+                ],
+                false,
+            ),
+            (
+                vec![Expr::Call(1, vec![Expr::Local(1)]), Expr::Local(1)],
+                true,
+            ),
+        ] {
+            let mut p = borrowed_alias_program(Expr::Local(0));
+            p.funcs[0].locals[2] = MT::Record(vec![
+                ("0".into(), MT::con("std::I64")),
+                (
+                    "1".into(),
+                    MT::con(if retained { "std::String" } else { "std::I64" }),
+                ),
+            ]);
+            let Body::Expr(Expr::Let(_, _, body)) = &mut p.funcs[0].body else {
+                unreachable!()
+            };
+            let Expr::Let(_, computation, _) = &mut **body else {
+                unreachable!()
+            };
+            **computation = Expr::Record(fields);
+            let (body, _) = counted(&p);
+            assert_eq!(format!("{body:?}").contains("Let(1,"), retained, "{body:?}");
         }
     }
 
