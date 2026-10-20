@@ -2,8 +2,8 @@
 
 ## Next action
 
-Next: finish the tuple-match simplification on `simplify-local-match-inputs`.
-Publish one draft PR, run the channel count/effect checks, inspect actual C and
+Next: finish [draft PR #178](https://github.com/e6qu/fun-with-pipes/pull/178) on
+`simplify-local-match-inputs`. Verify the batched test repair in a new channel count/effect run, inspect actual C and
 binaries, then run all nine production gates and documentation on the final head.
 Fix all failures. Squash merge only after acceptance, with one explicit subject
 of at most 80 characters and an empty body.
@@ -49,6 +49,17 @@ only the new example's raw interpreter syntax/output (0.95s): `5`, `0`, `left`,
 `right`, `4`. Its first syntax attempt used unsupported named patterns; corrected
 to tacit holes before publication. This older binary does not verify new compiler
 behavior. Current code, native cleanup and count savings still need runner checks.
+Both complete logs for first run `39394019143` at `a3baa690` were audited.
+The only failure on each host was the new test enabling tracing stress for ARC;
+the runtime correctly rejected that setting. The repair explicitly enables GC
+stress/verification only in tracing mode, with reuse checks in both. It also adds
+the direct IR regression for an ignored trapping constant. All other completed
+targets and both count steps passed, but the failed workflow is not acceptance.
+Exploratory ARM64 counts show fresh-function allocations 5 → 2 and shared-function
+allocations 3 → 1, each with one fewer retain; other cases are unchanged. Repeat
+and audit on a passing run before publishing those as the selected result.
+The raw-example audit passes (5.40s); its temporary script first needed a blank-line
+parsing correction. No compiler or runtime change was needed for either check fix.
 
 Use `python3 scripts/local-guard.py COMMAND...` for focused serial checks.
 No local build was run. Full builds, native compilation, suites and measurements

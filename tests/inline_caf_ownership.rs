@@ -118,6 +118,71 @@ fn matching_a_local_callback_record_exposes_the_direct_call() {
 }
 
 #[test]
+fn ignored_constant_in_a_matched_tuple_still_evaluates() {
+    let integer = MT::con("std::I64");
+    let record = MT::Record(vec![
+        ("0".into(), integer.clone()),
+        ("1".into(), integer.clone()),
+    ]);
+    let mut program = Program {
+        funcs: vec![
+            Func {
+                name: "div".into(),
+                arity: 2,
+                locals: vec![integer.clone(), integer.clone()],
+                ty: MT::Fun(
+                    Box::new(integer.clone()),
+                    Box::new(MT::Fun(
+                        Box::new(integer.clone()),
+                        Box::new(integer.clone()),
+                    )),
+                ),
+                body: Body::Prim("prim.div".into()),
+            },
+            Func {
+                name: "bad".into(),
+                arity: 0,
+                locals: vec![],
+                ty: integer.clone(),
+                body: Body::Expr(Expr::Call(
+                    0,
+                    vec![Expr::Const(Value::I64(0)), Expr::Const(Value::I64(1))],
+                )),
+            },
+            Func {
+                name: "discard".into(),
+                arity: 1,
+                locals: vec![integer.clone(), record],
+                ty: MT::Fun(Box::new(integer.clone()), Box::new(integer)),
+                body: Body::Expr(Expr::Let(
+                    1,
+                    Box::new(Expr::Record(vec![Expr::Func(1), Expr::Local(0)])),
+                    Box::new(Expr::Match(
+                        Box::new(Expr::Local(1)),
+                        vec![(
+                            Pat::Record(vec![Pat::Wild, Pat::Wild]),
+                            Expr::Const(Value::I64(17)),
+                        )],
+                    )),
+                )),
+            },
+        ],
+        ..Program::default()
+    };
+    fwp::ir::check_locals(&program).unwrap();
+    let reference =
+        fwp::interp::Interp::new(&program, Box::new(Vec::new())).call(2, vec![Value::I64(7)]);
+    assert!(
+        matches!(&reference, Err(fwp::interp::Ctl::Trap(message)) if message.contains("division by zero"))
+    );
+    fwp::opt::optimize(&mut program);
+    fwp::ir::check_locals(&program).unwrap();
+    let actual =
+        fwp::interp::Interp::new(&program, Box::new(Vec::new())).call(2, vec![Value::I64(7)]);
+    assert_eq!(format!("{actual:?}"), format!("{reference:?}"));
+}
+
+#[test]
 fn ignored_caf_arguments_still_trap_in_evaluation_order() {
     let dir = std::env::temp_dir().join(format!("fwp-inline-caf-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
@@ -334,9 +399,11 @@ main = [
                 .output()
                 .unwrap();
             assert!(build.status.success(), "{build:?}");
+            let stress = if memory == "tracing" { "1" } else { "0" };
             let native = Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
+                .env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
                 .env("FWP_REUSE_VERIFY", "1")
                 .output()
                 .unwrap();

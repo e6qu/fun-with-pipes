@@ -800,7 +800,32 @@ uses that local directly in the continuation. It keeps the action first, without
 copying or dropping it, and preserves existing resource-lifetime boundaries.
 This exposes field-only uses to existing direct-call specialization. The
 [channel experiment](measurements/channel-transfer-protocol.md#removing-a-temporary-tuple-after-tap)
-removes a temporary argument tuple; its loop-state tuple still allocates.
+removes a temporary argument tuple. [Later loop-state lowering](measurements/channel-loop-state.md)
+also removes the repeated state-tuple allocation for these programs.
+
+Local tuple matching can expose the same direct calls. Consider:
+
+```fwp
+choose : (I64 -> I64, Option[I64]) -> I64
+choose = match
+    (_, Some _) -> id
+    (_, None) -> const 0
+```
+
+Each `_` supplies one argument to its arm. In the first arm, `id` returns the
+function from the first hole, which is then applied to the number from the
+second hole. Thus `(add 1, Some 4) | choose` produces `5`; `(add 1, None) | choose`
+produces `0`. The second arm ignores its one function argument through `const`.
+
+The current tuple-match extension binds nontrivial fields once, in source order,
+before matching the Option directly. This exposes the known `add 1` callback and
+avoids constructing a tuple only to inspect it. A field ignored by the selected
+arm still evaluates: an effect must run and a trapping constant must still trap.
+Checked local types preserve nominal aggregates and their child cleanup rules.
+The transformation applies only when at most one tuple field is tested; complete
+tuple uses, multiple tested fields and protected original resource bindings keep
+their existing lowering. [The handoff](development-state.md) records validation;
+source simplification alone does not prove allocation or timing improvements.
 
 The F64 matrix path uses blocks of 32 over contiguous arrays, checks dimensions
 once and allocates one output. Each element accumulates in ascending inner-index

@@ -83,8 +83,8 @@ passed in PR #175; the count experiment alone does not establish cleanup safety.
 
 The [next loop-state experiment](channel-loop-state.md) measures the remaining
 state tuple separately. Focused ownership checks pass on all six native platforms
-and both WASI hosts; its full delivery acceptance is tracked in the
-[handoff](../development-state.md).
+and both WASI hosts. Its full delivery acceptance is recorded in
+[PR #176 history](../roadmap-history.md#loop-state-and-known-function-calls-pr-176).
 
 ## Removing a temporary tuple after `tap`
 
