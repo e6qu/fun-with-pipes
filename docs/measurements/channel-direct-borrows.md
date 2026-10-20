@@ -86,6 +86,9 @@ run reproduces all earlier diagnostic profiles and all 100 saved code hashes.
 Tests now cover cancellation at borrowed-worker entry and ARC cleanup after a
 channel exchange fails, at O0/O1/O2 with stack placement enabled and disabled.
 
-The broader Apple Silicon job passes 231 checks. Other native and WebAssembly
-jobs, followed by all final production gates, remain required. Follow the
-[current handoff](../development-state.md) for acceptance.
+Broader Apple Silicon and Linux ARM64 jobs pass 231 checks each at that source.
+A subsequent tightening also requires callers to keep plain counted inputs
+after the call, avoiding prolonged last-use storage. These measurements must
+be reproduced for that stricter source. Its final production matrix includes
+the broader ownership coverage, including three added Windows targets.
+Follow the [current handoff](../development-state.md) for acceptance.

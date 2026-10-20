@@ -978,11 +978,13 @@ needed by an earlier borrowed argument.
 
 The proof starts with primitive borrows and extends through nonrecursive direct
 calls. Returning or storing a counted argument, unknown calls, resource scopes,
-function-value uses and external entries prevent selection. Flat record views
-also need a separate proof that the record cannot escape. Channels require every
-live caller to keep that same channel after the call: its hidden native callback
-context can have cleanup effects even when its element type is plain data.
-Dead functions do not change live call contracts.
+function-value uses and external entries prevent selection. Every live caller
+must already need the same counted values after the call; otherwise borrowing
+could prolong an input's lifetime and increase peak memory. Flat record views
+also need a separate proof that the record cannot escape. For channels, keeping
+the same owner also preserves destruction of hidden native callback context,
+even when the element type is plain data. Dead functions do not change live
+call contracts.
 
 The caller keeps borrowed values and original record boxes visible to tracing
 through the call, and remains responsible for failure and cancellation cleanup.

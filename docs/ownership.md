@@ -292,7 +292,9 @@ This branch implements direct-call borrowing; validation is in progress in the
 [handoff](development-state.md). A **direct call** names a function known to the
 compiler. When that function uses an argument only during the call and does not
 store or return its counted storage, the caller can keep ownership throughout
-the call.
+the call. Every caller must already need the same counted values afterward.
+Last-use inputs retain their consuming convention, so borrowing does not keep
+their storage alive longer than the original callee needed it.
 
 For example, in the [text-channel program](../tests/fixtures/channel_transfer_text.fwp),
 `exchange` takes a tuple containing a channel and an integer. It creates a string,

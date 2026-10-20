@@ -4,10 +4,9 @@
 
 Next: finish [PR #179](https://github.com/e6qu/fun-with-pipes/pull/179) on
 `move-matched-variant-owners`, head `82bcf83f765e072afa6431cbf196532d433e3cad`.
-Production `39417913864` has passing benchmarks, both ARM macOS jobs and
-Intel macOS GC stress; its other five native jobs are running without reported
-failure. Documentation
-`39417913929` passes. Five completed logs are audited in
+Production `39417913864` has passing benchmarks, all four macOS jobs,
+Linux ARM64 and Windows ARM64. Linux AMD64 and Windows AMD64 remain running.
+Documentation `39417913929` passes. Eight completed logs are audited in
 `/private/tmp/fwp-179-acceptance.json`. Audit every completed log
 with `/private/tmp/fwp-audit-179.py`; fix every failure before squash merge.
 Require all nine production jobs and documentation on this exact head. Use an
@@ -74,22 +73,36 @@ free disk, target data below 2 GiB and sampled aggregate RSS below 1 GiB.
 ## Prepared direct-call borrowing
 
 `/private/tmp/fwp-direct-borrows`, branch `borrow-direct-function-arguments`,
-contains implementation `ad3cd792c079bac8d04bc1dcab69936eb62e97e5`, preserved by
+contains the next change. Its previous measured source is
+`ad3cd792c079bac8d04bc1dcab69936eb62e97e5`, preserved by
 `roadmap/revision-direct-borrows-ad3cd792`. No second PR is open.
 Focused run `39423983460` passes 185 checks on each Linux host, none ignored or
 filtered. Both complete logs are audited in
 `/private/tmp/fwp-direct-borrow-repair-audit.json`. Broader run `39424662531`
-passes 231 checks on ARM macOS; the other five native and two WebAssembly jobs
-remain pending. Audit all completed logs with
-`/private/tmp/fwp-audit-direct-borrow-proof.py` before publishing the next PR.
+passes 231 checks each on ARM macOS and Linux ARM64. Its remaining jobs were
+requested cancelled because the tightening below supersedes that source.
+Audit final cancellation with `/private/tmp/fwp-audit-direct-borrow-proof.py`.
+Those partial checks do not establish full platform acceptance.
+
+A subsequent review found that borrowing a last-use plain input could prolong
+its storage beyond the callee's last use. The tightening requires
+every live caller to need the same counted values after the call, for all eligible
+parameter types. Scalar-only tuples keep their ordinary field convention.
+Regression cases cover String as well as Channel fields and transitive calls.
+Three previously absent broader targets (`borrowed_callbacks`,
+`channel_cycle_ownership`, `task_ownership`) are added to Windows production.
+The final nine production jobs now cover every broader native target, and Linux
+production retains all WASI cases; do not rerun a duplicate extra matrix.
+Run the stricter source through both focused measurement jobs, then finish the
+report and open/ready the next PR only after #179 merges. All final-head
+production jobs and documentation remain mandatory before its squash merge.
 
 The compiler infers caller-owned arguments for eligible nonrecursive direct
 workers. One contract drives lowering, ownership verification, entry ticks and
 failure cleanup. Flat tuple views need an independent nonescape proof and keep
 original boxes visible to tracing. Generic entries still consume their inputs.
 Returns/stores, function-value uses, resource scopes, recursive functions and
-unsupported representations retain existing ownership. Channels additionally
-require every live caller to keep that exact channel after the call; later use
+unsupported representations retain existing ownership. Every live caller must keep the same counted values after the call; later use
 of another tuple field is insufficient. This preserves hidden native sink-context
 destruction timing without admitting new resource captures or channel cycles.
 
@@ -110,18 +123,20 @@ and 20 ordinary binaries were audited using `scripts/summarize-channel-costs.py`
 allocations and peak charge; the four other cases' ordinary binaries are unchanged.
 Actual fresh-text exchange frames fall from 216 to 40 bytes on AMD64 and 224 to
 64 on ARM64, excluding callees. There is no elapsed-time or C/Rust comparison.
-The preparation worktree contains the new `docs/measurements/channel-direct-borrows.md`
+Documentation commit `ac4424a6` is published on the preparation branch with the new `docs/measurements/channel-direct-borrows.md`
 report, its raw JSON and updated ownership/design/pipeline/benchmark explanations.
-Documentation-only changes extend the passing source; compiler/test/workflow
-files match it. The next PR description is prepared in
-`/private/tmp/fwp-direct-borrow-pr-body.md` and still needs final acceptance links. No local build was run. Guarded repair formatting
+These measurements describe `ad3cd792`; reproduce them for the stricter
+current implementation before finalizing the next PR. The next PR description is prepared in
+`/private/tmp/fwp-direct-borrow-pr-body.md` and still needs final acceptance links. Keep the source stable while healthy
+gates run; update this handoff locally as results arrive. No local build was run. Guarded repair formatting
 passes (1.75s), and the documentation audit passes all 69 Markdown files after staging the new
 report (2.38s).
 
-Next: finish all broader logs; merge PR #179 only after its exact-head gates pass.
-Then record its accepted tree, rebase this preparation onto the actual merge,
-finish the current report/handoff, run the documentation audit, and open the
-next single PR. Keep all nine production gates and documentation for its final head.
+Next: publish and validate the lifetime tightening; merge PR #179 only after
+its exact-head gates pass. Record its accepted tree, rebase this preparation
+onto the actual merge, finish the report/handoff and documentation audit, then
+open the next single PR. A draft may precede the focused result; mark it ready
+only when the measurements and final docs are included, to start production once.
 
 ## Roadmap status
 

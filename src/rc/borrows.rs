@@ -101,7 +101,12 @@ fn parameter_type(prog: &Program, ty: &MT) -> bool {
     }
     super::needs_rc(&prog.shapes, ty)
         && match record_fields(&prog.shapes, ty) {
-            Some(fields) => fields.iter().all(|(_, ty)| leaf(prog, ty)),
+            Some(fields) => {
+                fields.iter().all(|(_, ty)| leaf(prog, ty))
+                    && fields
+                        .iter()
+                        .any(|(_, ty)| super::needs_rc(&prog.shapes, ty))
+            }
             None => leaf(prog, ty),
         }
 }
@@ -157,24 +162,21 @@ fn reads(e: &Expr, out: &mut BTreeSet<ReadPath>) {
     }
 }
 
-/// Channel destruction may release a native sink's hidden context. Borrow it
-/// only when every source caller keeps that same channel past the call, so the
-/// removed callee owner could never have been its last owner. Merely reading
-/// another field of the same tuple later is insufficient after field splitting.
-fn continuing_channels(prog: &Program, live: &[bool]) -> Vec<Vec<bool>> {
+/// Borrow only when every caller keeps the same counted value past the call.
+/// Otherwise borrowing could prolong a plain input's lifetime beyond its last
+/// callee use and raise peak memory. For channels this also preserves observable
+/// destruction of a native sink's hidden context. Reading another tuple field
+/// later is insufficient after field splitting.
+fn continuing_owners(prog: &Program, live: &[bool]) -> Vec<Vec<bool>> {
     fn retained(prog: &Program, ty: &MT, arg: &Expr, after: &BTreeSet<ReadPath>) -> bool {
-        if matches!(ty, MT::Con(name, _) if name == "std::Channel") {
-            return read_path(arg).is_some_and(|(local, fields)| {
-                after
-                    .iter()
-                    .any(|(l, prefix)| *l == local && fields.starts_with(prefix))
-            });
+        if !super::needs_rc(&prog.shapes, ty) {
+            return true;
         }
         if let Some(fields) = record_fields(&prog.shapes, ty) {
             return fields.iter().enumerate().all(|(index, (_, ty))| {
                 // Candidate records are flat. Nested records never qualify.
-                if !matches!(ty, MT::Con(name, _) if name == "std::Channel") {
-                    return true;
+                if record_fields(&prog.shapes, ty).is_some() {
+                    return false;
                 }
                 if let Expr::Record(values) = arg {
                     values
@@ -190,7 +192,11 @@ fn continuing_channels(prog: &Program, live: &[bool]) -> Vec<Vec<bool>> {
                 }
             });
         }
-        true
+        read_path(arg).is_some_and(|(local, fields)| {
+            after
+                .iter()
+                .any(|(l, prefix)| *l == local && fields.starts_with(prefix))
+        })
     }
     fn visit(prog: &Program, e: &Expr, after: &BTreeSet<ReadPath>, kept: &mut [Vec<bool>]) {
         match e {
@@ -347,7 +353,7 @@ pub(crate) fn infer(
         .collect();
     let mut contracts: BTreeMap<FuncId, Vec<Local>> = BTreeMap::new();
     let noescape = crate::escape::params(prog);
-    let channels = continuing_channels(prog, live);
+    let kept = continuing_owners(prog, live);
     // Start with known primitive borrows. A direct caller can qualify after
     // its callee has a proof; cycles never supply their own justification.
     loop {
@@ -356,7 +362,7 @@ pub(crate) fn infer(
             for local in 0..f.arity {
                 if contracts.get(&id).is_some_and(|ps| ps.contains(&local))
                     || !parameter_type(prog, &f.locals[local as usize])
-                    || !channels[id][local as usize]
+                    || !kept[id][local as usize]
                     || (record_fields(&prog.shapes, &f.locals[local as usize]).is_some()
                         && !noescape[id][local as usize])
                 {
@@ -437,11 +443,28 @@ mod tests {
         };
         assert!(matches!(**tail, Expr::Call(1, _)), "{body:?}");
         super::super::ownership_liveness(&p, &p.funcs[0], &body, &locals, &[0]).unwrap();
+
+        let scalar = program(
+            Expr::Field(Box::new(Expr::Local(0)), 0),
+            MT::Record(vec![("0".into(), MT::con("std::I64"))]),
+        );
+        assert!(
+            infer(&scalar, &[false, true], &[true, false]).is_empty(),
+            "scalar-only fields need no borrowed owner or prolonged record lifetime"
+        );
     }
 
     #[test]
     fn direct_call_chain_requires_each_callees_proof() {
-        let mut p = program(Expr::Call(2, vec![Expr::Local(0)]), MT::con("std::String"));
+        let mut p = program(
+            Expr::Let(
+                2,
+                Box::new(Expr::Call(2, vec![Expr::Local(0)])),
+                Box::new(Expr::Call(1, vec![Expr::Local(0)])),
+            ),
+            MT::con("std::String"),
+        );
+        p.funcs[0].locals.push(MT::con("std::I64"));
         let mut callee = p.funcs[0].clone();
         callee.body = Body::Expr(Expr::Call(1, vec![Expr::Local(0)]));
         p.funcs.push(callee);
@@ -450,6 +473,11 @@ mod tests {
             BTreeMap::from([(0, vec![0]), (2, vec![0])])
         );
         p.funcs[2].body = Body::Expr(Expr::Local(0));
+        p.funcs[2].ty = MT::Fun(
+            Box::new(MT::con("std::String")),
+            Box::new(MT::con("std::String")),
+        );
+        p.funcs[0].locals[2] = MT::con("std::String");
         assert!(infer(&p, &[false, true, false], &[true, true, true]).is_empty());
     }
 
@@ -517,47 +545,55 @@ mod tests {
     }
 
     #[test]
-    fn channel_borrows_require_that_same_field_after_every_call() {
-        let channel = MT::Con("std::Channel".into(), vec![MT::con("std::String")]);
-        let pair = MT::Record(vec![
-            ("0".into(), channel.clone()),
-            ("1".into(), MT::con("std::I64")),
-        ]);
-        for (later, result, expected) in [
+    fn borrows_require_that_same_field_after_every_call() {
+        for (input, symbol, output) in [
+            (MT::con("std::String"), "string.length", MT::con("std::I64")),
             (
-                Expr::Field(Box::new(Expr::Local(0)), 0),
-                channel.clone(),
-                true,
+                MT::Con("std::Channel".into(), vec![MT::con("std::String")]),
+                "channel.close",
+                MT::unit(),
             ),
-            (Expr::Local(0), pair.clone(), true),
-            (
-                Expr::Field(Box::new(Expr::Local(0)), 1),
-                MT::con("std::I64"),
-                false,
-            ),
-            (Expr::Const(Value::unit()), MT::unit(), false),
         ] {
-            let mut p = program(Expr::Call(1, vec![Expr::Local(0)]), channel.clone());
-            p.funcs[0].ty = MT::Fun(Box::new(channel.clone()), Box::new(MT::unit()));
-            p.funcs[1].locals = vec![channel.clone()];
-            p.funcs[1].ty = p.funcs[0].ty.clone();
-            p.funcs[1].body = Body::Prim("channel.close".into());
-            p.funcs.push(Func {
-                name: "caller".into(),
-                arity: 1,
-                locals: vec![pair.clone(), MT::unit()],
-                ty: MT::Fun(Box::new(pair.clone()), Box::new(result)),
-                body: Body::Expr(Expr::Let(
-                    1,
-                    Box::new(Expr::Call(
-                        0,
-                        vec![Expr::Field(Box::new(Expr::Local(0)), 0)],
+            let pair = MT::Record(vec![
+                ("0".into(), input.clone()),
+                ("1".into(), MT::con("std::I64")),
+            ]);
+            for (later, result, expected) in [
+                (
+                    Expr::Field(Box::new(Expr::Local(0)), 0),
+                    input.clone(),
+                    true,
+                ),
+                (Expr::Local(0), pair.clone(), true),
+                (
+                    Expr::Field(Box::new(Expr::Local(0)), 1),
+                    MT::con("std::I64"),
+                    false,
+                ),
+                (Expr::Const(Value::unit()), MT::unit(), false),
+            ] {
+                let mut p = program(Expr::Call(1, vec![Expr::Local(0)]), input.clone());
+                p.funcs[0].ty = MT::Fun(Box::new(input.clone()), Box::new(output.clone()));
+                p.funcs[1].locals = vec![input.clone()];
+                p.funcs[1].ty = p.funcs[0].ty.clone();
+                p.funcs[1].body = Body::Prim(symbol.into());
+                p.funcs.push(Func {
+                    name: "caller".into(),
+                    arity: 1,
+                    locals: vec![pair.clone(), output.clone()],
+                    ty: MT::Fun(Box::new(pair.clone()), Box::new(result)),
+                    body: Body::Expr(Expr::Let(
+                        1,
+                        Box::new(Expr::Call(
+                            0,
+                            vec![Expr::Field(Box::new(Expr::Local(0)), 0)],
+                        )),
+                        Box::new(later),
                     )),
-                    Box::new(later),
-                )),
-            });
-            let contracts = infer(&p, &[false, true, true], &[true, true, true]);
-            assert_eq!(contracts.contains_key(&0), expected, "{p:?}");
+                });
+                let contracts = infer(&p, &[false, true, true], &[true, true, true]);
+                assert_eq!(contracts.contains_key(&0), expected, "{p:?}");
+            }
         }
     }
 }
