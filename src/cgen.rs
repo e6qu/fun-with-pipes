@@ -3358,7 +3358,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     self.line("{");
                     self.indent += 1;
                     self.match_pattern(scrut, pat, &s, &next);
-                    let known = self.arm_start(scrut, pat, &before);
+                    let (known, body) = self.arm_start(scrut, pat, &before, body);
                     let fs = self.expr_fields(body, n);
                     self.arm_end(known, &mut after);
                     for (r, f) in rs.iter().zip(fs) {
@@ -3774,7 +3774,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     self.line("{");
                     self.indent += 1;
                     self.match_pattern(scrut, pat, &s, &next);
-                    let known = self.arm_start(scrut, pat, &before);
+                    let (known, body) = self.arm_start(scrut, pat, &before, body);
                     let (tag, fs) = self.expr_variant(body, m, ty);
                     self.arm_end(known, &mut after);
                     self.line(&format!("{}.tag = {};", u, tag));
@@ -4632,17 +4632,50 @@ impl<'g, 'p> FnGen<'g, 'p> {
 
     /// An arm starts: every token is as before the match, and a pattern
     /// with a constructor tells which one the scrutinee holds.
-    fn arm_start(&mut self, scrut: &Expr, pat: &Pat, before: &[bool]) -> Option<Local> {
+    fn arm_start<'e>(
+        &mut self,
+        scrut: &Expr,
+        pat: &Pat,
+        before: &[bool],
+        body: &'e Expr,
+    ) -> (Option<Local>, &'e Expr) {
         for (t, u) in self.tokens.iter_mut().zip(before) {
             t.used = *u;
         }
-        match (scrut, pat) {
+        let known = match (scrut, pat) {
             (Expr::Local(x), Pat::Construct(tag, _)) => {
                 self.known_tag.insert(*x, *tag);
                 Some(*x)
             }
             _ => None,
+        };
+        // An unboxed variant already owns its single payload. When the RC
+        // sequence retains that field and immediately drops the variant,
+        // transfer its owner instead. No operation or other child intervenes.
+        // Keep the original nodes: later unwind plans use their addresses.
+        let (Expr::Local(parent), Pat::Construct(_, fields), Expr::Dup(kept, after_dup)) =
+            (scrut, pat, body)
+        else {
+            return (known, body);
+        };
+        let [Pat::Bind(field)] = fields.as_slice() else {
+            return (known, body);
+        };
+        if self.g.reuse
+            && kept == field
+            && parent != field
+            && self.vlocals.contains_key(parent)
+            && !self.resource_slots.contains_key(parent)
+            && !self.resource_slots.contains_key(field)
+        {
+            if let Expr::Drop(dropped, rest) = &**after_dup {
+                if dropped == parent {
+                    self.line("/* move matched variant payload */");
+                    return (known, rest);
+                }
+            }
         }
+        (known, body)
     }
 
     fn arm_end(&mut self, known: Option<Local>, after: &mut [bool]) {
@@ -6011,7 +6044,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     self.line("{");
                     self.indent += 1;
                     self.match_pattern(scrut, pat, &s, &next);
-                    let known = self.arm_start(scrut, pat, &before);
+                    let (known, body) = self.arm_start(scrut, pat, &before, body);
                     let bv = self.expr(body);
                     self.arm_end(known, &mut after);
                     self.line(&format!("{} = {};", r, bv));

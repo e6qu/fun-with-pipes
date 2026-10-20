@@ -462,6 +462,16 @@ its existing child-owner rules. The accepted tests include aliases, pointer-like
 scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
 count operations; they do not prove every record or call allocation-free.
 
+The prepared variant-matching change applies the same move principle to a
+constructor with one payload already held in local fields. If a match arm begins
+by retaining that payload and immediately releasing the variant, the payload can
+keep its existing owner. For example, consuming `Some text` can return `text`
+without increasing and immediately decreasing its count. Another live owner of
+`text` keeps its existing count. Boxed variants, multiple fields and protected
+resource slots retain their existing lowering. The compiler keeps the original
+remaining expression nodes so failure-cleanup plans still identify their scopes.
+This preparation needs native validation and measurement; see the [handoff](development-state.md).
+
 A function used as a value may receive a boxed record even when its compiled
 body accepts separate fields. The entry code reads those fields before calling
 that body. For a uniquely owned plain-data record, it transfers counted fields

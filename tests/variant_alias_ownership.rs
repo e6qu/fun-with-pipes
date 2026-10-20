@@ -284,3 +284,158 @@ main = "later" | choose (read-all () | string.length | eq 0) "first" "last" | ec
     }
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn matching_one_variant_payload_moves_its_owner_in_all_result_forms() {
+    let text = MT::con("std::String");
+    let outcome = MT::con("Single");
+    let pair = MT::Record(vec![
+        ("0".into(), text.clone()),
+        ("1".into(), MT::con("std::I64")),
+    ]);
+    let mut program = Program::default();
+    program.shapes.insert(
+        outcome.clone(),
+        TypeShape::Adt(vec![
+            ("Value".into(), vec![text.clone()]),
+            ("Empty".into(), vec![]),
+        ]),
+    );
+    program.funcs.push(Func {
+        name: "maker".into(),
+        arity: 1,
+        locals: vec![text.clone()],
+        ty: fun(std::slice::from_ref(&text), outcome.clone()),
+        body: Body::Expr(Expr::Construct(0, vec![Expr::Local(0)])),
+    });
+    for (name, result, selected, empty) in [
+        (
+            "value-holder",
+            text.clone(),
+            Expr::Local(2),
+            Expr::Const(Value::str("empty")),
+        ),
+        (
+            "record-holder",
+            pair,
+            Expr::Record(vec![Expr::Local(2), Expr::Const(Value::I64(17))]),
+            Expr::Record(vec![
+                Expr::Const(Value::str("empty")),
+                Expr::Const(Value::I64(0)),
+            ]),
+        ),
+        (
+            "variant-holder",
+            outcome.clone(),
+            Expr::Construct(0, vec![Expr::Local(2)]),
+            Expr::Construct(1, vec![]),
+        ),
+    ] {
+        program.funcs.push(Func {
+            name: name.into(),
+            arity: 1,
+            locals: vec![text.clone(), outcome.clone(), text.clone()],
+            ty: fun(std::slice::from_ref(&text), result),
+            body: Body::Expr(Expr::Let(
+                1,
+                Box::new(Expr::Call(0, vec![Expr::Local(0)])),
+                Box::new(Expr::Match(
+                    Box::new(Expr::Local(1)),
+                    vec![
+                        (Pat::Construct(0, vec![Pat::Bind(2)]), selected),
+                        (Pat::Construct(1, vec![]), empty),
+                    ],
+                )),
+            )),
+        });
+    }
+    program.funcs.push(Func {
+        name: "main".into(),
+        arity: 0,
+        locals: vec![],
+        ty: text,
+        body: Body::Expr(Expr::Call(1, vec![Expr::Const(Value::str("value"))])),
+    });
+    program.main = Some(4);
+    fwp::ir::check_locals(&program).unwrap();
+    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(Vec::new()));
+    assert_eq!(
+        interpreter.call(1, vec![Value::str("value")]).unwrap(),
+        Value::str("value")
+    );
+    assert_eq!(
+        interpreter.call(2, vec![Value::str("value")]).unwrap(),
+        Value::Record(vec![Value::str("value"), Value::I64(17)].into())
+    );
+    assert_eq!(
+        interpreter.call(3, vec![Value::str("value")]).unwrap(),
+        Value::Data(0, vec![Value::str("value")].into())
+    );
+    let emitted = fwp::cgen::generate(&program).unwrap();
+    let marker = "/* move matched variant payload */";
+    assert_eq!(
+        emitted.matches(marker).count(),
+        3,
+        "scalar, record and variant result generators must all transfer the field"
+    );
+    let runtime = emitted.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let control = runtime.replace(
+        marker,
+        "fwp_rc_dup(l2); /* deliberately add a lost payload owner */",
+    );
+    let probe = r#"
+static int dead(V v) { return fwp_reuse_verify ? STR(v)->len==0 : *fwp_rc_slot(v)==0; }
+int main(void) {
+ fwp_gc_start(__builtin_frame_address(0)); fwp_fns=fwp_fn_table; fwp_init_consts();
+ for(int mode=0;mode<3;mode++) for(int alias=0;alias<2;alias++) {
+  V value=fwp_rc_fresh(fwp_str_new("value",5));
+  if(alias) fwp_rc_dup(value);
+  V packed=mode==0?f1(value):mode==1?f2(value):f3(value);
+  V result=mode==0?packed:OBJ(packed)->f[0];
+  if(result!=value||STR(result)->len!=5||memcmp(STR(result)->d,"value",5))return 1;
+  if(*fwp_rc_slot(result)!=1+alias)return 2;
+  // Move the generic result's payload into this probe, then free its header.
+  if(mode) fwp_rc_free_obj(packed);
+  if(alias&&fwp_rc_release_last(value))return 3;
+  if(!fwp_rc_release_last(result))return 4;
+  fwp_rc_free_obj(result);
+  if(!dead(result)||fwp_cleanups)return 5;
+ }
+ return 0;
+}
+"#;
+    let dir = fwp::cgen::TempDir::new("variant-payload-move").unwrap();
+    let exe = dir.join("probe.exe");
+    for optimization in ["-O0", "-O2"] {
+        fwp::cgen::compile_c(&format!("{control}\n{probe}"), &exe, optimization).unwrap();
+        let negative = Command::new(&exe)
+            .env_remove("FWP_GC")
+            .env("FWP_GC_STRESS", "1")
+            .env("FWP_GC_VERIFY", "1")
+            .env("FWP_REUSE_VERIFY", "1")
+            .output()
+            .unwrap();
+        assert_eq!(
+            negative.status.code(),
+            Some(2),
+            "an extra payload owner must be detected: {negative:?}"
+        );
+        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, optimization).unwrap();
+        for poison in ["0", "1"] {
+            let actual = Command::new(&exe)
+                .env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", "1")
+                .env("FWP_GC_VERIFY", "1")
+                .env("FWP_REUSE_VERIFY", poison)
+                .output()
+                .unwrap();
+            assert!(
+                actual.status.success(),
+                "{optimization}, poison {poison}: {actual:?}"
+            );
+        }
+    }
+}
