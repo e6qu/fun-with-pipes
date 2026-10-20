@@ -117,6 +117,13 @@ trap = fork concat (tap echo | div 0 | show) (add 1 | tap echo | show) | string.
                     "{name}/{memory}/{opt}"
                 );
             }
+            if let Some(root) = std::env::var_os("FWP_INTEGER_LENGTH_ARTIFACTS") {
+                let root = std::path::Path::new(&root);
+                std::fs::create_dir_all(root).unwrap();
+                let label = format!("semantics-{memory}{opt}");
+                std::fs::write(root.join(format!("{label}.c")), &code).unwrap();
+                std::fs::copy(&binary, root.join(format!("{label}.exe"))).unwrap();
+            }
         }
     }
 }
@@ -205,6 +212,15 @@ main = range 0 4096 | map line | sum | echo
                 assert_eq!(result.stdout, raw.stdout, "{memory}/{opt}");
                 if status == 0 {
                     assert_eq!(result.stderr, raw.stderr, "{memory}/{opt}");
+                }
+                if let Some(root) = std::env::var_os("FWP_INTEGER_LENGTH_ARTIFACTS") {
+                    let root = std::path::Path::new(&root);
+                    std::fs::create_dir_all(root).unwrap();
+                    let label = format!("allocation-check-{memory}{opt}-exit-{status}");
+                    std::fs::write(root.join(format!("{label}.c")), candidate).unwrap();
+                    std::fs::copy(&binary, root.join(format!("{label}.exe"))).unwrap();
+                    std::fs::write(root.join(format!("{label}.stdout")), &result.stdout).unwrap();
+                    std::fs::write(root.join(format!("{label}.stderr")), &result.stderr).unwrap();
                 }
             }
         }

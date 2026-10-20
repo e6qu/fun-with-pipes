@@ -51,7 +51,7 @@ fn target(
         if operation == Operation::LengthSum {
             if let Some(id) = funcs.iter().position(|function| {
                 if function.arity != 2
-                    || !matches!(&function.body, Body::Prim(name) if name == "add")
+                    || !matches!(&function.body, Body::Prim(name) if name == "prim.add")
                 {
                     return false;
                 }
@@ -75,8 +75,8 @@ fn target(
                 integer,
             ),
             Operation::LengthSum => (
-                "add",
-                "add",
+                "prim.add",
+                "prim.add",
                 vec![integer.clone(), integer.clone()],
                 integer,
             ),

@@ -1,0 +1,6 @@
+# Count decimal characters without keeping the displayed text.
+# C and Rust peers count digits directly, using checked multiplication and sums.
+line : I64 -> I64
+line = fork concat show (mul 3 | show) | concat "#" | string.length
+
+main = range 0 2000000 | map line | sum | echo
