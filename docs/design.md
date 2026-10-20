@@ -618,8 +618,9 @@ records production acceptance in PR #159.
 
 The server keeps argument and typed-cleanup records on the stack,
 calls each compiled method directly, and releases its arguments, result or error
-through concrete generated destructors. Native output channels borrow sent values
-and embed their callback payload after the channel header. Queue and callback
+through concrete generated destructors. A typed send consumes a message owner;
+native output callbacks borrow that value only for the duration of the callback
+and keep their callback payload after the channel header. Queue and callback
 cleanup share alternative header fields; sends retain their direct callback
 pointer. The [ownership guide](ownership.md) describes the lifetime rules, and
 [history](roadmap-history.md) records production acceptance in PR #160. The next

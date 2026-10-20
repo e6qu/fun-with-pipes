@@ -48,7 +48,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                 assert_eq!(code.matches(finish).count(), 1);
                 code = code.replace(finish, &format!("{finish}    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget_given != fwp_gc.budget) exit(193);\n"));
             }
-            let drop = "            c->owner.queue.drop(element);";
+            let drop = "            c->owner.queue_drop(element);";
             assert_eq!(code.matches(drop).count(), 1);
             let missing_drop = code.replace(drop, "            (void)element;");
             for opt in ["-O0", "-O2"] {
@@ -368,11 +368,10 @@ int main(void){
  for(int iteration=0;iteration<64;iteration++)for(int mode=0;mode<4;mode++){
   V value=fwp_rc_fresh(fwp_str_new("capture",7));
   V fn=fwp_rc_fresh(fwp_pap(GIVE,1,&value));
-  V ch=fwp_p_channel_make_owned(1,fwp_closure_drop,fwp_rc_dup);
+  V ch=fwp_p_channel_make_owned(1,fwp_closure_drop);
   if(mode==2)fwp_p_channel_close(ch);
-  if(fwp_p_channel_send_owned(ch,fn,fwp_rc_dup)!=(mode==2?FWP_FALSE:FWP_TRUE))return 191;
-  if(*fwp_rc_slot(fn)!=(mode==2?1:2)||*fwp_rc_slot(value)!=1)return 192;
-  fwp_closure_drop(fn);
+  if(fwp_p_channel_send_owned(ch,fn,fwp_closure_drop)!=(mode==2?FWP_FALSE:FWP_TRUE))return 191;
+  if(mode!=2&&(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(value)!=1))return 192;
   if(mode==0||mode==3){
    if(mode==3){
     fail_option=1;fwp_trap_recover=recover;fwp_trap_jb=&recovered;fwp_trap_cleanup=0;
@@ -395,7 +394,7 @@ int main(void){
 }
 "#.replace("GIVE", give);
     let code = format!("{runtime}\n{probe}");
-    let drop = "c->owner.queue.drop(element);";
+    let drop = "c->owner.queue_drop(element);";
     assert_eq!(code.matches(drop).count(), 1);
     let omitted = code.replace(drop, "(void)element;");
     for opt in ["-O0", "-O2"] {

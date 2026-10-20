@@ -738,7 +738,7 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
             assert_eq!(measured.matches(snapshot).count(), 1);
             let missing_state =
                 measured.replace(snapshot, "            /* omit finished state owner */");
-            let drop = "c->owner.queue.drop(element);";
+            let drop = "c->owner.queue_drop(element);";
             assert_eq!(measured.matches(drop).count(), 1);
             let missing_queue = measured.replace(drop, "(void)element;");
             let (retained_label, retained) = if fixture == "tasks" {

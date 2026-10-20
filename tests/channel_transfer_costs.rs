@@ -14,22 +14,22 @@ fn checked(command: &mut Command) -> Output {
 
 fn instrument(generated: &str) -> String {
     let mut code = client_allocations::instrument_client_allocations(generated);
-    let entry = "static V fwp_p_channel_send_owned(V ch, V x, void (*dup)(V)) {";
+    let entry = "static V fwp_p_channel_send_owned(V ch, V x, void (*drop)(V)) {";
     assert_eq!(code.matches(entry).count(), 1);
     code = code.replacen(entry, &format!("static uint64_t channel_calls, channel_accepted, channel_unique, channel_retains;\n{entry}\nif(client_active)channel_calls++;"), 1);
-    let retain = "                if (c->owner.queue.dup) c->owner.queue.dup(x);";
-    assert_eq!(code.matches(retain).count(), 1);
-    code = code.replacen(retain, &format!("                uint64_t before = client_retains;\n                uint8_t *payload_count = fwp_rc_slot(x);\n                if(client_active && payload_count && *payload_count == 1)channel_unique++;\n{retain}\n                if(client_active)channel_retains += client_retains - before;"), 1);
     // Restrict the accepted-send counter to this function; the older untyped
     // helper has the same buffer insertion and must not be counted twice.
     let start = code.find(entry).unwrap();
     let end = start + code[start..].find("\nstatic V fwp_chan_recv(").unwrap();
-    let body = &code[start..end];
+    let mut body = code[start..end].to_owned();
+    let ownership = "            uint8_t *count = fwp_rc_slot(ch);";
+    assert_eq!(body.matches(ownership).count(), 1);
+    body = body.replacen(ownership, &format!("            uint64_t before = client_retains;\n            uint8_t *payload_count = fwp_rc_slot(x);\n            if(client_active && payload_count && *payload_count == 1)channel_unique++;\n{ownership}"), 1);
     let inserted = "            c->len++;";
     assert_eq!(body.matches(inserted).count(), 1);
     let body = body.replacen(
         inserted,
-        &format!("{inserted}\n            if(client_active)channel_accepted++;"),
+        &format!("{inserted}\n            if(client_active){{channel_accepted++;channel_retains += client_retains - before;}}"),
         1,
     );
     code.replace_range(start..end, &body);

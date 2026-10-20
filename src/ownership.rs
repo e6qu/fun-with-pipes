@@ -359,7 +359,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "task.sleep" | "task.yield" | "task.cancelled" => (&[B], R, None, &[]),
         "task.cancel" => (&[B], R, None, &[]),
         "channel.make" | "channel.close" => (&[B], ResultOwnership::ChannelOperation, None, &[]),
-        "channel.send" => (&[B, B], ResultOwnership::ChannelOperation, None, &[]),
+        "channel.send" => (&[B, C], ResultOwnership::ChannelOperation, None, &[]),
         "trim" | "trim-start" | "trim-end" | "lower" | "upper" | "string.reverse" => {
             (&[B], ResultOwnership::FreshLeaf, None, &[])
         }

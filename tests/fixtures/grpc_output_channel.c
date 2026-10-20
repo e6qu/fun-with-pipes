@@ -2,8 +2,8 @@
  * request/connection it may outlive. Stages: success, closed channel, blocked
  * send cancellation, encode trap, request retain overflow, connection retain
  * overflow, and an independently retained value. */
-/* The six native targets had this 96-byte channel header before context cleanup. */
-_Static_assert(sizeof(fwp_chan)==96,"native channel header grew");
+/* Queue transfers no longer need a duplicate callback: save one pointer. */
+_Static_assert(sizeof(fwp_chan)==88,"native channel header has unexpected size");
 static int channel_stage,channel_encoded,channel_cancelled,channel_trapped;
 static V channel_value,channel_handle;
 static double channel_charge(void){return fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);}
@@ -20,12 +20,11 @@ static void channel_worker(void *arg,int cancelled){
  jmp_buf failure;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;
  if(!setjmp(failure)){
   fwp_cur->trap_jb=&failure;fwp_cur->trap_cleanup=fwp_cleanups;
-  fwp_value_owner channel={channel_handle,fwp_channel_drop},value={channel_value,channel_text_drop};
-  fwp_cleanup channel_cleanup,value_cleanup;
-  fwp_value_protect(&channel,&channel_cleanup);fwp_value_protect(&value,&value_cleanup);
-  V result=fwp_p_channel_send_owned(channel_handle,channel_value,fwp_rc_dup);
+  fwp_value_owner channel={channel_handle,fwp_channel_drop};
+  fwp_cleanup channel_cleanup;
+  fwp_value_protect(&channel,&channel_cleanup);
+  V result=fwp_p_channel_send_owned(channel_handle,channel_value,channel_text_drop);
   if(result!=(channel_stage==1?FWP_FALSE:FWP_TRUE))_Exit(233);
-  channel_text_drop(fwp_value_finish(&value,&value_cleanup));
   fwp_channel_drop(fwp_value_finish(&channel,&channel_cleanup));
  }else{
   channel_trapped++;

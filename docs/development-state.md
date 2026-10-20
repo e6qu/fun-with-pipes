@@ -12,9 +12,17 @@ empty body. Verify the resulting tree/message before cancelling redundant CI.
 Independent preparation is on `measure-channel-transfers`, worktree
 `/private/tmp/fwp-channel-transfers`. Keep one active PR. The next concrete action
 here is an ownership-transfer implementation selected from the measured counts.
-Next: make typed sends consume their message owner, preserve aliases and all
-failure/cancellation checks, then repeat counts while preserving PR #175's head.
+Next: run the six-native/two-WASI `channel-proof` suite and repeat `channel-costs`
+for the consuming-send implementation. Audit every failed job before a combined
+repair push; preserve PR #175's final head.
 [The protocol](measurements/channel-transfer-protocol.md) defines what is counted.
+Typed sends now consume messages, transfer accepted owners, and release rejected
+or cancelled messages. Aliases retain at the caller. The channel header no longer
+stores an unused duplicate callback. Generated gRPC delivery and C probes follow
+the new contract; native sink callbacks still borrow during their call. Tests
+cover saturated-count transfers and failed queue growth as well as cancellation,
+closed queues, failed receive allocation and deliberately omitted cleanup. These
+changes are not yet runner-verified.
 
 The new examples exposed later-stage Error/IO effects leaking into an earlier
 stored callback's type during composition. Open both temporary call rows with

@@ -215,6 +215,16 @@ Successful transfer removes the registration without releasing the transferred
 owner. Partially constructed records, callback arguments and decoder results
 must protect every acquired child until transfer succeeds.
 
+Typed channel sends now consume one message owner while borrowing the channel
+handle. A successful queue insertion transfers that owner without a retain.
+The compiler retains a separate owner first when an independently live alias
+needs the same value. Closed sends, native sinks, traps and cancelled waits release
+the consumed message; a sink borrows it only during its callback. Failed queue
+growth leaves no queued message. A failed receive allocation keeps the queued
+owner intact for retry. These transfer changes are implemented but await full
+native/WebAssembly acceptance. [Measured baselines](measurements/channel-transfer-protocol.md)
+show why the previous retain was avoidable for fresh messages.
+
 Counting cannot reclaim an unreachable cycle by itself. For example, a channel
 can contain a queued value holding that same channel. Closing it must preserve
 queued values for later receives. Explicit draining breaks the tested cycle;
@@ -1049,7 +1059,10 @@ record the memory reduction and mixed count/stack costs.
 
 A native output channel borrows each sent value only until its callback returns.
 A callback that keeps a value must acquire its own typed owner. Its payload lives
-after the unchanged 96-byte channel header in one allocation. Last-channel cleanup
+after the channel header in one allocation. The transfer change removes an unused
+duplicate-function pointer; its native layout test requires 88 bytes, compared
+with the earlier measured 96-byte header. Final platform checks are pending.
+Last-channel cleanup
 releases request/connection references and then that allocation; construction
 protects partially acquired references. Queue and callback cleanup use alternative
 fields in the header, without another lookup on the send path.
@@ -1178,8 +1191,8 @@ Installing a handler inside the continuation is allowed.
 Remote arguments are borrowed while encoded or delivered. Retained input cursors
 acquire their own typed owners. A decoded single reply stays protected until the
 final status arrives; cancellation, extra replies and failed status release it.
-A channel send borrows its decoded value, while an accepting queue acquires an
-owner. Native sinks and closed channels retain no local reply owner. Caught
+A channel send consumes the decoder's owner and transfers it into an accepting
+queue. Native sinks and closed channels release that owner before returning. Caught
 status errors own both their record and message. Tests omit these owners
 separately and require a failure, in addition to normal and cancellation checks.
 

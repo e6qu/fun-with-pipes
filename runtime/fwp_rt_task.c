@@ -1453,7 +1453,7 @@ typedef struct {
     int (*sink)(void *ctx, V value);
     void *sink_ctx;
     union {
-        struct { void (*drop)(V), (*dup)(V); } queue;
+        void (*queue_drop)(V);
         void (*sink_drop)(void *ctx);
     } owner;
 } fwp_chan;
@@ -1467,11 +1467,10 @@ static V fwp_p_channel_make(V capv) {
     return PTR(c);
 }
 
-static V fwp_p_channel_make_owned(V cap, void (*drop)(V), void (*dup)(V)) {
+static V fwp_p_channel_make_owned(V cap, void (*drop)(V)) {
     V value = fwp_rc_fresh(fwp_p_channel_make(cap));
     fwp_chan *c = (fwp_chan *)(uintptr_t)value;
-    c->owner.queue.drop = drop;
-    c->owner.queue.dup = dup;
+    c->owner.queue_drop = drop;
     return value;
 }
 
@@ -1487,11 +1486,11 @@ static void fwp_channel_drop(V value) {
         c->owner.sink_drop = NULL;
         drop(context);
     } else {
-        if (c->owner.queue.drop) for (size_t i = 0; i < c->len; i++) {
+        if (c->owner.queue_drop) for (size_t i = 0; i < c->len; i++) {
             size_t at = (c->head + i) % c->size;
             V element = c->buf[at];
             c->buf[at] = 0;
-            c->owner.queue.drop(element);
+            c->owner.queue_drop(element);
         }
         c->len = 0;
         fwp_mem_free(c->buf);
@@ -1531,23 +1530,29 @@ static V fwp_p_channel_send(V ch, V x) {
     }
 }
 
-static V fwp_p_channel_send_owned(V ch, V x, void (*dup)(V)) {
+/* Consume one message owner. The queue receives it on success; rejection,
+ * a native sink, failure and cancellation release it here. The channel itself
+ * stays borrowed from the caller until its wait links have been removed. */
+static V fwp_p_channel_send_owned(V ch, V x, void (*drop)(V)) {
+    fwp_value_owner message = {x, drop};
+    fwp_cleanup message_cleanup;
+    fwp_value_protect(&message, &message_cleanup);
     fwp_tasks_init();
     fwp_chan *c = (fwp_chan *)(uintptr_t)ch;
+    V result = FWP_FALSE;
     if (c->sink) {
-        if (c->closed) return FWP_FALSE;
-        return c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;
+        if (!c->closed) result = c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;
+        goto done;
     }
     for (;;) {
-        if (c->closed) return FWP_FALSE;
+        if (c->closed) break;
         if (c->len < c->cap) {
             if (c->len == c->size) fwp_chan_grow(c);
             uint8_t *count = fwp_rc_slot(ch);
-            if (count && *count) {
-                if (c->owner.queue.dup) c->owner.queue.dup(x);
-            } else if (dup) fwp_rc_share(x);
+            if ((!count || !*count) && drop) fwp_rc_share(x);
             c->buf[(c->head + c->len) % c->size] = x;
             c->len++;
+            fwp_value_finish(&message, &message_cleanup);
             fwp_wake_all(&c->recvq);
             return FWP_TRUE;
         }
@@ -1555,6 +1560,10 @@ static V fwp_p_channel_send_owned(V ch, V x, void (*dup)(V)) {
         fwp_park(&c->sendq, 0);
         fwp_check_cancel();
     }
+done:
+    fwp_value_finish(&message, &message_cleanup);
+    if (drop) drop(x);
+    return result;
 }
 
 static V fwp_chan_recv(V ch, int64_t at) {

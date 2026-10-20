@@ -66,7 +66,7 @@ fn client_received_buffers_release_on_retry_errors_and_cancelled_waits() {
             1,
         ),
         (
-            "fwp_p_channel_send_owned(ch, v, dec.ty->dup);",
+            "fwp_p_channel_send_owned(ch, v, dec.ty->drop);",
             "observed_channel(ch,v);",
             1,
         ),
@@ -103,7 +103,7 @@ static void no_release(void *);
 #define observed_open(output_,reused_) (*(output_)=connection,*(reused_)=stage==7&&opens==0,(g_stream*)(opens++==0?stream:retry_stream))
 #define observed_recv(connection_,stream_,deadline_,got_) do{g_recv(connection_,stream_,deadline_,got_);remember((got_)->m);remember((got_)->text);}while(0)
 #define observed_decode(value_,why_) (stage==5?(fwp_trap("decode trap"),0):stage==4||stage==9?(*(why_)=strdup("malformed message"),remember(*(why_)),G_DEC_BAD):(*(value_)=fwp_rc_fresh(fwp_cstr("reply")),decoded_live++,G_DEC_OK))
-#define observed_channel(channel_,value_) do{if(strcmp(STR(value_)->d,"reply"))_Exit(12);delivered++;if(stage==10)fwp_trap("channel trap");if(stage>=12)fwp_p_channel_send_owned(channel_,value_,dec.ty->dup);}while(0)
+#define observed_channel(channel_,value_) do{if(strcmp(STR(value_)->d,"reply"))_Exit(12);delivered++;if(stage>=12){fwp_p_channel_send_owned(channel_,value_,dec.ty->drop);}else{fwp_value_owner consumed={value_,dec.ty->drop};fwp_cleanup guard;fwp_value_protect(&consumed,&guard);if(stage==10)fwp_trap("channel trap");fwp_value_finish(&consumed,&guard);dec.ty->drop(value_);}}while(0)
 "#;
     let fixture = r#"
 #undef free
@@ -134,9 +134,9 @@ int main(void){
 #endif
   output_channel=0;
   if(stage>=12){
-   output_channel=fwp_p_channel_make_owned(1,decoded_drop,fwp_rc_dup);
+   output_channel=fwp_p_channel_make_owned(1,decoded_drop);
    if(stage==13)fwp_p_channel_close(output_channel);
-   if(stage==14){V initial=fwp_rc_fresh(fwp_cstr("reply"));decoded_live++;fwp_p_channel_send_owned(output_channel,initial,fwp_rc_dup);decoded_drop(initial);}
+   if(stage==14){V initial=fwp_rc_fresh(fwp_cstr("reply"));decoded_live++;fwp_p_channel_send_owned(output_channel,initial,decoded_drop);}
    if(stage>=15){fwp_chan *ch=(void*)(uintptr_t)output_channel;ch->sink=decoded_sink;ch->owner.sink_drop=no_release;}
   }
   const fwp_desc response={.dup=fwp_rc_dup,.drop=decoded_drop};
@@ -192,7 +192,7 @@ int main(void){
     for opt in ["-O1", "-O2"] {
         let missing_queue_owner = generated.replace(
             "observed_channel(ch,v);",
-            "if(stage>=12){delivered++;fwp_p_channel_send(ch,v);}else{observed_channel(ch,v);}",
+            "if(stage>=12){delivered++;fwp_p_channel_send(ch,v);dec.ty->drop(v);}else{observed_channel(ch,v);}",
         );
         fwp::cgen::compile_c(
             &format!("{hooks}\n{missing_queue_owner}\n{fixture}"),
@@ -207,8 +207,8 @@ int main(void){
             "omitted response queue owner: {out:?}"
         );
         let missing_value_guard = generated.replace(
-            "fwp_value_protect(&decoded, &decoded_cleanup);",
-            "fwp_cleanup_push(&decoded_cleanup, no_release, &decoded);",
+            "fwp_value_protect(&message, &message_cleanup);",
+            "message.drop = NULL; /* omit consumed-message cleanup */",
         );
         fwp::cgen::compile_c(
             &format!("{hooks}\n{missing_value_guard}\n{fixture}"),
