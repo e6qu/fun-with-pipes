@@ -3478,6 +3478,29 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
+    /// Counted receive results can move their payload directly into a matched
+    /// variant's fields. Uncounted runtime calls retain their existing ABI.
+    fn channel_receive_type(&self, id: FuncId) -> Option<MT> {
+        if !self.g.reuse {
+            return None;
+        }
+        let function = &self.g.prog.funcs[id];
+        let Body::Prim(symbol) = &function.body else {
+            return None;
+        };
+        let channel = match symbol.as_str() {
+            "channel.recv" if function.arity == 1 => 0,
+            "channel.recv-for" if function.arity == 2 => 1,
+            _ => return None,
+        };
+        match &function.locals[channel] {
+            MT::Con(name, fields) if name == "std::Channel" && fields.len() == 1 => {
+                Some(fields[0].clone())
+            }
+            _ => None,
+        }
+    }
+
     /// The size of the struct a variant `e` of type `ty` gives without
     /// being built: every tail of `e` builds a constructor or calls a
     /// worker returning one (`Abi::vret`), and at least one is not a
@@ -3514,6 +3537,13 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 Expr::Construct(_, xs) => Some(!xs.is_empty()),
                 Expr::Call(id, args)
                     if m == 1 && args.len() == 2 && fg.lookup_value_type(*id).is_some() =>
+                {
+                    Some(true)
+                }
+                Expr::Call(id, args)
+                    if m == 1
+                        && args.len() == fg.g.prog.funcs[*id].arity as usize
+                        && fg.channel_receive_type(*id).is_some() =>
                 {
                     Some(true)
                 }
@@ -3621,6 +3651,31 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     let duplicate = self.g.value_dup(&element);
                     self.line(&format!("if ({tag}) {duplicate}({value});"));
                 }
+                self.keep_borrowed_args(*id, &values);
+                self.end_call(pending);
+                (tag, vec![value])
+            }
+            Expr::Call(id, args)
+                if m == 1
+                    && args.len() == self.g.prog.funcs[*id].arity as usize
+                    && self.channel_receive_type(*id).is_some() =>
+            {
+                let element = self.channel_receive_type(*id).unwrap();
+                let values = self.args(args);
+                let pending = self.begin_call(e as *const Expr);
+                let duplicate = if crate::rc::needs_rc(&self.g.prog.shapes, &element) {
+                    self.g.value_dup(&element)
+                } else {
+                    "NULL"
+                };
+                let (channel, deadline) = if values.len() == 2 {
+                    (&values[1], format!("fwp_after({})", values[0]))
+                } else {
+                    (&values[0], "0".into())
+                };
+                let value = self.fresh();
+                let tag = self.fresh();
+                self.line(&format!("V {value}; V {tag} = fwp_chan_recv_owned({channel}, {deadline}, {duplicate}, FWP_CHANNEL_RESULT_FIELDS, &{value});"));
                 self.keep_borrowed_args(*id, &values);
                 self.end_call(pending);
                 (tag, vec![value])

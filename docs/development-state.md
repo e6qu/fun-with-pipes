@@ -18,80 +18,38 @@ subject with no body or trailers. Redundant post-merge runs `39370566486` and
 records the accepted queued-function proof, consuming sends and `tap` optimization.
 Do not reopen their preparation branches as new work.
 
-## Current changes
+## Receive-result preparation
 
-Channel programs still allocated a tuple each time they advanced loop state.
-An action or branch could hide the next record from existing field-by-field
-lowering. The compiler now follows a match when every arm ends in a record,
-keeping eligible state fields in locals. Actions, patterns, aliases and failures
-retain their semantics; existing shape and resource checks still apply.
+This worktree `/private/tmp/fwp-channel-receives`, branch
+`unbox-channel-receives`, prepares the next change independently. Do not open a
+second PR or move PR #176's stable head. Next: run focused ownership and count
+checks on this preparation; fix all failures before making any support claim.
 
-Known, capture-free function aliases now expose direct calls. The measured
-`string.length` callback no longer uses generic dispatch. Arity-zero constants
-stay at their original evaluation point because they can allocate or trap.
-There is no new syntax or runtime helper. See the
-[example, counts and actual binary inspection](measurements/channel-loop-state.md).
+The shared-text loop still allocated `Some message` after each receive. The
+candidate gives immediately matched receives their tag and payload directly,
+using the existing variant-field cleanup machinery. Generic callers retain boxed
+Options. An explicit runtime result-form argument selects the representation;
+both forms share the receive loop. Boxed allocation still precedes dequeue so a
+failed allocation leaves the message available for retry. No new surface API,
+tracing fallback or primitive ownership-contract change is introduced.
 
-The log audit also found five Linux resident-memory tests returning early on
-macOS but appearing to pass. They now explicitly report the Linux `/proc`
-requirement. Missing or failing C compilers fail GC checks; negative controls
-verify both cases. The full stress golden suite still runs on macOS. Inline
-imports found during review were moved to file scope, and temporary-directory
-comments now describe the actual guarantees.
+Tests extend cancellation/close coverage to both result forms, check zero-valued
+messages separately from empty results, verify timed ready/empty receives, and
+confirm that direct fields move one owner without allocating an Option. Existing
+boxed allocation-failure and negative cleanup controls remain. The shared native
+and WASI fixture adds timed function receives and a failure after calling one.
+These changes are not yet compiled or verified on runners.
 
-## Evidence
+The saved diagnostic interpreter rejects the new unannotated callback pipe with
+an effect-row mismatch. An explicitly typed intermediate function runs with the
+expected output (guarded 0.86s), but is not used to conceal the issue. The original
+pipe remains in the fixture and callback-effect regression; runner checks will
+establish whether the accepted compiler's existing inference repair handles it.
+Any remaining inference defect must be fixed. No local compiler build was run.
 
-| Check | Revision and run | Result |
-|---|---|---|
-| Loop-state counts | `16adc74b`, `39363807189` | Both Linux architectures; 180 samples and 20 ordinary binaries audited |
-| Loop-state ownership | `16adc74b`, `39364385408` | All six native platforms: 47 integration tests plus all compiler units each; both WASI hosts: 18 checks each |
-| Resource fields with GCC | `cc850204`, `39365324259` / `39365327202` | 37 tests across 21 targets on each Linux architecture |
-| Loop state plus function aliases | `75da96b8`, `39366497033` | All six native platforms: 62 integrations plus all compiler units each; both WASI hosts: 18 checks each |
-| Combined counts | `75da96b8`, `39366501786` | Both Linux architectures; 180 samples and 20 ordinary binaries audited |
-| GC test reporting | `bd9eb989`, `39368181540` | Eight tests per Linux host; three applicable tests and five explicit Linux-only ignores per macOS host; both invalid-compiler controls pass on all four |
-
-Complete logs are audited. Except for the five explicit Linux-only GC tests on
-macOS, these runs have no ignored or filtered tests. Native unit totals are 145,
-or 146 on Windows. The current delivery carries the measured implementation plus
-GC test/workflow repairs, import placement and documentation changes. These
-focused runs do not replace final-head production acceptance.
-
-The count comparison uses integrated PR #175 source `f3c6f8d9`, run `39362629293`,
-with GCC O2 and LTO disabled on both revisions. Each of five cases saves one
-allocation per additional message from loop-state lowering. Fresh/closed cases
-save one retain, shared cases two. Every ARC profile ends with zero charged
-storage. Alias propagation saves no further allocations or retains; the fresh-text
-exchange frame shrinks by 48 bytes on each architecture. Reports separate code
-size, file size and individual frames. These are fwp operation-count comparisons,
-not elapsed-time improvements or evidence of C/Rust parity.
-
-## Local checks and resource limits
-
-Use `python3 scripts/local-guard.py COMMAND...` for serial bounded checks.
-No local full compiler or generated native build was run. Disk is near the
-64 GiB floor; heavy work belongs on runners. A guarded `cargo clean --profile dev`
-removed 573.7 MiB in 0.58s before reaching the floor; do not rebuild locally.
-
-Guarded raw interpretation checks the branched loop and retained alias (0.82s)
-and the documentation example (0.86s). `scripts/summarize-channel-costs.py`
-audits loop-only and combined reports (1.61s/1.55s). Complete-log audit scripts
-verify resource fields (0.23s) and combined ownership (0.14s). ELF inspection
-checks actual sections, calls and frames. `cargo fmt --all` and
-`python3 scripts/check-roadmap.py` pass after preparation (1.55s/2.74s).
-
-An earlier handoff edit omitted the required status table; restoring it fixed
-the audit. A guarded `du` returned sizes but stopped with `Operation not permitted`
-while controlling the system utility; it was not retried and no limits changed.
-Redundant audited baseline/transfer/tap downloads were removed; committed reports
-and GitHub artifacts remain. Integrated baseline and candidate binaries remain
-under `/private/tmp/fwp-channel-{cost-combined,loop-costs,alias-costs}`.
-
-Publication checks on the delivery branch pass under the guard: `cargo fmt --all
--- --check` (1.43s), `python3 scripts/check-roadmap.py` (2.89s),
-`python3 scripts/check-primitive-inventory.py --baseline
-tests/fixtures/primitive-inventory-baseline.json --output
-/private/tmp/fwp-next-primitive-inventory.json` (1.06s), and
-`python3 scripts/test-native-test-runner.py` (11 checks, 8.52s).
+Production PR #176 run `39371117507` is in progress on `ddff413a`;
+documentation `39371117707` passes. The draft synchronization run `39371117777`
+skipped its jobs and is not acceptance. All seven roadmap areas remain open.
 
 ## Roadmap status
 

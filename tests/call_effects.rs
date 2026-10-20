@@ -6,6 +6,8 @@ use std::process::Command;
 const SOURCE: &str = r#"
 has-text : (String -> String) -> Bool
 has-text = apply "!" | string.length | gt 1
+receive-fail : Channel[() -> String] -> () ! {Async, Error[String]}
+receive-fail = channel.recv | option.map (apply () | tap (const "received failure" | fail)) | ignore
 main = [
     "a b c" | words | map concat | find has-text | option.map (apply "!") | echo,
     option.map (apply "!") ("a b c" | words | map concat | find has-text) | echo,
