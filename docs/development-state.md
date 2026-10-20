@@ -2,110 +2,112 @@
 
 ## Next action
 
-PR #175 is the only active delivery. Its branch `queued-function-delivery` contains
-combined channel proofs, consuming sends and the measured `tap` improvement.
-Published repair `6511a50f` restores the frozen primitive baseline, explicitly checks
-the consuming-send contract and assigns the new measurement target to native CI.
-Production at `f3c6f8d9` failed those preflights. Do not merge it. Follow the primary
-worktree handoff for the final acceptance run and merge; require all nine
-production jobs and documentation for its exact final head.
+[PR #175](https://github.com/e6qu/fun-with-pipes/pull/175) is the only active PR.
+Keep its head `6511a50f` stable while production run `39363423392` finishes.
+Documentation `39363423384`, the benchmark gate and regular ARM64 macOS pass.
+The complete macOS log has no failed/ignored Rust tests; its 11 SDK tests pass. All eight focused
+ownership jobs in `39362626916` pass, as do both count jobs in `39362629293`.
+Those focused runs use `f3c6f8d9`: compiler, runtime and integration-test source
+are identical to the final PR head. The later repair restores the frozen
+inventory, explicitly audits consuming channel sends and registers the new test
+in native CI. Do not merge any superseded head or count cancelled jobs as passes.
 
-This worktree (`/private/tmp/fwp-channel-transfers`) is now the independent
-`flatten-channel-loop-state` experiment, based on `f3c6f8d9`. Next: finish the loop-only evidence audit, then validate the additional known-function alias change described below. Preserve both measured revisions and fix every failure. Count run `39363807189` passes both hosts; its saved C and actual
-machine code are inspected. Do not change the primary PR while its gates run.
-Keep it separate while PR #175 is being validated; do not open another PR yet.
-The inventory/schedule repair is included here. Final PR #175 production is
-`39363423392`, documentation `39363423384`; its unchanged compiler/runtime has
-focused ownership `39362626916` and counts `39362629293` at `f3c6f8d9`.
-Superseded production `39359123801` and `39362628332`, focused `39361329677`
-and docs `39362628337` were cancelled to free runners. Review their completed
-portions for additional failures; cancelled checks are not acceptance.
+Require all nine production jobs and documentation on the exact final head.
+Audit completed logs, fix every failure, then squash merge with an explicit
+one-line subject of at most 80 characters and empty body. Verify the merged
+message and identical tree before cancelling redundant post-merge production.
+The primary worktree `/Users/zardoz/projects/fun-with-pipes` holds that delivery.
 
-## Candidate and limits
+This worktree, `/private/tmp/fwp-channel-transfers`, holds the separate
+`flatten-channel-loop-state` preparation. Current implementation is `75da96b8`.
+Next: audit its ownership run `39366497033` and count run `39366501786`, including
+all failed tests, generated C and actual machine code. Do not open a second PR.
+After #175 is accepted, apply only this branch's difference from `6511a50f` to a
+fresh branch from accepted main, update the plan/history, and run full acceptance.
 
-The [measured channel programs](measurements/channel-transfer-protocol.md) still
-allocate their loop-state tuple on every iteration. Generated `unique-text` C
-uses `V st[1]` and calls `fwp_record(3, ...)` in the loop. The preceding `tap`
-action leaves a match around the next record, so existing `Again` normalization
-cannot expose that record to field-by-field loop lowering.
+## Candidate
 
-The candidate carries `Again` through a match only when every arm's terminal
-value is a record. It keeps the scrutinee, patterns, evaluation order and existing
-ownership boundaries. Existing loop-shape checks still decide whether state can
-be held as fields; whole-value uses keep their established representation.
-No new syntax or runtime helper is added. [The count experiment](measurements/channel-loop-state.md) now passes on both
-Linux hosts, with 180 audited samples: one fewer allocation per message in all
-five cases, one fewer retain for fresh/closed values and two fewer for shared
-values. Every ARC profile ends with zero charged storage. Cleanup and complete
-platform acceptance remain pending; counts are not timing results.
+The measured channel programs allocated a tuple each time they advanced their
+loop state. `tap` or a branch hid the next record from existing field-by-field
+loop lowering. Carrying `Again` through a match exposes each terminal record,
+while preserving the action, patterns, evaluation order and resource boundaries.
+Every arm must end in a record; existing shape checks still decide eligibility.
+Whole-value uses retain their established representation. There is no new syntax
+or runtime helper. See [the example and loop-only results](measurements/channel-loop-state.md).
 
-The expanded loop regression compares raw interpretation with O1/O2 native,
-stack allocation on/off, tracing stress, reuse checks, no-reuse/no-free settings
-and checked ARC. It includes observable actions, branches choosing different
-records, retained aliases and caught failures. Existing preparation/unwind and
-nested-loop cases must also pass. Runner counts must include all five fixtures,
-three inputs and repeated samples, with zero final ARC managed charge.
+Inspection also found generic dispatch of a known `string.length` callback.
+The optimizer now propagates capture-free function aliases, exposing direct
+calls. Arity-zero constants remain at their original evaluation point because
+they can allocate or trap. A new regression checks repeated calls and interpreter
+agreement; focused CI also covers constant evaluation order, temporary cleanup
+and callback effects. This additional change is not yet measured or accepted.
 
-## Checks
+## Evidence
 
-`python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py env
-FWP_NO_OPT=1 /private/tmp/fwp-queued-diagnostic-compiler/fwp run --interp
-/private/tmp/fwp-branched-loop-reference.fwp` passes in 0.82s with stdin closed.
-The new branch case prints `branches`, `branches?`, `branches?!`, then
-`("branches?!?", (3, "branches"))`: effects run in order and the alias is unchanged.
-This is interpretation only. No local compiler rebuild or native build was run.
-Keep the fixed guard limits, especially the nearby 64 GiB free-disk floor.
+- Loop-only implementation `16adc74b`, count run `39363807189`: both Linux
+  architectures pass. The audited report has 180 samples and 20 ordinary binaries.
+  Each of five cases saves one allocation per additional message; fresh/closed
+  cases save one retain, shared cases two. Every ARC profile ends with zero
+  charged storage. These are counts, not timings or C/Rust comparisons.
+- The comparison uses integrated baseline `f3c6f8d9`, run `39362629293`, not a
+  mixture of binaries from before and after collector exclusion. Both have GCC
+  O2 with LTO disabled. The report includes file/code sizes and loop stack frames.
+- Loop-only ownership `39364385408`: Linux and Windows on both architectures,
+  ARM64 macOS and both WASI hosts pass; their complete logs are audited. Intel
+  macOS remains running. Native hosts have 47 integration tests plus all compiler
+  units; each WASI host has 18 checks, with none ignored or filtered.
+- Resource-field runs `39365324259` (AMD64) and `39365327202` (ARM64) at
+  `cc850204` pass with GCC. Each has 37 tests across 21 targets, none ignored or
+  filtered. Both complete logs are audited. Compiler implementation matches the
+  loop-only measured revision; comments, import placement and workflow differ.
+- Alias implementation `75da96b8`: focused `39366497033` and counts
+  `39366501786` are running. Do not apply loop-only counts to this revision.
+
+## Local checks
+
+Use `python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py COMMAND...`
+for serial bounded checks. No local full compiler or generated native build was
+run. Free disk is near the 64 GiB floor; use runners for heavy work.
+
+Guarded raw interpretation checks the tapped/branched loop's output and retained
+initial alias (0.82s); the documentation example prints `hello`, `hello!`, then
+`hello!!` (0.86s). `scripts/summarize-channel-costs.py` audits the baseline and
+loop-only reports in 1.54s/1.61s. ELF inspection confirms smaller code sections
+on both hosts, even where linker alignment enlarges the executable file.
+`/private/tmp/fwp-audit-loop-fields.py` verifies both 37-test logs in 0.23s.
+After the alias change, guarded `cargo fmt --all` and
+`python3 scripts/check-roadmap.py` pass in 1.48s and 2.54s. The handoff rewrite
+initially removed the required seven-row status table; restoring it passes the
+audit in 2.43s. A guarded `du` inventory returned its sizes but stopped with
+`Operation not permitted` while controlling the system utility; it was not retried
+and no limit was changed. Three redundant, audited baseline/transfer/tap download
+directories were removed; their reports and GitHub artifacts remain. Integrated
+baseline and candidate binaries are retained locally for comparison.
+
+## Accepted work and remaining goals
+
+[PR #174](https://github.com/e6qu/fun-with-pipes/pull/174), accepted as
+`3ec71969089a7ab95ff065f7b611c74534fbe326`, remains the base until #175 merges.
+[History](roadmap-history.md#numeric-hashing-and-integer-output-pr-174) retains
+its checks, measured improvements and remaining C/Rust gaps. The queued-function
+proof, consuming sends and `tap` tuple removal are all in #175; do not reopen
+old preparation branches as new work.
 
 ## Roadmap status
 
-| Step | Status | Remaining focus |
-|---|---|---|
-| 1 | In progress | Ownership contracts, tracing removal and limited ARC |
-| 2 | In progress | Functional intermediates, copies and eligible tail recursion |
-| 3 | In progress | Equivalent-work C/Rust gaps and machine-code costs |
-| 4 | In progress | Derivative precision, speed and storage |
-| 5 | In progress | CPU kernels and ahead-of-time device execution |
-| 6 | In progress | Reproducible comparisons and regression budgets |
-| 7 | In progress | Representative larger applications |
+All seven areas in [PLAN.md](../PLAN.md) remain open.
 
-All seven areas in [PLAN.md](../PLAN.md) remain open. Persistent subscriptions,
+| Step | Status | Work |
+|---|---|---|
+| 1 | In progress | Ownership and GC removal |
+| 2 | In progress | Functional overhead |
+| 3 | In progress | Machine performance |
+| 4 | In progress | Autodiff |
+| 5 | In progress | Numerical kernels |
+| 6 | In progress | Reproducible comparisons |
+| 7 | In progress | Larger applications |
+
+ Persistent subscriptions,
 resource captures, resource-owning tail frames and mutual recursion need further
 proofs. JIT is excluded. Follow [AGENTS.md](../AGENTS.md): one active PR, all
 final-head gates, bounded local work and one-line commits without trailers.
-
-The guarded report audit (`scripts/summarize-channel-costs.py --run 39363807189
---source 16adc74bc668312a60169a0c84f030fdac19ba49 --artifacts
-/private/tmp/fwp-channel-loop-costs --output /private/tmp/fwp-channel-loop-counts.json`)
-passes in 1.61s. Pending edits only document those results and correct stale
-ownership comments; the measured compiler implementation remains unchanged.
-
-PR #175's integrated count run `39362629293` also passes both hosts; its 180
-samples were audited under the guard in 1.54s. Counts and managed memory match
-the earlier tap experiment; binary sizes change with collector exclusion. The
-new report compares like-for-like integrated sources. ELF inspection confirms
-all five code sections shrink on both hosts, despite the AMD64 closed-function
-file growing 4136 bytes due to unwind metadata and data-page alignment. The
-document's example passes raw interpretation in 0.86s.
-
-Review found an inline import in `tests/resource_frame_fields.rs`; it now sits
-at the top of the file. The `fields` evidence suite uses GCC on Linux, matching
-production. Run it on Linux ARM64 and AMD64 for the candidate: it checks retained
-resource frames and match contexts as well as worker entry, field movement and
-failure cleanup. Other suites retain their established compiler settings.
-
-## Known function aliases
-
-Inspection of the measured loop binary found generic function dispatch for a
-known `string.length` callback. The optimizer now propagates capture-free function
-aliases just as it does cheap local aliases, exposing direct calls. It excludes
-arity-zero constants, whose evaluation can allocate or trap. A regression checks
-repeated uses and interpreter agreement; existing constant-evaluation order and
-cleanup controls are added to focused ownership CI. No savings are claimed yet:
-repeat the count experiment and inspect the new C and machine code. This changes
-the measured compiler, so the loop-only report remains a separate experiment.
-
-Loop-only ownership run `39364385408` passes Linux and Windows on both
-architectures, ARM64 macOS and both WASI hosts; complete logs are audited. Intel
-macOS remains running. Resource-field runs `39365324259` (AMD64) and `39365327202`
-(ARM64) at `cc850204` are running with GCC. PR #175 production remains pending;
-its documentation and benchmark gates pass.

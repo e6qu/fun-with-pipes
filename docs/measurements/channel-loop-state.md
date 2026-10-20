@@ -83,6 +83,7 @@ In the fresh-text binary, the executing loop moves from `work` (`w0`) into
 frame. The loop's own frame is 296 bytes on AMD64 (248 local bytes plus six
 saved registers), down from 504, and 288 bytes on ARM64 including saved registers,
 down from 464. The exchange worker remains 376/368 bytes on AMD64/ARM64.
-These are individual frames, excluding callees and total task-stack peaks.
+AMD64 counts exclude the return address; ARM64 counts include the saved link
+register. These are individual frames, excluding callees and total task-stack peaks.
 Generated C now uses three state slots and has no state-record allocation in
 the executing loop. Cleanup and platform gates must pass before acceptance.
