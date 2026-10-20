@@ -11,7 +11,8 @@ No execution-time speedup is claimed.
 
 Later reports use this same protocol for [loop-state tuples](channel-loop-state.md),
 [direct matches](channel-match-results.md), [moving matched payloads](channel-variant-moves.md)
-and [borrowing across calls](channel-direct-borrows.md). Each identifies its
+and [borrowing across calls](channel-direct-borrows.md), then
+[temporary local names](channel-local-borrows.md). Each identifies its
 comparison revision, measured savings, remaining costs and acceptance status.
 
 ## First measured baseline

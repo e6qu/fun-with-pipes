@@ -179,7 +179,7 @@ jobs:
           EVIDENCE_RUN: ${{ inputs.evidence_run }}
           PROGRAM_SOURCE: ${{ inputs.source_revision }}
           PROFILE_HOST: ${{ matrix.runner }}
-        run: python3 scripts/measure-scalar-text-memory.py --run "$EVIDENCE_RUN" --source "$PROGRAM_SOURCE" --host "$PROFILE_HOST" --cc gcc --time /usr/bin/time --samples 3 --output scalar-memory-evidence
+        run: python3 scripts/measure-scalar-text-memory.py --run "$EVIDENCE_RUN" --source "$PROGRAM_SOURCE" --host "$PROFILE_HOST" --cc gcc --time /usr/bin/time --samples 3 --timing-samples 24 --warmups 2 --output scalar-memory-evidence
       - uses: actions/upload-artifact@v7
         if: always()
         with:
