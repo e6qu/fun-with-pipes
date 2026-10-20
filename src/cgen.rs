@@ -9606,6 +9606,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     }
     let tests = matches!(mode, Mode::Tests);
     let main = prog.main.unwrap_or(0);
+    let roots: Vec<_> = match &mode {
+        Mode::Exec(commands, _) => commands.iter().map(|c| c.fid).collect(),
+        _ => Vec::new(),
+    };
+    let live = live_functions(prog, &roots);
     // the calling conventions follow the bodies as they are; with counted
     // references, the code is generated from the counted bodies
     let mut abis: Vec<Option<Abi>> = prog.funcs.iter().map(|f| abi_of(prog, f)).collect();
@@ -9629,8 +9634,12 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let prog = if reuse {
         borrowing = {
             let mut program = prog.clone();
-            let owned_entries: Vec<_> = abis.iter().map(Option::is_none).collect();
-            program.borrowed_parameters = crate::rc::borrows::infer(prog, &owned_entries);
+            let owned_entries: Vec<_> = abis
+                .iter()
+                .enumerate()
+                .map(|(id, abi)| abi.is_none() || roots.contains(&id))
+                .collect();
+            program.borrowed_parameters = crate::rc::borrows::infer(prog, &owned_entries, &live);
             program
         };
         &borrowing
@@ -9724,16 +9733,13 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         owned_fold_callbacks: Vec::new(),
         owned_right_fold_callbacks: Vec::new(),
     };
-    let mut roots = Vec::new();
     if let Mode::Exec(cmds, _) = &mode {
-        roots.extend(cmds.iter().map(|c| c.fid));
         for command in cmds {
             if prog.funcs[command.fid].arity > 0 {
                 g.used_closures[command.fid] = true;
             }
         }
     }
-    let live = live_functions(prog, &roots);
     let mut bodies = String::new();
     for id in (0..prog.funcs.len()).filter(|&id| live[id]) {
         bodies.push_str(&g.func(id)?);

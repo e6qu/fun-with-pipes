@@ -4,12 +4,14 @@
 
 Next: finish [PR #179](https://github.com/e6qu/fun-with-pipes/pull/179) on
 `move-matched-variant-owners`, head `82bcf83f765e072afa6431cbf196532d433e3cad`.
-Production `39417913864` has a passing benchmark job; the native jobs are starting
-on their runners. Documentation `39417913929` passes. Audit every completed log
+Production `39417913864` has passing benchmarks and both ARM macOS jobs;
+its other six native jobs are running without reported failure. Documentation
+`39417913929` passes. Four completed logs are audited in
+`/private/tmp/fwp-179-acceptance.json`. Audit every completed log
 with `/private/tmp/fwp-audit-179.py`; fix every failure before squash merge.
 Require all nine production jobs and documentation on this exact head. Use an
 explicit one-line subject of at most 80 characters and empty body, then verify
-the merge tree. Worktree: `/private/tmp/fwp-variant-moves`.
+the merge tree. Worktree: `/Users/zardoz/projects/fun-with-pipes`.
 Keep the final head stable while healthy gates run; record status here locally.
 Independent borrowing investigation is in `/private/tmp/fwp-direct-borrows`,
 branch `borrow-direct-function-arguments`; no second PR is open.
@@ -71,7 +73,18 @@ free disk, target data below 2 GiB and sampled aggregate RSS below 1 GiB.
 ## Prepared direct-call borrowing
 
 `/private/tmp/fwp-direct-borrows`, branch `borrow-direct-function-arguments`,
-contains the next implementation; no second PR is open. It is not yet verified.
+contains the next implementation, based on `e62cf232a1f1b87161e920c533d07a22eac4bce5`.
+No second PR is open. Both complete focused logs from `39421484177` were audited:
+`/private/tmp/fwp-direct-borrow-first-audit.json`. Each has the same two failures:
+a unit fixture omitted its tuple constant's type, and a native probe expected
+unwind cleanup without enabling generated unwind support. All other checks and
+the measurement steps pass; this failed run supplies no acceptance.
+The repair supplies explicit fixture types, adds a reachable async branch,
+tests cancellation at borrowed-worker entry, and adds a checked-ARC channel
+failure case at O0/O1/O2 with stack placement both enabled and disabled.
+Only live callers contribute borrowing contracts; explicit execution entries
+remain consuming. Run the repaired focused suite, audit both full logs, then
+run all six native and both WebAssembly ownership suites before the next PR.
 The compiler infers caller-owned parameters for eligible nonrecursive direct
 workers. One contract drives call lowering, callee ownership, verification,
 entry ticks and failure cleanup. Borrowed flat records need an independent
@@ -90,8 +103,8 @@ A native probe checks exact counts at O0/O2, caller failure, independent aliases
 generic boxed entries and a deliberately leaked-owner control. The ownership
 checker now rejects a borrowed argument whose owner was consumed by a later
 argument. Formatting passes under the guard (1.57s); the documentation audit passes
-(2.50s), and formatting after the channel proof passes (1.47s). No local build
-was run. Initial run `39420410381` was cancelled while both jobs were still queued,
+(2.50s), and formatting after the channel proof passes (1.47s). Repair formatting passes (1.75s) and documentation audit passes (2.96s).
+No local build was run. Initial run `39420410381` was cancelled while both jobs were still queued,
 before compilation; it supplies no evidence. Validation and channel counts will run in
 `channel-costs`; review all
 steps and generated binaries before any performance claim or next PR.

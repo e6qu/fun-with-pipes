@@ -161,7 +161,7 @@ fn reads(e: &Expr, out: &mut BTreeSet<ReadPath>) {
 /// only when every source caller keeps that same channel past the call, so the
 /// removed callee owner could never have been its last owner. Merely reading
 /// another field of the same tuple later is insufficient after field splitting.
-fn continuing_channels(prog: &Program) -> Vec<Vec<bool>> {
+fn continuing_channels(prog: &Program, live: &[bool]) -> Vec<Vec<bool>> {
     fn retained(prog: &Program, ty: &MT, arg: &Expr, after: &BTreeSet<ReadPath>) -> bool {
         if matches!(ty, MT::Con(name, _) if name == "std::Channel") {
             return read_path(arg).is_some_and(|(local, fields)| {
@@ -230,7 +230,7 @@ fn continuing_channels(prog: &Program) -> Vec<Vec<bool>> {
         .iter()
         .map(|f| vec![true; f.arity as usize])
         .collect();
-    for f in &prog.funcs {
+    for (_, f) in prog.funcs.iter().enumerate().filter(|(id, _)| live[*id]) {
         if let Body::Expr(body) = &f.body {
             visit(prog, body, &BTreeSet::new(), &mut kept);
         }
@@ -303,8 +303,13 @@ fn uses_only_borrows(
     }
 }
 
-pub(crate) fn infer(prog: &Program, owned_entries: &[bool]) -> BTreeMap<FuncId, Vec<Local>> {
+pub(crate) fn infer(
+    prog: &Program,
+    owned_entries: &[bool],
+    live: &[bool],
+) -> BTreeMap<FuncId, Vec<Local>> {
     assert_eq!(owned_entries.len(), prog.funcs.len());
+    assert_eq!(live.len(), prog.funcs.len());
     let mut graph = vec![BTreeSet::new(); prog.funcs.len()];
     let mut values = BTreeSet::new();
     values.extend(prog.main);
@@ -317,7 +322,7 @@ pub(crate) fn infer(prog: &Program, owned_entries: &[bool]) -> BTreeMap<FuncId, 
             values.extend(method.iter_fn);
         }
     }
-    for (id, f) in prog.funcs.iter().enumerate() {
+    for (id, f) in prog.funcs.iter().enumerate().filter(|(id, _)| live[*id]) {
         match &f.body {
             Body::Expr(body) => references(body, &mut graph[id], &mut values),
             Body::Remote(remote) => values.extend(remote.iter_fn),
@@ -329,7 +334,11 @@ pub(crate) fn infer(prog: &Program, owned_entries: &[bool]) -> BTreeMap<FuncId, 
         .iter()
         .enumerate()
         .filter(|(id, f)| {
-            f.arity > 0 && !values.contains(id) && !owned_entries[*id] && !recursive(*id, &graph)
+            live[*id]
+                && f.arity > 0
+                && !values.contains(id)
+                && !owned_entries[*id]
+                && !recursive(*id, &graph)
         })
         .filter_map(|(id, f)| match &f.body {
             Body::Expr(body) => Some((id, f, body)),
@@ -338,7 +347,7 @@ pub(crate) fn infer(prog: &Program, owned_entries: &[bool]) -> BTreeMap<FuncId, 
         .collect();
     let mut contracts: BTreeMap<FuncId, Vec<Local>> = BTreeMap::new();
     let noescape = crate::escape::params(prog);
-    let channels = continuing_channels(prog);
+    let channels = continuing_channels(prog, live);
     // Start with known primitive borrows. A direct caller can qualify after
     // its callee has a proof; cycles never supply their own justification.
     loop {
@@ -399,7 +408,7 @@ mod tests {
     #[test]
     fn borrowed_reads_share_one_contract_with_insertion_and_verification() {
         let mut p = program(Expr::Call(1, vec![Expr::Local(0)]), MT::con("std::String"));
-        p.borrowed_parameters = infer(&p, &[false, true]);
+        p.borrowed_parameters = infer(&p, &[false, true], &[true, true]);
         assert_eq!(p.borrowed_parameters, BTreeMap::from([(0, vec![0])]));
         assert!(!super::super::consumes_arg(&p, 0, 0));
         let (body, locals) = super::super::insert(&p)[0].clone().unwrap();
@@ -420,7 +429,7 @@ mod tests {
             ),
             MT::Record(vec![("0".into(), MT::con("std::String"))]),
         );
-        p.borrowed_parameters = infer(&p, &[false, true]);
+        p.borrowed_parameters = infer(&p, &[false, true], &[true, true]);
         assert_eq!(p.borrowed_parameters, BTreeMap::from([(0, vec![0])]));
         let (body, locals) = super::super::insert(&p)[0].clone().unwrap();
         let Expr::Let(_, _, tail) = &body else {
@@ -437,11 +446,11 @@ mod tests {
         callee.body = Body::Expr(Expr::Call(1, vec![Expr::Local(0)]));
         p.funcs.push(callee);
         assert_eq!(
-            infer(&p, &[false, true, false]),
+            infer(&p, &[false, true, false], &[true, true, true]),
             BTreeMap::from([(0, vec![0]), (2, vec![0])])
         );
         p.funcs[2].body = Body::Expr(Expr::Local(0));
-        assert!(infer(&p, &[false, true, false]).is_empty());
+        assert!(infer(&p, &[false, true, false], &[true, true, true]).is_empty());
     }
 
     #[test]
@@ -459,11 +468,14 @@ mod tests {
             },
         ] {
             let p = program(body, MT::con("std::String"));
-            assert!(infer(&p, &[false, true]).is_empty());
+            assert!(infer(&p, &[false, true], &[true, true]).is_empty());
         }
         let mut p = program(Expr::Call(1, vec![Expr::Local(0)]), MT::con("std::String"));
         p.funcs[1].body = Body::Expr(Expr::Call(0, vec![Expr::Local(0)]));
-        assert!(infer(&p, &[false, false]).is_empty(), "mutual recursion");
+        assert!(
+            infer(&p, &[false, false], &[true, true]).is_empty(),
+            "mutual recursion"
+        );
     }
 
     #[test]
@@ -471,13 +483,26 @@ mod tests {
         let original = program(Expr::Call(1, vec![Expr::Local(0)]), MT::con("std::String"));
         let mut p = original.clone();
         p.exports.push(("read".into(), 0));
-        assert!(infer(&p, &[false, true]).is_empty());
+        assert!(infer(&p, &[false, true], &[true, true]).is_empty());
         let mut p = original.clone();
         p.funcs[1].body = Body::Expr(Expr::Func(0));
-        assert!(infer(&p, &[false, true]).is_empty());
+        assert!(infer(&p, &[false, true], &[true, true]).is_empty());
         assert!(
-            infer(&original, &[true, true]).is_empty(),
+            infer(&original, &[true, true], &[true, true]).is_empty(),
             "no direct worker"
+        );
+    }
+
+    #[test]
+    fn unreachable_function_values_do_not_change_live_call_contracts() {
+        let mut p = program(Expr::Call(1, vec![Expr::Local(0)]), MT::con("std::String"));
+        let mut dead = p.funcs[0].clone();
+        dead.body = Body::Expr(Expr::Func(0));
+        p.funcs.push(dead);
+        assert!(infer(&p, &[false, true, true], &[true, true, true]).is_empty());
+        assert_eq!(
+            infer(&p, &[false, true, true], &[true, true, false]),
+            BTreeMap::from([(0, vec![0])])
         );
     }
 
@@ -488,7 +513,7 @@ mod tests {
         p.funcs[1].locals = vec![tuple.clone()];
         p.funcs[1].ty = MT::Fun(Box::new(tuple.clone()), Box::new(tuple));
         p.funcs[1].body = Body::Prim("get".into());
-        assert!(infer(&p, &[false, true]).is_empty());
+        assert!(infer(&p, &[false, true], &[true, true]).is_empty());
     }
 
     #[test]
@@ -498,24 +523,25 @@ mod tests {
             ("0".into(), channel.clone()),
             ("1".into(), MT::con("std::I64")),
         ]);
-        for (later, expected) in [
-            (Expr::Field(Box::new(Expr::Local(0)), 0), true),
-            (Expr::Local(0), true),
-            (Expr::Field(Box::new(Expr::Local(0)), 1), false),
-            (Expr::Const(Value::unit()), false),
+        for (later, result, expected) in [
+            (
+                Expr::Field(Box::new(Expr::Local(0)), 0),
+                channel.clone(),
+                true,
+            ),
+            (Expr::Local(0), pair.clone(), true),
+            (
+                Expr::Field(Box::new(Expr::Local(0)), 1),
+                MT::con("std::I64"),
+                false,
+            ),
+            (Expr::Const(Value::unit()), MT::unit(), false),
         ] {
             let mut p = program(Expr::Call(1, vec![Expr::Local(0)]), channel.clone());
             p.funcs[0].ty = MT::Fun(Box::new(channel.clone()), Box::new(MT::unit()));
             p.funcs[1].locals = vec![channel.clone()];
             p.funcs[1].ty = p.funcs[0].ty.clone();
             p.funcs[1].body = Body::Prim("channel.close".into());
-            let result = type_of(
-                &|id| &p.funcs[id].ty,
-                &p.shapes,
-                std::slice::from_ref(&pair),
-                &later,
-            )
-            .unwrap();
             p.funcs.push(Func {
                 name: "caller".into(),
                 arity: 1,
@@ -530,7 +556,7 @@ mod tests {
                     Box::new(later),
                 )),
             });
-            let contracts = infer(&p, &[false, true, true]);
+            let contracts = infer(&p, &[false, true, true], &[true, true, true]);
             assert_eq!(contracts.contains_key(&0), expected, "{p:?}");
         }
     }

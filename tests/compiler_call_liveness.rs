@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::process::{Command, Output};
 
 #[test]
-fn direct_borrowed_fields_keep_caller_owners_through_success_and_failure() {
+fn direct_borrowed_fields_preserve_owners_on_success_failure_and_cancellation() {
     let string = MT::con("std::String");
     let integer = MT::con("std::I64");
     let pair = MT::Record(vec![
@@ -28,7 +28,7 @@ fn direct_borrowed_fields_keep_caller_owners_through_success_and_failure() {
     p.funcs.push(Func {
         name: "read".into(),
         arity: 1,
-        locals: vec![pair.clone(), string.clone(), integer.clone()],
+        locals: vec![pair.clone(), string.clone(), integer.clone(), MT::unit()],
         ty: function_type(&[pair], integer.clone()),
         body: Body::Expr(Expr::Let(
             1,
@@ -40,6 +40,14 @@ fn direct_borrowed_fields_keep_caller_owners_through_success_and_failure() {
                     Box::new(Expr::Local(2)),
                     vec![
                         (Pat::Lit(Value::I64(0)), Expr::Call(0, vec![Expr::Local(1)])),
+                        (
+                            Pat::Lit(Value::I64(2)),
+                            Expr::Let(
+                                3,
+                                Box::new(Expr::Call(5, vec![Expr::Const(Value::unit())])),
+                                Box::new(Expr::Call(0, vec![Expr::Local(1)])),
+                            ),
+                        ),
                         (
                             Pat::Wild,
                             Expr::Call(3, vec![Expr::Const(Value::str("expected"))]),
@@ -80,6 +88,13 @@ fn direct_borrowed_fields_keep_caller_owners_through_success_and_failure() {
             vec![Expr::Const(Value::str("input")), Expr::Const(Value::I64(0))],
         )),
     });
+    p.funcs.push(Func {
+        name: "yield".into(),
+        arity: 1,
+        locals: vec![MT::unit()],
+        ty: function_type(&[MT::unit()], MT::unit()),
+        body: Body::Prim("task.yield".into()),
+    });
     p.main = Some(4);
     fwp::ir::check_locals(&p).unwrap();
     let mut interpreter = fwp::interp::Interp::new(&p, Box::new(Vec::new()));
@@ -93,14 +108,17 @@ fn direct_borrowed_fields_keep_caller_owners_through_success_and_failure() {
         .call(2, vec![Value::str("input"), Value::I64(1)])
         .is_err());
     let emitted = fwp::cgen::generate(&p).unwrap();
-    assert!(emitted.contains("/* caller-owned parameters: 0 */"));
+    let borrowed = "/* caller-owned parameters: 0 */";
+    assert_eq!(emitted.matches(borrowed).count(), 1);
     let entry = "static V f0(V l0) {\n";
     assert_eq!(emitted.matches(entry).count(), 1);
     let runtime = emitted.replace(
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
     ).replace(entry, &format!(
-        "static volatile unsigned expected_owners;\n{entry}if (*fwp_rc_slot(l0) != expected_owners) exit(20);\n"
+        "static volatile unsigned expected_owners;\nstatic volatile int cancel_borrowed_entry;\nstatic fwp_task cancelled_borrowed_task;\n{entry}if (*fwp_rc_slot(l0) != expected_owners) exit(20);\n"
+    )).replace(borrowed, &format!(
+        "{borrowed}\nif (cancel_borrowed_entry) {{ fwp_cur=&cancelled_borrowed_task; cancelled_borrowed_task.cancelled=1; fwp_budget=0; }}\n"
     ));
     let probe = r#"
 static volatile V input_value;
@@ -139,6 +157,21 @@ int main(void) {
   } else if(!mode) return 9;
   fwp_handlers=h.prev;
   if(fwp_cleanups || !dead(input_value)) return 10;
+ }
+ for(int alias=0;alias<2;alias++) {
+  input_value=fwp_rc_fresh(fwp_str_new("input",5));
+  if(alias) fwp_rc_dup(input_value);
+  memset(&cancelled_borrowed_task,0,sizeof cancelled_borrowed_task);
+  cancel_borrowed_entry=1;
+  if(!setjmp(cancelled_borrowed_task.base)) { f2(input_value,0); return 11; }
+  fwp_cur=0; cancel_borrowed_entry=0;
+  if(!cancelled_borrowed_task.unwinding || fwp_cleanups) return 12;
+  if(alias) {
+   if(*fwp_rc_slot(input_value)!=1 || STR(input_value)->len!=5) return 13;
+   if(!fwp_rc_release_last(input_value)) return 14;
+   fwp_rc_free_obj(input_value);
+  }
+  if(!dead(input_value)) return 15;
  }
  return 0;
 }
