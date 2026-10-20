@@ -423,6 +423,25 @@ the 144 saved output semantic-test binaries.
 Allocation counts come from a separate test that detects an intentionally added
 String. The report does not infer whole-process heap use from that narrower check.
 
+### Measuring integer text without building it
+
+`show | string.length` asks how many characters an integer's decimal display
+would contain. For example, applying it to `-17` returns `3`: the minus sign and
+two digits. Native lowering can count those characters directly, without owning
+a temporary String. The same rule handles concatenations of integer displays
+and literal text: `show | concat "é🙂" | string.length` returns `5` for `-17`.
+Literal lengths count Unicode scalar values, as ordinary `string.length` does.
+
+`src/cgen/scalar_text.rs` performs this rewrite before ownership lowering adds
+temporary locals. It handles signed and unsigned integers up to 64 bits and
+preserves the order of integer-producing expressions, including their effects
+and traps. A static bound proves that combining the lengths fits I64; the
+generated sum still uses ordinary checked addition. Shared strings, unknown
+string producers, floating-point displays and wider integers keep their storage.
+The private integer-length operation has no source-language declaration.
+This preparation needs the checks recorded in the [handoff](development-state.md)
+before any allocation or speed claim.
+
 ## Runtime
 
 The runtime supplies operations generated programs cannot express as simple C
