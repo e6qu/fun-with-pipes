@@ -605,7 +605,13 @@ impl Proof<'_> {
                 );
                 if returns_functions {
                     match contract {
-                        Some(c) if c.result == crate::ownership::ResultOwnership::Static => {
+                        Some(c)
+                            if matches!(
+                                c.result,
+                                crate::ownership::ResultOwnership::Static
+                                    | crate::ownership::ResultOwnership::Never
+                            ) =>
+                        {
                             result.clear()
                         }
                         Some(c)
@@ -1020,6 +1026,40 @@ mod tests {
             .queued_targets(&functions, &mut BTreeSet::new())
             .unwrap_err()
             .contains("cannot prove the source"));
+    }
+
+    #[test]
+    fn nonreturning_primitives_do_not_produce_unknown_functions() {
+        for symbol in ["prim.trap", "exit", "unmodeled-function-producer"] {
+            let mut program = state_program(true);
+            let input = if symbol == "exit" {
+                Value::I64(1)
+            } else {
+                Value::str("stopped")
+            };
+            let input_type = if symbol == "exit" {
+                MT::con("std::I64")
+            } else {
+                MT::con("std::String")
+            };
+            program.funcs.push(Func {
+                name: symbol.into(),
+                arity: 1,
+                locals: vec![input_type.clone()],
+                ty: arrow(input_type, program.funcs[1].ty.clone()),
+                body: Body::Prim(symbol.into()),
+            });
+            program.funcs[0].body = Body::Expr(Expr::Apply(
+                Box::new(Expr::Call(3, vec![Expr::Const(input)])),
+                vec![Expr::Const(Value::unit())],
+            ));
+            let result = check(&program, &[0]);
+            if symbol == "unmodeled-function-producer" {
+                assert!(result.unwrap_err().contains("cannot prove"));
+            } else {
+                result.unwrap();
+            }
+        }
     }
 
     #[test]

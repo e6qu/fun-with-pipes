@@ -4,11 +4,28 @@
 
 The active delivery branch is `queued-function-delivery`, based on accepted main.
 Use `gh pr view queued-function-delivery` for its PR and current checks.
-Next: require all nine production jobs and documentation for its exact final
-head, repair every failure, then squash merge with a one-line subject and empty
-body. Verify the merged tree/message before cancelling redundant post-merge CI.
-Preserve passing heads while remaining gates run; audit every failed job and
-completed target before a combined repair push.
+Next: finish auditing production `39353280539` at `d1df84d9`, verify the
+non-returning-function proof repair on focused runners, then push all known
+repairs together. macOS ARM64 stress has four failures across
+`autodiff_checkpoint` and `autodiff_precision`: ARC invents an unknown callable
+from a non-returning primitive and later rejects `rev._vjp`. The remaining gates
+are still running; benchmark and documentation jobs passed. All targets in the
+completed failed job were audited. Do not merge this head.
+
+The prepared repair gives `Never` primitive results an empty callable set:
+a trap or exit cannot return an unknown function. Unknown runtime producers
+remain rejected. A small queued-function regression reproduces the old rejection;
+guarded raw interpretation prints `Some 3` (0.97s). Focused queued-entry checks now
+also run the complete checkpoint and F128 precision targets. Full acceptance is
+still required before squash merge with a one-line subject and empty body.
+
+Independent preparation `measure-channel-transfers` in
+`/private/tmp/fwp-channel-transfers` measures and then implements consuming
+channel sends. Baseline run `39354805966` passed on Linux ARM64/AMD64;
+immutable source `roadmap/revision-channel-counts-2b56fd1c` records one unnecessary
+queue retain per fresh message. Transfer runs `39356046321` and `39356051237`
+are in progress. Their old all-borrowed unit expectation and a missing-cleanup
+control need repair; audit all completed targets before pushing. Keep one PR.
 
 Compiler/test source `c04f01fbeb1dc0f1a1efc07473bcc894b864175a` is preserved by
 `roadmap/revision-queued-functions-c04f01fb`. Focused macOS ARM64 run `39352725240`
