@@ -375,8 +375,31 @@ impl Proof<'_> {
         }
     }
 
-    fn expr(&mut self, expr: &Expr, locals: &mut [Targets], scoped: u8) -> Result<Targets, String> {
-        let result = match expr {
+    /// Fields share a conservative origin set, but a direct callable can only
+    /// have its checked monomorphic type. Keep unknown origins: knowing the
+    /// type alone does not establish a function's captures or lifetime.
+    fn refine_callable(&self, values: &mut Targets, ty: &MT) {
+        if !matches!(ty, MT::Fun(..)) {
+            return;
+        }
+        values.retain(|closure| match closure {
+            Closure::Unknown => true,
+            Closure::Known(id, supplied) => crate::ir::same_type(
+                &self.program.shapes,
+                self.program.funcs[*id].ty.params(*supplied).1,
+                ty,
+            ),
+        });
+    }
+
+    fn expr(
+        &mut self,
+        expr: &Expr,
+        locals: &mut [Targets],
+        local_types: &[MT],
+        scoped: u8,
+    ) -> Result<Targets, String> {
+        let mut result = match expr {
             Expr::Local(local) => locals[*local as usize].clone(),
             Expr::Const(value) => self.constant(value),
             Expr::Func(id) if self.program.funcs[*id].arity == 0 => self.request(*id, scoped, &[]),
@@ -384,56 +407,64 @@ impl Proof<'_> {
             Expr::Call(id, args) => {
                 let values = args
                     .iter()
-                    .map(|arg| self.expr(arg, locals, scoped))
+                    .map(|arg| self.expr(arg, locals, local_types, scoped))
                     .collect::<Result<Vec<_>, _>>()?;
                 self.request(*id, scoped, &values)
             }
             Expr::Apply(function, args) => {
-                let function = self.expr(function, locals, scoped)?;
+                let function = self.expr(function, locals, local_types, scoped)?;
                 let args = args
                     .iter()
-                    .map(|arg| self.expr(arg, locals, scoped))
+                    .map(|arg| self.expr(arg, locals, local_types, scoped))
                     .collect::<Result<Vec<_>, _>>()?;
                 self.apply(&function, &args, scoped)?
             }
             Expr::Record(fields) | Expr::Construct(_, fields) => {
                 let mut result = Targets::new();
                 for field in fields {
-                    result.extend(self.expr(field, locals, scoped)?);
+                    result.extend(self.expr(field, locals, local_types, scoped)?);
                 }
                 result
             }
-            Expr::Field(value, _) => self.expr(value, locals, scoped)?,
+            Expr::Field(value, _) => self.expr(value, locals, local_types, scoped)?,
             Expr::SetFields(value, fields) => {
-                let mut result = self.expr(value, locals, scoped)?;
+                let mut result = self.expr(value, locals, local_types, scoped)?;
                 for (_, field) in fields {
-                    result.extend(self.expr(field, locals, scoped)?);
+                    result.extend(self.expr(field, locals, local_types, scoped)?);
                 }
                 result
             }
             Expr::BorrowGlobal(local, global, body) => {
                 locals[*local as usize] = self.request(*global, scoped, &[]);
-                self.expr(body, locals, scoped)?
+                self.expr(body, locals, local_types, scoped)?
             }
             Expr::Let(local, value, body) => {
-                locals[*local as usize] = self.expr(value, locals, scoped)?;
-                self.expr(body, locals, scoped)?
+                locals[*local as usize] = self.expr(value, locals, local_types, scoped)?;
+                self.expr(body, locals, local_types, scoped)?
             }
             Expr::Match(value, arms) => {
-                let value = self.expr(value, locals, scoped)?;
+                let value = self.expr(value, locals, local_types, scoped)?;
                 let mut result = Targets::new();
                 for (pattern, body) in arms {
                     let mut branch = locals.to_vec();
                     Self::bind(pattern, &value, &mut branch);
-                    result.extend(self.expr(body, &mut branch, scoped)?);
+                    result.extend(self.expr(body, &mut branch, local_types, scoped)?);
                 }
                 result
             }
             Expr::Trace(_, body)
             | Expr::Dup(_, body)
             | Expr::Drop(_, body)
-            | Expr::ResourceRegion { body, .. } => self.expr(body, locals, scoped)?,
+            | Expr::ResourceRegion { body, .. } => self.expr(body, locals, local_types, scoped)?,
         };
+        if let Some(ty) = crate::ir::type_of(
+            &|id| &self.program.funcs[id].ty,
+            &self.program.shapes,
+            local_types,
+            expr,
+        ) {
+            self.refine_callable(&mut result, &ty);
+        }
         Ok(result)
     }
 
@@ -445,7 +476,7 @@ impl Proof<'_> {
                 for (local, value) in locals.iter_mut().zip(args) {
                     *local = value.clone();
                 }
-                self.expr(body, &mut locals, scoped)
+                self.expr(body, &mut locals, &function.locals, scoped)
             }
             Body::Prim(symbol) if matches!(symbol.as_str(), "ad.scope" | "ad.scope2") => {
                 self.apply(&args[0], &args[1..], scoped | AD)
@@ -968,6 +999,12 @@ mod tests {
         };
         let mut functions = Targets::from([Closure::Known(1, 0)]);
         assert!(join(&mut functions, &Targets::from([Closure::Unknown])));
+        functions.insert(Closure::Known(2, 0));
+        proof.refine_callable(&mut functions, &program.funcs[1].ty);
+        assert_eq!(
+            functions,
+            Targets::from([Closure::Known(1, 0), Closure::Unknown])
+        );
         assert!(proof
             .apply(&functions, &[Targets::new()], STATE)
             .unwrap_err()
