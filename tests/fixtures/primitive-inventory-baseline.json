@@ -3025,7 +3025,7 @@
       "symbol": "channel.send",
       "aliased": false,
       "bucket": "contract",
-      "contract": "Some(Contract { arguments: [Borrow, Consume], result: ChannelOperation, callback: None, aliases: [] })",
+      "contract": "Some(Contract { arguments: [Borrow, Borrow], result: ChannelOperation, callback: None, aliases: [] })",
       "signature": "Channel[a] -> a -> Bool ! {Async}"
     },
     {

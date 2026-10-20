@@ -4,7 +4,7 @@
 
 PR #175 is the only active delivery. Its branch `queued-function-delivery` contains
 combined channel proofs, consuming sends and the measured `tap` improvement.
-Local repair `6511a50f` restores the frozen primitive baseline, explicitly checks
+Published repair `6511a50f` restores the frozen primitive baseline, explicitly checks
 the consuming-send contract and assigns the new measurement target to native CI.
 Production at `f3c6f8d9` failed those preflights. Do not merge it. Follow the primary
 worktree handoff for the final acceptance run and merge; require all nine
@@ -15,7 +15,12 @@ This worktree (`/private/tmp/fwp-channel-transfers`) is now the independent
 candidate with `channel-proof` and `channel-costs` on runners, audit every result,
 and compare counts, generated C and actual binaries with the existing reports.
 Keep it separate while PR #175 is being validated; do not open another PR yet.
-Bring the inventory/schedule repair into this branch before its full acceptance.
+The inventory/schedule repair is included here. Final PR #175 production is
+`39363423392`, documentation `39363423384`; its unchanged compiler/runtime has
+focused ownership `39362626916` and counts `39362629293` at `f3c6f8d9`.
+Superseded production `39359123801` and `39362628332`, focused `39361329677`
+and docs `39362628337` were cancelled to free runners. Review their completed
+portions for additional failures; cancelled checks are not acceptance.
 
 ## Candidate and limits
 

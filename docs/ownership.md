@@ -263,8 +263,8 @@ cancelled blocked operations release their wait registrations and owners first.
 
 ### Next proof: functions stored in channels
 
-This implementation is under validation on the preparation branch; it is not
-yet accepted platform support. A partial
+This implementation is under validation in PR #175; it is not yet accepted
+platform support. A partial
 application such as `add 3` is a function that adds three to its next input. It
 keeps the integer `3` as a **capture**, a value saved for the later call. Storing
 that function in a channel cannot create a cycle through this integer. Receiving

@@ -183,6 +183,7 @@
     "fold_unwind_ownership",
     "channel_queue_ownership",
     "queued_functions",
+    "channel_transfer_costs",
     "closure_ownership",
     "dns_ownership",
     "stack",
