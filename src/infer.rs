@@ -1163,7 +1163,14 @@ impl<'a> Infer<'a> {
         // each call of the composition calls both stages once, choosing
         // their abstract sizes again
         let start = self.env.table.vars.len();
-        let lhs = &self.open_call(lhs, None);
+        // Known effects of the later stage belong to this composition, not to
+        // an earlier stored callback whose open row may be shared with `lhs`.
+        // Treat both stages symmetrically when opening their temporary call rows.
+        let later_effects = match self.env.table.resolve(rhs) {
+            Type::Fun(_, _, effects) => Some(effects),
+            _ => None,
+        };
+        let lhs = &self.open_call(lhs, later_effects.as_ref());
         let Type::Fun(a, b, e) = self.env.table.resolve(lhs) else {
             unreachable!()
         };
@@ -1179,7 +1186,7 @@ impl<'a> Infer<'a> {
                         "the stage after `|` must be a function, but it has type `{}`",
                         self.show(&other)
                     ),
-                ))
+                ));
             }
         }
         if let Type::Fun(param, _, _) = self.env.table.resolve(rhs) {
@@ -1668,7 +1675,7 @@ impl<'a> Infer<'a> {
                             return Err(Diagnostic::error(
                                 row.span,
                                 format!("matrix rows must all have {} elements", c),
-                            ))
+                            ));
                         }
                         _ => {}
                     }

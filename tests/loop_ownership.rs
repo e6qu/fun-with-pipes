@@ -65,6 +65,12 @@ function-step = if (.0 | eq 0) (.1 | Stop)
 effect-step : (I64, String) -> Step[(I64, String), String] ! {IO}
 effect-step = if (.0 | eq 0) (.1 | Stop)
     (make { 0 = .0 | sub 1, 1 = .1 | tap echo | concat "!" } | Again)
+tapped-step : (I64, String) -> Step[(I64, String), String] ! {IO}
+tapped-step = if (.0 | eq 0) (.1 | Stop)
+    (tap (.1 | echo) | make { 0 = .0 | sub 1, 1 = .1 | concat "!" } | Again)
+fallible-step : (I64, String) -> Step[(I64, String), String] ! {IO, Error[String]}
+fallible-step = tap (.1 | echo) | if (.0 | eq 1) (const "stopped" | fail)
+    (make { 0 = .0 | sub 1, 1 = .1 | concat "!" } | Again)
 main = [
     (3, "a b" | words | join "") | both (loop record-step) id | echo,
     (3, "a b" | words | join "") | loop boxed-step | concat "after:" | echo,
@@ -77,6 +83,8 @@ main = [
     apply "!" (loop function-step (3, concat ("a b" | words | join ""))) | echo,
     (3, "trace") | loop effect-step | echo,
     (0, "empty") | loop effect-step | echo,
+    (3, "tapped") | both (loop tapped-step) id | echo,
+    (3, "fallible") | both (attempt (loop fallible-step)) id | echo,
 ] | ignore
 "#,
     )
@@ -131,6 +139,22 @@ main = [
         );
         assert_eq!(out.stdout, reference.stdout, "{flag}=0");
     }
+    let exe = dir.0.join("aliases-arc-O2");
+    checked(
+        Command::new(fwp)
+            .arg("build")
+            .arg(&src)
+            .args(["--gc", "arc", "-O2", "-o"])
+            .arg(&exe),
+    );
+    let out = checked(
+        Command::new(&exe)
+            .env_remove("FWP_GC")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0"),
+    );
+    assert_eq!(out.stdout, reference.stdout, "checked ARC");
 }
 
 #[test]
@@ -401,6 +425,9 @@ static void scalar_stop_caps(V f, int duplicate) { (void)f; (void)duplicate; }
 static const fwp_owned_fninfo scalar_owned = {scalar_stop_entry, scalar_stop_caps, scalar_stop_args};
 static const fwp_fninfo scalar_fns[] = {{1, scalar_stop_entry, "numeric stop", &scalar_owned}};
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 2;
+#endif
     fwp_gc_start(__builtin_frame_address(0));
     fwp_fns = scalar_fns;
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));

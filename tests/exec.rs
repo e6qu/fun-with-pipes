@@ -3,6 +3,7 @@
 //! produce exactly the expected output.
 
 use std::collections::HashMap;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -47,7 +48,6 @@ fn run(
     stdin: &[u8],
     binary_out: bool,
 ) -> (Vec<u8>, String, i32) {
-    use std::io::Write;
     let mut c = command(r, func);
     c.args(args)
         .stdin(Stdio::piped())

@@ -2156,17 +2156,12 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
                 }
                 fwp_cleanup_pop(&decode_text);
                 free(why);
-                /* Sending borrows the decoded value. A queue acquires its own
-                 * owner; closed channels and native sinks retain none here. */
-                fwp_value_owner decoded = {v, dec.ty->drop};
-                fwp_cleanup decoded_cleanup;
-                fwp_value_protect(&decoded, &decoded_cleanup);
+                /* Sending consumes the decoder's owner, including cleanup on
+                 * rejection, native sinks, traps and cancellation. */
                 fwp_cleanup channel_abort;
                 fwp_cleanup_push(&channel_abort, g_call_reset, &call);
-                fwp_p_channel_send_owned(ch, v, dec.ty->dup);
+                fwp_p_channel_send_owned(ch, v, dec.ty->drop);
                 fwp_cleanup_pop(&channel_abort);
-                fwp_value_finish(&decoded, &decoded_cleanup);
-                if (dec.ty->drop) dec.ty->drop(v);
                 fwp_cleanup_pop(&received);
                 g_got_release(&g);
                 continue;

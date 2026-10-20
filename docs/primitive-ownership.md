@@ -219,13 +219,15 @@ allocation rather than freeing an interior pointer from its bump heap.
 ## Task result and deadline boundaries
 
 The runtime owns fresh typed result wrappers from task.await, task.within and
-Channel receives. Wrappers retain pointer-bearing payload owners; scalar words
+channel receives. Wrappers own their pointer-bearing payloads; scalar words
 do not select reference destructors. task.deadline borrows its typed argument
 and retains the returned alias instead of forcing it into runtime sharing.
 It also retains spawn/deadline captures through entry, completion or
 cancellation and protects scope results through joining and unwind. Counted
 task handles own typed cached results; repeated awaits return separate owners.
-Typed channels retain queued elements and transfer them on receive; close
+Typed sends consume message owners and transfer them into the queue; the compiler
+retains independently live aliases before a send. Receive transfers the queued
+owner into its result, while failure before result allocation leaves it queued; close
 preserves the queue. These contracts do not establish automatic cycle
 reclamation, complete ARC or tracing-free execution.
 

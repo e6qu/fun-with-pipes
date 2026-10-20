@@ -618,8 +618,9 @@ records production acceptance in PR #159.
 
 The server keeps argument and typed-cleanup records on the stack,
 calls each compiled method directly, and releases its arguments, result or error
-through concrete generated destructors. Native output channels borrow sent values
-and embed their callback payload after the channel header. Queue and callback
+through concrete generated destructors. A typed send consumes a message owner;
+native output callbacks borrow that value only for the duration of the callback
+and keep their callback payload after the channel header. Queue and callback
 cleanup share alternative header fields; sends retain their direct callback
 pointer. The [ownership guide](ownership.md) describes the lifetime rules, and
 [history](roadmap-history.md) records production acceptance in PR #160. The next
@@ -792,6 +793,14 @@ The optimizer removes work only when doing so preserves observable behavior:
 | Flat loop state | Rebuilding state tuples on each iteration | Unsupported shapes keep ordinary state representation |
 | Variant returns | Building `Some`/`Ok` only to immediately inspect it | Unknown whole-value consumers may require a box |
 | Blocked matrix multiplication | Poor locality and generic loop overhead | Preserve multiplication/addition order and shape semantics |
+
+`tap action` runs an action and returns its original input. When its internal
+match has one wildcard arm returning an unchanged local value, the optimizer
+uses that local directly in the continuation. It keeps the action first, without
+copying or dropping it, and preserves existing resource-lifetime boundaries.
+This exposes field-only uses to existing direct-call specialization. The
+[channel experiment](measurements/channel-transfer-protocol.md#removing-a-temporary-tuple-after-tap)
+removes a temporary argument tuple; its loop-state tuple still allocates.
 
 The F64 matrix path uses blocks of 32 over contiguous arrays, checks dimensions
 once and allocates one output. Each element accumulates in ascending inner-index

@@ -1,0 +1,17 @@
+# Keep the same string alive across all sends, including after each receive.
+# This is a deliberate sharing control, unlike a fresh temporary per message.
+texts : I64 -> Channel[String] ! {Async}
+texts = channel.make
+exchange : (Channel[String], String) -> () ! {Async, Error[String]}
+exchange =
+    tap (uncurry channel.send)
+    | both (.0 | channel.recv | option.unwrap-or "missing") .1
+    | uncurry eq
+    | if id (const ()) (const "wrong queue value" | fail)
+step : (Channel[String], I64, I64, String) -> Step[(Channel[String], I64, I64, String), I64] ! {Async, Error[String]}
+step = if (fork lt .2 .1)
+    (tap (both .0 .3 | exchange) | make { 0 = .0, 1 = .1 | add 1, 2 = .2, 3 = .3 } | Again)
+    (tap (.0 | channel.close) | .1 | Stop)
+export work : I64 -> I64 ! {Async, Error[String]}
+work = make { 0 = const 1 | texts, 1 = const 0, 2 = id, 3 = show } | loop step
+main = 16 | work | echo

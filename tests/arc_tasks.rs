@@ -83,7 +83,7 @@ fn tasks_and_acyclic_channels_reclaim_after_join_and_cancellation() {
                 for needle in [
                     "if (t->result_drop && result) t->result_drop(result);",
                     "if (ownership == FWP_TASK_SHARED) fwp_task_drop(PTR(finished));",
-                    "c->owner.queue.drop(element);",
+                    "c->owner.queue_drop(element);",
                 ] {
                     assert_eq!(measured.matches(needle).count(), 1);
                     let omitted = measured.replace(needle, "/* omitted owner release */");

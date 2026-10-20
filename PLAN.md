@@ -96,6 +96,9 @@ outside the benchmark suite.
    The [queued-function proof](docs/ownership.md#next-proof-functions-stored-in-channels)
    is implemented and awaiting full acceptance. Finish its capture, receiver-scope,
    cancellation and generated-entry checks without adding ownership syntax.
+   The same delivery includes [moving messages into queues and removing temporary
+   argument tuples](docs/measurements/channel-transfer-protocol.md). Validate its
+   measured count savings, cleanup and binaries together, including GCC at O0.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.

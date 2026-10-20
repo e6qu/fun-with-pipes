@@ -227,7 +227,7 @@ fn runtime_owners(fixture: String) -> String {
  fwp_task_drop(cached);
  if(fstat(fd,&descriptor_status)!=-1||fwp_wasm_counts_live)return 9;
  h=fwp_p_file_open(fwp_cstr(argv[1]),0,0);file=(fwp_file *)(uintptr_t)h;fd=fileno(file->f);
- V channel=fwp_p_channel_make_owned(1,fwp_file_drop,fwp_file_dup);
+ V channel=fwp_p_channel_make_owned(1,fwp_file_drop);
  fwp_chan *c=(fwp_chan *)(uintptr_t)channel;
  fwp_chan_grow(c);c->buf[0]=h;c->len=1;
  fwp_rc_dup(channel);fwp_channel_drop(channel);

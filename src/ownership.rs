@@ -359,7 +359,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "task.sleep" | "task.yield" | "task.cancelled" => (&[B], R, None, &[]),
         "task.cancel" => (&[B], R, None, &[]),
         "channel.make" | "channel.close" => (&[B], ResultOwnership::ChannelOperation, None, &[]),
-        "channel.send" => (&[B, B], ResultOwnership::ChannelOperation, None, &[]),
+        "channel.send" => (&[B, C], ResultOwnership::ChannelOperation, None, &[]),
         "trim" | "trim-start" | "trim-end" | "lower" | "upper" | "string.reverse" => {
             (&[B], ResultOwnership::FreshLeaf, None, &[])
         }
@@ -739,7 +739,6 @@ mod tests {
         assert_eq!(flat_map.aliases, &[0, 1]);
         for symbol in [
             "channel.make",
-            "channel.send",
             "channel.recv",
             "channel.recv-for",
             "channel.close",
@@ -748,6 +747,10 @@ mod tests {
             assert_eq!(channel.result, ResultOwnership::ChannelOperation);
             assert!(channel.arguments.iter().all(|arg| *arg == Argument::Borrow));
         }
+        let send = primitive("channel.send").unwrap();
+        assert_eq!(send.result, ResultOwnership::ChannelOperation);
+        assert_eq!(send.arguments, &[Argument::Borrow, Argument::Consume]);
+        assert!(send.aliases.is_empty());
         let spawn = primitive("task.spawn").unwrap();
         assert_eq!(spawn.argument(0), Argument::Borrow);
         assert_eq!(spawn.callback, Some(Callback::Retained(0)));
@@ -834,6 +837,9 @@ mod tests {
                             consumed.is_empty() && c.aliases.is_empty() && c.callback.is_none(),
                             "{symbol}"
                         );
+                    }
+                    ResultOwnership::ChannelOperation if symbol == "channel.send" => {
+                        assert_eq!(consumed, vec![1], "{symbol}");
                     }
                     _ => assert!(consumed.is_empty(), "{symbol}"),
                 }
