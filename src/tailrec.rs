@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 /// Immutable data can leave a frame without closing a resource or cancelling
 /// an operation. Unknown captures and opaque handles need a stronger proof.
-fn plain_data(shapes: &Shapes, ty: &MT, seen: &mut HashSet<MT>) -> bool {
+pub(crate) fn plain_data(shapes: &Shapes, ty: &MT, seen: &mut HashSet<MT>) -> bool {
     if !seen.insert(ty.clone()) {
         return true;
     }

@@ -79,6 +79,10 @@ nonescape proof; field views keep their original boxes visible to tracing.
 The existing generic entries still consume their arguments and release them
 on success/failure. Functions used as values, exports, resource scopes, recursive
 functions and workers without a supported representation retain owned arguments.
+Plain-data eligibility reuses the tail-recursion type proof. Channels additionally
+require every caller to keep that exact channel after the call; using another
+tuple field is insufficient. This preserves native sink-context destruction
+timing and does not admit new captures or channel cycles.
 
 New unit cases cover read-only fields, transitive direct calls, escaping values,
 function values, recursion and the distinction between borrowing and nonescape.
@@ -86,7 +90,9 @@ A native probe checks exact counts at O0/O2, caller failure, independent aliases
 generic boxed entries and a deliberately leaked-owner control. The ownership
 checker now rejects a borrowed argument whose owner was consumed by a later
 argument. Formatting passes under the guard (1.57s); the documentation audit passes
-(2.50s). No local build was run. Validation and channel counts will run in
+(2.50s), and formatting after the channel proof passes (1.47s). No local build
+was run. Initial run `39420410381` was cancelled while both jobs were still queued,
+before compilation; it supplies no evidence. Validation and channel counts will run in
 `channel-costs`; review all
 steps and generated binaries before any performance claim or next PR.
 
