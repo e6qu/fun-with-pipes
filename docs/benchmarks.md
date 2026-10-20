@@ -20,7 +20,8 @@ ratios on another machine or establish that the whole language is â€œzero-cost.â
 |---|---|---|
 | How much slower/faster than C or Rust? | [Complete programs](#fwp-compared-with-c-and-rust), [arrays/matrices](#current-numerical-comparison-and-record-moves), [hashing](#repeating-the-allocation-and-borrowing-changes-together), [vector lanes](#fixed-size-lane-calculations-against-c-and-rust) | Ratio against the named C/Rust implementation for that input and timing boundary |
 | Did a compiler change help? | [Iteration](#list-iteration-compared-with-its-previous-definition), [derivatives](#paired-autodiff-metadata-allocations), [HTTP functions](#fixed-function-values-in-the-http-server), [maps](#larger-maps-exposed-a-storage-layout-problem) | New fwp / baseline fwp; not overhead against another language |
-| How much ownership work does a channel exchange need? | [Method and baseline](measurements/channel-transfer-protocol.md), [matched payloads](measurements/channel-variant-moves.md), [direct-call borrowing](measurements/channel-direct-borrows.md) | Allocations, retains and actual binary/frame sizes; no execution-time or C/Rust comparison |
+| How much ownership work does a channel exchange need? | [Method and baseline](measurements/channel-transfer-protocol.md), [matched payloads](measurements/channel-variant-moves.md), [direct-call borrowing](measurements/channel-direct-borrows.md), [function channels](measurements/function-channel-borrows.md) | Allocations, retains and actual binary/frame sizes; no execution-time or C/Rust comparison |
+| What does integer-text elimination save? | [Direct character counting](measurements/integer-text.md) | Native results and allocation controls; time against C/Rust counting versus formatting |
 | Does storage release correctly? | [Clients](#memory-used-by-complete-remote-stream-clients), [servers](#server-memory-after-completed-remote-calls), [C results](#returning-owned-values-to-c-callers), [failure cleanup](#cleanup-after-failed-map-and-set-operations) | Allocation/count/live-byte checks; most contain no timing benchmark |
 | How do I reproduce it? | [Running comparisons](#running-comparisons) | Select the exact source, suite, control and host; retain raw evidence |
 
@@ -112,11 +113,15 @@ cannot establish what their machine instructions looked like.
 | `range-set` | Build the distinct keys `0..999999`, then compute FNV-1a over the canonical set encoding: unsigned LEB128 count followed by eight little-endian bytes per key | All three start with ordered keys and need no sorting. C uses a heap buffer, Rust a vector, fwp a set. Hash multiplication wraps modulo 2^64 in all three. Optimizers may remove storage or combine loops; inspect retained binaries before claiming equal allocations. Runtime startup, allocation, hashing and output are timed together; the general runner uses fwp's tracing mode. |
 | `pipeline` | For `0..999999`, multiply by 3, keep even results and sum; sum 20 rounds | fwp can combine the stages into one traversal without intermediate lists. C explicitly fills arrays; Rust constructs vectors and filters them. Eliminating that work can outweigh language overhead. |
 | `strings` | For `i=0..1999999`, concatenate decimal `i`, decimal `3*i` and `#`; sum text lengths | fwp can calculate some formatted lengths without creating the string. C uses `snprintf` and `strlen`; Rust uses `format!` and byte length. All characters here are ASCII, so the lengths agree. The programs need not perform the same formatting or allocation work. |
+| `text-length` | The same input, fwp pipeline and result as `strings`; C and Rust count decimal digits by repeated division by ten, without formatting text | This compares fwp's elimination of temporary text against handwritten counting. All three check multiplication and sums for overflow; the inputs fit. The C/Rust failure messages differ and are not exercised. Startup, output, scheduling and remaining ownership work are still included; matching algorithms do not establish equal machine instructions. |
 
 A result that is faster than C here does not mean fwp outperforms the best
 hand-written C version. Likewise, a slower result does not identify how much
 came from reference counting, collection, checks, allocation or the algorithm.
 The timing runner does not measure those costs separately.
+The [integer-text report](measurements/integer-text.md) records the first
+two-host direct-counting comparison and its raw samples. Older six-program
+measurements do not include this new peer comparison.
 
 ### Recorded example and overhead
 

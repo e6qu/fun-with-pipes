@@ -34,11 +34,26 @@ main = range 0 129 | map (choose | checks) | length | echo
     let borrowed_failure = channel_source
         .replace("(.1 | width)", "(.1 | width | add 1)")
         .replace("main = 16 | work | echo", "main = 16 | attempt work | echo");
+    let function_channel_source = include_str!("fixtures/channel_transfer_function.fwp");
+    assert_eq!(function_channel_source.matches("(.1 | width)").count(), 1);
+    assert_eq!(
+        function_channel_source
+            .matches("main = 16 | work | echo")
+            .count(),
+        1
+    );
+    let borrowed_function_failure = function_channel_source
+        .replace("(.1 | width)", "(.1 | width | add 1)")
+        .replace("main = 16 | work | echo", "main = 16 | attempt work | echo");
     let sources = [
         ("arrays", include_str!("fixtures/numeric_array_fusion.fwp")),
         ("closures", closures),
         ("files", files.as_str()),
         ("borrowed-call-failure", borrowed_failure.as_str()),
+        (
+            "borrowed-function-call-failure",
+            borrowed_function_failure.as_str(),
+        ),
         (
             "ownership-scopes",
             include_str!("../docs/tutorials/23-ownership-scopes/main.fwp"),
@@ -76,7 +91,7 @@ main = range 0 129 | map (choose | checks) | length | echo
             );
             let code = std::fs::read_to_string(&cfile).unwrap();
             assert!(code.contains("#define FWP_ARC_ONLY 1"));
-            if name == "borrowed-call-failure" {
+            if name == "borrowed-call-failure" || name == "borrowed-function-call-failure" {
                 let start = code.find("/* exchange :").expect("direct exchange worker");
                 let worker = &code[start..];
                 let worker = &worker[..worker.find("\n}").unwrap()];

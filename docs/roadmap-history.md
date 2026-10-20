@@ -12,6 +12,28 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Matched payload moves and direct-call borrows (PR #179)
+
+Matching a single-payload variant can transfer its owner into the arm. A direct
+call can borrow input storage when every caller still needs that same storage
+afterward. Last uses consume their inputs; generic entries retain their ordinary
+ownership rules. Failure, cancellation and original resource scopes stay covered.
+
+[The channel comparison](measurements/channel-direct-borrows.md) removes the
+remaining fresh-text retain, without changing allocations or peak accounted
+storage. The report records smaller frames and actual binary changes; it makes
+no timing claim. Compile-time evaluation also rejects runtime handles instead
+of silently generating an invalid native constant. File contents can still
+be read at compile time and embedded as data.
+
+[PR #179](https://github.com/e6qu/fun-with-pipes/pull/179) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39438167856)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39438167895)
+on `63a129f25cfb9a3b940baf7786036265bfdf831d`; complete logs were audited.
+Squash merge `2f2e3fa1baa3b8b298781d109bb4d6eb11a822d7` has the same tree
+and a one-line message without trailers. Duplicate post-merge production
+`39456604708` was cancelled; post-merge documentation had already passed.
+
 ## Direct matches and callbacks (PR #178)
 
 A match on a temporary tuple can test the relevant field directly, after

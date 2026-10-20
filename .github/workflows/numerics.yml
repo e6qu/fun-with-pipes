@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, channel-costs, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, channel-costs, scalar-text, scalar-text-memory, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -89,7 +89,7 @@ jobs:
           path: gc-checks.log
           if-no-files-found: error
   channel_transfer_costs:
-    if: inputs.suite == 'channel-costs'
+    if: inputs.suite == 'channel-costs' || inputs.suite == 'scalar-text'
     strategy:
       fail-fast: false
       matrix:
@@ -101,6 +101,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 1
       FWP_CHANNEL_COST_ARTIFACTS: channel-cost-evidence
+      FWP_INTEGER_LENGTH_ARTIFACTS: channel-cost-evidence/text-length
       FWP_LTO: '0'
     steps:
       - uses: actions/checkout@v7
@@ -116,22 +117,74 @@ jobs:
           rustc -Vv > channel-cost-evidence/rust.txt
           "$CC" --version > channel-cost-evidence/cc.txt
           printf '%s\n' 'CC=gcc; FWP_LTO=0; compile_c with -O2 -std=gnu11 -ffp-contract=off -w; native runtime links; ARC and tracing; stress/verification disabled for counts' > channel-cost-evidence/settings.txt
+      - name: Check primitive ownership contracts
+        env:
+          FWP_INVENTORY_EXPECTED_HEAD: ${{ github.sha }}
+        run: python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output channel-cost-evidence/ownership-inventory.json
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --lib --test channel_transfer_costs --test call_effects --test inline_caf_ownership --test variant_alias_ownership --test variant_conversion_ownership --test compiler_call_liveness --test worker_preparation_ownership --test arc_execution -- -D warnings
+      - run: cargo clippy --lib --test channel_transfer_costs --test call_effects --test inline_caf_ownership --test variant_alias_ownership --test variant_conversion_ownership --test compiler_call_liveness --test worker_preparation_ownership --test arc_execution --test queued_functions --test channel_cycle_ownership --test integer_output -- -D warnings
       - name: Verify direct-call borrowing proofs
         if: ${{ !cancelled() }}
         run: cargo test --lib
       - name: Verify callback effects and variant ownership
         if: ${{ !cancelled() }}
-        run: cargo test --no-fail-fast --test call_effects --test golden_check --test inline_caf_ownership --test variant_alias_ownership --test variant_conversion_ownership --test compiler_call_liveness --test worker_preparation_ownership --test arc_execution
+        run: cargo test --no-fail-fast --test call_effects --test golden_check --test inline_caf_ownership --test variant_alias_ownership --test variant_conversion_ownership --test compiler_call_liveness --test worker_preparation_ownership --test arc_execution --test queued_functions --test channel_cycle_ownership --test integer_output
       - name: Compare results and count allocations and retains
         if: ${{ !cancelled() }}
         run: cargo test --test channel_transfer_costs -- --ignored --nocapture
+      - name: Inspect integer-length test binaries
+        if: ${{ !cancelled() && inputs.suite == 'scalar-text' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(find channel-cost-evidence/text-length -name '*.exe' | wc -l)" -eq 12
+          for binary in channel-cost-evidence/text-length/*.exe; do
+            objdump -d "$binary" > "${binary%.exe}.asm"
+          done
+      - name: Compare complete programs with C and Rust
+        if: ${{ !cancelled() && inputs.suite == 'scalar-text' }}
+        run: cargo test --release --test bench benchmarks -- --ignored --exact --nocapture
+      - uses: actions/upload-artifact@v7
+        if: ${{ always() && inputs.suite == 'scalar-text' }}
+        with:
+          name: scalar-text-bench-${{ matrix.runner }}
+          path: |
+            target/bench.md
+            target/bench-evidence/
+          if-no-files-found: error
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: channel-costs-${{ matrix.runner }}
           path: channel-cost-evidence/
+          if-no-files-found: error
+  scalar_text_memory:
+    if: inputs.suite == 'scalar-text-memory'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Profile the accepted text-counting artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          PROGRAM_SOURCE: ${{ inputs.source_revision }}
+          PROFILE_HOST: ${{ matrix.runner }}
+        run: python3 scripts/measure-scalar-text-memory.py --run "$EVIDENCE_RUN" --source "$PROGRAM_SOURCE" --host "$PROFILE_HOST" --cc gcc --time /usr/bin/time --samples 3 --output scalar-memory-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: scalar-text-memory-${{ matrix.runner }}
+          path: scalar-memory-evidence/
           if-no-files-found: error
   queued_function_proof:
     if: inputs.suite == 'channel-proof'

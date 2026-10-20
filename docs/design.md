@@ -423,6 +423,27 @@ the 144 saved output semantic-test binaries.
 Allocation counts come from a separate test that detects an intentionally added
 String. The report does not infer whole-process heap use from that narrower check.
 
+### Measuring integer text without building it
+
+`show | string.length` asks how many characters an integer's decimal display
+would contain. For example, applying it to `-17` returns `3`: the minus sign and
+two digits. Native lowering can count those characters directly, without owning
+a temporary String. The same rule handles concatenations of integer displays
+and literal text: `show | concat "é🙂" | string.length` returns `5` for `-17`.
+Literal lengths count Unicode scalar values, as ordinary `string.length` does.
+
+`src/cgen/scalar_text.rs` performs this rewrite before ownership lowering adds
+temporary locals. It handles signed and unsigned integers up to 64 bits and
+preserves the order of integer-producing expressions, including their effects
+and traps. A static bound proves that combining the lengths fits I64; the
+generated sum still uses ordinary checked addition. Shared strings, unknown
+string producers, floating-point displays and wider integers keep their storage.
+The private integer-length operation has no source-language declaration.
+The [Linux measurements](measurements/integer-text.md) record zero managed leaf
+allocations in the probe, actual machine code and comparison with direct
+character counting in C/Rust. The [handoff](development-state.md) tracks full
+production acceptance.
+
 ## Runtime
 
 The runtime supplies operations generated programs cannot express as simple C
@@ -989,6 +1010,13 @@ also need a separate proof that the record cannot escape. For channels, keeping
 the same owner also preserves destruction of hidden native callback context,
 even when the element type is plain data. Dead functions do not change live
 call contracts.
+
+Channel handles do not need plain-data payloads for this call convention.
+Keeping the same channel owner after the call preserves its queued values and
+native sink context regardless of payload representation. This does not prove
+the payload graph acyclic: `arc.rs` and `arc_scope.rs` still check stored captures,
+cycles and call scopes independently. The extended handle proof is tracked in
+the handoff until native cleanup tests and measurements pass.
 
 The caller keeps borrowed values and original record boxes visible to tracing
 through the call, and remains responsible for failure and cancellation cleanup.

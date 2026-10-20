@@ -1,0 +1,300 @@
+{
+  "hosts": [
+    {
+      "measurementSource": "fd1c1ec0292fa3c49a8f4f3cf37e76cb420058d6",
+      "measurementRun": 39455802373,
+      "programSource": "37de5ba40970f7729bf735b347527f5628117dc0",
+      "programRun": 39446896772,
+      "host": "ubuntu-latest",
+      "cpu": "AMD EPYC 9V45 96-Core Processor",
+      "kernel": "Linux runnervm8k3b6 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+      "cCompiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+      "timeTool": "time (GNU Time) UNKNOWN",
+      "expectedOutput": "28518516\n",
+      "processMemory": {
+        "c": {
+          "peakRssKiB": [
+            1640,
+            1704,
+            1640
+          ],
+          "sha256": "94f9fcd83827743175ebb58275d532ff39bca86ecb72fbffaa3610103a42f7d9",
+          "fileBytes": 16040,
+          "textSectionBytes": 489,
+          "elfMachine": 62,
+          "textSectionSha256": "41097af1d239637c424e3e1313c72af5c1a2c30d690a2c53764d57bd2ada012a"
+        },
+        "rs": {
+          "peakRssKiB": [
+            2152,
+            2224,
+            2136
+          ],
+          "sha256": "0748ebba8f3aa052900dc86800a37d002460579e7192be828a5c1e6cbb49c857",
+          "fileBytes": 4538112,
+          "textSectionBytes": 242211,
+          "elfMachine": 62,
+          "textSectionSha256": "5def8e2c899ef5145846e1805243ae9ff179c5d5694df1fd2915a721c84d36f2"
+        },
+        "fwp": {
+          "peakRssKiB": [
+            1996,
+            1996,
+            1996
+          ],
+          "sha256": "d45a7c289bfd99b082c17926030760a28414e95c14d9e2c67bf74a4300abbd42",
+          "fileBytes": 61808,
+          "textSectionBytes": 25218,
+          "elfMachine": 62,
+          "textSectionSha256": "3c61a4beb8540ee49a875eedab816dfc1f12b875202ec5e00af74aef8a08ab1f"
+        }
+      },
+      "managedMemory": {
+        "ordinary": {
+          "profiles": [
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/ordinary",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "1d1cea48b20828ff5b79eaed011f3ffc43d6cbd2a557bbba9baa0474d05434d6",
+          "sha256": "6ea01098331282f96aff2f1c895f7d763f9f24d5f6ca03112531fe017af3e0f4",
+          "fileBytes": 62048,
+          "textSectionBytes": 25650,
+          "elfMachine": 62,
+          "textSectionSha256": "626571d4748ab381cc001b2609098b6fc0f0d1a09c77eaa8e0d7e057a12ddba6"
+        },
+        "injected-allocation": {
+          "profiles": [
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16,
+              "collections": 0
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16,
+              "collections": 0
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16,
+              "collections": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/injected-allocation.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/injected-allocation",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "d4eaab329fcca9ff9b00afaeb284678ac0d6da29c5cf0612a8cfd61ad77ba817",
+          "sha256": "1de1de195a8b9b4a0acc6ecac820311dae22b94a55991cfe32015634b960966c",
+          "fileBytes": 62064,
+          "textSectionBytes": 26802,
+          "elfMachine": 62,
+          "textSectionSha256": "fd5cb511e4b077f4d0ef8e797f13297632f22f3c1f05017444c2c637f2eca512"
+        }
+      },
+      "sourceAuditSha256": "4a558e787ab61c905566cf53832ee0575961be6f14606b78ca3bf441138e68c1",
+      "scope": "Three or more fresh runs of the actual previously timed direct-counting C/Rust/fwp binaries, on the matching native architecture. GNU time records whole-process peak RSS in KiB, including startup, output and shutdown. These separate memory runs are excluded from the timing comparison; RSS includes shared code/libraries and has page/accounting granularity. Separate instrumented GCC O2 builds of saved fwp C count managed requests, retains and peak/final charged bytes after constant initialization through cleanup. They exclude raw buffers, allocator metadata, stacks and libc. A single injected 16-byte leaf allocation must be detected. No C/Rust allocator-call count or peak-RSS improvement over older fwp is claimed."
+    },
+    {
+      "measurementSource": "fd1c1ec0292fa3c49a8f4f3cf37e76cb420058d6",
+      "measurementRun": 39455802373,
+      "programSource": "37de5ba40970f7729bf735b347527f5628117dc0",
+      "programRun": 39446896772,
+      "host": "ubuntu-24.04-arm",
+      "cpu": "Neoverse-N2",
+      "kernel": "Linux runnervmidgih 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux",
+      "cCompiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+      "timeTool": "time (GNU Time) UNKNOWN",
+      "expectedOutput": "28518516\n",
+      "processMemory": {
+        "c": {
+          "peakRssKiB": [
+            1380,
+            1364,
+            1380
+          ],
+          "sha256": "0c2bcd1bd05ca8bf684623ce9cbe9904b102b2c9ba9e85fd306186d8dcbe88e4",
+          "fileBytes": 70320,
+          "textSectionBytes": 536,
+          "elfMachine": 183,
+          "textSectionSha256": "1c63eccdd2a521a6acd85f33f4f651cf6d2e10f9a279321aa8750936bc0eaf2e"
+        },
+        "rs": {
+          "peakRssKiB": [
+            1692,
+            1688,
+            1692
+          ],
+          "sha256": "d319a59fa1bfb4231e3321ff83692b1828853bbf869d53659eb3e5e75cca4319",
+          "fileBytes": 4620896,
+          "textSectionBytes": 218908,
+          "elfMachine": 183,
+          "textSectionSha256": "c14679de23adbf442e43e4d31cf7e0f55e5bf1e1d2ebdc2b45f8a43e61f86ddc"
+        },
+        "fwp": {
+          "peakRssKiB": [
+            1668,
+            1668,
+            1668
+          ],
+          "sha256": "d069cae6e1e84de46ce7817d6f7ea21647b7ea1dd6bf7dac9ebba0582b984b7a",
+          "fileBytes": 83440,
+          "textSectionBytes": 22908,
+          "elfMachine": 183,
+          "textSectionSha256": "edc448d919922e5e29ab24c88ec39eb867a91bcf6abeb2cd4b10962cbe3771e6"
+        }
+      },
+      "managedMemory": {
+        "ordinary": {
+          "profiles": [
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/ordinary",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "1d1cea48b20828ff5b79eaed011f3ffc43d6cbd2a557bbba9baa0474d05434d6",
+          "sha256": "de84f9605f863e860fa6d8dc6331c437b6837aca99dee8c83b3252b21987c187",
+          "fileBytes": 83680,
+          "textSectionBytes": 23436,
+          "elfMachine": 183,
+          "textSectionSha256": "f10ab290859ba43d45daadd54446250b0ba1060fd1722597a54dc17bca340f16"
+        },
+        "injected-allocation": {
+          "profiles": [
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16,
+              "collections": 0
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16,
+              "collections": 0
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16,
+              "collections": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/injected-allocation.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/injected-allocation",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "d4eaab329fcca9ff9b00afaeb284678ac0d6da29c5cf0612a8cfd61ad77ba817",
+          "sha256": "83806bbc3f5f923ffdc3d3bc57af00bba047b5f73bec7f6d9774206ebcfcef34",
+          "fileBytes": 83696,
+          "textSectionBytes": 24332,
+          "elfMachine": 183,
+          "textSectionSha256": "db77c4742a89e536eab5b681e37b9b0e3f6a0175c1b5ba06f97cc6a160df95fc"
+        }
+      },
+      "sourceAuditSha256": "c0815f36357e45d9a5de9fb43282d4a4a51ca0169faf3872ac01ae21d00de5d4",
+      "scope": "Three or more fresh runs of the actual previously timed direct-counting C/Rust/fwp binaries, on the matching native architecture. GNU time records whole-process peak RSS in KiB, including startup, output and shutdown. These separate memory runs are excluded from the timing comparison; RSS includes shared code/libraries and has page/accounting granularity. Separate instrumented GCC O2 builds of saved fwp C count managed requests, retains and peak/final charged bytes after constant initialization through cleanup. They exclude raw buffers, allocator metadata, stacks and libc. A single injected 16-byte leaf allocation must be detected. No C/Rust allocator-call count or peak-RSS improvement over older fwp is claimed."
+    }
+  ]
+}
