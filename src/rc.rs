@@ -4,9 +4,10 @@
 //! it produces.
 //!
 //! The ownership discipline:
-//! - A function owns its parameters and returns an owned value; so does a
-//!   constructor. A primitive, a C function and a remote call only borrow
-//!   their arguments: the caller drops them after the call.
+//! - Ordinary functions own their parameters and return an owned value;
+//!   constructors own their fields. A primitive's explicit contract says which
+//!   arguments it borrows, consumes or shares. C and remote calls borrow their
+//!   arguments; the caller keeps their owners through the call.
 //! - Building a record or a variant, or applying a closure, consumes the
 //!   parts.
 //! - `match` and field access borrow the value they look into; a field
@@ -19,8 +20,9 @@
 //!   borrow it, so a local used several times is duplicated only where a
 //!   use needs a reference of its own.
 //!
-//! Only locals whose type may hold a pointer take part: integers, floats,
-//! `Bool`, `()` and other enumerations are never counted.
+//! Only locals whose representation may hold an owned pointer take part. Inline
+//! numeric values, `Bool`, `()` and fieldless variants need no counts. Boxed wide
+//! numbers still have owned storage.
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -37,8 +39,8 @@ type Set = BTreeSet<Local>;
 /// Compiled dynamic applications own closures and typed captures; task
 /// handles own cached results, and channels own queued elements. Unknown
 /// callbacks and other runtime values
-/// remain shared. Never count unboxed integers, floats, `Bool`, `()` and other enumerations. A type this pass
-/// does not know (`unknown`) is counted.
+/// remain shared. Unboxed numbers, `Bool`, `()` and fieldless variants need no
+/// count. A type this pass does not know (`unknown`) is counted.
 pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
     match t {
         MT::Record(fs) => !fs.is_empty(),
@@ -85,9 +87,8 @@ fn consumes(funcs: &[Func], id: FuncId) -> bool {
     matches!(funcs[id].body, Body::Expr(_) | Body::Ctor(_))
 }
 
-/// Whether a call of `id` takes ownership of its argument `j`: every
-/// argument of a function or constructor, and the array that
-/// `array.set` and `array.push` write in place when it is unique.
+/// Whether a call takes ownership of argument `j`: ordinary function/constructor
+/// arguments and the arguments marked Consume in a primitive's contract.
 pub fn consumes_arg(funcs: &[Func], id: FuncId, j: usize) -> bool {
     consumes(funcs, id) || matches!(&funcs[id].body, Body::Prim(s) if prim_consumes(s, j))
 }

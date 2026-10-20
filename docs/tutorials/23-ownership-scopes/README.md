@@ -87,7 +87,7 @@ functions. A queued function that captures a channel, task, file or connection
 is rejected even if a particular execution might be safe. A function using State
 or autodiff must still run inside the required scope after it is received; sending
 it does not preserve a sender's temporary scope. See the
-[proof and validation status](../../ownership.md#next-proof-functions-stored-in-channels).
+[proof and validation status](../../ownership.md#functions-stored-in-channels).
 
 ## A graph with deletion
 

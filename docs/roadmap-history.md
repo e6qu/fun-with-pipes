@@ -12,6 +12,38 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Function queues and cheaper sends (PR #175)
+
+Checked ARC accepts queued functions whose immutable captures are proved safe.
+For example, sending `add 3`, receiving it and applying it to `5` produces `8`.
+Calls still need the correct state/derivative scope. Unknown functions and
+resource-bearing captures remain rejected; no ownership syntax is added.
+Sends move an existing owner into the queue, preserving aliases and cleanup on
+failure/cancellation. A `tap` optimization also removes a temporary argument tuple.
+ARC preprocessing excludes tracing routines even with GCC at O0.
+
+[Measurements](measurements/channel-transfer-protocol.md) compare five fwp
+programs at 0/16/1024 messages on Linux ARM64/AMD64. Fresh sends save one retain;
+successful exchanges save one allocation request after `tap` simplification.
+Shared cases retain their required owners. All ARC samples end with zero charged
+storage. The report preserves code-size and stack tradeoffs; it makes no timing
+or C/Rust parity claim. Loop-state tuples still allocate in this delivery.
+
+Focused checks pass on all six native platforms and both WASI hosts, covering
+aliases, closed queues, failures, cancellation and actual binaries. Full acceptance
+also verifies repairs to autodiff proofs, recursive type comparisons, callback
+effect inference, GCC collector exclusion and Windows output checks. Default
+native mode still includes tracing; [the memory roadmap](../PLAN.md) remains open.
+
+[PR #175](https://github.com/e6qu/fun-with-pipes/pull/175) merged as
+`b9cfbbe656baacf30864c8a84b0184ca683ff5b6`, with identical files to tested head
+`6511a50fb99167b60f0b03a96c8a36cfa0c55e46`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39363423392)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39363423384)
+passed before the squash merge; its tree and one-line message were verified.
+Only redundant post-merge production `39370566486` and documentation `39370566329`
+were cancelled after verification.
+
 ## Numeric hashing and integer output (PR #174)
 
 [PR #174](https://github.com/e6qu/fun-with-pipes/pull/174) merged as

@@ -4,8 +4,10 @@ This experiment asks how much reference-count work remains when a program sends
 a value through a channel. A retain increments the count of owners keeping a
 value alive. A temporary value may be movable into the queue; a value still used
 elsewhere needs sharing. Measurements must distinguish those cases before a
-transfer optimization is selected. The consuming-send and temporary-tuple changes have measured count savings.
-Combined production acceptance is still pending; no speedup is claimed.
+transfer optimization is selected. The consuming-send and temporary-tuple changes
+have measured count savings and passed
+[production acceptance in PR #175](../roadmap-history.md#function-queues-and-cheaper-sends-pr-175).
+No execution-time speedup is claimed.
 
 ## First measured baseline
 
@@ -76,8 +78,13 @@ The standalone `step` wrapper also remains in the binary, but is not the loop's
 executed body. The generated loop already avoids allocating `Step` variants;
 its state tuple and the tuple passed to `exchange` still allocate. Those are
 separate costs from queue ownership. No execution-time improvement is established,
-and no C/Rust peer was measured. The separate six-host ownership run still needs
-complete acceptance; a passing count experiment does not replace that gate.
+and no C/Rust peer was measured. Separate ownership and full production checks
+passed in PR #175; the count experiment alone does not establish cleanup safety.
+
+The [next loop-state experiment](channel-loop-state.md) measures the remaining
+state tuple separately. Focused ownership checks pass on all six native platforms
+and both WASI hosts; its full delivery acceptance is tracked in the
+[handoff](../development-state.md).
 
 ## Removing a temporary tuple after `tap`
 
@@ -116,8 +123,8 @@ frame shrinks from 632 to 504 bytes on AMD64 and from 544 to 464 bytes on ARM64.
 These are individual frames, not total task-stack peaks. In table order, ARC
 executable file sizes change by −8/0/−4416/−48/+48 bytes on AMD64 and
 −16/−8/−280/−120/+48 on ARM64. No execution timing or C/Rust comparison was run.
-The expanded cleanup tests still require their recorded test-setting repairs
-and final production acceptance; these count results alone do not supply it.
+The expanded cleanup tests and their test-setting repairs passed final production
+acceptance in PR #175. These count results remain evidence of the measured revision.
 
 ## Programs and inputs
 

@@ -317,8 +317,11 @@ impl<'p> Opt<'p> {
                     }
                     return out;
                 }
-                // a copy of a local or constant: substituted
-                if matches!(v, Expr::Local(_) | Expr::Const(_)) && self.trivial(&v) {
+                // Propagate cheap aliases, including a capture-free function.
+                // Arity-zero Func values evaluate constants and may trap;
+                // trivial excludes them so their evaluation stays here.
+                if matches!(v, Expr::Local(_) | Expr::Const(_) | Expr::Func(_)) && self.trivial(&v)
+                {
                     let mut s: Vec<Option<Expr>> = vec![None; self.nlocals()];
                     s[l as usize] = Some(v);
                     return self.expr(substitute(&b, &s), depth);

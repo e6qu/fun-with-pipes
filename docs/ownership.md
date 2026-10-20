@@ -124,7 +124,7 @@ traps. Unproved runtime sharing still uses tracing.
 | Arrays, maps and sets | Typed elements, counted storage, selected unique updates | Callback and alias contracts must be proved |
 | Strings and bytes | Counted leaves for proved copies/aliases | Unmodeled result families remain shared |
 | Closures | Owned captured arguments and typed call metadata; eligible functions with only fixed function captures use static records | Runtime-data captures retain ordinary ownership; retained unknown callbacks are not checked ARC |
-| Tasks and channels | Counted handles/results/queues; ARC admits acyclic nested channel types; proved queued functions are under validation | Resource-bearing or unknown queued captures, task/HTTP stream payloads and recursive channel ownership remain unproved |
+| Tasks and channels | Counted handles/results/queues; ARC admits acyclic nested channel types; proved immutable function captures are accepted | Resource-bearing or unknown queued captures, task/HTTP stream payloads and recursive channel ownership remain unproved |
 | Derivative tapes | Scoped owners and a bounded numeric workspace | Raw unscoped tape calls are not checked ARC |
 | External/network state | Explicit resource teardown where modeled | Freeing a C buffer does not prove the lifetime of every referenced fwp value |
 
@@ -221,8 +221,8 @@ The compiler retains a separate owner first when an independently live alias
 needs the same value. Closed sends, native sinks, traps and cancelled waits release
 the consumed message; a sink borrows it only during its callback. Failed queue
 growth leaves no queued message. A failed receive allocation keeps the queued
-owner intact for retry. These transfer changes are implemented but await full
-native/WebAssembly acceptance. [Measured baselines](measurements/channel-transfer-protocol.md)
+owner intact for retry. These changes passed native/WebAssembly checks and
+[production acceptance in PR #175](roadmap-history.md#function-queues-and-cheaper-sends-pr-175). [Measured baselines](measurements/channel-transfer-protocol.md)
 show why the previous retain was avoidable for fresh messages.
 
 Counting cannot reclaim an unreachable cycle by itself. For example, a channel
@@ -246,8 +246,8 @@ example, `Link = | Node (Channel[Link])` is still rejected even if a particular
 program would drain every queue. This is a missing proof about all executions,
 not a claim that every value of `Link` is cyclic.
 
-Accepted deliveries exclude functions, tasks and HTTP stream handles from queue
-payloads; the function subset below is now under validation.
+Tasks and HTTP stream handles remain excluded from queue payloads. Functions
+are accepted only when the capture and call-scope checks below succeed.
 A function or task can capture the sending channel; an HTTP stream handle can
 reach the channel through its connection-owned handler. These paths can form
 a cycle without mentioning the channel in the result type; the check therefore examines the complete payload type.
@@ -261,10 +261,10 @@ Closing an admitted channel still preserves queued messages for receiving.
 Releasing its last owner destroys the remaining queue and its typed contents;
 cancelled blocked operations release their wait registrations and owners first.
 
-### Next proof: functions stored in channels
+### Functions stored in channels
 
-This implementation is under validation in PR #175; it is not yet accepted
-platform support. A partial
+[PR #175](roadmap-history.md#function-queues-and-cheaper-sends-pr-175) records
+passing native, WebAssembly and production checks for this subset. A partial
 application such as `add 3` is a function that adds three to its next input. It
 keeps the integer `3` as a **capture**, a value saved for the later call. Storing
 that function in a channel cannot create a cycle through this integer. Receiving
@@ -1069,7 +1069,9 @@ The typed send owns and releases the message; a callback that keeps it must
 acquire its own typed owner. The channel's payload lives
 after the channel header in one allocation. The transfer change removes an unused
 duplicate-function pointer; its native layout test requires 88 bytes, compared
-with the earlier measured 96-byte header. Final platform checks are pending.
+with the earlier measured 96-byte header.
+[PR #175](roadmap-history.md#function-queues-and-cheaper-sends-pr-175) records
+passing platform checks; the smaller header does not reduce allocator charge.
 Last-channel cleanup
 releases request/connection references and then that allocation; construction
 protects partially acquired references. Queue and callback cleanup use alternative
@@ -1205,7 +1207,7 @@ status errors own both their record and message. Tests omit these owners
 separately and require a failure, in addition to normal and cancellation checks.
 
 Wire messages encode data, not managed pointers or callable captures. Local
-queues follow their separate [capture proof](#next-proof-functions-stored-in-channels);
+queues follow their separate [capture proof](#functions-stored-in-channels);
 the new function subset does not add serialization of functions. Queue payloads
 still exclude tasks, HTTP stream handles and recursive channel ownership.
 Request/connection owners and borrowed

@@ -2,143 +2,114 @@
 
 ## Next action
 
-[PR #175](https://github.com/e6qu/fun-with-pipes/pull/175) is the only active PR.
-This delivery combines the queued-function proof, consuming channel sends,
-measured `tap` optimization and CI repairs. The transfer preparation is integrated;
-do not open another PR for it. Next: validate the integration repair below with
-all production gates, documentation, `channel-proof` and `channel-costs` on the
-same branch head. Audit all completed job logs and fix every failure before merge.
+Next: finish [PR #176](https://github.com/e6qu/fun-with-pipes/pull/176), the only
+active PR, on `flatten-channel-loop-state-delivery`. Require all nine production
+jobs and documentation on its exact final head. Focused checks below pass;
+full acceptance starts when this PR is marked ready. Fix every failure, audit completed
+logs, then squash merge with an explicit one-line subject of at most 80 characters
+and empty body. Verify the merged tree/message before cancelling redundant runs.
 
-Combined source `f3c6f8d9` is published. Production `39362628332` found two
-preflight mistakes: the frozen primitive inventory was edited, and
-`channel_transfer_costs` was missing from the native test schedule. This repair
-restores the frozen baseline, explicitly audits `channel.send` changing from
-borrow/borrow to borrow/consume, and registers the new target. Both checks now
-run in focused Unix ownership jobs before the compiler tests. They pass locally.
-Runtime and compiler source are unchanged by this integration repair. New full
-acceptance is required; do not merge `f3c6f8d9` or the older `6b246748`.
+[PR #175](https://github.com/e6qu/fun-with-pipes/pull/175) is accepted as
+`b9cfbbe656baacf30864c8a84b0184ca683ff5b6`, the base of this branch.
+All nine production jobs `39363423392` and documentation `39363423384` passed
+on tested head `6511a50f`. The merge has the same tree and a verified 58-character
+subject with no body or trailers. Redundant post-merge runs `39370566486` and
+`39370566329` are cancelled. [History](roadmap-history.md#function-queues-and-cheaper-sends-pr-175)
+records the accepted queued-function proof, consuming sends and `tap` optimization.
+Do not reopen their preparation branches as new work.
 
-The separate branch `flatten-channel-loop-state`, in
-`/private/tmp/fwp-channel-transfers`, is an unverified next experiment based on
-`f3c6f8d9`. It exposes records returned after actions/branches to loop lowering.
-Its new example passes raw interpretation, but no compiled result or allocation
-saving is verified. Keep it out of PR #175 and validate it before a later delivery.
+## Current changes
 
-Require all nine production jobs and documentation on the final PR head before
-squash merge. Use an explicit one-line subject, at most 80 characters, and empty
-body. Verify the merged tree/message before cancelling redundant post-merge CI.
-Older passing focused runs do not establish acceptance of the combined head.
+Channel programs still allocated a tuple each time they advanced loop state.
+An action or branch could hide the next record from existing field-by-field
+lowering. The compiler now follows a match when every arm ends in a record,
+keeping eligible state fields in locals. Actions, patterns, aliases and failures
+retain their semantics; existing shape and resource checks still apply.
 
-## What this delivery changes
+Known, capture-free function aliases now expose direct calls. The measured
+`string.length` callback no longer uses generic dispatch. Arity-zero constants
+stay at their original evaluation point because they can allocate or trap.
+There is no new syntax or runtime helper. See the
+[example, counts and actual binary inspection](measurements/channel-loop-state.md).
 
-Checked ARC admits known queued functions with proved immutable captures:
-numbers, strings, containers and other proved functions. Captured channels, tasks,
-files, connections and streams remain rejected. The proof follows captures,
-returns, queues and caught errors; calls use the receiver's State/autodiff scope.
-Unknown function sources remain rejected. Traps and exits produce no function,
-which fixes the autodiff rejection found in production. Recursive record-type
-comparison visits each pair once. See [the example and limits](ownership.md#next-proof-functions-stored-in-channels).
+The log audit also found five Linux resident-memory tests returning early on
+macOS but appearing to pass. They now explicitly report the Linux `/proc`
+requirement. Missing or failing C compilers fail GC checks; negative controls
+verify both cases. The full stress golden suite still runs on macOS. Inline
+imports found during review were moved to file scope, and temporary-directory
+comments now describe the actual guarantees.
 
-Channel sends transfer the caller's owner into a queue. A blocked send protects
-that owner until delivery, failure or cancellation; closed sends release it.
-Independent aliases remain valid. Native callback sinks borrow during the call.
-The runtime keeps typed cleanup and scheduling while excluding tracing routines
-from ARC builds, including at O0. Tests inspect actual binaries and require a
-tracing build as a positive control.
+## Evidence
 
-A narrow optimizer change removes an alias returned after `tap`, keeping its
-action before the continuation. This removes the temporary tuple passed to
-`exchange` in the measured programs. Their loop-state tuples still allocate.
-Callback type inference also stops effects from later pipe stages leaking into
-stored callback types. No new syntax is introduced.
+| Check | Revision and run | Result |
+|---|---|---|
+| Loop-state counts | `16adc74b`, `39363807189` | Both Linux architectures; 180 samples and 20 ordinary binaries audited |
+| Loop-state ownership | `16adc74b`, `39364385408` | All six native platforms: 47 integration tests plus all compiler units each; both WASI hosts: 18 checks each |
+| Resource fields with GCC | `cc850204`, `39365324259` / `39365327202` | 37 tests across 21 targets on each Linux architecture |
+| Loop state plus function aliases | `75da96b8`, `39366497033` | All six native platforms: 62 integrations plus all compiler units each; both WASI hosts: 18 checks each |
+| Combined counts | `75da96b8`, `39366501786` | Both Linux architectures; 180 samples and 20 ordinary binaries audited |
+| GC test reporting | `bd9eb989`, `39368181540` | Eight tests per Linux host; three applicable tests and five explicit Linux-only ignores per macOS host; both invalid-compiler controls pass on all four |
 
-## Measurements and checks
+Complete logs are audited. Except for the five explicit Linux-only GC tests on
+macOS, these runs have no ignored or filtered tests. Native unit totals are 145,
+or 146 on Windows. The current delivery carries the measured implementation plus
+GC test/workflow repairs, import placement and documentation changes. These
+focused runs do not replace final-head production acceptance.
 
-The [channel protocol and results](measurements/channel-transfer-protocol.md)
-compare five fwp programs before/after each change on Linux ARM64 and AMD64.
-They measure allocations, retains, managed memory, executable sizes and selected
-machine-code stack frames. They do not measure speed or compare with C/Rust.
+The count comparison uses integrated PR #175 source `f3c6f8d9`, run `39362629293`,
+with GCC O2 and LTO disabled on both revisions. Each of five cases saves one
+allocation per additional message from loop-state lowering. Fresh/closed cases
+save one retain, shared cases two. Every ARC profile ends with zero charged
+storage. Alias propagation saves no further allocations or retains; the fresh-text
+exchange frame shrinks by 48 bytes on each architecture. Reports separate code
+size, file size and individual frames. These are fwp operation-count comparisons,
+not elapsed-time improvements or evidence of C/Rust parity.
 
-- Baseline `2b56fd1c`, run `39354805966`: both hosts pass, 180 audited samples.
-- Consuming sends `34568f3d`, run `39356051237`: one fewer retain per fresh text
-  or function message; shared totals and allocation counts unchanged. Run
-  `39357990574` at `5d083f3f` repeats all 180 samples and binary sizes exactly.
-- `tap` revision `f0747ab2`, run `39360310385`: both hosts pass, 180 audited
-  samples. Each successful exchange saves one allocation and 32 bytes of peak
-  managed charge; closed sends are unchanged. Shared text also saves one retain.
-  All ARC profiles finish with zero charged storage and no collections. Size
-  and stack tradeoffs are reported; these are not zero-cost channel claims.
-- Proof repair `fd1275ea`: runs `39357056381` and `39357061326` each pass 158
-  focused checks. Precision run `39357198059` passes 27 checks on each of four
-  Linux/macOS hosts. All complete logs are audited.
-- Collector exclusion `e6135894`, run `39361329677`: Linux and Windows, each on
-  both architectures, pass all units and 38 integration checks with no ignored
-  cases. Complete logs are audited. Linux explicitly uses GCC, matching
-  production. Both WASI hosts also pass all 14 checks, with complete logs audited.
-  macOS results still need the final audit.
+## Local checks and resource limits
 
-## Failures repaired and remaining validation
+Use `python3 scripts/local-guard.py COMMAND...` for serial bounded checks.
+No local full compiler or generated native build was run. Disk is near the
+64 GiB floor; heavy work belongs on runners. A guarded `cargo clean --profile dev`
+removed 573.7 MiB in 0.58s before reaching the floor; do not rebuild locally.
 
-Original production `39353280539` at `d1df84d9` found five autodiff failures
-from the non-returning branch proof and, on both Linux hosts, a binary-symbol
-failure from GCC retaining unused tracing code at O0. Every completed production
-job log is audited, including both Windows hosts and both Linux hosts. Benchmark
-and documentation gates passed. The repairs above address both causes.
+Guarded raw interpretation checks the branched loop and retained alias (0.82s)
+and the documentation example (0.86s). `scripts/summarize-channel-costs.py`
+audits loop-only and combined reports (1.61s/1.55s). Complete-log audit scripts
+verify resource fields (0.23s) and combined ownership (0.14s). ELF inspection
+checks actual sections, calls and frames. `cargo fmt --all` and
+`python3 scripts/check-roadmap.py` pass after preparation (1.55s/2.74s).
 
-Production `39359123801` at `6b246748` still lacks collector exclusion. Its
-benchmark, regular/stress ARM64 macOS and documentation gates pass; audit the remaining jobs for any further
-failures before the combined publication. Never merge this superseded head.
+An earlier handoff edit omitted the required status table; restoring it fixed
+the audit. A guarded `du` returned sizes but stopped with `Operation not permitted`
+while controlling the system utility; it was not retried and no limits changed.
+Redundant audited baseline/transfer/tap downloads were removed; committed reports
+and GitHub artifacts remain. Integrated baseline and candidate binaries remain
+under `/private/tmp/fwp-channel-{cost-combined,loop-costs,alias-costs}`.
 
-Preparation run `39357985210` passes 38 integrations on each native host and 18
-on each WASI host; its one stale ownership-contract assertion is fixed in
-`f0747ab2`. Expanded run `39360304008` passes all compiler units and both WASI
-jobs. Completed native jobs expose the new loop test enabling GC-stress flags
-in ARC mode, plus Windows C output using CRLF. Both are repaired locally:
-tracing keeps stress/reuse checks, ARC uses its required settings, and the C
-probe explicitly uses binary stdout. Intel macOS reports the same ARC-settings failure; its complete log is now
-audited, finishing the eight-job audit.
-Full Windows production now includes the four loop targets too.
-
-## Local checks and accepted base
-
-Use `python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py COMMAND...`
-for serial bounded checks. `cargo fmt --all -- --check` and `python3 scripts/check-roadmap.py`
-pass on the combined preparation (1.32s and 2.53s) and after integration
-(1.55s and 2.54s). `check-primitive-inventory.py --baseline
+Publication checks on the delivery branch pass under the guard: `cargo fmt --all
+-- --check` (1.43s), `python3 scripts/check-roadmap.py` (2.89s),
+`python3 scripts/check-primitive-inventory.py --baseline
 tests/fixtures/primitive-inventory-baseline.json --output
-/private/tmp/fwp-175-combined-inventory/candidate.json` passes (0.39s), auditing
-394 declarations and 384 symbols. `scripts/test-native-test-runner.py` passes
-all 11 coverage/failure-propagation checks (8.52s). Guarded raw interpretation
-of the new tapped-loop cases agrees with expected effect order and kept aliases.
-The exact standalone ownership-contract unit passes. Guarded
-`/private/tmp/fwp-check-arc-preprocessing.py` passes C syntax and exclusion/control
-checks in 0.63s without producing a binary. No local full compiler rebuild,
-generated native build or timing run was performed.
-
-Free disk is close to the 64 GiB floor; avoid large downloads and use runners for
-heavy work. The old recursive-type reproducer exceeded the 1 GiB local guard;
-its repaired native regression passed on focused runners. Do not retry the old
-compiler locally or raise any guard limits.
-
-[PR #174](https://github.com/e6qu/fun-with-pipes/pull/174) is accepted as
-`3ec71969089a7ab95ff065f7b611c74534fbe326`, after all nine jobs and docs passed.
-Its merge tree and one-line message were verified. [History](roadmap-history.md#numeric-hashing-and-integer-output-pr-174)
-retains its measurements and remaining C/Rust gaps. The old
-`prove-queued-function-ownership` worktree is historical; do not resume it.
+/private/tmp/fwp-next-primitive-inventory.json` (1.06s), and
+`python3 scripts/test-native-test-runner.py` (11 checks, 8.52s).
 
 ## Roadmap status
 
-| Step | Status | Remaining focus |
-|---|---|---|
-| 1 | In progress | Ownership contracts, tracing removal and limited ARC |
-| 2 | In progress | Functional intermediates, copies and eligible tail recursion |
-| 3 | In progress | Equivalent-work C/Rust gaps and machine-code costs |
-| 4 | In progress | Derivative precision, speed and storage |
-| 5 | In progress | CPU kernels and ahead-of-time device execution |
-| 6 | In progress | Reproducible comparisons and regression budgets |
-| 7 | In progress | Representative larger applications |
+All seven areas in [PLAN.md](../PLAN.md) remain open.
 
-All seven areas in [PLAN.md](../PLAN.md) remain open. Persistent subscriptions,
-resource captures, resource-owning tail frames and mutual recursion need further
-proofs. JIT is excluded. Follow [AGENTS.md](../AGENTS.md): one active PR, all
-final-head gates, bounded local work and one-line commits without trailers.
+| Step | Status | Work |
+|---|---|---|
+| 1 | In progress | Ownership and GC removal |
+| 2 | In progress | Functional overhead |
+| 3 | In progress | Machine performance |
+| 4 | In progress | Autodiff |
+| 5 | In progress | Numerical kernels |
+| 6 | In progress | Reproducible comparisons |
+| 7 | In progress | Larger applications |
+
+Persistent subscriptions, resource captures, resource-owning tail frames and
+mutual recursion need further proofs. Shared-text channel exchange still allocates
+its receive result; removing it would need evidence for failure, cancellation and
+call boundaries. That change is not implemented in this delivery. JIT is excluded.
+Follow [AGENTS.md](../AGENTS.md): one active PR, final-head gates, bounded local
+work and one-line commits without trailers.
