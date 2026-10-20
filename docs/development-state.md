@@ -4,22 +4,28 @@
 
 Next: finish [PR #178](https://github.com/e6qu/fun-with-pipes/pull/178) on
 `simplify-local-match-inputs`. Final head is `732984c3fb6b8646f6f3ee4932c123eadb7f3555`.
-Production `39397311012` has all nine jobs (some active, some queued); documentation
-is `39397297724`. Audit every job and fix every failure. Merge only after exact-head
+Production `39397311012` has all nine jobs: benchmark passes and eight platform
+jobs are active. Documentation `39397297724` passes. The two completed logs were
+audited in `/private/tmp/fwp-178-acceptance.json` (5.91s). Audit every job and fix every failure. Merge only after exact-head
 acceptance, with an explicit one-line subject of at most 80 characters and empty
 body. Keep this head stable while healthy gates run.
 
 Independent preparation is in `/private/tmp/fwp-variant-moves`, branch
-`move-matched-variant-owners`, based on this head. It investigates the remaining
-retain/drop pair when matching one owned variant payload. No second PR exists.
-The prepared code transfers a sole matched payload by removing an adjacent
-retain/drop pair, only for variants already held in local fields and outside
-resource slots. New tests cover scalar, record and variant results, unique/shared
-payloads, O0/O2 and an intentionally leaked-owner control. Existing queue failure
-and cancellation checks remain required. Guarded `cargo fmt --all -- --check` passes (1.45s) and
-`python3 scripts/check-roadmap.py` passes (2.59s). Native tests and fresh counts
-have not yet run; finish #178 first, then carry forward verified preparation. Keep this local status update for the next
-delivery rather than restarting healthy production for status alone.
+`move-matched-variant-owners`, source `7136727a1788720c7bab873ba79d5c3c6e084e9a`.
+It removes an adjacent retain/drop pair for a sole payload already held in local
+variant fields, excluding protected resource slots. Tests cover scalar, record
+and variant results, unique/shared owners, O0/O2 and a deliberately leaked owner.
+Guarded formatting passes (1.45s); documentation audit passes (2.59s).
+Focused run `39398766302` fails on both hosts only because two test functions
+were unreachable from the fixture entry point and were correctly omitted from C.
+Both complete logs were audited (2.62s); all other tests and count checks pass.
+The fixture now references all three result forms from its entry point; the
+three-move assertion is unchanged. Formatting passes (1.58s). Repeat the focused
+run for this repair. Six-platform ownership/cancellation run `39398786993` still
+uses the original fixture; audit all of its results before a combined rerun.
+Neither failed nor pending runs establish acceptance.
+No second PR exists. Finish #178 before publishing the prepared next delivery.
+Keep this local status update for that delivery instead of restarting healthy CI.
 
 ## Accepted baseline
 

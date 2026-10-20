@@ -317,7 +317,7 @@ fn matching_one_variant_payload_moves_its_owner_in_all_result_forms() {
         ),
         (
             "record-holder",
-            pair,
+            pair.clone(),
             Expr::Record(vec![Expr::Local(2), Expr::Const(Value::I64(17))]),
             Expr::Record(vec![
                 Expr::Const(Value::str("empty")),
@@ -353,8 +353,18 @@ fn matching_one_variant_payload_moves_its_owner_in_all_result_forms() {
         name: "main".into(),
         arity: 0,
         locals: vec![],
-        ty: text,
-        body: Body::Expr(Expr::Call(1, vec![Expr::Const(Value::str("value"))])),
+        ty: MT::Record(vec![
+            ("0".into(), text),
+            ("1".into(), pair),
+            ("2".into(), outcome),
+        ]),
+        // Keep every result form reachable in the emitted program. The C
+        // probe calls these functions directly, but reachability starts here.
+        body: Body::Expr(Expr::Record(
+            (1..=3)
+                .map(|id| Expr::Call(id, vec![Expr::Const(Value::str("value"))]))
+                .collect(),
+        )),
     });
     program.main = Some(4);
     fwp::ir::check_locals(&program).unwrap();
