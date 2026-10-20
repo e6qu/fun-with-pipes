@@ -193,10 +193,10 @@ count savings from timing; [the handoff](development-state.md) records acceptanc
 
 ## Ownership boundaries
 
-A boundary is a call where ownership crosses between compiled code and a runtime,
-foreign function or remote service. Every contract distinguishes:
+A boundary is a call where ownership passes between functions, the runtime,
+foreign code or a remote service. Every contract distinguishes:
 
-- **Borrow:** read a value for this call while its caller remains responsible.
+- **Borrow:** use a value for this call while its caller remains responsible.
 - **Consume:** take an owned reference; the callee releases it or transfers it on.
 - **Retain:** acquire an additional reference that can outlive the call.
 - **Fresh result:** return newly owned storage.
@@ -268,6 +268,57 @@ on ordinary tracing channels.
 Closing an admitted channel still preserves queued messages for receiving.
 Releasing its last owner destroys the remaining queue and its typed contents;
 cancelled blocked operations release their wait registrations and owners first.
+
+### Moving a sole matched payload
+
+A variant such as `Some text` owns its payload, here a string. When the variant
+already lives in local fields and its match arm immediately retains `text` and
+releases the variant, the compiler transfers that existing owner instead.
+Another live alias of the string keeps its own owner. The rule requires one
+directly bound payload, adjacent count operations and no protected resource slot;
+boxed variants and other shapes keep their existing cleanup. It does not alter
+which channels or function captures checked ARC accepts.
+
+[The measurement](measurements/channel-variant-moves.md) removes one retain per
+fresh-text/fresh-function/shared-text message and two per shared-function message.
+Allocations and peak charged storage are unchanged. Focused Linux checks pass,
+including independent aliases and a deliberately leaked-owner control. Broader
+ownership checks pass on all six native platforms and both WebAssembly hosts.
+Final production acceptance is tracked in the [handoff](development-state.md).
+
+### Borrowing across direct calls
+
+Direct-call borrowing is implemented; the [handoff](development-state.md) tracks
+platform acceptance. A **direct call** names a function known to the
+compiler. When that function uses an argument only during the call and does not
+store or return its counted storage, the caller can keep ownership throughout
+the call. Every caller must already need the same counted values afterward.
+Last-use inputs retain their consuming convention, so borrowing does not keep
+their storage alive longer than the original callee needed it.
+
+For example, in the [text-channel program](../tests/fixtures/channel_transfer_text.fwp),
+`exchange` takes a tuple containing a channel and an integer. It creates a string,
+sends it, receives it and checks its length. The loop keeps the same channel for
+the next exchange. Giving `exchange` another channel owner would add a retain
+and release per message; borrowing uses the loop's existing owner instead.
+The source signature and pipe syntax stay unchanged. Removing retains does not
+remove allocation, destruction or all runtime ownership checks.
+
+This requires more than seeing a channel of strings. Native channels can also
+hold callback context whose destruction is observable. The proof therefore
+requires every live caller to use that same channel after the call; later use
+of another tuple field does not qualify. Resource captures, recursive workers,
+unknown calls and escaping arguments retain their existing ownership rules.
+
+Failure or cancellation releases caller-owned storage through the caller's
+cleanup scope. Generic function entries still consume their inputs, including
+boxed tuples. Tests exercise these boundaries with independent aliases,
+collector stress, reuse poisoning and an intentionally leaked-owner control.
+An ARC case checks complete reclamation after an exchange fails. Passing those
+focused Linux checks and [binary measurements](measurements/channel-direct-borrows.md)
+show zero retains per fresh-text exchange, with unchanged allocations and peak
+charged storage. Other cases keep their measured counts. Broader platform and
+final production acceptance remain tracked in the handoff.
 
 ### Functions stored in channels
 

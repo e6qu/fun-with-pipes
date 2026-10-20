@@ -22,7 +22,8 @@ jobs:
       matrix:
         runner: [windows-2025, windows-11-arm]
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 90
+    # Full ownership, golden and standalone-compiler checks share this job.
+    timeout-minutes: 150
     env:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
@@ -82,7 +83,7 @@ jobs:
       - name: Queued function captures, receive ownership and callback effects
         shell: pwsh
         run: |
-          cargo test --no-fail-fast --test queued_functions --test channel_queue_ownership --test call_effects -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          cargo test --no-fail-fast --test queued_functions --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test borrowed_callbacks --test call_effects --test variant_alias_ownership --test variant_conversion_ownership -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
       - name: Generated programs with native resources and ownership stress
         shell: pwsh

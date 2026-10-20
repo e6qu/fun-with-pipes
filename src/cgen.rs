@@ -609,6 +609,14 @@ fn counted_program(prog: &Program) -> Program {
             f.locals = locals;
         }
     }
+    for (id, borrowed) in &p.borrowed_parameters {
+        let f = &p.funcs[*id];
+        let Body::Expr(body) = &f.body else {
+            unreachable!("only expression workers borrow arguments")
+        };
+        crate::rc::ownership_liveness(&p, f, body, &f.locals, borrowed)
+            .expect("invalid inferred argument ownership");
+    }
     p
 }
 
@@ -665,7 +673,10 @@ impl Gen<'_> {
             &self.prog.funcs[id],
             e,
             &self.prog.funcs[id].locals,
-            &[],
+            self.prog
+                .borrowed_parameters
+                .get(&id)
+                .map_or(&[], Vec::as_slice),
         )
         .expect("invalid ownership before C generation")
     }
@@ -2480,7 +2491,9 @@ impl<'p> Gen<'p> {
                 }
                 format!("PTR(&fwp_constant{id})")
             }
-            Value::File(_) | Value::Native(_) => "0".into(),
+            Value::File(_) | Value::Native(_) => {
+                unreachable!("runtime handles were rejected before C generation")
+            }
             Value::Closure(c) => {
                 if !c.args.is_empty() && c.args.len() < self.prog.funcs[c.func].arity as usize {
                     let captures: Option<Vec<_>> = c
@@ -3199,15 +3212,61 @@ impl<'g, 'p> FnGen<'g, 'p> {
 
     /// The arguments of a direct call of a function's worker, in
     /// evaluation order: a record passed field by field is not built.
-    fn worker_args(&mut self, g: FuncId, abi: &Abi, args: &[Expr]) -> Vec<String> {
+    fn worker_args(&mut self, g: FuncId, abi: &Abi, args: &[Expr]) -> (Vec<String>, Vec<String>) {
+        // A field view must keep the original box, not only its selected
+        // children, visible to tracing while the worker runs.
+        fn roots(fg: &FnGen<'_, '_>, e: &Expr, out: &mut Vec<String>) {
+            match e {
+                Expr::Local(l)
+                    if crate::rc::needs_rc(&fg.g.prog.shapes, &fg.locals[*l as usize]) =>
+                {
+                    if let Some(fields) = fg.fields.get(l) {
+                        for (value, (_, ty)) in fields
+                            .iter()
+                            .zip(record_fields(&fg.g.prog.shapes, &fg.locals[*l as usize]).unwrap())
+                        {
+                            if crate::rc::needs_rc(&fg.g.prog.shapes, ty) {
+                                out.push(value.clone());
+                            }
+                        }
+                    } else if !(*l == 0
+                        && fg
+                            .in_loop
+                            .as_ref()
+                            .is_some_and(|lg| lg.record && !lg.unpacked_parameters))
+                    {
+                        out.push(format!("l{l}"));
+                    }
+                }
+                Expr::Field(base, _) => roots(fg, base, out),
+                Expr::Record(fields) => fields.iter().for_each(|e| roots(fg, e, out)),
+                _ => {}
+            }
+        }
         let mut out = Vec::new();
+        let mut owners = Vec::new();
         for (j, (a, p)) in args.iter().zip(&abi.params).enumerate() {
+            if !crate::rc::consumes_arg(self.g.prog, g, j) {
+                roots(self, a, &mut owners);
+            }
             match p {
+                Some(n) if !crate::rc::consumes_arg(self.g.prog, g, j) => {
+                    if self.unboxed(a) == Some(*n) {
+                        out.extend(self.expr_fields(a, *n));
+                    } else {
+                        let value = self.expr(a);
+                        let value = self.bind(value);
+                        owners.push(value.clone());
+                        out.extend((0..*n).map(|k| format!("OBJ({value})->f[{k}]")));
+                    }
+                }
                 Some(n) => out.extend(self.expr_fields(a, *n)),
                 None => out.push(self.arg(g, j, a)),
             }
         }
-        abi.args_decode_words(self.g.prog, g, out)
+        owners.sort();
+        owners.dedup();
+        (abi.args_decode_words(self.g.prog, g, out), owners)
     }
 
     /// In a loop's step, a field of the state kept as its own fields: its
@@ -3288,11 +3347,12 @@ impl<'g, 'p> FnGen<'g, 'p> {
             Expr::Call(id, args) if self.g.abis[*id].as_ref().and_then(|a| a.ret) == Some(n) => {
                 let abi = self.g.abis[*id].clone().unwrap();
                 let outer = std::mem::take(&mut self.stack_args);
-                let xs = self.worker_args(*id, &abi, args);
+                let (xs, owners) = self.worker_args(*id, &abi, args);
                 self.tail_tokens(self.tail_calls.contains(&(e as *const Expr)));
                 let t = self.fresh();
                 let node = self.begin_call(e as *const Expr);
                 self.line(&format!("fwp_wr{id} {t} = w{id}({});", xs.join(", ")));
+                self.keep_borrowed_args(*id, &xs, Some(&abi), &owners);
                 self.end_call(node);
                 self.stack_args_finish(outer);
                 abi.result_words(self.g.prog, *id, &t)
@@ -3358,7 +3418,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     self.line("{");
                     self.indent += 1;
                     self.match_pattern(scrut, pat, &s, &next);
-                    let known = self.arm_start(scrut, pat, &before);
+                    let (known, body) = self.arm_start(scrut, pat, &before, body);
                     let fs = self.expr_fields(body, n);
                     self.arm_end(known, &mut after);
                     for (r, f) in rs.iter().zip(fs) {
@@ -3651,7 +3711,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     let duplicate = self.g.value_dup(&element);
                     self.line(&format!("if ({tag}) {duplicate}({value});"));
                 }
-                self.keep_borrowed_args(*id, &values);
+                self.keep_borrowed_args(*id, &values, None, &[]);
                 self.end_call(pending);
                 (tag, vec![value])
             }
@@ -3675,18 +3735,19 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 };
                 let result = self.fresh();
                 self.line(&format!("fwp_channel_result {result} = fwp_chan_recv_owned({channel}, {deadline}, {duplicate}, FWP_CHANNEL_RESULT_FIELDS);"));
-                self.keep_borrowed_args(*id, &values);
+                self.keep_borrowed_args(*id, &values, None, &[]);
                 self.end_call(pending);
                 (format!("{result}.tag"), vec![format!("{result}.value")])
             }
             Expr::Call(id, args) if self.g.abis[*id].as_ref().and_then(|a| a.vret) == Some(m) => {
                 let abi = self.g.abis[*id].clone().unwrap();
                 let outer = std::mem::take(&mut self.stack_args);
-                let xs = self.worker_args(*id, &abi, args);
+                let (xs, owners) = self.worker_args(*id, &abi, args);
                 self.tail_tokens(self.tail_calls.contains(&(e as *const Expr)));
                 let t = self.fresh();
                 let node = self.begin_call(e as *const Expr);
                 self.line(&format!("fwp_u{} {} = w{}({});", m, t, id, xs.join(", ")));
+                self.keep_borrowed_args(*id, &xs, Some(&abi), &owners);
                 self.end_call(node);
                 self.stack_args_finish(outer);
                 parts(&t)
@@ -3774,7 +3835,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     self.line("{");
                     self.indent += 1;
                     self.match_pattern(scrut, pat, &s, &next);
-                    let known = self.arm_start(scrut, pat, &before);
+                    let (known, body) = self.arm_start(scrut, pat, &before, body);
                     let (tag, fs) = self.expr_variant(body, m, ty);
                     self.arm_end(known, &mut after);
                     self.line(&format!("{}.tag = {};", u, tag));
@@ -4425,14 +4486,14 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// An argument of a call of `g` at parameter `j`: a record or variant
     /// built for a parameter that does not escape is built on the stack.
     fn arg(&mut self, g: FuncId, j: usize, a: &Expr) -> String {
-        if crate::rc::borrows_record_argument(&self.g.prog.funcs, g, j, a) {
+        if crate::rc::borrows_record_argument(self.g.prog, g, j, a) {
             // RC lowering keeps every field owner alive through this call.
             // The stack view owns no child reference and needs no child drop.
             return self.stack_object(a, None);
         }
         if let Some(children) = self.stack_alias(a) {
             let value = self.expr(a);
-            if crate::rc::consumes_arg(&self.g.prog.funcs, g, j) {
+            if crate::rc::consumes_arg(self.g.prog, g, j) {
                 self.stack_args.extend(children);
             }
             return value;
@@ -4454,23 +4515,45 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// A borrowed pointer stays a conservative root through the call.
     /// Inlining can otherwise replace its later drop with metadata access
     /// and discard the allocation's address before an allocating primitive.
-    fn keep_borrowed_args(&mut self, id: FuncId, args: &[String]) {
+    fn keep_borrowed_args(
+        &mut self,
+        id: FuncId,
+        args: &[String],
+        abi: Option<&Abi>,
+        owners: &[String],
+    ) {
         let f = &self.g.prog.funcs[id];
-        let Body::Prim(symbol) = &f.body else { return };
-        let Some(contract) = crate::ownership::primitive(symbol) else {
-            return;
-        };
-        let roots: Vec<String> =
-            f.ty.params(args.len())
-                .0
-                .iter()
-                .enumerate()
-                .filter(|(i, t)| {
-                    contract.argument(*i) == crate::ownership::Argument::Borrow
-                        && crate::rc::needs_rc(&self.g.prog.shapes, t)
-                })
-                .map(|(i, _)| args[i].clone())
-                .collect();
+        let mut roots = Vec::new();
+        let mut offset = 0;
+        for (j, ty) in f.ty.params(f.arity as usize).0.iter().enumerate() {
+            let fields = abi.and_then(|a| a.params[j]);
+            let width = fields.unwrap_or(1);
+            let borrowed = match &f.body {
+                Body::Prim(symbol) => crate::ownership::primitive(symbol)
+                    .is_some_and(|c| c.argument(j) == crate::ownership::Argument::Borrow),
+                Body::Expr(_) => !crate::rc::consumes_arg(self.g.prog, id, j),
+                _ => false,
+            };
+            if borrowed {
+                if fields.is_some() {
+                    for (k, (_, ty)) in record_fields(&self.g.prog.shapes, ty)
+                        .unwrap()
+                        .iter()
+                        .enumerate()
+                    {
+                        if crate::rc::needs_rc(&self.g.prog.shapes, ty) {
+                            roots.push(args[offset + k].clone());
+                        }
+                    }
+                } else if crate::rc::needs_rc(&self.g.prog.shapes, ty) {
+                    roots.push(args[offset].clone());
+                }
+            }
+            offset += width;
+        }
+        roots.extend_from_slice(owners);
+        roots.sort();
+        roots.dedup();
         for root in roots {
             self.line(&format!("FWP_KEEP_ALIVE({root});"));
         }
@@ -4632,17 +4715,50 @@ impl<'g, 'p> FnGen<'g, 'p> {
 
     /// An arm starts: every token is as before the match, and a pattern
     /// with a constructor tells which one the scrutinee holds.
-    fn arm_start(&mut self, scrut: &Expr, pat: &Pat, before: &[bool]) -> Option<Local> {
+    fn arm_start<'e>(
+        &mut self,
+        scrut: &Expr,
+        pat: &Pat,
+        before: &[bool],
+        body: &'e Expr,
+    ) -> (Option<Local>, &'e Expr) {
         for (t, u) in self.tokens.iter_mut().zip(before) {
             t.used = *u;
         }
-        match (scrut, pat) {
+        let known = match (scrut, pat) {
             (Expr::Local(x), Pat::Construct(tag, _)) => {
                 self.known_tag.insert(*x, *tag);
                 Some(*x)
             }
             _ => None,
+        };
+        // An unboxed variant already owns its single payload. When the RC
+        // sequence retains that field and immediately drops the variant,
+        // transfer its owner instead. No operation or other child intervenes.
+        // Keep the original nodes: later unwind plans use their addresses.
+        let (Expr::Local(parent), Pat::Construct(_, fields), Expr::Dup(kept, after_dup)) =
+            (scrut, pat, body)
+        else {
+            return (known, body);
+        };
+        let [Pat::Bind(field)] = fields.as_slice() else {
+            return (known, body);
+        };
+        if self.g.reuse
+            && kept == field
+            && parent != field
+            && self.vlocals.contains_key(parent)
+            && !self.resource_slots.contains_key(parent)
+            && !self.resource_slots.contains_key(field)
+        {
+            if let Expr::Drop(dropped, rest) = &**after_dup {
+                if dropped == parent {
+                    self.line("/* move matched variant payload */");
+                    return (known, rest);
+                }
+            }
         }
+        (known, body)
     }
 
     fn arm_end(&mut self, known: Option<Local>, after: &mut [bool]) {
@@ -5696,13 +5812,14 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return self.bind(format!("(V)(int64_t)({})", n));
         }
         if let Some(abi) = self.g.abis[id].clone() {
-            let xs = self.worker_args(id, &abi, args);
+            let (xs, owners) = self.worker_args(id, &abi, args);
             self.tail_tokens(tail);
             return match abi.ret {
                 Some(n) => {
                     let t = self.fresh();
                     let node = self.begin_call(key);
                     self.line(&format!("fwp_wr{id} {t} = w{id}({});", xs.join(", ")));
+                    self.keep_borrowed_args(id, &xs, Some(&abi), &owners);
                     self.end_call(node);
                     // a record compiled code owns, like any it builds
                     let values = abi.result_words(self.g.prog, id, &t);
@@ -5727,6 +5844,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         let t = self.fresh();
                         let node = self.begin_call(key);
                         self.line(&format!("fwp_u{} {} = w{}({});", m, t, id, xs.join(", ")));
+                        self.keep_borrowed_args(id, &xs, Some(&abi), &owners);
                         self.end_call(node);
                         let ty = self.ret_type(id);
                         let k = self.g.vhelper(&ty, m);
@@ -5740,7 +5858,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         let value = abi
                             .scalar_result(self.g.prog, id)
                             .map_or_else(|| call.clone(), |n| n.to_word(&call));
-                        self.bind_call(key, value)
+                        let result = self.bind_call(key, value);
+                        self.keep_borrowed_args(id, &xs, Some(&abi), &owners);
+                        result
                     }
                 },
             };
@@ -5783,7 +5903,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             } else {
                 self.bind_call(key, call)
             };
-            self.keep_borrowed_args(id, &xs);
+            self.keep_borrowed_args(id, &xs, None, &[]);
             result
         }
     }
@@ -6011,7 +6131,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     self.line("{");
                     self.indent += 1;
                     self.match_pattern(scrut, pat, &s, &next);
-                    let known = self.arm_start(scrut, pat, &before);
+                    let (known, body) = self.arm_start(scrut, pat, &before, body);
                     let bv = self.expr(body);
                     self.arm_end(known, &mut after);
                     self.line(&format!("{} = {};", r, bv));
@@ -8556,7 +8676,13 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                 if fg.g.uncounted.self_tail.contains(&id) {
                     fg.line("fwp_self_again:;");
                 }
-                fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &[]);
+                let borrowed =
+                    fg.g.prog
+                        .borrowed_parameters
+                        .get(&id)
+                        .cloned()
+                        .unwrap_or_default();
+                fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &borrowed);
                 let r = fg.expr(&e);
                 let body = fg.out;
                 out.push_str(&body);
@@ -8578,6 +8704,14 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             f.ty,
             abi.sig(self.prog, id)
         );
+        if let Some(parameters) = self.prog.borrowed_parameters.get(&id) {
+            let parameters = parameters
+                .iter()
+                .map(Local::to_string)
+                .collect::<Vec<_>>()
+                .join(", ");
+            let _ = writeln!(out, "    /* caller-owned parameters: {parameters} */");
+        }
         let mut names = Vec::new();
         for (i, p) in abi.params.iter().enumerate() {
             match p {
@@ -8625,7 +8759,13 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
         if fg.g.uncounted.self_tail.contains(&id) {
             fg.line("fwp_self_again:;");
         }
-        fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &[]);
+        let borrowed =
+            fg.g.prog
+                .borrowed_parameters
+                .get(&id)
+                .cloned()
+                .unwrap_or_default();
+        fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &borrowed);
         let ret = match (abi.ret, abi.vret) {
             (Some(n), _) => {
                 let fs = fg.expr_fields(e, n);
@@ -8659,6 +8799,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                 self.reuse
                     && free_enabled()
                     && p.is_some()
+                    && crate::rc::consumes_arg(self.prog, id, i)
                     && !self.resource_type(&f.locals[i])
                     && record_fields(&self.prog.shapes, &f.locals[i]).is_some_and(|fields| {
                         fields
@@ -8697,7 +8838,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                 .params
                 .iter()
                 .enumerate()
-                .filter(|(_, p)| p.is_some())
+                .filter(|(i, p)| p.is_some() && crate::rc::consumes_arg(self.prog, id, *i))
                 .flat_map(|(i, _)| {
                     record_fields(&self.prog.shapes, &f.locals[i])
                         .unwrap_or_default()
@@ -8708,17 +8849,22 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                 })
                 .collect();
             let has_boxed = abi.params.iter().any(Option::is_some);
-            let originals: Vec<_> = if has_boxed {
+            let has_borrowed = self.prog.borrowed_parameters.contains_key(&id);
+            let originals: Vec<_> = if has_boxed || has_borrowed {
                 f.ty.params(f.arity as usize)
                     .0
                     .into_iter()
                     .enumerate()
-                    .map(|(i, ty)| (format!("l{i}"), ty.clone()))
+                    .map(|(i, ty)| (i, format!("l{i}"), ty.clone()))
                     .collect()
             } else {
                 Vec::new()
             };
-            let protection = self.protect_values(&originals, "owned", "cleanup");
+            let owned_values = originals
+                .iter()
+                .map(|(_, value, ty)| (value.clone(), ty.clone()))
+                .collect::<Vec<_>>();
+            let protection = self.protect_values(&owned_values, "owned", "cleanup");
             pre.push_str(&protection);
             pre.push_str(&snapshots);
             if !protection.is_empty() {
@@ -8755,18 +8901,22 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             }
             if !protection.is_empty() {
                 let mut slot = 0;
-                for (i, (_, ty)) in originals.iter().enumerate() {
+                for (i, _, ty) in &originals {
                     if !crate::rc::needs_rc(&self.prog.shapes, ty) {
                         continue;
                     }
-                    if abi.params[i].is_none() {
+                    if abi.params[*i].is_none() && crate::rc::consumes_arg(self.prog, id, *i) {
                         let _ = write!(pre, "owned.v{slot} = 0; ");
                     }
                     slot += 1;
                 }
             }
             for (i, p) in abi.params.iter().enumerate() {
-                if p.is_some() {
+                let borrowed = !crate::rc::consumes_arg(self.prog, id, i);
+                if borrowed {
+                    let _ = write!(post, "FWP_KEEP_ALIVE(l{i}); ");
+                }
+                if p.is_some() || borrowed {
                     let ty = self.prog.funcs[id].locals[i].clone();
                     let drop = self.value_drop(&ty);
                     let _ = write!(post, "{drop}(l{i}); ");
@@ -9434,6 +9584,7 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
 }
 
 fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
+    crate::ir::check_locals(prog)?;
     // Fuse before ownership lowering separates the temporary String from print.
     let direct_output = if std::env::var("FWP_DIRECT_INTEGER_PRINT").is_ok_and(|v| v == "0") {
         None
@@ -9458,6 +9609,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     }
     let tests = matches!(mode, Mode::Tests);
     let main = prog.main.unwrap_or(0);
+    let roots: Vec<_> = match &mode {
+        Mode::Exec(commands, _) => commands.iter().map(|c| c.fid).collect(),
+        _ => Vec::new(),
+    };
+    let live = live_functions(prog, &roots);
     // the calling conventions follow the bodies as they are; with counted
     // references, the code is generated from the counted bodies
     let mut abis: Vec<Option<Abi>> = prog.funcs.iter().map(|f| abi_of(prog, f)).collect();
@@ -9477,6 +9633,22 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             .any(|t| crate::resource::contains_resource(&prog.shapes, t))
     });
     let reuse = reuse_enabled() || resources;
+    let borrowing;
+    let prog = if reuse {
+        borrowing = {
+            let mut program = prog.clone();
+            let owned_entries: Vec<_> = abis
+                .iter()
+                .enumerate()
+                .map(|(id, abi)| abi.is_none() || roots.contains(&id))
+                .collect();
+            program.borrowed_parameters = crate::rc::borrows::infer(prog, &owned_entries, &live);
+            program
+        };
+        &borrowing
+    } else {
+        prog
+    };
     let uncounted = prog;
     let counted;
     let prog = if reuse {
@@ -9564,16 +9736,13 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         owned_fold_callbacks: Vec::new(),
         owned_right_fold_callbacks: Vec::new(),
     };
-    let mut roots = Vec::new();
     if let Mode::Exec(cmds, _) = &mode {
-        roots.extend(cmds.iter().map(|c| c.fid));
         for command in cmds {
             if prog.funcs[command.fid].arity > 0 {
                 g.used_closures[command.fid] = true;
             }
         }
     }
-    let live = live_functions(prog, &roots);
     let mut bodies = String::new();
     for id in (0..prog.funcs.len()).filter(|&id| live[id]) {
         bodies.push_str(&g.func(id)?);
@@ -9703,7 +9872,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                 }
                 if !protection.is_empty() && crate::rc::needs_rc(&prog.shapes, ty) {
                     let _ = writeln!(lib_defs, "    inputs_owner.v{slot} = {};", args[i]);
-                    if crate::rc::consumes_arg(&prog.funcs, fid, i) {
+                    if crate::rc::consumes_arg(prog, fid, i) {
                         consumed_slots.push(slot);
                     }
                     slot += 1;

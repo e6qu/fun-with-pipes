@@ -26,10 +26,19 @@ checks = make { 0 = apply "A", 1 = apply "B", 2 = apply "C" }
 main = range 0 129 | map (choose | checks) | length | echo
 "#;
     let files = format!("main = [{:?} | attempt (flip file.with file.read-all) | echo, {:?} | attempt (flip file.with file.read-all) | echo] | ignore\n", data.to_string_lossy(), dir.join("missing").to_string_lossy());
+    let channel_source = include_str!("fixtures/channel_transfer_text.fwp");
+    assert_eq!(channel_source.matches("(.1 | width)").count(), 1);
+    assert_eq!(channel_source.matches("main = 16 | work | echo").count(), 1);
+    // Fail after sending and receiving, while the loop still owns its channel.
+    // The normal ARC ledger below must observe complete physical reclamation.
+    let borrowed_failure = channel_source
+        .replace("(.1 | width)", "(.1 | width | add 1)")
+        .replace("main = 16 | work | echo", "main = 16 | attempt work | echo");
     let sources = [
         ("arrays", include_str!("fixtures/numeric_array_fusion.fwp")),
         ("closures", closures),
         ("files", files.as_str()),
+        ("borrowed-call-failure", borrowed_failure.as_str()),
         (
             "ownership-scopes",
             include_str!("../docs/tutorials/23-ownership-scopes/main.fwp"),
@@ -67,6 +76,15 @@ main = range 0 129 | map (choose | checks) | length | echo
             );
             let code = std::fs::read_to_string(&cfile).unwrap();
             assert!(code.contains("#define FWP_ARC_ONLY 1"));
+            if name == "borrowed-call-failure" {
+                let start = code.find("/* exchange :").expect("direct exchange worker");
+                let worker = &code[start..];
+                let worker = &worker[..worker.find("\n}").unwrap()];
+                assert!(
+                    worker.contains("/* caller-owned parameters: 0 */"),
+                    "the failure must exercise an inferred borrowed call: {worker}"
+                );
+            }
             let main_start = code
                 .find("static void *fwp_main_thread(void *arg) {")
                 .unwrap();

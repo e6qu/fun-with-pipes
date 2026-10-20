@@ -11,6 +11,10 @@ code, but ordinary functions are simpler when no syntax transformation is needed
 result into the program as a constant. Lists, maps, records and even
 functions can be constants. The code inside `comptime` may read files and
 fail, but it has no access to the network or tasks.
+Return the file's contents, not its open handle: `comptime (file.read "data.txt")`
+embeds text, while `comptime (file.open "data.txt")` is rejected. An open handle
+belongs to the compiler process and cannot be embedded in the finished program,
+even inside a container or function capture.
 
 ## Reflection
 

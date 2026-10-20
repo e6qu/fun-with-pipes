@@ -462,6 +462,19 @@ its existing child-owner rules. The accepted tests include aliases, pointer-like
 scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
 count operations; they do not prove every record or call allocation-free.
 
+The variant-matching change applies the same move principle to a
+constructor with one payload already held in local fields. If a match arm begins
+by retaining that payload and immediately releasing the variant, the payload can
+keep its existing owner. For example, consuming `Some text` can return `text`
+without increasing and immediately decreasing its count. Another live owner of
+`text` keeps its existing count. Boxed variants, multiple fields and protected
+resource slots retain their existing lowering. The compiler keeps the original
+remaining expression nodes so failure-cleanup plans still identify their scopes.
+[Focused checks and measurements](measurements/channel-variant-moves.md) pass
+on Linux ARM64/AMD64; broader ownership checks pass on all six native platforms
+and both WebAssembly hosts. Final production acceptance is tracked in the
+[handoff](development-state.md).
+
 A function used as a value may receive a boxed record even when its compiled
 body accepts separate fields. The entry code reads those fields before calling
 that body. For a uniquely owned plain-data record, it transfers counted fields
@@ -650,6 +663,10 @@ A value produced by `comptime` is already known when C is generated. For example
 an array header, but does not need to allocate that storage on the heap at startup.
 The current change places compound constants, wide numeric literals and closures
 with constant captures in static program storage. Strings already use this model.
+Compile-time evaluation may read files, but its result cannot contain an open
+file or another runtime handle. Such handles belong to the compiler process;
+return file contents or other ordinary data instead. Nested containers and
+captures follow the same rule, checked before embedding constants.
 
 Records and variants keep their tag/count headers. Arrays preserve the selected
 packed or word layout; F128 elements keep all 128 bits. Maps keep their sorted
@@ -956,9 +973,32 @@ not implemented; use the individual networking guides for exact limits.
 
 ## Ownership implementation
 
-Keep one ownership contract inventory in `src/ownership.rs`, used by both
-reference-count insertion and C generation. Borrowing, consuming, retaining and
-returning aliases have different meanings. A successful output test alone cannot
+Primitive ownership contracts live in `src/ownership.rs`. For eligible direct
+calls, `src/rc/borrows.rs` also proves which arguments can remain owned by their
+callers. Both reference-count insertion and C generation use the resulting
+`Program.borrowed_parameters` contract. The ownership verifier checks it before
+code generation, including whether later argument evaluation consumes an owner
+needed by an earlier borrowed argument.
+
+The proof starts with primitive borrows and extends through nonrecursive direct
+calls. Returning or storing a counted argument, unknown calls, resource scopes,
+function-value uses and external entries prevent selection. Every live caller
+must already need the same counted values after the call; otherwise borrowing
+could prolong an input's lifetime and increase peak memory. Flat record views
+also need a separate proof that the record cannot escape. For channels, keeping
+the same owner also preserves destruction of hidden native callback context,
+even when the element type is plain data. Dead functions do not change live
+call contracts.
+
+The caller keeps borrowed values and original record boxes visible to tracing
+through the call, and remains responsible for failure and cancellation cleanup.
+Existing generic entries still consume arguments: they protect those owners
+while calling the borrowing worker, then release them. No source annotations or
+new runtime wrapper are added. See [direct-call borrowing](ownership.md#borrowing-across-direct-calls)
+for an example and current validation status.
+
+Borrowing, consuming, retaining and returning aliases have different meanings.
+A successful output test alone cannot
 prove those lifetimes. Changes need alias, failure, cancellation and deliberate
 missing-cleanup controls as well as collector/reuse verification. The detailed
 [primitive tables](primitive-ownership.md) and [ownership guide](ownership.md)

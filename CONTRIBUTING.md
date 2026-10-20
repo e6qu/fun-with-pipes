@@ -147,11 +147,11 @@ executables concurrently with one harness thread each. Tests keep their existing
 internal workers. Every executable gets a separate uploaded log; any failed test
 fails the job after the remaining targets run. This avoids leaving the runner
 idle between the many single-test executables. Target assignments stay fixed.
-The macOS CI deadline is 150 minutes: the original PR #164 Intel GC job reached
-90 minutes with 82 of 122 targets complete, two interrupted and 38 unstarted.
-The larger deadline prevents losing another full run on a slow host; it does
-not make tests faster or relax any assertion. Local resource limits remain
-unchanged. Every delivery still requires its own complete passing matrix.
+macOS and Windows production jobs allow 150 minutes for tests, compiler builds
+and artifact cleanup. This scheduling limit neither makes tests faster nor
+relaxes assertions or local resource limits. Every delivery still requires its
+own complete passing matrix; a cancelled job is not a passing gate, even if its
+test steps finished.
 
 The documentation job verifies the real Cargo target set, artifact coverage,
 assignment stability, concurrent execution and failure propagation. The stress

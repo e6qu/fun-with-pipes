@@ -1,7 +1,11 @@
 //! Caller effects must not contaminate known pure function-valued arguments.
 use fwp::driver::{check_source, signatures};
+use fwp::ir::{Body, Expr, Func, Pat, Program, MT};
+use fwp::value::{FileState, Value};
+use std::cell::RefCell;
 use std::path::Path;
 use std::process::Command;
+use std::rc::Rc;
 
 const SOURCE: &str = r#"
 has-text : (String -> String) -> Bool
@@ -14,6 +18,140 @@ main = [
     "a b c" | words | map concat | nth 1 | option.map (apply "!") | echo,
 ] | ignore
 "#;
+
+#[test]
+fn comptime_rejects_runtime_handles_for_interpreted_and_native_programs() {
+    let dir = fwp::cgen::TempDir::new("fwp-comptime-handle").unwrap();
+    std::fs::write(dir.path().join("input.txt"), "compile-time text\n").unwrap();
+    let source = dir.path().join("handle.fwp");
+    let output = dir.path().join("handle.c");
+    for expression in [
+        r#"file.open "input.txt""#,
+        r#"Some (file.open "input.txt")"#,
+        r#"(1, file.open "input.txt")"#,
+        r#"[file.open "input.txt"]"#,
+        r#"[file.open "input.txt"] | array.from-list"#,
+    ] {
+        std::fs::write(
+            &source,
+            format!("saved = comptime ({expression})\nmain = saved | ignore\n"),
+        )
+        .unwrap();
+        for native in [false, true] {
+            let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
+            command.current_dir(dir.path());
+            if native {
+                command
+                    .args(["build", "--emit-c"])
+                    .arg(&source)
+                    .arg("-o")
+                    .arg(&output);
+            } else {
+                command.args(["run", "--interp"]).arg(&source);
+            }
+            let result = command.output().unwrap();
+            let error = String::from_utf8_lossy(&result.stderr);
+            assert!(!result.status.success(), "{expression}: native={native}");
+            assert!(
+                error.contains("`comptime` constant contains a runtime File handle"),
+                "{expression}: native={native}: {error}"
+            );
+            assert!(error.contains("Return ordinary data"), "{error}");
+            assert!(!output.exists());
+        }
+    }
+}
+
+#[test]
+fn comptime_file_contents_survive_removing_the_compilation_input() {
+    let dir = fwp::cgen::TempDir::new("fwp-comptime-data").unwrap();
+    let input = dir.path().join("input.txt");
+    let source = dir.path().join("data.fwp");
+    let text = "compile-time text\n";
+    std::fs::write(&input, text).unwrap();
+    std::fs::write(
+        &source,
+        "text = comptime (file.read \"input.txt\")\nmain = text | print\n",
+    )
+    .unwrap();
+    let interpreted = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .current_dir(dir.path())
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(
+        interpreted.status.success(),
+        "{}",
+        String::from_utf8_lossy(&interpreted.stderr)
+    );
+    assert_eq!(interpreted.stdout, format!("{text}\n").as_bytes());
+    for opt in ["-O0", "-O2"] {
+        std::fs::write(&input, text).unwrap();
+        let executable = dir
+            .path()
+            .join(format!("data{opt}{}", std::env::consts::EXE_SUFFIX));
+        let built = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .current_dir(dir.path())
+            .arg("build")
+            .arg(&source)
+            .args([opt, "-o"])
+            .arg(&executable)
+            .output()
+            .unwrap();
+        assert!(
+            built.status.success(),
+            "{}",
+            String::from_utf8_lossy(&built.stderr)
+        );
+        std::fs::remove_file(&input).unwrap();
+        let ran = Command::new(&executable)
+            .current_dir(dir.path())
+            .env("FWP_GC_STRESS", "1")
+            .env("FWP_GC_VERIFY", "1")
+            .output()
+            .unwrap();
+        assert!(
+            ran.status.success(),
+            "{}",
+            String::from_utf8_lossy(&ran.stderr)
+        );
+        assert_eq!(ran.stdout, interpreted.stdout);
+        assert_eq!(ran.stderr, interpreted.stderr);
+    }
+}
+
+#[test]
+fn c_generation_rejects_runtime_handles_even_in_hand_built_ir() {
+    let file = Value::File(Rc::new(RefCell::new(FileState {
+        path: "closed-test-file".into(),
+        file: None,
+    })));
+    for body in [
+        Expr::Const(Value::tuple(vec![file.clone()])),
+        Expr::Match(
+            Box::new(Expr::Const(Value::unit())),
+            vec![(Pat::Lit(file), Expr::Const(Value::unit()))],
+        ),
+    ] {
+        let program = Program {
+            main: Some(0),
+            funcs: vec![Func {
+                name: "main".into(),
+                arity: 0,
+                locals: vec![],
+                ty: MT::unit(),
+                body: Body::Expr(body),
+            }],
+            ..Program::default()
+        };
+        let error = fwp::cgen::generate(&program).unwrap_err();
+        assert!(
+            error.contains("constant contains a runtime File handle"),
+            "{error}"
+        );
+    }
+}
 
 #[test]
 fn pure_function_values_in_io_pipes_and_applications() {

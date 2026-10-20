@@ -990,7 +990,14 @@ impl<'a> Mono<'a> {
             })
         };
         match result {
-            Ok(v) => Ok(Expr::Const(v)),
+            Ok(v) => {
+                v.check_constant().map_err(|message| {
+                    Diagnostic::error(e.span, format!("`comptime` {message}")).with_note(
+                        "Return ordinary data, such as file contents, instead of a runtime handle.",
+                    )
+                })?;
+                Ok(Expr::Const(v))
+            }
             Err(m) => Err(Diagnostic::error(e.span, m)),
         }
     }
