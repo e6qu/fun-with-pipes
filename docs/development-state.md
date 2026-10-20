@@ -2,77 +2,78 @@
 
 ## Next action
 
-This is isolated preparation on `prove-queued-function-ownership` in
-`/private/tmp/fwp-channel-functions`, based on final PR #174 head
-`67f233467bc68fe9a690373af219253d45f4e3f8`. The primary checkout owns PR #174:
-production `39342938663` is running; documentation `39342938600` passed, as did
-the production benchmark job. Do not modify or merge that PR without auditing
-all nine exact-head jobs. Its measured compiler is `0bb385ab`; the difference
-is retained reports and documentation only.
+This is preparation on `prove-queued-function-ownership` in
+`/private/tmp/fwp-channel-functions`, based on PR #174 head
+`67f233467bc68fe9a690373af219253d45f4e3f8`. The primary checkout owns that PR.
+Production `39342938663` is running; documentation `39342938600`, benchmarks
+and both ARM macOS jobs pass. Keep that tested head unchanged. Require all nine
+production jobs and documentation before squash merge, then verify its tree and
+one-line message. The final-head benchmark is retained at
+`/private/tmp/fwp-174-final-production-bench.md` for the next documentation update.
 
-Next: run the expanded queued-function checks on all six native hosts and both
-Linux WASI hosts, inspect every result, and fix any failure before publication.
-This preparation is not accepted support. `src/arc.rs` now permits function
-payload types only with the separate capture and call-scope proof.
+Next: publish the complete repair batch and rerun `channel-proof`; all eight
+jobs in `39346219500` have been audited. After PR #174 passes and merges, deliver this
+ownership work as the next single PR with current docs and full acceptance gates.
+No new platform support is accepted yet.
 
-## In-progress implementation
+## Queued-function implementation
 
-`src/arc_scope.rs` now distinguishes a known function plus supplied-argument
-count from an explicit unknown source. Set union must retain unknown sources
-when mixed with known functions. The existing finite analysis also records
-function values sent through each concrete channel type and returns those
-values at receive operations, so calls are checked in the receiver's scope.
-Unit checks cover receiver State scope, mixed known/unknown targets, nested
-capture owners and functions carried by caught errors. The prototype follows
-error payloads separately from ordinary returns and rejects unknown producers.
-It checks immutable captures recursively, rejecting resource captures for now.
-Initial proof-only source `4ad0107a` ran in `39344388657`: both Linux architectures
-passed 141 compiler unit checks and all 16 existing integration checks. Both
-failed Clippy solely on an unused pattern binding; the complete logs were audited
-and that binding is removed. Formatting passed under the primary guard (1.57s).
-Source `0e291839` then passed `39345460745` on both Linux architectures: Clippy,
-141 compiler unit checks and 18 integration checks each, none ignored. This
-verifies the initial eligibility subset and three rejection examples. They compare
-raw interpretation with ARC/tracing O0/O2, check undrained capture reclamation,
-require an omitted-release control to fail, inspect collector symbols, and reject
-self, returned and nested channel captures. WASI's physical-allocation suite now
-includes the same positive fixture. No runtime implementation has changed.
+The compiler now permits functions in ARC channel payloads when their actual
+captures are proved immutable. Numbers, strings, containers and other proved
+functions are supported by the new analysis. Captured channels, tasks, files,
+connections and streams remain rejected. This conservative restriction can reject
+safe programs; it is not a claim that all rejected programs contain cycles.
 
-The next source expands that fixture with nonempty records and nested queues,
-functions capturing functions, caught error values and receiver State scope.
-New tests cover cancelled blocked sends/receives, closed sends, caught failure,
-64 repeated drained/undrained batches, and a C probe checking constant charged
-memory after each of 256 transfer/close/failed-receive cases. Missing-release
-controls must fail. WASI/Browser checks run ordinary and instrumented binaries
-with JSPI and Asyncify; these additions are not verified yet. The runner jobs
-retain actual C/binaries and source IDs. Windows permanently runs the new test.
+`arc_scope.rs` tracks known functions and an explicit unknown source through
+captures, calls, queues and caught error values. Unknown sources survive union
+with known functions. Calls use the receiver's State/autodiff scope. Queues of
+one concrete type share a target set; aggregate fields and caught errors also
+merge conservatively. External function-bearing queues remain unproved. Native
+constructors need an explicit source model. There is no new syntax or runtime
+implementation. See [the proof](ownership.md#next-proof-functions-stored-in-channels).
 
-Local checks use the primary guard: formatting 1.58s; saved-compiler raw
-interpretation of the task/expanded-value fixtures passes in 0.27/0.35s. These
-interpreter runs verify source semantics, not the new compiler's ownership proof.
+## Checks and outstanding repair
 
-Still required before claiming support:
+All builds and full suites run on GitHub:
 
-- Verify the implemented capture and unknown-source rules against real lowered
-  programs, including external inputs and modeled gRPC iterator constructors.
-  Do not erase existing native/service support. Runtime producers need explicit
-  sources; an alias contract must not conceal a newly manufactured function.
-- Verify activation for function-bearing channels even without State/AD and
-  distinction between empty queues and unknown functions. Check every send,
-  nested/returned/error-carried callback, aggregate, alias and partial application.
-- Verify the new eligibility rule and replacement of obsolete blanket-rejection
-  tests; add native/WASI lifetime, failure, cancellation and repeated bounded-live
-  evidence. Negative controls
-  must include self/two-queue cycles, unknown sources and calls after State/AD
-  scopes end. Keep task/HTTP-stream payload restrictions.
+- Initial proof `4ad0107a`, run `39344388657`: both Linux hosts passed 141 unit
+  and 16 integration checks. Clippy found one unused binding; fixed in `0e291839`.
+- `0e291839`, run `39345460745`: both Linux hosts passed Clippy, 141 unit and
+  18 integration checks, none ignored.
+- Expanded source `67839578`, run `39346219500`: both Linux native jobs pass.
+  The three queued-function tests also pass on both Windows hosts and ARM macOS.
+  Complete logs exposed missing OpenSSL setup in those three jobs: the HTTP-body
+  unit check and State cleanup C probe could not compile. The pending batch adds
+  the existing Windows TLS setup/cache and explicit macOS OpenSSL configuration.
+  Windows production will also run its complete unit suite after dependency setup.
+- Both WASI jobs finish with 13 passed and one obsolete rejection check failed.
+  Actual execution/cleanup passes, including JSPI and Asyncify for WASI/Browser.
+  The old test rejected an empty function queue; the pending replacement accepts
+  that queue and rejects an actual self-capturing callback on both entry targets.
+- Intel macOS also passes: 141 unit and 19 integration checks, none ignored.
+  Every completed target on all eight hosts was audited before this repair.
 
-The design is in [ownership](ownership.md#next-proof-functions-stored-in-channels).
-The runtime already owns queued closures and their captures in tracing mode;
-existing `tests/channel_queue_ownership.rs` checks transfers and cleanup.
-`mono.rs` lowers const/curry/compose into ordinary IR. Native gRPC explicitly
-creates iterator closures; its generated IR constructor must remain modeled.
-Do not infer safety from a whole-program absence of resource types or an empty
-function-target set.
+Expanded tests cover records, nested queues, functions capturing functions,
+receiver State, caught errors, cancelled blocked sends/receives, closed sends,
+caught failure and undrained queues. A C probe checks unchanged charged memory
+after each of 256 transfer/close/failed-receive cases at O0/O2; omitted releases
+must fail. WASI separately counts physical allocations at shutdown. These are
+cleanup checks, not speed benchmarks or proof of zero heap/counting overhead.
+
+The pending batch also adds explicit unknown-producer/external-queue unit checks,
+a caught-channel rejection and receiver autodiff test, plus a worked tutorial.
+Native artifacts will retain disassembly as well as source/binaries. These new
+checks have not run on the compiler yet.
+
+Local work uses the primary `scripts/local-guard.py`, with unchanged limits:
+formatting last passed in 1.62s; doc links/anchors passed in 2.56s; saved-compiler
+raw interpretation of value/task fixtures passed in 0.35/0.27s; all five negative
+fixtures are valid programs (0.86s); the updated tutorial output, formatting and
+source excerpts pass (0.29/0.01/0.23s). These interpreter runs do not validate the
+new ownership implementation. No local compiler build or benchmark ran.
+The final PR #174 production benchmark is now retained in
+`docs/measurements/numeric-output-peers-2026-10-20.md`, linked from the benchmark
+guide with its C/Rust overhead and measurement limits.
 
 ## Roadmap status
 
@@ -86,6 +87,7 @@ function-target set.
 | 6 | In progress | Reproducible comparisons and regression budgets |
 | 7 | In progress | Representative larger applications |
 
-All seven areas remain open. JIT is excluded. Follow [AGENTS.md](../AGENTS.md):
-keep local checks serial under the primary `scripts/local-guard.py`, preserve
-its fixed limits, and put full builds, suites and benchmarks on GitHub.
+All seven areas remain open. Persistent subscriptions, resource captures,
+resource-owning tail frames and mutual recursion need separate proofs. JIT is
+excluded. Follow [AGENTS.md](../AGENTS.md), including one active PR, all final-head
+gates, bounded local work and one-line commits without bodies or trailers.

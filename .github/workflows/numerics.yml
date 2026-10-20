@@ -55,6 +55,27 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
+      - uses: actions/cache/restore@v6
+        id: queued_windows_tls_cache
+        if: runner.os == 'Windows'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native Windows OpenSSL dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v6
+        if: ${{ !cancelled() && runner.os == 'Windows' && env.FWP_WINDOWS_DEPS_READY == '1' && steps.queued_windows_tls_cache.outputs.cache-hit != 'true' }}
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
       - name: Compiler proof unit tests
@@ -70,7 +91,7 @@ jobs:
           mkdir -p queued-function-evidence
           git rev-parse HEAD > queued-function-evidence/source.txt
           rustc -Vv > queued-function-evidence/rust.txt
-          clang --version > queued-function-evidence/cc.txt
+          "$CC" --version > queued-function-evidence/cc.txt
       - uses: actions/upload-artifact@v7
         if: always()
         with:

@@ -977,12 +977,12 @@ pub fn prim(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ir::{Body, Func, TypeShape};
+    use std::fmt::Write as _;
+    use std::process::Command;
 
     #[test]
     fn body_bounds_and_error_order_agree_with_native() {
-        use crate::ir::{Body, Func, TypeShape};
-        use std::process::Command;
-
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let _peer = TcpStream::connect(listener.local_addr().unwrap()).unwrap();
         let (socket, _) = listener.accept().unwrap();
@@ -1033,13 +1033,11 @@ mod tests {
                 Value::Data(0, fields) => {
                     expected.push_str("ok:");
                     for byte in bytes_of(&fields[0]).iter() {
-                        use std::fmt::Write;
                         write!(&mut expected, "{byte:02x}").unwrap();
                     }
                     expected.push('\n');
                 }
                 Value::Data(1, fields) => {
-                    use std::fmt::Write;
                     writeln!(&mut expected, "err:{}", int(&fields[0])).unwrap();
                 }
                 _ => panic!("unexpected body result"),

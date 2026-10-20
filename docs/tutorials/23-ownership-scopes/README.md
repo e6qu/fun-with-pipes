@@ -55,11 +55,39 @@ over that option receives `Some 42` from the inbox. The result is therefore
 `Some (Some 42)`: the two options describe two independent receives.
 
 Checked ARC accepts this ownership direction. The routing queue can own the
-inbox, but the inbox holds only integers and cannot refer back. It still rejects
-recursive channel types and queued functions, tasks or HTTP stream handles whose
-captures could complete a cycle. Closing a queue does not discard its messages,
+inbox, but the inbox holds only integers and cannot refer back. Recursive channel
+types and queued task or HTTP stream handles still lack the required proof.
+Closing a queue does not discard its messages,
 and receiving transfers the queued owner. Dropping the last owner releases any
 messages that remain; no implicit drain operation is added.
+
+## Sending a function through a channel
+
+`callbacks` creates a queue for functions of type `I64 -> I64`. The partial
+application `add 3` saves the number `3` for a later call. That saved value is a
+**capture**. It cannot refer back to the queue, so this function has no ownership
+cycle. `add-through-queue` sends it, receives it, then applies it to `5`:
+
+```fwp
+add-through-queue =
+    const 1
+    | callbacks
+    | tap (flip channel.send (add 3))
+    | channel.recv
+    | option.map (apply 5)
+```
+
+`const 1` ignores the initial `()` and selects a capacity of one.
+The result is `Some 8`. `option.map` runs its function only for a received message;
+`apply 5` calls that received function with `5`.
+
+The compiler checks the saved values, not just the arrow type. The current subset
+permits immutable captures, including strings, containers and other proved
+functions. A queued function that captures a channel, task, file or connection
+is rejected even if a particular execution might be safe. A function using State
+or autodiff must still run inside the required scope after it is received; sending
+it does not preserve a sender's temporary scope. See the
+[proof and validation status](../../ownership.md#next-proof-functions-stored-in-channels).
 
 ## A graph with deletion
 
@@ -92,6 +120,7 @@ The expected output is:
 6
 None
 Some (Some 42)
+Some 8
 (None, Some [1])
 ```
 
@@ -140,6 +169,16 @@ route-message =
     | channel.recv
     | option.map channel.recv
 
+callbacks : I64 -> Channel[I64 -> I64] ! {Async}
+callbacks = channel.make
+add-through-queue : () -> Option[I64] ! {Async}
+add-through-queue =
+    const 1
+    | callbacks
+    | tap (flip channel.send (add 3))
+    | channel.recv
+    | option.map (apply 5)
+
 Node = { label: String, links: List[I64] }
 graph : Map[I64, Node]
 graph =
@@ -157,6 +196,7 @@ main = [
     1 | channel.make | tap (produce | task.spawn) | channel.drain | sum | echo,
     1 | channel.make | cancel-worker | echo,
     () | route-message | echo,
+    () | add-through-queue | echo,
     graph
     | both (map.remove 1 | map.get 1) (map.get 0 | option.map .links)
     | echo,

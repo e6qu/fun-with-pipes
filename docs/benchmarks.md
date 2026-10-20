@@ -1098,9 +1098,21 @@ Negative overhead means a lower observed fwp median; overlapping samples do not
 establish superiority or parity. These are costs of these programs on these
 runners, not an overhead percentage for the language. The separate million-key
 [PR #173 production baseline](measurements/range-set-peers-2026-10-19.md) and
-[pre-repair PR #174 results](measurements/numeric-hash-pre-repair-peers-2026-10-19.md)
+[final PR #174 results](measurements/numeric-output-peers-2026-10-20.md)
 use GCC and tracing, with different workloads. Their percentages cannot be
 subtracted from this table. Both retain all six production benchmark programs.
+
+The final PR #174 report uses AMD EPYC 7763, GCC 13.3 and Rust 1.99.1. It times
+whole processes, including startup, input construction and output, with one
+warmup and six rotating samples per implementation. Median fwp extra time against
+C / Rust is +38.3% / +3.9% for the arithmetic loop, −11.9% / +8.5% for the map,
+−41.7% / +13.1% for the pipeline, +5.9% / +7.1% for the range set, and
++15.7% / +16.5% for strings. Work and arithmetic guarantees differ as explained
+in that report; these are observations, not isolated costs of the language.
+The [pre-repair report](measurements/numeric-hash-pre-repair-peers-2026-10-19.md)
+remains historical evidence. Its loop/map timing ranges overlap the final run;
+the pipeline median returned from 26.089 ms to 17.258 ms. Keep the raw samples
+when assessing changes rather than selecting one favorable median.
 
 Specialized and general ARC profiles now match at **one managed allocation**,
 zero retains and zero charge after cleanup. Small/large/set programs request
