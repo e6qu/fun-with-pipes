@@ -27,6 +27,78 @@ impl Drop for Scratch {
 }
 
 #[test]
+fn failed_scopes_keep_error_values_and_all_spawned_children() {
+    let dir = Scratch::new("failed-scope");
+    let source = dir.0.join("scope.fwp");
+    std::fs::write(
+        &source,
+        r#"
+sleeping : I64 -> () -> I64 ! {Async}
+sleeping = curry (.0 | tap (const 1h | task.sleep))
+start : I64 -> () ! {Async}
+start = sleeping | task.spawn | ignore
+scope-failure : () -> () ! {Async, Error[String]}
+scope-failure =
+    const 0 | flip range 65 | each start
+    | const "scope error" | string.repeat 2 | fail
+round : I64 -> () ! {Async, IO}
+round = const () | attempt (const scope-failure | task.scope) | echo
+main = range 0 4 | each round
+"#,
+    )
+    .unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    assert_eq!(
+        reference.stdout,
+        b"Err \"scope errorscope error\"\n".repeat(4)
+    );
+    assert!(reference.stderr.is_empty());
+    for memory in ["arc", "tracing"] {
+        let cfile = dir.0.join("scope.c");
+        checked(
+            Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .args(["build", "--gc", memory, "--emit-c"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let mut code = std::fs::read_to_string(&cfile).unwrap();
+        if memory == "arc" {
+            let finish = "\n    fwp_cl_finish();\n";
+            assert_eq!(code.matches(finish).count(), 1);
+            code = code.replace(
+                finish,
+                &format!("{finish}    if(fwp_gc.ncollect || fwp_gc.budget_given!=fwp_gc.budget)exit(83);\n"),
+            );
+        }
+        for opt in ["-O0", "-O2", "-O3"] {
+            let binary = dir.0.join("scope.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let stress = if memory == "arc" { "0" } else { "1" };
+            let actual = checked(
+                Command::new(&binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress),
+            );
+            assert_eq!(
+                (&actual.stdout, &actual.stderr),
+                (&reference.stdout, &reference.stderr),
+                "{memory}/{opt}"
+            );
+        }
+    }
+}
+
+#[test]
 fn task_values_and_channel_aliases_under_stress() {
     let dir = Scratch::new("aliases");
     let src = dir.0.join("tasks.fwp");

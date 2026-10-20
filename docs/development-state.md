@@ -64,28 +64,46 @@ The original preparation remains at `/private/tmp/fwp-direct-borrows`, branch
 onto accepted main; measured objects remain available through remote tags.
 Use the root checkout for this delivery. The old worktree's handoff is obsolete.
 
-## Isolated alias preparation
+## Isolated alias and cleanup preparation
 
 Worktree `/private/tmp/fwp-local-channel-aliases`, branch
-`borrow-local-channel-aliases`, starts at PR #180's final head. The ownership pass
-can replace temporary aliases in borrowed call arguments when the same source
-storage is used afterward. It keeps effects and traps in place and distinguishes
-record fields. Consuming/unknown calls, escapes and resource scopes are excluded.
-No new IR form or surface syntax is introduced. Existing sequence lowering and
-its verifier protect the original owner through argument evaluation and cleanup.
+`borrow-local-channel-aliases`, starts at PR #180's final head. Source
+`ba0a2f1e71e91dc8c4c9c2c444f843e625ae79ab` passes both Linux GCC jobs in
+`39459301764`, with clean complete logs. Receipt:
+`/private/tmp/fwp-local-alias-audit.json`; artifacts:
+`/private/tmp/fwp-local-alias-costs`. All 180 profiles and 20 ordinary binaries
+are audited, but the five programs' counts and binaries are unchanged. The
+initial alias proof worked in simple tests but missed the real loop's enclosing
+match continuation. Do not claim that run removed its retain.
 
-Four unit checks cover continuing owners, different fields, independent branches,
-escapes, unknown/consuming calls and resource scopes. A native channel-context
-probe checks owner counts at the call, aliases and destruction at O0/O2 under GC
-stress/verification and reuse poisoning; an injected extra retain must fail.
-These changes are implemented but not yet verified by compilation or execution.
-Initial run `39458970390` was cancelled during setup before tests: review found
-the native fixture must mark its manually built record as fresh owned storage.
-That fixture is corrected; the compiler change is unchanged.
-Run the existing `channel-costs` focused suite on both Linux GCC hosts, inspect
-all logs and fix every failure. Compare all five channel programs against the
-PR #180 report; do not claim the closed-function retain is removed until measured.
-Local guarded formatting passes (1.77s); no local build or native compilation.
+Current unverified changes fix that gap before ownership insertion, tracking
+later reads of the same storage through enclosing let/match continuations.
+Six unit checks cover same/different fields, branches, escapes, resource-bearing
+values and unknown/consuming calls. No new IR form or syntax is added.
+The native context probe now checks success, failure and cancellation at O0/O2/O3,
+independent aliases, GC verification and reuse poisoning. Extra-owner and
+missing-release controls must fail.
+
+Review also found changed automatic fields read after longjmp without volatile
+qualification. Error payload/type fields and mutable task-scope child metadata
+are now volatile; unchanged links remain ordinary fields. A new 65-child scope
+failure test compares interpreter and native ARC/tracing at O0/O2/O3 and checks
+zero final ARC charge. Native static assertions check the C qualification.
+The focused workflow also includes all task-ownership tests.
+
+Next: publish this combined repair, run `scalar-text` on both Linux GCC hosts,
+audit every complete log and all channel/benchmark artifacts. Preserve PR #180's
+healthy head. All failures are work to fix. The earlier setup-only run
+`39458970390` was cancelled before tests after correcting fresh-owner initialization
+in the native fixture. No local builds or native compilations. Guarded validation
+of the new scoped-failure example with the existing diagnostic interpreter and
+C emission passes (2.73s). The first count audit passes (1.67s).
+
+The production benchmark repeat is recorded in
+`docs/measurements/integer-text-repeat-2026-10-20.json`. Its seven fwp binaries and
+C files match the focused AMD64 run, but the text-length time gap versus C is
+12.8% in this session. Keep both results and their variability. The report audit
+passes (0.26s); no compiler speedup/regression is inferred from identical binaries.
 
 ## Accepted baseline
 

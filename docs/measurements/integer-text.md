@@ -55,6 +55,15 @@ Extra time is `(fwp / peer − 1) × 100%`. These are observations for these pro
 not universal language overhead or a performance budget. AMD64's fwp samples
 range from 8.346 to 12.619 ms; repeat sessions are needed for small differences.
 
+The final PR #180 head `64cfa0081dab2f6b19b6157e844c49481749a605` repeats the
+comparison in [production run 39457866569](https://github.com/e6qu/fun-with-pipes/actions/runs/39457866569),
+on another AMD EPYC 9V45 runner session. Its medians are C **7.902 ms**, Rust
+**9.540 ms**, fwp **8.913 ms**: +12.8% versus C and −6.6% versus Rust. All seven
+fwp binaries and generated C files are byte-identical to the focused AMD64 run.
+The [repeat report](integer-text-repeat-2026-10-20.json) preserves every program's
+samples, including slower results. This variation between identical binaries
+does not establish a compiler regression or improvement.
+
 Against the formatting peers, fwp takes about 10% as long on these hosts.
 That reflects eliminated work, not a tenfold advantage over handwritten
 character counting. The two fwp comparisons have identical generated C and
