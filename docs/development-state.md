@@ -38,7 +38,11 @@ messages separately from empty results, verify timed ready/empty receives, and
 confirm that direct fields move one owner without allocating an Option. Existing
 boxed allocation-failure and negative cleanup controls remain. The shared native
 and WASI fixture adds timed function receives and a failure after calling one.
-These changes are not yet compiled or verified on runners.
+These changes are not yet compiled or verified on runners. Review also found the
+uncounted tracing receive removed its message before allocating `Some`; it now
+reserves the result first, with a forced-failure/retry regression. Runs
+`39371506883`/`39371509365` at `c4cc467d` were still entirely queued when replaced
+to include this repair, so they provide no execution evidence.
 
 The saved diagnostic interpreter rejects the new unannotated callback pipe with
 an effect-row mismatch. An explicitly typed intermediate function runs with the

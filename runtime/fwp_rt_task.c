@@ -1572,11 +1572,12 @@ static V fwp_chan_recv(V ch, int64_t at) {
     for (;;) {
         if (c->len) {
             V x = c->buf[c->head];
+            V result = fwp_some(x); /* keep the message queued if allocation fails */
             c->buf[c->head] = 0; /* not kept alive by the channel */
             c->head = (c->head + 1) % c->size;
             c->len--;
             fwp_wake_all(&c->sendq);
-            return fwp_some(x);
+            return result;
         }
         if (c->closed || c->sink) return FWP_NONE;
         fwp_check_cancel();

@@ -67,8 +67,9 @@ main = [
         "int original_main(int argc, char **argv)",
     );
     assert!(runtime.contains("static void fwp_channel_drop("));
-    let runtime=runtime.replace("static int fwp_chan_recv_owned(",
-        "static int fail_option;\nstatic V channel_option(V x){if(fail_option){fail_option=0;fwp_trap(\"allocation probe\");}return fwp_some(x); }\nstatic int fwp_chan_recv_owned(")
+    let runtime=runtime.replace("static V fwp_chan_recv(",
+        "static int fail_option;\nstatic V channel_option(V x){if(fail_option){fail_option=0;fwp_trap(\"allocation probe\");}return fwp_some(x); }\nstatic V fwp_chan_recv(")
+        .replace("V result = fwp_some(x);", "V result = channel_option(x);")
         .replace("fwp_rc_fresh(fwp_some(x))", "fwp_rc_fresh(channel_option(x))");
     let grow = "static void fwp_chan_grow(fwp_chan *c) {";
     assert_eq!(runtime.matches(grow).count(), 1);
@@ -199,6 +200,14 @@ int main(void){
  if(fwp_cleanups||((fwp_chan *)(uintptr_t)ch)->len!=1||*fwp_rc_slot(value)!=1)return 26;
  received=fRECV(ch);if(OBJ(received)->f[0]!=value||*fwp_rc_slot(value)!=1)return 27;
  fwp_channel_drop(ch);option_drop(received);if(!dead(value))return 28;
+ // Uncounted tracing receives also preserve the queued value on allocation failure.
+ ch=fwp_p_channel_make(1);value=fwp_str_new("uncounted retry",15);fwp_p_channel_send(ch,value);
+ fail_option=1;fwp_trap_recover=recover;fwp_trap_jb=&recovered;fwp_trap_cleanup=0;
+ if(setjmp(recovered)==0){fwp_p_channel_recv(ch);return 50;}
+ fwp_trap_recover=0;fwp_trap_jb=0;
+ if(((fwp_chan *)(uintptr_t)ch)->len!=1||((fwp_chan *)(uintptr_t)ch)->buf[((fwp_chan *)(uintptr_t)ch)->head]!=value)return 51;
+ received=fwp_p_channel_recv(ch);if(OBJ(received)->f[0]!=value||STR(value)->len!=15)return 52;
+ fwp_p_channel_close(ch);FWP_KEEP_ALIVE(received);
  // A failed buffer allocation consumes the message but leaves the queue empty.
  ch=fMAKE(1);value=fwp_rc_fresh(fwp_str_new("growth",6));
  fail_grow=1;fwp_trap_recover=recover;fwp_trap_jb=&recovered;fwp_trap_cleanup=0;
