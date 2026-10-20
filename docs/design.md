@@ -824,8 +824,9 @@ arm still evaluates: an effect must run and a trapping constant must still trap.
 Checked local types preserve nominal aggregates and their child cleanup rules.
 The transformation applies only when at most one tuple field is tested; complete
 tuple uses, multiple tested fields and protected original resource bindings keep
-their existing lowering. [The handoff](development-state.md) records validation;
-source simplification alone does not prove allocation or timing improvements.
+their existing lowering. [Measurements](measurements/channel-match-results.md) record allocation, count
+and machine-code changes; [the handoff](development-state.md) tracks full validation.
+No execution-time improvement has been established.
 
 The F64 matrix path uses blocks of 32 over contiguous arrays, checks dimensions
 once and allocates one output. Each element accumulates in ascending inner-index

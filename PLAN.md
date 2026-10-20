@@ -104,7 +104,10 @@ outside the benchmark suite.
    retain the allocation savings, remaining ARC/function-message costs, stack
    growth and tracing-layout cost. The next delivery simplifies locally built
    tuples before pattern matching, exposing known callbacks and direct receives
-   while preserving field evaluation order. Measure it against those same programs.
+   while preserving field evaluation order. [The measured result](docs/measurements/channel-match-results.md)
+   removes three allocations per fresh-function message and two per shared-function
+   message, with one fewer retain each. Focused checks pass; finish full platform
+   acceptance before treating this delivery as supported.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.
