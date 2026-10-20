@@ -52,6 +52,8 @@ implementation of currently supported external protocols.
 - Before pushing a CI repair, audit every failed job and completed test target,
   fix underlying causes and check affected callers. Batch all known fixes into
   one push; preserve passing final heads while their remaining gates run.
+- Contract changes must pass the primitive inventory against its frozen baseline;
+  new test targets must pass the native shard coverage check before publication.
 - Focused checks must use the production compilers and optimization settings.
   Passing Clang tests does not verify GCC, especially for binary inspection.
 - Standing authorization covers fixes, publication and squash merge after all

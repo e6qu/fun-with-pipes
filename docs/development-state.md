@@ -4,16 +4,25 @@
 
 [PR #175](https://github.com/e6qu/fun-with-pipes/pull/175) is the only active PR.
 This delivery combines the queued-function proof, consuming channel sends,
-measured `tap` optimization and all CI repairs. The preparation is integrated
-into `queued-function-delivery`; do not open a separate transfer PR. Next: audit
-remaining older jobs, publish the combined head and run all production gates,
-`channel-proof` and `channel-costs`. Fix every failure before merge. The historical
-preparation worktree is `/private/tmp/fwp-channel-transfers`, at `981c5b5f`.
+measured `tap` optimization and CI repairs. The transfer preparation is integrated;
+do not open another PR for it. Next: validate the integration repair below with
+all production gates, documentation, `channel-proof` and `channel-costs` on the
+same branch head. Audit all completed job logs and fix every failure before merge.
 
-The remote PR head `6b246748` is not mergeable: GCC at O0 retains tracing routines
-in ARC binaries. Local primary repair `e6135894`, preserved by
-`roadmap/revision-arc-tracing-exclusion`, excludes those routines before C
-optimization. The same repair is included in the combined preparation.
+Combined source `f3c6f8d9` is published. Production `39362628332` found two
+preflight mistakes: the frozen primitive inventory was edited, and
+`channel_transfer_costs` was missing from the native test schedule. This repair
+restores the frozen baseline, explicitly audits `channel.send` changing from
+borrow/borrow to borrow/consume, and registers the new target. Both checks now
+run in focused Unix ownership jobs before the compiler tests. They pass locally.
+Runtime and compiler source are unchanged by this integration repair. New full
+acceptance is required; do not merge `f3c6f8d9` or the older `6b246748`.
+
+The separate branch `flatten-channel-loop-state`, in
+`/private/tmp/fwp-channel-transfers`, is an unverified next experiment based on
+`f3c6f8d9`. It exposes records returned after actions/branches to loop lowering.
+Its new example passes raw interpretation, but no compiled result or allocation
+saving is verified. Keep it out of PR #175 and validate it before a later delivery.
 
 Require all nine production jobs and documentation on the final PR head before
 squash merge. Use an explicit one-line subject, at most 80 characters, and empty
@@ -65,7 +74,8 @@ machine-code stack frames. They do not measure speed or compare with C/Rust.
 - Collector exclusion `e6135894`, run `39361329677`: Linux and Windows, each on
   both architectures, pass all units and 38 integration checks with no ignored
   cases. Complete logs are audited. Linux explicitly uses GCC, matching
-  production. macOS and WASI results still need the final audit.
+  production. Both WASI hosts also pass all 14 checks, with complete logs audited.
+  macOS results still need the final audit.
 
 ## Failures repaired and remaining validation
 
@@ -76,7 +86,7 @@ job log is audited, including both Windows hosts and both Linux hosts. Benchmark
 and documentation gates passed. The repairs above address both causes.
 
 Production `39359123801` at `6b246748` still lacks collector exclusion. Its
-benchmark and documentation gates pass; audit the remaining jobs for any further
+benchmark, regular/stress ARM64 macOS and documentation gates pass; audit the remaining jobs for any further
 failures before the combined publication. Never merge this superseded head.
 
 Preparation run `39357985210` passes 38 integrations on each native host and 18
@@ -85,14 +95,20 @@ on each WASI host; its one stale ownership-contract assertion is fixed in
 jobs. Completed native jobs expose the new loop test enabling GC-stress flags
 in ARC mode, plus Windows C output using CRLF. Both are repaired locally:
 tracing keeps stress/reuse checks, ARC uses its required settings, and the C
-probe explicitly uses binary stdout. Intel macOS is the remaining job to audit.
+probe explicitly uses binary stdout. Intel macOS reports the same ARC-settings failure; its complete log is now
+audited, finishing the eight-job audit.
 Full Windows production now includes the four loop targets too.
 
 ## Local checks and accepted base
 
 Use `python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py COMMAND...`
 for serial bounded checks. `cargo fmt --all -- --check` and `python3 scripts/check-roadmap.py`
-pass on the combined preparation (1.32s and 2.53s); repeat after integration. Guarded raw interpretation
+pass on the combined preparation (1.32s and 2.53s) and after integration
+(1.55s and 2.54s). `check-primitive-inventory.py --baseline
+tests/fixtures/primitive-inventory-baseline.json --output
+/private/tmp/fwp-175-combined-inventory/candidate.json` passes (0.39s), auditing
+394 declarations and 384 symbols. `scripts/test-native-test-runner.py` passes
+all 11 coverage/failure-propagation checks (8.52s). Guarded raw interpretation
 of the new tapped-loop cases agrees with expected effect order and kept aliases.
 The exact standalone ownership-contract unit passes. Guarded
 `/private/tmp/fwp-check-arc-preprocessing.py` passes C syntax and exclusion/control

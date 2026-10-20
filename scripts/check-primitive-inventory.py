@@ -252,6 +252,12 @@ for row in rows:
         assert row['contract'] == 'Some(Contract { arguments: [Borrow], result: ' + result + ', callback: None, aliases: [] })'
         changed_symbols.add(row['symbol'])
         continue
+    if row['symbol'] == 'channel.send':
+        assert before['contract'] == 'Some(Contract { arguments: [Borrow, Borrow], result: ChannelOperation, callback: None, aliases: [] })'
+        assert all(row[name] == before[name] for name in fields if name != 'contract')
+        assert row['contract'] == 'Some(Contract { arguments: [Borrow, Consume], result: ChannelOperation, callback: None, aliases: [] })'
+        changed_symbols.add(row['symbol'])
+        continue
     if row['symbol'] == 'grpc._force':
         assert before['contract'] == 'None' and row['bucket'] == 'contract'
         assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
@@ -335,7 +341,7 @@ for row in rows:
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | set(service_scopes) | {'http2.serve', 'grpc._force', 'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
+assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | set(service_scopes) | {'channel.send', 'http2.serve', 'grpc._force', 'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
 expected_counts = dict(baseline['counts'])
 expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes) + len(scalar_math)
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22

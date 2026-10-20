@@ -120,6 +120,11 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
+      - name: Ownership inventory and Unix native test coverage
+        if: ${{ !cancelled() && runner.os != 'Windows' }}
+        run: |
+          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output queued-function-evidence/inventory.json
+          python3 scripts/test-native-test-runner.py
       - name: Compiler proof unit tests
         if: ${{ !cancelled() }}
         run: cargo test --lib
