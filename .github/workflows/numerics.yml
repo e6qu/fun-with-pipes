@@ -13,9 +13,9 @@ on:
         options: [all, ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
         default: all
       server_entry_part:
-        description: Server-entry jobs; checks runs entry and API jobs, all adds memory measurements
+        description: Server-entry jobs; queued isolates queue regressions, checks includes API, all adds measurements
         type: choice
-        options: [all, checks, api, stdio, http-rest, http-mcp]
+        options: [all, checks, queued, api, stdio, http-rest, http-mcp]
         default: all
       source_revision:
         description: Full source commit for profiling, evidence audits or server rechecks
@@ -876,6 +876,21 @@ jobs:
       - name: Generated entry results and ownership restrictions
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite != 'server-checks' && matrix.part == 'checks' }}
         run: cargo test --no-fail-fast --test server_entry_ownership --test arc_execution -- --nocapture
+      - name: Queued functions in generated entries
+        if: ${{ !cancelled() && matrix.part == 'queued' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
+        run: cargo test --test server_entry_ownership generated_entries_accept_proved_functions_and_reject_channel_captures -- --exact --nocapture
+      - name: Queue capture and receiver-scope regressions
+        if: ${{ !cancelled() && matrix.part == 'queued' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
+        run: cargo test --test queued_functions -- --nocapture
+      - name: Preserve the compiler for bounded diagnostic checks
+        if: ${{ !cancelled() && matrix.part == 'queued' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: queued-proof-compiler-${{ matrix.runner }}
+          path: |
+            target/debug/fwp
+            target/debug/fwp.exe
+          if-no-files-found: error
       - name: Exact JSON and YAML numeric parsing
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') && inputs.suite != 'server-checks' && matrix.part == 'checks' }}
         shell: bash

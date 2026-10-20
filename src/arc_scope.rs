@@ -807,7 +807,9 @@ pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String>
         proof.changed = false;
         proof.service_boundaries(entries)?;
         for ((id, scoped), args) in proof.inputs.clone() {
-            let mut result = proof.function(id, scoped, &args)?;
+            let mut result = proof.function(id, scoped, &args).map_err(|error| {
+                format!("{error}\n  while checking `{}`", program.funcs[id].name)
+            })?;
             let function = &program.funcs[id];
             if !has_functions(
                 program,
@@ -825,7 +827,9 @@ pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String>
     proof.validate = true;
     proof.service_boundaries(entries)?;
     for ((id, scoped), args) in proof.inputs.clone() {
-        proof.function(id, scoped, &args)?;
+        proof
+            .function(id, scoped, &args)
+            .map_err(|error| format!("{error}\n  while checking `{}`", program.funcs[id].name))?;
     }
     Ok(())
 }
