@@ -2,129 +2,101 @@
 
 ## Next action
 
-Finish [PR #179](https://github.com/e6qu/fun-with-pipes/pull/179) as one combined
-ownership delivery: matched payload moves plus caller-owned direct arguments.
-Do not open a second PR for the prepared borrowing work.
+Next: publish the corrected compile-time regression test on
+`borrow-direct-function-arguments`, then run `numerics.yml` with
+`suite=channel-costs`. Audit both complete logs and fix every failure before
+publishing the combined [PR #179](https://github.com/e6qu/fun-with-pipes/pull/179).
+Keep the borrowing work in this PR; do not open another delivery PR.
 
-The published PR head is `82bcf83f765e072afa6431cbf196532d433e3cad` on
+Preparation worktree: `/private/tmp/fwp-direct-borrows`. Its code repair is
+`d5f9c0aad6f4d52a28323f32ac282570b266bd84`; the current edit corrects one test's
+expected output because `print` adds a newline. Run `39434495223` failed only
+that assertion on both hosts. All other unit/integration checks and measurements
+passed; both full logs were audited in
+`/private/tmp/fwp-direct-borrow-constants-audit.json`. The positive test stopped
+before native execution, so that part still needs passing runner evidence.
+
+The published PR remains at `82bcf83f765e072afa6431cbf196532d433e3cad`, branch
 `move-matched-variant-owners`, in `/Users/zardoz/projects/fun-with-pipes`.
-All nine production jobs in `39417913864` finished: eight pass, but Windows AMD64
-is **cancelled**, so this is not accepted. GitHub's annotation confirms its
-90-minute limit expired during final job cleanup. Every test step, golden program,
-standalone compiler build and artifact upload passed. Documentation `39417913929`
-passes; all ten complete logs are audited in `/private/tmp/fwp-179-acceptance.json`.
-Do not merge this head or treat the cancelled job as passing.
+Eight production jobs in `39417913864` pass; Windows AMD64 is **cancelled**.
+Its 90-minute limit expired during cleanup after every test/build/upload step
+passed. Documentation `39417913929` passes. All ten logs were audited in
+`/private/tmp/fwp-179-acceptance.json`; this is not acceptance. The preparation
+branch gives Windows 150 minutes, matching macOS, and adds the callback-borrow,
+channel-cycle and task-ownership targets to permanent Windows coverage.
 
-`/private/tmp/fwp-direct-borrows`, branch `borrow-direct-function-arguments`,
-contains the combined code at `fe005a4995f7a2aeb0459798802adc34d2c38946`.
-Focused run `39431240368` passes on both Linux hosts for that stricter source.
-Both complete logs are audited, with no failure or panic, in
-`/private/tmp/fwp-direct-borrow-lifetimes-audit.json`.
-An additional local workflow edit gives Windows production 150 minutes, matching
-the macOS production jobs. Local resource limits are unchanged. Three ownership targets are
-also added permanently to Windows production: callback borrowing, channel cycles
-and task cleanup. The normal production matrix now covers every broader native
-target, and Linux retains the full WASI checks. Avoid another duplicate preflight
-matrix; all nine final-head production jobs and documentation remain mandatory.
+After the focused run passes, download its artifacts and run
+`scripts/summarize-channel-costs.py` with the exact run/source. Reproduce counts,
+hashes, actual code and frames; preserve the source with a `roadmap/revision-*`
+tag. Update the report and this handoff, then commit the final docs. The prepared
+branch descends from the PR head: fast-forward it into the PR branch without a
+rebase or merge commit. Preserve the root's local handoff before switching;
+inspect both worktrees for other changes. Publish once and keep the final head
+stable through nine production gates and documentation. Rewrite the PR title/body
+from `/private/tmp/fwp-direct-borrow-pr-body.md`, replacing its pending validation
+paragraph. Squash-merge only after exact-head acceptance, using an explicit
+one-line subject of at most 80 characters and an empty body; verify the tree.
+Do not reuse the old acceptance receipt for the new head.
 
-Next: finish the incidental compile-time handle repair and its runner checks,
-then publish the combined PR. The interpreter accepted `comptime (file.open ...)`,
-but C generation silently embedded zero. The prepared repair rejects runtime
-handles, including nested containers/captures, and validates IR before native
-generation. Ordinary compile-time file contents remain supported. Added tests
-cover both execution modes, malformed IR and native O0/O2 execution after removing
-the compilation input. This repair is not yet runner-verified; the pending
-`fe005a49` run covers borrowing before this additional change. Dispatch
-`numerics.yml`, suite `channel-costs`, for the repair commit; it includes all
-new unit/integration checks and reproduces measurements on ARM64 and AMD64.
+## Changes and measured evidence
 
-After the focused run passes, download its artifacts and reproduce the report
-with `scripts/summarize-channel-costs.py`. Check counts, hashes, actual ELF code
-and frames against the previous evidence. Preserve the measured source with a
-tag. Update the report, PLAN, ownership notes and this handoff around the combined
-scope. Commit the final docs and workflow fix. The preparation branch descends
-from the current PR head, so fast-forward it into the PR branch without rebasing
-or a merge commit. Save the root's local handoff before switching/cleaning it;
-inspect both worktrees for other changes. Publish once with a clear combined PR
-title/body and then keep that final head stable through its production gates.
-The draft body `/private/tmp/fwp-direct-borrow-pr-body.md` still needs combined
-scope and final evidence updates. Do not reuse the initial-head audit receipt for
-the new head. Squash-merge only after exact-head acceptance, using one explicit
-subject of at most 80 characters and an empty body; verify the resulting tree.
+Single-payload matches transfer the payload owner instead of retaining it and
+dropping its wrapper. Direct-call borrowing lets callers keep eligible arguments
+alive through success, failure and cancellation. Every live caller must need the
+same counted storage after the call; last-use inputs stay consuming. Flat records
+also need a nonescape proof. Generic entries consume their inputs; original boxes
+remain visible to tracing. Resource scopes, recursion, escapes and unknown calls
+remain excluded. The verifier catches later arguments consuming an earlier
+borrow's owner. No new capture or cycle is admitted.
+
+The incidental `comptime` repair rejects runtime handles, including nested
+containers/captures. Previously an open file worked in the interpreter but became
+zero in generated C. File contents remain ordinary embeddable data. Tests check
+both execution modes, malformed IR, and O0/O2 execution after removing the input.
+
+[Variant measurements](measurements/channel-variant-moves.md) use `eecb4b5c`,
+focused run `39399972415` (21 checks/host). Broader run `39402978160` at
+`a59328d7` passes 214 checks/Unix host, 215/Windows host and 18/WebAssembly host.
+Those sources have immutable tags; artifacts are `/private/tmp/fwp-variant-final-costs`.
+
+[Borrowing measurements](measurements/channel-direct-borrows.md) currently describe
+`ad3cd792`, focused run `39423983460`: 185 checks/host. The stricter lifetime
+source `fe005a4995f7a2aeb0459798802adc34d2c38946` passes run `39431240368` with
+185 checks/host and reproduces all 180 profiles and 100 code hashes. Fresh-text
+retains fall from one/message to zero; allocations and peak charge are unchanged.
+Its exchange frames shrink from 216 to 40 bytes on AMD64 and 224 to 64 on ARM64,
+excluding callees. Other programs keep their costs. No timing or C/Rust claim.
+Update the report to the repaired source only after its run passes.
+
+Passing stricter-source artifacts: `/private/tmp/fwp-direct-borrow-lifetimes-costs`;
+summary: `/private/tmp/fwp-direct-borrow-lifetimes-counts.json`; full-log receipt:
+`/private/tmp/fwp-direct-borrow-lifetimes-audit.json`. Comparison helpers are
+`/private/tmp/fwp-compare-borrow-costs.py`, `fwp-compare-borrow-artifacts.py` and
+`fwp-inspect-borrow-symbols.py` in the same directory; pass explicit artifact paths.
+The older partial broader run is superseded, not final acceptance. The normal
+production matrix now includes its native targets and Linux's full WASI checks.
 
 ## Accepted baseline
 
-The user merged PR #178 as `2ee0159b941d7887d70f5d86342cfad08e4e35c2`.
-Its tree equals tested head `732984c3fb6b8646f6f3ee4932c123eadb7f3555`.
-All nine production jobs `39397311012` and documentation `39397297724` pass;
-all ten complete logs and the one-line merge message were verified. Receipt:
-`/private/tmp/fwp-178-acceptance.json`. Only duplicate post-merge production
-`39417022563` was cancelled; post-merge documentation passed.
-[History](roadmap-history.md#direct-matches-and-callbacks-pr-178) preserves acceptance.
-
-## Current change and evidence
-
-Matched variants with one payload in local fields transfer that payload's owner
-instead of retaining it and immediately dropping the variant. Boxed/multiple
-payloads and protected resource slots keep their existing cleanup. The
-[variant report](measurements/channel-variant-moves.md) records unchanged
-allocations/peak charge and mixed binary sizes. Focused `39399972415` passes
-21 checks per Linux host at `eecb4b5c11246e6b9223bd7eda84f7857daeef30`.
-Broader `39402978160` passes 214 checks per Unix host, 215 per Windows host and
-18 per WebAssembly host at `a59328d765adab49b2faead775f8237f0eec7b82`.
-All logs, 180 profiles and 20 binaries are audited; both sources have immutable
-`roadmap/revision-*` tags. Artifacts: `/private/tmp/fwp-variant-final-costs`.
-
-Direct-call borrowing uses one inferred contract for call lowering, ownership
-verification, entry ticks and cleanup. Every live caller must already need the
-same counted values after the call; last-use inputs retain consuming conventions
-so their storage is not prolonged. Flat records also need a nonescape proof;
-scalar-only tuples keep their ordinary field convention. Original boxes remain
-visible to tracing. Generic entries consume and release their inputs. Returns,
-stores, function-value uses, recursion and resource scopes remain excluded.
-Keeping channel owners also preserves destruction of hidden native sink context.
-No new capture or cycle is admitted. The verifier additionally rejects a borrowed
-argument whose owner is consumed while evaluating a later argument.
-
-Earlier borrowing source `ad3cd792c079bac8d04bc1dcab69936eb62e97e5`, preserved by
-`roadmap/revision-direct-borrows-ad3cd792`, passes focused `39423983460`: 185 checks
-on each Linux host, none ignored or filtered. Both complete logs are audited in
-`/private/tmp/fwp-direct-borrow-repair-audit.json`. Native probes cover independent
-aliases, boxed entries, failure, cancellation at worker entry and a deliberately
-leaked-owner control. A checked-ARC channel failure checks full reclamation at
-O0/O1/O2, with stack placement enabled and disabled. The initial two fixture
-failures (constant type context and missing generated unwind support) were fully
-reviewed and repaired together. Broader `39424662531` passes 231 checks each on
-ARM macOS and Linux ARM64, plus 18 ARM WebAssembly checks. The five remaining
-jobs were cancelled because the stricter source supersedes it. Every completed
-log is audited in `/private/tmp/fwp-direct-borrow-proof-audit.json`; cancelled
-logs contain only the requested cancellation error, no test failure. These partial
-checks are not acceptance of the stricter source.
-
-The preparation branch's `docs/measurements/channel-direct-borrows.md` and raw
-JSON currently describe `ad3cd792`, not final acceptance of `fe005a49`.
-Its 180 profiles and all 100 code hashes were reproduced by the passing run:
-fresh-text retains fall from one/message to zero, allocations/peak charge stay
-unchanged, and the other four programs' ordinary binaries are byte-identical.
-Fresh-text exchange frames fall from 216 to 40 bytes on AMD64 and 224 to 64 on
-ARM64, excluding callees. No timing or C/Rust comparison was made. Reproduce
-these results for the stricter source before final publication. Passing artifacts:
-`/private/tmp/fwp-direct-borrow-final-costs`; comparison helpers:
-`/private/tmp/fwp-compare-borrow-costs.py`, `/private/tmp/fwp-inspect-borrow-symbols.py`.
-The latter still points to the earlier diagnostic download; use passing artifacts.
+PR #178 merged as `2ee0159b941d7887d70f5d86342cfad08e4e35c2`, with the same tree
+as tested head `732984c3fb6b8646f6f3ee4932c123eadb7f3555`. All nine production
+jobs `39397311012` and docs `39397297724` pass; all logs and the one-line merge
+message were verified. Receipt: `/private/tmp/fwp-178-acceptance.json`.
+Only its duplicate post-merge production run was cancelled. See
+[accepted history](roadmap-history.md#direct-matches-and-callbacks-pr-178).
 
 ## Local checks and limits
 
-No local build was run. Guarded `cargo fmt --all` passes (1.57s);
-`python3 scripts/check-roadmap.py` passes 69 Markdown files, 106 immutable anchors
-and seven roadmap steps (2.77s). The six new compile-time fixture expressions
-were accepted by an existing diagnostic compiler using `--emit-c` (5.19s);
-this confirms syntax only, not the new rejection. Use
-`python3 scripts/local-guard.py COMMAND...`;
-from the preparation worktree, use its absolute path in the main checkout.
-Keep checks serial. Full builds, suites and measurements belong on runners.
-Preserve 64 GiB free disk, target data below 2 GiB and sampled aggregate RSS below
-1 GiB; do not increase local limits. The latest disk check had about 70 GiB free.
+No local build or full suite. Guarded `cargo fmt --all` passes (1.57s);
+`python3 scripts/check-roadmap.py` passes 69 docs, 106 anchors and seven roadmap
+steps (2.77s, before this handoff rewrite). Six new fixture expressions pass
+`--emit-c` with an existing diagnostic compiler (5.19s): syntax evidence only.
+The passing stricter-source report and hashes were reproduced under the guard.
+Use `python3 scripts/local-guard.py COMMAND...`, with its absolute path in the
+main checkout when working in preparation. Keep checks serial. Preserve 64 GiB
+free disk, target data below 2 GiB, sampled RSS below 1 GiB and the 180-second
+limit. Last observed: about 70 GiB free, root target 4 KiB, no preparation target.
+Full builds, suites and measurements belong on runners; never raise local limits.
 
 ## Roadmap status
 
@@ -135,12 +107,10 @@ Preserve 64 GiB free disk, target data below 2 GiB and sampled aggregate RSS bel
 | 3 | In progress | Resolve measured machine-code and performance gaps. |
 | 4 | In progress | Improve differentiation time, memory and precision. |
 | 5 | In progress | Validate numerical kernels and ahead-of-time GPU policy. |
-| 6 | In progress | Establish repeatable equivalent-work comparisons and budgets. |
-| 7 | In progress | Validate larger maintained programs and bounded live memory. |
+| 6 | In progress | Establish equivalent-work comparisons and budgets. |
+| 7 | In progress | Validate larger programs and bounded live memory. |
 
-All seven areas in [PLAN.md](../PLAN.md) remain open: GC removal, functional and
-machine overhead, autodiff, numerical kernels, dependable comparisons and larger
-programs. Default native execution still includes tracing. Persistent
-subscriptions, resource captures, resource-owning tail frames and mutual recursion
-need further proofs. Captured-channel eligibility needs provenance as well as
-payload types. JIT is excluded. Follow [AGENTS.md](../AGENTS.md).
+All seven [work areas](../PLAN.md) remain open. Default native execution still
+includes tracing. Persistent subscriptions, resource captures, resource-owning
+tail frames and mutual recursion need further proofs. Captured-channel eligibility
+needs provenance as well as payload types. JIT is excluded. Follow [AGENTS.md](../AGENTS.md).

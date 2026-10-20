@@ -85,7 +85,7 @@ fn comptime_file_contents_survive_removing_the_compilation_input() {
         "{}",
         String::from_utf8_lossy(&interpreted.stderr)
     );
-    assert_eq!(interpreted.stdout, text.as_bytes());
+    assert_eq!(interpreted.stdout, format!("{text}\n").as_bytes());
     for opt in ["-O0", "-O2"] {
         std::fs::write(&input, text).unwrap();
         let executable = dir
