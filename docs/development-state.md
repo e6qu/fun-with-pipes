@@ -2,96 +2,102 @@
 
 ## Next action
 
-Next: finish [PR #176](https://github.com/e6qu/fun-with-pipes/pull/176), the only
-active PR, on `flatten-channel-loop-state-delivery`. Require all nine production
-jobs and documentation on its exact final head. Focused checks below pass;
-full acceptance starts when this PR is marked ready. Fix every failure, audit completed
-logs, then squash merge with an explicit one-line subject of at most 80 characters
-and empty body. Verify the merged tree/message before cancelling redundant runs.
+Next: finish [draft PR #177](https://github.com/e6qu/fun-with-pipes/pull/177) on
+`deliver-channel-receive-fields`: run and audit all nine production jobs and documentation
+on its final head, using the selected result layout and measurements below. Fix every failure. One active
+PR at a time; squash merge only after final-head acceptance, with an explicit
+one-line subject of at most 80 characters and empty body.
 
-[PR #175](https://github.com/e6qu/fun-with-pipes/pull/175) is accepted as
-`b9cfbbe656baacf30864c8a84b0184ca683ff5b6`, the base of this branch.
-All nine production jobs `39363423392` and documentation `39363423384` passed
-on tested head `6511a50f`. The merge has the same tree and a verified 58-character
-subject with no body or trailers. Redundant post-merge runs `39370566486` and
-`39370566329` are cancelled. [History](roadmap-history.md#function-queues-and-cheaper-sends-pr-175)
-records the accepted queued-function proof, consuming sends and `tap` optimization.
-Do not reopen their preparation branches as new work.
+The user merged [PR #176](https://github.com/e6qu/fun-with-pipes/pull/176) as
+`90f0ab9f6b30da75682f598ef5afd8f9fef7bfed` before production CI completed.
+That is this delivery's base. Its tree equals `ddff413a`; its commit message is
+one line without trailers. Keep original production `39371117507` running and
+fix any failures in the next delivery. Its benchmark gate and documentation
+`39371117707` pass. Only duplicate post-merge runs `39372193646`/`39372193575`
+were cancelled after tree verification. [History](roadmap-history.md#loop-state-and-known-function-calls-pr-176)
+records the completed focused checks and measured loop/direct-call improvements.
 
 ## Current changes
 
-Channel programs still allocated a tuple each time they advanced loop state.
-An action or branch could hide the next record from existing field-by-field
-lowering. The compiler now follows a match when every arm ends in a record,
-keeping eligible state fields in locals. Actions, patterns, aliases and failures
-retain their semantics; existing shape and resource checks still apply.
+Eligible receives now keep the result's tag and message in local fields instead
+of allocating `Some message`. Whole-value callers keep boxed results. Both forms
+transfer the same queued owner and share the runtime receive loop; an explicit
+result-form argument selects the representation. The current candidate returns
+a two-word C struct so the target ABI can select registers or caller storage.
+There is no new syntax, fallback or ownership contract.
 
-Known, capture-free function aliases now expose direct calls. The measured
-`string.length` callback no longer uses generic dispatch. Arity-zero constants
-stay at their original evaluation point because they can allocate or trap.
-There is no new syntax or runtime helper. See the
-[example, counts and actual binary inspection](measurements/channel-loop-state.md).
+Boxed results are allocated before dequeue so failure leaves the message available
+for retry. Review found the uncounted tracing path dequeued first; this delivery
+repairs it with a forced-failure/retry test. Tests also cover zero-valued messages,
+timeouts, blocked cancellation, close, received function calls and failure cleanup.
+The existing native/WASI fixture carries the new language cases.
 
-The log audit also found five Linux resident-memory tests returning early on
-macOS but appearing to pass. They now explicitly report the Linux `/proc`
-requirement. Missing or failing C compilers fail GC checks; negative controls
-verify both cases. The full stress golden suite still runs on macOS. Inline
-imports found during review were moved to file scope, and temporary-directory
-comments now describe the actual guarantees.
+## Checks and measurements
 
-## Evidence
-
-| Check | Revision and run | Result |
+| Revision | Checks | Current outcome |
 |---|---|---|
-| Loop-state counts | `16adc74b`, `39363807189` | Both Linux architectures; 180 samples and 20 ordinary binaries audited |
-| Loop-state ownership | `16adc74b`, `39364385408` | All six native platforms: 47 integration tests plus all compiler units each; both WASI hosts: 18 checks each |
-| Resource fields with GCC | `cc850204`, `39365324259` / `39365327202` | 37 tests across 21 targets on each Linux architecture |
-| Loop state plus function aliases | `75da96b8`, `39366497033` | All six native platforms: 62 integrations plus all compiler units each; both WASI hosts: 18 checks each |
-| Combined counts | `75da96b8`, `39366501786` | Both Linux architectures; 180 samples and 20 ordinary binaries audited |
-| GC test reporting | `bd9eb989`, `39368181540` | Eight tests per Linux host; three applicable tests and five explicit Linux-only ignores per macOS host; both invalid-compiler controls pass on all four |
+| `78dc983e`, output-pointer result | Counts `39371671562` | Both Linux hosts pass; all 180 samples and 20 ordinary binaries audited |
+| `78dc983e` | Ownership `39371669060` | Both Linux/Windows, Intel macOS and both WASI hosts pass; unstarted ARM64 macOS job cancelled |
+| `a44d52a1`, two-word result | Counts `39372647179` | Both Linux hosts pass; all 180 samples and 20 binaries audited |
+| Final PR #177 head | Production native/WASI acceptance | Starts after the result-layout comparison |
 
-Complete logs are audited. Except for the five explicit Linux-only GC tests on
-macOS, these runs have no ignored or filtered tests. Native unit totals are 145,
-or 146 on Windows. The current delivery carries the measured implementation plus
-GC test/workflow repairs, import placement and documentation changes. These
-focused runs do not replace final-head production acceptance.
+The delivery has the same compiler/runtime/test changes as `a44d52a1`; its later
+edits update docs and add Windows receive/callback-effect coverage. Full Linux
+production requires the WASI toolchain and runs both existing WASI targets.
+Windows production now also runs `channel_queue_ownership` and `call_effects`
+alongside queued-function tests; these were previously only in focused checks.
+The duplicate refinement matrix `39372650018` was cancelled with all eight jobs
+still queued. Its coverage will run on the final production head, avoiding a
+second native/WASI pass immediately before the full matrix. Run `39371669060`
+was also retired after auditing seven passing jobs; only its unstarted ARM64
+macOS job was cancelled. Neither cancellation establishes platform support;
+the selected implementation still needs all final-head production gates. The preparation branch is
+`unbox-channel-receives` in `/private/tmp/fwp-channel-receives`; it is not a second
+PR. Do not repeat its work as a new task.
 
-The count comparison uses integrated PR #175 source `f3c6f8d9`, run `39362629293`,
-with GCC O2 and LTO disabled on both revisions. Each of five cases saves one
-allocation per additional message from loop-state lowering. Fresh/closed cases
-save one retain, shared cases two. Every ARC profile ends with zero charged
-storage. Alias propagation saves no further allocations or retains; the fresh-text
-exchange frame shrinks by 48 bytes on each architecture. Reports separate code
-size, file size and individual frames. These are fwp operation-count comparisons,
-not elapsed-time improvements or evidence of C/Rust parity.
+[The receive report](measurements/channel-receive-results.md) compares the first
+candidate against PR #176's measured implementation `75da96b8`. Fresh-text
+allocations fall from two to one per additional message; shared text falls from
+one to zero. Other cases and all retain counts are unchanged. All ARC samples end
+with zero charged storage. These are operation counts, not timings or C/Rust
+comparisons. Actual code sections shrink for text cases, but the receive helper's
+frame grows by 16 bytes on both architectures; that motivates the struct-return
+experiment. The selected struct has identical counters, smaller ARC code and
+another 16-byte reduction in the AMD64 exchange frame; ARM64 stays unchanged.
+The helper remains 16 bytes above baseline. The report also records ARM64
+shared-text tracing code growth (4016 bytes): function bodies shrink, but the
+linked binary adds a stub/padding region. No timing or universal size claim.
 
-## Local checks and resource limits
+A saved diagnostic interpreter rejected the new callback pipe with an effect
+mismatch. The original expression remains in the tests, and both Linux runner
+checks pass: the accepted inference repair already handles it. No wrapper or
+inference workaround was added. Superseded runs `39371506883`/`39371509365` were
+cancelled before any job executed; they supply no evidence.
+
+## Local checks and resources
 
 Use `python3 scripts/local-guard.py COMMAND...` for serial bounded checks.
-No local full compiler or generated native build was run. Disk is near the
-64 GiB floor; heavy work belongs on runners. A guarded `cargo clean --profile dev`
-removed 573.7 MiB in 0.58s before reaching the floor; do not rebuild locally.
+No local compiler or generated-native build was run. Heavy work belongs on
+runners. Disk is near the 64 GiB floor; keep target data below 2 GiB and sampled
+aggregate workload RSS below 1 GiB. Do not raise the guard's limits.
 
-Guarded raw interpretation checks the branched loop and retained alias (0.82s)
-and the documentation example (0.86s). `scripts/summarize-channel-costs.py`
-audits loop-only and combined reports (1.61s/1.55s). Complete-log audit scripts
-verify resource fields (0.23s) and combined ownership (0.14s). ELF inspection
-checks actual sections, calls and frames. `cargo fmt --all` and
-`python3 scripts/check-roadmap.py` pass after preparation (1.55s/2.74s).
-
-An earlier handoff edit omitted the required status table; restoring it fixed
-the audit. A guarded `du` returned sizes but stopped with `Operation not permitted`
-while controlling the system utility; it was not retried and no limits changed.
-Redundant audited baseline/transfer/tap downloads were removed; committed reports
-and GitHub artifacts remain. Integrated baseline and candidate binaries remain
-under `/private/tmp/fwp-channel-{cost-combined,loop-costs,alias-costs}`.
-
-Publication checks on the delivery branch pass under the guard: `cargo fmt --all
--- --check` (1.43s), `python3 scripts/check-roadmap.py` (2.89s),
-`python3 scripts/check-primitive-inventory.py --baseline
-tests/fixtures/primitive-inventory-baseline.json --output
-/private/tmp/fwp-next-primitive-inventory.json` (1.06s), and
-`python3 scripts/test-native-test-runner.py` (11 checks, 8.52s).
+Guarded `cargo fmt --all -- --check` passes (1.66s).
+`python3 scripts/check-roadmap.py` passes after tracking both reports (3.04s).
+Compiler/runtime/tests match measured revision `a44d52a1` exactly; `git diff
+--check` passes. No local build was needed.
+Seven completed Linux/Windows/Intel-macOS/WASI full logs pass guarded audits
+(6.69s/4.27s/2.88s), retained
+with hashes in `/private/tmp/fwp-receive-pointer-log-audit.json`.
+The primitive inventory against its frozen baseline passes (1.33s); contracts
+are unchanged. `scripts/summarize-channel-costs.py` audits the first candidate
+against run/source/artifacts (1.54s); ELF section comparison passes (0.14s).
+The selected struct artifact audit passes (1.56s), count/ELF comparison passes
+(0.13s), and function-symbol inspection explains the tracing layout cost (0.13s).
+Artifacts are `/private/tmp/fwp-channel-receive-struct-costs` and
+`/private/tmp/fwp-channel-receive-costs`, baseline artifacts
+`/private/tmp/fwp-channel-alias-costs`, and the audited count report
+`/private/tmp/fwp-channel-receive-counts.json`. Revision tag
+`roadmap/revision-channel-receive-78dc983e` preserves the first measurement.
 
 ## Roadmap status
 
@@ -108,8 +114,6 @@ All seven areas in [PLAN.md](../PLAN.md) remain open.
 | 7 | In progress | Larger applications |
 
 Persistent subscriptions, resource captures, resource-owning tail frames and
-mutual recursion need further proofs. Shared-text channel exchange still allocates
-its receive result; removing it would need evidence for failure, cancellation and
-call boundaries. That change is not implemented in this delivery. JIT is excluded.
-Follow [AGENTS.md](../AGENTS.md): one active PR, final-head gates, bounded local
-work and one-line commits without trailers.
+mutual recursion still need proofs. Default native execution retains tracing;
+zero additional shared-text allocations do not eliminate setup storage or ARC.
+Function-message costs remain. JIT is excluded. Follow [AGENTS.md](../AGENTS.md).

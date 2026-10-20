@@ -27,6 +27,8 @@ from-error : () -> (() -> String)
 from-error = caught | match
     Err _ -> id
     Ok _ -> const (give "unused")
+receive-fail : Channel[() -> String] -> () ! {Async, Error[String]}
+receive-fail = channel.recv | option.map (apply () | tap (const "received failure" | fail)) | ignore
 main = [
     callbacks 1 | tap (flip channel.send (add 3)) | channel.recv | option.map (apply 5) | echo,
     texts 1 | tap (flip channel.send (give (owned ()))) | tap channel.close | channel.recv | option.map (apply ()) | echo,
@@ -38,6 +40,9 @@ main = [
     events 1 | tap (flip channel.send (Event { callback = Some (const "record") })) | channel.recv | option.map (.callback | option.map (apply 9)) | echo,
     nested 1 | tap (flip channel.send [texts 1 | tap (flip channel.send (give "nested"))]) | channel.recv | option.map (map (channel.recv | option.map (apply ()))) | echo,
     callbacks 1 | tap (flip channel.send (twice (add 3))) | channel.recv | option.map (apply 5) | echo,
+    texts 1 | tap (flip channel.send (give "timed")) | channel.recv-for 0ns | option.map (apply ()) | echo,
+    texts 1 | tap channel.close | channel.recv-for 0ns | option.map (apply ()) | echo,
+    texts 1 | tap (flip channel.send (give (owned ()))) | attempt receive-fail | echo,
     events 1 | channel.close,
     nested 1 | channel.close,
 ] | ignore

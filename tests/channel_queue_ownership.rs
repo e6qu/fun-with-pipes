@@ -67,15 +67,16 @@ main = [
         "int original_main(int argc, char **argv)",
     );
     assert!(runtime.contains("static void fwp_channel_drop("));
-    let runtime=runtime.replace("static V fwp_chan_recv_owned(",
-        "static int fail_option;\nstatic V channel_option(V x){if(fail_option){fail_option=0;fwp_trap(\"allocation probe\");}return fwp_some(x); }\nstatic V fwp_chan_recv_owned(")
+    let runtime=runtime.replace("static V fwp_chan_recv(",
+        "static int fail_option;\nstatic V channel_option(V x){if(fail_option){fail_option=0;fwp_trap(\"allocation probe\");}return fwp_some(x); }\nstatic V fwp_chan_recv(")
+        .replace("V result = fwp_some(x);", "V result = channel_option(x);")
         .replace("fwp_rc_fresh(fwp_some(x))", "fwp_rc_fresh(channel_option(x))");
     let grow = "static void fwp_chan_grow(fwp_chan *c) {";
     assert_eq!(runtime.matches(grow).count(), 1);
     let runtime = runtime.replace(grow, &format!("static int fail_grow;\n{grow}\nif(fail_grow){{fail_grow=0;fwp_trap(\"queue growth probe\");}}"));
     let probe = r#"
 static jmp_buf recovered;static int recover(void){return 1;}
-static V blocking_ch,blocking_value;static int send_mode,worker_completed;
+static V blocking_ch,blocking_value;static int send_mode,field_mode,worker_completed;
 static void text_drop(V v);
 static int sink_calls,sink_drops;
 static int sink(void *arg,V value){if(arg!=&sink_calls||!fwp_rc_last(value))_Exit(38);sink_calls++;return 1;}
@@ -85,6 +86,7 @@ static void worker(void *arg,int failed){
  fwp_value_owner ch_owner={blocking_ch,fwp_channel_drop};
  fwp_cleanup ch_cleanup;fwp_value_protect(&ch_owner,&ch_cleanup);
  if(send_mode){if(fSEND(blocking_ch,blocking_value)!=FWP_FALSE)fwp_trap("expected closed send");}
+ else if(field_mode){if(fwp_chan_recv_owned(blocking_ch,0,fwp_rc_dup,FWP_CHANNEL_RESULT_FIELDS).tag)fwp_trap("expected closed field receive");}
  else if(fRECV(blocking_ch)!=FWP_NONE)fwp_trap("expected closed receive");
  fwp_value_finish(&ch_owner,&ch_cleanup);fwp_channel_drop(blocking_ch);worker_completed=1;
 }
@@ -117,7 +119,7 @@ int main(void){
  V word=fRECVWORD(ch);if(OBJ(word)->f[0]!=scalar||*fwp_rc_slot(scalar)!=1)return 14;
  fwp_rc_free_obj(word);fwp_channel_drop(ch);if(*fwp_rc_slot(scalar)!=1)return 15;text_drop(scalar);
  // Blocked send/receive calls own their borrowed handles until wait links clear.
- for(int mode=0;mode<4;mode++)for(int early_drop=0;early_drop<2;early_drop++){
+ for(field_mode=0;field_mode<2;field_mode++)for(int mode=0;mode<4;mode++)for(int early_drop=0;early_drop<2;early_drop++){
   blocking_ch=fMAKE(1);send_mode=mode<2;worker_completed=0;
   V queued=0;if(send_mode){queued=fwp_rc_fresh(fwp_str_new("queued",6));fSEND(blocking_ch,queued);}
   blocking_value=send_mode?fwp_rc_fresh(fwp_str_new("pending",7)):0;
@@ -141,6 +143,19 @@ int main(void){
  value=fwp_rc_fresh(fwp_str_new("timed",5));fSEND(ch,value);
  received=fwp_p_channel_recv_for_owned(duration,ch,fwp_rc_dup);
  if(OBJ(received)->f[0]!=value||*fwp_rc_slot(value)!=1)return 39;option_drop(received);fwp_channel_drop(ch);
+ // Direct fields move exactly one owner, allocate no Option and distinguish Some 0.
+ ch=fMAKE(1);value=fwp_rc_fresh(fwp_str_new("fields",6));fSEND(ch,value);
+ fail_option=1;intptr_t before_fields=fwp_gc.budget;
+ fwp_channel_result fields=fwp_chan_recv_owned(ch,fwp_after(duration),fwp_rc_dup,FWP_CHANNEL_RESULT_FIELDS);
+ V field=fields.value;
+ if(!fields.tag||field!=value||*fwp_rc_slot(value)!=1)return 43;
+ if(!fail_option||before_fields!=fwp_gc.budget||((fwp_chan *)(uintptr_t)ch)->len)return 44;
+ fail_option=0;fwp_channel_drop(ch);if(STR(field)->len!=6)return 45;text_drop(field);if(!dead(value))return 46;
+ ch=fWORD(1);fSENDWORD(ch,0);
+ fields=fwp_chan_recv_owned(ch,0,NULL,FWP_CHANNEL_RESULT_FIELDS);
+ if(!fields.tag||fields.value!=0)return 47;
+ if(fwp_chan_recv_owned(ch,fwp_after(duration),NULL,FWP_CHANNEL_RESULT_FIELDS).tag)return 48;
+ fCLOSE(ch);if(fwp_chan_recv_owned(ch,0,NULL,FWP_CHANNEL_RESULT_FIELDS).tag)return 49;fwp_channel_drop(ch);
  // Queue function captures and task caches retain their typed descendants.
  value=fwp_rc_fresh(fwp_str_new("function",8));V fn=fwp_rc_fresh(fwp_pap(GIVE,1,&value));
  ch=fwp_p_channel_make_owned(1,fwp_closure_drop);fwp_p_channel_send_owned(ch,fn,fwp_closure_drop);
@@ -188,6 +203,14 @@ int main(void){
  if(fwp_cleanups||((fwp_chan *)(uintptr_t)ch)->len!=1||*fwp_rc_slot(value)!=1)return 26;
  received=fRECV(ch);if(OBJ(received)->f[0]!=value||*fwp_rc_slot(value)!=1)return 27;
  fwp_channel_drop(ch);option_drop(received);if(!dead(value))return 28;
+ // Uncounted tracing receives also preserve the queued value on allocation failure.
+ ch=fwp_p_channel_make(1);value=fwp_str_new("uncounted retry",15);fwp_p_channel_send(ch,value);
+ fail_option=1;fwp_trap_recover=recover;fwp_trap_jb=&recovered;fwp_trap_cleanup=0;
+ if(setjmp(recovered)==0){fwp_p_channel_recv(ch);return 50;}
+ fwp_trap_recover=0;fwp_trap_jb=0;
+ if(((fwp_chan *)(uintptr_t)ch)->len!=1||((fwp_chan *)(uintptr_t)ch)->buf[((fwp_chan *)(uintptr_t)ch)->head]!=value)return 51;
+ received=fwp_p_channel_recv(ch);if(OBJ(received)->f[0]!=value||STR(value)->len!=15)return 52;
+ fwp_p_channel_close(ch);FWP_KEEP_ALIVE(received);
  // A failed buffer allocation consumes the message but leaves the queue empty.
  ch=fMAKE(1);value=fwp_rc_fresh(fwp_str_new("growth",6));
  fail_grow=1;fwp_trap_recover=recover;fwp_trap_jb=&recovered;fwp_trap_cleanup=0;
@@ -218,12 +241,12 @@ int main(void){
         "message.drop = NULL; /* deliberately omit pending-message cleanup */",
     );
     let extra_receive = runtime.replace(
-        "V result = fwp_rc_fresh(channel_option(x));",
-        "if(dup)dup(x);V result = fwp_rc_fresh(channel_option(x));",
+        "V result = form == FWP_CHANNEL_RESULT_BOXED ? fwp_rc_fresh(channel_option(x)) : x;",
+        "if(dup)dup(x);V result = form == FWP_CHANNEL_RESULT_BOXED ? fwp_rc_fresh(channel_option(x)) : x;",
     );
     let early_remove=runtime.replace(
-        "V result = fwp_rc_fresh(channel_option(x));\n            c->buf[c->head] = 0;\n            c->head = (c->head + 1) % c->size;\n            c->len--;",
-        "c->buf[c->head] = 0;\n            c->head = (c->head + 1) % c->size;\n            c->len--;\n            V result = fwp_rc_fresh(channel_option(x));");
+        "V result = form == FWP_CHANNEL_RESULT_BOXED ? fwp_rc_fresh(channel_option(x)) : x;\n            c->buf[c->head] = 0;\n            c->head = (c->head + 1) % c->size;\n            c->len--;",
+        "c->buf[c->head] = 0;\n            c->head = (c->head + 1) % c->size;\n            c->len--;\n            V result = form == FWP_CHANNEL_RESULT_BOXED ? fwp_rc_fresh(channel_option(x)) : x;");
     let no_sink_drop = runtime.replace(
         "        drop(context);",
         "/* omit native context release */",

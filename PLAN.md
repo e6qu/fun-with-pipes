@@ -97,10 +97,15 @@ outside the benchmark suite.
    passed native, WebAssembly and full production checks in
    [PR #175](docs/roadmap-history.md#function-queues-and-cheaper-sends-pr-175), together
    with consuming sends and temporary argument-tuple removal. Its measured count
-   savings do not remove all channel costs. The current delivery keeps eligible
-   loop state in locals and calls known function aliases directly; focused checks
-   and [binary/count measurements](docs/measurements/channel-loop-state.md) pass,
-   while full production acceptance remains required.
+   savings do not remove all channel costs. [PR #176](docs/roadmap-history.md#loop-state-and-known-function-calls-pr-176)
+   keeps eligible loop state in locals and calls known function aliases directly.
+   It is merged with passing focused checks and measurements; its full platform
+   acceptance is still running. The current delivery removes eligible receive
+   result wrappers. [Counts and binary inspection](docs/measurements/channel-receive-results.md)
+   show a further allocation reduction for text messages, with ARC traffic and
+   function-message costs remaining. The selected struct return reduces ARC code
+   size further, with documented stack and tracing-layout costs. Complete its
+   final platform and cleanup checks before claiming support.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.

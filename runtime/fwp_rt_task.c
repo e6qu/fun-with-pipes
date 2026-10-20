@@ -1572,35 +1572,8 @@ static V fwp_chan_recv(V ch, int64_t at) {
     for (;;) {
         if (c->len) {
             V x = c->buf[c->head];
+            V result = fwp_some(x); /* keep the message queued if allocation fails */
             c->buf[c->head] = 0; /* not kept alive by the channel */
-            c->head = (c->head + 1) % c->size;
-            c->len--;
-            fwp_wake_all(&c->sendq);
-            return fwp_some(x);
-        }
-        if (c->closed || c->sink) return FWP_NONE;
-        fwp_check_cancel();
-        if (at && fwp_now_ns() >= at) return FWP_NONE;
-        fwp_park(&c->recvq, at);
-        fwp_check_cancel();
-    }
-}
-
-static V fwp_p_channel_recv(V ch) { return fwp_chan_recv(ch, 0); }
-static V fwp_p_channel_recv_for(V d, V ch) { return fwp_chan_recv(ch, fwp_after(d)); }
-
-static V fwp_chan_recv_owned(V ch, int64_t at, void (*dup)(V)) {
-    fwp_tasks_init();
-    fwp_chan *c = (fwp_chan *)(uintptr_t)ch;
-    for (;;) {
-        if (c->len) {
-            V x = c->buf[c->head];
-            uint8_t *count = fwp_rc_slot(ch);
-            if ((!count || !*count) && dup) fwp_rc_share(x);
-            /* Allocate before removing the queue owner; no fallible operation
-             * follows its transfer into this owned Option. */
-            V result = fwp_rc_fresh(fwp_some(x));
-            c->buf[c->head] = 0;
             c->head = (c->head + 1) % c->size;
             c->len--;
             fwp_wake_all(&c->sendq);
@@ -1613,9 +1586,47 @@ static V fwp_chan_recv_owned(V ch, int64_t at, void (*dup)(V)) {
         fwp_check_cancel();
     }
 }
-static V fwp_p_channel_recv_owned(V ch, void (*dup)(V)) { return fwp_chan_recv_owned(ch, 0, dup); }
+
+static V fwp_p_channel_recv(V ch) { return fwp_chan_recv(ch, 0); }
+static V fwp_p_channel_recv_for(V d, V ch) { return fwp_chan_recv(ch, fwp_after(d)); }
+
+/* Both result forms transfer the same queue owner. A boxed result reserves its
+ * Option before removing the message; direct fields need no result allocation. */
+typedef enum {
+    FWP_CHANNEL_RESULT_BOXED,
+    FWP_CHANNEL_RESULT_FIELDS
+} fwp_channel_result_form;
+typedef struct { V tag, value; } fwp_channel_result;
+static fwp_channel_result fwp_chan_recv_owned(V ch, int64_t at, void (*dup)(V),
+                                             fwp_channel_result_form form) {
+    fwp_tasks_init();
+    fwp_chan *c = (fwp_chan *)(uintptr_t)ch;
+    for (;;) {
+        if (c->len) {
+            V x = c->buf[c->head];
+            uint8_t *count = fwp_rc_slot(ch);
+            if ((!count || !*count) && dup) fwp_rc_share(x);
+            /* Reserve a boxed result before removing the queue owner. No
+             * fallible operation follows either form's ownership transfer. */
+            V result = form == FWP_CHANNEL_RESULT_BOXED ? fwp_rc_fresh(fwp_some(x)) : x;
+            c->buf[c->head] = 0;
+            c->head = (c->head + 1) % c->size;
+            c->len--;
+            fwp_wake_all(&c->sendq);
+            return (fwp_channel_result){1, result};
+        }
+        if (c->closed || c->sink) return (fwp_channel_result){0, FWP_NONE};
+        fwp_check_cancel();
+        if (at && fwp_now_ns() >= at) return (fwp_channel_result){0, FWP_NONE};
+        fwp_park(&c->recvq, at);
+        fwp_check_cancel();
+    }
+}
+static V fwp_p_channel_recv_owned(V ch, void (*dup)(V)) {
+    return fwp_chan_recv_owned(ch, 0, dup, FWP_CHANNEL_RESULT_BOXED).value;
+}
 static V fwp_p_channel_recv_for_owned(V d, V ch, void (*dup)(V)) {
-    return fwp_chan_recv_owned(ch, fwp_after(d), dup);
+    return fwp_chan_recv_owned(ch, fwp_after(d), dup, FWP_CHANNEL_RESULT_BOXED).value;
 }
 
 static V fwp_p_channel_close(V ch) {
