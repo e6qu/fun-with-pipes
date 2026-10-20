@@ -101,10 +101,11 @@ outside the benchmark suite.
    keeps eligible loop state in locals and calls known function aliases directly.
    It is merged with passing focused checks and measurements; its full platform
    acceptance is still running. The current delivery removes eligible receive
-   result wrappers. [Initial counts and binary inspection](docs/measurements/channel-receive-results.md)
+   result wrappers. [Counts and binary inspection](docs/measurements/channel-receive-results.md)
    show a further allocation reduction for text messages, with ARC traffic and
-   function-message costs remaining. Finish its result-layout comparison and
-   cleanup checks before claiming support.
+   function-message costs remaining. The selected struct return reduces ARC code
+   size further, with documented stack and tracing-layout costs. Complete its
+   final platform and cleanup checks before claiming support.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.

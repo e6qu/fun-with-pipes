@@ -78,12 +78,51 @@ include saved registers but exclude return addresses; ARM64 counts include saved
 registers and the link register. These are individual frames, not total stack peaks.
 The first implementation writes the payload through an output pointer. A follow-up
 experiment returns a two-word C struct so the target ABI can choose registers;
-its results are pending and must not be attributed to this measured revision.
+its separate results follow below.
+
+## Selected result layout
+
+The delivery uses a two-word C struct for the tag and payload.
+[Run 39372647179](https://github.com/e6qu/fun-with-pipes/actions/runs/39372647179)
+measures revision `a44d52a12331191bd79c5bb025e770ff9c3acae5` on the same two
+hosts and protocol. [Its report](channel-receive-struct-counts-2026-10-20.json)
+audits another 180 samples and 20 ordinary binaries. Every measured allocation,
+retain and memory-charge value matches the output-pointer implementation above.
+The delivery's compiler, runtime and tests match that revision; subsequent edits
+update documentation and add existing receive/effect tests to Windows production.
+
+Compared with the output-pointer version, the ordinary ARC binaries change by:
+
+| Program | AMD64 `.text` bytes | ARM64 `.text` bytes | File bytes, AMD64 / ARM64 |
+|---|---:|---:|---:|
+| Fresh text | −80 | −80 | 0 / 0 |
+| Fresh function | −48 | −80 | −8 / −8 |
+| Shared text | −64 | −48 | 0 / 0 |
+| Shared function | −32 | −64 | −8 / −8 |
+| Closed function | 0 | 0 | 0 / 0 |
+
+In the fresh-text disassembly, the tag/payload return in `rax`/`rdx` on AMD64 and
+`x0`/`x1` on ARM64. The AMD64 exchange frame falls another 16 bytes, from 296 to
+280; ARM64 remains 288. The receive helper remains 56/80 bytes respectively,
+still 16 bytes larger than the original baseline. Returning a struct therefore
+improves code size and one caller frame; it does not remove every stack cost.
+
+Tracing code sizes also shrink or stay unchanged except for shared text on
+ARM64: its `.text` grows 4016 bytes and its file grows 24 bytes. Inspection shows
+84 fewer bytes in sized function symbols, but a new 4096-byte region between
+`fwp_main_thread` and the atomic helper. That region contains a load/branch stub
+and padding; the call site branches through it. These linked-binary costs are
+retained in the comparison. No timing was measured, so smaller ARC code does not
+establish a speedup or rule out a tracing-mode slowdown.
 
 ## Ownership and failure checks
 
-Focused ownership run `39371669060` is still running. It covers native targets
-and WASI; the measurement result alone does not establish complete cleanup safety.
+Focused ownership run `39371669060` passes both Linux and Windows architectures,
+Intel macOS, and both WASI hosts. All seven complete logs are audited: 62
+integrations plus compiler units per native host and 18 checks per WASI host,
+none ignored or filtered. Its unstarted ARM64 macOS job was cancelled when the
+result-layout refinement moved validation to final production. This partial
+focused run does not establish complete platform acceptance.
 Tests exercise blocked receive cancellation, close, timed ready/empty receives,
 queued functions and failures after calling them. A runtime probe verifies that
 direct fields transfer one owner without attempting the injected Option allocation.

@@ -230,8 +230,8 @@ passes an immediately matched result as separate tag and payload fields, avoidin
 its `Some` allocation. Whole-value uses keep boxed results; both forms transfer
 the same queued owner. Boxed allocation must precede dequeue so failure permits
 retry. The candidate also repairs that order in the uncounted tracing path.
-Its initial text-message counts pass, but its final result layout and complete
-cleanup/platform acceptance are still under validation.
+Its selected two-word result has audited text-message allocation savings on both
+Linux architectures. Complete cleanup/platform acceptance is still under validation.
 
 Counting cannot reclaim an unreachable cycle by itself. For example, a channel
 can contain a queued value holding that same channel. Closing it must preserve

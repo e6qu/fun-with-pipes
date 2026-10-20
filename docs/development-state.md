@@ -2,9 +2,9 @@
 
 ## Next action
 
-Next: publish `deliver-channel-receive-fields` as a draft PR, finish the receive
-result-layout comparison and focused ownership checks below, then run all nine
-production jobs and documentation on its final head. Fix every failure. One active
+Next: finish [draft PR #177](https://github.com/e6qu/fun-with-pipes/pull/177) on
+`deliver-channel-receive-fields`: run and audit all nine production jobs and documentation
+on its final head, using the selected result layout and measurements below. Fix every failure. One active
 PR at a time; squash merge only after final-head acceptance, with an explicit
 one-line subject of at most 80 characters and empty body.
 
@@ -37,12 +37,21 @@ The existing native/WASI fixture carries the new language cases.
 | Revision | Checks | Current outcome |
 |---|---|---|
 | `78dc983e`, output-pointer result | Counts `39371671562` | Both Linux hosts pass; all 180 samples and 20 ordinary binaries audited |
-| `78dc983e` | Ownership `39371669060` | Both Linux and both WASI hosts pass; macOS/Windows running/queued |
-| `a44d52a1`, two-word result | Counts `39372647179` | Pending |
-| `a44d52a1` | Ownership `39372650018` | Pending |
+| `78dc983e` | Ownership `39371669060` | Both Linux/Windows, Intel macOS and both WASI hosts pass; unstarted ARM64 macOS job cancelled |
+| `a44d52a1`, two-word result | Counts `39372647179` | Both Linux hosts pass; all 180 samples and 20 binaries audited |
+| Final PR #177 head | Production native/WASI acceptance | Starts after the result-layout comparison |
 
 The delivery has the same compiler/runtime/test changes as `a44d52a1`; its later
-edits update the plan and accepted-work records. The preparation branch is
+edits update docs and add Windows receive/callback-effect coverage. Full Linux
+production requires the WASI toolchain and runs both existing WASI targets.
+Windows production now also runs `channel_queue_ownership` and `call_effects`
+alongside queued-function tests; these were previously only in focused checks.
+The duplicate refinement matrix `39372650018` was cancelled with all eight jobs
+still queued. Its coverage will run on the final production head, avoiding a
+second native/WASI pass immediately before the full matrix. Run `39371669060`
+was also retired after auditing seven passing jobs; only its unstarted ARM64
+macOS job was cancelled. Neither cancellation establishes platform support;
+the selected implementation still needs all final-head production gates. The preparation branch is
 `unbox-channel-receives` in `/private/tmp/fwp-channel-receives`; it is not a second
 PR. Do not repeat its work as a new task.
 
@@ -53,8 +62,11 @@ one to zero. Other cases and all retain counts are unchanged. All ARC samples en
 with zero charged storage. These are operation counts, not timings or C/Rust
 comparisons. Actual code sections shrink for text cases, but the receive helper's
 frame grows by 16 bytes on both architectures; that motivates the struct-return
-experiment. Its results are not yet known. Keep both measurements and compare
-actual binaries before selecting the final form.
+experiment. The selected struct has identical counters, smaller ARC code and
+another 16-byte reduction in the AMD64 exchange frame; ARM64 stays unchanged.
+The helper remains 16 bytes above baseline. The report also records ARM64
+shared-text tracing code growth (4016 bytes): function bodies shrink, but the
+linked binary adds a stub/padding region. No timing or universal size claim.
 
 A saved diagnostic interpreter rejected the new callback pipe with an effect
 mismatch. The original expression remains in the tests, and both Linux runner
@@ -69,12 +81,20 @@ No local compiler or generated-native build was run. Heavy work belongs on
 runners. Disk is near the 64 GiB floor; keep target data below 2 GiB and sampled
 aggregate workload RSS below 1 GiB. Do not raise the guard's limits.
 
-Guarded `cargo fmt --all` passes after the struct change (1.76s).
-`python3 scripts/check-roadmap.py` passes after tracking the report (2.89s).
+Guarded `cargo fmt --all -- --check` passes (1.66s).
+`python3 scripts/check-roadmap.py` passes after tracking both reports (3.04s).
+Compiler/runtime/tests match measured revision `a44d52a1` exactly; `git diff
+--check` passes. No local build was needed.
+Seven completed Linux/Windows/Intel-macOS/WASI full logs pass guarded audits
+(6.69s/4.27s/2.88s), retained
+with hashes in `/private/tmp/fwp-receive-pointer-log-audit.json`.
 The primitive inventory against its frozen baseline passes (1.33s); contracts
 are unchanged. `scripts/summarize-channel-costs.py` audits the first candidate
 against run/source/artifacts (1.54s); ELF section comparison passes (0.14s).
-Artifacts are `/private/tmp/fwp-channel-receive-costs`, baseline artifacts
+The selected struct artifact audit passes (1.56s), count/ELF comparison passes
+(0.13s), and function-symbol inspection explains the tracing layout cost (0.13s).
+Artifacts are `/private/tmp/fwp-channel-receive-struct-costs` and
+`/private/tmp/fwp-channel-receive-costs`, baseline artifacts
 `/private/tmp/fwp-channel-alias-costs`, and the audited count report
 `/private/tmp/fwp-channel-receive-counts.json`. Revision tag
 `roadmap/revision-channel-receive-78dc983e` preserves the first measurement.
