@@ -2,9 +2,10 @@
 
 ## Next action
 
-Next: publish `flatten-channel-loop-state-delivery` as one PR, then require all
-nine production jobs and documentation on its exact final head. Focused checks
-below pass; full acceptance has not run yet. Fix every failure, audit completed
+Next: finish [PR #176](https://github.com/e6qu/fun-with-pipes/pull/176), the only
+active PR, on `flatten-channel-loop-state-delivery`. Require all nine production
+jobs and documentation on its exact final head. Focused checks below pass;
+full acceptance starts when this PR is marked ready. Fix every failure, audit completed
 logs, then squash merge with an explicit one-line subject of at most 80 characters
 and empty body. Verify the merged tree/message before cancelling redundant runs.
 
