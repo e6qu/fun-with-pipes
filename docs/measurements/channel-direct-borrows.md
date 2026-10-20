@@ -45,7 +45,9 @@ allocator metadata, stacks and total process memory.
 
 Zero retains do not mean zero memory-management work. Strings still allocate
 and are destroyed; the runtime still has ownership metadata and checks. Function
-payloads remain outside this channel-borrow proof. Shared-message parameters
+payloads remain outside this measured source's channel-borrow proof; the
+[later handle extension](function-channel-borrows.md) measures that case.
+Shared-message parameters
 also contain a message that the send consumes, so the whole parameter does not
 qualify for borrowing. These remaining costs are visible in the table.
 
