@@ -79,6 +79,9 @@ escapes, unknown/consuming calls and resource scopes. A native channel-context
 probe checks owner counts at the call, aliases and destruction at O0/O2 under GC
 stress/verification and reuse poisoning; an injected extra retain must fail.
 These changes are implemented but not yet verified by compilation or execution.
+Initial run `39458970390` was cancelled during setup before tests: review found
+the native fixture must mark its manually built record as fresh owned storage.
+That fixture is corrected; the compiler change is unchanged.
 Run the existing `channel-costs` focused suite on both Linux GCC hosts, inspect
 all logs and fix every failure. Compare all five channel programs against the
 PR #180 report; do not claim the closed-function retain is removed until measured.

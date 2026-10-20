@@ -92,7 +92,7 @@ int main(void){
   queue->sink=probe_sink;queue->sink_ctx=&destroyed;queue->owner.sink_drop=probe_drop;
   if(alias)fwp_rc_dup(channel);
   expected_owners=1+alias;
-  V returned=f1(fwp_record(2,(V[]){channel,42}));
+  V returned=f1(fwp_rc_fresh(fwp_record(2,(V[]){channel,42})));
   if(returned!=channel||destroyed||!queue->closed)return 72;
   if(*fwp_rc_slot(returned)!=expected_owners)return 73;
   fwp_channel_drop(returned);
