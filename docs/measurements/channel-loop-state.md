@@ -47,8 +47,8 @@ samples and 20 ordinary binaries with C and disassembly hashes. It uses the
 [same five programs and measurement boundaries](channel-transfer-protocol.md)
 as [the integrated PR #175 baseline](channel-count-integrated-2026-10-20.json)
 at `f3c6f8d9`, run `39362629293`: GCC O2, LTO disabled, raw interpreter/native
-output comparison, inputs 0/16/1024 and three fresh profiles. Both revisions
-include the preprocessing repair that excludes tracing code from ARC binaries.
+output comparison, inputs 0/16/1024 and three fresh profiles. Hosts are AMD EPYC 7763 and Neoverse-N2, with GCC 13.3.0 on both revisions.
+Both revisions include the preprocessing repair that excludes tracing code from ARC binaries.
 The integrated baseline reproduces the previous `tap` allocation/retain/memory
 counts; its executable sizes differ, so the size comparisons below use this
 integrated build rather than mixing revisions.

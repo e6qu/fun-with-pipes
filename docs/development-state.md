@@ -87,3 +87,9 @@ new report compares like-for-like integrated sources. ELF inspection confirms
 all five code sections shrink on both hosts, despite the AMD64 closed-function
 file growing 4136 bytes due to unwind metadata and data-page alignment. The
 document's example passes raw interpretation in 0.86s.
+
+Review found an inline import in `tests/resource_frame_fields.rs`; it now sits
+at the top of the file. The `fields` evidence suite uses GCC on Linux, matching
+production. Run it on Linux ARM64 and AMD64 for the candidate: it checks retained
+resource frames and match contexts as well as worker entry, field movement and
+failure cleanup. Other suites retain their established compiler settings.
