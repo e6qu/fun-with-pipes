@@ -2,114 +2,101 @@
 
 ## Next action
 
-The active delivery branch is `queued-function-delivery`, based on accepted main.
-Use `gh pr view queued-function-delivery` for its PR and current checks.
-Next: finish auditing production `39353280539` at `d1df84d9`, verify the
-non-returning-function proof repair on focused runners, then push all known
-repairs together. macOS ARM64 stress has four failures across
-`autodiff_checkpoint` and `autodiff_precision`: ARC invents an unknown callable
-from a non-returning primitive and later rejects `rev._vjp`. The remaining gates
-are still running; benchmark and documentation jobs passed. All targets in the
-completed failed job were audited. Do not merge this head.
+[PR #175](https://github.com/e6qu/fun-with-pipes/pull/175) is the only active PR.
+The combined repair on `queued-function-delivery` includes
+`fd1275ea69c8bf6b3f08b4ecd106585ab94cf89f`, preserved by
+`roadmap/revision-nonreturning-proof`, plus documentation and coverage updates.
+Next: audit the repaired head's full CI and finish reviewing original production
+run `39353280539` at failed head `d1df84d9`. The workflows do not cancel older
+runs when the branch advances. All completed failures were audited before this
+repair push; review later results and fix any additional failures together.
 
-The prepared repair gives `Never` primitive results an empty callable set:
-a trap or exit cannot return an unknown function. Unknown runtime producers
-remain rejected. A small queued-function regression reproduces the old rejection;
-guarded raw interpretation prints `Some 3` (0.97s). Focused queued-entry checks now
-also run the complete checkpoint and F128 precision targets. Full acceptance is
-still required before squash merge with a one-line subject and empty body.
+Require all nine production jobs and documentation on the final PR head before
+squash merge. Use an explicit one-line subject, at most 80 characters, and empty
+body. Verify the merged tree/message before cancelling redundant post-merge CI.
 
-Independent preparation `measure-channel-transfers` in
-`/private/tmp/fwp-channel-transfers` measures and then implements consuming
-channel sends. Baseline run `39354805966` passed on Linux ARM64/AMD64;
-immutable source `roadmap/revision-channel-counts-2b56fd1c` records one unnecessary
-queue retain per fresh message. Transfer runs `39356046321` and `39356051237`
-are in progress. Their old all-borrowed unit expectation and a missing-cleanup
-control need repair; audit all completed targets before pushing. Keep one PR.
+## Queued-function delivery
 
-Compiler/test source `c04f01fbeb1dc0f1a1efc07473bcc894b864175a` is preserved by
-`roadmap/revision-queued-functions-c04f01fb`. Focused macOS ARM64 run `39352725240`
-passes 144 unit, seven queue and one generated-entry check, none ignored. Linux
-AMD64 counterpart `39352728274` passes the same 152 checks. Subsequent delivery edits are
-documentation only. Full final-head native/WASI acceptance is still required.
-
-[PR #174](https://github.com/e6qu/fun-with-pipes/pull/174) is accepted as
-`3ec71969089a7ab95ff065f7b611c74534fbe326`. All nine jobs and docs passed; its
-merge tree matches tested head `67f23346`. The message is one line, 73 characters,
-without body or trailers. Redundant post-merge production `39351187907` was
-cancelled after verification. [History](roadmap-history.md#numeric-hashing-and-integer-output-pr-174)
-and [the C/Rust comparison](measurements/numeric-output-peers-2026-10-20.md)
-retain actual results and remaining performance gaps.
-
-Preparation branch `prove-queued-function-ownership` remains in
-`/private/tmp/fwp-channel-functions`; the primary branch contains its changes
-on accepted main and now owns further work. Do not resume the older worktree.
-Immutable `roadmap/revision-queued-functions-ca3c9c0f` preserves earlier evidence.
-
-## Implementation
-
-ARC queues admit known functions with proved immutable captures: numbers,
+Checked ARC admits known functions with proved immutable captures: numbers,
 strings, containers and other proved functions. Captured channels, tasks, files,
 connections and streams remain rejected, even when a particular program might
-be safe. There is no new syntax or runtime implementation.
+be safe. There is no new syntax or runtime implementation in this PR. See
+[the worked example and limits](ownership.md#next-proof-functions-stored-in-channels).
 
-The compiler tracks known and unknown sources through captures, calls, queues
-and caught errors. Unknown sources survive union with known ones. Calls use the
-receiver's State/autodiff scope. Queues of one concrete type, aggregate fields
-and caught errors merge conservatively. Checked function types exclude incompatible
-origins from neighboring fields. External function-bearing queues stay rejected.
-See [the proof and worked example](ownership.md#next-proof-functions-stored-in-channels).
+The proof follows captures, returns, queues and caught errors. Calls use the
+receiver's State/autodiff scope. Aggregate fields and queues of the same concrete
+type merge conservatively; incompatible callable types are filtered, while
+unknown sources remain unknown. External function-bearing queues are rejected.
 
-Generated REST/MCP wrappers exposed a separate false rejection: a call through
-`uncurry` with no possible incoming function. Empty origin sets represent
-unreachable calls, such as mapping over an empty function collection; unmodeled
-runtime/foreign values carry an explicit unknown source. `a1162f87` separates
-these cases and retains unknown-source rejection. A standalone regression is
-included, using `FWP_NO_OPT=1` so optimization cannot erase the empty map.
-The diagnostic now identifies the function where proof fails.
-Review also found unbounded structural comparison of recursive record types.
-The saved compiler exceeded the local 1 GiB guard on a small reproducer and was
-stopped; do not rerun that check locally. `ir::same_type` now visits each type
-pair once. Unit tests check equivalent shapes, mismatches after recursive fields
-and distinct variant names. Those tests and the native/interpreter regression
-pass on the focused macOS runner.
+Empty origin sets mean no possible incoming function, as with mapping an empty
+function collection. Non-returning traps/exits likewise produce no function.
+These differ from an unmodeled producer, which remains unknown and rejected.
+Structural comparison of recursive record types now visits each type pair once.
+The old compiler exceeded the local 1 GiB guard on that reproducer; do not retry
+it locally. Its repaired native regression passed on focused runners.
 
-## Validation
+## Current checks and failures
 
-- `ca3c9c0f`, run `39349638508`: all six native hosts pass Clippy, unit checks
-  (142 Linux/macOS, 143 Windows) and 20 integration checks. Their only failure
-  was a new gRPC test using one path for both a C file and a split-build directory.
-  `7ccf6654` fixes that path. Both WASI jobs pass all 14 tests, none ignored.
-- Server run `39349641747`: all completed targets audited. Existing entry checks
-  and all three REST API/authentication/multipart checks pass. The new queued
-  endpoint fails the empty-origin proof above. Earlier TLS setup and exposure
-  annotation failures were repaired and verified; they are not outstanding tasks.
-- Focused run `39351589390` at `cb99e36a`: all five queued-function tests pass,
-  including the repaired gRPC capture rejection and receiver-autodiff test.
-  The generated entry still fails at `uncurry`. Its runner-built macOS compiler
-  is saved in `/private/tmp/fwp-queued-diagnostic-compiler/fwp`.
-- `a1162f87`, focused runs `39352051384` and `39352344445`: generated entries
-  and all five queue checks pass on macOS ARM64 and Linux AMD64. This verifies
-  the empty-origin repair before the additional recursive-type regression.
-- Final compiler source `c04f01fb`, focused run `39352725240`: all 152 checks
-  pass on each of macOS ARM64 and Linux AMD64, including the two additional
-  program regressions and recursive type units. There is no new accepted platform
-  support is accepted until the final production gates pass.
+- Production `39353280539` at `d1df84d9`: benchmarks passed. Regular macOS ARM64
+  found one failure in `autodiff_nested`; stress ARM64 found three checkpoint
+  failures and one F128 precision failure. All five reject `rev._vjp` because
+  a trapping branch was treated as an unknown function producer. Both complete
+  logs were audited; remaining jobs are still running. Documentation
+  `39353280537` passed.
+- Repair `fd1275ea`: focused macOS ARM64 `39357056381` and Linux AMD64
+  `39357061326` each pass 158 checks: 145 units, eight queue cases, one generated
+  entry, three checkpoint tests and one precision test. None ignored; the entry
+  filter deliberately excludes five other tests, which remain production gates.
+- Precision run `39357198059` at the repair passes all 27 checks on Linux and
+  macOS, each on ARM64 and AMD64. It includes all three
+  failed autodiff targets, nested derivatives, tape cleanup, wrong-input cases,
+  float formats and generated library documentation. Complete finished logs were
+  audited. These focused runs do not replace final production acceptance.
 
-Tests cover returned/nested functions, scopes, errors, cancelled transfers,
-closed/undrained queues and repeated work. A C probe checks unchanged charged
-memory after each of 256 cases at O0/O2; omitted releases must fail. WASI counts
-physical allocations and exercises JSPI/Asyncify. Native artifacts retain C,
-binaries and disassembly. These are cleanup checks, not speed or zero-heap claims.
+Existing checks compare raw interpretation with native ARC/stressed tracing,
+exercise closed/undrained queues, aliases, cancelled transfers and failed receive
+allocation, and inspect actual ARC binaries for collector removal. WASI checks
+physical allocations and JSPI/Asyncify. Cleanup results are not speed claims.
+Earlier compiler source `c04f01fb` and its focused checks are preserved by
+`roadmap/revision-queued-functions-c04f01fb`; superseded preparation details remain
+in that snapshot, rather than competing with this handoff.
+
+## Independent next delivery
+
+`measure-channel-transfers`, worktree `/private/tmp/fwp-channel-transfers`, follows
+[the measured protocol](https://github.com/e6qu/fun-with-pipes/blob/measure-channel-transfers/docs/measurements/channel-transfer-protocol.md).
+It also fixes later-stage effects leaking into stored callback types.
+Baseline `2b56fd1c`, run `39354805966`, passed both Linux architectures. Transfer
+source `34568f3d`, counts run `39356051237`, removes one retain per fresh message:
+text 4 → 3; functions 5 → 4. Shared totals, allocations and peak charge are
+unchanged. Binary-size changes and an extra 16 bytes in the inspected ARM64
+exchange frame are recorded; no timing/C-or-Rust parity claim is made.
+
+All six native jobs in `39356046321` failed only two stale test expectations;
+other 26 integration cases passed. Both WASI jobs passed all 14 checks. Every
+complete log was audited. Combined repair `5d083f3f` includes those corrections
+and the primary non-returning proof fix. Runs `39357985210` (six native/two WASI,
+expanded autodiff/resource tests) and `39357990574` (counts) continue. Completed
+Linux ARM64 and Windows AMD64 logs pass all 38 integration checks but expose one
+remaining all-borrowed assertion in the contract inventory test. Its local repair
+passes the exact standalone unit test; other jobs still need complete audit.
+Keep this preparation separate until PR #175 is accepted; keep one active PR.
+
+## Local work and accepted base
 
 Local checks use `python3 scripts/local-guard.py COMMAND...`, unchanged limits.
-Formatting last passed in 1.36s; documentation in 2.82s. Saved-compiler raw
-interpretation validates fixtures/tutorials. The minimal empty-map example prints
-`[]` (0.64s), while old ARC C emission reproduces the `uncurry` rejection (0.76s).
-Standalone endpoint C emission passes (1.00s); MCP reproduces the failure (10.14s).
-No local compiler rebuild, native build or benchmark ran. Complete logs are saved
-under `/private/tmp/fwp-queued-*`. Earlier ARM64 binaries omit collector routines
-in ARC but retain allocation, dynamic calls and count operations.
+`cargo fmt --all -- --check` and `python3 scripts/check-roadmap.py` pass under
+the guard. Guarded interpretation of the minimal
+trapping-branch regression prints `Some 3`; old ARC emission reproduces rejection.
+Reports audit downloaded data; no local compiler rebuild, native build or timing
+run was performed. Free disk is close to the 64 GiB floor: avoid large downloads,
+monitor the guard and move additional heavy analysis to runners.
+
+[PR #174](https://github.com/e6qu/fun-with-pipes/pull/174) is accepted as
+`3ec71969089a7ab95ff065f7b611c74534fbe326`, after all nine jobs and docs passed.
+Its merge tree and one-line message were verified. [History](roadmap-history.md#numeric-hashing-and-integer-output-pr-174)
+retains its measurements and remaining C/Rust gaps. The old
+`prove-queued-function-ownership` worktree is historical; do not resume it.
 
 ## Roadmap status
 

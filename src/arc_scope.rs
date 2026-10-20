@@ -906,8 +906,8 @@ mod tests {
 
     #[test]
     fn queued_functions_use_the_receivers_scope() {
-        // Check the flow proof independently of ARC's current blanket rejection
-        // of function payloads. Sending get does not call it or retain a scope.
+        // Sending get does not call it or retain a scope. The receiver must
+        // establish its own State handler before invoking the queued function.
         for scoped in [false, true] {
             let mut program = state_program(scoped);
             let unit = MT::unit();
