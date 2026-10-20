@@ -739,7 +739,6 @@ mod tests {
         assert_eq!(flat_map.aliases, &[0, 1]);
         for symbol in [
             "channel.make",
-            "channel.send",
             "channel.recv",
             "channel.recv-for",
             "channel.close",
@@ -748,6 +747,10 @@ mod tests {
             assert_eq!(channel.result, ResultOwnership::ChannelOperation);
             assert!(channel.arguments.iter().all(|arg| *arg == Argument::Borrow));
         }
+        let send = primitive("channel.send").unwrap();
+        assert_eq!(send.result, ResultOwnership::ChannelOperation);
+        assert_eq!(send.arguments, &[Argument::Borrow, Argument::Consume]);
+        assert!(send.aliases.is_empty());
         let spawn = primitive("task.spawn").unwrap();
         assert_eq!(spawn.argument(0), Argument::Borrow);
         assert_eq!(spawn.callback, Some(Callback::Retained(0)));

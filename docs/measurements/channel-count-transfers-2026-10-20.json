@@ -1,0 +1,1534 @@
+{
+  "source": "34568f3d67c3713d641dc39ff10564f09aa66098",
+  "run": 39356051237,
+  "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/39356051237",
+  "scope": "Five sequential channel programs; raw interpreter and ordinary native results agree. Three fresh count profiles per input (0, 16, 1024), ARC/tracing, GCC O2. No timing, C/Rust peer, concurrency or total process memory claim. Requested and charged managed bytes exclude raw buffers, allocator metadata and stacks. Code hashes identify saved ordinary/instrumented binaries and ordinary disassembly.",
+  "hosts": [
+    {
+      "host": "ubuntu-latest",
+      "job": 118410958128,
+      "environment": {
+        "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.86\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "kernel": "Linux runnervm8k3b6 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux\n",
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "cc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "settings": "CC=gcc; compile_c with -O2; ARC and tracing; stress/verification disabled for counts\n"
+      },
+      "measurements": [
+        {
+          "case": "unique-text",
+          "memory": "arc",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 9,
+              "requested_bytes": 1691,
+              "retains": 0,
+              "peak_charge": 1760,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 148792
+            },
+            "16": {
+              "requests": 74,
+              "requested_bytes": 3132,
+              "retains": 48,
+              "peak_charge": 1856,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 16,
+              "queue_retains": 0,
+              "binary_bytes": 148792
+            },
+            "1024": {
+              "requests": 4106,
+              "requested_bytes": 117926,
+              "retains": 3072,
+              "peak_charge": 1904,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 1024,
+              "queue_retains": 0,
+              "binary_bytes": 148792
+            }
+          },
+          "files": {
+            "unique-text-arc-O2.c": {
+              "bytes": 702692,
+              "sha256": "bea8512bc6b9b591a9894644fc08eed5dfe056d5ceec465e781242141d16dbcd"
+            },
+            "unique-text-arc-O2.exe": {
+              "bytes": 148792,
+              "sha256": "a4d6b11e825934337c0ea1df1b730ce850b513013bf3eb102c3b4277fc4d4259"
+            },
+            "unique-text-arc-O2.asm": {
+              "bytes": 1134170,
+              "sha256": "b0cbdf42f3807468fec87434134a4f96cecf2d5060e490c939ad8effe591d6f8"
+            },
+            "unique-text-arc-O2-counted.c": {
+              "bytes": 705065,
+              "sha256": "a01e2370cc49a7caebb767523d09ebdf931d9c14b0e08f0a9a8ebe50c49eae16"
+            },
+            "unique-text-arc-O2-counted.exe": {
+              "bytes": 144952,
+              "sha256": "1fdf494312efea780f068896cd96e3f5e486d18c7c1e9cdf6cb9820765aaf3f1"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 4.0,
+            "requested_bytes": 113.8829365079365,
+            "retains": 3.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 48
+        },
+        {
+          "case": "unique-text",
+          "memory": "tracing",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 9,
+              "requested_bytes": 1691,
+              "retains": 0,
+              "peak_charge": 1760,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157384
+            },
+            "16": {
+              "requests": 74,
+              "requested_bytes": 3132,
+              "retains": 48,
+              "peak_charge": 1856,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 16,
+              "queue_retains": 0,
+              "binary_bytes": 157384
+            },
+            "1024": {
+              "requests": 4106,
+              "requested_bytes": 117926,
+              "retains": 3072,
+              "peak_charge": 1904,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 1024,
+              "queue_retains": 0,
+              "binary_bytes": 157384
+            }
+          },
+          "files": {
+            "unique-text-tracing-O2.c": {
+              "bytes": 702669,
+              "sha256": "d8229417006386cdf298c70ae4ee32c44d8798e1567da86292218e938059635a"
+            },
+            "unique-text-tracing-O2.exe": {
+              "bytes": 157384,
+              "sha256": "10d6bad70346757d6550309cc7b31acb66efdaddb3162b200e1a41bfd299e6fd"
+            },
+            "unique-text-tracing-O2.asm": {
+              "bytes": 1229198,
+              "sha256": "81637c3df69d28bc9a53ac143fc41dd3f095eb1fcdf6bb92e3965fbc99457a83"
+            },
+            "unique-text-tracing-O2-counted.c": {
+              "bytes": 705042,
+              "sha256": "9fd8bd375cb2d019e2884bd17f110d3a3aa366b926302f8dc1e0389ef2c9ed2a"
+            },
+            "unique-text-tracing-O2-counted.exe": {
+              "bytes": 153592,
+              "sha256": "c7a8c6f91eace5a33dd04daf48fe5d620c8674a1ce8aeb58682b1df465893082"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 4.0,
+            "requested_bytes": 113.8829365079365,
+            "retains": 3.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 48
+        },
+        {
+          "case": "unique-function",
+          "memory": "arc",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 9,
+              "requested_bytes": 1691,
+              "retains": 0,
+              "peak_charge": 1760,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 154032
+            },
+            "16": {
+              "requests": 122,
+              "requested_bytes": 4028,
+              "retains": 64,
+              "peak_charge": 1904,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 16,
+              "queue_retains": 0,
+              "binary_bytes": 154032
+            },
+            "1024": {
+              "requests": 7178,
+              "requested_bytes": 175270,
+              "retains": 4096,
+              "peak_charge": 1952,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 1024,
+              "queue_retains": 0,
+              "binary_bytes": 154032
+            }
+          },
+          "files": {
+            "unique-function-arc-O2.c": {
+              "bytes": 708970,
+              "sha256": "936badd029e44ed1ddca32d5501ba4983feac78713e5b57576284e90035d57a3"
+            },
+            "unique-function-arc-O2.exe": {
+              "bytes": 154032,
+              "sha256": "edc6eab5fc0c6150c5de97af380d5a2422da2b9ddaaefb3088cc95f737e7a343"
+            },
+            "unique-function-arc-O2.asm": {
+              "bytes": 1176284,
+              "sha256": "cade772036756161c40c95f0ed8d08ded5514cef85346b95542b1d6a7f3accc0"
+            },
+            "unique-function-arc-O2-counted.c": {
+              "bytes": 711343,
+              "sha256": "433183ac9bab6744e5f446197356c0a089e6fac3d254b3728621a55738fcc192"
+            },
+            "unique-function-arc-O2-counted.exe": {
+              "bytes": 150200,
+              "sha256": "5f4209c828158cd89f0d858f14ad3256ed3153eef6aa844a5a7a45fcc17b65cd"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 7.0,
+            "requested_bytes": 169.8829365079365,
+            "retains": 4.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 48
+        },
+        {
+          "case": "unique-function",
+          "memory": "tracing",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 9,
+              "requested_bytes": 1691,
+              "retains": 0,
+              "peak_charge": 1760,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 162792
+            },
+            "16": {
+              "requests": 122,
+              "requested_bytes": 4028,
+              "retains": 64,
+              "peak_charge": 1904,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 16,
+              "queue_retains": 0,
+              "binary_bytes": 162792
+            },
+            "1024": {
+              "requests": 7178,
+              "requested_bytes": 175270,
+              "retains": 4096,
+              "peak_charge": 1952,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 1024,
+              "queue_retains": 0,
+              "binary_bytes": 162792
+            }
+          },
+          "files": {
+            "unique-function-tracing-O2.c": {
+              "bytes": 708947,
+              "sha256": "d36925bf20e408d1316143cf188d8deacd7db12d1ad908efe7f5e24132484ee6"
+            },
+            "unique-function-tracing-O2.exe": {
+              "bytes": 162792,
+              "sha256": "f7e19ae8be87a319c4dcbaad4887cbb3a69878c92ccd290e5e1bf6e9a844e596"
+            },
+            "unique-function-tracing-O2.asm": {
+              "bytes": 1271345,
+              "sha256": "85590e8bd3c55abbe76a7b8cf200290bce4af3a5aa37124d8d610a188bb85ade"
+            },
+            "unique-function-tracing-O2-counted.c": {
+              "bytes": 711320,
+              "sha256": "d4fae72eea0304a7e84c349287a229d3b6649a23b2bb916a0dd07ff5949d13d6"
+            },
+            "unique-function-tracing-O2-counted.exe": {
+              "bytes": 158832,
+              "sha256": "8cd3918af12aafabdfbba205ef2c53a2a219ba30616f37e827bc3c8820dae38b"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 7.0,
+            "requested_bytes": 169.8829365079365,
+            "retains": 4.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 48
+        },
+        {
+          "case": "shared-text",
+          "memory": "arc",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 10,
+              "requested_bytes": 1709,
+              "retains": 0,
+              "peak_charge": 1792,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 148736
+            },
+            "16": {
+              "requests": 59,
+              "requested_bytes": 2999,
+              "retains": 112,
+              "peak_charge": 1856,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 148736
+            },
+            "1024": {
+              "requests": 3083,
+              "requested_bytes": 83643,
+              "retains": 7168,
+              "peak_charge": 1856,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 148736
+            }
+          },
+          "files": {
+            "shared-text-arc-O2.c": {
+              "bytes": 704893,
+              "sha256": "137f98fc61c3ddbf0dab36d3de54c7c2dbe50cff60d2c1ccc2ba0a179545bb39"
+            },
+            "shared-text-arc-O2.exe": {
+              "bytes": 148736,
+              "sha256": "1369eacd3b791b4b33444881ab73cc99335dd7d8e696c835f99631a46d0d2013"
+            },
+            "shared-text-arc-O2.asm": {
+              "bytes": 1134385,
+              "sha256": "c96fb69ba9df2baaf4d34e401fb5b99707c0252cf39677d5a2989b1624e5a671"
+            },
+            "shared-text-arc-O2-counted.c": {
+              "bytes": 707266,
+              "sha256": "f90549ff98b74df9022c22fc301b9bee1116da646cfd2a169792fdebeb6cf19f"
+            },
+            "shared-text-arc-O2-counted.exe": {
+              "bytes": 144944,
+              "sha256": "ae7b88cac6f785773a03612995e2c0c56df3f56145c0215ba5e154ed1ffde64a"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 3.0,
+            "requested_bytes": 80.00396825396825,
+            "retains": 7.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 0
+        },
+        {
+          "case": "shared-text",
+          "memory": "tracing",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 10,
+              "requested_bytes": 1709,
+              "retains": 0,
+              "peak_charge": 1792,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157296
+            },
+            "16": {
+              "requests": 59,
+              "requested_bytes": 2999,
+              "retains": 112,
+              "peak_charge": 1856,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157296
+            },
+            "1024": {
+              "requests": 3083,
+              "requested_bytes": 83643,
+              "retains": 7168,
+              "peak_charge": 1856,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157296
+            }
+          },
+          "files": {
+            "shared-text-tracing-O2.c": {
+              "bytes": 704870,
+              "sha256": "166afd01acab38b620923eded0250af7a3665739485034ef2b28f5d47f55c7ec"
+            },
+            "shared-text-tracing-O2.exe": {
+              "bytes": 157296,
+              "sha256": "bf928e9ca8b297f0b96fc49533307bcb9bcb417651827f4a2f88830c52c2095a"
+            },
+            "shared-text-tracing-O2.asm": {
+              "bytes": 1229269,
+              "sha256": "6f271d26a5afa9f45e8c4a09574fb2aa18c3fe5032ad01474d4ad4133ca10801"
+            },
+            "shared-text-tracing-O2-counted.c": {
+              "bytes": 707243,
+              "sha256": "ad5a29f7ff73c12fd3a65f396da957109f5ab43d90cbac854da578f9bbd65746"
+            },
+            "shared-text-tracing-O2-counted.exe": {
+              "bytes": 153504,
+              "sha256": "ca772a4c731caa34602fb4901615d442883bbb3abfb39bf48dd38ad74747a121"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 3.0,
+            "requested_bytes": 80.00396825396825,
+            "retains": 7.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 0
+        },
+        {
+          "case": "shared-function",
+          "memory": "arc",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 11,
+              "requested_bytes": 1725,
+              "retains": 0,
+              "peak_charge": 1808,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 153752
+            },
+            "16": {
+              "requests": 92,
+              "requested_bytes": 3575,
+              "retains": 144,
+              "peak_charge": 1888,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 153752
+            },
+            "1024": {
+              "requests": 5132,
+              "requested_bytes": 121547,
+              "retains": 9216,
+              "peak_charge": 1888,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 153752
+            }
+          },
+          "files": {
+            "shared-function-arc-O2.c": {
+              "bytes": 708105,
+              "sha256": "1a8df567fa93ca559febd71eda16a7e3d5560f4d3b0175f7b0579e1c5438d6ee"
+            },
+            "shared-function-arc-O2.exe": {
+              "bytes": 153752,
+              "sha256": "e6cdbc565394927b17808ab6e45c4ec7b685ffa857e458885d0e41d228c20cd3"
+            },
+            "shared-function-arc-O2.asm": {
+              "bytes": 1180745,
+              "sha256": "fb9e928416935c5e70b18bdcb17f5c6f6975ad7f8d0cba34ae84c802cd261ad3"
+            },
+            "shared-function-arc-O2-counted.c": {
+              "bytes": 710478,
+              "sha256": "d8e3243efd9455b4b86fd1d6f5073ab6b7f6fbdba433196adb338d1e78b00547"
+            },
+            "shared-function-arc-O2-counted.exe": {
+              "bytes": 153936,
+              "sha256": "7bf88b023dcaa68db9de86da2642e068a8a9296ae3e76648e1d36e8ae3da65ac"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 5.0,
+            "requested_bytes": 117.03571428571429,
+            "retains": 9.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 0
+        },
+        {
+          "case": "shared-function",
+          "memory": "tracing",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 11,
+              "requested_bytes": 1725,
+              "retains": 0,
+              "peak_charge": 1808,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 162376
+            },
+            "16": {
+              "requests": 92,
+              "requested_bytes": 3575,
+              "retains": 144,
+              "peak_charge": 1888,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 162376
+            },
+            "1024": {
+              "requests": 5132,
+              "requested_bytes": 121547,
+              "retains": 9216,
+              "peak_charge": 1888,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 162376
+            }
+          },
+          "files": {
+            "shared-function-tracing-O2.c": {
+              "bytes": 708082,
+              "sha256": "07314977a5a9af076bb3a759818b0b337f7a16323b77cae161426e83da1c5898"
+            },
+            "shared-function-tracing-O2.exe": {
+              "bytes": 162376,
+              "sha256": "d7ba352864d3f3fb1bb07073f372f8aebf28130e2e164e7fe08576c49a58f931"
+            },
+            "shared-function-tracing-O2.asm": {
+              "bytes": 1274122,
+              "sha256": "dc554f67ca15478d66352d5edcb2303ac4a037aea374c34a8a1a6004bfe037ed"
+            },
+            "shared-function-tracing-O2-counted.c": {
+              "bytes": 710455,
+              "sha256": "4ffff75a7e647deea97dd3933f9526ad3039cb60e4948002581028a57f330b77"
+            },
+            "shared-function-tracing-O2-counted.exe": {
+              "bytes": 162608,
+              "sha256": "7a9fb5dc5e9ccf8eb5ab6e6466d6ab665bc2283cccc6253de0a4f69d5ae1d92b"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 5.0,
+            "requested_bytes": 117.03571428571429,
+            "retains": 9.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 0
+        },
+        {
+          "case": "closed-function",
+          "memory": "arc",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 9,
+              "requested_bytes": 1691,
+              "retains": 0,
+              "peak_charge": 1760,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 148568
+            },
+            "16": {
+              "requests": 57,
+              "requested_bytes": 2740,
+              "retains": 32,
+              "peak_charge": 1808,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 148568
+            },
+            "1024": {
+              "requests": 3081,
+              "requested_bytes": 93342,
+              "retains": 2048,
+              "peak_charge": 1856,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 148568
+            }
+          },
+          "files": {
+            "closed-function-arc-O2.c": {
+              "bytes": 698426,
+              "sha256": "cb673051e872aac1d867111365d648bfe0203309ed350171018a5bb8c3710666"
+            },
+            "closed-function-arc-O2.exe": {
+              "bytes": 148568,
+              "sha256": "efc9e8167454477edef0622a32bccff451abba39eadfbe5b1cbde2860c08b8b6"
+            },
+            "closed-function-arc-O2.asm": {
+              "bytes": 1110531,
+              "sha256": "e81a1d11f161414cd82d19ed366edf16fa14771a5b52694c7fc25fa9e7286730"
+            },
+            "closed-function-arc-O2-counted.c": {
+              "bytes": 700799,
+              "sha256": "dca38c0789f2d2f915c7c6e9bad53f35f3961b98aaced30ec38b77f541de9669"
+            },
+            "closed-function-arc-O2-counted.exe": {
+              "bytes": 140640,
+              "sha256": "819ca7ef7181fc905c46fe53ec0aca656e0fc0099c88db8bd223abe6624635aa"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 3.0,
+            "requested_bytes": 89.8829365079365,
+            "retains": 2.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 48
+        },
+        {
+          "case": "closed-function",
+          "memory": "tracing",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 9,
+              "requested_bytes": 1691,
+              "retains": 0,
+              "peak_charge": 1760,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157168
+            },
+            "16": {
+              "requests": 57,
+              "requested_bytes": 2740,
+              "retains": 32,
+              "peak_charge": 1808,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157168
+            },
+            "1024": {
+              "requests": 3081,
+              "requested_bytes": 93342,
+              "retains": 2048,
+              "peak_charge": 1856,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157168
+            }
+          },
+          "files": {
+            "closed-function-tracing-O2.c": {
+              "bytes": 698403,
+              "sha256": "257efb37417ce14d099acd8cd57083e28f6bc349082d849267b75b827e8382fa"
+            },
+            "closed-function-tracing-O2.exe": {
+              "bytes": 157168,
+              "sha256": "8b2028a242996ceb140ba7ec5d90591bbf934361930ee31247607abe6d862157"
+            },
+            "closed-function-tracing-O2.asm": {
+              "bytes": 1205558,
+              "sha256": "254e0343ae785e7fc9dd6f9e5abdb73392826e4dbe0ee07997d082e7134ed3fd"
+            },
+            "closed-function-tracing-O2-counted.c": {
+              "bytes": 700776,
+              "sha256": "f3b06fe7bc91f343bca03e1c87a18e9567178d39c28fc329d8ac31118f1c6133"
+            },
+            "closed-function-tracing-O2-counted.exe": {
+              "bytes": 153368,
+              "sha256": "5c1410f91eb14053b1eea035147efbcf716c0ab11b0fad02cd15bf2552758a9e"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 3.0,
+            "requested_bytes": 89.8829365079365,
+            "retains": 2.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 48
+        }
+      ]
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "job": 118410957883,
+      "environment": {
+        "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "kernel": "Linux runnervm05w4h 7.0.0-1017-azure #17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 19:06:39 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux\n",
+        "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+        "cc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "settings": "CC=gcc; compile_c with -O2; ARC and tracing; stress/verification disabled for counts\n"
+      },
+      "measurements": [
+        {
+          "case": "unique-text",
+          "memory": "arc",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 9,
+              "requested_bytes": 5403,
+              "retains": 0,
+              "peak_charge": 6368,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157864
+            },
+            "16": {
+              "requests": 74,
+              "requested_bytes": 6844,
+              "retains": 48,
+              "peak_charge": 6464,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 16,
+              "queue_retains": 0,
+              "binary_bytes": 157864
+            },
+            "1024": {
+              "requests": 4106,
+              "requested_bytes": 121638,
+              "retains": 3072,
+              "peak_charge": 6512,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 1024,
+              "queue_retains": 0,
+              "binary_bytes": 157864
+            }
+          },
+          "files": {
+            "unique-text-arc-O2.c": {
+              "bytes": 702692,
+              "sha256": "bea8512bc6b9b591a9894644fc08eed5dfe056d5ceec465e781242141d16dbcd"
+            },
+            "unique-text-arc-O2.exe": {
+              "bytes": 157864,
+              "sha256": "6219b8de35c0038962850e646689a3b99cf10ab71b2d4aa18782ef5651421408"
+            },
+            "unique-text-arc-O2.asm": {
+              "bytes": 858740,
+              "sha256": "1a6cb0c4de438cc7f5996d2cebf01d3d727610b974d71dca06dbe917a9fd44f1"
+            },
+            "unique-text-arc-O2-counted.c": {
+              "bytes": 705065,
+              "sha256": "a01e2370cc49a7caebb767523d09ebdf931d9c14b0e08f0a9a8ebe50c49eae16"
+            },
+            "unique-text-arc-O2-counted.exe": {
+              "bytes": 158168,
+              "sha256": "9196ecbb4581be77e8b34221db0d1c17d8530dbdbb2361a701f23fc2edc9d986"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 4.0,
+            "requested_bytes": 113.8829365079365,
+            "retains": 3.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 48
+        },
+        {
+          "case": "unique-text",
+          "memory": "tracing",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 9,
+              "requested_bytes": 5403,
+              "retains": 0,
+              "peak_charge": 6368,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 158144
+            },
+            "16": {
+              "requests": 74,
+              "requested_bytes": 6844,
+              "retains": 48,
+              "peak_charge": 6464,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 16,
+              "queue_retains": 0,
+              "binary_bytes": 158144
+            },
+            "1024": {
+              "requests": 4106,
+              "requested_bytes": 121638,
+              "retains": 3072,
+              "peak_charge": 6512,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 1024,
+              "queue_retains": 0,
+              "binary_bytes": 158144
+            }
+          },
+          "files": {
+            "unique-text-tracing-O2.c": {
+              "bytes": 702669,
+              "sha256": "d8229417006386cdf298c70ae4ee32c44d8798e1567da86292218e938059635a"
+            },
+            "unique-text-tracing-O2.exe": {
+              "bytes": 158144,
+              "sha256": "ef2bfc0fd189ec67d6394012d3b0ce90023233bdd0f4e57bf5a952c7f4ed78dc"
+            },
+            "unique-text-tracing-O2.asm": {
+              "bytes": 920556,
+              "sha256": "67aded1387888eeb8fd0469e191df2b37bf4b5e1aeaf13456f40066459b0ccf8"
+            },
+            "unique-text-tracing-O2-counted.c": {
+              "bytes": 705042,
+              "sha256": "9fd8bd375cb2d019e2884bd17f110d3a3aa366b926302f8dc1e0389ef2c9ed2a"
+            },
+            "unique-text-tracing-O2-counted.exe": {
+              "bytes": 158488,
+              "sha256": "b1d6921c7885c71988c2d58bfe845c022d96ec82d8dee7f24fb2ff055f4864be"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 4.0,
+            "requested_bytes": 113.8829365079365,
+            "retains": 3.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 48
+        },
+        {
+          "case": "unique-function",
+          "memory": "arc",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 9,
+              "requested_bytes": 5403,
+              "retains": 0,
+              "peak_charge": 6368,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 158968
+            },
+            "16": {
+              "requests": 122,
+              "requested_bytes": 7740,
+              "retains": 64,
+              "peak_charge": 6512,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 16,
+              "queue_retains": 0,
+              "binary_bytes": 158968
+            },
+            "1024": {
+              "requests": 7178,
+              "requested_bytes": 178982,
+              "retains": 4096,
+              "peak_charge": 6560,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 1024,
+              "queue_retains": 0,
+              "binary_bytes": 158968
+            }
+          },
+          "files": {
+            "unique-function-arc-O2.c": {
+              "bytes": 708970,
+              "sha256": "936badd029e44ed1ddca32d5501ba4983feac78713e5b57576284e90035d57a3"
+            },
+            "unique-function-arc-O2.exe": {
+              "bytes": 158968,
+              "sha256": "e1f1ad2fa03345e7245086e447f1e35bdfc3a89ddb7a36af19c6982e031dce9c"
+            },
+            "unique-function-arc-O2.asm": {
+              "bytes": 891226,
+              "sha256": "fa31669c5b1772abef3ea42c759663a27b5634f24f1852b69625e33f228b2a1e"
+            },
+            "unique-function-arc-O2-counted.c": {
+              "bytes": 711343,
+              "sha256": "433183ac9bab6744e5f446197356c0a089e6fac3d254b3728621a55738fcc192"
+            },
+            "unique-function-arc-O2-counted.exe": {
+              "bytes": 159272,
+              "sha256": "c2ecf5f032c7d5c2e216637f466cc6f7e54b3de826e0bccd5ff771a251b2738e"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 7.0,
+            "requested_bytes": 169.8829365079365,
+            "retains": 4.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 48
+        },
+        {
+          "case": "unique-function",
+          "memory": "tracing",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 9,
+              "requested_bytes": 5403,
+              "retains": 0,
+              "peak_charge": 6368,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 159328
+            },
+            "16": {
+              "requests": 122,
+              "requested_bytes": 7740,
+              "retains": 64,
+              "peak_charge": 6512,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 16,
+              "queue_retains": 0,
+              "binary_bytes": 159328
+            },
+            "1024": {
+              "requests": 7178,
+              "requested_bytes": 178982,
+              "retains": 4096,
+              "peak_charge": 6560,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 1024,
+              "queue_retains": 0,
+              "binary_bytes": 159328
+            }
+          },
+          "files": {
+            "unique-function-tracing-O2.c": {
+              "bytes": 708947,
+              "sha256": "d36925bf20e408d1316143cf188d8deacd7db12d1ad908efe7f5e24132484ee6"
+            },
+            "unique-function-tracing-O2.exe": {
+              "bytes": 159328,
+              "sha256": "79004bd62a46074b2fa1eb21969f7548727eb2f24a95b0056d190663d742747f"
+            },
+            "unique-function-tracing-O2.asm": {
+              "bytes": 951045,
+              "sha256": "d1c1d54d6d4d370c3de6e4982421ee0388f57113d5eba52c4ffea0a8dc495f2e"
+            },
+            "unique-function-tracing-O2-counted.c": {
+              "bytes": 711320,
+              "sha256": "d4fae72eea0304a7e84c349287a229d3b6649a23b2bb916a0dd07ff5949d13d6"
+            },
+            "unique-function-tracing-O2-counted.exe": {
+              "bytes": 159592,
+              "sha256": "6b274b9509eecfe4f8b54a56caa20a8a6ca3837d355e5eeb587c0b7142a6224b"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 7.0,
+            "requested_bytes": 169.8829365079365,
+            "retains": 4.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 48
+        },
+        {
+          "case": "shared-text",
+          "memory": "arc",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 10,
+              "requested_bytes": 5421,
+              "retains": 0,
+              "peak_charge": 6400,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157872
+            },
+            "16": {
+              "requests": 59,
+              "requested_bytes": 6711,
+              "retains": 112,
+              "peak_charge": 6464,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157872
+            },
+            "1024": {
+              "requests": 3083,
+              "requested_bytes": 87355,
+              "retains": 7168,
+              "peak_charge": 6464,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157872
+            }
+          },
+          "files": {
+            "shared-text-arc-O2.c": {
+              "bytes": 704893,
+              "sha256": "137f98fc61c3ddbf0dab36d3de54c7c2dbe50cff60d2c1ccc2ba0a179545bb39"
+            },
+            "shared-text-arc-O2.exe": {
+              "bytes": 157872,
+              "sha256": "3d6023529e76b954c42bef37a787622b5eedd1094dee1f5d2634764ee189c09a"
+            },
+            "shared-text-arc-O2.asm": {
+              "bytes": 866190,
+              "sha256": "02d3131df5d6fde6584e5619229f11f2373f3e906e8163c7a704c8deaf774b3b"
+            },
+            "shared-text-arc-O2-counted.c": {
+              "bytes": 707266,
+              "sha256": "f90549ff98b74df9022c22fc301b9bee1116da646cfd2a169792fdebeb6cf19f"
+            },
+            "shared-text-arc-O2-counted.exe": {
+              "bytes": 158216,
+              "sha256": "a5668f976a804cac36d2369db64f6f22e186d89d6d80b135f4fc2b943a9aa0d4"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 3.0,
+            "requested_bytes": 80.00396825396825,
+            "retains": 7.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 0
+        },
+        {
+          "case": "shared-text",
+          "memory": "tracing",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 10,
+              "requested_bytes": 5421,
+              "retains": 0,
+              "peak_charge": 6400,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 158152
+            },
+            "16": {
+              "requests": 59,
+              "requested_bytes": 6711,
+              "retains": 112,
+              "peak_charge": 6464,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 158152
+            },
+            "1024": {
+              "requests": 3083,
+              "requested_bytes": 87355,
+              "retains": 7168,
+              "peak_charge": 6464,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 158152
+            }
+          },
+          "files": {
+            "shared-text-tracing-O2.c": {
+              "bytes": 704870,
+              "sha256": "166afd01acab38b620923eded0250af7a3665739485034ef2b28f5d47f55c7ec"
+            },
+            "shared-text-tracing-O2.exe": {
+              "bytes": 158152,
+              "sha256": "c96d7495d5f960043b0a03611b1b4e831066689bd7530c3cb1d597321d60a56b"
+            },
+            "shared-text-tracing-O2.asm": {
+              "bytes": 929483,
+              "sha256": "36225d3d83cbd7d2a1cff8888b6434dc5db3697424ac4879ef070b59d036a257"
+            },
+            "shared-text-tracing-O2-counted.c": {
+              "bytes": 707243,
+              "sha256": "ad5a29f7ff73c12fd3a65f396da957109f5ab43d90cbac854da578f9bbd65746"
+            },
+            "shared-text-tracing-O2-counted.exe": {
+              "bytes": 158496,
+              "sha256": "032da3f07f52e76f716185e49e39083143898bb660fbf3ecafcd2649529126af"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 3.0,
+            "requested_bytes": 80.00396825396825,
+            "retains": 7.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 0
+        },
+        {
+          "case": "shared-function",
+          "memory": "arc",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 11,
+              "requested_bytes": 5437,
+              "retains": 0,
+              "peak_charge": 6416,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 158656
+            },
+            "16": {
+              "requests": 92,
+              "requested_bytes": 7287,
+              "retains": 144,
+              "peak_charge": 6496,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 158656
+            },
+            "1024": {
+              "requests": 5132,
+              "requested_bytes": 125259,
+              "retains": 9216,
+              "peak_charge": 6496,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 158656
+            }
+          },
+          "files": {
+            "shared-function-arc-O2.c": {
+              "bytes": 708105,
+              "sha256": "1a8df567fa93ca559febd71eda16a7e3d5560f4d3b0175f7b0579e1c5438d6ee"
+            },
+            "shared-function-arc-O2.exe": {
+              "bytes": 158656,
+              "sha256": "e4a9563bf2037c62ae05d4c4b6c99f8a36212f3f066dda36dab5b921c9926ed7"
+            },
+            "shared-function-arc-O2.asm": {
+              "bytes": 889669,
+              "sha256": "34dcbaeb500d5a9bc61d1ca098bcb7ffe1bd63471de6ca32b778ac8841904e9d"
+            },
+            "shared-function-arc-O2-counted.c": {
+              "bytes": 710478,
+              "sha256": "d8e3243efd9455b4b86fd1d6f5073ab6b7f6fbdba433196adb338d1e78b00547"
+            },
+            "shared-function-arc-O2-counted.exe": {
+              "bytes": 158880,
+              "sha256": "3768c1ad160911720e2c1a80d67828c9bcf87086735ee2abba2d3abe8092813f"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 5.0,
+            "requested_bytes": 117.03571428571429,
+            "retains": 9.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 0
+        },
+        {
+          "case": "shared-function",
+          "memory": "tracing",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 11,
+              "requested_bytes": 5437,
+              "retains": 0,
+              "peak_charge": 6416,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 158968
+            },
+            "16": {
+              "requests": 92,
+              "requested_bytes": 7287,
+              "retains": 144,
+              "peak_charge": 6496,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 16,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 158968
+            },
+            "1024": {
+              "requests": 5132,
+              "requested_bytes": 125259,
+              "retains": 9216,
+              "peak_charge": 6496,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 1024,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 158968
+            }
+          },
+          "files": {
+            "shared-function-tracing-O2.c": {
+              "bytes": 708082,
+              "sha256": "07314977a5a9af076bb3a759818b0b337f7a16323b77cae161426e83da1c5898"
+            },
+            "shared-function-tracing-O2.exe": {
+              "bytes": 158968,
+              "sha256": "38bdb62accd1b6403255dd65ee2cc12bed47279dbc9f8f8562ef6bdbf8f960cb"
+            },
+            "shared-function-tracing-O2.asm": {
+              "bytes": 950501,
+              "sha256": "9723c70b64b4a06a9d965abdc535e0ae0f4856c0fc26d8eae182a31b0e6e2167"
+            },
+            "shared-function-tracing-O2-counted.c": {
+              "bytes": 710455,
+              "sha256": "4ffff75a7e647deea97dd3933f9526ad3039cb60e4948002581028a57f330b77"
+            },
+            "shared-function-tracing-O2-counted.exe": {
+              "bytes": 159264,
+              "sha256": "4cc99bff65f9c1837b276f7873d373640bd42d307627b358a9ec746216b87718"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 5.0,
+            "requested_bytes": 117.03571428571429,
+            "retains": 9.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 0
+        },
+        {
+          "case": "closed-function",
+          "memory": "arc",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 9,
+              "requested_bytes": 5403,
+              "retains": 0,
+              "peak_charge": 6368,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157608
+            },
+            "16": {
+              "requests": 57,
+              "requested_bytes": 6452,
+              "retains": 32,
+              "peak_charge": 6416,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157608
+            },
+            "1024": {
+              "requests": 3081,
+              "requested_bytes": 97054,
+              "retains": 2048,
+              "peak_charge": 6464,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157608
+            }
+          },
+          "files": {
+            "closed-function-arc-O2.c": {
+              "bytes": 698426,
+              "sha256": "cb673051e872aac1d867111365d648bfe0203309ed350171018a5bb8c3710666"
+            },
+            "closed-function-arc-O2.exe": {
+              "bytes": 157608,
+              "sha256": "e37bfdec51d23ea71a333081bc541ae31516e07e2c32bc53579591b3694db7e8"
+            },
+            "closed-function-arc-O2.asm": {
+              "bytes": 844633,
+              "sha256": "9ce9ecac73be46de530694736f1183a61d9b9640ff0381964b8efb0e011e8537"
+            },
+            "closed-function-arc-O2-counted.c": {
+              "bytes": 700799,
+              "sha256": "dca38c0789f2d2f915c7c6e9bad53f35f3961b98aaced30ec38b77f541de9669"
+            },
+            "closed-function-arc-O2-counted.exe": {
+              "bytes": 157912,
+              "sha256": "6b1aa0089e227e1f6ca5f23fc5c071ae3e9eac457720be389499dd2801fb0706"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 3.0,
+            "requested_bytes": 89.8829365079365,
+            "retains": 2.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 48
+        },
+        {
+          "case": "closed-function",
+          "memory": "tracing",
+          "optimization": "O2",
+          "profiles": {
+            "0": {
+              "requests": 9,
+              "requested_bytes": 5403,
+              "retains": 0,
+              "peak_charge": 6368,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 0,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157888
+            },
+            "16": {
+              "requests": 57,
+              "requested_bytes": 6452,
+              "retains": 32,
+              "peak_charge": 6416,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 16,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157888
+            },
+            "1024": {
+              "requests": 3081,
+              "requested_bytes": 97054,
+              "retains": 2048,
+              "peak_charge": 6464,
+              "final_charge": 0,
+              "collections": 0,
+              "sends": 1024,
+              "accepted": 0,
+              "unique_payloads": 0,
+              "queue_retains": 0,
+              "binary_bytes": 157888
+            }
+          },
+          "files": {
+            "closed-function-tracing-O2.c": {
+              "bytes": 698403,
+              "sha256": "257efb37417ce14d099acd8cd57083e28f6bc349082d849267b75b827e8382fa"
+            },
+            "closed-function-tracing-O2.exe": {
+              "bytes": 157888,
+              "sha256": "ab18d3d281831d8be4a0a74ca51f9540081aa89f4c4a3bb475d939422063b576"
+            },
+            "closed-function-tracing-O2.asm": {
+              "bytes": 908229,
+              "sha256": "e161cd61d8b83e9ba91996f72064d0803c18e0a935bc1420b3e0e7a218ead936"
+            },
+            "closed-function-tracing-O2-counted.c": {
+              "bytes": 700776,
+              "sha256": "f3b06fe7bc91f343bca03e1c87a18e9567178d39c28fc329d8ac31118f1c6133"
+            },
+            "closed-function-tracing-O2-counted.exe": {
+              "bytes": 158232,
+              "sha256": "40774c0e4387a32584a7ca1edea421959839b0ef85ebaa1fe17d241dc7ae1d81"
+            }
+          },
+          "perAdditionalMessage16To1024": {
+            "requests": 3.0,
+            "requested_bytes": 89.8829365079365,
+            "retains": 2.0,
+            "queue_retains": 0.0
+          },
+          "peakChargeGrowth16To1024": 48
+        }
+      ]
+    }
+  ]
+}

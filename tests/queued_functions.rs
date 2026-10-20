@@ -182,6 +182,56 @@ main = [callbacks 1 | channel.close, apply (A { tail = [] }) ((from-a, from-b) |
 }
 
 #[test]
+fn a_trapping_branch_does_not_create_an_unknown_queued_function() {
+    let dir = fwp::cgen::TempDir::new("queued-never-function").unwrap();
+    let source = dir.join("main.fwp");
+    let program = r#"
+callbacks : I64 -> Channel[I64 -> I64] ! {Async}
+callbacks = channel.make
+choose : Bool -> I64 -> I64
+choose = if id (const (add 1)) (const "unreachable" | prim.trap)
+main = callbacks 1 | tap (flip channel.send (choose True)) | channel.recv | option.map (apply 2) | echo
+"#;
+    std::fs::write(&source, program).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    assert_eq!(reference.stdout, b"Some 3\n");
+    for memory in ["arc", "tracing"] {
+        let cfile = dir.join("main.c");
+        checked(
+            Command::new(compiler)
+                .env("FWP_NO_OPT", "1")
+                .args(["build", "--gc", memory, "--emit-c"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(cfile).unwrap();
+        for opt in ["-O0", "-O2"] {
+            let binary = dir.join("main.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let stress = if memory == "arc" { "0" } else { "1" };
+            let actual = checked(
+                Command::new(binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", stress)
+                    .env("FWP_GC_VERIFY", stress)
+                    .env("FWP_REUSE_VERIFY", stress),
+            );
+            assert_eq!(
+                (&actual.stdout, &actual.stderr),
+                (&reference.stdout, &reference.stderr)
+            );
+        }
+    }
+}
+
+#[test]
 fn empty_callable_collections_do_not_create_unknown_calls() {
     let dir = fwp::cgen::TempDir::new("queued-empty-callable").unwrap();
     let source = dir.join("main.fwp");

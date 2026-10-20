@@ -24,7 +24,7 @@ fn instrument(generated: &str) -> String {
     let mut body = code[start..end].to_owned();
     let ownership = "            uint8_t *count = fwp_rc_slot(ch);";
     assert_eq!(body.matches(ownership).count(), 1);
-    body = body.replacen(ownership, &format!("            uint64_t before = client_retains;\n            uint8_t *payload_count = fwp_rc_slot(x);\n            if(client_active && payload_count && *payload_count == 1)channel_unique++;\n{ownership}"), 1);
+    body = body.replacen(ownership, &format!("{ownership}\n            uint64_t before = client_retains;\n            uint8_t *payload_count = fwp_rc_slot(x);\n            if(client_active && count && *count && payload_count && *payload_count == 1)channel_unique++;"), 1);
     let inserted = "            c->len++;";
     assert_eq!(body.matches(inserted).count(), 1);
     let body = body.replacen(

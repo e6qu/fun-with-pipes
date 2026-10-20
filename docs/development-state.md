@@ -4,10 +4,15 @@
 
 PR [#175](https://github.com/e6qu/fun-with-pipes/pull/175), branch
 `queued-function-delivery`, is frozen at `d1df84d96642c5f097f915f63cb58bf82fcb855f`.
-Production run `39353280539` has passed benchmarks; eight native jobs remain in
-progress. Documentation run `39353280537` passed. Require every final-head gate,
-audit failures together, then squash merge with an explicit one-line subject and
-empty body. Verify the resulting tree/message before cancelling redundant CI.
+Production run `39353280539` failed regular and stress macOS ARM64 with five
+ARC proof rejections across nested differentiation, checkpointing and F128
+precision; all completed targets were audited. Other gates continue. Documentation
+and benchmarks passed. Do not merge the failed head. The primary worktree has
+prepared `fd1275ea`, preserved by `roadmap/revision-nonreturning-proof`, to exclude
+non-returning primitives from callable origins. Focused macOS `39357056381` passes 145 units, eight queue tests, one generated
+entry, three checkpoint tests and one F128 precision test. Linux counterpart
+`39357061326` and precision run `39357198059` remain pending. This worktree also
+contains that source/test repair, without overwriting the transfer changes.
 
 Independent preparation is on `measure-channel-transfers`, worktree
 `/private/tmp/fwp-channel-transfers`. Keep one active PR. The next concrete action
@@ -22,7 +27,22 @@ stores an unused duplicate callback. Generated gRPC delivery and C probes follow
 the new contract; native sink callbacks still borrow during their call. Tests
 cover saturated-count transfers and failed queue growth as well as cancellation,
 closed queues, failed receive allocation and deliberately omitted cleanup. These
-changes are not yet runner-verified.
+changes have audited results at `34568f3d`, run `39356046321`: all six native
+hosts pass 26 integration checks but fail one stale failure-control exit code
+(23 instead of 22). Their unit suite fails only the old all-borrowed channel
+assertion (143 other tests pass, 144 on Windows). Both expectations are repaired;
+all eight complete logs were audited. Both WASI hosts pass all 14 checks, none
+ignored. The repair batch also includes the primary non-returning proof fix and
+expands autodiff and WASI resource-counter coverage.
+
+Repeated-count run `39356051237` passes both Linux architectures, with all 180
+samples and 20 ordinary binaries audited. Fresh text retains fall from four to
+three per message; fresh-function retains fall from five to four. Shared totals,
+allocation requests and peak charged bytes are unchanged. ARC final charge and
+collections remain zero. ARM64's inspected exchange frame grows by 16 bytes;
+binary size changes are recorded, including AMD64 closed-send growth. There is
+no timing or C/Rust-parity claim. Source `34568f3d` is preserved by
+`roadmap/revision-channel-transfers-34568f3d`. Full acceptance is still pending.
 
 The new examples exposed later-stage Error/IO effects leaking into an earlier
 stored callback's type during composition. Open both temporary call rows with

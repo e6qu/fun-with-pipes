@@ -4,7 +4,8 @@ This experiment asks how much reference-count work remains when a program sends
 a value through a channel. A retain increments the count of owners keeping a
 value alive. A temporary value may be movable into the queue; a value still used
 elsewhere needs sharing. Measurements must distinguish those cases before a
-transfer optimization is selected. No runtime change or speedup is claimed yet.
+transfer optimization is selected. The consuming-send change is now implemented
+and awaiting validation; no speedup is claimed.
 
 ## First measured baseline
 
@@ -27,9 +28,51 @@ The fresh cases' peak charge rose by 48 bytes between 16 and 1024 messages:
 the first input reaches 16-character messages, while the larger input reaches
 the full 64-character cycle. Shared cases had unchanged peak charge. This
 identifies a bounded payload-size difference, not accumulating queue storage.
-It does not measure total process memory. The next change should transfer the
-sender's existing owner into the queue and preserve independent aliases, then
-repeat these profiles and failure/cancellation checks.
+It does not measure total process memory. This baseline selected transfer of the
+sender's existing owner into the queue, with independent aliases preserved.
+
+## Transfer result and remaining costs
+
+[Run 39356051237](https://github.com/e6qu/fun-with-pipes/actions/runs/39356051237)
+repeats the protocol at `34568f3d`, preserved by
+`roadmap/revision-channel-transfers-34568f3d`. The
+[transfer report](channel-count-transfers-2026-10-20.json) audits both native
+hosts and another 180 samples. Linux AMD64 used an AMD EPYC 7763; ARM64 used
+Neoverse-N2. Both used their recorded GCC versions with the same compilation
+settings and source-level work as the baseline.
+
+| ARC case, 1024 messages | Total retains before → after | Queue retains before → after |
+|---|---:|---:|
+| Fresh text | 4096 → 3072 | 1024 → 0 |
+| Fresh function | 5120 → 4096 | 1024 → 0 |
+| Shared text | 7168 → 7168 | 1024 → 0 |
+| Shared function | 9216 → 9216 | 1024 → 0 |
+| Closed function | 2048 → 2048 | 0 → 0 |
+
+Both architectures give these counts. A queue receives the existing owner;
+shared cases acquire the needed extra owner at the caller instead. Fresh text
+therefore removes one of four retains per exchange; fresh functions remove one
+of five. Allocation request counts and sampled peak charge are unchanged. Every
+ARC profile still ends with zero charged storage and zero collections. The
+smaller channel header does not reduce the allocator's charged size in these
+profiles. Heap allocation and other retains remain; this is not a zero-cost
+channel claim.
+
+Code size and stack use have tradeoffs. Ordinary ARC executable file size changes
+on AMD64 are +72/+64/+144/+144/+4160 bytes in table order; ARM64 changes are
+0/−24/+80/+80/−24 bytes. File size includes linker layout and is not just executed
+instruction bytes. Inspecting the fresh-text binaries' actual disassembly:
+
+- AMD64 `exchange` (`f17`) keeps its 320-byte stack subtraction plus five saved
+  registers; `step` (`w7`) keeps 456 bytes plus four saved registers.
+- ARM64 `exchange` grows from a 336-byte frame to 352 bytes; `step` stays at
+  432 bytes. These ARM frame sizes include the saved registers.
+
+These are those functions' own frames, excluding callees and total task stacks.
+The transfer must keep a pending message protected until insertion or cleanup.
+No execution-time improvement is established, and no C/Rust peer was measured.
+The separate six-host ownership run still requires its test-expectation repairs
+and complete acceptance; a passing count experiment does not replace that gate.
 
 ## Programs and inputs
 
@@ -80,7 +123,8 @@ ARC runs must end with zero additional charge and zero collections.
 
 Additional counters record send calls, accepted queue insertions, payloads with
 one counted owner at insertion, and effective retains performed by the queue's
-typed duplication operation. They exclude caller retains and later receive/call
+insertion ownership work (the baseline used a typed duplication operation).
+They exclude caller retains and later receive/call
 work; total retains include those operations. Native sinks and blocked/cancelled
 transfers are outside this sequential experiment and retain their separate
 [ownership correctness tests](../ownership.md).

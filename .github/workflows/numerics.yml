@@ -124,7 +124,7 @@ jobs:
         run: cargo test --lib
       - name: Existing ARC, channel, State and autodiff behavior
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test typed_state_ownership --test scope_thunk_ownership --test ad_tape_scopes --test grpc_client_receive --test grpc_response_encoding
+        run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test typed_state_ownership --test scope_thunk_ownership --test ad_tape_scopes --test grpc_client_receive --test grpc_response_encoding --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested
       - name: Record queued-function evidence source
         if: always()
         shell: bash
@@ -925,7 +925,7 @@ jobs:
         run: cargo test --lib
       - name: Queue capture and receiver-scope regressions
         if: ${{ !cancelled() && matrix.part == 'queued' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --test queued_functions -- --nocapture
+        run: cargo test --no-fail-fast --test queued_functions --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested -- --nocapture
       - name: Preserve the compiler for bounded diagnostic checks
         if: ${{ !cancelled() && matrix.part == 'queued' }}
         uses: actions/upload-artifact@v7
@@ -1025,7 +1025,7 @@ jobs:
       - name: Asyncify toolchain
         run: npm install -g binaryen
       - name: Checked WASI ownership, queues and static capture initialization
-        run: cargo test --test wasm_arc -- --nocapture
+        run: cargo test --no-fail-fast --test wasm_arc --test wasm_resource_counts -- --nocapture
       - name: Record WASI evidence source
         if: always()
         run: |

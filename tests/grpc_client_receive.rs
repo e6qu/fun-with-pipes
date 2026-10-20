@@ -219,8 +219,8 @@ int main(void){
         let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
         assert_eq!(
             out.status.code(),
-            Some(22),
-            "omitted decoded value cleanup: {out:?}"
+            Some(23),
+            "omitted pending message cleanup: {out:?}"
         );
         fwp::cgen::compile_c(&format!("{hooks}\n{missing_abort}\n{fixture}"), &exe, opt).unwrap();
         let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
