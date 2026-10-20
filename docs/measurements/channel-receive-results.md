@@ -130,5 +130,6 @@ direct fields transfer one owner without attempting the injected Option allocati
 Boxed receives must allocate their result before removing the message. If that
 allocation fails, the message stays queued for retry. The candidate also repairs
 the uncounted tracing path, which previously dequeued first; a forced-failure
-regression checks retry there. Full production acceptance remains required before
-this candidate is treated as supported.
+regression checks retry there. The selected implementation passed all nine
+production jobs and documentation on the exact delivery head; see
+[PR #177 history](../roadmap-history.md#receive-results-without-temporary-wrappers-pr-177).

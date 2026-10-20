@@ -99,13 +99,12 @@ outside the benchmark suite.
    with consuming sends and temporary argument-tuple removal. Its measured count
    savings do not remove all channel costs. [PR #176](docs/roadmap-history.md#loop-state-and-known-function-calls-pr-176)
    keeps eligible loop state in locals and calls known function aliases directly.
-   It is merged with passing focused checks and measurements; its full platform
-   acceptance is still running. The current delivery removes eligible receive
-   result wrappers. [Counts and binary inspection](docs/measurements/channel-receive-results.md)
-   show a further allocation reduction for text messages, with ARC traffic and
-   function-message costs remaining. The selected struct return reduces ARC code
-   size further, with documented stack and tracing-layout costs. Complete its
-   final platform and cleanup checks before claiming support.
+   Both its full acceptance and [PR #177's receive-wrapper removal](docs/roadmap-history.md#receive-results-without-temporary-wrappers-pr-177)
+   pass. [Counts and binary inspection](docs/measurements/channel-receive-results.md)
+   retain the allocation savings, remaining ARC/function-message costs, stack
+   growth and tracing-layout cost. The next delivery simplifies locally built
+   tuples before pattern matching, exposing known callbacks and direct receives
+   while preserving field evaluation order. Measure it against those same programs.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.

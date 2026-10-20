@@ -1,5 +1,5 @@
 //! Known function aliases can call directly; constant evaluation stays ordered.
-use fwp::ir::{Body, Expr, Func, Program, MT};
+use fwp::ir::{Body, Expr, Func, Pat, Program, MT};
 use fwp::value::Value;
 use std::process::Command;
 
@@ -61,6 +61,63 @@ fn repeated_known_function_aliases_become_direct_calls() {
 }
 
 #[test]
+fn matching_a_local_callback_record_exposes_the_direct_call() {
+    let integer = MT::con("std::I64");
+    let callback = MT::Fun(Box::new(integer.clone()), Box::new(integer.clone()));
+    let record = MT::Record(vec![
+        ("0".into(), callback.clone()),
+        ("1".into(), integer.clone()),
+    ]);
+    let mut program = Program {
+        funcs: vec![
+            Func {
+                name: "add".into(),
+                arity: 2,
+                locals: vec![integer.clone(), integer.clone()],
+                ty: MT::Fun(Box::new(integer.clone()), Box::new(callback.clone())),
+                body: Body::Prim("prim.add".into()),
+            },
+            Func {
+                name: "matched-callback".into(),
+                arity: 1,
+                locals: vec![integer.clone(), callback.clone(), integer.clone(), record],
+                ty: callback,
+                body: Body::Expr(Expr::Let(
+                    3,
+                    Box::new(Expr::Record(vec![
+                        Expr::Apply(Box::new(Expr::Func(0)), vec![Expr::Const(Value::I64(1))]),
+                        Expr::Local(0),
+                    ])),
+                    Box::new(Expr::Match(
+                        Box::new(Expr::Local(3)),
+                        vec![(
+                            Pat::Record(vec![Pat::Bind(1), Pat::Bind(2)]),
+                            Expr::Apply(Box::new(Expr::Local(1)), vec![Expr::Local(2)]),
+                        )],
+                    )),
+                )),
+            },
+        ],
+        ..Program::default()
+    };
+    fwp::ir::check_locals(&program).unwrap();
+    let reference = fwp::interp::Interp::new(&program, Box::new(Vec::new()))
+        .call(1, vec![Value::I64(7)])
+        .unwrap();
+    fwp::opt::optimize(&mut program);
+    fwp::ir::check_locals(&program).unwrap();
+    let actual = fwp::interp::Interp::new(&program, Box::new(Vec::new()))
+        .call(1, vec![Value::I64(7)])
+        .unwrap();
+    assert_eq!(actual, reference);
+    assert_eq!(actual, Value::I64(8));
+    assert!(
+        matches!(&program.funcs[1].body, Body::Expr(Expr::Call(0, _))),
+        "a known callback matched from a local tuple needs no runtime tuple or closure"
+    );
+}
+
+#[test]
 fn ignored_caf_arguments_still_trap_in_evaluation_order() {
     let dir = std::env::temp_dir().join(format!("fwp-inline-caf-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
@@ -71,6 +128,8 @@ fn ignored_caf_arguments_still_trap_in_evaluation_order() {
         "bad : I64\nbad = 1 | div 0\ndiscard : I64 -> I64\ndiscard = const 17\nmain = bad | discard | echo\n",
         "bad : I64\nbad = 1 | div 0\nlater : I64\nlater = 9223372036854775807 | add 1\ndiscard : I64 -> I64\ndiscard = const later\nmain = bad | discard | echo\n",
         "bad : String\nbad = 1 | div 0 | show\ndiscard : String -> I64\ndiscard = const 17\nmain = bad | discard | echo\n",
+        "bad : I64\nbad = 1 | div 0\ndiscard : (I64, Bool) -> I64\ndiscard = match\n    (_, True) -> const 17\n    (_, False) -> const 19\nmain = (bad, True) | discard | echo\n",
+        "bad : I64\nbad = 1 | div 0\nlater : I64\nlater = 9223372036854775807 | add 1\ndiscard : (I64, I64) -> I64\ndiscard = match (_, _) -> const (const 17)\nmain = (bad, later) | discard | echo\n",
     ];
     for (case, text) in cases.iter().enumerate() {
         std::fs::write(&src, text).unwrap();
@@ -212,6 +271,81 @@ int main(int argc,char **argv){int result=original_main(argc,argv);if(result)ret
             );
             assert_eq!(o.stdout, reference.stdout);
             assert_eq!(o.stderr, reference.stderr);
+        }
+    }
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn matched_record_fields_preserve_effects_and_callback_results() {
+    let dir = std::env::temp_dir().join(format!("fwp-matched-fields-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let src = dir.join("probe.fwp");
+    let exe = dir.join("probe");
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    std::fs::write(
+        &src,
+        r#"
+measure : (String -> I64, Option[String]) -> I64
+measure = match
+    (_, Some _) -> id
+    (_, None) -> const 0
+text : Bool -> Option[String]
+text = if id (const "x" | string.repeat 4 | Some) (const None)
+measured : Bool -> I64
+measured = both (const (string.length | add 1)) text | measure
+left : I64 -> I64 ! {IO}
+left = tap (const "left" | echo) | add 1
+right : I64 -> I64 ! {IO}
+right = tap (const "right" | echo) | mul 2
+pick : (I64, I64) -> I64
+pick = match (_, _) -> const
+main = [
+    True | measured | echo,
+    False | measured | echo,
+    3 | both left right | pick | echo,
+]
+"#,
+    )
+    .unwrap();
+    let reference = Command::new(fwp)
+        .args(["run", "--interp"])
+        .arg(&src)
+        .env("FWP_NO_OPT", "1")
+        .output()
+        .unwrap();
+    assert!(reference.status.success(), "{reference:?}");
+    assert_eq!(reference.stdout, b"5\n0\nleft\nright\n4\n");
+    let optimized = Command::new(fwp)
+        .args(["run", "--interp"])
+        .arg(&src)
+        .output()
+        .unwrap();
+    assert!(optimized.status.success(), "{optimized:?}");
+    assert_eq!(optimized.stdout, reference.stdout);
+    assert_eq!(optimized.stderr, reference.stderr);
+    for memory in ["arc", "tracing"] {
+        for optimization in ["-O0", "-O2"] {
+            let build = Command::new(fwp)
+                .arg("build")
+                .arg(&src)
+                .args(["--gc", memory, optimization, "-o"])
+                .arg(&exe)
+                .output()
+                .unwrap();
+            assert!(build.status.success(), "{build:?}");
+            let native = Command::new(&exe)
+                .env("FWP_GC_STRESS", "1")
+                .env("FWP_GC_VERIFY", "1")
+                .env("FWP_REUSE_VERIFY", "1")
+                .output()
+                .unwrap();
+            assert!(
+                native.status.success(),
+                "{memory}, {optimization}: {native:?}"
+            );
+            assert_eq!(native.stdout, reference.stdout);
+            assert_eq!(native.stderr, reference.stderr);
         }
     }
     std::fs::remove_dir_all(dir).unwrap();

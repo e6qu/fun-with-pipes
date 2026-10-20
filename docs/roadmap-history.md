@@ -12,6 +12,29 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Receive results without temporary wrappers (PR #177)
+
+Immediately matched receives can keep the `Option` tag and message in local
+fields, transferring the queued owner without allocating a `Some` wrapper.
+Whole-value uses remain boxed. Both use the same receive loop and preserve
+timeout, cancellation and cleanup. Boxed receives allocate before dequeue;
+this also repairs retry after allocation failure in uncounted tracing mode.
+
+[Counts and binary inspection](measurements/channel-receive-results.md) show
+fresh-text allocations falling from two to one per additional message, and shared
+text from one to zero, on both Linux architectures. Function-message costs and
+retains are unchanged. The selected struct return reduces ARC code size further;
+the report retains helper-stack growth and one larger ARM64 tracing code section.
+No timing or C/Rust parity claim is made.
+
+[PR #177](https://github.com/e6qu/fun-with-pipes/pull/177) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39374128066)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39374119890)
+on `a5828518f92da3112fde13157a0dcc964d6c3cb9`; complete logs were audited.
+The user merged it as `44f9eb6eeb787df378b159b33f113bffd69b216e` with the same
+tree and a one-line message without trailers. Duplicate post-merge production
+was cancelled; post-merge documentation had already completed.
+
 ## Loop state and known function calls (PR #176)
 
 Loops can now keep state fields in locals even when an action or branch precedes
@@ -36,10 +59,10 @@ The user merged [PR #176](https://github.com/e6qu/fun-with-pipes/pull/176) as
 `90f0ab9f6b30da75682f598ef5afd8f9fef7bfed` before production CI completed.
 Its tree equals head `ddff413a940b2c37e6ea3349b443fe59a232d953`, and its verified
 message is one line without trailers. [Production](https://github.com/e6qu/fun-with-pipes/actions/runs/39371117507)
-remains running; the benchmark gate and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39371117707)
-pass. This is merged work with unfinished acceptance, tracked in the
-[handoff](development-state.md). Only duplicate post-merge runs `39372193646`
-and `39372193575` were cancelled after tree verification.
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39371117707)
+now pass on that exact head; all nine production jobs and complete logs were
+audited. Only duplicate post-merge runs `39372193646` and `39372193575` were
+cancelled after tree verification.
 
 ## Function queues and cheaper sends (PR #175)
 

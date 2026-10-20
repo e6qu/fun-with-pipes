@@ -225,13 +225,13 @@ owner intact for retry. These changes passed native/WebAssembly checks and
 [production acceptance in PR #175](roadmap-history.md#function-queues-and-cheaper-sends-pr-175). [Measured baselines](measurements/channel-transfer-protocol.md)
 show why the previous retain was avoidable for fresh messages.
 
-The next [receive-result candidate](measurements/channel-receive-results.md)
+The accepted [receive-result implementation](measurements/channel-receive-results.md)
 passes an immediately matched result as separate tag and payload fields, avoiding
 its `Some` allocation. Whole-value uses keep boxed results; both forms transfer
 the same queued owner. Boxed allocation must precede dequeue so failure permits
-retry. The candidate also repairs that order in the uncounted tracing path.
+retry. It also repairs that order in the uncounted tracing path.
 Its selected two-word result has audited text-message allocation savings on both
-Linux architectures. Complete cleanup/platform acceptance is still under validation.
+Linux architectures and [complete production acceptance](roadmap-history.md#receive-results-without-temporary-wrappers-pr-177).
 
 Counting cannot reclaim an unreachable cycle by itself. For example, a channel
 can contain a queued value holding that same channel. Closing it must preserve
