@@ -288,8 +288,8 @@ Final production acceptance is tracked in the [handoff](development-state.md).
 
 ### Borrowing across direct calls
 
-This branch implements direct-call borrowing; validation is in progress in the
-[handoff](development-state.md). A **direct call** names a function known to the
+Direct-call borrowing is implemented; the [handoff](development-state.md) tracks
+platform acceptance. A **direct call** names a function known to the
 compiler. When that function uses an argument only during the call and does not
 store or return its counted storage, the caller can keep ownership throughout
 the call. Every caller must already need the same counted values afterward.

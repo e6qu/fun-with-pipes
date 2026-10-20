@@ -14,15 +14,15 @@ eligibility rules and the separate consuming convention for generic entries.
 ## Comparison and method
 
 Compare PR #179's measured source `eecb4b5c` (run `39399972415`) with
-`ad3cd792c079bac8d04bc1dcab69936eb62e97e5`
-([passing run 39423983460](https://github.com/e6qu/fun-with-pipes/actions/runs/39423983460)).
-The latter is preserved by `roadmap/revision-direct-borrows-ad3cd792`.
+`f3e05d27c8f0610f9614b1421f2c7dbedb89c16c`
+([passing run 39436111385](https://github.com/e6qu/fun-with-pipes/actions/runs/39436111385)).
+The latter is preserved by `roadmap/revision-direct-borrows-f3e05d27`.
 Both run the same five programs at 0, 16 and 1024 messages, with three fresh
 profiles per input, in checked ARC and tracing modes. The
 [protocol](channel-transfer-protocol.md) defines each program and counter.
 
 GCC 13.3.0 compiles at O2, with LTO and floating-point contraction disabled.
-The new AMD64 host is an AMD EPYC 9V74; the baseline used an EPYC 7763.
+The new AMD64 host is an AMD EPYC 9V45; the baseline used an EPYC 7763.
 Both ARM64 runs use Neoverse-N2. These are count and binary comparisons between
 two fwp revisions: **no elapsed-time or C/Rust comparison was performed**.
 Different hosts and fewer count operations do not establish a speedup.
@@ -73,22 +73,21 @@ ordinary binaries are unchanged.
 
 ## Validation
 
-Both focused Linux hosts pass 185 checks, with none ignored or filtered:
-153 compiler unit tests, 31 integration checks and the explicit measurement test.
+Both focused Linux hosts pass 189 checks, with none ignored or filtered:
+154 compiler unit tests, 34 integration checks and the explicit measurement test.
 All complete logs were audited. The [machine-readable report](channel-direct-borrow-counts-2026-10-20.json)
 validates 180 profiles and 20 ordinary binaries, with hashes of generated C,
 instrumented binaries and disassembly.
 
-The first run failed in two fixtures: a unit constant lacked its explicit type,
-and a native probe expected unwind cleanup without enabling that generated path.
-Both complete logs were reviewed and both fixtures repaired together. The passing
-run reproduces all earlier diagnostic profiles and all 100 saved code hashes.
-Tests now cover cancellation at borrowed-worker entry and ARC cleanup after a
-channel exchange fails, at O0/O1/O2 with stack placement enabled and disabled.
+The measured source requires callers to need the same counted storage after
+the call, avoiding prolonged last-use input lifetimes. Tests cover independent
+aliases, generic entries, failure, cancellation at borrowed-worker entry and an
+intentionally leaked-owner control. An ARC channel failure verifies complete
+reclamation at O0/O1/O2 with stack placement enabled and disabled.
 
-Broader Apple Silicon and Linux ARM64 jobs pass 231 checks each at that source.
-A subsequent tightening also requires callers to keep plain counted inputs
-after the call, avoiding prolonged last-use storage. These measurements must
-be reproduced for that stricter source. Its final production matrix includes
-the broader ownership coverage, including three added Windows targets.
-Follow the [current handoff](../development-state.md) for acceptance.
+The same run verifies rejection of runtime handles in compile-time constants,
+including nested containers and function captures. Ordinary compile-time file
+contents work in both engines; native O0/O2 executables still print the contents
+after the input file is removed. The final production matrix includes the broader
+ownership coverage and three added Windows targets. Focused Linux success is
+not complete platform acceptance; follow the [handoff](../development-state.md).

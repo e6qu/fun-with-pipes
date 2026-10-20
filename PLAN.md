@@ -97,8 +97,9 @@ outside the benchmark suite.
 2. Complete one delivery of [matched payload moves](docs/measurements/channel-variant-moves.md)
    and [borrowing across direct calls](docs/measurements/channel-direct-borrows.md).
    The latter requires callers to need the same counted values after the call,
-   avoiding extra input retention. Verify success, failure and cancellation;
-   reproduce counts and inspect actual binaries before final production acceptance.
+   avoiding extra input retention. Focused Linux checks pass for success, failure
+   and cancellation, with reproduced counts and inspected binaries. Complete
+   final production acceptance on all maintained platforms.
    [The accepted baseline](docs/roadmap-history.md#direct-matches-and-callbacks-pr-178)
    already removes temporary receive wrappers, loop-state tuples and eligible
    callback objects. Borrowing does not remove all runtime ownership checks or
