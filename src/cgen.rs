@@ -4,10 +4,15 @@
 
 use std::collections::HashMap;
 use std::fmt::Write;
+use std::io::Read;
+#[cfg(unix)]
+use std::os::unix::fs::DirBuilderExt;
 #[cfg(unix)]
 use std::os::unix::process::ExitStatusExt;
 
+use crate::ffi::{self, CType};
 use crate::ir::*;
+use crate::ownership::ResultOwnership;
 use crate::value::Value;
 
 #[path = "cgen_wide.rs"]
@@ -7770,7 +7775,6 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                             );
                         }
                     } else if let Some(contract) = crate::ownership::primitive(&sym) {
-                        use crate::ownership::ResultOwnership;
                         match contract.result {
                             ResultOwnership::ChannelOperation => {
                                 let ty = if sym == "channel.make" {
@@ -8763,7 +8767,6 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
 
 /// A C value from a word.
 fn ffi_to_c(t: &crate::ffi::CType, v: &str) -> String {
-    use crate::ffi::CType;
     match t {
         CType::Int { .. } => format!("({})(int64_t)({})", crate::ffi::c_name(t), v),
         CType::F32 => format!("fwp_f32({})", v),
@@ -8785,7 +8788,6 @@ fn ffi_to_c(t: &crate::ffi::CType, v: &str) -> String {
 
 /// A word from a C value.
 fn ffi_from_c(t: &crate::ffi::CType, e: &str) -> String {
-    use crate::ffi::CType;
     match t {
         CType::Int { signed: true, .. } => format!("(V)(int64_t)({})", e),
         CType::Int { signed: false, .. } => format!("(V)({})", e),
@@ -8813,7 +8815,6 @@ impl Gen<'_> {
         ty: &MT,
         value: &str,
     ) {
-        use crate::ffi::CType;
         if !self.reuse {
             let _ = writeln!(out, "    V {name} = {};", ffi_from_c(c, value));
             return;
@@ -8869,7 +8870,6 @@ impl Gen<'_> {
 
     /// Struct definitions and converters for the structs among `types`.
     fn ffi_structs(&mut self, types: &[crate::ffi::CType]) {
-        use crate::ffi::CType;
         for t in types {
             match t {
                 CType::Struct { name, fields } if !self.ffi_structs.contains(name) => {
@@ -8926,7 +8926,6 @@ impl Gen<'_> {
         symbol: &str,
         variadic: Option<u32>,
     ) -> Result<String, String> {
-        use crate::ffi::{self, CType};
         let (params, ret) = ffi::signature(self.prog, f)
             .map_err(|e| format!("foreign function `{}`: {}", symbol, e))?;
         let mut all: Vec<CType> = params.iter().map(|(_, c)| c.clone()).collect();
@@ -9120,7 +9119,6 @@ type ExportSig = (
 );
 
 fn library_result_needs_release(result: &crate::ffi::CType) -> bool {
-    use crate::ffi::CType;
     match result {
         CType::Str => true,
         CType::Struct { fields, .. } => fields.iter().any(|(_, _, ty)| *ty == CType::Str),
@@ -9315,7 +9313,6 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
     }
     // compile-time constants may hold closures
     fn value_refs(v: &crate::value::Value, out: &mut Vec<FuncId>) {
-        use crate::value::Value;
         match v {
             Value::Closure(c) => {
                 out.push(c.func);
@@ -10840,8 +10837,8 @@ pub fn check_target(prog: &Program, target: Target) -> Result<(), String> {
     Ok(())
 }
 
-/// A private temporary directory (mode 0700, with an unpredictable name,
-/// created fresh so that nobody else can have placed files in it),
+/// A private temporary directory (mode 0700 on Unix), created atomically
+/// so an existing directory and its files are never reused,
 /// removed with its contents when dropped.
 pub struct TempDir {
     path: std::path::PathBuf,
@@ -10853,8 +10850,6 @@ impl TempDir {
     }
 
     pub(crate) fn in_parent(base: &std::path::Path, prefix: &str) -> Result<TempDir, String> {
-        #[cfg(unix)]
-        use std::os::unix::fs::DirBuilderExt;
         let mut last = String::new();
         for attempt in 0..16u32 {
             let path = base.join(format!("{}-{}", prefix, random_suffix(attempt)));
@@ -10899,9 +10894,8 @@ impl Drop for TempDir {
 }
 
 /// 128 random bits as hex, from /dev/urandom (falling back to the clock,
-/// the process id and the attempt number, which are at least unique).
+/// the process id and the attempt number). Exclusive creation checks collisions.
 fn random_suffix(attempt: u32) -> String {
-    use std::io::Read;
     let mut b = [0u8; 16];
     let random = std::fs::File::open("/dev/urandom")
         .and_then(|mut f| f.read_exact(&mut b))

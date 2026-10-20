@@ -9,6 +9,8 @@ use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpStream;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
+#[cfg(unix)]
+use std::os::unix::process::ExitStatusExt;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 
@@ -84,7 +86,6 @@ fn status_detail(status: std::process::ExitStatus) -> String {
     let detail = format!("code={:?}", status.code());
     #[cfg(unix)]
     {
-        use std::os::unix::process::ExitStatusExt;
         format!(
             "{detail} signal={:?} core_dumped={}",
             status.signal(),
