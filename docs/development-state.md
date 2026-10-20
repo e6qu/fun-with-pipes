@@ -11,8 +11,7 @@ worktree handoff for the final acceptance run and merge; require all nine
 production jobs and documentation for its exact final head.
 
 This worktree (`/private/tmp/fwp-channel-transfers`) is now the independent
-`flatten-channel-loop-state` experiment, based on `f3c6f8d9`. Next: audit `channel-proof` run `39364385408` at `16adc74b`, fix every failure,
-and preserve the recorded comparison with PR #175's integrated measurements. Count run `39363807189` passes both hosts; its saved C and actual
+`flatten-channel-loop-state` experiment, based on `f3c6f8d9`. Next: finish the loop-only evidence audit, then validate the additional known-function alias change described below. Preserve both measured revisions and fix every failure. Count run `39363807189` passes both hosts; its saved C and actual
 machine code are inspected. Do not change the primary PR while its gates run.
 Keep it separate while PR #175 is being validated; do not open another PR yet.
 The inventory/schedule repair is included here. Final PR #175 production is
@@ -93,3 +92,20 @@ at the top of the file. The `fields` evidence suite uses GCC on Linux, matching
 production. Run it on Linux ARM64 and AMD64 for the candidate: it checks retained
 resource frames and match contexts as well as worker entry, field movement and
 failure cleanup. Other suites retain their established compiler settings.
+
+## Known function aliases
+
+Inspection of the measured loop binary found generic function dispatch for a
+known `string.length` callback. The optimizer now propagates capture-free function
+aliases just as it does cheap local aliases, exposing direct calls. It excludes
+arity-zero constants, whose evaluation can allocate or trap. A regression checks
+repeated uses and interpreter agreement; existing constant-evaluation order and
+cleanup controls are added to focused ownership CI. No savings are claimed yet:
+repeat the count experiment and inspect the new C and machine code. This changes
+the measured compiler, so the loop-only report remains a separate experiment.
+
+Loop-only ownership run `39364385408` passes Linux and Windows on both
+architectures, ARM64 macOS and both WASI hosts; complete logs are audited. Intel
+macOS remains running. Resource-field runs `39365324259` (AMD64) and `39365327202`
+(ARM64) at `cc850204` are running with GCC. PR #175 production remains pending;
+its documentation and benchmark gates pass.

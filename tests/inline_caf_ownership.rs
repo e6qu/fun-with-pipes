@@ -1,5 +1,65 @@
-//! Inlining must evaluate CAF arguments before entering the callee.
+//! Known function aliases can call directly; constant evaluation stays ordered.
+use fwp::ir::{Body, Expr, Func, Program, MT};
+use fwp::value::Value;
 use std::process::Command;
+
+#[test]
+fn repeated_known_function_aliases_become_direct_calls() {
+    let text = MT::con("std::String");
+    let integer = MT::con("std::I64");
+    let callback = MT::Fun(Box::new(text.clone()), Box::new(integer.clone()));
+    let mut program = Program {
+        funcs: vec![
+            Func {
+                name: "length".into(),
+                arity: 1,
+                locals: vec![text.clone()],
+                ty: callback.clone(),
+                body: Body::Prim("string.length".into()),
+            },
+            Func {
+                name: "measure-twice".into(),
+                arity: 1,
+                locals: vec![text.clone(), callback],
+                ty: MT::Fun(
+                    Box::new(text),
+                    Box::new(MT::Record(vec![
+                        ("0".into(), integer.clone()),
+                        ("1".into(), integer),
+                    ])),
+                ),
+                body: Body::Expr(Expr::Let(
+                    1,
+                    Box::new(Expr::Func(0)),
+                    Box::new(Expr::Record(vec![
+                        Expr::Apply(Box::new(Expr::Local(1)), vec![Expr::Local(0)]),
+                        Expr::Apply(Box::new(Expr::Local(1)), vec![Expr::Local(0)]),
+                    ])),
+                )),
+            },
+        ],
+        ..Program::default()
+    };
+    fwp::ir::check_locals(&program).unwrap();
+    let input = vec![Value::str("aλ🙂")];
+    let reference = fwp::interp::Interp::new(&program, Box::new(Vec::new()))
+        .call(1, input.clone())
+        .unwrap();
+    fwp::opt::optimize(&mut program);
+    fwp::ir::check_locals(&program).unwrap();
+    let result = fwp::interp::Interp::new(&program, Box::new(Vec::new()))
+        .call(1, input)
+        .unwrap();
+    assert_eq!(result, reference);
+    let Body::Expr(Expr::Record(calls)) = &program.funcs[1].body else {
+        panic!("known aliases should not require local function dispatch");
+    };
+    assert_eq!(calls.len(), 2);
+    assert!(calls
+        .iter()
+        .all(|e| matches!(e, Expr::Call(0, args) if matches!(args.as_slice(), [Expr::Local(0)]))));
+}
+
 #[test]
 fn ignored_caf_arguments_still_trap_in_evaluation_order() {
     let dir = std::env::temp_dir().join(format!("fwp-inline-caf-{}", std::process::id()));

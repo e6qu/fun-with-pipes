@@ -130,7 +130,7 @@ jobs:
         run: cargo test --lib
       - name: ARC, channels, State, autodiff and loop cleanup
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test typed_state_ownership --test scope_thunk_ownership --test ad_tape_scopes --test grpc_client_receive --test grpc_response_encoding --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested --test loop_ownership --test loop_preparation_ownership --test loop_unwind_ownership --test nested_loop_boxing
+        run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test typed_state_ownership --test scope_thunk_ownership --test ad_tape_scopes --test grpc_client_receive --test grpc_response_encoding --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested --test loop_ownership --test loop_preparation_ownership --test loop_unwind_ownership --test nested_loop_boxing --test inline_caf_ownership --test caf_ownership --test call_effects
       - name: Record queued-function evidence source
         if: always()
         shell: bash
