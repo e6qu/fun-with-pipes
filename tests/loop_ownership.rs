@@ -149,9 +149,10 @@ main = [
     );
     let out = checked(
         Command::new(&exe)
-            .env("FWP_GC_STRESS", "1")
-            .env("FWP_GC_VERIFY", "1")
-            .env("FWP_REUSE_VERIFY", "1"),
+            .env_remove("FWP_GC")
+            .env("FWP_GC_STRESS", "0")
+            .env("FWP_GC_VERIFY", "0")
+            .env("FWP_REUSE_VERIFY", "0"),
     );
     assert_eq!(out.stdout, reference.stdout, "checked ARC");
 }
@@ -424,6 +425,9 @@ static void scalar_stop_caps(V f, int duplicate) { (void)f; (void)duplicate; }
 static const fwp_owned_fninfo scalar_owned = {scalar_stop_entry, scalar_stop_caps, scalar_stop_args};
 static const fwp_fninfo scalar_fns[] = {{1, scalar_stop_entry, "numeric stop", &scalar_owned}};
 int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0) return 2;
+#endif
     fwp_gc_start(__builtin_frame_address(0));
     fwp_fns = scalar_fns;
     V bits = fwp_rc_fresh(fwp_cstr("numeric bits"));

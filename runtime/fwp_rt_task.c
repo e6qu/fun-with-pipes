@@ -289,7 +289,7 @@ static fwp_task *fwp_task_new(void) {
 
 static fwp_task *fwp_gc_tasks = 0;
 
-#if FWP_GC
+#if FWP_GC && !defined(FWP_ARC_ONLY)
 /* the lowest address of a suspended task's stack in use */
 #ifdef FWP_OWN_CONTEXT
 #define FWP_TASK_LOW(t) ((char *)(t)->ctx.sp)

@@ -91,11 +91,20 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     let symbols = checked(Command::new("nm").arg(&binary));
                     let symbols = String::from_utf8_lossy(&symbols.stdout);
                     for symbol in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
-                        assert!(!symbols.contains(symbol), "ARC binary retains {symbol}");
+                        assert!(
+                            !symbols.contains(symbol),
+                            "{name}/{opt}: ARC binary retains {symbol}"
+                        );
                     }
                     fwp::cgen::compile_c(&missing_drop, &binary, opt).unwrap();
                     let omitted = run().output().unwrap();
                     assert_eq!(omitted.status.code(), Some(193), "{opt}: {omitted:?}");
+                } else {
+                    let symbols = checked(Command::new("nm").arg(&binary));
+                    assert!(
+                        String::from_utf8_lossy(&symbols.stdout).contains("fwp_gc_mark_all"),
+                        "tracing control must contain its collector: {name}/{opt}"
+                    );
                 }
             }
         }

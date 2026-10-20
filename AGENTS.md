@@ -52,6 +52,8 @@ implementation of currently supported external protocols.
 - Before pushing a CI repair, audit every failed job and completed test target,
   fix underlying causes and check affected callers. Batch all known fixes into
   one push; preserve passing final heads while their remaining gates run.
+- Focused checks must use the production compilers and optimization settings.
+  Passing Clang tests does not verify GCC, especially for binary inspection.
 - Standing authorization covers fixes, publication and squash merge after all
   final-head gates pass. Do not ask for the same permission again.
 - Require nine production jobs for the exact commit: Linux ARM64/AMD64, regular

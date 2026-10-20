@@ -4,8 +4,8 @@ This experiment asks how much reference-count work remains when a program sends
 a value through a channel. A retain increments the count of owners keeping a
 value alive. A temporary value may be movable into the queue; a value still used
 elsewhere needs sharing. Measurements must distinguish those cases before a
-transfer optimization is selected. The consuming-send change is now implemented
-and awaiting validation; no speedup is claimed.
+transfer optimization is selected. The consuming-send and temporary-tuple changes have measured count savings.
+Combined production acceptance is still pending; no speedup is claimed.
 
 ## First measured baseline
 
@@ -78,6 +78,46 @@ its state tuple and the tuple passed to `exchange` still allocate. Those are
 separate costs from queue ownership. No execution-time improvement is established,
 and no C/Rust peer was measured. The separate six-host ownership run still needs
 complete acceptance; a passing count experiment does not replace that gate.
+
+## Removing a temporary tuple after `tap`
+
+`value | tap action | next` runs `action` on the value, discards the action's
+result, then passes the original value to `next`. The optimizer can remove an
+internal alias of that original value while keeping the action first. This lets
+the existing direct-call optimization pass `exchange` its channel and counter
+separately, without constructing their temporary tuple.
+
+[Run 39360310385](https://github.com/e6qu/fun-with-pipes/actions/runs/39360310385)
+at `f0747ab2`, preserved by `roadmap/revision-channel-tap-f0747ab2`, passes both
+Linux hosts. [Its report](channel-count-tap-2026-10-20.json) audits another 180
+samples. The table compares it with the consuming-send revision above. These
+per-message counts are finite differences between inputs 16 and 1024; startup
+costs remain in the report.
+
+| ARC case | Allocation requests per message, before → after |
+|---|---:|
+| Fresh text | 4 → 3 |
+| Fresh function | 7 → 6 |
+| Shared text | 3 → 2 |
+| Shared function | 5 → 4 |
+| Closed function | 3 → 3 |
+
+Both architectures agree. Each successful case removes one allocation per
+message and reduces sampled peak charge by 32 bytes. Shared-text retains also
+fall from seven to six per message; other retain totals are unchanged. Every
+ARC profile finishes with zero charged storage and zero collections. The
+loop-state tuple still allocates, and `Step` was already unboxed. Closed sends
+do not call `exchange`, so their counts are unchanged.
+
+The fresh-text machine code now calls `exchange` through worker `w17`. Its own
+frame grows from 360 to 376 bytes on AMD64 (including saved registers, excluding
+the return address), and from 352 to 368 bytes on ARM64. The enclosing `work`
+frame shrinks from 632 to 504 bytes on AMD64 and from 544 to 464 bytes on ARM64.
+These are individual frames, not total task-stack peaks. In table order, ARC
+executable file sizes change by −8/0/−4416/−48/+48 bytes on AMD64 and
+−16/−8/−280/−120/+48 on ARM64. No execution timing or C/Rust comparison was run.
+The expanded cleanup tests still require their recorded test-setting repairs
+and final production acceptance; these count results alone do not supply it.
 
 ## Programs and inputs
 

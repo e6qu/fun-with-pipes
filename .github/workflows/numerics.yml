@@ -81,7 +81,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     env:
-      CC: clang
+      CC: ${{ startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_QUEUED_FUNCTION_ARTIFACTS: queued-function-evidence
@@ -828,7 +828,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
-      CC: clang
+      CC: ${{ matrix.part == 'queued' && startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_UDP_ARTIFACTS: server-check-evidence/udp
@@ -926,7 +926,7 @@ jobs:
         run: cargo test --lib
       - name: Queue capture and receiver-scope regressions
         if: ${{ !cancelled() && matrix.part == 'queued' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test queued_functions --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested -- --nocapture
+        run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested -- --nocapture
       - name: Preserve the compiler for bounded diagnostic checks
         if: ${{ !cancelled() && matrix.part == 'queued' }}
         uses: actions/upload-artifact@v7
