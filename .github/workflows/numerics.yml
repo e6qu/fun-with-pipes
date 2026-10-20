@@ -43,6 +43,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 1
       FWP_CHANNEL_COST_ARTIFACTS: channel-cost-evidence
+      FWP_LTO: '0'
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -56,7 +57,7 @@ jobs:
           uname -a > channel-cost-evidence/kernel.txt
           rustc -Vv > channel-cost-evidence/rust.txt
           "$CC" --version > channel-cost-evidence/cc.txt
-          printf '%s\n' 'CC=gcc; compile_c with -O2; ARC and tracing; stress/verification disabled for counts' > channel-cost-evidence/settings.txt
+          printf '%s\n' 'CC=gcc; FWP_LTO=0; compile_c with -O2 -std=gnu11 -ffp-contract=off -w; native runtime links; ARC and tracing; stress/verification disabled for counts' > channel-cost-evidence/settings.txt
       - run: cargo fmt --all -- --check
       - run: cargo clippy --test channel_transfer_costs --test call_effects -- -D warnings
       - name: Verify callback effects
@@ -78,7 +79,7 @@ jobs:
       matrix:
         runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     env:
       CC: clang
       CARGO_BUILD_JOBS: 2
@@ -122,9 +123,9 @@ jobs:
       - name: Compiler proof unit tests
         if: ${{ !cancelled() }}
         run: cargo test --lib
-      - name: Existing ARC, channel, State and autodiff behavior
+      - name: ARC, channels, State, autodiff and loop cleanup
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test typed_state_ownership --test scope_thunk_ownership --test ad_tape_scopes --test grpc_client_receive --test grpc_response_encoding --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested
+        run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test typed_state_ownership --test scope_thunk_ownership --test ad_tape_scopes --test grpc_client_receive --test grpc_response_encoding --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested --test loop_ownership --test loop_preparation_ownership --test loop_unwind_ownership --test nested_loop_boxing
       - name: Record queued-function evidence source
         if: always()
         shell: bash

@@ -838,6 +838,9 @@ mod tests {
                             "{symbol}"
                         );
                     }
+                    ResultOwnership::ChannelOperation if symbol == "channel.send" => {
+                        assert_eq!(consumed, vec![1], "{symbol}");
+                    }
                     _ => assert!(consumed.is_empty(), "{symbol}"),
                 }
             }

@@ -219,7 +219,7 @@ allocation rather than freeing an interior pointer from its bump heap.
 ## Task result and deadline boundaries
 
 The runtime owns fresh typed result wrappers from task.await, task.within and
-Channel receives. Wrappers retain pointer-bearing payload owners; scalar words
+channel receives. Wrappers own their pointer-bearing payloads; scalar words
 do not select reference destructors. task.deadline borrows its typed argument
 and retains the returned alias instead of forcing it into runtime sharing.
 It also retains spawn/deadline captures through entry, completion or

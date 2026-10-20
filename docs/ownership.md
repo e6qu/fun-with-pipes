@@ -1057,8 +1057,9 @@ temporary function object. The ordinary entry remains the explicit no-reuse mode
 [Linux measurements](benchmarks.md#freeing-method-arguments-and-results-linux-measurement)
 record the memory reduction and mixed count/stack costs.
 
-A native output channel borrows each sent value only until its callback returns.
-A callback that keeps a value must acquire its own typed owner. Its payload lives
+A native output channel's callback borrows each sent value until it returns.
+The typed send owns and releases the message; a callback that keeps it must
+acquire its own typed owner. The channel's payload lives
 after the channel header in one allocation. The transfer change removes an unused
 duplicate-function pointer; its native layout test requires 88 bytes, compared
 with the earlier measured 96-byte header. Final platform checks are pending.

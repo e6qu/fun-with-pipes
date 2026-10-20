@@ -64,15 +64,20 @@ on AMD64 are +72/+64/+144/+144/+4160 bytes in table order; ARM64 changes are
 instruction bytes. Inspecting the fresh-text binaries' actual disassembly:
 
 - AMD64 `exchange` (`f17`) keeps its 320-byte stack subtraction plus five saved
-  registers; `step` (`w7`) keeps 456 bytes plus four saved registers.
-- ARM64 `exchange` grows from a 336-byte frame to 352 bytes; `step` stays at
-  432 bytes. These ARM frame sizes include the saved registers.
+  registers. The executing loop is in `work` (`w0`), which keeps 584 bytes plus
+  six saved registers (632 bytes total, excluding the return address).
+- ARM64 `exchange` grows from a 336-byte frame to 352 bytes. `work` keeps
+  544 bytes: 448 local bytes plus 96 bytes for saved registers. These ARM frame
+  sizes include the saved registers.
 
 These are those functions' own frames, excluding callees and total task stacks.
 The transfer must keep a pending message protected until insertion or cleanup.
-No execution-time improvement is established, and no C/Rust peer was measured.
-The separate six-host ownership run still requires its test-expectation repairs
-and complete acceptance; a passing count experiment does not replace that gate.
+The standalone `step` wrapper also remains in the binary, but is not the loop's
+executed body. The generated loop already avoids allocating `Step` variants;
+its state tuple and the tuple passed to `exchange` still allocate. Those are
+separate costs from queue ownership. No execution-time improvement is established,
+and no C/Rust peer was measured. The separate six-host ownership run still needs
+complete acceptance; a passing count experiment does not replace that gate.
 
 ## Programs and inputs
 
@@ -102,7 +107,11 @@ returns a function that ignores its later argument and returns `value`.
 Run the explicit `channel-costs` suite in `numerics.yml`. It uses native Linux
 AMD64 and ARM64 runners, GCC, `-O2`, and both checked ARC and ordinary tracing
 builds. `compile_c` also supplies `-std=gnu11 -ffp-contract=off -w` and native
-runtime links. Artifacts identify the exact source, CPU, kernel and tool versions,
+runtime links. The workflow explicitly sets `FWP_LTO=0`, disabling link-time
+optimization. The recorded baseline and first transfer run also compiled without
+it: their C files are below the compiler's automatic size threshold of 1,000,000
+bytes. This keeps future counts independent of that threshold.
+Artifacts identify the exact source, CPU, kernel and tool versions,
 and retain fwp source, generated C, ordinary and instrumented binaries and actual
 ordinary-binary disassembly. They include ordinary binary file size in bytes.
 

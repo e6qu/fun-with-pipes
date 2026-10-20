@@ -145,13 +145,15 @@ caller's handlers. Its producer can install a handler inside its own step.
 Similarly, the server drains a returned iterator after the method returns; that
 iterator cannot use a method-local handler that has already ended.
 
-Received values belong to the caller or its response iterator. Sending a reply
-into a channel borrows it during delivery; a queue keeps an independent owner.
+Received values belong to the caller or its response iterator. A typed send
+transfers one reply owner into a queue, or keeps it alive until a native delivery
+callback returns and then releases it. A callback that saves the reply must
+acquire a separate owner.
 Closed channels, failed sends, cancelled calls and caught remote errors release
 their completed values. Earlier aliases remain usable. The
 [ownership contract](ownership.md#checked-grpc-clients-and-services) describes the
-checks and the remaining limits. HTTP/2 handlers, REST, MCP and browser entry
-are separate boundaries and remain outside this extension.
+checks and the remaining limits. HTTP/2 handlers, REST, MCP and browser entries
+have separate contracts in the [ownership guide](ownership.md#ownership-boundaries).
 
 ## What stays the same, and what changes
 

@@ -1,6 +1,6 @@
-/* A native output channel borrows sent values and independently owns the
- * request/connection it may outlive. Stages: success, closed channel, blocked
- * send cancellation, encode trap, request retain overflow, connection retain
+/* A native output callback borrows the message owned by its send. The channel
+ * independently owns the request/connection it may outlive. Stages: success,
+ * closed channel, blocked send cancellation, encode trap, request retain overflow, connection retain
  * overflow, and an independently retained value. */
 /* Queue transfers no longer need a duplicate callback: save one pointer. */
 _Static_assert(sizeof(fwp_chan)==88,"native channel header has unexpected size");
