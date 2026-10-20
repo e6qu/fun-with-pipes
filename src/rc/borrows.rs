@@ -90,7 +90,7 @@ fn recursive(id: FuncId, graph: &[BTreeSet<FuncId>]) -> bool {
 /// A flat record may be passed as separate borrowed fields. Nested aggregate
 /// reconstruction, function captures and resource-close lifetimes need their
 /// own representation proof.
-fn parameter_type(prog: &Program, ty: &MT) -> bool {
+pub(super) fn parameter_type(prog: &Program, ty: &MT) -> bool {
     fn leaf(prog: &Program, ty: &MT) -> bool {
         let plain = |ty| crate::tailrec::plain_data(&prog.shapes, ty, &mut HashSet::new());
         // Borrow the handle, not its queued values. The continuing owner keeps
@@ -114,7 +114,7 @@ fn parameter_type(prog: &Program, ty: &MT) -> bool {
         }
 }
 
-type ReadPath = (Local, Vec<u32>);
+pub(super) type ReadPath = (Local, Vec<u32>);
 
 fn read_path(e: &Expr) -> Option<ReadPath> {
     match e {
@@ -157,12 +157,22 @@ fn visit_children(e: &Expr, mut visit: impl FnMut(&Expr)) {
     }
 }
 
-fn reads(e: &Expr, out: &mut BTreeSet<ReadPath>) {
+pub(super) fn reads(e: &Expr, out: &mut BTreeSet<ReadPath>) {
     if let Some(path) = read_path(e) {
         out.insert(path);
     } else {
         visit_children(e, |child| reads(child, out));
     }
+}
+
+/// Reading another field of the same record does not keep this field's
+/// storage alive once the backend separates record fields.
+pub(super) fn retained_read(arg: &Expr, after: &BTreeSet<ReadPath>) -> bool {
+    read_path(arg).is_some_and(|(local, fields)| {
+        after
+            .iter()
+            .any(|(l, prefix)| *l == local && fields.starts_with(prefix))
+    })
 }
 
 /// Borrow only when every caller keeps the same counted value past the call.
@@ -195,11 +205,7 @@ fn continuing_owners(prog: &Program, live: &[bool]) -> Vec<Vec<bool>> {
                 }
             });
         }
-        read_path(arg).is_some_and(|(local, fields)| {
-            after
-                .iter()
-                .any(|(l, prefix)| *l == local && fields.starts_with(prefix))
-        })
+        retained_read(arg, after)
     }
     fn visit(prog: &Program, e: &Expr, after: &BTreeSet<ReadPath>, kept: &mut [Vec<bool>]) {
         match e {

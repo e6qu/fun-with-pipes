@@ -41,7 +41,9 @@ The runtime's peak accounted storage is unchanged; every ARC profile finishes wi
 and no collections. These counters exclude raw buffers, allocator metadata and
 stacks. Shared-message parameters still include a consumed message. The closed
 case is inlined and still creates an owned alias inside its loop. Neither cost
-is removed by changing the direct-call convention.
+is removed by changing the direct-call convention. The
+[local-borrow report](channel-local-borrows.md) measures the subsequent removal
+of the closed case's temporary owner.
 
 ## Actual binary changes
 
@@ -73,5 +75,6 @@ and 20 ordinary binaries. All 100 saved C/binary/disassembly hashes and every
 profile match the earlier channel-only source `d8c62e17`, whose focused run
 `39440052683` also passed. The combined source's integer-text lowering does not
 change these channel results. Reproduce the audit with
-`scripts/summarize-channel-costs.py`; the [handoff](../development-state.md)
-tracks the full production matrix.
+`scripts/summarize-channel-costs.py`.
+[PR #180](../roadmap-history.md#function-channel-borrows-and-integer-text-pr-180)
+records passing final production acceptance on all maintained platforms.

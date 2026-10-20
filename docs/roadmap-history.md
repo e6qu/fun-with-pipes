@@ -12,6 +12,28 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Function-channel borrows and integer text (PR #180)
+
+Direct calls can borrow a channel carrying functions while its original owner
+keeps the queue and callback data alive. In the measured fresh-function program,
+this removes one retain/release pair per message, with unchanged allocation and
+peak storage. Capture, cycle and resource-scope checks remain.
+
+`show | string.length` and eligible concatenations count integer characters
+without creating text. The equivalent-work C/Rust comparison still shows time
+and whole-process memory gaps. The [integer-text report](measurements/integer-text.md)
+retains timings, managed-allocation controls, RSS and actual machine code;
+[channel measurements](measurements/function-channel-borrows.md) record count,
+frame and binary changes. These are specific improvements, not removal of GC.
+
+[PR #180](https://github.com/e6qu/fun-with-pipes/pull/180) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39457866569)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39457866666)
+at `64cfa0081dab2f6b19b6157e844c49481749a605`; complete logs were audited.
+Squash merge `fe491a97466d9b6d972059553c95886ad850aacb` has the identical tree
+and a verified one-line message without trailers. Duplicate post-merge
+production `39470377254` and documentation `39470376880` were cancelled.
+
 ## Matched payload moves and direct-call borrows (PR #179)
 
 Matching a single-payload variant can transfer its owner into the arm. A direct

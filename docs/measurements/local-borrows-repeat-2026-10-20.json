@@ -1,0 +1,1810 @@
+{
+  "hosts": [
+    {
+      "measurementSource": "373aa1902c7329be58c15fadbd782a5ec79c97c0",
+      "measurementRun": 39468533196,
+      "programSource": "b15488ad0edc3780fcec9ed5e03a42092cf213d7",
+      "programRun": 39465380125,
+      "host": "ubuntu-latest",
+      "cpu": "AMD EPYC 7763 64-Core Processor",
+      "kernel": "Linux runnervmxehtw 7.0.0-1017-azure #17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+      "cCompiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+      "timeTool": "time (GNU Time) UNKNOWN",
+      "expectedOutput": "28518516\n",
+      "processMemory": {
+        "c": {
+          "peakRssKiB": [
+            1512,
+            1512,
+            1512
+          ],
+          "sha256": "94f9fcd83827743175ebb58275d532ff39bca86ecb72fbffaa3610103a42f7d9",
+          "fileBytes": 16040,
+          "textSectionBytes": 489,
+          "elfMachine": 62,
+          "textSectionSha256": "41097af1d239637c424e3e1313c72af5c1a2c30d690a2c53764d57bd2ada012a"
+        },
+        "rs": {
+          "peakRssKiB": [
+            1896,
+            2012,
+            2012
+          ],
+          "sha256": "0748ebba8f3aa052900dc86800a37d002460579e7192be828a5c1e6cbb49c857",
+          "fileBytes": 4538112,
+          "textSectionBytes": 242211,
+          "elfMachine": 62,
+          "textSectionSha256": "5def8e2c899ef5145846e1805243ae9ff179c5d5694df1fd2915a721c84d36f2"
+        },
+        "fwp": {
+          "peakRssKiB": [
+            1932,
+            2060,
+            1932
+          ],
+          "sha256": "d45a7c289bfd99b082c17926030760a28414e95c14d9e2c67bf74a4300abbd42",
+          "fileBytes": 61808,
+          "textSectionBytes": 25218,
+          "elfMachine": 62,
+          "textSectionSha256": "3c61a4beb8540ee49a875eedab816dfc1f12b875202ec5e00af74aef8a08ab1f"
+        }
+      },
+      "timing": {
+        "c": {
+          "samples": [
+            {
+              "round": 0,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 13160778,
+              "childCpuNs": 12918000
+            },
+            {
+              "round": 1,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 13195994,
+              "childCpuNs": 12950000
+            },
+            {
+              "round": 2,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 13203578,
+              "childCpuNs": 12981000
+            },
+            {
+              "round": 3,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 13055733,
+              "childCpuNs": 12842000
+            },
+            {
+              "round": 4,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 13011270,
+              "childCpuNs": 12794000
+            },
+            {
+              "round": 5,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 12921604,
+              "childCpuNs": 12712000
+            },
+            {
+              "round": 6,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 13238633,
+              "childCpuNs": 12868000
+            },
+            {
+              "round": 7,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 13608331,
+              "childCpuNs": 13195000
+            },
+            {
+              "round": 8,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 13189221,
+              "childCpuNs": 12888000
+            },
+            {
+              "round": 9,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 13037570,
+              "childCpuNs": 12799000
+            },
+            {
+              "round": 10,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 13159967,
+              "childCpuNs": 12946000
+            },
+            {
+              "round": 11,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 13013765,
+              "childCpuNs": 12798000
+            },
+            {
+              "round": 12,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 13205833,
+              "childCpuNs": 12910000
+            },
+            {
+              "round": 13,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 13110034,
+              "childCpuNs": 12853000
+            },
+            {
+              "round": 14,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 13334932,
+              "childCpuNs": 12982000
+            },
+            {
+              "round": 15,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 13019976,
+              "childCpuNs": 12786000
+            },
+            {
+              "round": 16,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 12915662,
+              "childCpuNs": 12697000
+            },
+            {
+              "round": 17,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 13262077,
+              "childCpuNs": 12956000
+            },
+            {
+              "round": 18,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 13395534,
+              "childCpuNs": 13008000
+            },
+            {
+              "round": 19,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 13352144,
+              "childCpuNs": 13062000
+            },
+            {
+              "round": 20,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 13183260,
+              "childCpuNs": 12949000
+            },
+            {
+              "round": 21,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 13215881,
+              "childCpuNs": 12998000
+            },
+            {
+              "round": 22,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 13115855,
+              "childCpuNs": 12897000
+            },
+            {
+              "round": 23,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 12968521,
+              "childCpuNs": 12750000
+            }
+          ],
+          "binarySha256": "94f9fcd83827743175ebb58275d532ff39bca86ecb72fbffaa3610103a42f7d9",
+          "medianWallNs": 13172019.0,
+          "medianChildCpuNs": 12903500.0
+        },
+        "rs": {
+          "samples": [
+            {
+              "round": 0,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14899570,
+              "childCpuNs": 14675000
+            },
+            {
+              "round": 1,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 15156537,
+              "childCpuNs": 14862000
+            },
+            {
+              "round": 2,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14845259,
+              "childCpuNs": 14619000
+            },
+            {
+              "round": 3,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 15130459,
+              "childCpuNs": 14802000
+            },
+            {
+              "round": 4,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 14878651,
+              "childCpuNs": 14647000
+            },
+            {
+              "round": 5,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 14813280,
+              "childCpuNs": 14597000
+            },
+            {
+              "round": 6,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14848956,
+              "childCpuNs": 14592000
+            },
+            {
+              "round": 7,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 14773586,
+              "childCpuNs": 14532000
+            },
+            {
+              "round": 8,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14938281,
+              "childCpuNs": 14718000
+            },
+            {
+              "round": 9,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 15309411,
+              "childCpuNs": 14897000
+            },
+            {
+              "round": 10,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 15095163,
+              "childCpuNs": 14856000
+            },
+            {
+              "round": 11,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 14895552,
+              "childCpuNs": 14677000
+            },
+            {
+              "round": 12,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14755833,
+              "childCpuNs": 14539000
+            },
+            {
+              "round": 13,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 14980901,
+              "childCpuNs": 14654000
+            },
+            {
+              "round": 14,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14929345,
+              "childCpuNs": 14692000
+            },
+            {
+              "round": 15,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 15399259,
+              "childCpuNs": 15060000
+            },
+            {
+              "round": 16,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 15956479,
+              "childCpuNs": 15614000
+            },
+            {
+              "round": 17,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 15208414,
+              "childCpuNs": 14873000
+            },
+            {
+              "round": 18,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14988365,
+              "childCpuNs": 14710000
+            },
+            {
+              "round": 19,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 14883560,
+              "childCpuNs": 14643000
+            },
+            {
+              "round": 20,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14849757,
+              "childCpuNs": 14624000
+            },
+            {
+              "round": 21,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 14937760,
+              "childCpuNs": 14669000
+            },
+            {
+              "round": 22,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 15113137,
+              "childCpuNs": 14866000
+            },
+            {
+              "round": 23,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 14891254,
+              "childCpuNs": 14669000
+            }
+          ],
+          "binarySha256": "0748ebba8f3aa052900dc86800a37d002460579e7192be828a5c1e6cbb49c857",
+          "medianWallNs": 14933552.5,
+          "medianChildCpuNs": 14676000.0
+        },
+        "fwp": {
+          "samples": [
+            {
+              "round": 0,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 22825868,
+              "childCpuNs": 22562000
+            },
+            {
+              "round": 1,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 15870397,
+              "childCpuNs": 15626000
+            },
+            {
+              "round": 2,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14001811,
+              "childCpuNs": 13789000
+            },
+            {
+              "round": 3,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 21949575,
+              "childCpuNs": 21712000
+            },
+            {
+              "round": 4,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 13817387,
+              "childCpuNs": 13597000
+            },
+            {
+              "round": 5,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 22501625,
+              "childCpuNs": 22263000
+            },
+            {
+              "round": 6,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14298545,
+              "childCpuNs": 14070000
+            },
+            {
+              "round": 7,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 22865161,
+              "childCpuNs": 22527000
+            },
+            {
+              "round": 8,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14465786,
+              "childCpuNs": 14220000
+            },
+            {
+              "round": 9,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 22803036,
+              "childCpuNs": 22507000
+            },
+            {
+              "round": 10,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 14339601,
+              "childCpuNs": 14117000
+            },
+            {
+              "round": 11,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 20651171,
+              "childCpuNs": 20419000
+            },
+            {
+              "round": 12,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 13865147,
+              "childCpuNs": 13631000
+            },
+            {
+              "round": 13,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 15067970,
+              "childCpuNs": 14776000
+            },
+            {
+              "round": 14,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 13886655,
+              "childCpuNs": 13618000
+            },
+            {
+              "round": 15,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 22289807,
+              "childCpuNs": 22034000
+            },
+            {
+              "round": 16,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 22654208,
+              "childCpuNs": 22393000
+            },
+            {
+              "round": 17,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 22912589,
+              "childCpuNs": 22595000
+            },
+            {
+              "round": 18,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 22873990,
+              "childCpuNs": 22617000
+            },
+            {
+              "round": 19,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 22779301,
+              "childCpuNs": 22529000
+            },
+            {
+              "round": 20,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 13892571,
+              "childCpuNs": 13677000
+            },
+            {
+              "round": 21,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 22739227,
+              "childCpuNs": 22488000
+            },
+            {
+              "round": 22,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 13885257,
+              "childCpuNs": 13655000
+            },
+            {
+              "round": 23,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 19901618,
+              "childCpuNs": 19667000
+            }
+          ],
+          "binarySha256": "d45a7c289bfd99b082c17926030760a28414e95c14d9e2c67bf74a4300abbd42",
+          "medianWallNs": 20276394.5,
+          "medianChildCpuNs": 20043000.0
+        }
+      },
+      "timingSamples": 24,
+      "warmups": 2,
+      "fwpOverPeer": {
+        "c": {
+          "medianWallNs": 1.5393535721441034,
+          "medianChildCpuNs": 1.5532994923857868
+        },
+        "rs": {
+          "medianWallNs": 1.3577743473965755,
+          "medianChildCpuNs": 1.365699100572363
+        }
+      },
+      "managedMemory": {
+        "ordinary": {
+          "profiles": [
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/ordinary",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "5f16aeb53e8400b252440b1246a25b626e3f8d08ec1ed4eaebae329d0a8253d3",
+          "sha256": "6ea01098331282f96aff2f1c895f7d763f9f24d5f6ca03112531fe017af3e0f4",
+          "fileBytes": 62048,
+          "textSectionBytes": 25650,
+          "elfMachine": 62,
+          "textSectionSha256": "626571d4748ab381cc001b2609098b6fc0f0d1a09c77eaa8e0d7e057a12ddba6"
+        },
+        "injected-allocation": {
+          "profiles": [
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16,
+              "collections": 0
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16,
+              "collections": 0
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16,
+              "collections": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/injected-allocation.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/injected-allocation",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "e34351f15a8889fb94e62072b018b22ba94b7dbe40d0ae85d59d37343b3a4ec1",
+          "sha256": "1de1de195a8b9b4a0acc6ecac820311dae22b94a55991cfe32015634b960966c",
+          "fileBytes": 62064,
+          "textSectionBytes": 26802,
+          "elfMachine": 62,
+          "textSectionSha256": "fd5cb511e4b077f4d0ef8e797f13297632f22f3c1f05017444c2c637f2eca512"
+        }
+      },
+      "sourceAuditSha256": "57c410b02f853a915afa3e97a021d46d01227724b07f762ab861ba10cf188f2c",
+      "scope": "Three or more fresh runs of the actual previously timed direct-counting C/Rust/fwp binaries, on the matching native architecture. GNU time records whole-process peak RSS in KiB, including startup, output and shutdown. Separate balanced rotating/reversed timing rounds record whole-process elapsed and child user+system CPU time with explicit warmups/sample count. Elapsed includes Python subprocess launch, input/output and shutdown; child CPU excludes parent and descheduled time. No recompilation occurs inside either timed interval. Every sample is retained. These memory runs are excluded from the timing comparison; RSS includes shared code/libraries and has page/accounting granularity. Separate instrumented GCC O2 builds of saved fwp C count managed requests, retains and peak/final charged bytes after constant initialization through cleanup. They exclude raw buffers, allocator metadata, stacks and libc. A single injected 16-byte leaf allocation must be detected. No C/Rust allocator-call count or peak-RSS improvement over older fwp is claimed."
+    },
+    {
+      "measurementSource": "373aa1902c7329be58c15fadbd782a5ec79c97c0",
+      "measurementRun": 39468533196,
+      "programSource": "b15488ad0edc3780fcec9ed5e03a42092cf213d7",
+      "programRun": 39465380125,
+      "host": "ubuntu-24.04-arm",
+      "cpu": "Neoverse-N2",
+      "kernel": "Linux runnervmidgih 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux",
+      "cCompiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+      "timeTool": "time (GNU Time) UNKNOWN",
+      "expectedOutput": "28518516\n",
+      "processMemory": {
+        "c": {
+          "peakRssKiB": [
+            1376,
+            1316,
+            1312
+          ],
+          "sha256": "0c2bcd1bd05ca8bf684623ce9cbe9904b102b2c9ba9e85fd306186d8dcbe88e4",
+          "fileBytes": 70320,
+          "textSectionBytes": 536,
+          "elfMachine": 183,
+          "textSectionSha256": "1c63eccdd2a521a6acd85f33f4f651cf6d2e10f9a279321aa8750936bc0eaf2e"
+        },
+        "rs": {
+          "peakRssKiB": [
+            1568,
+            1676,
+            1692
+          ],
+          "sha256": "d319a59fa1bfb4231e3321ff83692b1828853bbf869d53659eb3e5e75cca4319",
+          "fileBytes": 4620896,
+          "textSectionBytes": 218908,
+          "elfMachine": 183,
+          "textSectionSha256": "c14679de23adbf442e43e4d31cf7e0f55e5bf1e1d2ebdc2b45f8a43e61f86ddc"
+        },
+        "fwp": {
+          "peakRssKiB": [
+            1668,
+            1668,
+            1668
+          ],
+          "sha256": "d069cae6e1e84de46ce7817d6f7ea21647b7ea1dd6bf7dac9ebba0582b984b7a",
+          "fileBytes": 83440,
+          "textSectionBytes": 22908,
+          "elfMachine": 183,
+          "textSectionSha256": "edc448d919922e5e29ab24c88ec39eb867a91bcf6abeb2cd4b10962cbe3771e6"
+        }
+      },
+      "timing": {
+        "c": {
+          "samples": [
+            {
+              "round": 0,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 13972911,
+              "childCpuNs": 13639000
+            },
+            {
+              "round": 1,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 13972447,
+              "childCpuNs": 13651000
+            },
+            {
+              "round": 2,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14012895,
+              "childCpuNs": 13704000
+            },
+            {
+              "round": 3,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 14017295,
+              "childCpuNs": 13669000
+            },
+            {
+              "round": 4,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 13945711,
+              "childCpuNs": 13621000
+            },
+            {
+              "round": 5,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 13958455,
+              "childCpuNs": 13653000
+            },
+            {
+              "round": 6,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 13956967,
+              "childCpuNs": 13642000
+            },
+            {
+              "round": 7,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 13982599,
+              "childCpuNs": 13666000
+            },
+            {
+              "round": 8,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 13911719,
+              "childCpuNs": 13624000
+            },
+            {
+              "round": 9,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 13976351,
+              "childCpuNs": 13663000
+            },
+            {
+              "round": 10,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 14060743,
+              "childCpuNs": 13755000
+            },
+            {
+              "round": 11,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 13927231,
+              "childCpuNs": 13638000
+            },
+            {
+              "round": 12,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14004287,
+              "childCpuNs": 13695000
+            },
+            {
+              "round": 13,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 14009087,
+              "childCpuNs": 13673000
+            },
+            {
+              "round": 14,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 13941063,
+              "childCpuNs": 13643000
+            },
+            {
+              "round": 15,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 14020919,
+              "childCpuNs": 13695000
+            },
+            {
+              "round": 16,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 13933927,
+              "childCpuNs": 13634000
+            },
+            {
+              "round": 17,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 13996655,
+              "childCpuNs": 13694000
+            },
+            {
+              "round": 18,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14036959,
+              "childCpuNs": 13675000
+            },
+            {
+              "round": 19,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 13982791,
+              "childCpuNs": 13663000
+            },
+            {
+              "round": 20,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 13989055,
+              "childCpuNs": 13643000
+            },
+            {
+              "round": 21,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 13990263,
+              "childCpuNs": 13675000
+            },
+            {
+              "round": 22,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 13954975,
+              "childCpuNs": 13643000
+            },
+            {
+              "round": 23,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 14008191,
+              "childCpuNs": 13705000
+            }
+          ],
+          "binarySha256": "0c2bcd1bd05ca8bf684623ce9cbe9904b102b2c9ba9e85fd306186d8dcbe88e4",
+          "medianWallNs": 13982695.0,
+          "medianChildCpuNs": 13663000.0
+        },
+        "rs": {
+          "samples": [
+            {
+              "round": 0,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14788335,
+              "childCpuNs": 14480000
+            },
+            {
+              "round": 1,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 14810464,
+              "childCpuNs": 14488000
+            },
+            {
+              "round": 2,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14862839,
+              "childCpuNs": 14539000
+            },
+            {
+              "round": 3,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 14811559,
+              "childCpuNs": 14480000
+            },
+            {
+              "round": 4,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 14782512,
+              "childCpuNs": 14440000
+            },
+            {
+              "round": 5,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 14725359,
+              "childCpuNs": 14423000
+            },
+            {
+              "round": 6,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14809440,
+              "childCpuNs": 14487000
+            },
+            {
+              "round": 7,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 14774991,
+              "childCpuNs": 14473000
+            },
+            {
+              "round": 8,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14749199,
+              "childCpuNs": 14433000
+            },
+            {
+              "round": 9,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 14790208,
+              "childCpuNs": 14456000
+            },
+            {
+              "round": 10,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 14744063,
+              "childCpuNs": 14428000
+            },
+            {
+              "round": 11,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 14796936,
+              "childCpuNs": 14499000
+            },
+            {
+              "round": 12,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14761623,
+              "childCpuNs": 14457000
+            },
+            {
+              "round": 13,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 14823047,
+              "childCpuNs": 14522000
+            },
+            {
+              "round": 14,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14686264,
+              "childCpuNs": 14401000
+            },
+            {
+              "round": 15,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 14781007,
+              "childCpuNs": 14454000
+            },
+            {
+              "round": 16,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 14817927,
+              "childCpuNs": 14476000
+            },
+            {
+              "round": 17,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 14724343,
+              "childCpuNs": 14423000
+            },
+            {
+              "round": 18,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14777975,
+              "childCpuNs": 14446000
+            },
+            {
+              "round": 19,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 14863496,
+              "childCpuNs": 14537000
+            },
+            {
+              "round": 20,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14792472,
+              "childCpuNs": 14459000
+            },
+            {
+              "round": 21,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 14786863,
+              "childCpuNs": 14457000
+            },
+            {
+              "round": 22,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 14794736,
+              "childCpuNs": 14443000
+            },
+            {
+              "round": 23,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 14766791,
+              "childCpuNs": 14441000
+            }
+          ],
+          "binarySha256": "d319a59fa1bfb4231e3321ff83692b1828853bbf869d53659eb3e5e75cca4319",
+          "medianWallNs": 14787599.0,
+          "medianChildCpuNs": 14457000.0
+        },
+        "fwp": {
+          "samples": [
+            {
+              "round": 0,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14487239,
+              "childCpuNs": 14166000
+            },
+            {
+              "round": 1,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 14492559,
+              "childCpuNs": 14170000
+            },
+            {
+              "round": 2,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14443655,
+              "childCpuNs": 14116000
+            },
+            {
+              "round": 3,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 14566400,
+              "childCpuNs": 14263000
+            },
+            {
+              "round": 4,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 14475727,
+              "childCpuNs": 14117000
+            },
+            {
+              "round": 5,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 14495039,
+              "childCpuNs": 14200000
+            },
+            {
+              "round": 6,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14582911,
+              "childCpuNs": 14229000
+            },
+            {
+              "round": 7,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 14509120,
+              "childCpuNs": 14216000
+            },
+            {
+              "round": 8,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14509239,
+              "childCpuNs": 14199000
+            },
+            {
+              "round": 9,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 14574567,
+              "childCpuNs": 14255000
+            },
+            {
+              "round": 10,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 14498943,
+              "childCpuNs": 14161000
+            },
+            {
+              "round": 11,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 14489887,
+              "childCpuNs": 14193000
+            },
+            {
+              "round": 12,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14513216,
+              "childCpuNs": 14184000
+            },
+            {
+              "round": 13,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 14494639,
+              "childCpuNs": 14200000
+            },
+            {
+              "round": 14,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14442383,
+              "childCpuNs": 14111000
+            },
+            {
+              "round": 15,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 14472759,
+              "childCpuNs": 14155000
+            },
+            {
+              "round": 16,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 14529280,
+              "childCpuNs": 14218000
+            },
+            {
+              "round": 17,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 14533856,
+              "childCpuNs": 14176000
+            },
+            {
+              "round": 18,
+              "order": [
+                "c",
+                "rs",
+                "fwp"
+              ],
+              "wallNs": 14492815,
+              "childCpuNs": 14153000
+            },
+            {
+              "round": 19,
+              "order": [
+                "rs",
+                "fwp",
+                "c"
+              ],
+              "wallNs": 14546903,
+              "childCpuNs": 14222000
+            },
+            {
+              "round": 20,
+              "order": [
+                "fwp",
+                "c",
+                "rs"
+              ],
+              "wallNs": 14547303,
+              "childCpuNs": 14192000
+            },
+            {
+              "round": 21,
+              "order": [
+                "fwp",
+                "rs",
+                "c"
+              ],
+              "wallNs": 14443415,
+              "childCpuNs": 14115000
+            },
+            {
+              "round": 22,
+              "order": [
+                "c",
+                "fwp",
+                "rs"
+              ],
+              "wallNs": 14572711,
+              "childCpuNs": 14252000
+            },
+            {
+              "round": 23,
+              "order": [
+                "rs",
+                "c",
+                "fwp"
+              ],
+              "wallNs": 14476959,
+              "childCpuNs": 14167000
+            }
+          ],
+          "binarySha256": "d069cae6e1e84de46ce7817d6f7ea21647b7ea1dd6bf7dac9ebba0582b984b7a",
+          "medianWallNs": 14496991.0,
+          "medianChildCpuNs": 14188000.0
+        }
+      },
+      "timingSamples": 24,
+      "warmups": 2,
+      "fwpOverPeer": {
+        "c": {
+          "medianWallNs": 1.0367808923816189,
+          "medianChildCpuNs": 1.0384249432774646
+        },
+        "rs": {
+          "medianWallNs": 0.9803478576880533,
+          "medianChildCpuNs": 0.981393096769731
+        }
+      },
+      "managedMemory": {
+        "ordinary": {
+          "profiles": [
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/ordinary",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "5f16aeb53e8400b252440b1246a25b626e3f8d08ec1ed4eaebae329d0a8253d3",
+          "sha256": "de84f9605f863e860fa6d8dc6331c437b6837aca99dee8c83b3252b21987c187",
+          "fileBytes": 83680,
+          "textSectionBytes": 23436,
+          "elfMachine": 183,
+          "textSectionSha256": "f10ab290859ba43d45daadd54446250b0ba1060fd1722597a54dc17bca340f16"
+        },
+        "injected-allocation": {
+          "profiles": [
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16,
+              "collections": 0
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16,
+              "collections": 0
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16,
+              "collections": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/injected-allocation.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/scalar-memory-evidence/injected-allocation",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "e34351f15a8889fb94e62072b018b22ba94b7dbe40d0ae85d59d37343b3a4ec1",
+          "sha256": "83806bbc3f5f923ffdc3d3bc57af00bba047b5f73bec7f6d9774206ebcfcef34",
+          "fileBytes": 83696,
+          "textSectionBytes": 24332,
+          "elfMachine": 183,
+          "textSectionSha256": "db77c4742a89e536eab5b681e37b9b0e3f6a0175c1b5ba06f97cc6a160df95fc"
+        }
+      },
+      "sourceAuditSha256": "c02c26498fa7ffea42a05ddae470890b0078624aff709a3b0aa127ff1db7ff53",
+      "scope": "Three or more fresh runs of the actual previously timed direct-counting C/Rust/fwp binaries, on the matching native architecture. GNU time records whole-process peak RSS in KiB, including startup, output and shutdown. Separate balanced rotating/reversed timing rounds record whole-process elapsed and child user+system CPU time with explicit warmups/sample count. Elapsed includes Python subprocess launch, input/output and shutdown; child CPU excludes parent and descheduled time. No recompilation occurs inside either timed interval. Every sample is retained. These memory runs are excluded from the timing comparison; RSS includes shared code/libraries and has page/accounting granularity. Separate instrumented GCC O2 builds of saved fwp C count managed requests, retains and peak/final charged bytes after constant initialization through cleanup. They exclude raw buffers, allocator metadata, stacks and libc. A single injected 16-byte leaf allocation must be detected. No C/Rust allocator-call count or peak-RSS improvement over older fwp is claimed."
+    }
+  ]
+}

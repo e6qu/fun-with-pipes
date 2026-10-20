@@ -466,8 +466,10 @@ static V fwp_foreign_callback_get(uint32_t function, uint32_t parameter) {
 typedef struct fwp_handler {
     jmp_buf jb;
     struct fwp_handler *prev;
-    V value;
-    const fwp_desc *desc;
+    /* Written by fwp_fail after setjmp and read after longjmp. Keep these
+     * subobjects volatile; the unchanged links and saved depths need not be. */
+    volatile V value;
+    const fwp_desc *volatile desc;
     size_t state_depth;
     fwp_cleanup *cleanup;
 } fwp_handler;

@@ -326,8 +326,19 @@ An ARC case checks complete reclamation after an exchange fails. Passing those
 focused Linux checks and [binary measurements](measurements/channel-direct-borrows.md)
 show zero retains per fresh-text exchange; the handle extension also removes
 the fresh-function exchange's remaining retain. Allocations and peak charged
-storage are unchanged. Shared and closed cases keep their measured counts.
-Broader platform and final production acceptance remain tracked in the handoff.
+storage are unchanged; shared cases retain their measured costs.
+
+A temporary local name can also borrow the original storage directly. The
+compiler checks later reads through enclosing bindings and matches, so a
+temporary name inside a match's input can borrow a channel still needed in its
+selected arm. Another field's later use does not qualify. Consuming/unknown
+calls, escaping aliases and resource scopes keep their existing ownership.
+The [local-borrow measurements](measurements/channel-local-borrows.md) remove
+the closed-send loop's final retain and one of three shared-text retains,
+with unchanged allocations and peak charge.
+Native tests cover normal return, failure, cancellation, independent aliases and
+deliberately broken cleanup. Broader platform and final production acceptance
+remain tracked in the handoff.
 
 ### Functions stored in channels
 

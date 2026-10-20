@@ -1,0 +1,511 @@
+{
+  "source": "64cfa0081dab2f6b19b6157e844c49481749a605",
+  "run": 39457866569,
+  "job": 118749349711,
+  "host": "linux/x86_64",
+  "focusedSource": "37de5ba40970f7729bf735b347527f5628117dc0",
+  "cpu": "AMD EPYC 9V45 96-Core Processor",
+  "cCompiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+  "rustCompiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+  "settings": "fwp --gc tracing -O2, C cc -O2, Rust rustc -O; one warmup and six fresh-process samples in rotating C/Rust/fwp order; compilation excluded",
+  "scope": "Production repeat on another runner session of the same CPU model. All seven fwp executables and generated C files are byte-identical to the focused AMD64 evidence. RSS and managed counts were measured in a separate job, not these timing runs. No new implementation speedup or regression follows from timing differences between identical binaries.",
+  "programs": [
+    {
+      "program": "fib",
+      "medianProcessMs": {
+        "c": 10.939,
+        "rust": 20.407,
+        "fwp": 12.073
+      },
+      "processSamplesMs": {
+        "c": [
+          10.806,
+          10.973,
+          12.337,
+          16.19,
+          10.905,
+          10.791
+        ],
+        "rust": [
+          18.533,
+          18.748,
+          23.025,
+          22.067,
+          24.077,
+          18.607
+        ],
+        "fwp": [
+          11.65,
+          12.496,
+          8.835,
+          20.912,
+          11.359,
+          12.544
+        ]
+      },
+      "fwpOverC": 1.1036657829783345,
+      "fwpOverRust": 0.5916107218111433,
+      "files": {
+        "fib-c": {
+          "sha256": "ae736fce3ac88018bb92e5e742570caa6959c2dc983cf794d9ede18f9792d012",
+          "fileBytes": 15992,
+          "textSectionBytes": 1540,
+          "elfMachine": 62,
+          "textSectionSha256": "12f5b263cf9c00d6994910479f1419a573784b2f4f23aad378ac1fc18ff8564c"
+        },
+        "fib-source.c": {
+          "sha256": "f4e8e59d2b2a2d8261cbae1254038dfc1b1adfa4f7a62027a0e7e23143ec35af"
+        },
+        "fib-rs": {
+          "sha256": "09d6bd15ffc35febe9f45acea3c0e40d1ecc43f26bf6e5391242023d28c6e942",
+          "fileBytes": 4537784,
+          "textSectionBytes": 242035,
+          "elfMachine": 62,
+          "textSectionSha256": "4438c6467a280b00c7714cbe060041c091af013604f6102078d5148d7ae5e65a"
+        },
+        "fib-source.rs": {
+          "sha256": "8686b813d20111476775dcc1c8ca19b5443ca6e1c968caf5bb33875466b38feb"
+        },
+        "fib-fwp": {
+          "sha256": "4fb71cc7b725099581a759bb89a8b63e4d15f170e3fcf4ffc0575506f169aeda",
+          "fileBytes": 39256,
+          "textSectionBytes": 9586,
+          "elfMachine": 62,
+          "textSectionSha256": "2f0b51963a73f3e72ff3ab19ff8deb172a32dd513d63cbfe3b1d64ae25c4f78c"
+        },
+        "fib-source.fwp": {
+          "sha256": "f355a0193f3fc1ac38c993185fc5fbf255ed79cb0e21935e7306b82339d629a5"
+        },
+        "fib-generated.c": {
+          "sha256": "bfd527d3a4bda2a241f8000b489979a9e015bde718dcbf58d279c19dbf6ce344"
+        }
+      }
+    },
+    {
+      "program": "loop",
+      "medianProcessMs": {
+        "c": 57.31,
+        "rust": 69.242,
+        "fwp": 70.511
+      },
+      "processSamplesMs": {
+        "c": [
+          56.882,
+          57.654,
+          56.863,
+          57.027,
+          57.905,
+          57.592
+        ],
+        "rust": [
+          69.18,
+          68.313,
+          69.303,
+          69.16,
+          69.977,
+          69.423
+        ],
+        "fwp": [
+          69.563,
+          70.527,
+          74.834,
+          70.249,
+          70.495,
+          70.818
+        ]
+      },
+      "fwpOverC": 1.2303437445471994,
+      "fwpOverRust": 1.0183270269489615,
+      "files": {
+        "loop-c": {
+          "sha256": "167ff809619a3c92da183f397c536f495755104569fbeab6bb5efc0c1b946c30",
+          "fileBytes": 15968,
+          "textSectionBytes": 345,
+          "elfMachine": 62,
+          "textSectionSha256": "5e2c2fd121a8ad6dca54c370bc9a81eaa443a3b89caeb3111b082ee5868a74f5"
+        },
+        "loop-source.c": {
+          "sha256": "4cd663537f57bb18ba9245f201ec855052b4bc7918351b8ff3f1ff3ef606e20c"
+        },
+        "loop-rs": {
+          "sha256": "be6598f5cfdd88dc1294ae6417a4d0c61d2e41b17feaf5c35f434e29e2bef8b2",
+          "fileBytes": 4537896,
+          "textSectionBytes": 242211,
+          "elfMachine": 62,
+          "textSectionSha256": "5bd66a658d5f32ad053fec1c620f636b64f6d65aa1c88444668f62b8085e0434"
+        },
+        "loop-source.rs": {
+          "sha256": "e8227ad3408f53486a35d2d08bf9ceddd68cf5e68dd2c397b07c83c8584731c0"
+        },
+        "loop-fwp": {
+          "sha256": "93a1817191ef0fe43e2a35b7bacfd1c81c95f5f31e8d1c11c4f4144ff24f8bb6",
+          "fileBytes": 61648,
+          "textSectionBytes": 24514,
+          "elfMachine": 62,
+          "textSectionSha256": "18a6d8d204b969b15d32cd08145af370bbe1ab6f3c9c32b27a6e8d16d8cf1672"
+        },
+        "loop-source.fwp": {
+          "sha256": "9bdaa22b8a61325f5b441352434608acba2a272ace83f15a1a1dd063b1c6c365"
+        },
+        "loop-generated.c": {
+          "sha256": "fa7b08b96bd769a66042e8aa5b4fbf29c081dc12f884a9b0ffd1c27bbe5c2ae0"
+        }
+      }
+    },
+    {
+      "program": "map",
+      "medianProcessMs": {
+        "c": 282.278,
+        "rust": 240.721,
+        "fwp": 258.059
+      },
+      "processSamplesMs": {
+        "c": [
+          295.924,
+          283.16,
+          287.032,
+          279.259,
+          280.962,
+          281.396
+        ],
+        "rust": [
+          251.135,
+          246.498,
+          236.998,
+          237.44,
+          240.341,
+          241.102
+        ],
+        "fwp": [
+          259.906,
+          256.213,
+          265.019,
+          253.415,
+          253.931,
+          261.483
+        ]
+      },
+      "fwpOverC": 0.9142016026753768,
+      "fwpOverRust": 1.0720252906892211,
+      "files": {
+        "map-c": {
+          "sha256": "f4300eb2b4af54dd579acc84f9d7bdaac68c8696e009b62d3fccb59c5170c5fb",
+          "fileBytes": 16120,
+          "textSectionBytes": 633,
+          "elfMachine": 62,
+          "textSectionSha256": "af980adc4e6ef4cbfd601f90cb40eb7f69f9c340706f0e02dc8077ffb13f748c"
+        },
+        "map-source.c": {
+          "sha256": "f4ec5f7877e0d9718174e1900a89dd215eb8c3058c3e4397a45f471da6cfd5ee"
+        },
+        "map-rs": {
+          "sha256": "a0103293322c57aa73e3cfb14c3cbe1efc17688e4e6aed5f29bf4791866f08e7",
+          "fileBytes": 4543344,
+          "textSectionBytes": 246243,
+          "elfMachine": 62,
+          "textSectionSha256": "75c6e74d05f618ea6a95dcc34d35e382c03380233eb943bd1ec07ea3063593dc"
+        },
+        "map-source.rs": {
+          "sha256": "ce78c2e0df3778070af8b6a3ef27b9e8aa3ae0788fb2032c33c1a6fee036039c"
+        },
+        "map-fwp": {
+          "sha256": "301ef0153723d2b02af3f57712464044097dfd544288b8c61a631b097266faf2",
+          "fileBytes": 70768,
+          "textSectionBytes": 30850,
+          "elfMachine": 62,
+          "textSectionSha256": "af349c862b24d9d2685ff7db4ebb075ae6a09b2b6cf0dd8f4a0cd0259659145b"
+        },
+        "map-source.fwp": {
+          "sha256": "d5caa814fbf1fef79b86429c13c764c60fef2c8fe20eefdb9415f431b550f00b"
+        },
+        "map-generated.c": {
+          "sha256": "eac717c865714b26359b9a9d58fc74fd0052ab70d4d30ac46ef7b0b1515ffc12"
+        }
+      }
+    },
+    {
+      "program": "pipeline",
+      "medianProcessMs": {
+        "c": 14.697,
+        "rust": 10.779,
+        "fwp": 8.444
+      },
+      "processSamplesMs": {
+        "c": [
+          14.954,
+          14.736,
+          14.738,
+          13.878,
+          14.318,
+          14.658
+        ],
+        "rust": [
+          10.645,
+          10.558,
+          9.791,
+          10.913,
+          11.758,
+          10.987
+        ],
+        "fwp": [
+          15.18,
+          8.165,
+          8.53,
+          14.207,
+          8.359,
+          7.965
+        ]
+      },
+      "fwpOverC": 0.5745390215690278,
+      "fwpOverRust": 0.7833750811763616,
+      "files": {
+        "pipeline-c": {
+          "sha256": "1678a74d7a43ad983b00cb4a74caff962ff9cb05342ca38b63e19443ee095762",
+          "fileBytes": 16048,
+          "textSectionBytes": 457,
+          "elfMachine": 62,
+          "textSectionSha256": "84c94dec3b95ed31e6faa1bf3425c9deb059a6a5f2996b5a1e041658448edcb0"
+        },
+        "pipeline-source.c": {
+          "sha256": "c978deaa089f0e837cd5601e9d142368afcc7cf28a23963ebd6449c918c1bc41"
+        },
+        "pipeline-rs": {
+          "sha256": "2ab20f101fe18c0b609211d54db8e1c4d0634d4d7af326fc1f7377c1f2778d9d",
+          "fileBytes": 4538088,
+          "textSectionBytes": 242387,
+          "elfMachine": 62,
+          "textSectionSha256": "7843c966302652c0ccc76e5724406efcdaafcacc68768f9d1be4575b5961942e"
+        },
+        "pipeline-source.rs": {
+          "sha256": "8cb2b664d27bb078331d981f525ff9a504388943e19cbc4947a99b2f78e3fccb"
+        },
+        "pipeline-fwp": {
+          "sha256": "712d61132792a9da4b928a7ed27bc76bc538af07cbe9072f4784e0ae8e73a9fd",
+          "fileBytes": 62168,
+          "textSectionBytes": 25682,
+          "elfMachine": 62,
+          "textSectionSha256": "e96a52601a18cf2f1b0b425f02f3cdde438bf69aa561fa4b7101ca81a91631c2"
+        },
+        "pipeline-source.fwp": {
+          "sha256": "67f2496bf898971c60fc854ca1bd52889902ba8edc817788977f3501ee184456"
+        },
+        "pipeline-generated.c": {
+          "sha256": "7280f1d534820da89825e9613ed50a050a0b95b22e43e911503e80c5a26e5d79"
+        }
+      }
+    },
+    {
+      "program": "range-set",
+      "medianProcessMs": {
+        "c": 8.928,
+        "rust": 8.839,
+        "fwp": 9.191
+      },
+      "processSamplesMs": {
+        "c": [
+          8.821,
+          9.078,
+          9.0,
+          8.467,
+          8.937,
+          8.919
+        ],
+        "rust": [
+          8.942,
+          9.15,
+          8.728,
+          8.507,
+          9.178,
+          8.736
+        ],
+        "fwp": [
+          9.139,
+          9.176,
+          9.206,
+          9.029,
+          9.286,
+          9.245
+        ]
+      },
+      "fwpOverC": 1.0294578853046594,
+      "fwpOverRust": 1.03982350944677,
+      "files": {
+        "range-set-c": {
+          "sha256": "bfe66c1daf8321835766a6518c9b800f2a695b45d93538fa09a05fbad81869d9",
+          "fileBytes": 16048,
+          "textSectionBytes": 409,
+          "elfMachine": 62,
+          "textSectionSha256": "cbc0512251ba20e3d561edfb0b94e872d60e09e531827e0b640cd31337aae84d"
+        },
+        "range-set-source.c": {
+          "sha256": "c875255b715d55852c713a513c171f45960ae0930cdabfd5cc42dcc6169571a4"
+        },
+        "range-set-rs": {
+          "sha256": "4b8f85ad9af49b00fd84a5289b988e1a7d471d416f85acea124f2cc1b692786e",
+          "fileBytes": 4537696,
+          "textSectionBytes": 242147,
+          "elfMachine": 62,
+          "textSectionSha256": "bf5ca74ca5751674c07bc1e5fd67358f4a037a78cac99f09714ab620993ee1e2"
+        },
+        "range-set-source.rs": {
+          "sha256": "530f3958e4c5a58e0f4eca27c48859875cf9e20c62a2ceed6ba2bb9cf0b4e5b6"
+        },
+        "range-set-fwp": {
+          "sha256": "531017baac80b31aa82375a212274332a0b312d1494a6ea02241816aa9cc6008",
+          "fileBytes": 52416,
+          "textSectionBytes": 18530,
+          "elfMachine": 62,
+          "textSectionSha256": "99cd8cd72a1026f80432244064543d6e494e53afbcaf51998ffe525891b010bd"
+        },
+        "range-set-source.fwp": {
+          "sha256": "b18037978057f904f2af9d3911471180886b4e2d99e441c3b5e4d488abad9bce"
+        },
+        "range-set-generated.c": {
+          "sha256": "69758fe3fea5b181b5f31ec20a8299b7cf914fc7a3a46167c9d1065ecb2a0b92"
+        }
+      }
+    },
+    {
+      "program": "strings",
+      "medianProcessMs": {
+        "c": 73.452,
+        "rust": 87.223,
+        "fwp": 8.774
+      },
+      "processSamplesMs": {
+        "c": [
+          92.89,
+          72.43,
+          75.349,
+          73.171,
+          73.734,
+          72.893
+        ],
+        "rust": [
+          89.781,
+          87.023,
+          88.586,
+          85.866,
+          87.423,
+          86.804
+        ],
+        "fwp": [
+          8.652,
+          8.584,
+          8.896,
+          8.523,
+          12.596,
+          12.273
+        ]
+      },
+      "fwpOverC": 0.11945215923324075,
+      "fwpOverRust": 0.10059273356798092,
+      "files": {
+        "strings-c": {
+          "sha256": "8db181cb67b68abded8e3d19ce875432a5a8a73569b15f462ddba379325e9bf3",
+          "fileBytes": 16112,
+          "textSectionBytes": 409,
+          "elfMachine": 62,
+          "textSectionSha256": "69956d690bc3681524f58fee9836fb78e7a2b45adfc5e756deb8e2ecea63daac"
+        },
+        "strings-source.c": {
+          "sha256": "cc33677fa6cfca033b5704c58b7adb3c203225fc8ddd65e59b9992cb769a94c1"
+        },
+        "strings-rs": {
+          "sha256": "26c8e594461ccf142c69a5484dde8163a54517bfe80ed79e8cf8fa356758e818",
+          "fileBytes": 4540016,
+          "textSectionBytes": 243011,
+          "elfMachine": 62,
+          "textSectionSha256": "e5bfcf0e2642beceeeae035ba694571724d0ec0fb21b6e0b0e1233c56e2f5154"
+        },
+        "strings-source.rs": {
+          "sha256": "1ff725f04caaddffe45e3e9f297483aa5ffbc286c45ac6641e52dcd9a2d6b132"
+        },
+        "strings-fwp": {
+          "sha256": "6ee69fdb0d1e8e103f6a8265010e08419ca569552ae7735db9960d999000d444",
+          "fileBytes": 61800,
+          "textSectionBytes": 25218,
+          "elfMachine": 62,
+          "textSectionSha256": "3c61a4beb8540ee49a875eedab816dfc1f12b875202ec5e00af74aef8a08ab1f"
+        },
+        "strings-source.fwp": {
+          "sha256": "92583f3601f22be8045078ca167e07a9a3f709ae71e14f062116e64c6533b21c"
+        },
+        "strings-generated.c": {
+          "sha256": "8a1da8da8603681eed52cd8b9fbb0cedf13e5e9d8678133843ed5ddb59ce34a4"
+        }
+      }
+    },
+    {
+      "program": "text-length",
+      "medianProcessMs": {
+        "c": 7.902,
+        "rust": 9.54,
+        "fwp": 8.913
+      },
+      "processSamplesMs": {
+        "c": [
+          7.756,
+          7.744,
+          7.835,
+          7.969,
+          8.337,
+          8.227
+        ],
+        "rust": [
+          9.17,
+          9.259,
+          9.485,
+          9.596,
+          9.903,
+          9.859
+        ],
+        "fwp": [
+          8.387,
+          7.989,
+          11.833,
+          12.485,
+          9.183,
+          8.643
+        ]
+      },
+      "fwpOverC": 1.1279422930903569,
+      "fwpOverRust": 0.9342767295597485,
+      "files": {
+        "text-length-c": {
+          "sha256": "94f9fcd83827743175ebb58275d532ff39bca86ecb72fbffaa3610103a42f7d9",
+          "fileBytes": 16040,
+          "textSectionBytes": 489,
+          "elfMachine": 62,
+          "textSectionSha256": "41097af1d239637c424e3e1313c72af5c1a2c30d690a2c53764d57bd2ada012a"
+        },
+        "text-length-source.c": {
+          "sha256": "2e8d9de8c0fa10bf3172c7029d9c7319aae9e0bbb13b3fc2361a6e22be86c815"
+        },
+        "text-length-rs": {
+          "sha256": "0748ebba8f3aa052900dc86800a37d002460579e7192be828a5c1e6cbb49c857",
+          "fileBytes": 4538112,
+          "textSectionBytes": 242211,
+          "elfMachine": 62,
+          "textSectionSha256": "5def8e2c899ef5145846e1805243ae9ff179c5d5694df1fd2915a721c84d36f2"
+        },
+        "text-length-source.rs": {
+          "sha256": "948e348cda6c6acc7eaec530d4cf0af2758d9e0fbbbc889ec599213ce0eb4fc0"
+        },
+        "text-length-fwp": {
+          "sha256": "d45a7c289bfd99b082c17926030760a28414e95c14d9e2c67bf74a4300abbd42",
+          "fileBytes": 61808,
+          "textSectionBytes": 25218,
+          "elfMachine": 62,
+          "textSectionSha256": "3c61a4beb8540ee49a875eedab816dfc1f12b875202ec5e00af74aef8a08ab1f"
+        },
+        "text-length-source.fwp": {
+          "sha256": "074b69671f133cdecfda7fe113f89c4f5953f1507f88e9d9cb4ed819c6c3963a"
+        },
+        "text-length-generated.c": {
+          "sha256": "8a1da8da8603681eed52cd8b9fbb0cedf13e5e9d8678133843ed5ddb59ce34a4"
+        }
+      }
+    }
+  ]
+}

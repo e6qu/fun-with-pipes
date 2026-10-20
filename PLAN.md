@@ -94,16 +94,17 @@ outside the benchmark suite.
    WebAssembly acceptance. Explicit weak handles remain a proposal. Prefer
    borrowing and scoped cleanup; distinguish a definite cycle from a missing proof.
    Reject unproved retention rather than silently use tracing.
-2. Deliver [function-channel borrowing](docs/measurements/function-channel-borrows.md)
-   and [integer text elimination](docs/measurements/integer-text.md), with full
-   production acceptance. Focused Linux checks and memory measurements pass on
-   both architectures. The equivalent-work C/Rust comparison retains measured
-   timing gaps and whole-process storage costs.
-   [The accepted baseline](docs/roadmap-history.md#matched-payload-moves-and-direct-call-borrows-pr-179)
-   moves eligible matched payloads and borrows direct-call inputs when callers
-   still need the same counted storage afterward. Borrowing does not remove all
-   sharing costs. Resource-owning tail frames and mutual recursion need separate
-   proofs.
+2. Deliver [borrowing through temporary names](docs/measurements/channel-local-borrows.md)
+   and the associated failure/task-scope cleanup repair. Focused Linux evidence
+   removes the closed-send loop's redundant retain and one of three shared-text
+   retains. All five channel cases and actual binaries are audited on Linux
+   ARM64/AMD64; final production checks remain required.
+   [Accepted PR #180](docs/roadmap-history.md#function-channel-borrows-and-integer-text-pr-180)
+   already borrows function-channel inputs and eliminates eligible integer text.
+   Its equivalent-work C/Rust comparison retains timing gaps and whole-process
+   storage costs. Saved-binary repeats confirm variable AMD64 CPU time;
+   investigate the remaining gap without discarding slower samples.
+   Resource-owning tail frames and mutual recursion need separate proofs.
 3. Use representative applications and equivalent-work measurements to select
    the next costs to remove: dynamic closures/calls, input copies, container
    layout, numerical workspace and derivative recording. Use the accepted

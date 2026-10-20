@@ -235,8 +235,10 @@ struct fwp_task {
 };
 
 typedef struct fwp_scope {
-    fwp_task **tasks;
-    size_t n, cap;
+    /* Spawn updates these after the scope's setjmp. Failure must still see
+     * every child so it can cancel, join and release them after longjmp. */
+    fwp_task **volatile tasks;
+    volatile size_t n, cap;
     struct fwp_scope *prev;
 } fwp_scope;
 
