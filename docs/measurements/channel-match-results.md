@@ -75,7 +75,7 @@ Generated C receives tag and payload directly and calls the known transformation
 without constructing their partial-application objects. Actual disassembly
 establishes the frame measurements; inspecting C alone would not establish them.
 
-## Correctness checks and remaining acceptance
+## Correctness and acceptance
 
 Both focused jobs pass 17 checks with none ignored or filtered, including
 callback-effect tests, type-checker snapshots, ordered
@@ -85,7 +85,9 @@ Tracing runs use GC stress, GC verification and reuse verification. ARC runs
 physically release storage and reject those tracing/retained-storage options.
 Revision tag `roadmap/revision-channel-match-7a0c93ef` preserves the measured source.
 The final delivery also includes the tacit example in the native/GC/WASI golden
-program. All nine final-head production gates and documentation remain required.
+program. All nine final-head production gates and documentation pass;
+[PR #178's record](../roadmap-history.md#direct-matches-and-callbacks-pr-178)
+identifies the tested and identical merged trees.
 
 Two earlier focused runs failed because the new test incorrectly enabled those
 options for ARC. Both complete logs were reviewed, the settings were corrected,

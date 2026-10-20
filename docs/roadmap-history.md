@@ -12,6 +12,27 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Direct matches and callbacks (PR #178)
+
+A match on a temporary tuple can test the relevant field directly, after
+evaluating every field once in order. This exposes known callback calls and
+receives whose tag and payload can stay in locals. Ignored constants still
+evaluate and trap; whole-tuple uses and original resource scopes stay protected.
+
+[The five-program comparison](measurements/channel-match-results.md) measures
+three fewer allocations per fresh-function message and two fewer per
+shared-function message, with one fewer retain each. The other cases are
+unchanged. Exchange frames shrink on both architectures; the report keeps
+ARM64 layout growth. These counts do not establish a timing or C/Rust improvement.
+
+[PR #178](https://github.com/e6qu/fun-with-pipes/pull/178) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39397311012)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39397297724)
+on `732984c3fb6b8646f6f3ee4932c123eadb7f3555`; all complete logs were audited.
+The user's merge `2ee0159b941d7887d70f5d86342cfad08e4e35c2` has the same tree
+and a one-line message without trailers. Only duplicate post-merge production
+`39417022563` was cancelled; post-merge documentation had already passed.
+
 ## Receive results without temporary wrappers (PR #177)
 
 Immediately matched receives can keep the `Option` tag and message in local

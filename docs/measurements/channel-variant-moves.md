@@ -84,9 +84,13 @@ unchanged. Preserve these increases alongside the count savings.
 Both focused Linux jobs pass all 21 checks, none ignored or filtered.
 [The audited report](channel-variant-move-counts-2026-10-20.json) records all 180
 samples and 20 ordinary binaries, their C and disassembly. The passing run
-reproduces every count and code hash inspected above. Broader native/WebAssembly
-ownership checks and final production acceptance remain required; follow the
-[handoff](../development-state.md).
+reproduces every count and code hash inspected above.
+[Broader ownership checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39402978160)
+pass on all six native platforms and both WebAssembly hosts at `a59328d765adab49b2faead775f8237f0eec7b82`,
+whose compiler, runtime, tests and workflows match the measured source.
+Each Unix host passes 214 checks, each Windows host 215, and each WebAssembly host
+18, none ignored or filtered. All eight complete logs were audited.
+Final production acceptance remains required; follow the [handoff](../development-state.md).
 
 The first focused run failed because only the scalar test function was reachable
 from its entry point; the compiler correctly omitted the other two functions.

@@ -471,7 +471,8 @@ without increasing and immediately decreasing its count. Another live owner of
 resource slots retain their existing lowering. The compiler keeps the original
 remaining expression nodes so failure-cleanup plans still identify their scopes.
 [Focused checks and measurements](measurements/channel-variant-moves.md) pass
-on Linux ARM64/AMD64. Broader acceptance remains tracked in the
+on Linux ARM64/AMD64; broader ownership checks pass on all six native platforms
+and both WebAssembly hosts. Final production acceptance is tracked in the
 [handoff](development-state.md).
 
 A function used as a value may receive a boxed record even when its compiled

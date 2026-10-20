@@ -283,7 +283,8 @@ which channels or function captures checked ARC accepts.
 fresh-text/fresh-function/shared-text message and two per shared-function message.
 Allocations and peak charged storage are unchanged. Focused Linux checks pass,
 including independent aliases and a deliberately leaked-owner control. Broader
-acceptance is tracked in the [handoff](development-state.md).
+ownership checks pass on all six native platforms and both WebAssembly hosts.
+Final production acceptance is tracked in the [handoff](development-state.md).
 
 ### Functions stored in channels
 

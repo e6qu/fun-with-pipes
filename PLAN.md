@@ -89,45 +89,26 @@ outside the benchmark suite.
 ### Immediate priorities
 
 1. Extend [cycle-safe ownership contracts](docs/ownership.md#proposed-cycle-policy)
-   against subscriptions, channel workers, cancelled tasks and cyclic data graphs.
-   Acyclic nested channel types now have native and WebAssembly acceptance,
-   including queued owners, aliases, failure and cancellation. Persistent
-   subscriptions and unknown retained captures still need ownership contracts.
-   The [queued-function proof](docs/ownership.md#functions-stored-in-channels)
-   passed native, WebAssembly and full production checks in
-   [PR #175](docs/roadmap-history.md#function-queues-and-cheaper-sends-pr-175), together
-   with consuming sends and temporary argument-tuple removal. Its measured count
-   savings do not remove all channel costs. [PR #176](docs/roadmap-history.md#loop-state-and-known-function-calls-pr-176)
-   keeps eligible loop state in locals and calls known function aliases directly.
-   Both its full acceptance and [PR #177's receive-wrapper removal](docs/roadmap-history.md#receive-results-without-temporary-wrappers-pr-177)
-   pass. [Counts and binary inspection](docs/measurements/channel-receive-results.md)
-   retain the allocation savings, remaining ARC/function-message costs, stack
-   growth and tracing-layout cost. The next delivery simplifies locally built
-   tuples before pattern matching, exposing known callbacks and direct receives
-   while preserving field evaluation order. [The measured result](docs/measurements/channel-match-results.md)
-   removes three allocations per fresh-function message and two per shared-function
-   message, with one fewer retain each. Focused checks pass; finish full platform
-   acceptance before treating this delivery as supported. Independently prepared
-   [variant payload moves](docs/measurements/channel-variant-moves.md) remove
-   adjacent retain/releases and pass focused Linux checks; complete their broader
-   ownership checks before the next delivery. A channel retain remains at each
-   measured fresh-message call; borrowing across that call needs a separate proof.
-   Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
-   an implemented API. Reject unproved retention rather than silently use tracing.
-   Distinguish a definite cycle from a missing proof.
-2. Use the accepted numeric representation changes as measured baselines.
-   [Compact key-only sets](docs/roadmap-history.md#compact-set-storage-pr-172)
-   and [direct integer range sets](docs/roadmap-history.md#direct-integer-range-sets-pr-173)
-   passed all production gates. [Numeric hashing and direct integer output](docs/roadmap-history.md#numeric-hashing-and-integer-output-pr-174)
-   also passed, including the GCC aliasing repair and refreshed correctness,
-   allocation and machine-code evidence. Retain mixed timing results and C/Rust gaps in
-   [the measurements](docs/benchmarks.md#numeric-hash-specialization). The
-   [mixed-tail-recursion delivery](docs/roadmap-history.md#mixed-tail-recursion-pr-171)
-   passed; resource-owning tail frames and mutual recursion need separate proofs.
+   for persistent subscriptions, retained resource captures and cyclic data graphs.
+   Nested channels and selected queued functions already have native and
+   WebAssembly acceptance. Explicit weak handles remain a proposal. Prefer
+   borrowing and scoped cleanup; distinguish a definite cycle from a missing proof.
+   Reject unproved retention rather than silently use tracing.
+2. Finish production acceptance for [moving matched variant payloads](docs/measurements/channel-variant-moves.md).
+   Focused counts, six native ownership suites and both WebAssembly suites pass.
+   [The accepted baseline](docs/roadmap-history.md#direct-matches-and-callbacks-pr-178)
+   already removes temporary receive wrappers, loop-state tuples and eligible
+   callback objects. The new moves save retains, with unchanged allocations and
+   mixed binary-size results. The remaining channel retain across each measured
+   fresh-message call needs a caller/callee borrowing contract, including failure
+   and cancellation cleanup. Resource-owning tail frames and mutual recursion also
+   need separate proofs.
 3. Use representative applications and equivalent-work measurements to select
    the next costs to remove: dynamic closures/calls, input copies, container
-   layout, numerical workspace and derivative recording. Investigate known
-   timing regressions before claiming a performance improvement.
+   layout, numerical workspace and derivative recording. Use the accepted
+   [numeric representation measurements](docs/benchmarks.md#numeric-hash-specialization)
+   as baselines, preserving mixed timings and C/Rust gaps. Investigate known
+   regressions before claiming a performance improvement.
 
 All seven work areas remain open. The syntax and native-platform foundations
 are implemented; the main remaining work is ownership, representation,

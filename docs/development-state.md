@@ -2,104 +2,77 @@
 
 ## Next action
 
-Next: finish [PR #178](https://github.com/e6qu/fun-with-pipes/pull/178) on
-`simplify-local-match-inputs`. Final head is `732984c3fb6b8646f6f3ee4932c123eadb7f3555`.
-Production `39397311012` has all nine jobs: benchmark and ARM macOS GC pass; seven platform
-jobs are active. Documentation `39397297724` passes. The completed logs were
-audited in `/private/tmp/fwp-178-acceptance.json` (5.91s). Audit every job and fix every failure. Merge only after exact-head
-acceptance, with an explicit one-line subject of at most 80 characters and empty
-body. Keep this head stable while healthy gates run.
-
-Independent preparation is in `/private/tmp/fwp-variant-moves`, branch
-`move-matched-variant-owners`. Measured source `eecb4b5c11246e6b9223bd7eda84f7857daeef30`
-is preserved by `roadmap/revision-variant-moves-eecb4b5c`. It transfers a sole
-payload already held in local variant fields, removing an adjacent retain/drop
-pair outside protected resource slots. No second PR exists: finish #178 first.
-
-Focused repair run `39399972415` passes both Linux hosts: 21 checks each, none
-ignored or filtered. The 180 samples and 20 ordinary binaries are audited (1.80s),
-and reproduce all previously inspected counts/code hashes (0.13s). Log audit:
-`/private/tmp/fwp-variant-repair-audit.json`; final artifacts:
-`/private/tmp/fwp-variant-final-costs`. The next delivery's report is
-`docs/measurements/channel-variant-moves.md` in the preparation worktree.
-It records retain savings, unchanged allocation/peak-charge counts, smaller
-exchange frames and the mixed binary-size results. No timing or C/Rust claim.
-
-First focused run `39398766302` failed only because two test functions were
-unreachable and correctly omitted from C. The fixture now references all three
-result forms; its three-move assertion stays intact. Both full logs were audited.
-Five completed native jobs of broader run `39398786993` show only this same
-fixture failure; both WASI jobs pass. Audit the last Intel macOS job, then rerun
-the broader suite on the repaired source. Receipt:
-`/private/tmp/fwp-variant-first-proof-audit.json`. Do not treat failed runs as acceptance.
-
-Guarded formatting passes (1.58s). The disk guard stopped one download below
-64 GiB; no limit was raised. Verified old Actions download `39063863085` was
-removed only after confirming all six remote artifacts remain available. Recovery
-receipt: `/private/tmp/fwp-removed-download-39063863085.json`. The duplicate
-provisional #178 download was removed after checking 100 final-artifact hashes.
-The guarded final download then passed (6.07s); no local build was run.
-Keep local status updates for the next delivery instead of restarting healthy CI.
+Next: publish `move-matched-variant-owners` as the next delivery PR, then audit
+all nine final-head production jobs and documentation. Fix every failure before
+squash merge; use an explicit one-line subject of at most 80 characters and empty
+body. Worktree: `/private/tmp/fwp-variant-moves`. No second delivery PR is open.
+Keep the final head stable while healthy gates run; record status here locally.
 
 ## Accepted baseline
 
-The user merged PR #177 as `44f9eb6eeb787df378b159b33f113bffd69b216e`.
-Its tree equals tested head `a5828518f92da3112fde13157a0dcc964d6c3cb9`; the
-merge message is one line without trailers. All nine production jobs `39374128066`
-and documentation `39374119890` pass. PR #176's retained production `39371117507`
-and documentation `39371117707` also pass. All 20 complete logs were audited
-(37.42s), with hashes in `/private/tmp/fwp-176-177-acceptance.json`.
-Only duplicate post-merge #177 production `39393021237` was cancelled;
-post-merge documentation `39393021033` passed before cancellation was attempted.
-[History](roadmap-history.md) records both completed deliveries.
+The user merged [PR #178](https://github.com/e6qu/fun-with-pipes/pull/178) as
+`2ee0159b941d7887d70f5d86342cfad08e4e35c2`. Its tree equals tested head
+`732984c3fb6b8646f6f3ee4932c123eadb7f3555`; the message is one line without
+trailers. All nine production jobs `39397311012` and documentation `39397297724`
+pass. All ten complete logs were audited; receipt:
+`/private/tmp/fwp-178-acceptance.json`. Only duplicate post-merge production
+`39417022563` was cancelled; post-merge documentation passed.
+[History](roadmap-history.md#direct-matches-and-callbacks-pr-178) records the change.
 
-## Current delivery
+## Current change and evidence
 
-Local tuple matches now evaluate nontrivial fields once, in order, before
-matching the relevant field directly. This exposes existing direct-call and
-receive-wrapper removal. Original resource scopes and checked field types remain
-protected; whole-tuple uses and multiple tested fields keep their existing lowering.
-Ignored constants still evaluate and trap. Tests cover effects, both Option
-branches, direct callbacks and all four O0/O2 ARC/tracing combinations.
-The tacit example also runs in the existing native/GC/WASI golden program.
+Matching a variant with one payload already held in local fields can transfer
+that payload's owner instead of retaining it and immediately dropping the variant.
+Scalar, record and variant results use the rule. Aliases preserve their owners;
+boxed variants, multiple fields and protected resource slots keep existing cleanup.
+Original expression nodes preserve failure-cleanup scope identity.
 
-[The measurement report](measurements/channel-match-results.md) compares the
-same five programs against PR #177's measured source `a44d52a1`. Both Linux hosts
-pass run `39396074107` at `7a0c93ef4704b9443533f81e1c9c4a76e4179770`, preserved
-by `roadmap/revision-channel-match-7a0c93ef`. Each complete log passes 17 checks,
-none ignored or filtered. All 180 samples and 20 ordinary binaries are audited.
-The final documentation commit changes no compiler, runtime, test or workload.
+[The report](measurements/channel-variant-moves.md) compares the same five
+channel programs with PR #178. Per additional message, fresh text, fresh function
+and shared text each save one retain; shared function saves two. Allocations and
+peak charged storage stay unchanged. Actual exchange frames shrink; binary sizes
+are mixed. This is not a timing comparison or evidence of parity with C/Rust.
 
-Fresh-function allocations fall 5 → 2 per additional message and shared-function
-allocations 3 → 1; each saves one retain. Other cases are unchanged. ARC profiles
-end with zero charged storage and no collections. Actual frames shrink on both
-architectures. Retain the ARM64 link-stub/padding cost in the report; no timing or
-C/Rust parity claim. Source/runtime changes require fresh measurement/proof; status
-updates alone should not restart a healthy production head.
+Passing focused run `39399972415` uses `eecb4b5c11246e6b9223bd7eda84f7857daeef30`,
+preserved by `roadmap/revision-variant-moves-eecb4b5c`. Both Linux hosts pass 21
+checks, none ignored or filtered. All 180 samples and 20 binaries are audited.
+Passing broader run `39402978160` uses `a59328d765adab49b2faead775f8237f0eec7b82`,
+preserved by `roadmap/revision-variant-proof-a59328d7`: 214 checks on each Unix
+host, 215 on each Windows host, and 18 on each WebAssembly host. All eight
+complete logs pass, with no ignored or filtered checks. The rebased branch's
+compiler, runtime, tests and workflows match both passing sources. Final
+production gates are still required for this delivery.
 
-## Checks and resolved failures
+The first focused/broad runs failed because two test functions were unreachable
+and correctly omitted from generated C. The repaired fixture references all three
+result forms and keeps the three-move assertion. All failed logs were reviewed;
+no other failure was found. The passing runs above verify the repair. Native
+probes cover unique/shared owners, O0/O2, GC stress/verification, reuse poisoning
+and a deliberately leaked-owner control. Existing queue cases cover cancellation,
+failure after receiving a function and undrained captures.
 
-First focused run `39394019143` failed only because the new test enabled tracing
-stress for ARC. Repair run `39395145939` then exposed the omitted reuse-verification
-setting, which ARC also rejects because it retains freed storage. Both full log
-pairs were audited. The complete runtime option check and existing queue tests
-were reviewed: all three verification flags now use 1 for tracing and 0 for ARC.
-The test collects all four combinations before reporting failures. Run `39396074107`
-passes the repaired tests; earlier failed workflows are not acceptance.
+Local evidence: `/private/tmp/fwp-variant-final-costs`,
+`/private/tmp/fwp-variant-repair-audit.json` and
+`/private/tmp/fwp-variant-final-proof-audit.json`. Baseline binaries remain in
+`/private/tmp/fwp-match-final-costs`. Guarded final log audits passed in 10.26s
+(PR #178) and 12.49s (broader variant checks). Guarded formatting passes (1.58s); the documentation audit passes all 68 Markdown
+files, 106 immutable anchors and seven roadmap steps (2.63s). No local build was run.
+Use `python3 scripts/local-guard.py COMMAND...` for serial focused checks;
+from the worktree, use the guard's absolute path in the main checkout.
+Full compilation, suites and measurements belong on runners. Preserve 64 GiB
+free disk, target data below 2 GiB and sampled aggregate RSS below 1 GiB.
 
-Guarded formatting passes (1.46s); doc audit passes (2.97s); saved raw-interpreter
-example checks pass (5.40s), and golden formatting passes (0.14s). The older saved
-compiler only verified example syntax/output. Current runner logs are audited
-(2.64s), all samples/code hashes (1.71s), and ELF/frame comparison (0.14s).
-Artifacts: `/private/tmp/fwp-match-final-costs`; count report:
-`/private/tmp/fwp-match-final-counts.json`; log audit:
-`/private/tmp/fwp-match-final-log-audit.json`. Baseline artifacts remain at
-`/private/tmp/fwp-channel-receive-struct-costs`.
+## Next ownership investigation
 
-Use `python3 scripts/local-guard.py COMMAND...` for serial focused checks.
-No local build was run. Full builds, native compilation and large suites belong
-on runners. Preserve 64 GiB free disk, target data below 2 GiB and sampled aggregate
-RSS below 1 GiB. Stop on guard limits; never raise them.
+The fresh-message loop still retains its channel when calling `exchange`.
+`src/rc.rs::consumes_arg` makes ordinary functions consume arguments. Existing
+fold generation already uses `insert_function` and `ownership_liveness` with
+borrowed parameters. Extending that proof to direct calls needs one shared
+caller/callee contract, borrowed field projections and caller-held cleanup through
+failure/cancellation. Dynamic calls, escaping results, original resource scopes
+and recursive frames need explicit handling. Removing only the caller's retain
+would let the callee release an owner it was never given. This is investigation,
+not implemented support.
 
 ## Roadmap status
 
