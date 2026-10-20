@@ -2,28 +2,29 @@
 
 ## Next action
 
-Preparation branch `prove-queued-function-ownership` lives in
-`/private/tmp/fwp-channel-functions`, based on PR #174 head
-`67f233467bc68fe9a690373af219253d45f4e3f8`. The primary checkout owns that PR.
-Production `39342938663` has eight passing jobs; Linux ARM64 remains running.
-Documentation `39342938600` passes. Keep its head unchanged.
-Require all nine production jobs and documentation, squash merge, then verify
-identical trees and a one-line message. The prepared final audit is
-`/private/tmp/fwp-audit-174-combined-final.py` (run from the primary checkout
-through its local guard). Only then publish the next ownership PR.
+[PR #174](https://github.com/e6qu/fun-with-pipes/pull/174) is accepted as
+`3ec71969089a7ab95ff065f7b611c74534fbe326`. All nine production jobs and docs
+passed; the merge tree matches tested head `67f23346`. Its 73-character message
+has no body or trailers. Redundant post-merge production `39351187907` was
+cancelled only after that verification. [History](roadmap-history.md#numeric-hashing-and-integer-output-pr-174)
+records the results and remaining C/Rust performance gaps.
 
-Next: finish native/WASI run `39349638508` and server run `39349641747`, both
-at `ca3c9c0f6c33b79885c936996f3e4f72e3031cf9`. The autodiff repair passes on
-all six native hosts. Each has 20 passing integration checks; its only failure
-is the added gRPC test reusing a C-file path for a split-build directory.
-All six complete logs were audited. Distinct output paths repair that test.
-The compiler itself is unchanged; the next PR's full native gates must execute
-the repaired case. Keep the current WASI/server runs for their unchanged source.
-Earlier server run `39348422141` is fully audited: its new fixture's exposure
-annotation was misplaced and is fixed in `ca3c9c0f`; all other entry checks and
-all three REST API/authentication/multipart checks pass.
-Audit every completed target and failure before the next repair push. No new
-platform support is accepted yet.
+Next: publish `queued-function-delivery` from accepted main, carrying preparation
+commits from `prove-queued-function-ownership` in `/private/tmp/fwp-channel-functions`.
+Require all nine final-head production jobs and documentation before its squash
+merge. Keep the compiler source unchanged while checks run; fix every encountered
+failure and update this handoff. All seven roadmap areas remain open.
+
+Preflight source `ca3c9c0f6c33b79885c936996f3e4f72e3031cf9`, run `39349638508`,
+passes all unit checks and 20 integration checks per native host, including the
+autodiff repair. All six hosts failed only the added gRPC test's file/directory
+path collision. All logs were audited; `7ccf6654` fixes that test with distinct
+output paths. The compiler is unchanged by this repair. The new PR's full native
+gates must execute the corrected gRPC rejection. Both WASI jobs pass all 14 tests,
+none ignored. Current server run `39349641747` is still running at the same source.
+Earlier server run `39348422141` is fully audited: a misplaced exposure annotation
+was fixed in `ca3c9c0f`; all other entry checks and all three REST API,
+authentication and multipart checks pass. No new platform support is accepted yet.
 
 ## Queued-function implementation
 

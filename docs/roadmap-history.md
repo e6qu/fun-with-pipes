@@ -12,6 +12,37 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Numeric hashing and integer output (PR #174)
+
+[PR #174](https://github.com/e6qu/fun-with-pipes/pull/174) merged as
+`3ec71969089a7ab95ff065f7b611c74534fbe326`, with identical files to tested head
+`67f233467bc68fe9a690373af219253d45f4e3f8`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39342938663)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39342938600)
+passed before squash merge. The verified message is one line, 73 characters,
+with no body or trailers. Only redundant post-merge production `39351187907`
+was cancelled after checking the identical tree.
+
+Eligible numeric hashes avoid repeated per-element type dispatch. Integer
+printing avoids a temporary String. A GCC optimization failure exposed invalid
+aliasing assumptions in five runtime object views; those views now explicitly
+permit aliasing, without changing their layouts or disabling strict aliasing
+globally. The original failed-head measurements remain labeled as historical.
+
+Focused validation passed 456 tests across six native hosts and 24 tests on each
+WASI runner. Separate aliasing checks covered both Linux architectures with GCC
+and Clang at O1/O2/O3. Reports retain 96 hash correctness binaries, 48 allocation
+measurement binaries and 144 output binaries, including actual disassembly.
+The [hash/output measurements](benchmarks.md#numeric-hash-specialization) distinguish
+saved dispatch/count work from elapsed time: only the repeated Linux ARM64 large
+array/set cases establish separated timing ranges; other comparisons overlap.
+
+The [final C/Rust comparison](measurements/numeric-output-peers-2026-10-20.md)
+still shows gaps: its checked fwp loop costs 38.3% more median whole-process time
+than C and 3.9% more than Rust, and its string workload costs 15.7%/16.5% more.
+These six-sample comparisons identify work to investigate; they do not prove
+universal parity, a regression from the previous delivery or complete GC removal.
+
 ## Direct integer range sets (PR #173)
 
 [PR #173](https://github.com/e6qu/fun-with-pipes/pull/173) merged as

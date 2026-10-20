@@ -94,17 +94,17 @@ outside the benchmark suite.
    including queued owners, aliases, failure and cancellation. Persistent
    subscriptions and unknown retained captures still need ownership contracts.
    The [queued-function proof](docs/ownership.md#next-proof-functions-stored-in-channels)
-   specifies the next capture and call-scope analysis without new syntax.
+   is implemented and awaiting full acceptance. Finish its capture, receiver-scope,
+   cancellation and generated-entry checks without adding ownership syntax.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.
-2. Validate numeric hashing without repeated per-element type dispatch.
+2. Use the accepted numeric representation changes as measured baselines.
    [Compact key-only sets](docs/roadmap-history.md#compact-set-storage-pr-172)
    and [direct integer range sets](docs/roadmap-history.md#direct-integer-range-sets-pr-173)
-   passed all production gates. Repair the C aliasing defect exposed by GCC,
-   combine integer output without a temporary String, and refresh their correctness,
-   allocation and machine-code measurements. Finish final-head acceptance; retain
-   mixed timing results and C/Rust gaps in
+   passed all production gates. [Numeric hashing and direct integer output](docs/roadmap-history.md#numeric-hashing-and-integer-output-pr-174)
+   also passed, including the GCC aliasing repair and refreshed correctness,
+   allocation and machine-code evidence. Retain mixed timing results and C/Rust gaps in
    [the measurements](docs/benchmarks.md#numeric-hash-specialization). The
    [mixed-tail-recursion delivery](docs/roadmap-history.md#mixed-tail-recursion-pr-171)
    passed; resource-owning tail frames and mutual recursion need separate proofs.
