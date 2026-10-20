@@ -275,7 +275,8 @@ A `match` is a function. Patterns are:
 Records are matched through their fields with selectors, not patterns.
 Each hole's value is passed, in order, as an argument to the arm's body.
 Arms are checked for exhaustiveness, and the compiler names a missing case.
-Multi-argument pattern functions use `curry (match (a, b) ...)`. The brace
+For two arguments, `curry (match (_, _) -> const)` returns the first argument:
+its two holes pass both values to `const`, which ignores the second. The brace
 form `match { Some -> id, None -> const 0 }` fits on one line.
 
 ## Types

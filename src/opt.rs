@@ -274,12 +274,8 @@ impl<'p> Opt<'p> {
                         if let Some(out) = self.known_ctor(&v, arms, Some(&ty)) {
                             return self.expr(out, depth);
                         }
-                        if matches!(&v, Expr::Record(_)) {
-                            let lowered = known_record(v.clone(), arms.clone());
-                            if !matches!(&lowered, Expr::Match(s, _) if matches!(&**s, Expr::Record(_)))
-                            {
-                                return self.expr(lowered, depth);
-                            }
+                        if let Some(lowered) = self.known_record(&v, arms, Some(&ty)) {
+                            return self.expr(lowered, depth);
                         }
                         // A bare constructor/record does not carry its nominal
                         // type. Keep its typed binding when elimination fails.
@@ -374,7 +370,11 @@ impl<'p> Opt<'p> {
                     .into_iter()
                     .map(|(p, b)| (p, self.expr(b, depth)))
                     .collect();
-                known_record(s, arms)
+                if let Some(lowered) = self.known_record(&s, &arms, None) {
+                    self.expr(lowered, depth)
+                } else {
+                    Expr::Match(Box::new(s), arms)
+                }
             }
         }
     }
@@ -442,6 +442,95 @@ impl<'p> Opt<'p> {
             }
         }
         None
+    }
+
+    /// Match one field directly instead of constructing a temporary record.
+    /// Evaluate every nontrivial field once, in order, before selecting an arm.
+    /// The typed binding supplies nominal types that bare aggregates lack.
+    fn known_record(&mut self, s: &Expr, arms: &[(Pat, Expr)], ty: Option<&MT>) -> Option<Expr> {
+        let Expr::Record(es) = s else {
+            return None;
+        };
+        let n = es.len();
+        if arms.is_empty()
+            || !arms
+                .iter()
+                .all(|(p, _)| matches!(p, Pat::Record(ps) if ps.len() == n))
+        {
+            return None;
+        }
+        let irrefutable = |p: &Pat| matches!(p, Pat::Bind(_) | Pat::Wild);
+        let tested: Vec<usize> = (0..n)
+            .filter(|&i| {
+                arms.iter()
+                    .any(|(p, _)| matches!(p, Pat::Record(ps) if !irrefutable(&ps[i])))
+            })
+            .collect();
+        if tested.len() > 1 {
+            return None;
+        }
+        let fields = ty.and_then(|ty| record_fields(self.shapes, ty));
+        let types: Vec<Option<MT>> = es
+            .iter()
+            .enumerate()
+            .map(|(i, e)| {
+                fields
+                    .and_then(|fs| fs.get(i).map(|(_, t)| t.clone()))
+                    .or_else(|| {
+                        type_of(
+                            &|id: FuncId| &self.funcs[id].ty,
+                            self.shapes,
+                            &self.locals,
+                            e,
+                        )
+                    })
+            })
+            .collect();
+        if es
+            .iter()
+            .zip(&types)
+            .any(|(e, ty)| !self.trivial(e) && ty.is_none())
+        {
+            return None;
+        }
+        let mut bindings = Vec::new();
+        let values: Vec<Expr> = es
+            .iter()
+            .zip(types)
+            .map(|(e, ty)| {
+                if self.trivial(e) {
+                    e.clone()
+                } else {
+                    let l = self.fresh(&ty.unwrap());
+                    bindings.push((l, e.clone()));
+                    Expr::Local(l)
+                }
+            })
+            .collect();
+        let mut out = Vec::new();
+        for (p, body) in arms {
+            let Pat::Record(ps) = p else { unreachable!() };
+            let mut body = body.clone();
+            let mut test = Pat::Wild;
+            for (i, pi) in ps.iter().enumerate().rev() {
+                match pi {
+                    Pat::Bind(l) if !tested.contains(&i) => {
+                        body = Expr::Let(*l, Box::new(values[i].clone()), Box::new(body));
+                    }
+                    pi if tested.contains(&i) => test = pi.clone(),
+                    _ => {}
+                }
+            }
+            out.push((test, body));
+        }
+        let mut result = match tested.first() {
+            Some(&k) => Expr::Match(Box::new(values[k].clone()), out),
+            None => out.swap_remove(0).1,
+        };
+        for (l, value) in bindings.into_iter().rev() {
+            result = Expr::Let(l, Box::new(value), Box::new(result));
+        }
+        Some(result)
     }
 
     fn apply(&mut self, f: Expr, args: Vec<Expr>, depth: usize) -> Expr {
@@ -545,56 +634,6 @@ impl<'p> Opt<'p> {
             out = Expr::Let(l, Box::new(v), Box::new(out));
         }
         self.expr(out, depth + 1)
-    }
-}
-
-/// A match of a record built in place (`Record([a, b])`, as `curry` and
-/// `uncurry` leave behind) whose arms test at most one of its fields: the
-/// other fields are bound directly, and the match is on that field alone,
-/// so the record is never built.
-fn known_record(s: Expr, arms: Vec<(Pat, Expr)>) -> Expr {
-    let Expr::Record(es) = &s else {
-        return Expr::Match(Box::new(s), arms);
-    };
-    let n = es.len();
-    let trivial = es
-        .iter()
-        .all(|e| matches!(e, Expr::Local(_) | Expr::Const(_) | Expr::Func(_)));
-    let shapes = arms
-        .iter()
-        .all(|(p, _)| matches!(p, Pat::Record(ps) if ps.len() == n));
-    if !trivial || !shapes || arms.is_empty() {
-        return Expr::Match(Box::new(s), arms);
-    }
-    let irrefutable = |p: &Pat| matches!(p, Pat::Bind(_) | Pat::Wild);
-    let tested: Vec<usize> = (0..n)
-        .filter(|&i| {
-            arms.iter()
-                .any(|(p, _)| matches!(p, Pat::Record(ps) if !irrefutable(&ps[i])))
-        })
-        .collect();
-    if tested.len() > 1 {
-        return Expr::Match(Box::new(s), arms);
-    }
-    let Expr::Record(es) = s else { unreachable!() };
-    let mut out = Vec::new();
-    for (p, mut body) in arms {
-        let Pat::Record(ps) = p else { unreachable!() };
-        let mut test = Pat::Wild;
-        for (i, pi) in ps.into_iter().enumerate().rev() {
-            match pi {
-                Pat::Bind(l) if !tested.contains(&i) => {
-                    body = Expr::Let(l, Box::new(es[i].clone()), Box::new(body))
-                }
-                pi if tested.contains(&i) => test = pi,
-                _ => {}
-            }
-        }
-        out.push((test, body));
-    }
-    match tested.first() {
-        Some(&k) => Expr::Match(Box::new(es[k].clone()), out),
-        None => out.swap_remove(0).1,
     }
 }
 

@@ -5,7 +5,8 @@ its channel and counters. The values were needed, but the tuple object was not:
 the loop only read individual fields and constructed the next state from them.
 This candidate lets the existing loop generator recognize that pattern after
 an action or branch. Focused cleanup checks pass on all six native platforms
-and both WebAssembly hosts; full production acceptance is still pending.
+and both WebAssembly hosts. All nine production gates and documentation also
+pass; [PR #176 history](../roadmap-history.md#loop-state-and-known-function-calls-pr-176) records the exact head.
 
 ## What changes
 
@@ -90,7 +91,7 @@ Generated C now uses three state slots and has no state-record allocation in
 the executing loop. Focused ownership run `39364385408` passes 47 integration
 tests plus all compiler units on each native host, and 18 checks on each WASI
 host, with none ignored or filtered. Separate Linux resource-field runs
-`39365324259`/`39365327202` each pass 37 tests. Full acceptance is still required.
+`39365324259`/`39365327202` each pass 37 tests. Final production acceptance passed in PR #176.
 
 ## Calling known functions directly
 
@@ -119,5 +120,4 @@ on AMD64/ARM64 respectively. The other four cases have unchanged file and
 section sizes. Neither code size nor frame size establishes a timing improvement.
 The combined candidate passes focused ownership run `39366497033`: 62
 integration tests plus all compiler units on each of six native hosts, and 18
-checks on each WASI host, none ignored or filtered. Full production acceptance
-is still required.
+checks on each WASI host, none ignored or filtered. Final production acceptance passed in PR #176.
