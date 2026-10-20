@@ -11,9 +11,9 @@ worktree handoff for the final acceptance run and merge; require all nine
 production jobs and documentation for its exact final head.
 
 This worktree (`/private/tmp/fwp-channel-transfers`) is now the independent
-`flatten-channel-loop-state` experiment, based on `f3c6f8d9`. Next: validate the
-candidate with `channel-proof` and `channel-costs` on runners, audit every result,
-and compare counts, generated C and actual binaries with the existing reports.
+`flatten-channel-loop-state` experiment, based on `f3c6f8d9`. Next: audit `channel-proof` run `39364385408` at `16adc74b`, fix every failure,
+and preserve the recorded comparison with PR #175's integrated measurements. Count run `39363807189` passes both hosts; its saved C and actual
+machine code are inspected. Do not change the primary PR while its gates run.
 Keep it separate while PR #175 is being validated; do not open another PR yet.
 The inventory/schedule repair is included here. Final PR #175 production is
 `39363423392`, documentation `39363423384`; its unchanged compiler/runtime has
@@ -34,8 +34,11 @@ The candidate carries `Again` through a match only when every arm's terminal
 value is a record. It keeps the scrutinee, patterns, evaluation order and existing
 ownership boundaries. Existing loop-shape checks still decide whether state can
 be held as fields; whole-value uses keep their established representation.
-No new syntax or runtime helper is added. Allocation savings and cleanup are
-not yet verified. Do not claim success from the source change alone.
+No new syntax or runtime helper is added. [The count experiment](measurements/channel-loop-state.md) now passes on both
+Linux hosts, with 180 audited samples: one fewer allocation per message in all
+five cases, one fewer retain for fresh/closed values and two fewer for shared
+values. Every ARC profile ends with zero charged storage. Cleanup and complete
+platform acceptance remain pending; counts are not timing results.
 
 The expanded loop regression compares raw interpretation with O1/O2 native,
 stack allocation on/off, tracing stress, reuse checks, no-reuse/no-free settings
@@ -70,3 +73,17 @@ All seven areas in [PLAN.md](../PLAN.md) remain open. Persistent subscriptions,
 resource captures, resource-owning tail frames and mutual recursion need further
 proofs. JIT is excluded. Follow [AGENTS.md](../AGENTS.md): one active PR, all
 final-head gates, bounded local work and one-line commits without trailers.
+
+The guarded report audit (`scripts/summarize-channel-costs.py --run 39363807189
+--source 16adc74bc668312a60169a0c84f030fdac19ba49 --artifacts
+/private/tmp/fwp-channel-loop-costs --output /private/tmp/fwp-channel-loop-counts.json`)
+passes in 1.61s. Pending edits only document those results and correct stale
+ownership comments; the measured compiler implementation remains unchanged.
+
+PR #175's integrated count run `39362629293` also passes both hosts; its 180
+samples were audited under the guard in 1.54s. Counts and managed memory match
+the earlier tap experiment; binary sizes change with collector exclusion. The
+new report compares like-for-like integrated sources. ELF inspection confirms
+all five code sections shrink on both hosts, despite the AMD64 closed-function
+file growing 4136 bytes due to unwind metadata and data-page alignment. The
+document's example passes raw interpretation in 0.86s.

@@ -79,6 +79,9 @@ separate costs from queue ownership. No execution-time improvement is establishe
 and no C/Rust peer was measured. The separate six-host ownership run still needs
 complete acceptance; a passing count experiment does not replace that gate.
 
+The [next loop-state experiment](channel-loop-state.md) measures the remaining
+state tuple separately. Its ownership validation is still pending.
+
 ## Removing a temporary tuple after `tap`
 
 `value | tap action | next` runs `action` on the value, discards the action's
