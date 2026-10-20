@@ -143,7 +143,7 @@ cycle, while unreachable shared cycles still need tracing. Checked ARC admits
 nested channels when following their payload types cannot lead back to the same
 channel type. Tasks and HTTP stream handles remain excluded at any nested
 position because their hidden owners can lead back to the queue. The
-[function extension under validation](ownership.md#next-proof-functions-stored-in-channels)
+[queued-function capture proof](ownership.md#functions-stored-in-channels)
 checks actual captures and call scopes separately. The queue owns each
 retained message and the last channel owner releases remaining messages. See the
 [type proof](ownership.md#ownership-boundaries). Preserve callback, trap and task ordering when extending

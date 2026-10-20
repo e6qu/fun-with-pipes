@@ -93,12 +93,14 @@ outside the benchmark suite.
    Acyclic nested channel types now have native and WebAssembly acceptance,
    including queued owners, aliases, failure and cancellation. Persistent
    subscriptions and unknown retained captures still need ownership contracts.
-   The [queued-function proof](docs/ownership.md#next-proof-functions-stored-in-channels)
-   is implemented and awaiting full acceptance. Finish its capture, receiver-scope,
-   cancellation and generated-entry checks without adding ownership syntax.
-   The same delivery includes [moving messages into queues and removing temporary
-   argument tuples](docs/measurements/channel-transfer-protocol.md). Validate its
-   measured count savings, cleanup and binaries together, including GCC at O0.
+   The [queued-function proof](docs/ownership.md#functions-stored-in-channels)
+   passed native, WebAssembly and full production checks in
+   [PR #175](docs/roadmap-history.md#function-queues-and-cheaper-sends-pr-175), together
+   with consuming sends and temporary argument-tuple removal. Its measured count
+   savings do not remove all channel costs. The current delivery keeps eligible
+   loop state in locals and calls known function aliases directly; focused checks
+   and [binary/count measurements](docs/measurements/channel-loop-state.md) pass,
+   while full production acceptance remains required.
    Prefer borrowing and scoped cleanup; explicit weak handles are a proposal, not
    an implemented API. Reject unproved retention rather than silently use tracing.
    Distinguish a definite cycle from a missing proof.

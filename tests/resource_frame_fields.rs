@@ -1,5 +1,6 @@
 //! Original resource frames retain typed fields without boxing field-only locals.
 #![cfg(any(target_os = "linux", target_os = "macos"))]
+use fwp::ir::*;
 use std::process::{Command, Output};
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
@@ -57,7 +58,6 @@ main = "{}" | file.open | pack | .file | file.close | const "closed" | echo
         assert_eq!(out.stdout, reference.stdout);
         assert_eq!(out.stderr, reference.stderr);
     }
-    use fwp::ir::*;
     let file = MT::con("std::File");
     let unit = MT::unit();
     let record = MT::Record(vec![("file".into(), file.clone())]);

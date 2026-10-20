@@ -836,8 +836,8 @@ Admitted programs include ordinary immutable values, scoped files and state,
 proved derivative scopes, selected retained tasks, channels with acyclic nested
 queue ownership, and scoped C calls. Tasks and HTTP stream handles remain
 excluded from channel payloads because their hidden owners can lead back to the
-queue. The [queued-function extension](ownership.md#next-proof-functions-stored-in-channels),
-currently under validation, admits functions whose actual immutable captures are
+queue. The [queued-function extension](ownership.md#functions-stored-in-channels),
+accepted in PR #175, admits functions whose actual immutable captures are
 proved safe and checks their required scope when called after receiving.
 The [channel proof](ownership.md#ownership-boundaries) follows each channel's
 payload types and rejects a path back to that channel type. Immutable recursive

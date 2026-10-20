@@ -68,6 +68,13 @@ effect-step = if (.0 | eq 0) (.1 | Stop)
 tapped-step : (I64, String) -> Step[(I64, String), String] ! {IO}
 tapped-step = if (.0 | eq 0) (.1 | Stop)
     (tap (.1 | echo) | make { 0 = .0 | sub 1, 1 = .1 | concat "!" } | Again)
+branch-step : (I64, String) -> Step[(I64, String), String] ! {IO}
+branch-step = if (.0 | eq 0) (.1 | Stop)
+    (tap (.1 | echo)
+        | if (.0 | eq 2)
+            (make { 0 = .0 | sub 1, 1 = .1 | concat "!" })
+            (make { 0 = .0 | sub 1, 1 = .1 | concat "?" })
+        | Again)
 fallible-step : (I64, String) -> Step[(I64, String), String] ! {IO, Error[String]}
 fallible-step = tap (.1 | echo) | if (.0 | eq 1) (const "stopped" | fail)
     (make { 0 = .0 | sub 1, 1 = .1 | concat "!" } | Again)
@@ -84,6 +91,7 @@ main = [
     (3, "trace") | loop effect-step | echo,
     (0, "empty") | loop effect-step | echo,
     (3, "tapped") | both (loop tapped-step) id | echo,
+    (3, "branches") | both (loop branch-step) id | echo,
     (3, "fallible") | both (attempt (loop fallible-step)) id | echo,
 ] | ignore
 "#,

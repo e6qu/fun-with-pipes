@@ -7,6 +7,10 @@
 
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpStream;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
+#[cfg(unix)]
+use std::os::unix::process::ExitStatusExt;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 
@@ -22,7 +26,7 @@ fn have_cc() -> bool {
     Command::new(std::env::var("CC").unwrap_or_else(|_| "cc".into()))
         .arg("--version")
         .output()
-        .is_ok()
+        .is_ok_and(|output| output.status.success())
 }
 
 fn linux() -> bool {
@@ -82,7 +86,6 @@ fn status_detail(status: std::process::ExitStatus) -> String {
     let detail = format!("code={:?}", status.code());
     #[cfg(unix)]
     {
-        use std::os::unix::process::ExitStatusExt;
         format!(
             "{detail} signal={:?} core_dumped={}",
             status.signal(),
@@ -188,9 +191,7 @@ fn stressed_with_env(path: &Path, dir: &Path, env: &[(&str, &str)]) -> String {
 
 #[test]
 fn golden_programs_under_gc_stress() {
-    if !have_cc() {
-        return;
-    }
+    assert!(have_cc(), "native GC checks require a working C compiler");
     let dir = TempDir::new("stress");
     let mut entries: Vec<PathBuf> = std::fs::read_dir(root().join("tests/run"))
         .unwrap()
@@ -289,10 +290,7 @@ fn gc_failure_artifacts_retain_the_native_executable() {
 #[cfg(unix)]
 #[test]
 fn gc_stress_reports_native_compiler_failure() {
-    use std::os::unix::fs::PermissionsExt;
-    if !have_cc() {
-        return;
-    }
+    assert!(have_cc(), "native GC checks require a working C compiler");
     let dir = TempDir::new("compiler-failure-control");
     let source = dir.0.join("gc-compiler-failure-control.fwp");
     std::fs::write(&source, "main = \"hello\" | string.repeat 3 | echo\n").unwrap();
@@ -370,10 +368,13 @@ fn stats(stderr: &str) -> (f64, u64, u64) {
 }
 
 #[test]
+#[cfg_attr(
+    not(target_os = "linux"),
+    ignore = "resident-memory checks require Linux /proc"
+)]
 fn long_loop_runs_in_bounded_memory() {
-    if !have_cc() || !linux() {
-        return;
-    }
+    assert!(linux(), "resident-memory checks require Linux /proc");
+    assert!(have_cc(), "native GC checks require a working C compiler");
     let dir = TempDir::new("loop");
     let exe = dir.0.join("churn");
     // Exercise normal counted reclamation first; the separate shared build
@@ -543,10 +544,13 @@ fn bounded_server(cmd: Command, marker: &str, paths: &[&str], n: usize, limit_ki
 }
 
 #[test]
+#[cfg_attr(
+    not(target_os = "linux"),
+    ignore = "resident-memory checks require Linux /proc"
+)]
 fn http_server_runs_in_bounded_memory() {
-    if !have_cc() || !linux() {
-        return;
-    }
+    assert!(linux(), "resident-memory checks require Linux /proc");
+    assert!(have_cc(), "native GC checks require a working C compiler");
     let dir = TempDir::new("http");
     let exe = dir.0.join("api");
     build(
@@ -569,10 +573,13 @@ fn http_server_runs_in_bounded_memory() {
 }
 
 #[test]
+#[cfg_attr(
+    not(target_os = "linux"),
+    ignore = "resident-memory checks require Linux /proc"
+)]
 fn rest_server_runs_in_bounded_memory() {
-    if !have_cc() || !linux() {
-        return;
-    }
+    assert!(linux(), "resident-memory checks require Linux /proc");
+    assert!(have_cc(), "native GC checks require a working C compiler");
     let dir = TempDir::new("rest");
     let exe = dir.0.join("books");
     build(
@@ -596,19 +603,26 @@ fn rest_server_runs_in_bounded_memory() {
 }
 
 #[test]
+#[cfg_attr(
+    not(target_os = "linux"),
+    ignore = "resident-memory checks require Linux /proc"
+)]
 fn grpc_server_runs_in_bounded_memory() {
     grpc_server_memory("tracing");
 }
 
 #[test]
+#[cfg_attr(
+    not(target_os = "linux"),
+    ignore = "resident-memory checks require Linux /proc"
+)]
 fn arc_grpc_server_runs_in_bounded_memory() {
     grpc_server_memory("arc");
 }
 
 fn grpc_server_memory(memory_mode: &str) {
-    if !have_cc() || !linux() {
-        return;
-    }
+    assert!(linux(), "resident-memory checks require Linux /proc");
+    assert!(have_cc(), "native GC checks require a working C compiler");
     let dir = TempDir::new(&format!("grpc-{memory_mode}"));
     std::fs::copy(
         root().join("tests/grpc/greeter.fwp"),
