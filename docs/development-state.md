@@ -2,27 +2,37 @@
 
 ## Next action
 
-Next: finish the grouped integer-counting comparison and repair verification in
-[draft PR #182](https://github.com/e6qu/fun-with-pipes/pull/182), branch
-`investigate-native-counting-costs`. All four failed/completed focused jobs have now been audited in full.
-Publish the combined repair and matched comparison. The working tree adds matched C/Rust peers, ordinary inline
-hints, independent report audits and a binary-protocol assertion repair. These
-changes are not yet published or verified natively.
+Next: publish the final measurement/plan/handoff updates for
+[draft PR #182](https://github.com/e6qu/fun-with-pipes/pull/182), then mark it ready
+and audit all nine production jobs plus documentation on that exact final commit.
+Branch: `investigate-native-counting-costs`. Implementation is unchanged from
+verified preparation `a8859db10f34df4450eb608c4666785ebc5ae816`; only evidence and
+documents have changed locally. Do not merge the earlier intentionally skipped
+draft CI (`39528218956`). Squash-merge after full acceptance with an explicit
+one-line subject of at most 80 characters, empty body and no trailers/attribution.
+Standing authorization applies. Verify the merge tree and message afterward.
 
-The first new boundary test mistakenly compared binary protocol output with
-plain-text expected lengths. It now reads typed I64 frames and compares their
-payloads with Rust decimal-format lengths, preserving protocol coverage. All four focused logs confirm only that assertion failure and the consequent
-missing-binary inspection failure; every other target passed. The recorded 113
-signed I64 frames from each first-run failure pass independent protocol/decimal
-checks in `/private/tmp/fwp-check-length-protocol.py` (0.13s). Native verification
-of the repair still runs on GitHub.
+Combined run `39528239204` and documentation `39528218865` pass. Both Linux jobs
+pass formatting, Clippy, all five integer tests, twelve binary inspections and the
+eight-way measurement. Full logs are audited clean; receipt:
+`/private/tmp/fwp-matched-counting-audit.json` (audit script uses the same stem).
+Artifacts: `/private/tmp/fwp-matched-counting-costs`. The guarded independent
+report audit passed in 0.48s; all samples and native probes are recorded in
+`docs/measurements/integer-counting-matched-2026-10-21.json`.
 
-Then run suite `integer-counting` on GitHub: it now combines the five relevant
-integer tests, twelve binary inspections and the matched measurement on both hosts. Audit
-all logs, every timing sample and actual generated instructions before marking
-the PR ready. Require nine production jobs plus documentation on the final head;
-squash-merge with an explicit one-line subject of at most 80 characters and an
-empty body, without trailers or attribution. Standing authorization applies.
+The selected helpers use groups and ordinary inline hints. On Xeon 8573C/N2,
+child CPU time falls about 48% relative to unchanged fwp. Matched C/Rust remain
+faster: fwp extra CPU is 56.7–62.5% / 18.2–22.9% on Xeon, and 142.2–142.9% /
+29.5–30.1% on N2. The normal loops have no calls or stack traffic; AMD64 adds a
+fixed 40-byte entry frame, and instruction sections grow 368/448 bytes. Managed
+storage counts remain zero in this workload; tracing remains in the binaries.
+The guide records every tradeoff and the slower unhinted Xeon control.
+
+Next investigation after acceptance: generated C retains sign/large-value cases
+for the checked `3*i` product that the C peer eliminates using the loop bounds.
+Preserve checked arithmetic and trap order when testing ways to retain range
+information. The cause of historical identical-binary variability is still open.
+All seven roadmap areas remain open, with ownership/removal of tracing primary.
 
 ## Current implementation and evidence
 
@@ -32,37 +42,34 @@ groups of 16, 8, 4, 2 and 1 instead of repeatedly dividing by ten. Signed values
 use unsigned magnitude, including I64's minimum, then add the sign. No lookup
 table or heap storage is added. Existing checked arithmetic and trap order remain.
 Boundary inputs cover both sides of every representable power of ten, both signs,
-and unsigned extremes; native/interpreter verification is still pending repair.
+and unsigned extremes; repaired native/interpreter and independent binary-payload
+checks pass in the selected run.
 
 | Preparation | Source | Measurement / focused checks / documentation |
 |---|---|---|
 | Shared counting loop, not selected | `995d3ecfd451700ec93e0fc1b326f8be0503bad5` | `39525618134` passed / `39525621027` failed: assertion and missing binaries / `39525810747` passed |
 | Grouped counting, before inline hints | `5852017124334bb199ff653741b068f9b8c9f979` | `39526333980` passed / `39526336925` failed: same assertion and missing binaries / `39526267015` passed |
 
-Both measurement runs and documentation logs are audited clean. The shared-loop
-candidate was 1–4% slower in median child CPU time on AMD64 and 2–3% slower on
-ARM64 than the unchanged rebuild. Grouped counting reduced CPU medians by
-16–19% on EPYC 9V74 and 13–14% on Neoverse-N2, across four pinned CPUs each.
-All samples are kept in the linked reports; old C/Rust still use a different
-algorithm, so those ratios are not language-overhead measurements.
-
-Actual grouped binaries contain two counting-helper calls per iteration on both
-architectures. The next experiment adds an unhinted grouped control and C/Rust
-with the same algorithm to measure ordinary inline hints and remaining overhead.
-No forced inlining or universal speed claim is made.
+Both earlier measurement runs and documentation logs are audited clean. Their
+failed native runs came from comparing binary output with text in the new test;
+missing semantic binaries caused the following inspection failure. All other
+targets passed. The assertion repair passes in the selected run. Earlier timing
+results, including slower candidates, remain in the guide and raw reports.
 
 Current artifacts: `/private/tmp/fwp-counting-costs` and
 `/private/tmp/fwp-grouped-counting-costs`. Full-log receipts:
 `/private/tmp/fwp-counting-preparation-audit.json` and
 `/private/tmp/fwp-grouped-counting-audit.json`; audit scripts use the same stems.
 The report validator is `scripts/summarize-integer-counting.py`, with explicit
-`--comparison legacy` for the first experiments and `matched` for the next.
+`--comparison legacy` for the first experiments and `matched` for the current run.
 It verifies source replacement, binary/disassembly hashes, every sample/median,
 ratios, zero managed storage counts and the injected-allocation control.
 
 Saved baseline inputs come from `62ed104504b9e9a032434223120785e3cc37a47f`, focused
 run `39469883481`, tag `roadmap/revision-record-borrows-62ed1045`. The first new
-experiment is preserved by `roadmap/revision-integer-loop-995d3ecf`. All generated
+experiments are preserved by `roadmap/revision-integer-loop-995d3ecf` and
+`roadmap/revision-integer-groups-58520171`. The selected source is preserved by
+`roadmap/revision-integer-matched-a8859db1`. All generated
 source, binaries, disassembly and raw samples remain in the artifacts.
 
 The contributor guide's obsolete claim of no third-party Rust crates is corrected
@@ -92,7 +99,9 @@ below 2 GiB, sampled aggregate RSS below 1 GiB and 180 seconds. Full builds,
 native compilation, full suites and benchmarks run on GitHub. No limits were
 raised. Recent free space is about 66 GiB; recheck before downloading artifacts.
 
-Guarded checks: Python syntax/helper selection/whitespace 0.13s; focused Rust
+Guarded checks: selected-run full-log audit 7.49s, artifact download 22.85s,
+independent matched-report audit 0.48s and final guide link audit 2.57s. Earlier
+Python syntax/helper selection/whitespace 0.13s; focused Rust
 formatting 0.25s; documentation 3.31s; first/grouped report audits 0.58/0.59s;
 artifact downloads 8.62/8.05/17.61s. Full-log audits took 4–7s each. The sandboxed
 guard initially could not inspect `ps`; its approved invocation passed. Direct

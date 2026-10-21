@@ -94,16 +94,16 @@ outside the benchmark suite.
    WebAssembly acceptance. Explicit weak handles remain a proposal. Prefer
    borrowing and scoped cleanup; distinguish a definite cycle from a missing proof.
    Reject unproved retention rather than silently use tracing.
-2. Investigate the remaining integer-counting timing gap with controlled
-   comparisons on the same host. Saved identical binaries show variable AMD64
-   CPU time, so elapsed-time differences alone do not identify a compiler
-   regression. Retain every sample and inspect generated instructions before
-   selecting a change. [Accepted PR #181](docs/roadmap-history.md#temporary-channel-borrows-and-failure-cleanup-pr-181)
-   removes the closed-send retain and one shared-text retain and repairs failure
-   cleanup; its complete native matrix passes. [PR #180](docs/roadmap-history.md#function-channel-borrows-and-integer-text-pr-180)
-   already eliminates eligible integer text. Their reports preserve remaining
-   C/Rust gaps, storage costs and necessary shared ownership. Resource-owning
-   tail frames and mutual recursion still need separate proofs.
+2. Investigate remaining matched C/Rust gaps in integer counting. The
+   [grouped-counting measurements](docs/measurements/integer-counting.md) show
+   roughly half the former fwp CPU time, while preserving slower controls and
+   substantial gaps against peers using the same algorithm. Full acceptance is
+   tracked in the handoff. Inspect how generated C preserves proven numeric
+   bounds before selecting another change: the C peer eliminates cases that fwp
+   retains for a checked product. Do not weaken arithmetic or trap order. Earlier
+   variability of identical AMD64 binaries remains unexplained by these results.
+   Resource-owning tail frames and mutual recursion still need separate proofs.
+
 3. Use representative applications and equivalent-work measurements to select
    the next costs to remove: dynamic closures/calls, input copies, container
    layout, numerical workspace and derivative recording. Use the accepted

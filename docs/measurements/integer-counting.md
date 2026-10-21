@@ -1,94 +1,148 @@
-# Comparing integer character counters
+# Count integer characters with less arithmetic
 
-This experiment asks how to reduce the cost of `show | string.length` without
-building a string. For example, `-17` has three characters: two digits and a minus
-sign. The candidate counts decimal digits in groups of 16, 8, 4, 2 and 1 rather
-than dividing by ten for every digit. For `123456`, dividing by 10,000 removes
-four digits and leaves `12`; one more comparison gives six digits in total.
-Signed values first use their unsigned magnitude, then add one for a minus sign.
-Unsigned subtraction handles the smallest signed integer without overflowing
-signed negation. No lookup table, allocation or new runtime setting is needed.
+`show | string.length` counts an integer's displayed characters without building
+a string. For example, `-123456` has seven characters, including its minus sign.
+The runtime now counts digits in groups of 16, 8, 4, 2 and 1. Dividing `123456`
+by 10,000 removes four digits and leaves `12`; one further comparison gives six
+digits. Signed values use unsigned magnitude and add the sign, so I64's minimum
+does not require an overflowing signed negation. There is no lookup table or
+new heap storage. Ordinary inline hints let the C compiler combine this work
+with its caller; they do not force inlining.
 
-The matched C/Rust comparison is under investigation; full native acceptance
-is still required. These experiments do not explain earlier timing variation. An earlier candidate merely shared
-one loop between positive and negative values; its AMD64 CPU medians were about
-1–4% higher than an unchanged rebuild, so it was not selected as an improvement.
-ARM64 was about 2–3% slower too. Its [complete samples](integer-counting-loop-2026-10-21.json)
-come from `995d3ecf`, run `39525618134`.
+The measured program uses roughly half its former CPU time on the two hosts
+below. Matched C/Rust implementations remain faster. This is a specific program
+comparison, not universal language overhead or completion of the performance
+roadmap. Linux focused verification passes; the [handoff](../development-state.md)
+records full native acceptance.
 
-The first grouped candidate (`58520171`, run `39526333980`) reduced median child
-CPU time versus the unchanged rebuild by 16–19% on EPYC 9V74 and 13–14% on
-Neoverse-N2, across four CPUs each. [All samples](integer-counting-groups-2026-10-21.json)
-are retained. Both measurements pass independent source, hash, sample and memory
-checks. Those older C/Rust peers still used one-digit division, so their ratios
-also reflect an algorithm change. Inspection found two helper calls per loop
-iteration on both architectures. The next comparison tests ordinary inline hints
-and measures against C/Rust using the same grouped algorithm. See the [handoff](../development-state.md)
-for the current source and checks.
+## Program and results
 
-## What runs
+`bench/text-length` sums the characters in `i`, `3*i` and one separator for
+`0 <= i < 2000000`, then prints `28518516`. All three implementations check the
+relevant multiplication and additions. Timed values are nonnegative and at most
+5,999,997; correctness tests cover negative and wider values too, but this timing
+does not establish their performance. The `strings` peers still format strings
+and therefore perform different work.
 
-The maintained `bench/text-length` programs count characters of `i` and `3*i`,
-plus one separator, for integers from zero through 1,999,999. They sum the counts
-and print `28518516`. C, Rust and fwp all count digits directly and check the
-relevant arithmetic. This is different from the `strings` peers, which construct
-formatted strings; their timings do not measure the same work. Timed values
-range from zero to 5,999,997. Boundary correctness checks cover negative and wider
-values too, but this timing workload does not establish their performance.
+Source `a8859db10f34df4450eb608c4666785ebc5ae816`, preserved by
+`roadmap/revision-integer-matched-a8859db1`, passes
+[run 39528239204](https://github.com/e6qu/fun-with-pipes/actions/runs/39528239204).
+Each native Linux job passes all five integer tests, inspects twelve binaries and
+runs the comparison below. Every complete log is audited clean. GCC 13.3.0 builds
+C/fwp at O2; Rust 1.99.1 uses `-O`. fwp uses tracing mode without link-time
+optimization. The hosts are Xeon Platinum 8573C and Neoverse-N2, with four allowed
+CPU IDs per runner. These are two runner sessions, not eight independent machines.
 
-Eight executables run on the same GitHub Linux machine:
+The table gives the range of four per-CPU **elapsed-time medians**, in milliseconds.
+C and Rust use the same grouped algorithm as fwp and ordinary inline hints.
+
+| Host | Matched C | Matched Rust | fwp | Extra fwp time versus C | Extra versus Rust |
+|---|---:|---:|---:|---:|---:|
+| AMD64, Xeon 8573C | 3.924–3.938 | 5.121–5.135 | 6.054–6.255 | +54.0–59.4% | +17.9–21.9% |
+| ARM64, Neoverse-N2 | 3.304–3.331 | 5.862–5.934 | 7.517–7.595 | +127.5–128.5% | +27.9–28.2% |
+
+Extra time is `(fwp / peer - 1) * 100%`, computed separately on each CPU. Child
+CPU medians also remain higher: **+56.7–62.5% / +18.2–22.9%** versus C/Rust on
+Xeon, and **+142.2–142.9% / +29.5–30.1%** on N2. These gaps must not be replaced
+with comparisons against the slower old algorithms.
+
+Against an unchanged fwp rebuild on the same CPUs, the new version uses
+**47.5–49.0% less child CPU time on Xeon** and **48.6–48.9% less on N2**. Removing
+only its inline hints makes it slower: the hints save about 49–50.5% on Xeon and
+40.5–40.8% on N2 relative to that control. The unhinted version itself is slightly
+slower than old fwp on this Xeon; grouped counting alone is not a uniform win.
+[Every sample and ratio](integer-counting-matched-2026-10-21.json) is retained.
+
+## What the timer includes
+
+Eight executables run on each allowed CPU separately:
 
 | Executable | Purpose |
 |---|---|
-| Saved C | Earlier one-digit-at-a-time comparison. |
-| Saved Rust | Earlier one-digit-at-a-time comparison. |
-| Saved fwp | Repeat the exact previously measured binary. |
-| Rebuilt fwp | Compile the unchanged saved generated C to expose rebuild differences. |
-| Candidate fwp | Compile that C with only the integer counting helpers replaced. |
-| Matched C | Handwritten grouped counting with an ordinary inline hint. |
-| Matched Rust | The same grouped algorithm with an ordinary inline hint. |
-| Grouped fwp without hints | Remove only the candidate's two inline hints, to measure their effect. |
+| Saved C / Rust | Earlier one-digit-at-a-time comparisons; algorithm changes contribute to these ratios. |
+| Saved fwp | Repeat the exact earlier binary. |
+| Rebuilt fwp | Compile unchanged saved generated C, to expose rebuild differences. |
+| Candidate fwp | Replace only its integer-counting helpers. |
+| Matched C / Rust | Handwritten grouped counting with ordinary inline hints. |
+| Grouped fwp without hints | Remove only the candidate's two inline hints. |
 
-The script verifies the source run, its successful jobs, input source hashes,
-saved benchmark samples and executable architectures before use. The fwp rebuilds
-use GCC `-O2 -std=gnu11 -ffp-contract=off`, without link-time optimization.
-Matched C uses GCC `-O2`; matched Rust uses `rustc -O`. The hints permit, but
-do not force, inlining. It records commands, tool versions, source and binary hashes, executable sizes,
-instruction-section sizes and complete disassembly. The candidate does not
-remove checked arithmetic, tracing support or ownership operations.
+`scripts/measure-integer-counting.py` verifies the successful source run, inputs,
+saved benchmark samples and executable architectures. All fwp rebuilds use GCC
+`-O2 -std=gnu11 -ffp-contract=off`, without LTO. Matched C uses GCC `-O2`;
+matched Rust uses `rustc -O`. Commands, tools, source/binary hashes and complete
+disassembly accompany the results. The unchanged rebuild's instruction-section
+hash matches the saved fwp binary on both hosts.
 
-## Timing and memory
+The workflow explicitly selects each allowed CPU in turn. The Python parent and
+its children share that CPU restriction; no extra launcher runs inside the timer.
+The original CPU set is restored afterward. Address randomization is recorded and
+left unchanged. After two warmups per executable, 48 rounds rotate and reverse
+order, balancing each executable's position. Every output must match.
 
-`scripts/measure-integer-counting.py` runs only on GitHub's native Linux ARM64
-and AMD64 workers. The workflow explicitly selects each CPU allowed to the job.
-The Python parent and its children are restricted to one CPU at a time; results
-remain separate for each CPU. The script restores the original CPU set afterward.
-Address randomization is recorded and left unchanged.
+Each sample records elapsed time and child user plus system CPU time, including
+startup, computation, output and shutdown. Elapsed time includes Python's process
+launch; child CPU excludes the parent's work and descheduling. Compilation,
+downloads, inspection and instrumentation are outside timing. No sample is
+discarded. Pinning does not control clock frequency, virtualization, caches or
+process address layout, and does not explain historical timing variation.
 
-After two warmups per executable, forty-eight rounds rotate and reverse execution
-order, balancing each executable's position. Every output must match. Each sample
-records elapsed time and the child's user plus system CPU time. Both cover
-startup, computation, output and shutdown. Elapsed time also includes Python's
-process launch; child CPU time excludes the parent's work and time descheduled.
-Compilation, downloads, disassembly and storage instrumentation are outside
-timing. No timing sample is discarded.
+## Instructions, storage and remaining work
 
-Each ratio divides the candidate's median by the named peer's median. A ratio of
-`1.10` means ten percent more time; `0.90` means ten percent less. Inspect the raw
-samples and each CPU before interpreting a ratio: pinned execution does not
-control clock frequency, virtualization, caches or process address layout.
+The inspected fwp hot loops contain no calls or stack loads/stores on either host;
+all per-iteration values remain in registers. Without the hints, each iteration
+called the counting helper twice. The selected AMD64 function saves four registers
+and reserves eight bytes once on entry: a 40-byte frame excluding the return
+address, versus no normal-path frame in old fwp. ARM64 still has no normal-path
+frame; its overflow path saves 16 bytes. These are fixed costs, not per-item heap
+storage or growing recursion.
 
-Separate instrumented rebuilds count managed allocations, requested bytes,
-retains, peak/final charged storage and collections after constant initialization.
-The baseline, candidate and unhinted grouped counter must report zero in this workload. A deliberate
-16-byte allocation must be detected independently. These counts exclude raw
-buffers, allocator metadata, stacks and libc; they do not claim zero whole-process
-memory use. Earlier [saved-binary memory measurements](integer-text.md) describe
-process-memory costs. The instrumented programs are never timed.
+| Host | Old fwp instruction bytes | New instruction bytes | Old whole file | New whole file |
+|---|---:|---:|---:|---:|
+| AMD64 | 25,218 | 25,586 (+368) | 61,800 | 61,776 |
+| ARM64 | 22,908 | 23,356 (+448) | 83,432 | 83,432 |
 
-Correctness checks in `tests/integer_output.rs` compare unoptimized interpretation
-and native ARC/tracing execution. Inputs include signed and unsigned extremes
-and values immediately before, at and after every representable power of ten;
-signed cases include both signs. Expected lengths also come from Rust decimal
-formatting. Other cases preserve Unicode lengths, shared strings, effects and
-trap order. Passing this experiment alone does not replace full native CI.
+Instruction bytes are the ELF `.text` section. Whole-file sizes also reflect
+symbols, metadata and alignment; their changes do not measure instruction cost.
+The matched C/Rust instruction sections are 585/242,195 bytes on AMD64 and
+600/218,876 on ARM64. These include each program's linked/runtime choices, not
+just the counting loop.
+
+Separate instrumented fwp rebuilds report zero managed allocations, requested
+bytes, retains, collections and peak/final charged storage after constant
+initialization. A deliberate 16-byte allocation is detected. The counters exclude
+raw buffers, allocator metadata, stacks and libc; they do not mean zero process
+memory or removal of tracing. The instrumented executables are never timed.
+Earlier [process-memory measurements](integer-text.md) remain historical evidence;
+this experiment does not claim a new RSS improvement.
+
+The C loop uses its numeric bounds to eliminate impossible cases and replace
+some digit counting with comparisons and constants. fwp still computes the sign
+and tests large-number cases for `3*i`, despite the bounded source input. That is
+an observed instruction difference; its share of the timing gap is not isolated.
+The next controlled investigation should preserve more numeric-range information
+through generated C without weakening checked arithmetic or trap order.
+
+## Correctness and earlier experiments
+
+`tests/integer_output.rs` compares unoptimized interpretation and native execution
+at O0/O2 in ARC and tracing modes. Inputs include signed/unsigned extremes and
+values immediately before, at and after every representable power of ten, with
+both signs for signed cases. Binary I64 payloads are independently checked against
+Rust decimal-format lengths. Other cases preserve Unicode lengths, shared
+strings, effects, trap order and output-protocol separation. Allocation controls
+must detect deliberately inserted storage requests. The artifact audit verifies
+all 24 native executables across both hosts, their C, disassembly and controls.
+
+A shared-loop candidate (`995d3ecf`, run `39525618134`) was not selected: CPU
+medians were 1–4% higher on EPYC 9V74 and 2–3% higher on N2 than unchanged fwp.
+Its [complete samples](integer-counting-loop-2026-10-21.json) remain available.
+Unhinted grouping (`58520171`, run `39526333980`) saved 16–19% on EPYC 9V74 and
+13–14% on N2 in those sessions; its [samples](integer-counting-groups-2026-10-21.json)
+are also retained, alongside the later, slower Xeon result. Both preparations'
+focused test runs exposed the new test's binary-versus-text assertion mistake
+and consequent missing artifacts. All failed targets were audited; the repaired
+protocol assertion and complete binary inspection pass in the selected run above.
+
+Reproduce artifact checks with `scripts/summarize-integer-counting.py`, supplying
+the full run/source, artifact directory, output path and explicit comparison mode:
+`legacy` for the first two experiments, `matched` for the selected eight-way run.
