@@ -34,18 +34,26 @@ handles both ordinary queues and native response senders. No runtime changes.
 A new full-analysis unit control checks that identical signatures/service metadata
 are insufficient without the explicit entry contract, that another channel input
 stays unknown, and that a missing method contract is rejected. Existing 24 unit
-calls now pass the unknown policy explicitly. Only formatting/whitespace checks
-have run; compiler build and tests have not run yet.
+calls now pass the unknown policy explicitly. Prototype commit
+`867cc9a1889d948fa0002c82736c2aa79d305c35` passed Linux run `39586619398`, including
+compiler units, Clippy and existing socket/queue regressions. The complete log
+has no errors or panic diagnostics; receipt `/private/tmp/fwp-grpc-sender-probe.json`.
 
 ## Required native evidence
 
-Use the existing `tests/grpc.rs` server/client helpers. A new service fixture should
-queue callbacks capturing a response channel, including tuple/record and nested
-queue paths. Exercise repeated sends, undrained/closed queues, rejected sends,
-caught errors and blocked-task cancellation across repeated requests. Compare
-raw interpretation with native ARC/tracing at O0/O2. Count live native response
-channels, stream/connection cleanup and managed bytes; deliberately omit a queued
-release to verify detection. Inspect actual C, native binaries and disassembly.
+The new `tests/grpc/queued.fwp` fixture queues callbacks capturing a response
+channel, including tuple/record and nested-queue paths. Its client makes 64 calls:
+repeated sends, undrained/closed queues, rejected sends, caught errors and
+blocked-task cancellation. The accepted PR #184 compiler, verified by SHA-256,
+formatted both fixtures and matched their explicit raw interpreter output locally.
+This checks source semantics, not the new ARC proof.
+
+`tests/support/queued_grpc_responses.rs` uses the existing gRPC server/client
+helpers. It compares raw interpretation with native ARC/tracing at O0/O2, measures
+live response channels and final stream/connection/task and managed-storage
+cleanup, and deliberately omits a queued release. These native checks have not
+run yet. Generated C, binaries, disassembly, symbols and logs are retained by the
+focused workflow. No speed or C/Rust parity claim is involved.
 WASI has no native gRPC server claim; keep its existing ownership regression gates.
 
 `tests/support/grpc_server_measurement.rs` and `tests/fixtures/server-memory/probe.c`
@@ -60,8 +68,12 @@ Do not replace unknown producers with type-based acceptance or tracing.
 Run checks through `python3 scripts/local-guard.py`, serially and at low priority.
 No local full build, native C compilation, full test gate or benchmark. Preserve
 64 GiB free disk, target below 2 GiB, sampled RSS below 1 GiB and the 180-second
-limit. Free disk was 65.19 GiB before this small checkout. The main handoff records
-cleanup receipts; modified and evidence-containing historical checkouts remain.
+limit. Disk pressure stopped one source check before execution. After recoverable
+cache cleanup it ran through the guard successfully. Latest free space: 64.40 GiB,
+still fluctuating. The main handoff records cleanup receipts. APFS copy-on-write
+clones preserve every path and independent contents of identical evidence files;
+receipt `/private/tmp/fwp-identical-evidence-clone-cleanup.json`. No compiler/test
+work bypassed the guard and no limits changed.
 
 ## Roadmap status
 

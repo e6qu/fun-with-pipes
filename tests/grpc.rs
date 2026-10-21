@@ -18,6 +18,9 @@ use std::time::{Duration, Instant};
 mod client_allocations;
 use client_allocations::instrument_client_allocations;
 
+#[path = "support/queued_grpc_responses.rs"]
+mod queued_grpc_responses;
+
 fn fwp() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_fwp"))
 }

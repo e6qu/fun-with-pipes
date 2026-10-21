@@ -1,0 +1,282 @@
+//! Real service calls whose queued callbacks retain native response channels.
+use super::*;
+
+fn instrument(generated: &str) -> String {
+    let mut code = server_measurement::instrument(generated);
+    for (before, after) in [
+        (
+            "typedef uint64_t V;",
+            "typedef uint64_t V;\nstatic unsigned response_live, response_created, response_peak;",
+        ),
+        (
+            "    q->owner.sink_drop = g_sink_drop;",
+            "    q->owner.sink_drop = g_sink_drop;\n    response_created++; if(++response_live > 8) _Exit(201);\n    if(response_live > response_peak) response_peak = response_live;",
+        ),
+        (
+            "static void g_sink_drop(void *arg) {",
+            "static void g_sink_drop(void *arg) {\n    if(!response_live) _Exit(202); response_live--;",
+        ),
+        (
+            "    server_final_recorded=1;",
+            "    server_final_recorded=1;\n    fprintf(stderr, \"response-channels\\t%u\\t%u\\t%u\\n\", response_created, response_live, response_peak);\n    if(response_live || response_created != server_expected_calls) _Exit(203);",
+        ),
+    ] {
+        assert_eq!(code.matches(before).count(), 1, "{before}");
+        code = code.replacen(before, after, 1);
+    }
+    code
+}
+
+fn client(binary: Option<&Path>, address: Option<&str>) -> Command {
+    let mut command = match binary {
+        Some(binary) => Command::new(binary),
+        None => {
+            let mut command = Command::new(fwp());
+            command.args(["run", "--interp"]);
+            if address.is_some() {
+                command.args(["--service", "queued"]);
+            }
+            command.arg(dir().join("queued-client.fwp"));
+            command.env("FWP_NO_OPT", "1");
+            command
+        }
+    };
+    if let Some(address) = address {
+        command.env("FWP_SERVICE_QUEUED", address);
+    }
+    command
+}
+
+fn check_output(command: Command, label: &str, artifacts: &Path) {
+    let output = run(command, 120);
+    std::fs::write(artifacts.join(format!("{label}.stdout")), &output.stdout).unwrap();
+    std::fs::write(artifacts.join(format!("{label}.stderr")), &output.stderr).unwrap();
+    assert!(output.status.success(), "{label}: {}", render(&output));
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        include_str!("../grpc/queued-client.out"),
+        "{label}"
+    );
+    assert!(output.stderr.is_empty(), "{label}: {}", render(&output));
+}
+
+fn compile(code: &str, label: &str, opt: &str, artifacts: &Path, arc: bool) -> PathBuf {
+    let binary = artifacts.join(format!("{label}.exe"));
+    std::fs::write(artifacts.join(format!("{label}.c")), code).unwrap();
+    fwp::cgen::compile_c(code, &binary, opt).unwrap();
+    let (tool, flag) = if cfg!(target_os = "macos") {
+        ("otool", "-tvV")
+    } else if cfg!(target_os = "windows") {
+        ("llvm-objdump", "-d")
+    } else {
+        ("objdump", "-d")
+    };
+    let mut disassemble = Command::new(tool);
+    disassemble.arg(flag).arg(&binary);
+    let assembly = run(disassemble, 60);
+    assert!(assembly.status.success(), "{}", render(&assembly));
+    std::fs::write(artifacts.join(format!("{label}.asm")), assembly.stdout).unwrap();
+    let mut symbols = Command::new("nm");
+    symbols.arg(&binary);
+    let symbols = run(symbols, 30);
+    assert!(symbols.status.success(), "{}", render(&symbols));
+    let text = String::from_utf8_lossy(&symbols.stdout);
+    if arc {
+        for symbol in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+            assert!(!text.contains(symbol), "{label} retains {symbol}");
+        }
+    } else {
+        assert!(text.contains("fwp_gc_mark_all"), "{label} lacks tracing");
+    }
+    std::fs::write(artifacts.join(format!("{label}.nm")), symbols.stdout).unwrap();
+    binary
+}
+
+#[test]
+fn queued_response_channels_release_transport_owners() {
+    assert!(have_cc(), "a native C compiler is required");
+    let scratch = scratch("queued-responses");
+    let artifacts = std::env::var_os("FWP_QUEUED_GRPC_ARTIFACTS")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| scratch.join("evidence"));
+    std::fs::create_dir_all(&artifacts).unwrap();
+    for file in ["queued.fwp", "queued-client.fwp", "queued-client.out"] {
+        std::fs::copy(dir().join(file), artifacts.join(file)).unwrap();
+    }
+    check_output(client(None, None), "local-raw-interpreter", &artifacts);
+    let mut reference = Command::new(fwp());
+    reference
+        .args(["serve", "--interp"])
+        .arg(dir().join("queued-client.fwp"))
+        .args(["queued", "--listen", "127.0.0.1:0"])
+        .env("FWP_NO_OPT", "1");
+    let reference = start(reference, Duration::from_secs(60));
+    check_output(
+        client(None, Some(&reference.addr)),
+        "remote-raw-interpreter",
+        &artifacts,
+    );
+    for memory in ["arc", "tracing"] {
+        let split = scratch.join(memory);
+        build(
+            &[
+                "--gc",
+                memory,
+                "--service",
+                "queued",
+                "--emit-c",
+                dir().join("queued-client.fwp").to_str().unwrap(),
+                "-o",
+                split.to_str().unwrap(),
+            ],
+            &dir(),
+        );
+        let client_code = std::fs::read_to_string(split.join("queued-client.c")).unwrap();
+        let server_code = std::fs::read_to_string(split.join("queued.c")).unwrap();
+        let measured_code = instrument(&server_code);
+        let release = "            c->owner.queue_drop(element);";
+        assert_eq!(measured_code.matches(release).count(), 1);
+        let broken_code = measured_code.replace(release, "            (void)element;");
+        for opt in ["-O0", "-O2"] {
+            let label = format!("{memory}{opt}");
+            let arc = memory == "arc";
+            let client_binary = compile(
+                &client_code,
+                &format!("{label}-client"),
+                opt,
+                &artifacts,
+                arc,
+            );
+            check_output(
+                client(Some(&client_binary), Some(&reference.addr)),
+                &format!("{label}-interpreted-server"),
+                &artifacts,
+            );
+            let ordinary = compile(
+                &server_code,
+                &format!("{label}-ordinary"),
+                opt,
+                &artifacts,
+                arc,
+            );
+            let mut command = Command::new(&ordinary);
+            let stress = if arc { "0" } else { "1" };
+            command
+                .args(["--listen", "127.0.0.1:0"])
+                .env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", "1");
+            let ordinary = start(command, Duration::from_secs(60));
+            check_output(
+                client(None, Some(&ordinary.addr)),
+                &format!("{label}-interpreted-client"),
+                &artifacts,
+            );
+            check_output(
+                client(Some(&client_binary), Some(&ordinary.addr)),
+                &format!("{label}-native"),
+                &artifacts,
+            );
+            drop(ordinary);
+            for (variant, code) in [
+                ("measured", &measured_code),
+                ("omitted-release", &broken_code),
+            ] {
+                // Tracing could reclaim the intentionally leaked values. The
+                // omission control therefore belongs to checked ARC only.
+                if !arc && variant == "omitted-release" {
+                    continue;
+                }
+                let case = format!("{label}-{variant}");
+                let binary = compile(code, &case, opt, &artifacts, arc);
+                let mut command = Command::new(&binary);
+                command
+                    .args(["--listen", "127.0.0.1:0"])
+                    .env("FWP_SERVER_MEASURE_CALLS", "64")
+                    .env("FWP_GC", "off")
+                    .env("FWP_FREE", "1")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "1")
+                    .env("FWP_GC_STATS", "0");
+                let mut server = start(command, Duration::from_secs(60));
+                if variant == "omitted-release" {
+                    let output = run(client(Some(&client_binary), Some(&server.addr)), 120);
+                    std::fs::write(
+                        artifacts.join(format!("{case}-client.log")),
+                        render(&output),
+                    )
+                    .unwrap();
+                    let began = Instant::now();
+                    let status = loop {
+                        if let Some(status) = server.child.try_wait().unwrap() {
+                            break status;
+                        }
+                        assert!(
+                            began.elapsed() < Duration::from_secs(15),
+                            "missing-release control did not exit: {}",
+                            server.log.lock().unwrap()
+                        );
+                        std::thread::sleep(Duration::from_millis(20));
+                    };
+                    assert_eq!(
+                        status.code(),
+                        Some(201),
+                        "{case}: {}",
+                        server.log.lock().unwrap()
+                    );
+                    std::fs::write(artifacts.join(format!("{case}.status")), "201\n").unwrap();
+                } else {
+                    check_output(
+                        client(Some(&client_binary), Some(&server.addr)),
+                        &case,
+                        &artifacts,
+                    );
+                    assert!(
+                        server.wait_log("server-storage\t"),
+                        "{case}: {}",
+                        server.log.lock().unwrap()
+                    );
+                    assert!(server.child.try_wait().unwrap().is_none(), "{case} exited");
+                    let log = server.log.lock().unwrap().clone();
+                    std::fs::write(artifacts.join(format!("{case}-server.log")), &log).unwrap();
+                    let responses: Vec<u64> = log
+                        .lines()
+                        .find_map(|line| line.strip_prefix("response-channels\t"))
+                        .unwrap()
+                        .split('\t')
+                        .map(|n| n.parse().unwrap())
+                        .collect();
+                    assert_eq!(&responses[..2], &[64, 0], "{case}");
+                    assert!((1..=8).contains(&responses[2]), "{case}");
+                    let final_counts: Vec<u64> = log
+                        .lines()
+                        .find_map(|line| line.strip_prefix("server-final\t"))
+                        .unwrap()
+                        .split('\t')
+                        .map(|n| n.parse().unwrap())
+                        .collect();
+                    assert_eq!(final_counts.len(), 15);
+                    assert_eq!(final_counts[4], 0, "{case}: managed storage remains");
+                    assert_eq!(final_counts[5], 0, "{case}: collector ran");
+                    assert_eq!(
+                        &final_counts[6..],
+                        &[64, 64, 1, 1, 1, 64, 0, 0, 0],
+                        "{case}"
+                    );
+                    std::fs::write(
+                        artifacts.join(format!("{case}.status")),
+                        "running after completed sample\n",
+                    )
+                    .unwrap();
+                }
+                std::fs::write(
+                    artifacts.join(format!("{case}-server.log")),
+                    server.log.lock().unwrap().as_bytes(),
+                )
+                .unwrap();
+            }
+        }
+    }
+}

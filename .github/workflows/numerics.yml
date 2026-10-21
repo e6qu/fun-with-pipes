@@ -287,6 +287,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_QUEUED_FUNCTION_ARTIFACTS: queued-function-evidence
+      FWP_QUEUED_GRPC_ARTIFACTS: queued-function-evidence/grpc-responses
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -336,6 +337,9 @@ jobs:
       - name: Retained socket callbacks and resource cleanup
         if: ${{ !cancelled() && inputs.suite == 'queued-sockets' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test call_effects --test queued_functions --test native_sockets --test channel_cycle_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context
+      - name: Queued gRPC response callbacks and transport cleanup
+        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
+        run: cargo test --test grpc queued_response_channels_release_transport_owners -- --nocapture
       - name: Record queued-function evidence source
         if: always()
         shell: bash
