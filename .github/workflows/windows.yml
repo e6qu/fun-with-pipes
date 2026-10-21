@@ -150,13 +150,15 @@ jobs:
           name: windows-tls_tests-${{ matrix.runner }}
           path: windows-tls_tests.log
           if-no-files-found: error
-      - name: Shared remote stream lifetimes
+      - name: Remote stream and queued response lifetimes
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
           cargo test --lib grpc::stream_source_tests
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --test grpc stream_aliases_are_consistent_across_tasks -- --exact
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --test grpc queued_response_channels_
           exit $LASTEXITCODE
       - name: Native nested autodiff and ownership controls
         id: autodiff_tests

@@ -7,7 +7,9 @@ The `--gc arc` mode uses reference counts without a tracing collector.
 A queued callback is a function saved in a channel for a later call. That function
 can keep another queue alive. Checked `--gc arc` now accepts this when the captured
 queue comes from `channel.make`, stores data without functions, and has proved
-nested owners. Unknown or native queue producers remain rejected as captures.
+nested owners. Unknown queue producers remain rejected as captures. Native
+producers need their own contract; the [gRPC response extension](queued-grpc-responses.md)
+is checked separately from this local-queue measurement.
 The [ownership guide](../ownership.md#functions-stored-in-channels) explains the
 rule with a complete example that prints `Some "hello"`.
 
