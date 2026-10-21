@@ -21,8 +21,10 @@ The [cancellation-only comparison](measurements/task-cancellation.md) has earlie
 six-host evidence. The added Windows fiber probe passed its first execution but
 its assertion expected LF instead of the C runtime's CRLF output on both Windows
 architectures. That stopped the remaining variants and left incomplete artifacts.
-This merge is not full platform acceptance. The next grouped PR repairs the
-assertion, reruns every variant and completes the inherited validation.
+This merge is not full platform acceptance. [PR #189](https://github.com/e6qu/fun-with-pipes/pull/189)
+repairs the assertion and reruns every variant with the
+[compact-record measurements](measurements/task-records.md). Its final production
+acceptance is tracked in the handoff; do not treat this early merge as acceptance.
 
 ## Smaller Linux task heap records (PR #187)
 

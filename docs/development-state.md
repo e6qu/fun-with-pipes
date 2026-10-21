@@ -2,73 +2,87 @@
 
 ## Next action
 
-Next: finish the grouped task-record work on `compact-task-records`, based on
-user merge `ffcf04763990356fb3cb3913d6414082e00aa178` of PR #188. Open one PR
-for its needed fixes, compact task flags, removal of ARC's tracing-only stack
-marker and the matched native measurements. Use the primary workspace.
-The first publication will open one draft PR and dispatch the six-native and
-two-WebAssembly focused matrices. Publication details will be recorded in
-`/private/tmp/fwp-task-record-publication.json`.
+Next: finish [PR #189](https://github.com/e6qu/fun-with-pipes/pull/189),
+`compact-task-records` in the primary workspace. Publish the measured results,
+then require all nine production jobs and documentation for that final commit.
+Audit every completed log, fix every failure together, and squash only after
+acceptance. The base is the user's early #188 merge
+`ffcf04763990356fb3cb3913d6414082e00aa178`. Continue through PLAN.md afterward;
+keep one delivery PR at a time.
 
-## Changes and validation
+## Measured change and checks
 
-Task flags now use individual boolean bytes, grouped beside the ownership kind.
-ARC omits the collector's saved stack marker and its switch-time write; tracing
-keeps both. The live-task list remains because cancellation and shutdown use it.
-[The measurement method](measurements/task-records.md) names inputs, counters,
-comparison layouts and limitations. New arc_tasks checks retain all actual
-binaries and compare output with raw interpretation; existing stress, reuse,
-register-root, cancellation, static-memory and library-unload checks remain.
-There are no new native execution results for this group yet. Guarded formatting, workflow structure, native target assignment
-and documentation checks passed; full execution belongs on GitHub.
+The [task-record report](measurements/task-records.md) compares preceding integer
+flags with compact boolean bytes and removal of ARC's tracing-only stack marker.
+ARC records shrink by 32 bytes on every measured host. Allocation requests and
+retains stay at 1,706 and 1,069. Peak managed charge falls on Linux/macOS but stays
+unchanged on Windows ARC because both sizes use the same allocator class.
+Tracing keeps its stack marker; both modes keep cancellation/shutdown links.
+No timing, total-process-memory, zero-ARC or C/Rust parity claim follows.
 
-PR #188's focused runs at `71ef0268ca1a2f279036b4b6e57b81e2c8ad288f` are
-`39630720224` (native) and `39630724707` (WebAssembly). Both Windows jobs failed:
-the standalone C probe writes CRLF, while its exact-byte assertion expected LF.
-The probe returned success; its assertion stopped later variants and caused the
-artifact inventory to fail. The test and local binary inspector now expect the
-actual Windows C output. Do not call the failed run acceptance. All eight focused logs are now audited: four native jobs and both WebAssembly
-jobs passed; the two Windows jobs share this failure.
+Measured source `c10934f5dadf9b57f2d6280589ca95541178667e` passed all six native
+focused jobs in run `39636847663` and both WebAssembly jobs in `39636852832`.
+Every full log was audited. All 164 native binaries have inspected architecture
+headers, generated C, symbols, disassembly, sections, output and exit status.
+Both WebAssembly artifacts contain 112 executed modules and twelve return-state
+controls each. Focused acceptance does not replace final production acceptance.
+The [raw report](measurements/task-records-2026-10-21.json) preserves the source,
+immutable tag, toolchains, CPU details, counters, hashes and instruction excerpts.
 
-Audit with `/private/tmp/fwp-audit-task-cancellation.py` through the local guard.
-It uses the saved publication/acceptance files under `/private/tmp`; preserve
-that failed-source receipt before creating new-source runs. The user's merge
-record is `/private/tmp/fwp-188-merge-record.json`. Original full production run
-`39635039734` is pending; merge-push runs `39635064120` and `39635064137` duplicate
-its tree. Preserve original full-run coverage and audit all completed logs.
+The Windows C probe now expects its native CRLF output. All normal O0/O1/O2
+register/stack/rounding/host-ownership probes pass; restoring the unwanted
+collector snapshot exits 211. Matched Windows context comparisons retain 101
+fiber switches while removing all 101 extra snapshots. The
+[cancellation guide](measurements/task-cancellation.md) separates these results
+from earlier cancellation-buffer storage measurements.
 
-The full production audit also found a macOS ARM64 registry DNS failure before
-compilation. Its original log is `/private/tmp/fwp-188-119343104377.log`.
-Production and the two focused suites now cache the lockfile's registry sources,
-fetch with explicit network limits, then set Cargo offline for builds/tests.
-No alternate registry, unpinned dependency or skipped check is introduced.
-Run `/private/tmp/fwp-audit-188-final.py` to track all remaining original full jobs.
+Local checks use `python3 scripts/local-guard.py`: rustfmt, workflow structure
+(actionlint with shellcheck disabled), native target assignment, documentation
+links/commit subjects, and static artifact inspection. Full builds, native
+execution, full suites and benchmarks run on GitHub. Keep the fixed limits:
+64 GiB free disk, 2 GiB target, 1 GiB sampled aggregate RSS and 180 seconds.
 
-The earlier cancellation-only source `b37f5948d07128455a76e177f66448240bb47389`
-passed all eight focused jobs; its immutable tag and raw report remain unchanged.
-The newer source is preserved by `roadmap/revision-task-cancellation-71ef0268ca1a`.
-The completed #187 receipt is `/private/tmp/fwp-187-final-acceptance.json`;
-its verified merge is `eb9ba7e828a5ab8ef0f7579b7f6fe1263e752c8c`.
-Do not repeat those merges or overwrite historical measurements.
+## Inherited validation and tools
 
-## Delivery
+PR #188 was merged before its full checks finished. Its original production run
+`39635039734` remains under audit. The macOS ARM64 job failed resolving crates.io
+before compilation; production and focused workflows now cache locked registry
+sources, fetch explicitly, and build/test with Cargo offline. This does not skip
+checks or promise recovery from every network outage.
 
-Keep one substantial PR at a time, incorporating related work and every known
-fix. Native execution and full gates run on GitHub. Use the local guard for
-serial focused checks, preserving 64 GiB free disk, 2 GiB target, 1 GiB sampled
-aggregate RSS and 180 seconds. No local native compilation or full suite.
-Require all nine production jobs plus documentation for the final PR commit.
-Then squash-merge with an explicit one-line subject of at most 80 characters,
-an empty body and no attribution/trailers; verify message, parent and tested tree.
-Continue to the next substantial roadmap group and keep this handoff current.
+The duplicate same-tree merge run `39635064120` was cancelled to free runners.
+All finalized logs were audited: both Windows jobs show the known CRLF assertion;
+other incomplete jobs ended on cancellation, with no additional diagnosed test
+failure. Neither cancelled nor failed runs count as acceptance. The earlier
+focused Windows failures at `71ef0268ca1a2f279036b4b6e57b81e2c8ad288f` remain in
+separate receipts; all eight old focused logs were reviewed.
+
+Temporary helpers and receipts under `/private/tmp`:
+
+- `fwp-task-record-publication.json` and `fwp-task-record-acceptance.json` preserve
+  the measured source/runs. `fwp-audit-task-records.py` audits those eight jobs.
+- `fwp-task-record-evidence/c10934f5dadf/` holds inspected artifacts. Do not rerun
+  an inspector over an existing accepted report or overwrite old measurements.
+- `fwp-audit-188-final.py` audits the original full run; `fwp-audit-188-merge.py`
+  preserves the cancelled duplicate's diagnostics.
+- Final production run IDs and the exact delivery commit belong in the
+  publication/acceptance receipts after publication. Preserve the measured source.
+
+## Following ownership group
+
+Preparation is isolated at `/private/tmp/fwp-queued-task-captures`, branch
+`queued-task-captures`, based on measured source `c10934f5dadf`. It is unpublished
+and unverified. The draft proof follows a captured task's known producer,
+computation and result; unknown task producers and mutable callback back-edges
+remain rejected. Initial unit tests and a repeated task-capture fixture are in
+progress. Complete adversarial result/alias/cancellation checks, native and
+WebAssembly cleanup measurements and documentation before delivery. Rebase this
+preparation onto #189's verified merge; do not create a competing PR.
 
 ## Roadmap status
 
-All seven areas in [PLAN.md](../PLAN.md) remain open. These changes reduce task
-heap storage and unnecessary collector work; they do not finish tracing removal,
-eliminate ARC, prove a general speedup or establish C/Rust performance parity.
-The next ownership work must preserve failure/cancellation cleanup and measure
-representative programs before choosing an optimization.
+All seven areas in [PLAN.md](../PLAN.md) remain open. Smaller task records do not
+complete ownership, tracing removal or the language's performance goals.
 
 | Step | Status | Remaining work |
 |---|---|---|

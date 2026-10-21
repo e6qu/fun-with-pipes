@@ -123,10 +123,12 @@ outside the benchmark suite.
    moving storage is not eliminating it.
    [Cancellation-state storage](docs/measurements/task-cancellation.md) and Windows
    ARC snapshot removal merged in PR #188 before full validation. The next group
-   repairs its Windows output assertion, compacts task-state flags, removes ARC's
-   remaining tracing-only stack marker, and completes the inherited checks.
-   [Task-record measurements](docs/measurements/task-records.md) will compare both
-   representations without inferring timing gains from smaller records.
+   repairs its Windows output assertion, compacts task-state flags and removes ARC's
+   remaining tracing-only stack marker. Its six native focused jobs pass.
+   [Task-record measurements](docs/measurements/task-records.md) show 32 fewer bytes
+   per ARC task with unchanged allocation/retain counts and platform-dependent
+   peak savings. Full PR #189 acceptance remains in the handoff; smaller records
+   do not establish a timing gain.
 
 All seven work areas remain open. The syntax and native-platform foundations
 are implemented; the main remaining work is ownership, representation,
