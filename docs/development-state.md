@@ -51,6 +51,12 @@ The local candidate changes the returned expression for signed 64-bit
 multiplication (I64 and ISize), after its existing overflow check. A new scalar regression uses runtime CLI operands,
 independent i128 expectations for both types, both memory modes and native builds
 at O0/O1/O2/O3.
+The focused `integer-counting` suite includes these scalar tests and now requires
+actual compiler-produced C to match the measured range candidate exactly. It also
+builds, executes and saves the real compiler-produced binary and disassembly. The
+old measurement-only `integer-range` option is removed; its original source/run
+remain preserved.
+
 Its UBSan controls check the actual emitted primitive at O1/O2/O3 and deliberately
 remove the overflow check to prove the sanitizer detects the unsafe product.
 Guarded formatting, whitespace and documentation checks pass (2.66s); native
