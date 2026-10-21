@@ -22,6 +22,7 @@ ratios on another machine or establish that the whole language is â€œzero-cost.â
 | Did a compiler change help? | [Iteration](#list-iteration-compared-with-its-previous-definition), [derivatives](#paired-autodiff-metadata-allocations), [HTTP functions](#fixed-function-values-in-the-http-server), [maps](#larger-maps-exposed-a-storage-layout-problem) | New fwp / baseline fwp; not overhead against another language |
 | How much ownership work does a channel exchange need? | [Method and baseline](measurements/channel-transfer-protocol.md), [matched payloads](measurements/channel-variant-moves.md), [direct-call borrowing](measurements/channel-direct-borrows.md), [function channels](measurements/function-channel-borrows.md) | Allocations, retains and actual binary/frame sizes; no execution-time or C/Rust comparison |
 | Can task records use less heap storage? | [Saved CPU state in task stacks](measurements/task-contexts.md) | Matched fwp layouts: managed bytes, process memory, complete-process time and actual binary/static sizes |
+| Can cancellation state use the active stack? | [Cancellation-storage comparison](measurements/task-cancellation.md) | Six-host fwp layout comparison: managed bytes, retained owners, entry-frame and executable sizes; no timing or process-memory claim |
 | How much does grouped integer counting cost? | [Controlled CPU comparisons](measurements/integer-counting.md) | Paired old/new fwp, matched C/Rust, explicit CPU placement and all samples |
 | Can checked multiplication preserve numeric bounds? | [Checked-product comparison](measurements/checked-products.md) | Actual compiler output, per-CPU C/Rust gaps, dynamic-input controls and O0/O1 costs |
 | What does integer-text elimination save? | [Direct character counting](measurements/integer-text.md) | Native results and allocation controls; time against C/Rust counting versus formatting |
@@ -279,6 +280,17 @@ short-process timings are mixed. The [raw report](measurements/task-contexts-202
 retains 144 samples, exact compiler settings, binary/code/static sizes and a
 separate 72-call service comparison. These measurements compare fwp layouts,
 not fwp overhead against C/Rust.
+
+### Cancellation state and Windows ARC fibers
+
+The [cancellation guide](measurements/task-cancellation.md) compares embedded heap
+return buffers with buffers borrowed from active entry frames. At the preserved
+source, all six hosts make 1,706 allocation requests and 1,069 retains. Heap
+records and peak managed charge shrink, while entry frames grow. Actual binary
+sizes include unchanged and larger results. The report names the workload,
+compiler settings and stack-cost calculation; it makes no timing claim.
+The related Windows collector-snapshot removal is under test and has separate
+controls, so its results must not be inferred from the cancellation measurements.
 
 ### Current numerical comparison and record moves
 

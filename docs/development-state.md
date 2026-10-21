@@ -2,13 +2,22 @@
 
 ## Next action
 
-Next: finish the task-cancellation and Windows ARC storage group on
-`task-cancellation-stack` in `/private/tmp/fwp-task-cancellation`. There is no PR
-for this preparation yet. Keep one active delivery PR: #187 is still waiting for
-its last Linux gate at `81bb3efa8e3f2cc5f3dd9f0ae9952709088c2905`.
-Its nine other gates passed; `/private/tmp/fwp-merge-187.py` rechecks all ten,
-merges with the authorized one-line subject and empty body, and verifies the
-resulting message, parent and tree. Do not reset healthy CI for a status edit.
+Next: finish focused validation of the task-cancellation and Windows ARC group
+on `task-cancellation-stack` in `/private/tmp/fwp-task-cancellation`, then prepare
+its final production PR head. Source `71ef0268ca1a2f279036b4b6e57b81e2c8ad288f` is preserved by tag
+`roadmap/revision-task-cancellation-71ef0268ca1a`. Native run `39630720224` and WebAssembly run `39630724707`
+check that source. Use `/private/tmp/fwp-audit-task-cancellation.py` through the
+local guard; audit every job and inspect actual binaries before accepting results.
+The stage-two inspector is `/private/tmp/fwp-inspect-cancellation-stage2.py`.
+The current publication and acceptance receipts live under `/private/tmp`.
+
+PR #187 passed all ten gates and squash-merged as `eb9ba7e828a5ab8ef0f7579b7f6fe1263e752c8c`.
+Its complete-log receipt `/private/tmp/fwp-187-final-acceptance.json` verifies the
+actual message, parent and tree. Do not repeat its merge. The new branch rebases
+onto this verified merge; its runtime, compiler, tests, scripts and workflows
+must remain identical to the focused source above until any required repair.
+The draft PR number and final rebased head are recorded in
+`/private/tmp/fwp-task-cancellation-delivery.json` after publication.
 
 ## Accepted focused evidence
 
@@ -54,7 +63,7 @@ No local native build, benchmark or full suite has run.
 
 Publish the added Windows work and run both focused matrices. Audit every job
 and fix all failures; inspect actual Windows binaries and update the comparison.
-After #187 merges, rebase this group onto its verified merge and open one PR.
+Keep one delivery PR; the branch is rebased onto the verified #187 merge.
 Require all nine production gates plus documentation on the final head before
 squash merge. Use a single-line subject of at most 80 characters and an empty body;
 verify the actual commit message, sole parent and tested tree.

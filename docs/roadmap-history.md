@@ -12,6 +12,21 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Smaller Linux task heap records (PR #187)
+
+Saved CPU state moves from heap task records into existing child stacks and root
+static storage. The [comparison](measurements/task-contexts.md) counts those bytes
+separately and retains mixed timings, larger files and remaining ARC operations.
+This is a storage improvement for the measured programs, not GC removal or
+proof of C/Rust performance parity.
+
+[PR #187](https://github.com/e6qu/fun-with-pipes/pull/187) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39613713414)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39613713402)
+at `81bb3efa8e3f2cc5f3dd9f0ae9952709088c2905`. Every complete log was audited.
+Squash merge `eb9ba7e828a5ab8ef0f7579b7f6fe1263e752c8c` has the identical tree, the expected sole parent,
+and a verified one-line message without a body or trailers.
+
 ## Queued service responses and bounded server startup (PR #186)
 
 Queued callbacks can retain a response channel supplied by an actual gRPC service
