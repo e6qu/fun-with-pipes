@@ -1,0 +1,68 @@
+# Response channels captured by callbacks queued inside a served method.
+# Each method is also callable locally, so raw interpretation is a reference.
+Event = { send: () -> Bool ! {Async} }
+events : I64 -> Channel[Event] ! {Async}
+events = channel.make
+send-text : (Channel[String], String) -> () -> Bool ! {Async}
+send-text = curry (.0 | uncurry channel.send)
+event : (I64, Channel[String]) -> Event
+event = both .1 (.0 | show) | send-text | make Event { send = id }
+enqueue : Event -> Channel[Event] ! {Async}
+enqueue = both (const 1 | events) id | tap (fork channel.send .0 .1) | .0
+require : Bool -> ()
+require =
+    if id (const ()) (const "queued response assertion failed" | prim.trap)
+receive-once : Channel[Event] -> () ! {Async}
+receive-once =
+    channel.recv | option.map (.send | apply ()) | eq (Some True) | require
+receive-twice : Channel[Event] -> () ! {Async}
+receive-twice =
+    channel.recv
+    | option.map (.send | both (apply ()) (apply ()))
+    | eq (Some (True, True))
+    | require
+export reply : I64 -> Channel[String] -> () ! {Async}
+reply = curry (event | enqueue | receive-once)
+export twice : I64 -> Channel[String] -> () ! {Async}
+twice = curry (event | enqueue | receive-twice)
+export discarded : I64 -> Channel[String] -> () ! {Async}
+discarded = curry (event | enqueue | ignore)
+export closed : I64 -> Channel[String] -> () ! {Async}
+closed = curry (event | enqueue | tap channel.close | ignore)
+send-pending : (Channel[Event], Event) -> () -> Bool ! {Async}
+send-pending = curry (.0 | uncurry channel.send)
+export cancelled : I64 -> Channel[String] -> () ! {Async}
+cancelled = curry (event
+    | both enqueue id
+    | send-pending
+    | task.spawn
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
+    | eq None
+    | require)
+export rejected : I64 -> Channel[String] -> () ! {Async}
+rejected = curry (event
+    | both (enqueue | tap channel.close) id
+    | send-pending
+    | apply ()
+    | eq False
+    | require)
+fail-queued : Channel[Event] -> () ! {Error[String]}
+fail-queued = const "expected" | fail
+export failed : I64 -> Channel[String] -> () ! {Async, Error[String]}
+failed = curry (event | enqueue | fail-queued)
+queues : I64 -> Channel[Channel[String]] ! {Async}
+queues = channel.make
+hold : Channel[String] -> Channel[Channel[String]] ! {Async}
+hold = both (const 1 | queues) id | tap (fork channel.send .0 .1) | .0
+send-nested : (Channel[Channel[String]], String) -> () -> Bool ! {Async}
+send-nested = curry (.0 | both (.0 | channel.recv) .1 | match
+    (Some _, _) -> channel.send
+    (None, _) -> const False)
+export nested : I64 -> Channel[String] -> () ! {Async}
+nested = curry (both (.1 | hold) (.0 | show)
+    | send-nested
+    | make Event { send = id }
+    | enqueue
+    | receive-once)

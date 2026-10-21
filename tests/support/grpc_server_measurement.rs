@@ -1,7 +1,7 @@
 //! Measure server storage after requests and connection tasks finish.
 use super::*;
 
-fn instrument(generated: &str) -> String {
+pub(super) fn instrument(generated: &str) -> String {
     // Reuse the existing allocation/retain counter hooks, changing their sample
     // boundary to server readiness. The generated application is unchanged.
     let mut code = instrument_client_allocations(generated);
