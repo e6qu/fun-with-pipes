@@ -104,7 +104,8 @@ def main():
                 report['semanticProbes'] = checked
         if args.comparison in ('range', 'compiled-range'):
             experiment = report['arithmeticExperiment']
-            assert experiment['compilerChanged'] is False
+            if args.comparison == 'compiled-range':
+                assert experiment['rewriteScope'] == 'saved generated C'
             old_multiply, new_multiply = experiment['originalMultiply'], experiment['recomputedMultiply']
             assert old_multiply.count('return (V)r;') == 1
             assert old_multiply.count('__builtin_mul_overflow(x, y, &r)') == 1
@@ -137,6 +138,37 @@ def main():
             report['compilerProduced'] = {
                 **actual, 'sourceSha256': audit.digest(actual_c),
                 'assemblySha256': audit.digest(assembly)}
+            products = args.artifacts / ('integer-product-semantics-' + host)
+            native = {f'products-{mode}{opt}': f'products-{mode}.c'
+                      for mode in ('arc', 'tracing') for opt in ('-O0', '-O1', '-O2', '-O3')}
+            sanitized = {f'{kind}{opt}': f'{kind}.c'
+                         for kind in ('checked', 'unchecked-control') for opt in ('-O1', '-O2', '-O3')}
+            expected_products = {**native, **sanitized}
+            assert {path.stem for path in products.glob('*.exe')} == set(expected_products)
+            checked_c = (products / 'checked.c').read_text()
+            check = 'if (__builtin_mul_overflow(x, y, &r)) fwp_trap_overflow("I64");'
+            assert checked_c.count(check) == 1
+            assert (products / 'unchecked-control.c').read_text() == checked_c.replace(check, '')
+            generated = (products / 'products-arc.c').read_text()
+            _, tail = generated.split('/* prim.mul : I64 -> I64 -> I64 */\n', 1)
+            primitive, _ = tail.split('\n}\n', 1)
+            assert primitive + '\n}\n' in checked_c
+            checked_products = []
+            for label, source_name in sorted(expected_products.items()):
+                assembly = products / (label + '.asm')
+                assert assembly.stat().st_size > 0
+                entry = {'name': label, **audit.binary(products / (label + '.exe'), machine),
+                         'sourceSha256': audit.digest(products / source_name),
+                         'assemblySha256': audit.digest(assembly)}
+                if label.startswith('unchecked-control'):
+                    diagnostic = (products / (label + '.stderr')).read_text()
+                    assert 'signed integer overflow' in diagnostic
+                    status = (products / (label + '.status')).read_text().strip()
+                    assert re.fullmatch(r'Some\(-?\d+\)|None', status) and status != 'Some(0)'
+                    entry.update(controlExit=status, controlDiagnostic=diagnostic,
+                                 controlStdout=(products / (label + '.stdout')).read_text())
+                checked_products.append(entry)
+            report['scalarProbes'] = checked_products
         assert [item['cpu'] for item in report['measurements']] == report['allowedCpus']
         assert report['allowedCpus'] == sorted(set(report['allowedCpus'])) and report['allowedCpus']
         for result in report['measurements']:

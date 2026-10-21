@@ -371,6 +371,7 @@ int main(int argc, char **argv) {
 fn signed_products_preserve_bounds_effects_and_defined_intermediates() {
     let dir = fwp::cgen::TempDir::new("signed-products").unwrap();
     let input = dir.join("products.fwp");
+    let artifacts = std::env::var_os("FWP_SIGNED_PRODUCT_ARTIFACTS").map(PathBuf::from);
     std::fs::write(
         &input,
         "# expose: cli\nexport product : I64 -> I64 -> () ! {IO}\n\
@@ -442,9 +443,16 @@ fn signed_products_preserve_bounds_effects_and_defined_intermediates() {
             .unwrap();
         assert!(emitted.status.success(), "{emitted:?}");
         let code = std::fs::read_to_string(&cfile).unwrap();
+        if let Some(root) = &artifacts {
+            std::fs::create_dir_all(root).unwrap();
+            std::fs::write(root.join(format!("products-{memory}.c")), &code).unwrap();
+        }
         for opt in ["-O0", "-O1", "-O2", "-O3"] {
             let binary = dir.join("products.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            if let Some(root) = &artifacts {
+                std::fs::copy(&binary, root.join(format!("products-{memory}{opt}.exe"))).unwrap();
+            }
             let stress = if memory == "arc" { "0" } else { "1" };
             for (name, a, b, expected) in &cases {
                 let actual = outcome(
@@ -507,7 +515,10 @@ int main(int argc, char **argv) {{
 }}
 "#
             );
-            std::fs::write(&cfile, sanitized).unwrap();
+            std::fs::write(&cfile, &sanitized).unwrap();
+            if let Some(root) = &artifacts {
+                std::fs::write(root.join(format!("{label}.c")), &sanitized).unwrap();
+            }
             for opt in ["-O1", "-O2", "-O3"] {
                 let binary = dir.join(format!("{label}{opt}.exe"));
                 let (cc, flags) = fwp::cgen::c_compiler().unwrap();
@@ -525,6 +536,9 @@ int main(int argc, char **argv) {{
                     .output()
                     .unwrap();
                 assert!(compiled.status.success(), "{label}/{opt}: {compiled:?}");
+                if let Some(root) = &artifacts {
+                    std::fs::copy(&binary, root.join(format!("{label}{opt}.exe"))).unwrap();
+                }
                 if label == "checked" {
                     for (_, a, b, expected) in cases.iter().filter(|case| case.0 == "product") {
                         let actual =
@@ -536,6 +550,17 @@ int main(int argc, char **argv) {{
                         .args(["9223372036854775807", "2"])
                         .output()
                         .unwrap();
+                    if let Some(root) = &artifacts {
+                        std::fs::write(root.join(format!("{label}{opt}.stdout")), &actual.stdout)
+                            .unwrap();
+                        std::fs::write(root.join(format!("{label}{opt}.stderr")), &actual.stderr)
+                            .unwrap();
+                        std::fs::write(
+                            root.join(format!("{label}{opt}.status")),
+                            format!("{:?}\n", actual.status.code()),
+                        )
+                        .unwrap();
+                    }
                     assert!(!actual.status.success(), "{actual:?}");
                     assert!(
                         String::from_utf8_lossy(&actual.stderr).contains("signed integer overflow"),
