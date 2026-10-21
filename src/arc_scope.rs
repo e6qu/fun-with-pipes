@@ -135,10 +135,10 @@ fn has_channels(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
     }
 }
 
-/// Immutable data and socket handles cannot own a queue or callback. Sockets
-/// have shared value owners; their final release closes the descriptor. Data
-/// channels also need the producer/payload proof below. File captures violate
-/// source-level linear use; other mutable owners still need lifetime proofs.
+/// Socket handles cannot own a queue or callback; final release closes their
+/// descriptor. Follow immutable containers' fields. Data channels also need the
+/// producer/payload proof below. File captures violate source-level linear use;
+/// other mutable owners still need lifetime proofs.
 fn queued_capture_type(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> Result<(), String> {
     if !seen.insert(ty.clone()) {
         return Ok(());

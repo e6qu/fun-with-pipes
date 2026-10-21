@@ -2,64 +2,79 @@
 
 ## Next action
 
-Next: publish the queue-summary repair and run the broad six-native/two-WASI
-focused matrix. The first Linux probe `39576706899` at `fb448042` passed lint,
-inventory, all compiler unit tests and every native target except the new queue
-fixture. Its ARC emission lost the captured channel's producer. Full log audit:
-`/private/tmp/fwp-data-queue-probe.json`.
+Next: require all nine production jobs plus documentation for the final head
+of the data-queue capture PR on `prove-data-queue-captures`. Audit every completed
+log and fix every failure. Then squash-merge with an explicit one-line subject
+under 80 characters and an empty body. Standing authorization remains in effect;
+focused checks alone do not authorize merge. Keep one active PR.
 
-The repair preserves queue origins in non-function return summaries; the old
-function-only filter had cleared them. A full-analysis unit control now checks
-that path. The fixture also requires the repeated receive to return Some (),
-so an empty result cannot silently skip its callback. The strengthened fixture
-passes accepted raw interpretation. Candidate native cleanup is still unverified.
-Do not open a second PR until #184 passes and is merged.
+PR #184 passed all ten gates and was squash-merged as
+`b3401149955ff6e0aaa1d70044b527aec20f2e5f`. Its tested head `0509937311ffd94171da9e2213c387d23e81739a`
+and merge have identical trees. The [history](roadmap-history.md#queued-socket-callbacks-and-handler-inference-pr-184)
+records acceptance; local receipt `/private/tmp/fwp-184-final-acceptance.json`
+verifies the message, parent and tree. Do not repeat that completed delivery.
 
-Branch `prove-data-queue-captures` is in `/private/tmp/fwp-data-queue-captures`,
-based on PR #184 review commit `0509937311ffd94171da9e2213c387d23e81739a`.
-PR #184 remains active in `/Users/zardoz/projects/fun-with-pipes`; its final CI
-is `39570320517`, with documentation `39570319685`. Its exact-head audit and
-conditional merge helpers are `/private/tmp/fwp-audit-184-final.py` and
-`/private/tmp/fwp-merge-184.py`. Keep the two checkouts and evidence separate.
-After the squash merge, transplant this preparation onto the accepted main
-commit, retaining its changes and the updated delivery history.
+This checkout is `/private/tmp/fwp-data-queue-captures`, based on that accepted
+main commit. All eight focused jobs in
+`39578006890` passed at `3e3385c12fda3097b39f901146b4290bb32161e5`; remote tag
+`roadmap/revision-data-queues-3e3385c12fda` preserves that source. Only a source
+comment, documentation and evidence changed afterward. Final-head production
+checks remain required; their IDs will be recorded locally after publication.
 
-## Implementation being checked
+## What changed
 
-The finite ownership analysis now tracks known queue creators and unknown queue
-sources alongside function origins. A queued callback may capture a data-only
-queue created by `channel.make`, including through records, lists or other
-proved data queues. It checks values ever sent into nested queues; a known
-creator must not hide an unknown owner in its contents. Existing type checks
-still reject recursive queue ownership and function-bearing captured channels.
-Tasks, HTTP streams, gRPC cells and single-use files remain excluded captures.
-No runtime representation, weak-reference API or source syntax changes.
+The ownership analysis tracks known queue creators and unknown sources alongside
+functions. A queued callback may capture a data-only queue from `channel.make`,
+including through records, lists and nested data queues. Every value sent into a
+nested queue is checked. A known outer creator cannot hide an unknown inner owner.
+Function-return summaries now preserve queue origins; the first probe exposed
+that they previously erased all non-function origins. A full-analysis unit control
+covers that repair. First probe audit: `/private/tmp/fwp-data-queue-probe.json`.
 
-Unit controls cover known/unknown producer joins, nested contents, empty
-containers, unrelated aggregate fields and callback-bearing queues. The new
-`queued_data_channels.fwp` fixture covers delivery, repeated reads, aliases,
-records/lists, nested and undrained queues, failure, blocked sends and
-cancellation. Native tests instrument live queue objects with a 64-object bound
-and require complete teardown; removing queue release must fail with exit 198.
-The same fixture joins asynchronous WASI/browser-loader tests in JSPI and
-Asyncify modes at O1/O2. These checks are added, not yet passed.
+Function-bearing captured queues, recursive queue ownership, unknown/native
+producers, tasks, HTTP streams, gRPC cells and single-use files retain their
+restrictions. No runtime layout, weak-reference API or syntax changes were added.
+The [ownership guide](ownership.md#functions-stored-in-channels) includes an
+explained example; the [evidence guide](measurements/queued-data-channels.md)
+states exactly what the checks measure and exclude.
 
-## Checks and limits
+## Verified checks
 
-The accepted PR #183 macOS ARM64 compiler formatted the new fixture and its raw
-interpreter printed `data queues released` for all 64 rounds. The first draft's
-cancellation callback did not match task.spawn's permitted effect row; its
-stored Wait function now declares that existing API contract explicitly. The
-ordinary Event function keeps only Async. This source check does not validate
-the new ARC proof. Rust formatting is applied; no local build or native C
-compilation was run. Use `python3 scripts/local-guard.py` for all local checks.
+The focused matrix covers six native platforms and two Linux WebAssembly hosts.
+Every complete log was audited. All 24 native binaries have the expected
+architecture, output, generated C and disassembly. ARC excludes collector routines;
+tracing controls retain marking. The 64-round fixture verifies normal delivery,
+aliases, nested queues, failure, blocked sends and cancellation. Queue counts return
+to zero; deliberately omitted releases fail with exit 198.
 
-The prior full-CI timing review and next ownership notes are in
-`/private/tmp/fwp-183-test-duration-review.json` and
-`/private/tmp/fwp-184-next-ownership-notes.md`. They identify repeated REST server
-builds as a cycle-time investigation, without claiming a measured improvement.
-Disk remains close to the 64 GiB floor. Preserve current inspected binaries;
-cleanup receipts are recorded in the main checkout's handoff. Never raise limits.
+Both WebAssembly hosts pass WASI/browser-loader execution under Node, with JSPI
+and Asyncify at O1/O2. All 64 modules, saved C and successful-run symbol listings
+were inspected. Physical-allocation/count-table teardown passes; omitted scheduler
+or queue cleanup fails with exit 244. This is not an actual-browser test, speed
+benchmark, retain/release count or total-process memory bound.
+
+Local receipts and scripts: `/private/tmp/fwp-data-queue-matrix.json`,
+`fwp-audit-data-queue-matrix.py`, `fwp-data-queue-evidence.py`,
+`fwp-data-queue-wasi-evidence.py` and `fwp-data-queue-report.py`.
+Inspected files and download digests are in `/private/tmp/fwp-data-queue-evidence`;
+verified ZIP containers were removed to save space. The report retains artifact
+IDs and digests for recovery. The accepted PR #183 macOS compiler also checked
+raw interpretation of the fixture and the documentation example. Full builds and
+native execution ran on GitHub, not locally.
+
+## Local resources and next investigations
+
+Use `python3 scripts/local-guard.py COMMAND...` for serial local checks. Preserve
+64 GiB free disk, target data below 2 GiB, sampled workload RSS below 1 GiB and
+the 180-second deadline. Last measured free space was 64.35 GiB. Do not raise limits.
+The main handoff records verified cache cleanup, including 388 MiB of byte-identical
+older inputs whose canonical copies remain. Current inspected binaries are retained.
+
+The previous full-CI timing review is `/private/tmp/fwp-183-test-duration-review.json`.
+Repeated REST server compilation is a possible cycle-time investigation, not a
+measured improvement. Research notes are `/private/tmp/fwp-184-next-ownership-notes.md`;
+its candidate data-queue scope is now implemented, not a task to repeat. Select the
+next ownership gap from maintained programs and explicit producer contracts.
 
 ## Roadmap status
 

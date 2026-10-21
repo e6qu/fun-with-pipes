@@ -687,8 +687,10 @@ channels hold strings, which cannot point back. `Channel[Task[String]]` is not,
 since a task could capture that channel. HTTP stream handles remain excluded
 for the same reason. The [queued-function capture proof](ownership.md#functions-stored-in-channels)
 admits proved immutable captures and shared socket handles (`UdpSocket`,
-`Listener`, `Conn`), which cannot own a queue. The linked contract records
-validation status. A function's input/output type alone cannot establish that
+`Listener`, `Conn`), which cannot own a queue. It also admits captured data-only
+queues from `channel.make` when their nested owners have known sources.
+Unknown/native queue producers remain rejected as captures. The linked contract
+records validation status. A function's input/output type alone cannot establish that
 proof. The compiler follows record,
 variant and container fields and rejects a path back to the same channel type;
 see the [proof and limits](ownership.md#ownership-boundaries).

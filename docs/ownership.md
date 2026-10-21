@@ -401,14 +401,59 @@ A closure keeps its captured handle alive; receiving transfers ownership, droppi
 an undrained queue releases it, and releasing the final socket owner closes the
 OS descriptor. Explicit close still affects every alias.
 
-The next extension, currently under validation, tracks data-queue creators.
-It admits a callback capturing a queue from `channel.make` only when its payload
+The data-queue extension tracks queue creators. It admits a callback capturing
+a queue from `channel.make` only when its payload
 cannot contain functions and its nested queue owners have known sources. Native
 or unknown producers remain rejected as captures, including when mixed with
 known creators. Recursive queue types still fail the separate cycle check.
-The [new fixture](../tests/fixtures/queued_data_channels.fwp) exercises this path;
-its addition is not passing native support. See the [handoff](development-state.md)
-for current checks.
+The [cleanup checks](measurements/queued-data-channels.md) pass on all six native
+platforms and both WebAssembly hosts. See the [handoff](development-state.md)
+for full production acceptance.
+
+For example, an event can retain a text queue until someone calls its `read`
+function. `Channel[String]` stores text; `Channel[Event]` stores records containing
+a function. The `Async` effect allows these operations to wait for a message or
+space. Both queues below have capacity one.
+
+`curry` turns a function taking a tuple into successive single-argument calls.
+Here `read-text queue` saves the queue and returns a function waiting for `()`;
+`.0` selects the queue from that pair. `make Event { read = id }` wraps this
+function in the record's `read` field. `id` keeps its input unchanged.
+
+```fwp
+Event = { read: () -> Option[String] ! {Async} }
+texts : I64 -> Channel[String] ! {Async}
+texts = channel.make
+events : I64 -> Channel[Event] ! {Async}
+events = channel.make
+read-text : Channel[String] -> () -> Option[String] ! {Async}
+read-text = curry (.0 | channel.recv)
+event : Channel[String] -> Event ! {Async}
+event =
+    tap (flip channel.send "hello") | read-text | make Event { read = id }
+main =
+    texts 1
+    | event
+    | both (const 1 | events) id
+    | tap (fork channel.send .0 .1)
+    | .0
+    | channel.recv
+    | option.and-then (.read | apply ())
+    | echo
+```
+
+`both f g` builds a pair from two uses of the same input. `const 1` ignores that
+input and produces the capacity, so the pair contains a fresh event queue and
+the event. `fork channel.send .0 .1` sends the pair's second value into its first;
+`tap` keeps the pair afterward. Receiving the event and calling its `read` field
+receives `"hello"` from the text queue. `option.and-then` runs this call only for
+`Some event`, without nesting another `Option`. The output is `Some "hello"`.
+
+The ownership chain is event queue → event → text queue → text. Text cannot refer
+back to either queue. A second read would wait while the text queue is open and
+empty: retaining a queue does not duplicate its messages. This example passes
+raw interpretation; the native fixture checks this pattern alongside failure
+and cancellation.
 
 `File` is different: source type checking already forbids capturing this
 single-use resource in a reusable function. Pass the file as the final argument;

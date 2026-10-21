@@ -956,6 +956,16 @@ a channel or callback. Existing typed closure cleanup therefore releases these
 captures without creating a queue cycle; explicit close still changes every
 alias. Native validation is tracked in the linked queued-function contract.
 `File` remains single-use and cannot be captured by a reusable function.
+
+`arc_scope.rs` also tracks data queues created by `channel.make`. A callback may
+capture one when its payload contains no functions and nested queues have proved
+creators. Function-return summaries preserve these queue origins, meaning the
+possible places where a value was created. Unknown native or external sources
+stay unknown when combined with known sources. Checking every value sent into a
+nested queue prevents a known outer creator from hiding an unknown inner owner.
+The [data-queue checks](measurements/queued-data-channels.md) cover native and
+WebAssembly cleanup; this changes the compile-time proof, not runtime storage.
+
 The [channel proof](ownership.md#ownership-boundaries) follows each channel's
 payload types and rejects a path back to that channel type. Immutable recursive
 containers remain allowed. Mutable
