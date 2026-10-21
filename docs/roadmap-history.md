@@ -12,6 +12,21 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Compact task records and repaired native validation (PR #189)
+
+ARC task records are 32 bytes smaller on each measured native host. Allocation
+and retain counts stay unchanged; allocator size classes make peak savings vary.
+[The report](measurements/task-records.md) preserves those limits, tracing-mode
+results and actual binary inspection. Windows output assertions and dependency
+fetching are repaired without dropping checks.
+
+[PR #189](https://github.com/e6qu/fun-with-pipes/pull/189) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39641372026)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39641321443)
+at `4dfc2be31c62c9e54271692ac8638fbb66ca786b`. Every complete log was audited.
+Squash merge `030fa3374e36459d9a774379e2116ac42ed5db1d` has the identical tree,
+expected parent and verified single-line message without body or trailers.
+
 ## Cancellation buffers and Windows ARC fibers (PR #188)
 
 [PR #188](https://github.com/e6qu/fun-with-pipes/pull/188) was merged by the user
@@ -21,10 +36,14 @@ The [cancellation-only comparison](measurements/task-cancellation.md) has earlie
 six-host evidence. The added Windows fiber probe passed its first execution but
 its assertion expected LF instead of the C runtime's CRLF output on both Windows
 architectures. That stopped the remaining variants and left incomplete artifacts.
-This merge is not full platform acceptance. [PR #189](https://github.com/e6qu/fun-with-pipes/pull/189)
-repairs the assertion and reruns every variant with the
-[compact-record measurements](measurements/task-records.md). Its final production
-acceptance is tracked in the handoff; do not treat this early merge as acceptance.
+The completed [production run](https://github.com/e6qu/fun-with-pipes/actions/runs/39635039734)
+has six passing jobs, these two Windows failures, and a macOS ARM64 GC-stress
+failure resolving crates.io before compilation. Every full log was audited;
+documentation passed. This merge is not full platform acceptance.
+[PR #189](https://github.com/e6qu/fun-with-pipes/pull/189) repairs the assertion
+and dependency fetching, and reruns every variant with the
+[compact-record measurements](measurements/task-records.md). PR #189 has full production
+acceptance as recorded above; this earlier merge alone does not.
 
 ## Smaller Linux task heap records (PR #187)
 

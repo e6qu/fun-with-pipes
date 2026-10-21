@@ -32,6 +32,11 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
             include_str!("fixtures/queued_data_channels.fwp"),
             include_str!("fixtures/queued_data_channels.out"),
         ),
+        (
+            "task-handles",
+            include_str!("fixtures/queued_task_handles.fwp"),
+            include_str!("fixtures/queued_task_handles.out"),
+        ),
     ] {
         std::fs::write(&source, program).unwrap();
         let compiler = env!("CARGO_BIN_EXE_fwp");
@@ -47,12 +52,28 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
             checked(
                 Command::new(compiler)
                     .env_remove("FWP_NO_OPT")
-                    .args(["build", "--gc", memory, "--emit-c"])
+                    .args(["build", "-O1", "--gc", memory, "--emit-c"])
                     .arg(&source)
                     .arg("-o")
                     .arg(&cfile),
             );
             let mut code = std::fs::read_to_string(cfile).unwrap();
+            if name == "task-handles" && memory == "arc" {
+                let create = "    task->identity = ++fwp_task_identity;";
+                let release = "    if (!t->done || t->stack) abort();";
+                let root_release = "        fwp_mem_free(fwp_root);";
+                let finish = "\n    fwp_cl_finish();\n";
+                // Library/WASI and executable shutdown each have a root release.
+                for (needle, count) in [(create, 1), (release, 1), (root_release, 2), (finish, 1)] {
+                    assert_eq!(code.matches(needle).count(), count, "{needle}");
+                }
+                code = code
+                    .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic unsigned captured_task_live, captured_task_created;")
+                    .replace(create, &format!("{create}\n    captured_task_created++; if (++captured_task_live > 64) exit(201);"))
+                    .replace(release, &format!("{release}\n    if (!captured_task_live) exit(202); captured_task_live--;"))
+                    .replace(root_release, &format!("    if (!captured_task_live) exit(202); captured_task_live--;\n{root_release}"))
+                    .replace(finish, &format!("{finish}    if (captured_task_live || !captured_task_created) exit(203);\n"));
+            }
             if name == "data-queues" {
                 let create = "    fwp_chan *c = (fwp_chan *)fwp_mem_alloc(sizeof(fwp_chan));";
                 let release = "    if (c->sendq.head || c->recvq.head) abort();";
@@ -134,7 +155,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     std::fs::write(path.join(format!("{label}.stderr")), &actual.stderr).unwrap();
                     std::fs::write(
                         path.join(format!("{label}.status")),
-                        actual.status.to_string(),
+                        format!("{:?}\n", actual.status.code()),
                     )
                     .unwrap();
                     let (tool, flag) = if cfg!(target_os = "macos") {
@@ -167,6 +188,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     let expected = match name {
                         "sockets" => 194,
                         "data-queues" => 198,
+                        "task-handles" => 201,
                         _ => 193,
                     };
                     assert_eq!(
@@ -174,6 +196,23 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                         Some(expected),
                         "{name}/{opt}: {omitted:?}"
                     );
+                    if name == "task-handles" {
+                        if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
+                            let path = std::path::PathBuf::from(path);
+                            let label = format!("task-handles-arc{opt}-missing-queue-owner");
+                            std::fs::write(path.join(format!("{label}.c")), &missing_drop).unwrap();
+                            std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                            std::fs::write(path.join(format!("{label}.stdout")), &omitted.stdout)
+                                .unwrap();
+                            std::fs::write(path.join(format!("{label}.stderr")), &omitted.stderr)
+                                .unwrap();
+                            std::fs::write(
+                                path.join(format!("{label}.status")),
+                                format!("{:?}\n", omitted.status.code()),
+                            )
+                            .unwrap();
+                        }
+                    }
                     if name == "sockets" {
                         let omitted_close = code.replace(
                             "    fwp_sock_final(s);",
@@ -207,6 +246,8 @@ keep = then2 const channel.close
 "#;
     for (name, body) in [
         ("self", "send-self = fork channel.send id keep\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n"),
+        ("task-computation", "Event = { read: () -> () ! {Async} }\nevents : I64 -> Channel[Event] ! {Async}\nevents = channel.make\nwait : Task[()] -> () -> () ! {Async}\nwait = curry (.0 | task.await | ignore)\nkeep-task = keep | task.spawn\nmain = (callbacks 1, events 1) | tap (fork channel.send .1 (.0 | keep-task | wait | make Event { read = id })) | .1 | channel.recv | option.map (.read | apply ()) | ignore\n"),
+        ("task-result", "Event = { read: () -> () ! {Async} }\nevents : I64 -> Channel[Event] ! {Async}\nevents = channel.make\nwait : Task[() -> () ! {Async}] -> () -> () ! {Async}\nwait = curry (.0 | task.await | option.map (apply ()) | ignore)\nkeep-task = keep | const | task.spawn\nmain = (callbacks 1, events 1) | tap (fork channel.send .1 (.0 | keep-task | wait | make Event { read = id })) | .1 | channel.recv | option.map (.read | apply ()) | ignore\n"),
         ("returned", "returned = keep | const | apply ()\nsend-self = fork channel.send id returned\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n"),
         ("nested", "lists : I64 -> Channel[List[() -> () ! {Async}]] ! {Async}\nlists = channel.make\nmain = lists 1 | tap (flip channel.send [keep (callbacks 1)]) | channel.recv | ignore\n"),
         ("two-queues", "main = (callbacks 1, callbacks 1) | tap (fork channel.send .0 (.1 | keep)) | tap (fork channel.send .1 (.0 | keep)) | both (.0 | channel.recv) (.1 | channel.recv) | ignore\n"),
@@ -225,6 +266,154 @@ keep = then2 const channel.close
         let error = String::from_utf8_lossy(&build.stderr);
         assert!(error.contains("queued function") && error.contains("captured") && error.contains("Channel"), "{name}: {error}");
     }
+}
+
+#[test]
+fn direct_task_messages_reject_computation_and_result_queue_owners() {
+    let dir = fwp::cgen::TempDir::new("queued-task-cycles").unwrap();
+    for (name, source, diagnostic) in [
+        (
+            "computation",
+            r#"
+jobs : I64 -> Channel[Task[String]] ! {Async}
+jobs = channel.make
+keep : Channel[Task[String]] -> () -> String ! {Async}
+keep = curry (.0 | channel.close | const "done")
+main = jobs 1 | tap (fork channel.send id (keep | task.spawn)) | channel.recv | option.and-then task.await | ignore
+"#,
+            "captured task-bearing channel `Channel[Task[String]]`",
+        ),
+        (
+            "result",
+            r#"
+TaskResult = { close: () -> () ! {Async} }
+jobs : I64 -> Channel[Task[TaskResult]] ! {Async}
+jobs = channel.make
+keep : Channel[Task[TaskResult]] -> () -> () ! {Async}
+keep = curry (.0 | channel.close)
+start = keep | make TaskResult { close = id } | const | task.spawn
+main = jobs 1 | tap (fork channel.send id start) | channel.recv | option.and-then task.await | option.map (.close | apply ()) | ignore
+"#,
+            // TaskResult contains a callback, so this queue also carries function
+            // owners through its tasks. That existing check rejects it first.
+            "captured function-bearing channel `Channel[Task[TaskResult]]`",
+        ),
+    ] {
+        let input = dir.join(format!("{name}.fwp"));
+        let cfile = dir.join("tracing.c");
+        let compiler = env!("CARGO_BIN_EXE_fwp");
+        std::fs::write(&input, source).unwrap();
+        let reference = checked(
+            Command::new(compiler)
+                .env("FWP_NO_OPT", "1")
+                .args(["run", "--interp"])
+                .arg(&input),
+        );
+        checked(
+            Command::new(compiler)
+                .args(["build", "-O1", "--gc", "tracing", "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        for opt in ["-O0", "-O2"] {
+            let binary = dir.join("tracing.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let actual = checked(
+                Command::new(binary)
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", "1"),
+            );
+            assert_eq!(
+                (&actual.stdout, &actual.stderr),
+                (&reference.stdout, &reference.stderr)
+            );
+        }
+        let build = Command::new(compiler)
+            .args(["build", "-O1", "--gc", "arc", "--emit-c"])
+            .arg(&input)
+            .arg("-o")
+            .arg(dir.join("rejected.c"))
+            .output()
+            .unwrap();
+        assert!(
+            !build.status.success(),
+            "{name}: accepted an unproved queue owner"
+        );
+        let error = String::from_utf8_lossy(&build.stderr);
+        assert!(error.contains(diagnostic), "{name}: {error}");
+    }
+}
+
+#[test]
+fn task_results_reject_a_cached_self_owner_without_a_channel() {
+    let dir = fwp::cgen::TempDir::new("task-result-cycle").unwrap();
+    let source = dir.join("cycle.fwp");
+    std::fs::write(
+        &source,
+        r#"
+TaskResult = { read: () -> () ! {Async} }
+wait : Task[TaskResult] -> () -> () ! {Async}
+wait = curry (.0 | task.await | ignore)
+rec work : () -> TaskResult ! {Async}
+work = match
+    () -> TaskResult { read = wait main }
+rec main = task.spawn work
+"#,
+    )
+    .unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .arg("check")
+            .arg(&source),
+    );
+    let reference = checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    let cfile = dir.join("tracing.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--gc", "tracing", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    for opt in ["-O0", "-O2"] {
+        let binary = dir.join("tracing.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        let actual = checked(
+            Command::new(binary)
+                .env("FWP_GC_STRESS", "1")
+                .env("FWP_GC_VERIFY", "1")
+                .env("FWP_REUSE_VERIFY", "1"),
+        );
+        assert_eq!(
+            (&actual.stdout, &actual.stderr),
+            (&reference.stdout, &reference.stderr)
+        );
+    }
+
+    let result = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .args(["build", "--gc", "arc", "--emit-c"])
+        .arg(&source)
+        .arg("-o")
+        .arg(dir.join("cycle.c"))
+        .output()
+        .unwrap();
+    assert!(
+        !result.status.success(),
+        "accepted a task owning itself through its result"
+    );
+    assert!(
+        String::from_utf8_lossy(&result.stderr).contains("acyclic task result"),
+        "{result:?}"
+    );
 }
 
 #[test]
@@ -300,7 +489,7 @@ main = callbacks 1 | tap (flip channel.send (choose True)) | channel.recv | opti
         checked(
             Command::new(compiler)
                 .env("FWP_NO_OPT", "1")
-                .args(["build", "--gc", memory, "--emit-c"])
+                .args(["build", "-O1", "--gc", memory, "--emit-c"])
                 .arg(&source)
                 .arg("-o")
                 .arg(&cfile),
@@ -393,7 +582,7 @@ fn queued_remote_iterators_reject_hidden_stream_owners() {
         (true, "arc", false),
     ] {
         let mut build = Command::new(env!("CARGO_BIN_EXE_fwp"));
-        build.args(["build", "--gc", memory, "--emit-c"]);
+        build.args(["build", "-O1", "--gc", memory, "--emit-c"]);
         if remote {
             build.args(["--service", "greeter"]);
         }

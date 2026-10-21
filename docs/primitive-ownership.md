@@ -141,8 +141,10 @@ boundary; it does not establish tracing-free eligibility.
 Channel close preserves queued values. Explicit drain breaks the tested counted
 cycle, while unreachable shared cycles still need tracing. Checked ARC admits
 nested channels when following their payload types cannot lead back to the same
-channel type. Tasks and HTTP stream handles remain excluded at any nested
-position because their hidden owners can lead back to the queue. The
+channel type. HTTP stream handles remain excluded because their hidden owners
+can lead back to the queue. The [task-message extension](measurements/task-channels.md)
+also follows each known task's computation and result; unknown producers and
+captured task-bearing queues remain rejected. The
 [queued-function capture proof](ownership.md#functions-stored-in-channels)
 checks actual captures and call scopes separately. The queue owns each
 retained message and the last channel owner releases remaining messages. See the
@@ -222,8 +224,12 @@ The runtime owns fresh typed result wrappers from task.await, task.within and
 channel receives. Wrappers own their pointer-bearing payloads; scalar words
 do not select reference destructors. task.deadline borrows its typed argument
 and retains the returned alias instead of forcing it into runtime sharing.
-It also retains spawn/deadline captures through entry, completion or
-cancellation and protects scope results through joining and unwind. Counted
+The candidate `task.spawn` and `task.within` contracts consume one callback owner;
+the compiler duplicates it first only if another use needs an independent owner.
+The task keeps that owner through preparation, completion or cancellation.
+Deadline calls protect it while reading the clock. These changes are awaiting
+[platform validation](measurements/queued-task-handles.md#transferring-task-callbacks).
+Scope results remain protected through joining and unwind. Counted
 task handles own typed cached results; repeated awaits return separate owners.
 Typed sends consume message owners and transfer them into the queue; the compiler
 retains independently live aliases before a send. Receive transfers the queued

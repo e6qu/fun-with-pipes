@@ -96,7 +96,7 @@ jobs:
       - name: Queued function captures, receive ownership and callback effects
         shell: pwsh
         run: |
-          cargo test --no-fail-fast --test queued_functions --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test task_handle_ownership --test task_timer_order --test borrowed_callbacks --test call_effects --test variant_alias_ownership --test variant_conversion_ownership -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          cargo test --no-fail-fast --test queued_functions --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test task_handle_ownership --test task_timer_order --test within_thunk_ownership --test borrowed_callbacks --test call_effects --test variant_alias_ownership --test variant_conversion_ownership -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
       - name: Generated programs with native resources and ownership stress
         shell: pwsh

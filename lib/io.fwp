@@ -25,9 +25,11 @@ foreign "fwp" env.vars : () -> List[(String, String)] ! {IO}
 # an unavailable directory explicitly.
 foreign "fwp" env.cwd : () -> String ! {IO, Error[IoError]}
 # Elapsed time since process clock initialization; useful for measuring intervals.
-# The clock cannot go backward. A Duration stores nanoseconds (one billion per second).
+# The clock cannot go backward. A Duration stores signed 64-bit nanoseconds
+# (one billion per second). An unreadable clock or out-of-range elapsed time traps.
 foreign "fwp" time.monotonic : () -> Duration ! {IO}
 # Wall-clock nanoseconds since 1970-01-01 UTC, stored in a Duration record.
+# Times before 1970 are negative. An unreadable or out-of-range clock traps.
 # Clock corrections can change this value; use time.monotonic for elapsed time.
 foreign "fwp" time.unix : () -> Duration ! {IO}
 

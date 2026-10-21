@@ -683,9 +683,12 @@ checked ownership; [PR #164](roadmap-history.md#server-entries-exact-json-and-we
 records their passing functional, memory and production checks.
 Channels are eligible when their ownership types cannot form a queue cycle.
 `Channel[String]` and `Channel[List[Channel[String]]]` are eligible: the inner
-channels hold strings, which cannot point back. `Channel[Task[String]]` is not,
-since a task could capture that channel. HTTP stream handles remain excluded
-for the same reason. The [queued-function capture proof](ownership.md#functions-stored-in-channels)
+channels hold strings, which cannot point back. For `Channel[Task[String]]`, the
+[task-message extension](measurements/task-channels.md) additionally proves the
+task's computation and result owners: a known producer can be accepted, but an
+unknown producer or captured task-bearing queue is rejected. The linked guide
+records validation status. HTTP stream handles remain excluded because their
+handlers can own the queue. The [queued-function capture proof](ownership.md#functions-stored-in-channels)
 admits proved immutable captures and shared socket handles (`UdpSocket`,
 `Listener`, `Conn`), which cannot own a queue. It also admits captured data-only
 queues from `channel.make` when their nested owners have known sources.

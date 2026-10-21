@@ -1,0 +1,152 @@
+# A queued function owns a known task. The task's computation and result must
+# have no owning path back to a function queue, even before the task starts.
+Event = { read: () -> Option[String] ! {Async} }
+events : I64 -> Channel[Event] ! {Async}
+events = channel.make
+read-task : Task[String] -> () -> Option[String] ! {Async}
+read-task = curry (.0 | task.await)
+from-task : Task[String] -> Event
+from-task = read-task | make Event { read = id }
+start : String -> Task[String] ! {Async}
+start = const | task.spawn
+event : String -> Event ! {Async}
+event = start | from-task
+enqueue : Event -> Channel[Event] ! {Async}
+enqueue = both (const 1 | events) id | tap (fork channel.send .0 .1) | .0
+receive : Channel[Event] -> Option[String] ! {Async}
+receive = channel.recv | option.and-then (.read | apply ())
+require : Bool -> ()
+require = if id (const ()) (const "queued task assertion failed" | prim.trap)
+aliases : Event -> () ! {Async}
+aliases =
+    .read
+    | both (apply ()) (apply ())
+    | eq (Some "twice", Some "twice")
+    | require
+slow : () -> String ! {Async}
+slow = const 1h | task.sleep | const "too late"
+cancelled : () -> Event ! {Async}
+cancelled = const slow | task.spawn | tap task.cancel | from-task
+nested-read : Task[Task[String]] -> () -> Option[String] ! {Async}
+nested-read = curry (.0 | task.await | option.and-then task.await)
+nested : String -> Event ! {Async}
+nested = start | const | task.spawn | nested-read | make Event { read = id }
+Text = { text: String }
+returned : Text -> () -> String
+returned = .text | const
+read-returned : Task[() -> String] -> () -> Option[String] ! {Async}
+read-returned = curry (.0 | task.await | option.map (apply ()))
+function-result : String -> Event ! {Async}
+function-result =
+    make Text { text = id }
+    | returned
+    | const
+    | task.spawn
+    | read-returned
+    | make Event { read = id }
+fail-with : Channel[Event] -> () ! {Error[String]}
+fail-with = const "expected" | fail
+# Direct messages own the same task handles, without wrapping them in callbacks.
+jobs : I64 -> Channel[Task[String]] ! {Async}
+jobs = channel.make
+enqueue-task : Task[String] -> Channel[Task[String]] ! {Async}
+enqueue-task = both (const 1 | jobs) id | tap (fork channel.send .0 .1) | .0
+receive-task : Channel[Task[String]] -> Option[String] ! {Async}
+receive-task = channel.recv | option.and-then task.await
+fail-tasks : Channel[Task[String]] -> () ! {Error[String]}
+fail-tasks = const "expected task failure" | fail
+Packet = { task: Task[String], label: String }
+packets : I64 -> Channel[Packet] ! {Async}
+packets = channel.make
+packet : String -> Packet ! {Async}
+packet = make Packet { task = start, label = id }
+enqueue-packet : Packet -> Channel[Packet] ! {Async}
+enqueue-packet =
+    both (const 1 | packets) id | tap (fork channel.send .0 .1) | .0
+read-packet : Packet -> () ! {Async}
+read-packet =
+    .task
+    | both task.await task.await
+    | eq (Some "packet", Some "packet")
+    | require
+round : () -> () ! {Async}
+round =
+    tap
+        (const "first" | event | enqueue | receive | eq (Some "first") | require)
+    | tap (const "twice"
+        | event
+        | enqueue
+        | channel.recv
+        | option.map aliases
+        | eq (Some ())
+        | require)
+    | tap (cancelled | enqueue | receive | eq None | require)
+    | tap (const "nested"
+        | nested
+        | enqueue
+        | receive
+        | eq (Some "nested")
+        | require)
+    | tap (const "returned"
+        | function-result
+        | enqueue
+        | receive
+        | eq (Some "returned")
+        | require)
+    | tap (const "closed"
+        | event
+        | enqueue
+        | tap channel.close
+        | receive
+        | eq (Some "closed")
+        | require)
+    | tap (const "undrained" | event | enqueue | tap channel.close | ignore)
+    | tap (const "failed"
+        | event
+        | enqueue
+        | attempt fail-with
+        | eq (Err "expected")
+        | require)
+    | tap (const 1 | jobs | channel.close)
+    | tap (const "direct"
+        | start
+        | enqueue-task
+        | receive-task
+        | eq (Some "direct")
+        | require)
+    | tap (const slow
+        | task.spawn
+        | tap task.cancel
+        | enqueue-task
+        | receive-task
+        | eq None
+        | require)
+    | tap (const "task closed"
+        | start
+        | enqueue-task
+        | tap channel.close
+        | receive-task
+        | eq (Some "task closed")
+        | require)
+    | tap (const "task undrained"
+        | start
+        | enqueue-task
+        | tap channel.close
+        | ignore)
+    | tap (const "task failed"
+        | start
+        | enqueue-task
+        | attempt fail-tasks
+        | eq (Err "expected task failure")
+        | require)
+    | tap (const "packet"
+        | packet
+        | enqueue-packet
+        | channel.recv
+        | option.map read-packet
+        | eq (Some ())
+        | require)
+    | tap (const "packet undrained" | packet | enqueue-packet | ignore)
+    | task.yield
+main =
+    range 0 64 | each (const () | round) | const "task captures released" | echo

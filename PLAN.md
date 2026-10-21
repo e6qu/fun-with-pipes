@@ -97,9 +97,16 @@ outside the benchmark suite.
    passed full acceptance in
    [PR #186](docs/roadmap-history.md#queued-service-responses-and-bounded-server-startup-pr-186),
    including native delivery, cancellation and cleanup from the actual service constructor.
+   The next [task-ownership group](docs/measurements/queued-task-handles.md) adds
+   proofs for queued task captures, rejects result back-references, and transfers
+   callback owners directly into spawned tasks. Its combined platform validation
+   is pending; keep these claims separate from accepted deliveries.
    Explicit weak handles remain a proposal. Prefer
    borrowing and scoped cleanup; distinguish a definite cycle from a missing proof.
    Reject unproved retention rather than silently use tracing.
+   The [direct task message candidate](docs/measurements/task-channels.md) follows
+   queued task captures, reusing runtime task ownership while extending the
+   compiler's queue-cycle proof. Its tests and platform acceptance are pending.
 2. Investigate remaining matched C/Rust gaps in integer counting. The
    [grouped-counting measurements](docs/measurements/integer-counting.md) show
    roughly half the former fwp CPU time, while preserving slower controls and
@@ -121,14 +128,12 @@ outside the benchmark suite.
    smaller scheduler heap records while counting saved CPU state, usable stack
    space and process memory separately. It passed [full acceptance in PR #187](docs/roadmap-history.md#smaller-linux-task-heap-records-pr-187);
    moving storage is not eliminating it.
-   [Cancellation-state storage](docs/measurements/task-cancellation.md) and Windows
-   ARC snapshot removal merged in PR #188 before full validation. The next group
-   repairs its Windows output assertion, compacts task-state flags and removes ARC's
-   remaining tracing-only stack marker. Its six native focused jobs pass.
-   [Task-record measurements](docs/measurements/task-records.md) show 32 fewer bytes
-   per ARC task with unchanged allocation/retain counts and platform-dependent
-   peak savings. Full PR #189 acceptance remains in the handoff; smaller records
-   do not establish a timing gain.
+   [Task-record measurements](docs/measurements/task-records.md), accepted in
+   [PR #189](docs/roadmap-history.md#compact-task-records-and-repaired-native-validation-pr-189),
+   establish 32 fewer bytes per ARC task with unchanged allocation/retain counts
+   and platform-dependent peak savings. Smaller records do not establish a timing
+   gain. Use that baseline to measure retained task owners and temporary results.
+
 
 All seven work areas remain open. The syntax and native-platform foundations
 are implemented; the main remaining work is ownership, representation,

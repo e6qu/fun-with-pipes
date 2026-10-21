@@ -7835,13 +7835,13 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                             "task.spawn" => {
                                 s = s.replace(
                                     "fwp_p_task_spawn(l0)",
-                                    &format!("fwp_p_task_spawn_retained(l0, {drop})"),
+                                    &format!("fwp_p_task_spawn_owned(l0, {drop})"),
                                 )
                             }
                             "task.within" => {
                                 s = s.replace(
                                     "fwp_p_task_within(l0, l1)",
-                                    &format!("fwp_p_task_within_retained(l0, l1, {drop}, {dup})"),
+                                    &format!("fwp_p_task_within_owned(l0, l1, {drop}, {dup})"),
                                 )
                             }
                             // The HTTP connection owns the handler; every

@@ -16,7 +16,7 @@ pub(crate) enum EntryChannels {
 /// through a queue is rejected, including cycles inside a nested queue. Immutable
 /// recursive types may repeat; `seen` bounds each search to the reachable type
 /// graph. Function captures have a separate value-flow proof in arc_scope;
-/// tasks and streams still hide owners without a queued-value contract.
+/// task computations/results use that proof too; streams still lack a contract.
 fn channel_payload(
     prog: &Program,
     ty: &MT,
@@ -43,7 +43,6 @@ fn channel_payload(
         }
         MT::Con(name, args) => {
             let reason = match name.as_str() {
-                "std::Task" => Some("task captures can retain the receiving channel"),
                 "std::H2Stream" => Some("stream handler captures can retain the receiving channel"),
                 _ => None,
             };
@@ -111,7 +110,7 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
                         return Err(format!("channel type `{ty}` requires one payload type"));
                     };
                     return channel_payload(prog, payload, ty, &mut HashSet::new(), "payload").map_err(|path| format!(
-                        "type `{ty}` has no tracing-free ownership contract: channel payloads cannot contain tasks, HTTP stream handles or recursive channel ownership\n  {path}\n  This is a missing cycle-freedom proof, not a demonstrated cycle. Keep callbacks and handles with an independent owner; queue data or non-owning IDs instead."
+                        "type `{ty}` has no tracing-free ownership contract: channel payloads cannot contain HTTP stream handles or recursive channel ownership\n  {path}\n  This is a missing cycle-freedom proof, not a demonstrated cycle. Keep callbacks and handles with an independent owner; queue data or non-owning IDs instead."
                     ));
                 }
                 "std::Bool" | "std::String" | "std::Bytes" | "std::File" | "std::UdpSocket"
@@ -299,18 +298,15 @@ mod tests {
     }
 
     #[test]
-    fn nested_queues_do_not_hide_task_or_stream_captures() {
+    fn nested_queues_defer_task_owners_to_flow_but_reject_stream_captures() {
         let prog = Program::default();
-        for payload in [
-            MT::Con("std::Task".into(), vec![MT::con("std::String")]),
-            MT::con("std::H2Stream"),
-        ] {
-            let ty = channel(channel(payload));
-            let error = value_type(&prog, &ty, &mut HashSet::new()).unwrap_err();
-            assert!(
-                error.contains("captures can retain the receiving channel"),
-                "{error}"
-            );
-        }
+        let task = MT::Con("std::Task".into(), vec![MT::con("std::String")]);
+        value_type(&prog, &channel(channel(task)), &mut HashSet::new()).unwrap();
+        let ty = channel(channel(MT::con("std::H2Stream")));
+        let error = value_type(&prog, &ty, &mut HashSet::new()).unwrap_err();
+        assert!(
+            error.contains("captures can retain the receiving channel"),
+            "{error}"
+        );
     }
 }

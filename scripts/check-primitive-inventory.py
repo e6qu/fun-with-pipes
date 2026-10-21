@@ -228,6 +228,18 @@ for row in rows:
             contract='Some(Contract { arguments: ' + arguments + ', result: Numeric, callback: None, aliases: [] })')
         continue
     before = baseline_rows[key]
+    if row['symbol'] in {'task.spawn', 'task.within'}:
+        assert all(row[name] == before[name] for name in fields if name != 'contract')
+        callback = 0 if row['symbol'] == 'task.spawn' else 1
+        result = 'OwnedTask' if callback == 0 else 'OwnedTaskOption'
+        arguments = '[Borrow]' if callback == 0 else '[Borrow, Borrow]'
+        expected_before = f'Some(Contract {{ arguments: {arguments}, result: {result}, callback: Some(Retained({callback})), aliases: [{callback}] }})'
+        assert before['contract'] == expected_before
+        arguments = '[Consume]' if callback == 0 else '[Borrow, Consume]'
+        expected = f'Some(Contract {{ arguments: {arguments}, result: {result}, callback: Some(Retained({callback})), aliases: [{callback}] }})'
+        assert row['contract'] == expected, (row, expected)
+        changed_symbols.add(row['symbol'])
+        continue
     if row['symbol'] in service_scopes:
         assert before['contract'] == 'None' and before['bucket'] == 'runtime_or_specialization_review'
         assert row['bucket'] == 'contract'
@@ -341,7 +353,7 @@ for row in rows:
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | set(service_scopes) | {'channel.send', 'http2.serve', 'grpc._force', 'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
+assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | set(service_scopes) | {'task.spawn', 'task.within', 'channel.send', 'http2.serve', 'grpc._force', 'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
 expected_counts = dict(baseline['counts'])
 expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes) + len(scalar_math)
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22
