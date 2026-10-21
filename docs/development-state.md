@@ -2,8 +2,10 @@
 
 ## Next action
 
-Next: publish the prepared task-storage change as one PR, then audit all nine
-production jobs plus documentation for its final head. Fix every failure.
+Next: audit all nine production jobs plus documentation for
+[PR #187](https://github.com/e6qu/fun-with-pipes/pull/187) on
+`measure-native-task-contexts`. If still a draft, publish this final handoff and
+mark it ready to start production CI once. Fix every failure, then squash merge.
 Use a one-line subject under 80 characters and an empty body; verify message,
 parent and tree. Standing authorization covers publication, repairs and merging.
 
@@ -12,14 +14,16 @@ PR #186 passed all ten gates and was squash-merged as
 `fa2d5098573220833bda06e30af9f534181edc0d`. Receipt
 `/private/tmp/fwp-186-final-acceptance.json` verifies its message, parent and tree;
 [history](roadmap-history.md#queued-service-responses-and-bounded-server-startup-pr-186)
-records the accepted change. Do not repeat that merge. The first post-merge run
-query returned none; recheck `fwp-cancel-186-duplicates.py` before publication.
+records the accepted change. Do not repeat that merge. Both post-merge run
+queries returned none; no duplicate run needed cancellation.
 
-The branch `measure-native-task-contexts` is in `/private/tmp/fwp-task-contexts`.
-Commit its final report/docs, then rebase from the tested PR #186 head onto the
-verified squash merge. The tested source tag is already preserved. Check that
-runtime/tests still match that source, move the branch to the main workspace and
-publish one PR. The draft description is `/private/tmp/fwp-task-context-pr.md`.
+The branch is now in `/Users/zardoz/projects/fun-with-pipes`. The clean temporary
+worktree was removed after rebasing onto the verified PR #186 merge; its source
+tree did not change. Runtime, compiler, tests, scripts and workflows still match
+the focused source below. Only documentation/evidence changed afterward.
+`/private/tmp/fwp-task-context-publication.json` records the rebase, workspace,
+PR and final publication head. Always check the PR's current head before accepting
+CI; passing runs from the focused source or the initial draft are insufficient.
 
 ## Task storage and evidence
 
@@ -63,9 +67,9 @@ platforms do not establish native support. Existing platform gates remain intact
 
 All checks used `python3 scripts/local-guard.py COMMAND...`, serially. Rustfmt
 passed for both changed Rust tests; Python syntax passed for the measurement
-script and artifact/report helpers. The documentation audit checks 78 link sets,
-106 immutable preparation pairs/tags and seven roadmap areas; rerun it after
-staging the final report links. No native compilation or
+script and artifact/report helpers. The documentation audit passed 78 link sets,
+106 immutable preparation pairs/tags and seven roadmap areas after staging the
+final report links. No native compilation or
 benchmark execution ran locally. Preserve the fixed 64 GiB disk, 2 GiB target,
 1 GiB workload RSS and 180-second limits.
 
