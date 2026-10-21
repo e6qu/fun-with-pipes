@@ -2,25 +2,28 @@
 
 ## Next action
 
-Next: merge PR #185 after its final production gate passes, then publish this
-service-response batch on accepted main. All eight jobs of focused run `39591489617` passed at
-`0b1d6c115893eb9dc37536b2b3345ccbdcc74155`; every complete log was audited.
-Use `/private/tmp/fwp-audit-grpc-sender-matrix.py` and
-`/private/tmp/fwp-inspect-grpc-captures.py`. Inspections are saved under
-`/private/tmp/fwp-grpc-sender-evidence`; all six native hosts are complete:
-84 binaries, 24 cleanup samples and 12 deliberate leak controls. The
-[report](measurements/queued-grpc-responses-2026-10-21.json) preserves costs and
-peak variation, with no timing claim. The report generator is
-`/private/tmp/fwp-report-grpc-captures.py`.
+Next: audit all nine production jobs plus documentation for the queued service
+response PR on `prove-grpc-sender-captures`. Fix every failure, then squash-merge
+with an explicit one-line subject under 80 characters and an empty body. The main
+workspace `/Users/zardoz/projects/fun-with-pipes` holds this delivery branch.
+Do not confuse the passing focused matrix with final-head production acceptance.
 
-Preparation branch `prove-grpc-sender-captures` is in
-`/private/tmp/fwp-grpc-sender-captures`, based on PR #185 head
-`73850bd3b6ac460a7e077cea8cd1128f9913aea0`. PR #185 is still the only open delivery:
-nine of its ten gates pass; Linux AMD64 is running. Its production run is
-`39584128319`, documentation `39584128240`. Use `/private/tmp/fwp-merge-185.py`
-only after exact-head acceptance. Preserve that head while CI runs. After merge,
-preserve focused source with an immutable tag and transplant this preparation
-onto accepted main before opening the next PR.
+PR #185 passed all ten gates and was squash-merged as
+`f9bd49d9f9416b471326090f1a423282d476b1a9`. Its tested head `73850bd3b6ac460a7e077cea8cd1128f9913aea0`
+and merge have identical trees; the [history](roadmap-history.md#queued-callbacks-retaining-data-queues-pr-185)
+records acceptance. Receipt `/private/tmp/fwp-185-final-acceptance.json` verifies
+the message, parent and tree. Do not repeat that completed delivery.
+
+All eight jobs of focused run `39591489617` passed at
+`0b1d6c115893eb9dc37536b2b3345ccbdcc74155`. Remote tag
+`roadmap/revision-grpc-responses-0b1d6c115893` preserves that source. Only workflow
+coverage/failure propagation, documentation and evidence changed afterward;
+rebasing onto accepted main preserved the source tree. Every complete log and
+all six native artifact sets were audited: 84 binaries, 24 cleanup samples and
+12 deliberate leak controls. The [report](measurements/queued-grpc-responses-2026-10-21.json)
+preserves costs and peak variation, with no timing claim. Local receipts are
+`/private/tmp/fwp-grpc-sender-matrix.json` and per-host `inspection.json` files
+under `/private/tmp/fwp-grpc-sender-evidence`.
 
 Standing authorization covers publishing, fixes and squash merge after all nine
 production jobs plus documentation pass. Supply a one-line subject under
@@ -79,8 +82,9 @@ guard. No limits changed. Free space fluctuates around the floor.
 The accepted PR #184 macOS compiler formatted both fixtures and matched their
 72-call raw interpreter output. The guarded documentation audit passed: 77 link
 sets, 106 immutable preparation pairs/tags and seven roadmap steps. All native
-compilation and execution occurred on GitHub. Main-checkout handoff records the
-recoverable-cache cleanup receipts; no unique evidence or branch was removed.
+compilation and execution occurred on GitHub. The previous local handoff and cleanup receipts are saved under
+`/private/tmp/fwp-185-root-handoff.md` and `fwp-*-cleanup*.json`. No unique evidence
+or branch was removed.
 
 After this delivery, investigate measured task-record storage and remaining count
 traffic before choosing an optimization. `/private/tmp/fwp-next-task-storage-notes.md`
