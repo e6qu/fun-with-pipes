@@ -63,6 +63,15 @@ jobs:
       - name: Task, scope and cancellation regressions
         if: ${{ !cancelled() }}
         run: cargo test --no-fail-fast --test task_ownership --test task_handle_ownership --test arc_tasks --test task_timer_order --test typed_state_ownership --test loop_unwind_ownership --test resource_frames
+      - name: Library unload and static task budgets
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends strace
+          strace -V
+          cargo test --test library_unload
+          cargo test --test static_memory -- --skip golden_programs_with_static_memory
       - name: Service response owners and complete connection cleanup
         if: ${{ !cancelled() }}
         run: cargo test --test grpc queued_response_channels_ -- --nocapture

@@ -2,8 +2,9 @@
 
 ## Next action
 
-Next: publish the expanded `task-contexts` measurement, then inspect every process
-sample on native Linux ARM64 and AMD64. The first proof at
+Next: publish the corrected `task-contexts` measurement, then inspect every process
+sample on native Linux ARM64 and AMD64. Candidate-only correctness assertions
+must run in separate binaries, so they cannot bias the timed pair. The first proof at
 `c4a6fb0abb70704662f2736a5ee981e62f1b3f31`, run `39600508036`, passed both jobs;
 their complete logs and 62 actual native binaries were inspected. This is isolated
 preparation on `measure-native-task-contexts` in `/private/tmp/fwp-task-contexts`,
@@ -66,6 +67,12 @@ optimization level. It records peak resident memory through the post-task-teardo
 checkpoint and elapsed time through complete process exit. Those are different
 scopes; neither isolates context-switch cost. The script retains raw samples,
 binary hashes, ranges and candidate/control ratios. These new samples are pending.
+The intermediate run `39603525279` at `03bb8b3f9795c2d2aa851b4140e8d66845e4a969`
+still included candidate-only assertions in its timed binaries; do not use its
+timings as an equivalent-work result. It is superseded by the corrected source.
+The runtime implementation is unchanged. The corrected probe also tests library
+unload, including a deliberately omitted root-image clear, and static-memory
+budgets with `strace` installed so the no-later-mappings check actually executes.
 
 The focused workflow includes task/scope/cancellation regressions and all four
 queued service-response cleanup cases. Its two Linux jobs are independent. Full

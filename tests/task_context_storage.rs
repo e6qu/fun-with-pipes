@@ -1,5 +1,5 @@
 //! Native Linux task records with saved CPU state in their existing stacks.
-#![cfg(target_os = "linux")]
+#![cfg(all(target_os = "linux", target_env = "gnu"))]
 
 use std::fs::File;
 use std::path::{Path, PathBuf};
@@ -262,54 +262,63 @@ fn task_context_storage_preserves_output_and_cleanup() {
                 &format!("    client_measure_end();\n{layout_report}    fprintf(stderr, \"process-peak-kib\\t%ld\\n\", fwp_gc_status_kb(\"VmHWM\"));\n"),
                 1,
             );
-            if layout == "stack" {
-                replace(&mut measured, "    fwp_native_tasks_finish();\n", "    fwp_native_tasks_finish();\n    for(size_t i=0;i<sizeof fwp_root_context;i++)if(((unsigned char *)&fwp_root_context)[i])_Exit(193);\n", 1);
-                replace(&mut measured, "    makecontext(t->ctx, fwp_task_main, 0);", "    makecontext(t->ctx, fwp_task_main, 0);\n    if((uintptr_t)t->ctx % _Alignof(ucontext_t) || (char *)t->ctx < t->stack || (char *)(t->ctx+1) > t->stack+t->stack_size || t->ctx->uc_stack.ss_size != (size_t)((char *)t->ctx-t->stack))_Exit(195);", 1);
-                replace(&mut measured, "        fwp_zombie->gc_prev = fwp_zombie->gc_next = 0;", "        fwp_zombie->gc_prev = fwp_zombie->gc_next = 0;\n        if(fwp_zombie->ctx || fwp_zombie->stack)_Exit(196);", 1);
-            }
+            let verified = if layout == "stack" {
+                let mut checked = measured.clone();
+                replace(&mut checked, "    fwp_native_tasks_finish();\n", "    fwp_native_tasks_finish();\n    for(size_t i=0;i<sizeof fwp_root_context;i++)if(((unsigned char *)&fwp_root_context)[i])_Exit(193);\n", 1);
+                replace(&mut checked, "    makecontext(t->ctx, fwp_task_main, 0);", "    makecontext(t->ctx, fwp_task_main, 0);\n    if((uintptr_t)t->ctx % _Alignof(ucontext_t) || (char *)t->ctx < t->stack || (char *)(t->ctx+1) > t->stack+t->stack_size || t->ctx->uc_stack.ss_size != (size_t)((char *)t->ctx-t->stack))_Exit(195);", 1);
+                replace(&mut checked, "        fwp_zombie->gc_prev = fwp_zombie->gc_next = 0;", "        fwp_zombie->gc_prev = fwp_zombie->gc_next = 0;\n        if(fwp_zombie->ctx || fwp_zombie->stack)_Exit(196);", 1);
+                Some(checked)
+            } else {
+                None
+            };
             for opt in ["-O0", "-O2"] {
-                let label = format!("{layout}{opt}");
-                let binary = compile(&measured, &path, &label, opt);
-                let actual = run(
-                    Command::new(binary)
-                        .env("FWP_GC", "off")
-                        .env("FWP_FREE", "1")
-                        .env("FWP_GC_STRESS", "0")
-                        .env("FWP_GC_VERIFY", "0")
-                        .env("FWP_REUSE_VERIFY", "0"),
-                    &path,
-                    &label,
-                    30,
-                );
-                assert!(
-                    actual.status.success(),
-                    "{memory}/{label}: {}",
-                    String::from_utf8_lossy(&actual.stderr)
-                );
-                assert_eq!(actual.stdout, b"528\n");
-                let stderr = String::from_utf8_lossy(&actual.stderr);
-                let counts = stderr
-                    .lines()
-                    .find(|line| line.starts_with("client-memory\t"))
-                    .unwrap();
-                let values: Vec<u64> = counts
-                    .split('\t')
-                    .skip(1)
-                    .map(|v| v.parse().unwrap())
-                    .collect();
-                assert_eq!(values.len(), 6);
-                assert_eq!(values[4..], [0, 0], "{memory}/{label}: {stderr}");
-                let peak: u64 = stderr
-                    .lines()
-                    .find_map(|line| line.strip_prefix("process-peak-kib\t"))
-                    .unwrap()
-                    .parse()
-                    .unwrap();
-                assert!(peak > 0, "whole-process peak memory unavailable: {stderr}");
-                assert_eq!(stderr.lines().count(), 3, "{stderr}");
+                let mut variants = vec![(format!("{layout}{opt}"), &measured)];
+                if let Some(checked) = &verified {
+                    variants.push((format!("{layout}{opt}-verified"), checked));
+                }
+                for (label, source) in variants {
+                    let binary = compile(source, &path, &label, opt);
+                    let actual = run(
+                        Command::new(binary)
+                            .env("FWP_GC", "off")
+                            .env("FWP_FREE", "1")
+                            .env("FWP_GC_STRESS", "0")
+                            .env("FWP_GC_VERIFY", "0")
+                            .env("FWP_REUSE_VERIFY", "0"),
+                        &path,
+                        &label,
+                        30,
+                    );
+                    assert!(
+                        actual.status.success(),
+                        "{memory}/{label}: {}",
+                        String::from_utf8_lossy(&actual.stderr)
+                    );
+                    assert_eq!(actual.stdout, b"528\n");
+                    let stderr = String::from_utf8_lossy(&actual.stderr);
+                    let counts = stderr
+                        .lines()
+                        .find(|line| line.starts_with("client-memory\t"))
+                        .unwrap();
+                    let values: Vec<u64> = counts
+                        .split('\t')
+                        .skip(1)
+                        .map(|v| v.parse().unwrap())
+                        .collect();
+                    assert_eq!(values.len(), 6);
+                    assert_eq!(values[4..], [0, 0], "{memory}/{label}: {stderr}");
+                    let peak: u64 = stderr
+                        .lines()
+                        .find_map(|line| line.strip_prefix("process-peak-kib\t"))
+                        .unwrap()
+                        .parse()
+                        .unwrap();
+                    assert!(peak > 0, "whole-process peak memory unavailable: {stderr}");
+                    assert_eq!(stderr.lines().count(), 3, "{stderr}");
+                }
             }
             if memory == "arc" && layout == "stack" {
-                let mut broken = measured;
+                let mut broken = verified.unwrap();
                 replace(&mut broken, "    fwp_root = fwp_cur = 0;\n#ifdef FWP_LIBC_CONTEXT\n    memset(&fwp_root_context, 0, sizeof fwp_root_context);\n#endif", "    fwp_root = fwp_cur = 0;", 1);
                 let label = "missing-root-clear-O2";
                 let binary = compile(&broken, &path, label, "-O2");

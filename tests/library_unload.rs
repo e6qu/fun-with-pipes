@@ -100,6 +100,10 @@ static void finalize(void *p) {
  if(observed->entered!=2||observed->completed!=1||observed->cancelled!=2)observed->order_error=1;
 #ifdef FWP_LIBRARY
  if(fwp_root||fwp_gc_tasks||fwp_stack_pool_n||fwp_caf_state0||fwp_lib_ready)observed->order_error=1;
+#ifdef FWP_LIBC_CONTEXT
+ for(size_t i=0;i<sizeof fwp_root_context;i++)
+  if(((unsigned char *)&fwp_root_context)[i])observed->order_error=1;
+#endif
  fwp_lib_finish(); /* Reentrant finish must not repeat finalization. */
 #endif
  observed->finalized++;
@@ -223,7 +227,7 @@ int main(void) {{
 }}
 "#
     );
-    let controls=[
+    let mut controls=vec![
         ("if (fwp_gc.reservation) munmap(fwp_gc.reservation, fwp_gc.reservation_bytes);", "/* missing heap unmap */",1),
         ("while (fwp_stack_pool_n) munmap(fwp_stack_pool[--fwp_stack_pool_n], FWP_NATIVE_TASK_STACK);", "fwp_stack_pool_n = 0; /* leaked stacks */",2),
         ("    fwp_caf_finish();", "    /* missing cache cleanup */",3),
@@ -231,6 +235,13 @@ int main(void) {{
         ("sigaction(SIGINT, &fwp_prior_sigint, 0);", "(void)0; /* missing signal restoration */",5),
         ("pthread_key_delete(fwp_closure_drop_key);", "/* missing key deletion */",4),
     ];
+    if cfg!(all(target_os = "linux", target_env = "gnu")) {
+        controls.push((
+            "    fwp_cur = fwp_root = fwp_zombie = 0;\n#ifdef FWP_LIBC_CONTEXT\n    memset(&fwp_root_context, 0, sizeof fwp_root_context);\n#endif",
+            "    fwp_cur = fwp_root = fwp_zombie = 0; /* missing saved register cleanup */",
+            3,
+        ));
+    }
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_library(
             &library_source,
@@ -287,7 +298,7 @@ int main(void) {{
                 "main\nfinalized\nfinished\n"
             );
         }
-        for (needle, replacement, expected) in controls {
+        for &(needle, replacement, expected) in &controls {
             assert!(
                 library_source.contains(needle),
                 "missing negative control {needle}"
