@@ -4,6 +4,11 @@ These are correctness and cleanup checks, not a speed benchmark. They compare
 fwp's interpreter with generated programs. They do not compare fwp with C or Rust,
 measure reference-count traffic, or establish a total-process memory bound.
 
+Automatic reference counting (ARC) keeps a count of the owners of shared storage
+and releases it when the last owner finishes. Updating those counts costs work.
+Tracing collection instead finds reachable objects by following references.
+The checks here concern correct cleanup; they do not measure that bookkeeping cost.
+
 A callback is a function stored for a later call. A channel can keep that function
 in its queue, and the function can keep other values alive. The compiler must
 prove that these owners cannot form a cycle before accepting them under

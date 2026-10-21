@@ -91,7 +91,9 @@ outside the benchmark suite.
 1. Extend [cycle-safe ownership contracts](docs/ownership.md#proposed-cycle-policy)
    for persistent subscriptions, retained resource captures and cyclic data graphs.
    Nested channels and selected queued functions already have native and
-   WebAssembly acceptance. Explicit weak handles remain a proposal. Prefer
+   WebAssembly acceptance. [Capturing locally created data queues](docs/measurements/queued-data-channels.md)
+   passes focused native/WebAssembly checks; full delivery status is in the handoff.
+   Explicit weak handles remain a proposal. Prefer
    borrowing and scoped cleanup; distinguish a definite cycle from a missing proof.
    Reject unproved retention rather than silently use tracing.
 2. Investigate remaining matched C/Rust gaps in integer counting. The

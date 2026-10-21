@@ -12,6 +12,24 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Queued socket callbacks and handler inference (PR #184)
+
+Queued functions can retain UDP sockets, TCP listeners and connections under
+checked ARC. Existing owners keep each socket alive and close it on final release.
+Error/state handler inference also preserves handled effects through callbacks
+and returned records, while keeping unrelated effects required. The
+[focused report](measurements/queued-callbacks.md) records native cleanup,
+actual-binary inspection and WASI handler checks; these are correctness results,
+not timing or C/Rust parity claims.
+
+[PR #184](https://github.com/e6qu/fun-with-pipes/pull/184) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39570320517)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39570319685)
+at `0509937311ffd94171da9e2213c387d23e81739a`. Every complete log was audited.
+Squash merge `b3401149955ff6e0aaa1d70044b527aec20f2e5f` has the identical tree
+`fe039ae7fafb9252b8a3d1177d89f0d632dec9d8`. Its message is exactly
+`Support queued socket callbacks and correct handler inference`, one line with no body or trailers.
+
 ## Checked-product bounds (PR #183)
 
 Signed I64/ISize multiplication keeps its overflow check, then exposes the safe
