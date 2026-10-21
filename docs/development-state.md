@@ -16,21 +16,35 @@ Publication receipt: `/private/tmp/fwp-combined-publication.json`.
 
 Branch `application-baselines`, worktree `/private/tmp/fwp-application-baselines`,
 is preparing the next substantial batch while #191 runs. No second PR is open.
-It names a finite [application acceptance suite](application-acceptance.md),
-adds sorted-map C/Rust peers for the maintained word-frequency example, and
-records explicit input, timing, memory and binary-inspection boundaries.
-Word ties sort by the word; seven boundary cases compare raw interpretation
-and native ARC/tracing at O0/O2. A runner-only Linux ARM64/AMD64 comparison uses
-4,096/64 and 65,536/1,024 words/distinct words, two warmups and sixteen samples.
-No measurements or performance budgets are accepted yet.
+Source `74263bccf8e2e67865e1863e2c04a296a97877bb`, immutable tag
+`roadmap/revision-wordfreq-74263bccf8e2`, passes both Linux word-frequency jobs
+in `39690307737`; full logs are audited. Eight executed binaries are independently
+inspected in `/private/tmp/fwp-application-evidence/74263bccf8e2/inspection.json`.
+The [baseline](measurements/wordfreq.md) retains all samples: for 65,536 words,
+fwp ARC takes 3.29–3.52× C time and 2.45–2.54× Rust time, with 397,353 allocation
+requests, 138,250 retains and zero final managed charge. The C/Rust peers combine
+normalization into one pass; this is not a pure language-overhead measurement.
 
-Local `python3 scripts/local-guard.py python3 /private/tmp/fwp-check-wordfreq-peers.py`
-passes nine small cases across standalone Clang C, Rust and the prior verified
-fwp interpreter. The first comparison incorrectly treated vertical tab/form feed
-as separators; both language engines use only space/tab/CR/LF. The peers and
-explanations are corrected without changing those semantics. Guarded
-`fwp-check-application-preparation.py` passes formatting, workflow lint, Python
-syntax and documentation. Full compiler/native checks stay on runners.
+The worktree additionally prepares the [descent comparison](application-acceptance.md#descent-with-and-without-a-saved-history):
+the same Rosenbrock gradient and 199 updates, with saved history versus current
+weights, at 3/33/129 dimensions. The runner workflow is prepared but not launched.
+Four small local cases match the prior verified interpreter and an independent
+analytic derivative. No native result or improvement is claimed yet.
+
+The next optimization investigation is unchanged text: lower/upper/trim and
+replacement can avoid copies when bytes are unchanged. No compiler/runtime change
+has been made for this yet. Preserve original aliases and cleanup, consider
+consumed leaf ownership to avoid redundant retain/release pairs, and compare the
+same-host saved baseline C against any candidate. Count all additional sharing.
+Full builds and measurements remain on runners.
+
+Guarded local checks: `fwp-check-wordfreq-peers.py` passes nine C/Rust/interpreter
+cases; `fwp-check-ad-application.py` passes four paired descent cases;
+`fwp-inspect-wordfreq.py` verifies eight actual binaries;
+`fwp-check-application-preparation.py` covers formatting, workflow, Python and docs.
+All use the primary `python3 scripts/local-guard.py python3 SCRIPT`. An early peer
+mistakenly treated vertical tab/form feed as word separators; the peers and docs
+now match both language engines' explicit space/tab/CR/LF behavior.
 
 ## Delivery preparation
 

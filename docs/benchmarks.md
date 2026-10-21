@@ -15,8 +15,10 @@ The measurements below are dated observations. They do not promise the same
 ratios on another machine or establish that the whole language is “zero-cost.”
 
 The [application acceptance suite](application-acceptance.md) names the larger
-programs, current checks and remaining measurement gaps. Its new word-frequency
-comparison has no accepted timing result yet.
+programs, current checks and remaining measurement gaps. The first
+[word-frequency baseline](measurements/wordfreq.md) records a 3.29–3.52× ARC/C
+time ratio for its larger input on two Linux hosts, with the implementation
+differences stated explicitly.
 
 ## Choose the question first
 

@@ -10,11 +10,11 @@ performance and platform requirements in the last column.
 
 | Program family | Work and current input | Existing evidence | Still required for this suite |
 |---|---|---|---|
-| [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [Comparison protocol](#word-frequency-comparison); measurements pending | Repeat same-host C/Rust comparisons; set time/memory budgets; retain cleanup and native ARM64/AMD64 evidence |
+| [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [First C/Rust baseline](measurements/wordfreq.md); two Linux hosts | Repeat same-host C/Rust comparisons; set time/memory budgets; retain cleanup and native ARM64/AMD64 evidence |
 | [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; current test repeats a six-file tree 64 times | `tests/directory_report.rs`: interpreter/native agreement and final managed storage | Add a larger tree, permission/error controls and repeated live-memory measurements |
 | [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scale file sizes; measure input/output storage separately; record failure cleanup |
 | Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](benchmarks.md#current-numerical-comparison-and-record-moves) | Repeat current-revision comparisons; set per-size budgets; include a larger numerical application |
-| Derivative application | Repeated gradients/Jacobians, including unused tapes and nested differentiation | [Numerical contracts](numerics.md#reverse-mode), `tests/autodiff_nested.rs` and `tests/autodiff_workspace.rs` | Select an end-to-end model and fixed data; compare supported precision, recording/workspace/output costs and scaling |
+| Derivative application | Rosenbrock descent from alternating −1.2/1.0 inputs: 3, 33 and 129 dimensions, 199 gradient updates | [Descent comparison](#descent-with-and-without-a-saved-history); measurements pending; existing nested/workspace checks remain | Measure retained history and workspace separately; set time/memory budgets and extend native evidence |
 | Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](benchmarks.md#server-memory-after-completed-remote-calls) | Consolidate one repeatable service scenario with bounded concurrency, disconnects and repeated live-memory samples |
 
 Before declaring this suite accepted, name the exact revisions, inputs and native
@@ -77,6 +77,40 @@ are not resident memory or C/Rust allocation counts. Profiled execution times
 never enter the timing comparison. ARC binaries must omit tracing symbols and
 finish with zero managed charge and collections.
 
-**Status:** protocol and comparison implementations are prepared; no runner
-measurement or performance improvement is claimed yet. See the
+**Status:** the [first Linux C/Rust baseline](measurements/wordfreq.md) passes
+with independently inspected binaries. No performance improvement is claimed. See the
 [session handoff](development-state.md) for the actual validation state.
+
+## Descent with and without a saved history
+
+The `ad-application` suite uses the objective and reverse-mode gradient from
+[tutorial 20](tutorials/20-autodiff-and-devices/README.md). An objective assigns
+one number to a candidate vector; a gradient says how each component changes
+that number. Each update subtracts 0.001 times the gradient.
+
+The starting vector alternates −1.2 and 1.0. Cases have 3, 33 or 129 dimensions.
+The original `iterate 200 descend | last` retains 200 vectors, including the
+initial one, so it performs **199 updates**. The comparison loop performs the
+same updates while retaining only its current vector. Both return the complete
+final vector; neither returns the discarded history. This is a change in program
+structure, not an implemented compiler optimization.
+
+Both raw interpreter forms must agree bit-for-bit with each other and with the
+native outputs. An independent handwritten derivative also checks each component
+with relative and absolute tolerance 1e-10; different floating-point operation
+orders can round differently. That Python calculation is a correctness oracle,
+not a timed C/Rust baseline.
+
+Linux ARM64/AMD64 measurements use explicit GCC O2, ARC/tracing, disabled LTO and
+enabled bounded derivative-workspace reuse. Two warmups precede sixteen timed
+fresh processes per variant, with rotated and reversed order. Timing includes
+startup, calculation, printing and teardown. Separate instrumented runs record
+fwp allocation requests, bytes, retains and peak/final managed charge. Raw tape
+buffers, allocator metadata, stacks and resident memory are outside those counters;
+these numbers cannot establish total autodiff memory use.
+
+Generated C, native binaries, disassembly and hashes are retained. The final
+observer requires no live tapes or managed charge; a control that omits tape
+retirement must fail. This does not establish constant memory for arbitrary AD,
+or bounded long-running retention from a clean exit alone. Runner results and
+budgets remain pending.
