@@ -11,6 +11,10 @@ for delivery status. This preparation now includes the PR's U32 repair. The acti
 second PR before this delivery is accepted.
 
 Next: run and audit the prepared candidate's focused checks while PR #182 runs.
+The first preparation run `39535767609` at `40d01bcc` was cancelled while both
+jobs were queued, before any tests started. The replacement bundles clearer
+saved-C report metadata and all fourteen scalar binary/disassembly controls;
+the cancelled run establishes no support.
 Once PR #182 passes all nine production gates and documentation and is squash
 merged, rebase this preparation from `817805a1` onto the accepted merge. Preserve its
 compiler fixes and current handoff. Then finish verifying the range-preserving multiplication candidate below in the next
@@ -62,6 +66,11 @@ check this source, instruction section and all twelve semantic/control binaries;
 `--comparison range` remains for the historical measurement-only run. The
 old measurement-only `integer-range` option is removed; its original source/run
 remain preserved.
+
+The scalar tests retain eight ordinary binaries plus six sanitizer/control
+binaries, their C source and the failing control's diagnostics. CI disassembles
+all fourteen so ordinary dynamic multiplication can be inspected as well as the
+bounded counting loop.
 
 Its UBSan controls check the actual emitted primitive at O1/O2/O3 and deliberately
 remove the overflow check to prove the sanitizer detects the unsafe product.

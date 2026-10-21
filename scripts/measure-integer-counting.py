@@ -203,7 +203,7 @@ def main():
         'oldHelper': old_helper, 'candidateHelper': new_helper,
         'arithmeticExperiment': {'originalMultiply': multiply,
                                  'recomputedMultiply': recomputed_multiply,
-                                 'compilerChanged': False},
+                                 'rewriteScope': 'saved generated C'},
         'builds': builds, 'binaries': binaries, 'managedMemory': managed,
         'measurements': measurements,
         'scope': 'C, Rust and fwp count decimal characters for i and checked 3*i over '
@@ -215,8 +215,9 @@ def main():
                  'All matched helpers carry ordinary inline hints, not forced inlining. '
                  'Grouped-unhinted removes only the two fwp inline hints to isolate their cost. '
                  'Recomputed-product keeps the same signed overflow check and expresses '
-                 'the product again on its non-overflow continuation. This is a generated-C '
-                 'experiment, not a compiler implementation or full arithmetic acceptance. '
+                 'the product again on its non-overflow continuation. This comparison rewrites '
+                 'saved generated C. The workflow separately verifies actual compiler-produced '
+                 'C and its executable; measurements alone do not establish full arithmetic acceptance. '
                  'GCC range and optimized tree dumps accompany each C rebuild. '
                  'Rebuilt fwp uses unchanged saved C; candidate changes only integer '
                  'digit counting to descending decimal groups. Both use GCC O2, no LTO. Balanced '

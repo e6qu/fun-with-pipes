@@ -203,6 +203,7 @@ jobs:
       RUST_TEST_THREADS: 1
       FWP_LTO: '0'
       FWP_INTEGER_LENGTH_ARTIFACTS: integer-counting-semantics
+      FWP_SIGNED_PRODUCT_ARTIFACTS: integer-product-semantics
     steps:
       - uses: actions/checkout@v7
         with:
@@ -224,6 +225,15 @@ jobs:
           set -euo pipefail
           test "$(find integer-counting-semantics -name '*.exe' | wc -l)" -eq 12
           for binary in integer-counting-semantics/*.exe; do
+            objdump -d "$binary" > "${binary%.exe}.asm"
+          done
+      - name: Inspect scalar multiplication binaries and sanitizer controls
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(find integer-product-semantics -name '*.exe' | wc -l)" -eq 14
+          for binary in integer-product-semantics/*.exe; do
             objdump -d "$binary" > "${binary%.exe}.asm"
           done
       - name: Compare signed decimal counters on each allowed CPU
@@ -257,6 +267,12 @@ jobs:
         with:
           name: integer-counting-semantics-${{ matrix.runner }}
           path: integer-counting-semantics/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-product-semantics-${{ matrix.runner }}
+          path: integer-product-semantics/
           if-no-files-found: error
   queued_function_proof:
     if: inputs.suite == 'channel-proof'
