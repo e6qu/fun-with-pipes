@@ -35,9 +35,13 @@ The peers answer different questions:
 
 - [`strings`](../../bench/strings): C uses `snprintf`/`strlen`; Rust uses
   `format!` and byte length. They still format text that fwp eliminates.
-- [`text-length`](../../bench/text-length): C/Rust count digits by repeated
+- `text-length` at this measured revision: C/Rust count digits by repeated
   division by ten. All three check multiplication and sums for overflow; these
   inputs fit. Failure messages differ and are not exercised by the timing run.
+
+The maintained [text-length peers](../../bench/text-length) now use
+[grouped counting](integer-counting.md); the older samples below remain tied to
+the original algorithm and source.
 
 Each executable has one warmup and six timed fresh-process runs, in rotating
 C/Rust/fwp order. Times include startup, calculation, allocation, output and

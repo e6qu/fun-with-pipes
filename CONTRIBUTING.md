@@ -198,8 +198,10 @@ can infer the suffix when launching a program; symbol readers and file APIs cann
   when they are outside the current roadmap item. Preserve semantic regression
   controls and record validation in the handoff. Group coherent fixes without
   weakening the required CI gates or discarding the roadmap's priorities.
-- **No third-party crates.** fwp depends only on Rust's standard library,
-  with a vendored BSD-licensed [SoftFloat core](vendor/softfloat/README.md) for
+- **Dependencies.** The compiler uses Rust's standard library; native terminal
+  editing and interrupt handling also use Rustyline and ctrlc, declared in
+  `Cargo.toml`. Numerical support includes a vendored BSD-licensed
+  [SoftFloat core](vendor/softfloat/README.md) for
   exact arithmetic and a scoped [gdtoa core](vendor/gdtoa/README.md) for exact
   decimal conversion under its Lucent license, plus Boost-licensed
   [TLFloat templates](vendor/tlfloat/README.md) for format-specific transcendental

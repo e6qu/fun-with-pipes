@@ -12,6 +12,26 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Temporary channel borrows and failure cleanup (PR #181)
+
+Temporary channel names can borrow an owner still needed after the operation,
+including calculations inside record fields. The measured shared-text loop
+reduces retains from three to two per message; closed sends reduce one to zero.
+Allocations and peak accounted storage stay unchanged. Changed error and task-scope
+fields also remain valid after C `longjmp`, preserving failure/cancellation cleanup.
+[The report](measurements/channel-local-borrows.md) records counts, actual stack
+frames and code sizes, plus C/Rust timing gaps that remain unexplained.
+
+[PR #181](https://github.com/e6qu/fun-with-pipes/pull/181) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39488574062)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39488538767)
+at `2038c926246cfcf8f741df7fdf0324fefc568b58`; every complete log was audited.
+Squash merge `c98da7a5b3d859fee69120cf3452dcdecc904979` has the identical tree
+`2fc33e8e7b238402acfc30efe3aee753ac4a018c`. Its verified message is exactly
+`Borrow temporary channel names and preserve failure cleanup`: one line,
+59 characters, without a body or trailers. Duplicate post-merge production
+`39503544541` was cancelled; post-merge documentation `39503544342` had passed.
+
 ## Function-channel borrows and integer text (PR #180)
 
 Direct calls can borrow a channel carrying functions while its original owner

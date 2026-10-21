@@ -24,13 +24,36 @@ fn integer_text_lengths_preserve_widths_unicode_sharing_and_effect_order() {
     let dir = fwp::cgen::TempDir::new("integer-text-lengths").unwrap();
     let input = dir.join("main.fwp");
     let mut source = String::new();
+    // Exercise both sides of every decimal-width transition, including negative
+    // values. Unsigned magnitudes must handle I64::MIN without signed negation.
+    let mut signed = vec![i64::MIN, i64::MAX, -1, 0, 1];
+    for exponent in 1..=18 {
+        let power = 10_i64.pow(exponent);
+        for value in [power - 1, power, power + 1] {
+            signed.extend([value, -value]);
+        }
+    }
+    let signed_input = signed.iter().map(|x| format!("{x}\n")).collect::<String>();
+    let signed_output = signed
+        .iter()
+        .map(|x| x.to_string().len() as i64 + 2)
+        .collect::<Vec<_>>();
+    let mut unsigned = vec![0, 1, u64::MAX];
+    for exponent in 1..=19 {
+        let power = 10_u64.pow(exponent);
+        unsigned.extend([power - 1, power, power + 1]);
+    }
+    let unsigned_input = unsigned
+        .iter()
+        .map(|x| format!("{x}\n"))
+        .collect::<String>();
+    let unsigned_output = unsigned
+        .iter()
+        .map(|x| x.to_string().len() as i64 + 2)
+        .collect::<Vec<_>>();
     let widths: [(&str, &str, &[u8]); 7] = [
-        (
-            "signed",
-            "I64",
-            b"-9223372036854775808\n-1\n0\n9223372036854775807\n",
-        ),
-        ("unsigned", "U64", b"0\n18446744073709551615\n"),
+        ("signed", "I64", signed_input.as_bytes()),
+        ("unsigned", "U64", unsigned_input.as_bytes()),
         ("small", "I8", b"-128\n0\n127\n"),
         ("byte", "U8", b"0\n255\n"),
         ("word", "I32", b"-2147483648\n2147483647\n"),
@@ -80,6 +103,24 @@ trap = fork concat (tap echo | div 0 | show) (add 1 | tap echo | show) | string.
                 data,
             );
             assert_eq!(raw.status.code(), Some(*status), "{name}: {raw:?}");
+            let expected = match *name {
+                "signed" => Some(&signed_output),
+                "unsigned" => Some(&unsigned_output),
+                _ => None,
+            };
+            if let Some(expected) = expected {
+                // This test requests the typed binary pipe protocol. Compare
+                // each I64 payload with Rust's independently formatted length.
+                let mut stream = raw.stdout.strip_prefix(fwp::proto::MAGIC).unwrap();
+                let header = fwp::proto::read_header(&mut stream).unwrap();
+                assert_eq!(header.fingerprint, fwp::proto::fingerprint("std::I64"));
+                for value in expected {
+                    let (kind, payload) = fwp::proto::read_any_frame(&mut stream).unwrap().unwrap();
+                    assert_eq!(kind, 1);
+                    assert_eq!(payload, value.to_le_bytes());
+                }
+                assert_eq!(stream, fwp::proto::end_frame());
+            }
             raw
         })
         .collect();

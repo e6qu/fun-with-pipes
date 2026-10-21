@@ -107,6 +107,14 @@ lack that permission. Integer arithmetic checks overflow and division by zero;
 wrapping, saturating, overflowing and checked-result operations are explicit
 alternatives. Numeric conversions are explicit.
 
+Generated C must also avoid overflowing an intermediate before the language's
+check runs. For example, multiplying two `U32` values uses an unsigned 64-bit
+intermediate: `4294967295 * 4294967295` fits there, but exceeds signed 64-bit
+range. The compiler then checks the result against `U32`'s maximum and traps.
+Dynamic-input tests compare the unoptimized interpreter with native execution;
+C's undefined-behavior sanitizer checks the emitted multiplication, with the
+former signed intermediate as a control that must fail.
+
 ## Generics
 
 A definition is generic only when its signature declares type variables. For
@@ -439,6 +447,12 @@ and traps. A static bound proves that combining the lengths fits I64; the
 generated sum still uses ordinary checked addition. Shared strings, unknown
 string producers, floating-point displays and wider integers keep their storage.
 The private integer-length operation has no source-language declaration.
+Its scalar runtime counts decimal digits in descending groups of 16, 8, 4, 2
+and 1. Signed values use unsigned magnitude and add one for the minus sign, so
+I64's minimum does not require an overflowing signed negation. Ordinary inline
+hints allow the C compiler to combine counting with its caller; they do not force
+inlining. [Controlled comparisons](measurements/integer-counting.md) record the
+algorithm, call/size tradeoffs and current validation.
 The [Linux measurements](measurements/integer-text.md) record zero managed leaf
 allocations in the probe, actual machine code and comparison with direct
 character counting in C/Rust. The [handoff](development-state.md) tracks full

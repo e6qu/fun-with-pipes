@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, channel-costs, scalar-text, scalar-text-memory, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -185,6 +185,66 @@ jobs:
         with:
           name: scalar-text-memory-${{ matrix.runner }}
           path: scalar-memory-evidence/
+          if-no-files-found: error
+  integer_counting:
+    if: inputs.suite == 'integer-counting'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 1
+      FWP_LTO: '0'
+      FWP_INTEGER_LENGTH_ARTIFACTS: integer-counting-semantics
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --all -- --check
+      - name: Check integer boundary tests
+        if: ${{ !cancelled() }}
+        run: cargo clippy --test integer_output --test scalar_traps -- -D warnings
+      - name: Verify interpreter, native boundaries, effects and allocations
+        if: ${{ !cancelled() }}
+        run: cargo test --no-fail-fast --test integer_output --test scalar_traps
+      - name: Inspect all integer boundary and allocation controls
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(find integer-counting-semantics -name '*.exe' | wc -l)" -eq 12
+          for binary in integer-counting-semantics/*.exe; do
+            objdump -d "$binary" > "${binary%.exe}.asm"
+          done
+      - name: Compare signed decimal counters on each allowed CPU
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          PROGRAM_SOURCE: ${{ inputs.source_revision }}
+          PROFILE_HOST: ${{ matrix.runner }}
+        run: python3 scripts/measure-integer-counting.py --run "$EVIDENCE_RUN" --source "$PROGRAM_SOURCE" --host "$PROFILE_HOST" --cc gcc --rustc rustc --affinity each-allowed --rounds 48 --warmups 2 --output integer-counting-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-counting-${{ matrix.runner }}
+          path: integer-counting-evidence/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-counting-semantics-${{ matrix.runner }}
+          path: integer-counting-semantics/
           if-no-files-found: error
   queued_function_proof:
     if: inputs.suite == 'channel-proof'

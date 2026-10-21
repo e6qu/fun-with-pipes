@@ -3,14 +3,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int64_t characters(int64_t value) {
+static inline int64_t characters(int64_t value) {
     uint64_t magnitude = value < 0 ? (uint64_t)0 - (uint64_t)value : (uint64_t)value;
-    int64_t count = 1 + (value < 0);
-    while (magnitude >= 10) {
-        magnitude /= 10;
-        count++;
-    }
-    return count;
+    int64_t count = 1;
+    if (magnitude >= UINT64_C(10000000000000000)) { magnitude /= UINT64_C(10000000000000000); count += 16; }
+    if (magnitude >= UINT64_C(100000000)) { magnitude /= UINT64_C(100000000); count += 8; }
+    if (magnitude >= UINT64_C(10000)) { magnitude /= UINT64_C(10000); count += 4; }
+    if (magnitude >= UINT64_C(100)) { magnitude /= UINT64_C(100); count += 2; }
+    if (magnitude >= UINT64_C(10)) count++;
+    return count + (value < 0);
 }
 
 static int64_t add(int64_t left, int64_t right) {

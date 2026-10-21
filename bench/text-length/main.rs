@@ -1,11 +1,27 @@
+#[inline]
 fn characters(value: i64) -> i64 {
     let mut magnitude = value.unsigned_abs();
-    let mut count = 1 + i64::from(value < 0);
-    while magnitude >= 10 {
-        magnitude /= 10;
+    let mut count = 1;
+    if magnitude >= 10_000_000_000_000_000 {
+        magnitude /= 10_000_000_000_000_000;
+        count += 16;
+    }
+    if magnitude >= 100_000_000 {
+        magnitude /= 100_000_000;
+        count += 8;
+    }
+    if magnitude >= 10_000 {
+        magnitude /= 10_000;
+        count += 4;
+    }
+    if magnitude >= 100 {
+        magnitude /= 100;
+        count += 2;
+    }
+    if magnitude >= 10 {
         count += 1;
     }
-    count
+    count + i64::from(value < 0)
 }
 
 fn main() {

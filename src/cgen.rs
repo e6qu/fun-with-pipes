@@ -1470,6 +1470,13 @@ impl Scalar {
                 });
             }
             _ => match self.bounds() {
+                Some((_, hi)) if self == Scalar::Unsigned(32) && op == "mul" => {
+                    // U32::MAX squared fits U64, but exceeds I64::MAX. Keep
+                    // the widening product defined before checking U32's bound.
+                    s = format!(
+                        "uint64_t r = (uint64_t)l1 * (uint64_t)l0;\n    if (r > {hi}) {ovf}"
+                    );
+                }
                 // computed in 64 bits, where it cannot overflow, and checked
                 Some((lo, hi)) => {
                     let c = match op {

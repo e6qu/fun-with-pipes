@@ -104,7 +104,9 @@ independent aliases, callback-context destruction and deliberately broken
 extra-owner/missing-release controls. A separate scope test starts 65 child
 tasks, raises an error, and verifies output and cleanup over four repetitions
 in ARC and tracing modes. The interpreter provides the output reference.
-Final production acceptance is recorded in the [handoff](../development-state.md).
+[PR #181 acceptance](../roadmap-history.md#temporary-channel-borrows-and-failure-cleanup-pr-181)
+adds all nine production gates and documentation on the final commit; every
+complete log is clean. The measured count/frame figures above are from Linux.
 
 ## Timing checks retained with this batch
 
