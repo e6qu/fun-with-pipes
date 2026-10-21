@@ -1,5 +1,71 @@
 //! Maintained applications compose text-file ownership without a collector.
-use std::process::{Command, Output};
+use std::io::Write;
+use std::process::{Command, Output, Stdio};
+
+#[test]
+fn word_frequencies_preserve_separators_normalization_and_tie_order() {
+    let dir = fwp::cgen::TempDir::new("wordfreq-application").unwrap();
+    let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/wordfreq.fwp");
+    let cases = [
+        ("", ""),
+        (" \t\r\n", ""),
+        ("\u{b}\u{c}", "\u{b}\u{c}: 1\n"),
+        ("Pear pear apple", "pear: 2\napple: 1\n"),
+        ("z y x w v u", "u: 1\nv: 1\nw: 1\nx: 1\ny: 1\n"),
+        ("... , . A", ": 3\na: 1\n"),
+        ("É é Ä ä A", "a: 1\nÄ: 1\nÉ: 1\nä: 1\né: 1\n"),
+    ];
+    let check_cases = |command: &mut Command| {
+        for (input, expected) in cases {
+            let mut child = command
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .unwrap();
+            child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all(input.as_bytes())
+                .unwrap();
+            let output = child.wait_with_output().unwrap();
+            assert!(output.status.success(), "{input:?}: {output:?}");
+            assert_eq!(output.stdout, expected.as_bytes(), "{input:?}");
+            assert!(output.stderr.is_empty(), "{input:?}: {output:?}");
+        }
+    };
+    check_cases(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    for mode in ["arc", "tracing"] {
+        let cfile = dir.join("wordfreq.c");
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .env_remove("FWP_NO_OPT")
+                .args(["build", "--gc", mode, "--emit-c", "-O2"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(cfile).unwrap();
+        for opt in ["-O0", "-O2"] {
+            let binary = dir.join("wordfreq.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let verify = if mode == "arc" { "0" } else { "1" };
+            check_cases(
+                Command::new(binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", verify)
+                    .env("FWP_GC_VERIFY", verify)
+                    .env("FWP_REUSE_VERIFY", verify),
+            );
+        }
+    }
+}
 
 fn checked(command: &mut Command) -> Output {
     let output = command.output().unwrap();

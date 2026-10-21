@@ -24,6 +24,8 @@ a POSIX shell. `fwp run --interp` explicitly selects the interpreter; ordinary
 In `wordfreq`, `map` transforms each list element; `map.to-list` converts a key/value
 map to pairs. They are different operations despite the shared word. `.1` selects
 a pair's count, and `neg` makes the ascending sort put larger counts first.
+The word (`.0`) breaks equal-count ties alphabetically. `words` splits on spaces,
+tabs, line feeds and carriage returns; other characters remain in a word.
 Normalization here lowercases ASCII and removes commas/full stops; it is not a
 complete natural-language tokenizer.
 

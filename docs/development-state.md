@@ -2,19 +2,41 @@
 
 ## Next action
 
-Next: publish the combined `task-results-cpu` delivery as one PR. CPU preflight
-`39687243271` at `2cefc6482618eefc2eda6a4fdab2602373abb66b` passes;
-every complete log is audited in `/private/tmp/fwp-cpu-modes-acceptance.json`.
-That focused Linux job used Clang. The combined workflow now selects GCC on Linux
-to match production; run `suite=kernels,native_runner=ubuntu-latest` on the new
-head as well as all nine production jobs and documentation before squash merge.
-Continue all seven open plan areas afterward.
+Next: audit [PR #191](https://github.com/e6qu/fun-with-pipes/pull/191) at
+`12be5afcee7c81f1b98ffed2081d698e1124b000`: production `39688998592`,
+documentation `39688998567` and focused Linux GCC `39688997806`.
+Use `/private/tmp/fwp-audit-191-final.py` and `/private/tmp/fwp-audit-191-gcc.py`.
+Documentation, C/Rust benchmarks and the focused GCC check pass with full logs
+audited. Eight other production jobs are running. Fix every observed failure together, then
+require nine production jobs, documentation and the focused check for the exact
+head before squash merge. Continue all seven open plan areas afterward.
+Publication receipt: `/private/tmp/fwp-combined-publication.json`.
+
+## Independent application preparation
+
+Branch `application-baselines`, worktree `/private/tmp/fwp-application-baselines`,
+is preparing the next substantial batch while #191 runs. No second PR is open.
+It names a finite [application acceptance suite](application-acceptance.md),
+adds sorted-map C/Rust peers for the maintained word-frequency example, and
+records explicit input, timing, memory and binary-inspection boundaries.
+Word ties sort by the word; seven boundary cases compare raw interpretation
+and native ARC/tracing at O0/O2. A runner-only Linux ARM64/AMD64 comparison uses
+4,096/64 and 65,536/1,024 words/distinct words, two warmups and sixteen samples.
+No measurements or performance budgets are accepted yet.
+
+Local `python3 scripts/local-guard.py python3 /private/tmp/fwp-check-wordfreq-peers.py`
+passes nine small cases across standalone Clang C, Rust and the prior verified
+fwp interpreter. The first comparison incorrectly treated vertical tab/form feed
+as separators; both language engines use only space/tab/CR/LF. The peers and
+explanations are corrected without changing those semantics. Guarded
+`fwp-check-application-preparation.py` passes formatting, workflow lint, Python
+syntax and documentation. Full compiler/native checks stay on runners.
 
 ## Delivery preparation
 
 Branch `task-results-cpu`, worktree `/private/tmp/fwp-task-results-cpu`, has the
-combined changes staged on #190's verified squash merge
-`a2b9130fa1811c32e8807ba8cf61a8647fbcba60`. No next PR is open yet.
+combined changes committed on #190's verified squash merge
+`a2b9130fa1811c32e8807ba8cf61a8647fbcba60`. PR #191 is the only active delivery.
 Preparation receipt: `/private/tmp/fwp-combined-delivery-preparation.json`.
 It combines await fields, State/Jacobian repairs, C-buffer cleanup, CPU contracts,
 removal of runtime OpenCL compilation and preparation of C bridges before effects.

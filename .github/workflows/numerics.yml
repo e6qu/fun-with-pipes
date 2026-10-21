@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -2240,6 +2240,38 @@ jobs:
           name: compiler-crashes-console-${{ matrix.runner }}
           path: ~/Library/Logs/DiagnosticReports/fwp*
           if-no-files-found: ignore
+  wordfreq:
+    if: inputs.suite == 'wordfreq'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+      - run: cargo build --locked --release --bin fwp
+      - name: Word-frequency native and interpreter boundary cases
+        run: cargo test --locked --release --test text_file_tools word_frequencies_preserve_separators_normalization_and_tie_order -- --exact
+      - name: Compare the maintained word-frequency application
+        run: >-
+          python3 scripts/measure-wordfreq.py --compiler target/release/fwp
+          --cc gcc --rustc rustc --objdump objdump --nm nm --time /usr/bin/time
+          --case 4096:64 --case 65536:1024 --warmups 2 --samples 16
+          --timeout 180 --host "${{ matrix.runner }}" --output wordfreq-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: wordfreq-${{ matrix.runner }}
+          path: wordfreq-evidence/
+          if-no-files-found: error
   precision:
     if: inputs.suite == 'precision'
     strategy:

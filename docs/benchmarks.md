@@ -14,6 +14,10 @@ machine. This page separates two different questions:
 The measurements below are dated observations. They do not promise the same
 ratios on another machine or establish that the whole language is “zero-cost.”
 
+The [application acceptance suite](application-acceptance.md) names the larger
+programs, current checks and remaining measurement gaps. Its new word-frequency
+comparison has no accepted timing result yet.
+
 ## Choose the question first
 
 | Question | Read | What the number means |

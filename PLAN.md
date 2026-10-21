@@ -100,7 +100,7 @@ outside the benchmark suite.
    [checked products](docs/measurements/checked-products.md) retain slower controls,
    optimization-level differences and unexplained AMD64 variability. Resource-owning
    tail frames and mutual recursion still need separate lifetime proofs.
-3. Select larger representative applications and use equivalent-work measurements
+3. Complete the [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
    to choose the next costs to remove: dynamic calls, input copies, container
    layout, numerical workspace and derivative recording. Establish workload-specific
    time/memory budgets before claiming improvement. The [benchmark index](docs/benchmarks.md)
