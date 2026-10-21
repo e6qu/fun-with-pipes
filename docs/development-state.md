@@ -2,127 +2,110 @@
 
 ## Next action
 
-Next: run the controlled [integer-counting comparison](measurements/integer-counting.md)
-and focused scalar-text correctness suite on GitHub from branch
-`investigate-native-counting-costs`, based on accepted merge `c98da7a5`.
-The candidate counts decimal digits in groups of 16, 8, 4, 2 and 1; no speed
-benefit is yet established. The earlier shared-loop candidate was 1–4% slower
-than an unchanged rebuild on AMD64 and is not selected as an improvement. The experiment compares saved C/Rust/fwp, rebuilt unchanged fwp and
-the candidate on every allowed CPU, preserving all samples and generated code.
-Boundary tests now cover both sides of all signed/unsigned decimal transitions.
-[Draft PR #182](https://github.com/e6qu/fun-with-pipes/pull/182) groups this work.
-Preparation `995d3ecfd451700ec93e0fc1b326f8be0503bad5` has controlled measurement
-run `39525618134`, focused scalar-text run `39525621027` and documentation run
-`39525810747`. Measurement and documentation passed; focused checks are
-still running. Both measurement logs are audited clean, as is documentation.
-Saved artifacts: `/private/tmp/fwp-counting-costs`; full-log receipt:
-`/private/tmp/fwp-counting-preparation-audit.json`. Production run `39525810735` is intentionally skipped for
-the draft; it is not acceptance. Audit all completed jobs and retained samples
-before marking the PR ready. Require all nine final-head production gates and
-documentation before squash merge. Keep its subject one line, at most 80
-characters, with an explicit empty body and no trailers or attribution.
-The contributor guide's obsolete claim of no third-party Rust crates is also
-corrected to match the existing Rustyline/ctrlc dependencies in Cargo.toml.
-Local Python syntax passed in 0.12s and focused Rust formatting in 0.13s under
-the unchanged guard. The first sandboxed guard invocation could not read `ps`;
-its approved invocation passed. Native builds and execution remain on GitHub.
+Next: finish the grouped integer-counting comparison and repair verification in
+[draft PR #182](https://github.com/e6qu/fun-with-pipes/pull/182), branch
+`investigate-native-counting-costs`. All four failed/completed focused jobs have now been audited in full.
+Publish the combined repair and matched comparison. The working tree adds matched C/Rust peers, ordinary inline
+hints, independent report audits and a binary-protocol assertion repair. These
+changes are not yet published or verified natively.
+
+The first new boundary test mistakenly compared binary protocol output with
+plain-text expected lengths. It now reads typed I64 frames and compares their
+payloads with Rust decimal-format lengths, preserving protocol coverage. All four focused logs confirm only that assertion failure and the consequent
+missing-binary inspection failure; every other target passed. The recorded 113
+signed I64 frames from each first-run failure pass independent protocol/decimal
+checks in `/private/tmp/fwp-check-length-protocol.py` (0.13s). Native verification
+of the repair still runs on GitHub.
+
+Then run suite `integer-counting` on GitHub: it now combines the five relevant
+integer tests, twelve binary inspections and the matched measurement on both hosts. Audit
+all logs, every timing sample and actual generated instructions before marking
+the PR ready. Require nine production jobs plus documentation on the final head;
+squash-merge with an explicit one-line subject of at most 80 characters and an
+empty body, without trailers or attribution. Standing authorization applies.
+
+## Current implementation and evidence
+
+The [measurement guide](measurements/integer-counting.md) explains the workload,
+comparisons, timing scope and limits. The candidate counts decimal digits in
+groups of 16, 8, 4, 2 and 1 instead of repeatedly dividing by ten. Signed values
+use unsigned magnitude, including I64's minimum, then add the sign. No lookup
+table or heap storage is added. Existing checked arithmetic and trap order remain.
+Boundary inputs cover both sides of every representable power of ten, both signs,
+and unsigned extremes; native/interpreter verification is still pending repair.
+
+| Preparation | Source | Measurement / focused checks / documentation |
+|---|---|---|
+| Shared counting loop, not selected | `995d3ecfd451700ec93e0fc1b326f8be0503bad5` | `39525618134` passed / `39525621027` failed: assertion and missing binaries / `39525810747` passed |
+| Grouped counting, before inline hints | `5852017124334bb199ff653741b068f9b8c9f979` | `39526333980` passed / `39526336925` failed: same assertion and missing binaries / `39526267015` passed |
+
+Both measurement runs and documentation logs are audited clean. The shared-loop
+candidate was 1–4% slower in median child CPU time on AMD64 and 2–3% slower on
+ARM64 than the unchanged rebuild. Grouped counting reduced CPU medians by
+16–19% on EPYC 9V74 and 13–14% on Neoverse-N2, across four pinned CPUs each.
+All samples are kept in the linked reports; old C/Rust still use a different
+algorithm, so those ratios are not language-overhead measurements.
+
+Actual grouped binaries contain two counting-helper calls per iteration on both
+architectures. The next experiment adds an unhinted grouped control and C/Rust
+with the same algorithm to measure ordinary inline hints and remaining overhead.
+No forced inlining or universal speed claim is made.
+
+Current artifacts: `/private/tmp/fwp-counting-costs` and
+`/private/tmp/fwp-grouped-counting-costs`. Full-log receipts:
+`/private/tmp/fwp-counting-preparation-audit.json` and
+`/private/tmp/fwp-grouped-counting-audit.json`; audit scripts use the same stems.
+The report validator is `scripts/summarize-integer-counting.py`, with explicit
+`--comparison legacy` for the first experiments and `matched` for the next.
+It verifies source replacement, binary/disassembly hashes, every sample/median,
+ratios, zero managed storage counts and the injected-allocation control.
+
+Saved baseline inputs come from `62ed104504b9e9a032434223120785e3cc37a47f`, focused
+run `39469883481`, tag `roadmap/revision-record-borrows-62ed1045`. The first new
+experiment is preserved by `roadmap/revision-integer-loop-995d3ecf`. All generated
+source, binaries, disassembly and raw samples remain in the artifacts.
+
+The contributor guide's obsolete claim of no third-party Rust crates is corrected
+to match existing Rustyline/ctrlc dependencies. Historical benchmark reports remain
+tied to their actual source and algorithm; current peers are updated together.
+
+## Accepted base and remaining goals
+
+[PR #181](roadmap-history.md#temporary-channel-borrows-and-failure-cleanup-pr-181)
+passed all nine production gates and documentation at `2038c926`. Its squash
+merge `c98da7a5b3d859fee69120cf3452dcdecc904979` has the identical tested tree
+`2fc33e8e7b238402acfc30efe3aee753ac4a018c`. Receipt:
+`/private/tmp/fwp-181-acceptance.json`. The one-line 59-character message has no
+body or trailers. Duplicate production run `39503544541` was cancelled; duplicate
+documentation `39503544342` passed.
 
 All seven roadmap areas remain open. Default native execution still includes
 tracing GC; JIT is excluded. Retained resources, persistent subscriptions,
-resource-owning tail frames and mutual recursion need further proofs.
-
-## Accepted delivery
-
-[PR #181](https://github.com/e6qu/fun-with-pipes/pull/181) passed all nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39488574062)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39488538767)
-at `2038c926246cfcf8f741df7fdf0324fefc568b58`. Every complete log was audited;
-none contains a failed step, test error or panic. Acceptance and merge receipt:
-`/private/tmp/fwp-181-acceptance.json`.
-
-Squash merge `c98da7a5b3d859fee69120cf3452dcdecc904979` has the same tree
-`2fc33e8e7b238402acfc30efe3aee753ac4a018c` and one parent, accepted PR #180's
-merge `fe491a97`. Its verified message is exactly:
-
-`Borrow temporary channel names and preserve failure cleanup`
-
-That is one line, 59 characters, with no body or trailers. Both remote and fetched
-Git trees were checked. The guarded merge/verification took 9.31s; the local
-base/tree check and branch switch took 0.13s. Post-merge documentation
-`39503544342` already passed. Duplicate production `39503544541`
-was cancelled after verifying the identical tree; all nine duplicate jobs are
-confirmed cancelled. The accepted PR checks remain successful.
-
-## What this batch establishes
-
-- Temporary channel aliases borrow their continuing owner through bindings,
-  matches and borrowing calculations inside record fields. Stored aliases,
-  consuming/unknown calls, different-field evidence and resource scopes remain
-  excluded from the proof.
-- Changed error payload/type fields and task-scope child metadata remain valid
-  across C `longjmp`, using volatile fields without new heap objects.
-- Native tests cover return, failure and cancellation at O0/O2/O3, independent
-  aliases, callback-context destruction, GC/reuse verification and deliberately
-  broken cleanup. Another test fails after spawning 65 children and verifies
-  interpreter/native output and complete cleanup over four repetitions.
-- [Measured Linux counts](measurements/channel-local-borrows.md): closed-function
-  retains 1→0 and shared-text retains 3→2 per message. Allocations and peak charge
-  are unchanged; ARC finishes with zero charge and no collections. ARC frames
-  shrink 424→344 / 416→352 bytes for closed sends and 552→456 / 512→432 for shared
-  text (AMD64 / ARM64). No channel execution-time improvement is claimed.
-
-## Evidence for the next measurement
-
-Focused source `62ed104504b9e9a032434223120785e3cc37a47f`, tag
-`roadmap/revision-record-borrows-62ed1045`, passes 217 checks per Linux GCC host
-in run `39469883481`. Artifacts: `/private/tmp/fwp-record-alias-costs`;
-receipt: `/private/tmp/fwp-record-alias-audit.json`. All 180 channel profiles,
-20 ordinary binaries and seven C/Rust/fwp comparisons are audited.
-
-The final-head production benchmark is saved in `/private/tmp/fwp-181-benchmarks`;
-its audited report is `/private/tmp/fwp-181-benchmark-report.json`. All 21
-C/Rust/fwp executables match the focused source byte for byte, as do the seven
-generated C files. Sources, samples and medians pass. On EPYC 7763, decimal-counting
-C/Rust/fwp medians are 13.022/14.809/14.852 ms; fwp samples span 13.703–22.504 ms.
-Some saved focused Rust executables are now `*.codex-archive.gz`; their decoded
-bytes were compared explicitly without restoring files. Do not delete current
-evidence or assume archived paths are still ordinary executables.
-
-[Saved-binary repeats](measurements/local-borrows-repeat-2026-10-20.json) use
-measurement source `373aa1902c7329be58c15fadbd782a5ec79c97c0`, tagged
-`roadmap/revision-borrow-repeat-373aa190`, run `39468533196`, and binaries from
-`b15488ad` / run `39465380125`. Both hosts' complete logs and artifacts pass:
-24 balanced timing rounds, two warmups, three separate RSS/count samples,
-source/binary hashes and an injected-allocation control. On EPYC 7763, fwp is
-53.9% above C in median elapsed time and 55.3% above C in child CPU time; the
-spread therefore cannot be explained by descheduling alone. Neoverse-N2 gaps
-are 3.7% elapsed and 3.8% CPU. Artifacts: `/private/tmp/fwp-alias-repeat-memory`;
-receipt: `/private/tmp/fwp-alias-repeat-audit.json`. The cause remains unresolved.
+resource-owning tail frames and mutual recursion need further proofs. Earlier
+identical binaries had variable AMD64 CPU time; its cause remains unresolved.
+Do not infer that a new algorithm explains that historical variation.
 
 ## Local checks and resources
 
-Use `python3 scripts/local-guard.py` for every local check: 64 GiB free disk,
-target below 2 GiB, sampled aggregate RSS below 1 GiB and 180 seconds. Full
-builds, suites, native compilation and benchmarks run on GitHub. Root target is
-4 KiB. Guarded audits paused whenever the reserve failed and resumed only after
-recovery; no limits were raised and no unrelated process was stopped.
+Use `python3 scripts/local-guard.py` for local checks: 64 GiB free disk, target
+below 2 GiB, sampled aggregate RSS below 1 GiB and 180 seconds. Full builds,
+native compilation, full suites and benchmarks run on GitHub. No limits were
+raised. Recent free space is about 66 GiB; recheck before downloading artifacts.
 
-The user's cleanup request reclaimed 6.553 GiB of old generated downloads only
-after verifying their GitHub artifacts were available. Sources, reports, logs
-and current evidence were preserved. Recovery manifests are under `/private/tmp`:
-`fwp-disk-cleanup-2026-10-20.json`, `fwp-disk-cleanup-second-2026-10-20.json`,
-and `fwp-disk-cleanup-extra-generated-2026-10-20.json`.
+Guarded checks: Python syntax/helper selection/whitespace 0.13s; focused Rust
+formatting 0.25s; documentation 3.31s; first/grouped report audits 0.58/0.59s;
+artifact downloads 8.62/8.05/17.61s. Full-log audits took 4–7s each. The sandboxed
+guard initially could not inspect `ps`; its approved invocation passed. Direct
+Git launches previously hit OS process-group signal permissions; Python-supervised
+Git passed under the same guard. No checks or guard limits were bypassed.
 
-Recent guarded checks: final log audit 4.63s; final-head benchmark audit 0.35s;
-comparison of all 21 executables, including compressed Rust artifacts, 0.14s.
-A first generated-C comparison used a pre-cleanup source; correcting its source
-resolved that audit-only mismatch. Historical checks are in the accepted receipt
-and [delivery evidence](roadmap-history.md#temporary-channel-borrows-and-failure-cleanup-pr-181).
-The acceptance updates pass `python3 scripts/local-guard.py python3
-scripts/check-roadmap.py` in 2.67s: 72 link sets, 106 historical tag pairs,
-seven roadmap steps and commit messages. The whitespace check also passed
-in 0.13s under the unchanged guard with Python supervising Git; a direct Git
-launch had hit an OS process-group signal permission error.
+Prior authorized cleanup reclaimed 6.553 GiB of obsolete generated downloads after
+verifying remote recovery artifacts. Sources, reports, logs and current evidence
+were preserved. Recovery manifests: `/private/tmp/fwp-disk-cleanup-2026-10-20.json`,
+`/private/tmp/fwp-disk-cleanup-second-2026-10-20.json` and
+`/private/tmp/fwp-disk-cleanup-extra-generated-2026-10-20.json`.
+Some older Rust artifacts are `*.codex-archive.gz`; preserve them and compare
+decoded bytes explicitly when needed, without assuming raw files exist.
 
 ## Roadmap status
 

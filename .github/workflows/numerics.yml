@@ -197,22 +197,54 @@ jobs:
         runner: [ubuntu-latest, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 15
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 1
+      FWP_LTO: '0'
+      FWP_INTEGER_LENGTH_ARTIFACTS: integer-counting-semantics
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --all -- --check
+      - name: Check integer boundary tests
+        if: ${{ !cancelled() }}
+        run: cargo clippy --test integer_output -- -D warnings
+      - name: Verify interpreter, native boundaries, effects and allocations
+        if: ${{ !cancelled() }}
+        run: cargo test --test integer_output
+      - name: Inspect all integer boundary and allocation controls
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(find integer-counting-semantics -name '*.exe' | wc -l)" -eq 12
+          for binary in integer-counting-semantics/*.exe; do
+            objdump -d "$binary" > "${binary%.exe}.asm"
+          done
       - name: Compare signed decimal counters on each allowed CPU
+        if: ${{ !cancelled() }}
         env:
           GH_TOKEN: ${{ github.token }}
           EVIDENCE_RUN: ${{ inputs.evidence_run }}
           PROGRAM_SOURCE: ${{ inputs.source_revision }}
           PROFILE_HOST: ${{ matrix.runner }}
-        run: python3 scripts/measure-integer-counting.py --run "$EVIDENCE_RUN" --source "$PROGRAM_SOURCE" --host "$PROFILE_HOST" --cc gcc --affinity each-allowed --rounds 30 --warmups 2 --output integer-counting-evidence
+        run: python3 scripts/measure-integer-counting.py --run "$EVIDENCE_RUN" --source "$PROGRAM_SOURCE" --host "$PROFILE_HOST" --cc gcc --rustc rustc --affinity each-allowed --rounds 48 --warmups 2 --output integer-counting-evidence
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: integer-counting-${{ matrix.runner }}
           path: integer-counting-evidence/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-counting-semantics-${{ matrix.runner }}
+          path: integer-counting-semantics/
           if-no-files-found: error
   queued_function_proof:
     if: inputs.suite == 'channel-proof'

@@ -36,8 +36,8 @@ fn integer_text_lengths_preserve_widths_unicode_sharing_and_effect_order() {
     let signed_input = signed.iter().map(|x| format!("{x}\n")).collect::<String>();
     let signed_output = signed
         .iter()
-        .map(|x| format!("{}\n", x.to_string().len() + 2))
-        .collect::<String>();
+        .map(|x| x.to_string().len() as i64 + 2)
+        .collect::<Vec<_>>();
     let mut unsigned = vec![0, 1, u64::MAX];
     for exponent in 1..=19 {
         let power = 10_u64.pow(exponent);
@@ -49,8 +49,8 @@ fn integer_text_lengths_preserve_widths_unicode_sharing_and_effect_order() {
         .collect::<String>();
     let unsigned_output = unsigned
         .iter()
-        .map(|x| format!("{}\n", x.to_string().len() + 2))
-        .collect::<String>();
+        .map(|x| x.to_string().len() as i64 + 2)
+        .collect::<Vec<_>>();
     let widths: [(&str, &str, &[u8]); 7] = [
         ("signed", "I64", signed_input.as_bytes()),
         ("unsigned", "U64", unsigned_input.as_bytes()),
@@ -103,10 +103,23 @@ trap = fork concat (tap echo | div 0 | show) (add 1 | tap echo | show) | string.
                 data,
             );
             assert_eq!(raw.status.code(), Some(*status), "{name}: {raw:?}");
-            if *name == "signed" {
-                assert_eq!(raw.stdout, signed_output.as_bytes());
-            } else if *name == "unsigned" {
-                assert_eq!(raw.stdout, unsigned_output.as_bytes());
+            let expected = match *name {
+                "signed" => Some(&signed_output),
+                "unsigned" => Some(&unsigned_output),
+                _ => None,
+            };
+            if let Some(expected) = expected {
+                // This test requests the typed binary pipe protocol. Compare
+                // each I64 payload with Rust's independently formatted length.
+                let mut stream = raw.stdout.strip_prefix(fwp::proto::MAGIC).unwrap();
+                let header = fwp::proto::read_header(&mut stream).unwrap();
+                assert_eq!(header.fingerprint, fwp::proto::fingerprint("std::I64"));
+                for value in expected {
+                    let (kind, payload) = fwp::proto::read_any_frame(&mut stream).unwrap().unwrap();
+                    assert_eq!(kind, 1);
+                    assert_eq!(payload, value.to_le_bytes());
+                }
+                assert_eq!(stream, fwp::proto::end_frame());
             }
             raw
         })

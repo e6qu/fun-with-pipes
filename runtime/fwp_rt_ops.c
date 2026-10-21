@@ -357,7 +357,7 @@ static V fwp_show_i64(V v) {
     return fwp_str_new(b + sizeof b - n, (size_t)n);
 }
 
-static int64_t fwp_u64_chars(uint64_t x) {
+static inline int64_t fwp_u64_chars(uint64_t x) {
     int64_t n = 1;
     /* Remove decimal digit groups, largest first. U64 has at most 20 digits. */
     if (x >= UINT64_C(10000000000000000)) { x /= UINT64_C(10000000000000000); n += 16; }
@@ -368,7 +368,7 @@ static int64_t fwp_u64_chars(uint64_t x) {
     return n;
 }
 
-static int64_t fwp_i64_chars(int64_t x) {
+static inline int64_t fwp_i64_chars(int64_t x) {
     uint64_t magnitude = x < 0 ? (uint64_t)0 - (uint64_t)x : (uint64_t)x;
     return fwp_u64_chars(magnitude) + (x < 0);
 }

@@ -26,6 +26,7 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--host', choices=audit.HOSTS, required=True)
     parser.add_argument('--cc', required=True)
+    parser.add_argument('--rustc', required=True)
     parser.add_argument('--affinity', choices=['each-allowed'], required=True)
     parser.add_argument('--rounds', type=int, required=True)
     parser.add_argument('--warmups', type=int, required=True)
@@ -35,7 +36,8 @@ def main():
     machine, architecture = audit.HOSTS[args.host]
     assert platform.machine() == architecture
     assert re.fullmatch('[0-9a-f]{40}', args.source)
-    labels = ('c', 'rs', 'saved-fwp', 'rebuilt-fwp', 'candidate-fwp')
+    labels = ('c', 'rs', 'saved-fwp', 'rebuilt-fwp', 'candidate-fwp',
+              'matched-c', 'matched-rs', 'grouped-unhinted')
     assert args.rounds > 0 and args.rounds % (2 * len(labels)) == 0
     assert args.warmups > 0
     out = args.output.resolve()
@@ -69,16 +71,28 @@ def main():
         executable.chmod(0o755)
     original = (directory / 'text-length-generated.c').read_text()
     # Match both complete helpers, including nested conditional/loop bodies.
-    pattern = (r'static int64_t fwp_u64_chars\(uint64_t x\) \{.*?\n\}\n\n'
-               r'static int64_t fwp_i64_chars\(int64_t x\) \{.*?\n\}')
+    pattern = (r'static (?:inline )?int64_t fwp_u64_chars\(uint64_t x\) \{.*?\n\}\n\n'
+               r'static (?:inline )?int64_t fwp_i64_chars\(int64_t x\) \{.*?\n\}')
     old_helper, = re.findall(pattern, original, re.S)
     new_helper, = re.findall(pattern, (ROOT / 'runtime/fwp_rt_ops.c').read_text(), re.S)
     assert old_helper != new_helper
     candidate = original.replace(old_helper, new_helper)
     assert candidate.replace(new_helper, old_helper) == original
+    assert new_helper.count('static inline ') == 2
+    unhinted = candidate.replace(new_helper, new_helper.replace('static inline ', 'static '))
     builds = {}
     managed = {}
-    for label, code in [('rebuilt-fwp', original), ('candidate-fwp', candidate)]:
+    for kind, tool, flags in [('c', args.cc, ['-O2']), ('rs', args.rustc, ['-O'])]:
+        label = 'matched-' + kind
+        source = out / (label + '.' + kind)
+        source.write_bytes((ROOT / 'bench/text-length' / ('main.' + kind)).read_bytes())
+        executable = out / label
+        command = [tool, *flags, source, '-o', executable]
+        run(command, environment)
+        executables[label] = executable
+        builds[label] = {'command': list(map(str, command)), 'sourceSha256': audit.digest(source)}
+    for label, code in [('rebuilt-fwp', original), ('candidate-fwp', candidate),
+                        ('grouped-unhinted', unhinted)]:
         cfile = out / (label + '.c')
         cfile.write_text(code)
         executable = out / label
@@ -167,6 +181,7 @@ def main():
         'measurementRun': int(os.environ['GITHUB_RUN_ID']),
         'programSource': args.source, 'programRun': args.run, 'host': args.host,
         'cCompiler': compiler, 'cpuInfo': run(['lscpu'], environment).stdout.decode(),
+        'rustCompiler': run([args.rustc, '-Vv'], environment).stdout.decode().strip(),
         'kernel': run(['uname', '-a'], environment).stdout.decode().strip(),
         'aslr': Path('/proc/sys/kernel/randomize_va_space').read_text().strip(),
         'affinityPolicy': args.affinity, 'allowedCpus': affinity,
@@ -176,7 +191,12 @@ def main():
         'measurements': measurements,
         'scope': 'C, Rust and fwp count decimal characters for i and checked 3*i over '
                  '0 <= i < 2000000, with checked accumulation and output 28518516. '
-                 'C/Rust and saved fwp executables come from the audited earlier run. '
+                 'Saved C/Rust and fwp executables come from the audited earlier run. '
+                 'Matched C/Rust use the candidate algorithm from the measurement source, '
+                 'with GCC O2 and Rust -O respectively. Compare these peers to assess '
+                 'remaining overhead; comparison with old peers also changes algorithms. '
+                 'All matched helpers carry ordinary inline hints, not forced inlining. '
+                 'Grouped-unhinted removes only the two fwp inline hints to isolate their cost. '
                  'Rebuilt fwp uses unchanged saved C; candidate changes only integer '
                  'digit counting to descending decimal groups. Both use GCC O2, no LTO. Balanced '
                  'whole-process timing includes startup, output and shutdown; wall '
