@@ -2,21 +2,39 @@
 
 ## Next action
 
-Next: validate the task-capture preparation on branch `queued-task-captures`,
-worktree `/private/tmp/fwp-queued-task-captures`. The candidate follows known task
-computations/results and checks whether a result can own its producer. Native
-and WebAssembly tests cover queued handles, aliases, cancellation, undrained
-queues and deliberately omitted releases. Rust formatting passed. The verified #188 macOS compiler formatted and
-type-checked the new fixture; its raw interpreter produced the expected output.
-That compiler also accepted the recursive task-result cycle for ARC emission.
-The new proof, native execution and WebAssembly checks remain unverified. Read the
-[measurement plan](measurements/queued-task-handles.md).
+Next: validate the combined task-ownership group on branch `queued-task-captures`,
+worktree `/private/tmp/fwp-queued-task-captures`. It proves queued task owners,
+rejects result back-references and transfers task callback owners directly.
+Read the [measurement plan](measurements/queued-task-handles.md) and the actual
+checks below; combined native and WebAssembly acceptance remains pending.
 
 [PR #189](https://github.com/e6qu/fun-with-pipes/pull/189) remains the sole active
 PR. Its final commit is `4dfc2be31c62c9e54271692ac8638fbb66ca786b`; production run
 `39641372026` and documentation run `39641321443` must pass and be audited before
 squash merge. The primary workspace keeps that delivery unchanged. Rebase this
 preparation onto the verified merge before opening its substantial next PR.
+
+## Combined changes and validation
+
+This group also transfers callback ownership into `task.spawn` and `task.within`,
+preserving independent aliases. It checks POSIX clock errors and protects a
+deadline callback if clock reading fails. Native probes cover transferred owners,
+clock/stack/scope failures and a matched redundant-pair counter control. The three
+task callback/handle test targets join the focused native suite.
+
+Preparation run `39643823376` at `86de5747` completed: compiler/unit checks,
+gRPC/REST checks and both WebAssembly hosts passed. Its native batch found two
+new test defects: effectful helpers returned a bare function too early, and the
+counter expected one conditional root-release site instead of two. Both are
+corrected; raw interpretation of both revised examples passes. The task-result
+cycle regression passed. Full log receipt:
+`/private/tmp/fwp-task-capture-preflight-acceptance.json`.
+
+Guarded rustfmt, frozen primitive inventory, workflow syntax, documentation links
+and old-compiler fixture/C-emission checks pass. These are not execution evidence
+for the new callback transfer. Next: publish the combined source and run all six
+native hosts plus both WebAssembly hosts. Keep #189 as the sole delivery PR until
+its exact-head production gates pass and it is squash-merged.
 
 ## Measured change and checks
 

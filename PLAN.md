@@ -97,6 +97,10 @@ outside the benchmark suite.
    passed full acceptance in
    [PR #186](docs/roadmap-history.md#queued-service-responses-and-bounded-server-startup-pr-186),
    including native delivery, cancellation and cleanup from the actual service constructor.
+   The next [task-ownership group](docs/measurements/queued-task-handles.md) adds
+   proofs for queued task captures, rejects result back-references, and transfers
+   callback owners directly into spawned tasks. Its combined platform validation
+   is pending; keep these claims separate from accepted deliveries.
    Explicit weak handles remain a proposal. Prefer
    borrowing and scoped cleanup; distinguish a definite cycle from a missing proof.
    Reject unproved retention rather than silently use tracing.

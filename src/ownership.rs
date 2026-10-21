@@ -1,7 +1,7 @@
 //! Ownership at native primitive boundaries. Unproved heap-sharing boundaries
 //! still require tracing; checked ARC rejects them rather than retaining forever.
 //! Contracts cover containers, text/byte results and synchronous list callbacks.
-//! Array/map/set elements are typed owners. Spawned task thunks retain a counted
+//! Array/map/set elements are typed owners. Spawned tasks take a counted
 //! callback owner. Synchronous service scopes borrow callbacks; detached children
 //! retain the shared settings they need for their independent lifetimes.
 use Argument::{Borrow as B, Consume as C};
@@ -101,7 +101,8 @@ pub enum ResultOwnership {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Callback {
     Shared(usize),
-    /// Retain a counted callback reference for asynchronous invocation.
+    /// Keep a counted callback owner for asynchronous invocation. Consume
+    /// transfers the caller's owner; Borrow requires a runtime duplicate.
     /// A task or connection owns it until invocation and cleanup finish.
     Retained(usize),
     /// Invoke synchronously without retaining the callback function itself.
@@ -301,7 +302,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "ad.push-owned" => (&[B], ResultOwnership::Shared, None, &[]),
         "ad.backward-owned" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
         "task.spawn" => (
-            &[B],
+            &[C],
             ResultOwnership::OwnedTask,
             Some(Callback::Retained(0)),
             &[0],
@@ -342,7 +343,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             &[0],
         ),
         "task.within" => (
-            &[B, B],
+            &[B, C],
             ResultOwnership::OwnedTaskOption,
             Some(Callback::Retained(1)),
             &[1],
@@ -759,7 +760,7 @@ mod tests {
         assert_eq!(send.arguments, &[Argument::Borrow, Argument::Consume]);
         assert!(send.aliases.is_empty());
         let spawn = primitive("task.spawn").unwrap();
-        assert_eq!(spawn.argument(0), Argument::Borrow);
+        assert_eq!(spawn.argument(0), Argument::Consume);
         assert_eq!(spawn.callback, Some(Callback::Retained(0)));
         assert_eq!(spawn.result, ResultOwnership::OwnedTask);
         let await_contract = primitive("task.await").unwrap();
@@ -777,7 +778,7 @@ mod tests {
         assert_eq!(ad_scope.argument(1), Argument::Borrow);
         assert_eq!(ad_scope.aliases, &[0, 1]);
         let within = primitive("task.within").unwrap();
-        assert_eq!(within.argument(1), Argument::Borrow);
+        assert_eq!(within.argument(1), Argument::Consume);
         assert_eq!(within.callback, Some(Callback::Retained(1)));
         assert!(!within.borrows_callback());
         for (library, collections) in [
@@ -803,7 +804,10 @@ mod tests {
                 if let Some(i) = c.callback_argument() {
                     assert_eq!(
                         c.argument(i),
-                        if c.borrows_callback() || matches!(c.callback, Some(Callback::Retained(_)))
+                        if matches!(symbol, "task.spawn" | "task.within") {
+                            Argument::Consume
+                        } else if c.borrows_callback()
+                            || matches!(c.callback, Some(Callback::Retained(_)))
                         {
                             Argument::Borrow
                         } else {
@@ -846,6 +850,10 @@ mod tests {
                         );
                     }
                     ResultOwnership::ChannelOperation if symbol == "channel.send" => {
+                        assert_eq!(consumed, vec![1], "{symbol}");
+                    }
+                    ResultOwnership::OwnedTask => assert_eq!(consumed, vec![0], "{symbol}"),
+                    ResultOwnership::OwnedTaskOption if symbol == "task.within" => {
                         assert_eq!(consumed, vec![1], "{symbol}");
                     }
                     _ => assert!(consumed.is_empty(), "{symbol}"),

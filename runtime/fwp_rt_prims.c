@@ -3088,7 +3088,8 @@ static int64_t fwp_now_ns(void) {
     return (int64_t)((i128)counter.QuadPart * 1000000000 / frequency.QuadPart);
 #else
     struct timespec t;
-    clock_gettime(CLOCK_MONOTONIC, &t);
+    if (clock_gettime(CLOCK_MONOTONIC, &t) != 0)
+        fwp_trap("cannot read monotonic clock");
     return (int64_t)t.tv_sec * 1000000000LL + t.tv_nsec;
 #endif
 }
@@ -3103,7 +3104,8 @@ static int64_t fwp_unix_ns(void) {
     return (int64_t)ns;
 #else
     struct timespec now;
-    clock_gettime(CLOCK_REALTIME, &now);
+    if (clock_gettime(CLOCK_REALTIME, &now) != 0)
+        fwp_trap("cannot read system clock");
     return (int64_t)now.tv_sec * 1000000000LL + now.tv_nsec;
 #endif
 }

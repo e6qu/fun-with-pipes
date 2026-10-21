@@ -424,6 +424,12 @@ until it is released. This does not grant the same contract to arbitrary externa
 channels. [The service example and checks](measurements/queued-grpc-responses.md)
 explain this distinction and record what has been verified.
 
+The [task-handle preparation](measurements/queued-task-handles.md) extends the
+same proof to known task computations and results. It also checks whether a
+result can own its producing task through a returned callback. These changes
+are under validation, not accepted platform support. Unknown task producers
+remain rejected; raw task queue payloads retain their separate restriction.
+
 For example, an event can retain a text queue until someone calls its `read`
 function. `Channel[String]` stores text; `Channel[Event]` stores records containing
 a function. The `Async` effect allows these operations to wait for a message or
