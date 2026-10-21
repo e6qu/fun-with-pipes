@@ -91,7 +91,12 @@ cancel-received =
 round : () -> () ! {Async}
 round =
     tap (const "direct" | event | enqueue | received | eq "direct" | require)
-    | tap (two-values | enqueue | channel.recv | option.map twice | ignore)
+    | tap (two-values
+        | enqueue
+        | channel.recv
+        | option.map twice
+        | eq (Some ())
+        | require)
     | tap (closed-alias | enqueue | received | eq "closed" | require)
     | tap (const "nested" | nested | enqueue | received | eq "nested" | require)
     | tap

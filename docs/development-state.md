@@ -2,10 +2,18 @@
 
 ## Next action
 
-Next: run a Linux AMD64 CI probe for the data-queue capture proof, fix all
-failures, then run the full native and WebAssembly focused matrix. This is
-preparation for the next substantial PR; do not open another PR before #184
-passes its final gates and is merged. No new ownership support is verified yet.
+Next: publish the queue-summary repair and run the broad six-native/two-WASI
+focused matrix. The first Linux probe `39576706899` at `fb448042` passed lint,
+inventory, all compiler unit tests and every native target except the new queue
+fixture. Its ARC emission lost the captured channel's producer. Full log audit:
+`/private/tmp/fwp-data-queue-probe.json`.
+
+The repair preserves queue origins in non-function return summaries; the old
+function-only filter had cleared them. A full-analysis unit control now checks
+that path. The fixture also requires the repeated receive to return Some (),
+so an empty result cannot silently skip its callback. The strengthened fixture
+passes accepted raw interpretation. Candidate native cleanup is still unverified.
+Do not open a second PR until #184 passes and is merged.
 
 Branch `prove-data-queue-captures` is in `/private/tmp/fwp-data-queue-captures`,
 based on PR #184 review commit `0509937311ffd94171da9e2213c387d23e81739a`.

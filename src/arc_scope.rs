@@ -939,13 +939,11 @@ pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String>
                 format!("{error}\n  while checking `{}`", program.funcs[id].name)
             })?;
             let function = &program.funcs[id];
-            if !has_functions(
-                program,
-                function.ty.params(function.arity as usize).1,
-                &mut BTreeSet::new(),
-            ) {
-                result.clear();
+            let result_type = function.ty.params(function.arity as usize).1;
+            if !has_functions(program, result_type, &mut BTreeSet::new()) {
+                result.retain(|origin| !origin.callable());
             }
+            proof.refine_origins(&mut result, result_type);
             proof.changed |= join(proof.outputs.entry((id, scoped)).or_default(), &result);
         }
         if !proof.changed {
@@ -1316,6 +1314,33 @@ mod tests {
             ty: arrow(unit, leaf.clone()),
             body: Body::Prim("unmodeled-queue-producer".into()),
         });
+        let callback_queue = MT::Con("std::Channel".into(), vec![callback.clone()]);
+        program.funcs.push(Func {
+            name: "send-callback".into(),
+            arity: 2,
+            locals: vec![callback_queue.clone(), callback.clone()],
+            ty: arrow(callback_queue, arrow(callback, MT::con("std::Bool"))),
+            body: Body::Prim("channel.send".into()),
+        });
+        program.funcs.push(Func {
+            name: "entry".into(),
+            arity: 0,
+            locals: vec![],
+            ty: MT::con("std::Bool"),
+            body: Body::Expr(Expr::Call(
+                8,
+                vec![
+                    Expr::Call(2, vec![Expr::Const(Value::I64(1))]),
+                    Expr::Apply(
+                        Box::new(Expr::Func(3)),
+                        vec![Expr::Call(0, vec![Expr::Const(Value::I64(1))])],
+                    ),
+                ],
+            )),
+        });
+        // Exercise the fixed-point summaries as well as the direct operations
+        // below: a non-function result must preserve its channel producer.
+        check(&program, &[9]).unwrap();
         let mut proof = Proof {
             program: &program,
             captures: BTreeMap::new(),
