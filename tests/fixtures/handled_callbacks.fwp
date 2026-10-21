@@ -1,0 +1,31 @@
+checked : (() -> () ! {Error[String]}) -> Result[(), String]
+checked = attempt (apply ())
+ErrorCall = { call: () -> () ! {Error[String]} }
+checked-record : ErrorCall -> Result[(), String]
+checked-record = .call | attempt (apply ())
+handle : (a -> b ! {Error[x] | e}) -> a -> Result[b, x] ! e
+handle = attempt
+alias-check : (() -> () ! {Error[String]}) -> Result[(), String]
+alias-check = handle (apply ())
+Deferred[a] = { run: a }
+defer : (a -> b ! {Error[x] | e}) -> Deferred[a -> Result[b, x] ! e]
+defer = attempt | make Deferred { run = id }
+deferred : Deferred[(() -> () ! {Error[String]}) -> Result[(), String]]
+deferred = defer (apply ())
+read-state : (() -> I64 ! {State[I64]}) -> (I64, I64)
+read-state = run-state 7 (apply ())
+checked-io : (() -> () ! {IO, Error[String]}) -> Result[(), String] ! {IO}
+checked-io = attempt (apply ())
+fail-now : () -> () ! {Error[String]}
+fail-now = const "expected" | fail
+print-fail : () -> () ! {IO, Error[String]}
+print-fail = tap (const "before" | print) | fail-now
+main = [
+    checked fail-now | echo,
+    checked (const ()) | echo,
+    ErrorCall { call = fail-now } | checked-record | echo,
+    alias-check fail-now | echo,
+    apply fail-now (deferred | .run) | echo,
+    read-state get | echo,
+    checked-io print-fail | echo,
+] | ignore

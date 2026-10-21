@@ -19,39 +19,7 @@ main = [
 ] | ignore
 "#;
 
-const HANDLED_CALLBACKS: &str = r#"
-checked : (() -> () ! {Error[String]}) -> Result[(), String]
-checked = attempt (apply ())
-ErrorCall = { call: () -> () ! {Error[String]} }
-checked-record : ErrorCall -> Result[(), String]
-checked-record = .call | attempt (apply ())
-handle : (a -> b ! {Error[x] | e}) -> a -> Result[b, x] ! e
-handle = attempt
-alias-check : (() -> () ! {Error[String]}) -> Result[(), String]
-alias-check = handle (apply ())
-Deferred[a] = { run: a }
-defer : (a -> b ! {Error[x] | e}) -> Deferred[a -> Result[b, x] ! e]
-defer = attempt | make Deferred { run = id }
-deferred : Deferred[(() -> () ! {Error[String]}) -> Result[(), String]]
-deferred = defer (apply ())
-read-state : (() -> I64 ! {State[I64]}) -> (I64, I64)
-read-state = run-state 7 (apply ())
-checked-io : (() -> () ! {IO, Error[String]}) -> Result[(), String] ! {IO}
-checked-io = attempt (apply ())
-fail-now : () -> () ! {Error[String]}
-fail-now = const "expected" | fail
-print-fail : () -> () ! {IO, Error[String]}
-print-fail = tap (const "before" | print) | fail-now
-main = [
-    checked fail-now | echo,
-    checked (const ()) | echo,
-    ErrorCall { call = fail-now } | checked-record | echo,
-    alias-check fail-now | echo,
-    apply fail-now (deferred | .run) | echo,
-    read-state get | echo,
-    checked-io print-fail | echo,
-] | ignore
-"#;
+const HANDLED_CALLBACKS: &str = include_str!("fixtures/handled_callbacks.fwp");
 
 #[test]
 fn handlers_remove_effects_shared_with_callback_inputs_and_returned_records() {
@@ -86,7 +54,10 @@ fn handled_callback_application_matches_interpretation_and_native_execution() {
         .output()
         .unwrap();
     assert!(reference.status.success(), "{reference:?}");
-    assert_eq!(reference.stdout, b"Err \"expected\"\nOk ()\nErr \"expected\"\nErr \"expected\"\nErr \"expected\"\n(7, 7)\nbefore\nErr \"expected\"\n");
+    assert_eq!(
+        reference.stdout,
+        include_bytes!("fixtures/handled_callbacks.out")
+    );
     assert!(reference.stderr.is_empty(), "{reference:?}");
     for memory in ["arc", "tracing"] {
         let cfile = dir.join("main.c");

@@ -2,121 +2,79 @@
 
 ## Next action
 
-Next: finish the handler inference repair discovered while testing socket queues,
-then complete focused and production validation for [PR #184](https://github.com/e6qu/fun-with-pipes/pull/184).
-Branch `prove-retained-resource-ownership` is based on accepted merge
-`447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c`; published head is `f448c3b7`.
+Next: complete the eight-job focused matrix for [PR #184](https://github.com/e6qu/fun-with-pipes/pull/184),
+then publish the evidence and require all nine production jobs plus documentation
+at the final head. Squash-merge only after those gates pass, with one subject
+under 80 characters and an empty body. Standing authorization remains in effect.
 
-All six native socket jobs in `39563352313` have passed their test steps (last
-Intel macOS artifact upload was finishing). Five complete logs and 20 saved
-binaries have been audited; finish the sixth and generate the evidence report.
-The repair stays in this PR: `attempt (apply ())` incorrectly retained Error in
-its result type because argument weakening inserted the handled label into a
-temporary row, losing its relationship to the callback input. The same pattern
-can affect State handlers and returned records. `src/infer.rs::argument_type`
-now preserves labels where the callee shares the remaining row with its output;
-this is structural, not a special case for named handlers. New `call_effects`
-checks cover aliases, records, State, native/interpreter agreement, and rejection
-of unrelated IO effects. Probe `39566088635` completed with four `call_effects` failures: two came from
-ambiguous pipe grouping in the new deferred-function example; two exposed the
-need to distinguish produced functions from accepted callbacks. Other unit and
-socket/resource targets passed. Both causes are repaired locally: use an explicit
-application for the function-valued record field, and follow input/output
-direction through function types and actual record/variant fields. A new
-`Consumer` record control passes in the accepted compiler and must keep passing.
-The revised changes are not yet remotely tested. Publish with
-`suite=queued-sockets,native_runner=ubuntu-latest` for early feedback, then use
-all platforms and the full nine production gates before merge. Existing source
-acceptance and missing-effect rejection tests must keep passing.
+Branch `prove-retained-resource-ownership` is based on accepted PR #183 merge
+`447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c`. The latest tested compiler is `572b59a5`;
+local changes share the handler fixture with WASI and enable both WASI jobs when
+`queued-sockets` runs with `native_runner=all`. Publish these together, dispatch
+that matrix, and audit every complete job log before proceeding.
 
-The audit found that `src/infer.rs::check_effects` already rejects partial
-applications capturing `File`: reusable functions cannot consume a single-use
-file repeatedly. Preserve that rule. Socket handles are shared values instead;
-their runtime headers cannot own callbacks or queues, and their final owner
-closes the descriptor. `src/arc_scope.rs` now admits `UdpSocket`, `Listener` and
-`Conn` captures while preserving other mutable-owner rejections. See the
-[queued-function contract](ownership.md#functions-stored-in-channels).
+## Current implementation
 
-`tests/queued_functions.rs` adds a 64-round socket regression, native owner
-counters, descriptor-close checks, complete ARC teardown and deliberately
-omitted queue-release/socket-close controls. It covers received callbacks called
-twice, closed and undrained queues, aliases, caught failure, blocked senders and
-cancellation during UDP receive, TCP accept and TCP read. Unit tests preserve
-rejection through mixed records and recursive containers.
+Queued callbacks can capture `UdpSocket`, `Listener` and `Conn`. Their runtime
+objects cannot own a callback or queue; existing shared ownership keeps the
+socket alive and closes it on final release. Files retain their single-use rule.
+Channels, tasks, HTTP/2 streams and gRPC cells remain excluded as captures.
+The [ownership contract](ownership.md#functions-stored-in-channels) explains this
+subset. The 64-round fixture checks delivery, repeated calls, aliases, undrained
+queues, errors, blocked sends and cancellation during socket IO. Test-only
+counters check live socket objects and descriptor closure, with deliberately
+broken cleanup controls. Ordinary runtime representation is unchanged.
 
-Focused `queued-sockets` run `39563352313` tests published head `2121a9b5`.
-Audit every failure, then require all nine production gates and docs at the final
-head. Use `/private/tmp/fwp-audit-184-sockets.py` to retain complete job logs. This focused option retains six native platforms and tests the
-changed queue proof alongside socket/resource cleanup. The broader `channel-proof`
-run `39561654177` at `9232cdf4e790dbe2b728cb0e5d96c1a55ab4fd4d` is still finishing.
-Both WASI jobs passed; the completed Linux AMD64 job found only the new fixture's
-three task-effect errors. Those are repaired together: handle IoError with
-`attempt` before spawning, and declare the existing task callback effect set.
-Continue auditing every other job; receipt `/private/tmp/fwp-184-focused.json`.
-No new native socket queue support is verified yet.
+The fixture investigation also exposed `attempt (apply ())` incorrectly retaining
+its handled Error effect. `src/infer.rs::argument_type` now preserves the shared
+remaining row in the handler's result. Traversal distinguishes produced functions
+from accepted callbacks and follows actual record/variant fields. Tests include
+Error and State handlers, aliases, returned records, missing-IO rejection and
+existing callback-weakening cases. `tests/fixtures/handled_callbacks.fwp` is shared
+by native and WASI tests. No new syntax or named-handler special cases were added.
 
-For lightweight local source checks, the accepted PR #183 macOS ARM64 compiler
-is `/private/tmp/fwp-183-macos-compiler/fwp-macos-arm64/fwp`. Both its artifact
-archive and executable hashes were verified against GitHub/manifest metadata;
-receipts are beside it. It predates this ARC eligibility change, so use it only
-for unchanged source semantics, formatting and tracing C emission. Under
-`scripts/local-guard.py`, `check tests/fixtures/queued_sockets.fwp` passes;
-`run --interp` with and without `FWP_NO_OPT=1` matches the expected 64-round output
-(10.31s and 10.30s). Tracing `build --emit-c` passes without compiling C locally.
-The generated C is `/private/tmp/fwp-184-sockets-baseline.c`; instrumentation sites
-are unique. This is not native execution evidence for the candidate compiler.
+## Validation and evidence
 
-`cargo fmt --all -- --check`, `git diff --check`, the primitive inventory (394
-declarations, 384 symbols, 40 aliases), doc links and all 11 native-runner tooling
-tests pass under the guard; the combined last check took 12.86s. An initial
-wrong-edition formatter invocation was corrected before this run; obsolete
-focused run `39561434828` is cancelled. Read [PLAN.md](../PLAN.md),
-[ownership](ownership.md) and relevant [design](design.md) sections before edits.
+- Socket matrix `39563352313` at `2121a9b5` passed all six native platforms. All
+  complete logs and 24 O0/O2 ARC/tracing binaries were audited. Archive digests,
+  architectures, outputs and disassembly agree; ARC omits collector routines,
+  while tracing controls retain them. This predates the inference repair.
+  `/private/tmp/fwp-184-socket-evidence/report.json` records that scope;
+  `/private/tmp/fwp-184-sockets.json` retains the log audit.
+- Handler probe `39567130285` at `572b59a5` passed on Linux AMD64, including all
+  compiler unit tests, all 14 `call_effects` tests, queued functions and adjacent
+  socket/resource tests. Complete log audit:
+  `/private/tmp/fwp-184-handlers-direction.json`.
+- Earlier broad run `39561654177` passed both WASI jobs; all six native jobs had
+  only the subsequently fixed socket fixture effect errors. Probe `39566088635`
+  exposed four handler-test failures, repaired in `572b59a5`. Their full audits
+  remain in `/private/tmp/fwp-184-focused.json` and
+  `/private/tmp/fwp-184-handlers-probe.json`; no known failure is being deferred.
+- Local guarded checks passed: project Rust formatting, whitespace, doc links,
+  primitive inventory (394 declarations, 384 symbols, 40 aliases), and all 11
+  native-runner tooling tests. No local native build or full suite was run.
 
-## Accepted delivery
+Audit scripts are `/private/tmp/fwp-audit-184-direction.py`,
+`/private/tmp/fwp-audit-184-sockets.py`, `/private/tmp/fwp-184-download-evidence.py`
+and `/private/tmp/fwp-184-report-evidence.py`. Their source/run constants are
+explicit: update them or make a separate copy for the final matrix. The older
+socket report must not be presented as acceptance of later compiler changes.
 
-[PR #183](roadmap-history.md#checked-product-bounds-pr-183) is squash-merged.
-All nine production jobs in `39543123372` and documentation `39543123369` passed
-at `3606d072d0f708b600f44050ab9cafe1390bceee`. Every complete log was audited clean.
-Merge `447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c` has the identical tested tree
-`40b47a0670c38bc0b05c6dbd1afefd3ad5f7d7c5`. Its verified message is exactly
-`Preserve numeric bounds after checked multiplication`: one line, 52 characters, no body,
-trailers or attribution. Receipt: `/private/tmp/fwp-183-final-acceptance.json`.
-The redundant post-merge production run `39557406360` was cancelled after tree
-verification; post-merge documentation `39557406176` passed.
+## Local resources
 
-The [measurement guide](measurements/checked-products.md) and
-[raw report](measurements/checked-products-2026-10-21.json) retain the comparisons,
-binary evidence and limits. O2 counting loops improve, but matched C remains
-faster, AMD64 timings vary by CPU and O0/O1 emit an extra product. Tracing remains
-in the measured binaries. These results do not finish a roadmap work area.
-
-## Evidence and local resources
-
-Measured source `b57e2dcda716ebd27007d01aaf5e4e79d22518b6` remains available through
-`roadmap/revision-checked-product-b57e2dcd`. Focused run `39536765734` passed on
-both Linux architectures, including actual compiler C/instruction equality,
-runtime-input and sanitizer controls. Receipts: `/private/tmp/fwp-range-native-audit.json`
-and `/private/tmp/fwp-compiled-range-audited.json`; complete artifacts:
-`/private/tmp/fwp-compiled-range-costs`. Immutable baseline inputs share hardlinks
-with `/private/tmp/fwp-integer-range-costs`. The older handoff is preserved at
-`/private/tmp/fwp-183-pre-merge-handoff.md`; detailed delivery history belongs in
-[the history index](roadmap-history.md), not a competing next-action list.
-
-Use `python3 scripts/local-guard.py` for serial local checks. Full builds, native
-execution, full suites and measurements run on GitHub. Preserve 64 GiB free disk,
+Use `python3 scripts/local-guard.py` for serial local checks. Keep 64 GiB free,
 target data below 2 GiB, sampled aggregate RSS below 1 GiB and the 180-second
-deadline. No limits were raised. The final log audit passed in 18.26s; merge
-verification passed in 9.34s. Recheck free space before downloading artifacts.
-The merged-status documentation and next handoff pass `python3 scripts/check-roadmap.py`
-and `git diff --check` under the guard (3.78s).
+limit. Last free-space check: 65.22 GiB. Builds, native execution, full suites
+and measurements run on GitHub; no limits were raised.
 
-Authorized cleanup manifests are `/private/tmp/fwp-disk-cleanup-2026-10-20.json`,
-`/private/tmp/fwp-disk-cleanup-second-2026-10-20.json`,
-`/private/tmp/fwp-disk-cleanup-extra-generated-2026-10-20.json` and
-`/private/tmp/fwp-disk-cleanup-2026-10-21.json`. The earliest counting artifact
-trees are partial; restore their verified remote artifacts before binary audits.
-Current matched/range evidence and sources remain intact.
+The hash-verified accepted PR #183 macOS ARM64 compiler is
+`/private/tmp/fwp-183-macos-compiler/fwp-macos-arm64/fwp`; receipts are beside it.
+It can format source and check unchanged semantics, including the new Consumer
+preservation control. It predates both compiler changes and rejects the handler
+regression; do not use it to claim candidate acceptance. Its raw/optimized
+interpretation passed the earlier socket fixture before that fixture was changed
+to exercise the handler repair. Accepted older delivery details are in
+[history](roadmap-history.md#checked-product-bounds-pr-183), not a competing plan.
 
 ## Roadmap status
 

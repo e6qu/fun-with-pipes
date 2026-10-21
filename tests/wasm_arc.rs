@@ -244,6 +244,7 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
         ("numeric-hashes", include_str!("fixtures/numeric_hashes.fwp")),
         ("integer-output", include_str!("fixtures/integer_output.fwp")),
         ("queued-functions", include_str!("fixtures/queued_functions.fwp")),
+        ("handled-callbacks", include_str!("fixtures/handled_callbacks.fwp")),
         ("hash-fusion", include_str!("fixtures/hash_fusion.fwp")),
         ("hash-borrowed-fields", include_str!("fixtures/hash_borrowed_fields.fwp")),
         ("range-arrays", include_str!("fixtures/range_arrays.fwp")),
