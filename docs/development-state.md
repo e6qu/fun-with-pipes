@@ -2,79 +2,95 @@
 
 ## Next action
 
-Next: require all nine production jobs plus documentation for the final head
-of the data-queue capture PR on `prove-data-queue-captures`. Audit every completed
-log and fix every failure. Then squash-merge with an explicit one-line subject
-under 80 characters and an empty body. Standing authorization remains in effect;
-focused checks alone do not authorize merge. Keep one active PR.
+Next: audit all nine production jobs plus documentation for the queued service
+response PR on `prove-grpc-sender-captures`. Fix every failure, then squash-merge
+with an explicit one-line subject under 80 characters and an empty body. The main
+workspace `/Users/zardoz/projects/fun-with-pipes` holds this delivery branch.
+Do not confuse the passing focused matrix with final-head production acceptance.
 
-PR #184 passed all ten gates and was squash-merged as
-`b3401149955ff6e0aaa1d70044b527aec20f2e5f`. Its tested head `0509937311ffd94171da9e2213c387d23e81739a`
-and merge have identical trees. The [history](roadmap-history.md#queued-socket-callbacks-and-handler-inference-pr-184)
-records acceptance; local receipt `/private/tmp/fwp-184-final-acceptance.json`
-verifies the message, parent and tree. Do not repeat that completed delivery.
+PR #185 passed all ten gates and was squash-merged as
+`f9bd49d9f9416b471326090f1a423282d476b1a9`. Its tested head `73850bd3b6ac460a7e077cea8cd1128f9913aea0`
+and merge have identical trees; the [history](roadmap-history.md#queued-callbacks-retaining-data-queues-pr-185)
+records acceptance. Receipt `/private/tmp/fwp-185-final-acceptance.json` verifies
+the message, parent and tree. Do not repeat that completed delivery.
 
-This checkout is `/private/tmp/fwp-data-queue-captures`, based on that accepted
-main commit. All eight focused jobs in
-`39578006890` passed at `3e3385c12fda3097b39f901146b4290bb32161e5`; remote tag
-`roadmap/revision-data-queues-3e3385c12fda` preserves that source. Only a source
-comment, documentation and evidence changed afterward. Final-head production
-checks remain required; their IDs will be recorded locally after publication.
+All eight jobs of focused run `39591489617` passed at
+`0b1d6c115893eb9dc37536b2b3345ccbdcc74155`. Remote tag
+`roadmap/revision-grpc-responses-0b1d6c115893` preserves that source. Only workflow
+coverage/failure propagation, documentation and evidence changed afterward;
+rebasing onto accepted main preserved the source tree. Every complete log and
+all six native artifact sets were audited: 84 binaries, 24 cleanup samples and
+12 deliberate leak controls. The [report](measurements/queued-grpc-responses-2026-10-21.json)
+preserves costs and peak variation, with no timing claim. Local receipts are
+`/private/tmp/fwp-grpc-sender-matrix.json` and per-host `inspection.json` files
+under `/private/tmp/fwp-grpc-sender-evidence`.
 
-## What changed
+Standing authorization covers publishing, fixes and squash merge after all nine
+production jobs plus documentation pass. Supply a one-line subject under
+80 characters and an empty body; verify message, parent and tree afterward.
+Failing tests are work to fix. Keep one active PR, and do not restart healthy CI
+for handoff-only updates.
 
-The ownership analysis tracks known queue creators and unknown sources alongside
-functions. A queued callback may capture a data-only queue from `channel.make`,
-including through records, lists and nested data queues. Every value sent into a
-nested queue is checked. A known outer creator cannot hide an unknown inner owner.
-Function-return summaries now preserve queue origins; the first probe exposed
-that they previously erased all non-function origins. A full-analysis unit control
-covers that repair. First probe audit: `/private/tmp/fwp-data-queue-probe.json`.
+## Changes and ownership boundary
 
-Function-bearing captured queues, recursive queue ownership, unknown/native
-producers, tasks, HTTP streams, gRPC cells and single-use files retain their
-restrictions. No runtime layout, weak-reference API or syntax changes were added.
-The [ownership guide](ownership.md#functions-stored-in-channels) includes an
-explained example; the [evidence guide](measurements/queued-data-channels.md)
-states exactly what the checks measure and exclude.
+A queued callback can retain a served gRPC response channel under checked ARC.
+The service emitter supplies an explicit `EntryChannels::GrpcResponses` contract
+for that method's final response argument. The transport owns protocol data,
+not language callbacks; typed cleanup releases its stream and connection.
+Arbitrary external channels, other entry modes and unrelated channel arguments
+remain unknown. Payload/cycle/scope checks still apply. No runtime layout or
+syntax change. A full-analysis unit test checks both acceptance and rejection
+boundaries. [The guide](measurements/queued-grpc-responses.md) explains the program.
 
-## Verified checks
+The nine-case fixture makes 72 calls, including repeated sends, unreceived and
+closed queues, rejected sends, errors, nested queues, blocked sends and remote
+cancellation. Acknowledgement orders cancellation after the server retains the
+callback. Tests compare raw interpretation with native ARC/tracing at O0/O2.
+Each measured sample must release every response channel, stream, connection and
+child task. The still-live listener's actual socket-wait objects are identified
+separately; no other managed charge may remain. Both ARC omission controls must
+exit 201. These are cleanup results, not speed or C/Rust parity claims.
 
-The focused matrix covers six native platforms and two Linux WebAssembly hosts.
-Every complete log was audited. All 24 native binaries have the expected
-architecture, output, generated C and disassembly. ARC excludes collector routines;
-tracing controls retain marking. The 64-round fixture verifies normal delivery,
-aliases, nested queues, failure, blocked sends and cancellation. Queue counts return
-to zero; deliberately omitted releases fail with exit 198.
+Two earlier probes failed because of test settings/boundaries, now repaired:
+ARC cannot enable reuse verification's deliberate retention; the listener's lazy
+wait storage cannot be counted as a leaked request. Current focused checks pass
+on six native platforms. Generated C, actual ELF/Mach-O/PE binaries, disassembly,
+symbols and counters are retained. Two WebAssembly jobs preserve ownership
+regressions; they do not establish WebAssembly gRPC server support.
 
-Both WebAssembly hosts pass WASI/browser-loader execution under Node, with JSPI
-and Asyncify at O1/O2. All 64 modules, saved C and successful-run symbol listings
-were inspected. Physical-allocation/count-table teardown passes; omitted scheduler
-or queue cleanup fails with exit 244. This is not an actual-browser test, speed
-benchmark, retain/release count or total-process memory bound.
+## Incidental fixes and final-head coverage
 
-Local receipts and scripts: `/private/tmp/fwp-data-queue-matrix.json`,
-`fwp-audit-data-queue-matrix.py`, `fwp-data-queue-evidence.py`,
-`fwp-data-queue-wasi-evidence.py` and `fwp-data-queue-report.py`.
-Inspected files and download digests are in `/private/tmp/fwp-data-queue-evidence`;
-verified ZIP containers were removed to save space. The report retains artifact
-IDs and digests for recovery. The accepted PR #183 macOS compiler also checked
-raw interpretation of the fixture and the documentation example. Full builds and
-native execution ran on GitHub, not locally.
+REST startup now enforces a deadline and kills/reaps a silent child. The full
+REST target passes on all six native hosts. Three immutable tracing executables
+replace seven compilations; each test still starts a fresh server. This removes
+four duplicate builds without claiming a measured elapsed-time improvement.
 
-## Local resources and next investigations
+Workflow changes add all four response tests to production Windows
+(the existing filter ran only stream-alias tests), and make the focused test-plus-
+formatter step use Bash so a successful formatter cannot hide a failed test.
+Linux/macOS production gates already run the full gRPC target. Production source
+and tests have not changed after the focused matrix; final-head CI remains required.
 
-Use `python3 scripts/local-guard.py COMMAND...` for serial local checks. Preserve
-64 GiB free disk, target data below 2 GiB, sampled workload RSS below 1 GiB and
-the 180-second deadline. Last measured free space was 64.35 GiB. Do not raise limits.
-The main handoff records verified cache cleanup, including 388 MiB of byte-identical
-older inputs whose canonical copies remain. Current inspected binaries are retained.
+## Local checks and resources
 
-The previous full-CI timing review is `/private/tmp/fwp-183-test-duration-review.json`.
-Repeated REST server compilation is a possible cycle-time investigation, not a
-measured improvement. Research notes are `/private/tmp/fwp-184-next-ownership-notes.md`;
-its candidate data-queue scope is now implemented, not a task to repeat. Select the
-next ownership gap from maintained programs and explicit producer contracts.
+Use `python3 scripts/local-guard.py COMMAND...` serially. No local full builds,
+native C compilation, full suites or benchmarks. Preserve 64 GiB free disk,
+target below 2 GiB, sampled workload RSS below 1 GiB and the 180-second deadline.
+Disk pressure stopped two source checks; both later passed through the unchanged
+guard. No limits changed. Free space fluctuates around the floor.
+
+The accepted PR #184 macOS compiler formatted both fixtures and matched their
+72-call raw interpreter output. The guarded documentation audit passed: 77 link
+sets, 106 immutable preparation pairs/tags and seven roadmap steps. All native
+compilation and execution occurred on GitHub. The previous local handoff and cleanup receipts are saved under
+`/private/tmp/fwp-185-root-handoff.md` and `fwp-*-cleanup*.json`. No unique evidence
+or branch was removed.
+
+After this delivery, investigate measured task-record storage and remaining count
+traffic before choosing an optimization. `/private/tmp/fwp-next-task-storage-notes.md`
+records the current evidence and required context-switch checks. No implementation
+choice or speed claim has been made. Persistent subscriptions, unknown retained
+owners and cycle policy remain part of the broader memory work.
 
 ## Roadmap status
 

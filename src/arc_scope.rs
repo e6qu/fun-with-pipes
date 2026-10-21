@@ -5,6 +5,7 @@
 //! call summaries join monotonically. Aggregate fields conservatively share a
 //! set: this can reject ambiguous flows, but cannot hide a callable in a tuple,
 //! list, returned closure or recursive function. No source names imply a proof.
+use crate::arc::EntryChannels;
 use crate::ir::{Body, Expr, FuncId, Pat, Program, TypeShape, MT};
 use crate::value::Value;
 use std::collections::{BTreeMap, BTreeSet};
@@ -14,12 +15,20 @@ enum Origin {
     Function(FuncId, usize),
     UnknownFunction,
     Queue(FuncId),
+    GrpcSender(FuncId),
     UnknownQueue,
 }
 
 impl Origin {
     fn callable(self) -> bool {
         matches!(self, Self::Function(..) | Self::UnknownFunction)
+    }
+
+    fn queue(self) -> bool {
+        matches!(
+            self,
+            Self::Queue(_) | Self::GrpcSender(_) | Self::UnknownQueue
+        )
     }
 }
 type Targets = BTreeSet<Origin>;
@@ -194,17 +203,36 @@ fn queued_capture_type(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> R
 }
 
 impl Proof<'_> {
-    fn captured_queues(&self, values: &Targets, seen: &mut BTreeSet<FuncId>) -> Result<(), String> {
+    fn queue_type(&self, origin: Origin) -> Option<&MT> {
+        match origin {
+            Origin::Queue(id) => {
+                let function = &self.program.funcs[id];
+                Some(function.ty.params(function.arity as usize).1)
+            }
+            Origin::GrpcSender(id) => {
+                let function = &self.program.funcs[id];
+                function
+                    .ty
+                    .params(function.arity as usize)
+                    .0
+                    .last()
+                    .copied()
+            }
+            _ => None,
+        }
+    }
+
+    fn captured_queues(&self, values: &Targets, seen: &mut BTreeSet<Origin>) -> Result<(), String> {
         if values.contains(&Origin::UnknownQueue) {
-            return Err("--gc arc: cannot prove the producer of a queued function's captured channel; use a data queue created by channel.make".into());
+            return Err("--gc arc: cannot prove the producer of a queued function's captured channel; use a data queue from channel.make or a proved gRPC response channel".into());
         }
         for origin in values {
-            let Origin::Queue(id) = origin else { continue };
-            if !seen.insert(*id) {
+            let Some(channel) = self.queue_type(*origin) else {
+                continue;
+            };
+            if !seen.insert(*origin) {
                 continue;
             }
-            let function = &self.program.funcs[*id];
-            let channel = function.ty.params(function.arity as usize).1;
             queued_capture_type(self.program, channel, &mut BTreeSet::new())?;
             // Nested queues can contain native/unknown owners even when their
             // own allocation is known. Follow the joined values ever sent to
@@ -236,9 +264,7 @@ impl Proof<'_> {
                 queued_capture_type(self.program, ty, &mut BTreeSet::new())?;
                 if has_channels(self.program, ty, &mut BTreeSet::new()) {
                     if matches!(ty, MT::Con(name, _) if name == "std::Channel")
-                        && !value
-                            .iter()
-                            .any(|origin| matches!(origin, Origin::Queue(_) | Origin::UnknownQueue))
+                        && !value.iter().any(|origin| origin.queue())
                     {
                         return Err(
                             "--gc arc: cannot prove a queued function's captured channel producer"
@@ -454,30 +480,23 @@ impl Proof<'_> {
     fn refine_origins(&self, values: &mut Targets, ty: &MT) {
         if matches!(ty, MT::Con(name, _) if name == "std::Channel") {
             values.retain(|origin| match origin {
-                Origin::Queue(id) => {
-                    let function = &self.program.funcs[*id];
-                    crate::ir::same_type(
-                        &self.program.shapes,
-                        function.ty.params(function.arity as usize).1,
-                        ty,
-                    )
-                }
+                Origin::Queue(_) | Origin::GrpcSender(_) => self
+                    .queue_type(*origin)
+                    .is_some_and(|source| crate::ir::same_type(&self.program.shapes, source, ty)),
                 _ => true,
             });
             return;
         }
-        if values
-            .iter()
-            .any(|origin| matches!(origin, Origin::Queue(_) | Origin::UnknownQueue))
+        if values.iter().any(|origin| origin.queue())
             && !has_channels(self.program, ty, &mut BTreeSet::new())
         {
-            values.retain(|origin| !matches!(origin, Origin::Queue(_) | Origin::UnknownQueue));
+            values.retain(|origin| !origin.queue());
         }
         if !matches!(ty, MT::Fun(..)) {
             return;
         }
         values.retain(|closure| match closure {
-            Origin::Queue(_) | Origin::UnknownQueue => false,
+            Origin::Queue(_) | Origin::GrpcSender(_) | Origin::UnknownQueue => false,
             Origin::UnknownFunction => true,
             Origin::Function(id, supplied) => crate::ir::same_type(
                 &self.program.shapes,
@@ -866,7 +885,11 @@ impl Proof<'_> {
     }
 }
 
-pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String> {
+pub(crate) fn check(
+    program: &Program,
+    entries: &[FuncId],
+    entry_channels: EntryChannels,
+) -> Result<(), String> {
     let queued_functions = program.funcs.iter().any(|function| {
         let mut seen = BTreeSet::new();
         has_function_channels(program, &function.ty, &mut seen)
@@ -901,6 +924,20 @@ pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String>
                 .any(|method| method.func == entry && method.iter_fn.is_some())
         });
         let function = &program.funcs[entry];
+        let grpc_response = if entry_channels == EntryChannels::GrpcResponses {
+            let method = program
+                .service
+                .as_ref()
+                .and_then(|service| service.methods.iter().find(|method| method.func == entry))
+                .ok_or("--gc arc: gRPC entry has no served method contract")?;
+            matches!(
+                crate::rpc::shape(&function.ty, function.arity as usize, method.error.as_ref())
+                    .output,
+                crate::rpc::Output::Chan(_)
+            )
+        } else {
+            false
+        };
         for ty in function.ty.params(function.arity as usize).0 {
             if has_function_channels(program, ty, &mut BTreeSet::new()) {
                 return Err(
@@ -924,7 +961,16 @@ pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String>
                     Targets::new()
                 };
                 if has_channels(program, ty, &mut BTreeSet::new()) {
-                    origins.insert(Origin::UnknownQueue);
+                    // Only the service emitter supplies this native producer.
+                    // g_run_method uses g_sink_value with an uncaptured codec;
+                    // its gRPC transport owns bytes, not language callbacks.
+                    // A matching signature or service metadata alone is not
+                    // a producer contract for arbitrary external arguments.
+                    origins.insert(if grpc_response && index + 1 == function.arity as usize {
+                        Origin::GrpcSender(entry)
+                    } else {
+                        Origin::UnknownQueue
+                    });
                 }
                 origins
             })
@@ -963,7 +1009,7 @@ pub(crate) fn check(program: &Program, entries: &[FuncId]) -> Result<(), String>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ir::Func;
+    use crate::ir::{Func, ServedFn, ServiceDef};
 
     fn arrow(a: MT, b: MT) -> MT {
         MT::Fun(Box::new(a), Box::new(b))
@@ -1019,8 +1065,8 @@ mod tests {
 
     #[test]
     fn state_primitive_needs_a_proven_handler_context() {
-        assert!(check(&state_program(true), &[0]).is_ok());
-        assert!(check(&state_program(false), &[0])
+        assert!(check(&state_program(true), &[0], EntryChannels::Unknown).is_ok());
+        assert!(check(&state_program(false), &[0], EntryChannels::Unknown)
             .unwrap_err()
             .contains("tracing-free lifetime policy"));
     }
@@ -1103,9 +1149,9 @@ mod tests {
                 )),
             ));
             if scoped {
-                check(&program, &[0]).unwrap();
+                check(&program, &[0], EntryChannels::Unknown).unwrap();
             } else {
-                assert!(check(&program, &[0])
+                assert!(check(&program, &[0], EntryChannels::Unknown)
                     .unwrap_err()
                     .contains("outside a State scope"));
             }
@@ -1177,7 +1223,7 @@ mod tests {
                 Box::new(Expr::Call(3, vec![Expr::Const(input)])),
                 vec![Expr::Const(Value::unit())],
             ));
-            let result = check(&program, &[0]);
+            let result = check(&program, &[0], EntryChannels::Unknown);
             if symbol == "unmodeled-function-producer" {
                 assert!(result.unwrap_err().contains("cannot prove"));
             } else {
@@ -1340,7 +1386,7 @@ mod tests {
         });
         // Exercise the fixed-point summaries as well as the direct operations
         // below: a non-function result must preserve its channel producer.
-        check(&program, &[9]).unwrap();
+        check(&program, &[9], EntryChannels::Unknown).unwrap();
         let mut proof = Proof {
             program: &program,
             captures: BTreeMap::new(),
@@ -1409,6 +1455,93 @@ mod tests {
     }
 
     #[test]
+    fn grpc_response_captures_require_the_actual_service_entry_contract() {
+        let unit = MT::unit();
+        let integer = MT::con("std::I64");
+        let boolean = MT::con("std::Bool");
+        let channel = MT::Con("std::Channel".into(), vec![MT::con("std::String")]);
+        let callback = arrow(unit.clone(), unit.clone());
+        let events = MT::Con("std::Channel".into(), vec![callback.clone()]);
+        let captured = |queue| Expr::Apply(Box::new(Expr::Func(1)), vec![queue]);
+        let send = |queue| {
+            Expr::Let(
+                2,
+                Box::new(Expr::Call(
+                    2,
+                    vec![
+                        Expr::Call(0, vec![Expr::Const(Value::I64(1))]),
+                        captured(queue),
+                    ],
+                )),
+                Box::new(Expr::Const(Value::unit())),
+            )
+        };
+        let mut program = Program {
+            funcs: vec![
+                Func {
+                    name: "events".into(),
+                    arity: 1,
+                    locals: vec![integer.clone()],
+                    ty: arrow(integer.clone(), events.clone()),
+                    body: Body::Prim("channel.make".into()),
+                },
+                Func {
+                    name: "capture-response".into(),
+                    arity: 2,
+                    locals: vec![channel.clone(), unit.clone()],
+                    ty: arrow(channel.clone(), callback.clone()),
+                    body: Body::Expr(Expr::Const(Value::unit())),
+                },
+                Func {
+                    name: "send-event".into(),
+                    arity: 2,
+                    locals: vec![events.clone(), callback.clone()],
+                    ty: arrow(events, arrow(callback, boolean.clone())),
+                    body: Body::Prim("channel.send".into()),
+                },
+                Func {
+                    name: "serve".into(),
+                    arity: 2,
+                    locals: vec![integer.clone(), channel.clone(), boolean],
+                    ty: arrow(integer, arrow(channel.clone(), unit)),
+                    body: Body::Expr(send(Expr::Local(1))),
+                },
+            ],
+            service: Some(ServiceDef {
+                module: "responses".into(),
+                default_addr: String::new(),
+                methods: vec![ServedFn {
+                    name: "serve".into(),
+                    func: 3,
+                    error: None,
+                    path: "/responses/Serve".into(),
+                    iter_fn: None,
+                }],
+            }),
+            ..Program::default()
+        };
+        // The same type and service metadata do not make an external queue a
+        // gRPC sender. Only the emitter that creates that sender may attest it.
+        assert!(check(&program, &[3], EntryChannels::Unknown)
+            .unwrap_err()
+            .contains("cannot prove the producer"));
+        check(&program, &[3], EntryChannels::GrpcResponses).unwrap();
+
+        // A native sender does not make another argument's owner known.
+        program.funcs[3].locals[0] = channel.clone();
+        program.funcs[3].ty = arrow(channel.clone(), arrow(channel, MT::unit()));
+        program.funcs[3].body = Body::Expr(send(Expr::Local(0)));
+        assert!(check(&program, &[3], EntryChannels::GrpcResponses)
+            .unwrap_err()
+            .contains("cannot prove the producer"));
+
+        program.service.as_mut().unwrap().methods.clear();
+        assert!(check(&program, &[3], EntryChannels::GrpcResponses)
+            .unwrap_err()
+            .contains("no served method contract"));
+    }
+
+    #[test]
     fn runtime_function_producers_and_external_queues_need_known_sources() {
         let mut program = state_program(true);
         let getter = program.funcs[1].ty.clone();
@@ -1445,7 +1578,7 @@ mod tests {
             ty: arrow(channel.clone(), channel),
             body: Body::Expr(Expr::Local(0)),
         });
-        assert!(check(&program, &[4])
+        assert!(check(&program, &[4], EntryChannels::Unknown)
             .unwrap_err()
             .contains("external function-bearing channels"));
     }
@@ -1494,7 +1627,7 @@ mod tests {
                 (Pat::Wild, Expr::Const(Value::str("unused success branch"))),
             ],
         ));
-        assert!(check(&program, &[0])
+        assert!(check(&program, &[0], EntryChannels::Unknown)
             .unwrap_err()
             .contains("outside a State scope"));
     }
@@ -1557,7 +1690,7 @@ mod tests {
             };
             args[1] = Expr::Func(4);
             assert!(
-                check(&p, &[0])
+                check(&p, &[0], EntryChannels::Unknown)
                     .unwrap_err()
                     .contains("outside a State scope"),
                 "{symbol}"
@@ -1661,14 +1794,14 @@ mod tests {
                     unreachable!()
                 };
                 args[1] = Expr::Func(5);
-                let checked = check(&p, &[0]);
+                let checked = check(&p, &[0], EntryChannels::Unknown);
                 if bidirectional {
                     assert!(checked.unwrap_err().contains("outside a State scope"));
                 } else {
                     checked.unwrap();
                 }
                 // A synchronous sender outside a handler is unsafe too.
-                assert!(check(&p, &[5])
+                assert!(check(&p, &[5], EntryChannels::Unknown)
                     .unwrap_err()
                     .contains("outside a State scope"));
                 if bidirectional {
@@ -1687,8 +1820,8 @@ mod tests {
                         )),
                         0,
                     ));
-                    check(&p, &[0]).unwrap();
-                    check(&p, &[5]).unwrap();
+                    check(&p, &[0], EntryChannels::Unknown).unwrap();
+                    check(&p, &[5], EntryChannels::Unknown).unwrap();
                 }
             }
         }
@@ -1775,7 +1908,7 @@ mod tests {
             p.funcs[0].body = Body::Expr(Expr::Call(5, vec![Expr::Const(Value::unit())]));
             // Returning the closure alone does not invoke it. Serving this
             // result adds the runtime's later consumption outside the handler.
-            check(&p, &[5]).unwrap();
+            check(&p, &[5], EntryChannels::Unknown).unwrap();
             p.service = Some(crate::ir::ServiceDef {
                 module: "service".into(),
                 default_addr: String::new(),
@@ -1787,14 +1920,14 @@ mod tests {
                     iter_fn: None,
                 }],
             });
-            assert!(check(&p, &[5])
+            assert!(check(&p, &[5], EntryChannels::Unknown)
                 .unwrap_err()
                 .contains("outside a State scope"));
             let mut inner = p.funcs[4].clone();
             inner.name = "step-with-local-state".into();
             p.funcs.push(inner);
             p.funcs[4].body = Body::Expr(local_state(7));
-            check(&p, &[5]).unwrap();
+            check(&p, &[5], EntryChannels::Unknown).unwrap();
 
             // Received iterator constructors must seed the method's argument
             // flow too: an identity method forwards the known continuation.
@@ -1812,13 +1945,13 @@ mod tests {
                     vec![Expr::Const(Value::str("received")), Expr::Func(4)],
                 )),
             });
-            assert!(check(&p, &[5])
+            assert!(check(&p, &[5], EntryChannels::Unknown)
                 .unwrap_err()
                 .contains("no received iterator constructor"));
             p.service.as_mut().unwrap().methods[0].iter_fn = Some(8);
-            check(&p, &[5]).unwrap();
+            check(&p, &[5], EntryChannels::Unknown).unwrap();
             p.funcs[4].body = p.funcs[7].body.clone();
-            assert!(check(&p, &[5])
+            assert!(check(&p, &[5], EntryChannels::Unknown)
                 .unwrap_err()
                 .contains("outside a State scope"));
         }
@@ -1861,7 +1994,7 @@ mod tests {
             )),
             vec![Expr::Const(Value::unit())],
         ));
-        assert!(check(&p, &[0])
+        assert!(check(&p, &[0], EntryChannels::Unknown)
             .unwrap_err()
             .contains("tracing-free lifetime policy"));
     }
@@ -1869,8 +2002,8 @@ mod tests {
     #[test]
     fn every_entry_starts_without_a_dynamic_scope() {
         let p = state_program(true);
-        assert!(check(&p, &[0]).is_ok());
-        assert!(check(&p, &[0, 1])
+        assert!(check(&p, &[0], EntryChannels::Unknown).is_ok());
+        assert!(check(&p, &[0, 1], EntryChannels::Unknown)
             .unwrap_err()
             .contains("outside a State scope"));
     }
@@ -1905,14 +2038,14 @@ mod tests {
         let carry = Expr::Call(4, vec![Expr::Func(3), Expr::Func(1)]);
         p.funcs[0].ty = getter;
         p.funcs[0].body = Body::Expr(carry.clone());
-        assert!(check(&p, &[0]).is_ok());
+        assert!(check(&p, &[0], EntryChannels::Unknown).is_ok());
         // The same closure is still rejected when actually called unscoped.
         p.funcs[0].ty = MT::con("std::String");
         p.funcs[0].body = Body::Expr(Expr::Apply(
             Box::new(carry),
             vec![Expr::Const(Value::unit())],
         ));
-        assert!(check(&p, &[0])
+        assert!(check(&p, &[0], EntryChannels::Unknown)
             .unwrap_err()
             .contains("outside a State scope"));
     }

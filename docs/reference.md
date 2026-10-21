@@ -689,7 +689,8 @@ for the same reason. The [queued-function capture proof](ownership.md#functions-
 admits proved immutable captures and shared socket handles (`UdpSocket`,
 `Listener`, `Conn`), which cannot own a queue. It also admits captured data-only
 queues from `channel.make` when their nested owners have known sources.
-Unknown/native queue producers remain rejected as captures. The linked contract
+Served gRPC response channels have an explicit native-producer contract; arbitrary
+external channels remain rejected as captures. The linked contract
 records validation status. A function's input/output type alone cannot establish that
 proof. The compiler follows record,
 variant and container fields and rejects a path back to the same channel type;

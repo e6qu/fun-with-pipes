@@ -92,7 +92,10 @@ outside the benchmark suite.
    for persistent subscriptions, retained resource captures and cyclic data graphs.
    Nested channels and selected queued functions already have native and
    WebAssembly acceptance. [Capturing locally created data queues](docs/measurements/queued-data-channels.md)
-   passes focused native/WebAssembly checks; full delivery status is in the handoff.
+   passed full acceptance in [PR #185](docs/roadmap-history.md#queued-callbacks-retaining-data-queues-pr-185).
+   [Queued gRPC response captures](docs/measurements/queued-grpc-responses.md)
+   now pass six-platform native delivery, cancellation and cleanup checks from
+   their actual service constructor. Final production delivery is in the handoff.
    Explicit weak handles remain a proposal. Prefer
    borrowing and scoped cleanup; distinguish a definite cycle from a missing proof.
    Reject unproved retention rather than silently use tracing.

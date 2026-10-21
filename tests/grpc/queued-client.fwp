@@ -1,0 +1,40 @@
+import queued
+
+take-replies : (Channel[String] -> () ! {Async}) -> List[String] ! {Async}
+take-replies =
+    both (const 8 | channel.make) id
+    | tap (fork apply .0 .1)
+    | .0
+    | tap channel.close
+    | channel.drain
+require : Bool -> ()
+require =
+    if
+        id
+        (const ())
+        (const "queued response client assertion failed" | prim.trap)
+failed : I64 -> Channel[String] -> () ! {Async}
+failed = curry (attempt (uncurry queued.failed) | eq (Err "expected") | require)
+request : (I64, Channel[String]) -> () -> () ! {Async}
+request = curry (.0 | uncurry queued.peer-cancelled)
+peer-cancelled : I64 -> Channel[String] -> () ! {Async}
+peer-cancelled = curry (both .1 (request | task.spawn)
+    | tap (.0 | channel.recv | eq (Some "ready") | require)
+    | .1
+    | tap task.cancel
+    | task.await
+    | eq None
+    | require)
+round : I64 -> () ! {Async, IO}
+round =
+    tap (queued.reply | take-replies | echo)
+    | tap (queued.twice | take-replies | echo)
+    | tap (queued.discarded | take-replies | echo)
+    | tap (queued.closed | take-replies | echo)
+    | tap (queued.cancelled | take-replies | echo)
+    | tap (queued.rejected | take-replies | echo)
+    | tap (failed | take-replies | echo)
+    | tap (queued.nested | take-replies | echo)
+    | tap (peer-cancelled | take-replies | echo)
+    | ignore
+main = range 0 8 | each round

@@ -12,6 +12,23 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Queued callbacks retaining data queues (PR #185)
+
+Callbacks stored in channels can retain locally created data-only queues,
+including through aliases and nested queues. The compiler tracks actual creators
+and all values sent into nested queues; unknown producers cannot acquire a known
+origin merely by sharing a type. The [report](measurements/queued-data-channels.md)
+records native and WebAssembly cleanup and deliberate missing-release controls.
+This extends checked ARC support without changing runtime layouts or syntax.
+
+[PR #185](https://github.com/e6qu/fun-with-pipes/pull/185) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39584128319)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39584128240)
+at `73850bd3b6ac460a7e077cea8cd1128f9913aea0`. Every complete log was audited.
+Squash merge `f9bd49d9f9416b471326090f1a423282d476b1a9` has the identical tree
+`a51eac8ca22b93ab45dfb053285d3654eca03e68`. Its message is exactly
+`Allow queued callbacks to retain locally created data queues`, one line with no body or trailers.
+
 ## Queued socket callbacks and handler inference (PR #184)
 
 Queued functions can retain UDP sockets, TCP listeners and connections under
