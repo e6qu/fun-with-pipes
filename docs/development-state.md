@@ -16,11 +16,45 @@ preparation onto the verified merge before opening its substantial next PR.
 
 ## Combined changes and validation
 
+The correction checks clock-to-nanosecond range conversion, elapsed monotonic
+subtraction and deadline saturation. The interpreter preserves pre-1970 Unix
+timestamps and reports range errors consistently with native execution. Injected
+native clocks cover read errors, both overflow directions, exact signed limits,
+and pre-epoch time; interpreter tests use Windows-representable 100 ns ticks.
+
+Source `264e8fb4` passed both WebAssembly hosts. The completed native logs identify
+invalid collector/retention flags in the new ARC clock probe; binary inspection
+then fails because the remaining clock artifacts were never produced. All three
+flags are now off for ARC and on for tracing. Preserve that failed source's logs
+in `/private/tmp/fwp-task-owner-acceptance.json`; corrected-source evidence belongs
+in a separate receipt. All eight logs are now audited. Intel macOS hit the 45-minute job timeout while
+Clang was still compiling REST programs; its completed tests show only the same
+clock-probe failure. The corrected workflow allows that hosted job 90 minutes and
+inspects binaries before REST. It keeps the full REST suite; other hosts keep their
+45-minute limit. This does not alter local resource limits or count unfinished
+checks as passes. Publish all repairs together.
+
+Guarded macOS ARM64 O0 C probes pass protected cleanup (exit 0) and missing cleanup
+(exit 3) in both modes, including the new range/elapsed/pre-epoch cases. Commands:
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-probe-clock-c.py --memory arc --optimization O0`,
+and the same command with `--memory tracing`. Together with rustfmt, actionlint,
+`git diff --check` and `scripts/check-roadmap.py`, the serial check took 4.58 seconds
+and 0.69 CPU seconds. The C probes use the prior verified compiler's function
+metadata plus edited runtime functions; they do not verify the new compiler,
+interpreter tests or other platforms. Full builds and gates remain on GitHub.
+The library comments now document clock range errors and negative Unix times.
+The repository's standalone `tests/stdlib_doc.rs` generator was compiled under the
+guard with `rustc --edition 2021 --test`, then run with `FWP_BLESS=1` and again
+without blessing. Both passed (1.09 seconds wall, 0.14 CPU); the generated reference
+contains only the intended clock-comment changes.
+
 This group also transfers callback ownership into `task.spawn` and `task.within`,
 preserving independent aliases. It checks POSIX clock errors and protects a
 deadline callback if clock reading fails. Native probes cover transferred owners,
 clock/stack/scope failures and a matched redundant-pair counter control. The three
-task callback/handle test targets join the focused native suite.
+task callback/handle test targets join the focused native suite. Deadline ownership
+checks also join both Windows production gates; Unix production already assigns
+their target.
 
 Preparation run `39643823376` at `86de5747` completed: compiler/unit checks,
 gRPC/REST checks and both WebAssembly hosts passed. Its native batch found two
@@ -32,7 +66,7 @@ cycle regression passed. Full log receipt:
 
 Guarded rustfmt, frozen primitive inventory, workflow syntax, documentation links
 and old-compiler fixture/C-emission checks pass. These are not execution evidence
-for the new callback transfer. Next: publish the combined source and run all six
+for the new callback transfer. Next: publish the corrected source and rerun all six
 native hosts plus both WebAssembly hosts. Keep #189 as the sole delivery PR until
 its exact-head production gates pass and it is squash-merged.
 
@@ -64,17 +98,18 @@ from earlier cancellation-buffer storage measurements.
 
 Local checks use `python3 scripts/local-guard.py`: rustfmt, workflow structure
 (actionlint with shellcheck disabled), native target assignment, documentation
-links/commit subjects, and static artifact inspection. Full builds, native
-execution, full suites and benchmarks run on GitHub. Keep the fixed limits:
+links/commit subjects, and static artifact inspection. Full builds, full
+test gates and benchmarks run on GitHub. Keep the fixed limits:
 64 GiB free disk, 2 GiB target, 1 GiB sampled aggregate RSS and 180 seconds.
 
 ## Inherited validation and tools
 
-PR #188 was merged before its full checks finished. Its original production run
-`39635039734` remains under audit. The macOS ARM64 job failed resolving crates.io
-before compilation; production and focused workflows now cache locked registry
-sources, fetch explicitly, and build/test with Cargo offline. This does not skip
-checks or promise recovery from every network outage.
+PR #188 was merged before its full checks finished. Original run `39635039734`
+is now fully audited: six production jobs and documentation passed. Both Windows
+jobs failed only the known CRLF assertion; macOS ARM64 GC stress failed resolving
+crates.io before compilation. These repairs are included in #189. Workflows cache
+locked registry sources, fetch explicitly, and build/test with Cargo offline.
+This does not skip checks or promise recovery from every network outage.
 
 The duplicate same-tree merge run `39635064120` was cancelled to free runners.
 All finalized logs were audited: both Windows jobs show the known CRLF assertion;

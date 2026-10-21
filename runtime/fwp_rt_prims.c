@@ -3085,13 +3085,15 @@ static int64_t fwp_now_ns(void) {
     LARGE_INTEGER counter, frequency;
     if (!QueryPerformanceCounter(&counter) || !QueryPerformanceFrequency(&frequency))
         fwp_trap("cannot read monotonic clock");
-    return (int64_t)((i128)counter.QuadPart * 1000000000 / frequency.QuadPart);
+    i128 ns = (i128)counter.QuadPart * 1000000000 / frequency.QuadPart;
 #else
     struct timespec t;
     if (clock_gettime(CLOCK_MONOTONIC, &t) != 0)
         fwp_trap("cannot read monotonic clock");
-    return (int64_t)t.tv_sec * 1000000000LL + t.tv_nsec;
+    i128 ns = (i128)t.tv_sec * 1000000000 + t.tv_nsec;
 #endif
+    if (ns < INT64_MIN || ns > INT64_MAX) fwp_trap("monotonic time exceeds Duration range");
+    return (int64_t)ns;
 }
 
 static int64_t fwp_unix_ns(void) {
@@ -3100,14 +3102,14 @@ static int64_t fwp_unix_ns(void) {
     GetSystemTimePreciseAsFileTime(&now);
     uint64_t ticks = ((uint64_t)now.dwHighDateTime << 32) | now.dwLowDateTime;
     i128 ns = ((i128)ticks - UINT64_C(116444736000000000)) * 100;
-    if (ns < INT64_MIN || ns > INT64_MAX) fwp_trap("system time exceeds Duration range");
-    return (int64_t)ns;
 #else
     struct timespec now;
     if (clock_gettime(CLOCK_REALTIME, &now) != 0)
         fwp_trap("cannot read system clock");
-    return (int64_t)now.tv_sec * 1000000000LL + now.tv_nsec;
+    i128 ns = (i128)now.tv_sec * 1000000000 + now.tv_nsec;
 #endif
+    if (ns < INT64_MIN || ns > INT64_MAX) fwp_trap("system time exceeds Duration range");
+    return (int64_t)ns;
 }
 
 static int64_t fwp_start_time;
@@ -3115,7 +3117,9 @@ static int64_t fwp_start_time;
 static V fwp_duration(int64_t ns) { V f[1] = {(V)ns}; return fwp_record(1, f); }
 
 static V fwp_p_time_monotonic(void) {
-    return fwp_duration(fwp_now_ns() - fwp_start_time);
+    i128 ns = (i128)fwp_now_ns() - fwp_start_time;
+    if (ns < INT64_MIN || ns > INT64_MAX) fwp_trap("monotonic time exceeds Duration range");
+    return fwp_duration((int64_t)ns);
 }
 
 static V fwp_p_time_unix(void) { return fwp_duration(fwp_unix_ns()); }

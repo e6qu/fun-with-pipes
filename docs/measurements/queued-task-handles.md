@@ -113,8 +113,10 @@ owner; sharing still costs reference-count operations. The source syntax is unch
 
 The task owns the callback through preparation, completion and cancellation.
 Deadline calls also protect it while reading the clock. POSIX clock failures now
-report an error rather than using an uninitialized timestamp. Fault-injection
-checks cover clock failure, stack allocation, scope growth, and preservation of
+report an error rather than using an uninitialized timestamp. Timestamp conversion
+checks the signed nanosecond range on each platform, and deadline addition
+saturates without signed overflow, including at the range boundaries. Fault-injection
+checks cover clock failure, range overflow, stack allocation, scope growth, and preservation of
 independent aliases; removing protection must fail those checks.
 
 The measurement in `tests/retained_thunk_ownership.rs` runs ordinary task creation,
@@ -131,3 +133,9 @@ The focused native workflow disables link-time optimization explicitly and uses
 sections, compiler flags and CPU details for 22 executed binaries per host. That
 includes failing cleanup controls. The report checks counter differences again
 and requires ARC binaries to exclude tracing entry points.
+
+Clock conversion also checks the signed nanosecond range before narrowing, including
+elapsed monotonic time. The interpreter now reports the same range errors and keeps
+negative Unix timestamps for dates before 1970, rather than returning zero. Boundary
+probes use injected clocks; interpreter tests use exact 100 ns ticks, which Windows
+can represent. These checks do not require changing the host clock.
