@@ -25,6 +25,29 @@ require : Bool -> ()
 require = if id (const ()) (const "socket ownership assertion failed" | prim.trap)
 closed-udp : () -> Event ! {Network, Error[IoError]}
 closed-udp = const "127.0.0.1:0" | udp.bind | both (udp-live | make Event { check = id }) id | tap (.1 | udp.close) | .0
+# A waiting callback suspends in socket IO after it has left the queue.
+Wait = { call: () -> () ! {Async, Network, Error[IoError]} }
+waits : I64 -> Channel[Wait] ! {Async}
+waits = channel.make
+udp-wait : UdpSocket -> () -> () ! {Async, Network, Error[IoError]}
+udp-wait = curry (.0 | udp.recv-from 1 | ignore)
+listener-wait : Listener -> () -> () ! {Async, Network, Error[IoError]}
+listener-wait = curry (.0 | tcp.accept | ignore)
+connection-wait : (Conn, Conn) -> () -> () ! {Async, Network, Error[IoError]}
+connection-wait = curry (.0 | .0 | tcp.read 1 | ignore)
+new-udp-wait : () -> Wait ! {Network, Error[IoError]}
+new-udp-wait = const "127.0.0.1:0" | udp.bind | udp-wait | make Wait { call = id }
+new-listener-wait : () -> Wait ! {Network, Error[IoError]}
+new-listener-wait = const "127.0.0.1:0" | tcp.listen | listener-wait | make Wait { call = id }
+new-connection-wait : () -> Wait ! {Async, Network, Error[IoError]}
+new-connection-wait = const "127.0.0.1:0" | tcp.listen | both (tcp.local-addr | tcp.connect) tcp.accept | connection-wait | make Wait { call = id }
+cancel-received : Wait -> () ! {Async}
+cancel-received = both (const 1 | waits) id | tap (fork channel.send .0 .1) | .0 | channel.recv | option.map (.call | task.spawn | tap (const () | task.yield) | tap task.cancel | task.await) | eq (Some None) | require
+# Closing through an alias must make an already retained callback fail normally.
+closed-wait : () -> Wait ! {Network, Error[IoError]}
+closed-wait = const "127.0.0.1:0" | udp.bind | both (udp-wait | make Wait { call = id }) id | tap (.1 | udp.close) | .0
+call-closed : Wait -> () ! {Async, Network}
+call-closed = both (const 1 | waits) id | tap (fork channel.send .0 .1) | .0 | channel.recv | option.map (.call | attempt (apply ()) | result.is-ok) | eq (Some False) | require
 send-pending : Channel[Event] -> () -> Bool ! {Async, Network, Error[IoError]}
 send-pending = curry (fork channel.send .0 (.1 | udp-event))
 fail-queued : Channel[Event] -> () ! {Error[String]}
@@ -36,6 +59,10 @@ round =
     | tap (connection-event | enqueue | received | require)
     # Explicit close is visible through the callback's retained alias.
     | tap (closed-udp | enqueue | received | eq False | require)
+    | tap (closed-wait | call-closed)
+    | tap (new-udp-wait | cancel-received)
+    | tap (new-listener-wait | cancel-received)
+    | tap (new-connection-wait | cancel-received)
     # Dropping undrained queues releases their callbacks and sockets.
     | tap (udp-event | enqueue | ignore)
     | tap (listener-event | enqueue | tap channel.close | ignore)

@@ -4,7 +4,7 @@
 //! call summaries join monotonically. Aggregate fields conservatively share a
 //! set: this can reject ambiguous flows, but cannot hide a callable in a tuple,
 //! list, returned closure or recursive function. No source names imply a proof.
-use crate::ir::{Body, Expr, FuncId, MT, Pat, Program, TypeShape};
+use crate::ir::{Body, Expr, FuncId, Pat, Program, TypeShape, MT};
 use crate::value::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -904,11 +904,9 @@ mod tests {
     #[test]
     fn state_primitive_needs_a_proven_handler_context() {
         assert!(check(&state_program(true), &[0]).is_ok());
-        assert!(
-            check(&state_program(false), &[0])
-                .unwrap_err()
-                .contains("tracing-free lifetime policy")
-        );
+        assert!(check(&state_program(false), &[0])
+            .unwrap_err()
+            .contains("tracing-free lifetime policy"));
     }
 
     #[test]
@@ -991,11 +989,9 @@ mod tests {
             if scoped {
                 check(&program, &[0]).unwrap();
             } else {
-                assert!(
-                    check(&program, &[0])
-                        .unwrap_err()
-                        .contains("outside a State scope")
-                );
+                assert!(check(&program, &[0])
+                    .unwrap_err()
+                    .contains("outside a State scope"));
             }
         }
     }
@@ -1016,12 +1012,10 @@ mod tests {
             error_values: Targets::new(),
         };
         let mut functions = Targets::from([Closure::Known(1, 0)]);
-        assert!(
-            proof
-                .apply(&Targets::new(), &[Targets::new()], STATE)
-                .unwrap()
-                .is_empty()
-        );
+        assert!(proof
+            .apply(&Targets::new(), &[Targets::new()], STATE)
+            .unwrap()
+            .is_empty());
         assert!(join(&mut functions, &Targets::from([Closure::Unknown])));
         functions.insert(Closure::Known(2, 0));
         proof.refine_callable(&mut functions, &program.funcs[1].ty);
@@ -1029,18 +1023,14 @@ mod tests {
             functions,
             Targets::from([Closure::Known(1, 0), Closure::Unknown])
         );
-        assert!(
-            proof
-                .apply(&functions, &[Targets::new()], STATE)
-                .unwrap_err()
-                .contains("cannot prove the target")
-        );
-        assert!(
-            proof
-                .queued_targets(&functions, &mut BTreeSet::new())
-                .unwrap_err()
-                .contains("cannot prove the source")
-        );
+        assert!(proof
+            .apply(&functions, &[Targets::new()], STATE)
+            .unwrap_err()
+            .contains("cannot prove the target"));
+        assert!(proof
+            .queued_targets(&functions, &mut BTreeSet::new())
+            .unwrap_err()
+            .contains("cannot prove the source"));
     }
 
     #[test]
@@ -1130,11 +1120,9 @@ mod tests {
                 {
                     checked.unwrap();
                 } else {
-                    assert!(
-                        checked
-                            .unwrap_err()
-                            .contains("cannot prove a queued function's captured")
-                    );
+                    assert!(checked
+                        .unwrap_err()
+                        .contains("cannot prove a queued function's captured"));
                 }
             }
         }
@@ -1166,11 +1154,9 @@ mod tests {
         };
         let produced = proof.function(3, STATE, &[Targets::new()]).unwrap();
         assert!(produced.contains(&Closure::Unknown));
-        assert!(
-            proof
-                .queued_targets(&produced, &mut BTreeSet::new())
-                .is_err()
-        );
+        assert!(proof
+            .queued_targets(&produced, &mut BTreeSet::new())
+            .is_err());
         let channel = MT::Con("std::Channel".into(), vec![getter]);
         program.funcs.push(Func {
             name: "external-queue".into(),
@@ -1179,11 +1165,9 @@ mod tests {
             ty: arrow(channel.clone(), channel),
             body: Body::Expr(Expr::Local(0)),
         });
-        assert!(
-            check(&program, &[4])
-                .unwrap_err()
-                .contains("external function-bearing channels")
-        );
+        assert!(check(&program, &[4])
+            .unwrap_err()
+            .contains("external function-bearing channels"));
     }
 
     #[test]
@@ -1230,11 +1214,9 @@ mod tests {
                 (Pat::Wild, Expr::Const(Value::str("unused success branch"))),
             ],
         ));
-        assert!(
-            check(&program, &[0])
-                .unwrap_err()
-                .contains("outside a State scope")
-        );
+        assert!(check(&program, &[0])
+            .unwrap_err()
+            .contains("outside a State scope"));
     }
 
     #[test]
@@ -1406,11 +1388,9 @@ mod tests {
                     checked.unwrap();
                 }
                 // A synchronous sender outside a handler is unsafe too.
-                assert!(
-                    check(&p, &[5])
-                        .unwrap_err()
-                        .contains("outside a State scope")
-                );
+                assert!(check(&p, &[5])
+                    .unwrap_err()
+                    .contains("outside a State scope"));
                 if bidirectional {
                     // A detached producer may establish its own handler.
                     let mut inner = p.funcs[3].clone();
@@ -1527,11 +1507,9 @@ mod tests {
                     iter_fn: None,
                 }],
             });
-            assert!(
-                check(&p, &[5])
-                    .unwrap_err()
-                    .contains("outside a State scope")
-            );
+            assert!(check(&p, &[5])
+                .unwrap_err()
+                .contains("outside a State scope"));
             let mut inner = p.funcs[4].clone();
             inner.name = "step-with-local-state".into();
             p.funcs.push(inner);
@@ -1554,19 +1532,15 @@ mod tests {
                     vec![Expr::Const(Value::str("received")), Expr::Func(4)],
                 )),
             });
-            assert!(
-                check(&p, &[5])
-                    .unwrap_err()
-                    .contains("no received iterator constructor")
-            );
+            assert!(check(&p, &[5])
+                .unwrap_err()
+                .contains("no received iterator constructor"));
             p.service.as_mut().unwrap().methods[0].iter_fn = Some(8);
             check(&p, &[5]).unwrap();
             p.funcs[4].body = p.funcs[7].body.clone();
-            assert!(
-                check(&p, &[5])
-                    .unwrap_err()
-                    .contains("outside a State scope")
-            );
+            assert!(check(&p, &[5])
+                .unwrap_err()
+                .contains("outside a State scope"));
         }
     }
 
@@ -1607,22 +1581,18 @@ mod tests {
             )),
             vec![Expr::Const(Value::unit())],
         ));
-        assert!(
-            check(&p, &[0])
-                .unwrap_err()
-                .contains("tracing-free lifetime policy")
-        );
+        assert!(check(&p, &[0])
+            .unwrap_err()
+            .contains("tracing-free lifetime policy"));
     }
 
     #[test]
     fn every_entry_starts_without_a_dynamic_scope() {
         let p = state_program(true);
         assert!(check(&p, &[0]).is_ok());
-        assert!(
-            check(&p, &[0, 1])
-                .unwrap_err()
-                .contains("outside a State scope")
-        );
+        assert!(check(&p, &[0, 1])
+            .unwrap_err()
+            .contains("outside a State scope"));
     }
 
     #[test]
@@ -1662,10 +1632,8 @@ mod tests {
             Box::new(carry),
             vec![Expr::Const(Value::unit())],
         ));
-        assert!(
-            check(&p, &[0])
-                .unwrap_err()
-                .contains("outside a State scope")
-        );
+        assert!(check(&p, &[0])
+            .unwrap_err()
+            .contains("outside a State scope"));
     }
 }

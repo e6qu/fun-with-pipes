@@ -59,8 +59,8 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                 }
                 code = code
                     .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic unsigned socket_live, socket_created[3];")
-                    .replace(create, &format!("{create}\n    socket_created[kind]++; if(++socket_live > 16) exit(194);"))
-                    .replace(release, &format!("{release}\n    if(s->fd != FWP_INVALID_SOCKET) exit(195); if(!socket_live) exit(196); socket_live--;"))
+                    .replace(create, &format!("{create}\n    socket_created[kind]++; if(++socket_live > 64) exit(194);"))
+                    .replace(release, &format!("    fwp_socket_t observed_fd = s->fd;\n{release}\n    if(s->fd != FWP_INVALID_SOCKET) exit(195);\n    if(observed_fd != FWP_INVALID_SOCKET) {{ struct sockaddr_storage addr; socklen_t len = sizeof addr; if(getsockname(observed_fd, (struct sockaddr *)&addr, &len) == 0) exit(195); }}\n    if(!socket_live) exit(196); socket_live--;"))
                     .replace(finish, &format!("{finish}    if(socket_live || !socket_created[0] || !socket_created[1] || !socket_created[2]) exit(197);\n"));
             }
             if name == "values" {
