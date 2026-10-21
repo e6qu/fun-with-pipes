@@ -954,9 +954,12 @@ does not silently switch to tracing.
 
 Admitted programs include ordinary immutable values, scoped files and state,
 proved derivative scopes, selected retained tasks, channels with acyclic nested
-queue ownership, and scoped C calls. Tasks and HTTP stream handles remain
-excluded from channel payloads because their hidden owners can lead back to the
-queue. The [queued-function extension](ownership.md#functions-stored-in-channels),
+queue ownership, and scoped C calls. HTTP stream handles remain excluded from
+channel payloads because their hidden owners can lead back to the queue. The
+[task-message candidate](measurements/task-channels.md) replaces the blanket Task
+ban with a proof of the task's computation and result owners. Unknown producers
+and captured task-bearing queues remain rejected; the handoff records validation.
+The [queued-function extension](ownership.md#functions-stored-in-channels),
 accepted in PR #175, admits functions whose actual immutable captures are
 proved safe and checks their required scope when called after receiving.
 The current extension also admits shared socket handles: `fwp_sock` owns only

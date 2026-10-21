@@ -80,6 +80,11 @@ For an
 early native probe in `numerics.yml`, `native_runner` selects one runner instead
 of the suite's matrix. Use `all` for complete evidence; report collectors still
 require every expected native host. This does not change production acceptance.
+The task/channel proof and WebAssembly jobs use production's Rust O1 compiler/test
+profile with debug assertions and overflow checks enabled. Generated C still uses
+the explicit O0/O1/O2 settings requested by each test. The native ownership batch
+publishes its complete log before the longer transport tests; those tests still
+run after a batch failure, so audit their results before publishing a repair.
 For the `server-entries` suite, `server_entry_part=all` runs five parts on
 each selected host. An explicit `checks` selection runs two jobs: entry/codec
 checks and the larger REST API checks. Splitting them keeps the existing

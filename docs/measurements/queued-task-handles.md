@@ -1,7 +1,8 @@
 # Queued callbacks that retain task handles
 
-This preparation is not verified support yet. PR #189 remains the active delivery;
-finish its production acceptance before opening the next PR.
+This candidate follows the accepted task-record changes in PR #189. Its current
+checks and delivery status are in [the handoff](../development-state.md). Focused
+results alone do not establish final production acceptance.
 
 A task handle keeps a task's result available for later `task.await` calls. A
 callback is a function saved for a later call. Saving a callback in a channel can
@@ -76,9 +77,9 @@ record. `tap` sends the event while keeping the queue for the next step. Receivi
 transfers the event to the caller; `.read | apply ()` invokes its callback.
 `option.and-then` keeps one optional result instead of nesting two `Some` values.
 The captured task remains owned until the callback is released, so receiving an
-event does not invalidate its handle. Source checking and raw interpretation of
-this example passed with the verified #188 compiler; the new ARC eligibility
-proof still needs the runner checks described below.
+event does not invalidate its handle. Raw interpretation and focused native/ARC
+checks pass at the measured source below. The later direct-task-message extension
+has separate validation in [the handoff](../development-state.md).
 
 ## Programs under test
 
@@ -99,9 +100,12 @@ both explicitly selected suspension modes, JSPI and Asyncify, at O1/O2. They
 compare physical allocations, bytes and reference-count entries with the entry
 baseline. Missing scheduler cleanup and missing queued-value release must fail.
 
-These are correctness, cycle-policy and bounded-retention checks. They do not
-measure speed or parity with C/Rust. Runner results, architecture inspection and
-the complete native/WASM inventory remain pending.
+These correctness, cycle-policy and bounded-retention checks passed at source
+`521a160091040207067601ca3e57d7cc444e33f0`, retained by tag
+`roadmap/revision-task-owners-521a16009104`. All eight jobs in
+[run 39656585197](https://github.com/e6qu/fun-with-pipes/actions/runs/39656585197)
+passed; their complete logs were audited. This source predates direct Task
+messages and does not establish acceptance of that extension.
 
 ## Transferring task callbacks
 
@@ -126,13 +130,37 @@ control with the redundant retain/release pair restored. It counts actual counte
 callbacks, allocation requests/bytes, retains, peak/final managed charge and
 collections. This isolates the redundant pair; it is not an old-compiler timing
 comparison. Both must match raw interpretation, and only the retain count may
-differ. Results and binary inspection are pending.
+differ. The [source-specific report](queued-task-handles-2026-10-21.json) preserves
+hardware, compilers, flags, counts, generated-C hashes and actual binary inspection.
+
+All six native hosts show **10 → 5 retains**, with 27 allocation requests unchanged,
+at both O0 and O2. Each of five task creations removes one redundant retain/release
+pair; the other five retains remain necessary. Requested bytes and peak managed
+charge are identical between the control and transfer versions:
+
+| Hosts | Memory mode | Requested bytes | Peak managed bytes |
+|---|---|---:|---:|
+| Linux/macOS, ARM64/AMD64 | ARC | 2,306 | 688 |
+| Linux/macOS, ARM64/AMD64 | Tracing | 2,354 | 816 |
+| Windows, ARM64/AMD64 | ARC | 2,402 | 816 |
+| Windows AMD64 | Tracing | 4,226 | 1,328 |
+| Windows ARM64 | Tracing | 3,650 | 1,328 |
+
+ARC final managed charge and collection count are zero. Counts cover entry after
+constant initialization through runtime cleanup; raw stack mappings, allocator
+metadata and process memory are excluded. This is a 50% reduction in counted
+retains for this program, not a 50% speedup. No timing or C/Rust comparison ran.
 
 The focused native workflow disables link-time optimization explicitly and uses
 `scripts/inspect-task-owners.py` to preserve headers, symbols, instructions,
 sections, compiler flags and CPU details for 22 executed binaries per host. That
-includes failing cleanup controls. The report checks counter differences again
-and requires ARC binaries to exclude tracing entry points.
+includes failing cleanup controls. All 132 native binaries were independently
+checked against their executed artifacts, including architecture headers, symbols
+and generated C; O0 callback-transfer routines were disassembled independently.
+The report rechecks counter differences and absence of tracing entry points in
+ARC binaries. Both WebAssembly artifacts contain 32 executed task-capture modules
+whose headers, source/output hashes and available symbols were inspected.
+Final production acceptance of the combined delivery remains pending.
 
 Clock conversion also checks the signed nanosecond range before narrowing, including
 elapsed monotonic time. The interpreter now reports the same range errors and keeps

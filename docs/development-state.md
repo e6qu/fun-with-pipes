@@ -2,18 +2,20 @@
 
 ## Next action
 
-This is isolated preparation on `task-channel-owners` at
-`/private/tmp/fwp-task-channel-owners`, based on `521a1600` from
-`queued-task-captures`. PR #189 is merged. Group this proof extension with the preceding callback-owner
-work in one next PR after validation. The primary
-workspace and `/private/tmp/fwp-queued-task-captures` keep those live handoffs.
+Next: publish the audited correction and run all six native hosts plus both
+WebAssembly hosts on branch `task-channel-owners`, worktree
+`/private/tmp/fwp-task-channel-owners`. Keep this combined ownership work in one
+PR, then require all nine final-head production gates and documentation.
 
-Read [the candidate contract](measurements/task-channels.md). The working tree
-removes the blanket Task-message ban and proves known task computations/results
-instead. Captured task-bearing queues stay rejected. Unknown queues that may own
-a task/callback remain distinct from unknown data-only queues; only checked types
-can narrow that distinction. External task-bearing queues trigger proof even when
-no task is spawned locally. No runtime representation or reference counts change.
+This group contains callback-owner transfer, clock fixes, captured-task proofs,
+direct task messages and clearer measurement docs. The parent delivery is verified
+#189 merge `030fa3374e36459d9a774379e2116ac42ed5db1d`. The separate next allocation
+group remains local on `task-await-fields`; rebase it after this correction.
+
+Read [the task-message contract](measurements/task-channels.md) and
+[the callback measurements](measurements/queued-task-handles.md). Unknown task
+producers and captured task-bearing queues remain rejected. Direct task messages
+change the compiler proof, without new runtime representation or count operations.
 
 ## Checks and remaining work
 
@@ -26,16 +28,34 @@ validate the changed Rust proof or native ownership. Full builds stay on CI.
 The documentation example prints `Some "ready"` under raw interpretation; the
 frozen primitive inventory passes. The first roadmap check found this handoff
 missing its required seven-row status table; that table is restored below.
-Next: finish reviewing proof entry points and unknown origins, then publish a compiler/unit and focused Linux preflight with both
-WebAssembly hosts. Audit all failures before a correction. Extend to all six native
-hosts and inspect actual artifacts before delivery. The existing repeated fixture
-and physical-owner failure controls now cover direct task handles and task fields.
-Do not treat the preceding source's measurements as acceptance of this branch.
+The full preflight audit is complete for source
+`5542803edd48496248c5eb547195f16f821bf3c6`, run `39659304312`. Both WebAssembly jobs
+passed. Linux passed 169 compiler unit tests, all other ownership tests, four
+queued gRPC checks, its 22-binary inspector and all 28 REST tests. Exactly one
+new negative test expected the wrong diagnostic: a TaskResult callback makes
+`Channel[Task[TaskResult]]` function-bearing, so that existing check rejects it
+before the general task check. The correction requires the specific channel type
+and correct ownership diagnostic for each case; no compiler rejection is relaxed.
+Full logs and the failed-source receipt are preserved by
+`/private/tmp/fwp-audit-task-channel-preflight.py`.
 
-Related future investigation: `/private/tmp/fwp-next-task-queue-proof.md` records
-where immediate task-await results could avoid temporary Option boxes and why
-private task ownership needs a separate lifetime proof. Neither optimization is
-implemented. Keep changes grouped when their validation can share one delivery.
+The full-matrix dispatcher stopped on that failure before publishing any tag or
+starting jobs. The correction also publishes ownership batch logs before longer
+transport tests, with pipefail preserving failure status. Focused native/WASM jobs
+now use production's Rust O1 compiler/test profile with debug assertions and
+overflow checks retained. Generated-C settings and coverage are unchanged.
+Actionlint, diff and roadmap checks pass via `/private/tmp/fwp-check-task-channel-docs.py`;
+recheck the corrected Rust test before publication. These scheduling changes have
+no measured cycle-time result yet.
+Both new negative programs pass raw interpretation and prior-compiler tracing
+on macOS ARM64 O0 under GC/reuse stress. They are rejection tests, not examples of
+supported ARC programs. Require the corrected full matrix before acceptance.
+
+Separate next-group preparation now lives in `/private/tmp/fwp-task-await-fields`,
+branch `task-await-fields`, based on this published source. Local commit `1da61ef1c1461fb7272eb71d9f2d83f02af95838` adds direct await
+fields and matched allocation controls; the changed compiler is unverified.
+Keep that preparation separate while this group's validation finishes. Private
+`task.within` owner removal still needs a distinct lifetime proof.
 
 ## Preceding delivery evidence
 
@@ -44,14 +64,17 @@ PR #189 passed all final gates and squash-merged as
 Its final head is `4dfc2be31c62c9e54271692ac8638fbb66ca786b`, production run
 `39641372026`, docs `39641321443`. Audit with `/private/tmp/fwp-audit-189-final.py`
 which preserves the accepted receipt and verified merge.
-Rebase this branch onto `6e8d7aaee421a9c43891d368821783371e934906` after committing
-its changes, using old base `521a1600`; the preceding branch has already been
-rebased onto the merge. Preserve source `521a1600` and its immutable tag.
+Rebasing onto `6e8d7aaee421a9c43891d368821783371e934906` is complete.
+Preserve source `521a1600` and its immutable tag.
 
-The preceding callback-owner source is
+The preceding callback-owner source passed all six native and both WebAssembly
+jobs; every full log was audited. Its source is
 `521a160091040207067601ca3e57d7cc444e33f0`, focused run `39656585197`.
 `/private/tmp/fwp-audit-task-owners-corrected.py` keeps its separate receipt.
-Do not overwrite its source/report when rebasing or extending this preparation.
+All 132 native binaries and 64 task-capture WebAssembly modules were inspected.
+The source-specific JSON and plain guide are ready in docs/measurements; five
+creations show 10 → 5 retains with allocations/bytes unchanged. No timing claim.
+Do not overwrite this source/report when extending the direct-task proof.
 
 All seven areas in [PLAN.md](../PLAN.md) remain open. Continue substantial groups,
 one delivery PR at a time, after exact-head gates pass. Every commit/merge subject

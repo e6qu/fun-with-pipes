@@ -271,7 +271,7 @@ keep = then2 const channel.close
 #[test]
 fn direct_task_messages_reject_computation_and_result_queue_owners() {
     let dir = fwp::cgen::TempDir::new("queued-task-cycles").unwrap();
-    for (name, source) in [
+    for (name, source, diagnostic) in [
         (
             "computation",
             r#"
@@ -281,6 +281,7 @@ keep : Channel[Task[String]] -> () -> String ! {Async}
 keep = curry (.0 | channel.close | const "done")
 main = jobs 1 | tap (fork channel.send id (keep | task.spawn)) | channel.recv | option.and-then task.await | ignore
 "#,
+            "captured task-bearing channel `Channel[Task[String]]`",
         ),
         (
             "result",
@@ -293,6 +294,9 @@ keep = curry (.0 | channel.close)
 start = keep | make TaskResult { close = id } | const | task.spawn
 main = jobs 1 | tap (fork channel.send id start) | channel.recv | option.and-then task.await | option.map (.close | apply ()) | ignore
 "#,
+            // TaskResult contains a callback, so this queue also carries function
+            // owners through its tasks. That existing check rejects it first.
+            "captured function-bearing channel `Channel[Task[TaskResult]]`",
         ),
     ] {
         let input = dir.join(format!("{name}.fwp"));
@@ -339,10 +343,7 @@ main = jobs 1 | tap (fork channel.send id start) | channel.recv | option.and-the
             "{name}: accepted an unproved queue owner"
         );
         let error = String::from_utf8_lossy(&build.stderr);
-        assert!(
-            error.contains("task-bearing channel") || error.contains("acyclic task result"),
-            "{name}: {error}"
-        );
+        assert!(error.contains(diagnostic), "{name}: {error}");
     }
 }
 
