@@ -364,7 +364,10 @@ static int64_t fwp_u64_chars(uint64_t x) {
 }
 
 static int64_t fwp_i64_chars(int64_t x) {
-    return x < 0 ? 1 + fwp_u64_chars((uint64_t)0 - (uint64_t)x) : fwp_u64_chars((uint64_t)x);
+    uint64_t magnitude = x < 0 ? (uint64_t)0 - (uint64_t)x : (uint64_t)x;
+    int64_t n = 1 + (x < 0);
+    while (magnitude >= 10) { magnitude /= 10; n++; }
+    return n;
 }
 
 static void fwp_display_top(V v, const fwp_desc *d, FILE *out) {

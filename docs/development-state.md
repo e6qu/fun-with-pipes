@@ -2,13 +2,18 @@
 
 ## Next action
 
-Next: investigate the remaining integer-counting performance gap using controlled
-same-host measurements and actual generated instructions. Start from accepted
-merge `c98da7a5b3d859fee69120cf3452dcdecc904979`, branch
-`investigate-native-counting-costs`. No optimization is implemented on this branch;
-only acceptance, plan and handoff documents have changed. There is no open PR.
-Preserve existing inputs, checked arithmetic, trap order and every timing sample.
-Do not infer a compiler regression from different timings of identical binaries.
+Next: run the controlled [integer-counting comparison](measurements/integer-counting.md)
+and focused scalar-text correctness suite on GitHub from branch
+`investigate-native-counting-costs`, based on accepted merge `c98da7a5`.
+The candidate shares one signed digit-counting loop; no speed benefit is yet
+established. The experiment compares saved C/Rust/fwp, rebuilt unchanged fwp and
+the candidate on every allowed CPU, preserving all samples and generated code.
+Boundary tests now cover both sides of all signed/unsigned decimal transitions.
+No PR is open. Bundle the verified optimization, measurement and documentation
+in one PR; require all nine production gates and documentation before squash merge.
+Local Python syntax passed in 0.12s and focused Rust formatting in 0.13s under
+the unchanged guard. The first sandboxed guard invocation could not read `ps`;
+its approved invocation passed. Native builds and execution remain on GitHub.
 
 All seven roadmap areas remain open. Default native execution still includes
 tracing GC; JIT is excluded. Retained resources, persistent subscriptions,
