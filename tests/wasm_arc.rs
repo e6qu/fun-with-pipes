@@ -791,6 +791,12 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
             include_str!("fixtures/queued_data_channels.out"),
             1,
         ),
+        (
+            "queued-task-handles",
+            include_str!("fixtures/queued_task_handles.fwp"),
+            include_str!("fixtures/queued_task_handles.out"),
+            1,
+        ),
     ] {
         let program = if repetitions == 1 {
             program.to_owned()

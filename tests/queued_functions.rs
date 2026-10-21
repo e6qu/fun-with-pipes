@@ -32,6 +32,11 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
             include_str!("fixtures/queued_data_channels.fwp"),
             include_str!("fixtures/queued_data_channels.out"),
         ),
+        (
+            "task-handles",
+            include_str!("fixtures/queued_task_handles.fwp"),
+            include_str!("fixtures/queued_task_handles.out"),
+        ),
     ] {
         std::fs::write(&source, program).unwrap();
         let compiler = env!("CARGO_BIN_EXE_fwp");
@@ -53,6 +58,21 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     .arg(&cfile),
             );
             let mut code = std::fs::read_to_string(cfile).unwrap();
+            if name == "task-handles" && memory == "arc" {
+                let create = "    task->identity = ++fwp_task_identity;";
+                let release = "    if (!t->done || t->stack) abort();";
+                let root_release = "        fwp_mem_free(fwp_root);";
+                let finish = "\n    fwp_cl_finish();\n";
+                for needle in [create, release, root_release, finish] {
+                    assert_eq!(code.matches(needle).count(), 1, "{needle}");
+                }
+                code = code
+                    .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic unsigned captured_task_live, captured_task_created;")
+                    .replace(create, &format!("{create}\n    captured_task_created++; if (++captured_task_live > 64) exit(201);"))
+                    .replace(release, &format!("{release}\n    if (!captured_task_live) exit(202); captured_task_live--;"))
+                    .replace(root_release, &format!("    if (!captured_task_live) exit(202); captured_task_live--;\n{root_release}"))
+                    .replace(finish, &format!("{finish}    if (captured_task_live || !captured_task_created) exit(203);\n"));
+            }
             if name == "data-queues" {
                 let create = "    fwp_chan *c = (fwp_chan *)fwp_mem_alloc(sizeof(fwp_chan));";
                 let release = "    if (c->sendq.head || c->recvq.head) abort();";
@@ -167,6 +187,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     let expected = match name {
                         "sockets" => 194,
                         "data-queues" => 198,
+                        "task-handles" => 201,
                         _ => 193,
                     };
                     assert_eq!(
@@ -207,6 +228,8 @@ keep = then2 const channel.close
 "#;
     for (name, body) in [
         ("self", "send-self = fork channel.send id keep\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n"),
+        ("task-computation", "wait : Task[()] -> () -> () ! {Async}\nwait = curry (.0 | task.await | ignore)\nkeep-task = keep | task.spawn | wait\nmain = callbacks 1 | tap (fork channel.send id keep-task) | channel.recv | option.map (apply ()) | ignore\n"),
+        ("task-result", "wait : Task[() -> () ! {Async}] -> () -> () ! {Async}\nwait = curry (.0 | task.await | option.map (apply ()) | ignore)\nkeep-task = keep | const | task.spawn | wait\nmain = callbacks 1 | tap (fork channel.send id keep-task) | channel.recv | option.map (apply ()) | ignore\n"),
         ("returned", "returned = keep | const | apply ()\nsend-self = fork channel.send id returned\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n"),
         ("nested", "lists : I64 -> Channel[List[() -> () ! {Async}]] ! {Async}\nlists = channel.make\nmain = lists 1 | tap (flip channel.send [keep (callbacks 1)]) | channel.recv | ignore\n"),
         ("two-queues", "main = (callbacks 1, callbacks 1) | tap (fork channel.send .0 (.1 | keep)) | tap (fork channel.send .1 (.0 | keep)) | both (.0 | channel.recv) (.1 | channel.recv) | ignore\n"),
@@ -225,6 +248,75 @@ keep = then2 const channel.close
         let error = String::from_utf8_lossy(&build.stderr);
         assert!(error.contains("queued function") && error.contains("captured") && error.contains("Channel"), "{name}: {error}");
     }
+}
+
+#[test]
+fn task_results_reject_a_cached_self_owner_without_a_channel() {
+    let dir = fwp::cgen::TempDir::new("task-result-cycle").unwrap();
+    let source = dir.join("cycle.fwp");
+    std::fs::write(
+        &source,
+        r#"
+TaskResult = { read: () -> () ! {Async} }
+wait : Task[TaskResult] -> () -> () ! {Async}
+wait = curry (.0 | task.await | ignore)
+rec work : () -> TaskResult ! {Async}
+work = match
+    () -> TaskResult { read = wait main }
+rec main = task.spawn work
+"#,
+    )
+    .unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .arg("check")
+            .arg(&source),
+    );
+    let reference = checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    let cfile = dir.join("tracing.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--gc", "tracing", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    for opt in ["-O0", "-O2"] {
+        let binary = dir.join("tracing.exe");
+        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+        let actual = checked(
+            Command::new(binary)
+                .env("FWP_GC_STRESS", "1")
+                .env("FWP_GC_VERIFY", "1")
+                .env("FWP_REUSE_VERIFY", "1"),
+        );
+        assert_eq!(
+            (&actual.stdout, &actual.stderr),
+            (&reference.stdout, &reference.stderr)
+        );
+    }
+
+    let result = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .args(["build", "--gc", "arc", "--emit-c"])
+        .arg(&source)
+        .arg("-o")
+        .arg(dir.join("cycle.c"))
+        .output()
+        .unwrap();
+    assert!(
+        !result.status.success(),
+        "accepted a task owning itself through its result"
+    );
+    assert!(
+        String::from_utf8_lossy(&result.stderr).contains("acyclic task result"),
+        "{result:?}"
+    );
 }
 
 #[test]
