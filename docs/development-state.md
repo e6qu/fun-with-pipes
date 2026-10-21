@@ -2,103 +2,71 @@
 
 ## Next action
 
-Next: publish and accept the combined checked-product PR on branch
-`preserve-checked-product-ranges`. The shared workspace is
-`/Users/zardoz/projects/fun-with-pipes`; the temporary preparation worktree has
-been removed after moving its clean branch here. Require all nine production
-jobs and documentation for the final PR head, audit every complete log and fix
-every failure. Then squash-merge with an explicit one-line subject, at most
-80 characters, and an empty body; verify the tree and message. Do not restart
-passing gates for handoff-only updates.
+Next: require all nine production jobs plus documentation for the final head of
+[PR #184](https://github.com/e6qu/fun-with-pipes/pull/184). Audit every completed log
+and fix every failure before merging.
+Then squash-merge with one subject under 80 characters and an empty body.
+Standing authorization remains in effect; no merge is authorized by focused
+checks alone.
 
-[PR #182](roadmap-history.md#grouped-integer-counting-and-u32-overflow-pr-182)
-is accepted and merged as `36fbb04097e8ab3d09a02b0eebf9060002e4fe91`.
-All nine production jobs `39533108586` and documentation `39532459370` passed
-at `817805a18bd97e90090b36e7baf589d011048fd6`, with clean full logs. The squash
-tree matches exactly and its 64-character message has no body or trailers.
-Receipt: `/private/tmp/fwp-182-final-acceptance.json`. Duplicate post-merge CI
-`39542814814` and documentation `39542814748` were cancelled only after verifying
-the accepted tree. This branch was rebased onto that merge without changing
-its files; `/private/tmp/fwp-range-rebase.json` records the old/new heads and tree.
-The former local handoff is saved at `/private/tmp/fwp-182-pre-merge-handoff.md`.
+Branch `prove-retained-resource-ownership` is based on accepted PR #183 merge
+`447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c`. Implementation `d0d27930` passed all
+eight jobs in focused run `39568125065`: six native platforms and two WASI hosts.
+The review commit adds the evidence report and documentation only.
 
-## Current change and evidence
+## Current implementation
 
-Signed I64/ISize multiplication keeps its overflow check, then exposes the
-proven-safe product expression to C optimization. The [measurement guide](measurements/checked-products.md)
-explains the workload, comparisons, instructions, tests and tradeoffs. The
-[raw report](measurements/checked-products-2026-10-21.json) retains every sample.
+Queued callbacks can capture `UdpSocket`, `Listener` and `Conn`. Their runtime
+objects cannot own a callback or queue; existing shared ownership keeps the
+socket alive and closes it on final release. Files retain their single-use rule.
+Channels, tasks, HTTP/2 streams and gRPC cells remain excluded as captures.
+The [ownership contract](ownership.md#functions-stored-in-channels) explains this
+subset. Ordinary runtime representation is unchanged.
 
-Source `b57e2dcda716ebd27007d01aaf5e4e79d22518b6` is preserved by published tag
-`roadmap/revision-checked-product-b57e2dcd`. Focused run `39536765734` passes
-on both Linux architectures; complete logs are audited clean in
-`/private/tmp/fwp-range-native-audit.json`. Each job passes formatting, Clippy,
-five integer-output tests, four scalar-trap tests, twelve counting and fourteen
-scalar binary inspections, and the nine-way measurement. Actual compiler C
-matches the measured candidate byte-for-byte, and its instruction section and
-output match on both hosts. Full production/documentation acceptance is pending.
+The same PR fixes `attempt (apply ())` incorrectly retaining its handled Error
+effect. `src/infer.rs::argument_type` preserves the shared remaining effect row
+through returned functions, records and variants, while distinguishing accepted
+callbacks from produced values. Tests cover Error/State handlers, aliases,
+returned records, required IO and ordinary callback rules. The shared
+[handler fixture](../tests/fixtures/handled_callbacks.fwp) runs in the interpreter,
+native code and WASI. No syntax or named-handler special cases were added.
 
-The signed test covers 173 runtime operand pairs for each of I64 and ISize,
-unoptimized interpretation, ARC/tracing at O0/O1/O2/O3, effect/trap order and
-O1/O2/O3 undefined-behavior sanitizer checks. Removing the overflow guard must
-produce a signed-overflow diagnostic. Saved ordinary binaries confirm that
-O2/O3 reuse the checked product; O0/O1 emit an extra product. Document this
-cost; the measured O2 benefit is not a claim about every optimization level.
+## Validation and evidence
 
-On EPYC 7763/N2, O2 child CPU medians fall 14.6–29.0% / 17.9–18.3% relative
-to grouped fwp on the same CPUs. C remains faster. AMD64 varies substantially
-by CPU ID, including mixed comparisons with Rust; its cause is unresolved.
-Instruction sections shrink 64/112 bytes; AMD64's normal 40-byte frame
-disappears. Managed counters remain zero after initialization, with a working
-16-byte allocation control. Tracing code remains in the binaries.
+The [evidence guide](measurements/queued-callbacks.md) explains the scope and links
+the machine-readable report. All complete focused logs were audited. All 24
+native socket binaries match their platform and expected output; ARC excludes
+collector routines and tracing controls retain marking. Socket-object counts,
+descriptor closure and managed allocator teardown pass, including deliberately
+broken cleanup controls. Four WASI handler modules match interpretation and pass
+physical-allocation, byte and count-table teardown checks. These are correctness
+results, not performance or total-process memory claims.
 
-Artifacts: `/private/tmp/fwp-compiled-range-costs`; download manifest:
-`download-audit.json` there. Byte-identical immutable baseline inputs share
-hardlinks with `/private/tmp/fwp-integer-range-costs`; both artifact trees are
-complete. Independent source/binary/sample audit passed in 0.60s:
-`/private/tmp/fwp-compiled-range-audited.json`. Ordinary instruction inspection
-and timing-ratio review passed in 0.13s with `/private/tmp/fwp-range-review.py`.
-The first schema-inspection command used a dict operation on a list and failed;
-the corrected inspection and independent report audit pass.
-Documentation, immutable-tag, commit-message and whitespace checks pass under
-the guard (2.56s): `python3 scripts/check-roadmap.py` and `git diff --cached --check`.
-The first handoff check caught a missing roadmap-status table; it was restored
-before the passing rerun. The readable guide and report do not change compiler
-or test code from the focused source.
+Receipts and reproducible audit scripts are under `/private/tmp`:
+`fwp-184-final-focused.json`, `fwp-audit-184-final-focused.py`,
+`fwp-184-final-download.py`, `fwp-184-wasi-evidence.py` and
+`fwp-184-final-report.py`. Downloaded artifacts and digest receipts are in
+`fwp-184-final-evidence/`. Source and run constants are explicit; do not reuse
+an older receipt as acceptance of a changed compiler.
 
-## Earlier preparation
+Earlier runs exposed fixture effects and handler-row inference failures. Their
+complete logs remain in `fwp-184-focused.json`, `fwp-184-handlers-probe.json` and
+`fwp-184-handlers-direction.json`; the final focused run verifies the repairs.
+No known failure is being deferred. Local guarded formatting, whitespace,
+primitive inventory and native-runner tooling checks passed. Full builds and
+native execution ran on GitHub, not locally.
 
-The original saved-C experiment `7a8803762e240998605c6442afbbb33ed8157133`
-is retained by `roadmap/revision-integer-range-7a880376`. Measurement-only run
-`39530460995` passed on both hosts, but skipped native semantic preflight and
-did not modify the compiler. Audit: `/private/tmp/fwp-range-counting-audit.json`;
-artifacts/report: `/private/tmp/fwp-integer-range-costs` and
-`/private/tmp/fwp-integer-range-audited.json`. Use `--comparison range` for it;
-use `--comparison compiled-range` for the implemented candidate.
+## Local resources
 
-Preparation run `39535767609` at `40d01bcc` was cancelled while both jobs were
-queued; no tests ran. Its replacement above includes complete scalar artifacts.
-The old preparation branch remains at `ca72a9cde7e3ef4eb6e7d911110e8937a3f419b2`.
+Use `python3 scripts/local-guard.py` for serial local checks. Preserve 64 GiB
+free disk, target data below 2 GiB, sampled workload RSS below 1 GiB and the
+180-second limit. Move builds, full suites and measurements to GitHub.
 
-## Resources and remaining project work
-
-Use `python3 scripts/local-guard.py` for serial local checks. Full builds,
-native execution, complete suites and measurements belong on GitHub runners.
-Keep 64 GiB free, generated target below 2 GiB, sampled aggregate RSS below
-1 GiB and the 180-second deadline. Latest artifact download left about 65.3 GiB;
-recheck before more downloads. No limits were raised or checks bypassed.
-
-On October 21, authorized cleanup removed 304.74 MiB of obsolete binaries and
-disassembly after verifying remote recovery artifacts. Manifest:
-`/private/tmp/fwp-disk-cleanup-2026-10-21.json`. The first two counting artifact
-trees are now partial; restore their remote artifacts before another binary
-audit. Current matched/range evidence and source files were preserved.
-
-All seven [plan](../PLAN.md) work areas remain open. Ownership and removal of
-tracing are primary; default native execution still includes tracing. Retained
-resources, persistent subscriptions, resource-owning tail frames and mutual
-recursion need further proofs. Do not let microbenchmarks displace representative
-applications or claim a completed memory/performance roadmap. JIT is excluded.
+The hash-verified PR #183 macOS ARM64 compiler is
+`/private/tmp/fwp-183-macos-compiler/fwp-macos-arm64/fwp`; receipts are beside it.
+It can format source and check unchanged semantics, but predates both compiler
+changes here. Do not use it to claim candidate acceptance. Accepted older
+delivery details are in [history](roadmap-history.md#checked-product-bounds-pr-183).
 
 ## Roadmap status
 

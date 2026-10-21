@@ -22,6 +22,11 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
             include_str!("fixtures/queued_function_tasks.fwp"),
             include_str!("fixtures/queued_function_tasks.out"),
         ),
+        (
+            "sockets",
+            include_str!("fixtures/queued_sockets.fwp"),
+            include_str!("fixtures/queued_sockets.out"),
+        ),
     ] {
         std::fs::write(&source, program).unwrap();
         let compiler = env!("CARGO_BIN_EXE_fwp");
@@ -43,6 +48,24 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     .arg(&cfile),
             );
             let mut code = std::fs::read_to_string(cfile).unwrap();
+            if name == "sockets" {
+                // Count socket objects with value owners, not just managed bytes:
+                // a collected header is not evidence its OS handle was closed.
+                // Each of 64 rounds opens 6 listeners, 6 connections and 10 UDP
+                // sockets. The 64-live ceiling allows original resource frames
+                // within a round, but detects retention accumulating across them.
+                let create = "    s->refs = 1;";
+                let release = "    fwp_sock_final(s);";
+                let finish = "\n    fwp_cl_finish();\n";
+                for needle in [create, release, finish] {
+                    assert_eq!(code.matches(needle).count(), 1, "{needle}");
+                }
+                code = code
+                    .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic unsigned socket_live, socket_created[3];")
+                    .replace(create, &format!("{create}\n    socket_created[kind]++; if(++socket_live > 64) exit(194);"))
+                    .replace(release, &format!("    fwp_socket_t observed_fd = s->fd;\n{release}\n    if(s->fd != FWP_INVALID_SOCKET) exit(195);\n    if(observed_fd != FWP_INVALID_SOCKET) {{ struct sockaddr_storage addr; socklen_t len = sizeof addr; if(getsockname(observed_fd, (struct sockaddr *)&addr, &len) == 0) exit(195); }}\n    if(!socket_live) exit(196); socket_live--;"))
+                    .replace(finish, &format!("{finish}    if(socket_live || socket_created[0] != 64*6 || socket_created[1] != 64*6 || socket_created[2] != 64*10) {{ fprintf(stderr,\"socket accounting: live=%u listeners=%u connections=%u udp=%u\\n\", socket_live, socket_created[0], socket_created[1], socket_created[2]); exit(197); }}\n"));
+            }
             if name == "values" {
                 assert!(
                     code.contains("FWP_CHANNEL_RESULT_FIELDS);"),
@@ -70,7 +93,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                         .env("FWP_REUSE_VERIFY", stress);
                     command
                 };
-                let actual = checked(&mut run());
+                let actual = run().output().unwrap();
                 if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
                     let path = std::path::PathBuf::from(path);
                     std::fs::create_dir_all(&path).unwrap();
@@ -78,6 +101,12 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     std::fs::write(path.join(format!("{label}.c")), &code).unwrap();
                     std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
                     std::fs::write(path.join(format!("{label}.stdout")), &actual.stdout).unwrap();
+                    std::fs::write(path.join(format!("{label}.stderr")), &actual.stderr).unwrap();
+                    std::fs::write(
+                        path.join(format!("{label}.status")),
+                        actual.status.to_string(),
+                    )
+                    .unwrap();
                     let (tool, flag) = if cfg!(target_os = "macos") {
                         ("otool", "-tvV")
                     } else if cfg!(target_os = "windows") {
@@ -88,6 +117,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     let assembly = checked(Command::new(tool).arg(flag).arg(&binary));
                     std::fs::write(path.join(format!("{label}.asm")), assembly.stdout).unwrap();
                 }
+                assert!(actual.status.success(), "{name}/{memory}/{opt}: {actual:?}");
                 assert_eq!(
                     (&actual.stdout, &actual.stderr),
                     (&reference.stdout, &reference.stderr),
@@ -104,7 +134,22 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     }
                     fwp::cgen::compile_c(&missing_drop, &binary, opt).unwrap();
                     let omitted = run().output().unwrap();
-                    assert_eq!(omitted.status.code(), Some(193), "{opt}: {omitted:?}");
+                    let expected = if name == "sockets" { 194 } else { 193 };
+                    assert_eq!(
+                        omitted.status.code(),
+                        Some(expected),
+                        "{name}/{opt}: {omitted:?}"
+                    );
+                    if name == "sockets" {
+                        let omitted_close = code.replace(
+                            "    fwp_sock_final(s);",
+                            "    /* omitted final socket close */",
+                        );
+                        assert_ne!(omitted_close, code);
+                        fwp::cgen::compile_c(&omitted_close, &binary, opt).unwrap();
+                        let omitted = run().output().unwrap();
+                        assert_eq!(omitted.status.code(), Some(195), "{opt}: {omitted:?}");
+                    }
                 } else {
                     let symbols = checked(Command::new("nm").arg(&binary));
                     assert!(

@@ -12,6 +12,25 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Checked-product bounds (PR #183)
+
+Signed I64/ISize multiplication keeps its overflow check, then exposes the safe
+product expression to C optimization. The [report](measurements/checked-products.md)
+records lower O2 counting-loop CPU time on EPYC 7763/N2, smaller instruction
+sections and removal of AMD64's normal entry frame. Matched C remains faster;
+AMD64 comparisons with Rust vary by CPU. O0/O1 emit an extra product. These
+limits remain part of the result, and tracing is still present.
+
+[PR #183](https://github.com/e6qu/fun-with-pipes/pull/183) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39543123372)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39543123369)
+at `3606d072d0f708b600f44050ab9cafe1390bceee`; every complete log was audited.
+Squash merge `447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c` has the identical tree
+`40b47a0670c38bc0b05c6dbd1afefd3ad5f7d7c5`. Its verified message is exactly
+`Preserve numeric bounds after checked multiplication`, one line with no body,
+trailers or attribution. Runtime-input, interpreter/native and sanitizer controls
+preserve successful results, overflow traps and effect order.
+
 ## Grouped integer counting and U32 overflow (PR #182)
 
 Integer display lengths now count decimal digits in groups. Ordinary inline

@@ -552,7 +552,70 @@ impl<'a> Infer<'a> {
     /// A function value can satisfy a parameter that permits additional known
     /// effects. Widen only its temporary outer row, preserving effect variables
     /// shared with function-valued inputs; this is unrelated to caller effects.
-    fn argument_type(&mut self, expected: &Type, actual: &Type) -> Type {
+    fn argument_type(&mut self, expected: &Type, actual: &Type, callee: &Type) -> Type {
+        fn row_without(table: &TypeTable, row: &Row, tail: TV, label: &str) -> bool {
+            let row = table.flatten_row(row);
+            row.tail == Some(tail) && !row.fields.iter().any(|(name, _)| name == label)
+        }
+        fn result_without(
+            env: &Env,
+            ty: &Type,
+            tail: TV,
+            label: &str,
+            produced: bool,
+            visiting: &mut HashSet<(String, bool)>,
+        ) -> bool {
+            match env.table.resolve(ty) {
+                // Inputs reverse direction: an accepted callback's smaller
+                // row does not mean the surrounding function handles an effect.
+                Type::Fun(input, output, row) => {
+                    (produced && row_without(&env.table, &row, tail, label))
+                        || result_without(env, &input, tail, label, !produced, visiting)
+                        || result_without(env, &output, tail, label, produced, visiting)
+                }
+                Type::Record(row) => env
+                    .table
+                    .flatten_row(&row)
+                    .fields
+                    .iter()
+                    .any(|(_, ty)| result_without(env, ty, tail, label, produced, visiting)),
+                Type::Con(name, args) => {
+                    if !visiting.insert((name.clone(), produced)) {
+                        return false;
+                    }
+                    let found = if let Some(row) = env.table.expand_record(&name, &args) {
+                        row.fields
+                            .iter()
+                            .any(|(_, ty)| result_without(env, ty, tail, label, produced, visiting))
+                    } else if let Some(TypeDef {
+                        params,
+                        kind: TypeDefKind::Adt { ctors },
+                        ..
+                    }) = env.types.get(&name)
+                    {
+                        let map = params.iter().copied().zip(args.iter().cloned()).collect();
+                        ctors.iter().any(|ctor| {
+                            env.ctors[ctor].fields.iter().any(|field| {
+                                result_without(
+                                    env,
+                                    &TypeTable::subst(field, &map),
+                                    tail,
+                                    label,
+                                    produced,
+                                    visiting,
+                                )
+                            })
+                        })
+                    } else {
+                        args.iter()
+                            .any(|ty| result_without(env, ty, tail, label, produced, visiting))
+                    };
+                    visiting.remove(&(name, produced));
+                    found
+                }
+                Type::Var(_) | Type::App(..) | Type::Nat(_) | Type::NatOp(..) => false,
+            }
+        }
         let Type::Fun(_, _, permitted) = self.env.table.resolve(expected) else {
             return actual.clone();
         };
@@ -578,6 +641,20 @@ impl<'a> Infer<'a> {
             effects.tail = Some(self.env.table.fresh(Kind::Eff, self.level));
         }
         for (label, payload) in permitted.fields {
+            // A handler may accept {Error | e} and return a function using e.
+            // Keep that prefix on the callback's shared row: adding Error only
+            // to a temporary copy would unify the callback's row with e and
+            // leak its handled Error into the result. Follow returned records
+            // too; this is a type relationship, not a special case for names.
+            if permitted.tail.is_some_and(|tail| {
+                let Type::Fun(_, result, call) = self.env.table.resolve(callee) else {
+                    return false;
+                };
+                row_without(&self.env.table, &call, tail, &label)
+                    || result_without(self.env, &result, tail, &label, true, &mut HashSet::new())
+            }) {
+                continue;
+            }
             if !effects
                 .fields
                 .iter()
@@ -1602,7 +1679,7 @@ impl<'a> Infer<'a> {
             let r = self.fresh();
             match self.env.table.resolve(&tf) {
                 Type::Fun(p, _, _) => {
-                    let argument = self.argument_type(&p, &ta);
+                    let argument = self.argument_type(&p, &ta, &tf);
                     self.unify_presented(
                         arg.span,
                         &p,

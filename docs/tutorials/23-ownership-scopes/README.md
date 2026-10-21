@@ -83,8 +83,13 @@ The result is `Some 8`. `option.map` runs its function only for a received messa
 
 The compiler checks the saved values, not just the arrow type. The current subset
 permits immutable captures, including strings, containers and other proved
-functions. A queued function that captures a channel, task, file or connection
-is rejected even if a particular execution might be safe. A function using State
+functions. The compiler also admits shared socket handles (`UdpSocket`,
+`Listener`, `Conn`): they cannot own a queue or callback. The
+[socket example and validation status](../../ownership.md#functions-stored-in-channels)
+explain their lifetime and current checks. Captured channels, tasks and HTTP/2
+streams remain rejected. Files have a separate single-use rule that forbids
+capturing them in reusable functions; pass a file as the last argument instead.
+A function using State
 or autodiff must still run inside the required scope after it is received; sending
 it does not preserve a sender's temporary scope. See the
 [proof and validation status](../../ownership.md#functions-stored-in-channels).

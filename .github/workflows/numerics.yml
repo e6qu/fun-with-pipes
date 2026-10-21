@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -275,11 +275,11 @@ jobs:
           path: integer-product-semantics/
           if-no-files-found: error
   queued_function_proof:
-    if: inputs.suite == 'channel-proof'
+    if: inputs.suite == 'channel-proof' || inputs.suite == 'queued-sockets'
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+        runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]' || format('["{0}"]', inputs.native_runner)) }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     env:
@@ -331,8 +331,11 @@ jobs:
         if: ${{ !cancelled() }}
         run: cargo test --lib
       - name: ARC, channels, State, autodiff and loop cleanup
-        if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
+        if: ${{ !cancelled() && inputs.suite == 'channel-proof' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test typed_state_ownership --test scope_thunk_ownership --test ad_tape_scopes --test grpc_client_receive --test grpc_response_encoding --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested --test loop_ownership --test loop_preparation_ownership --test loop_unwind_ownership --test nested_loop_boxing --test inline_caf_ownership --test caf_ownership --test call_effects --test variant_alias_ownership --test variant_conversion_ownership --test compiler_call_liveness --test worker_preparation_ownership --test borrowed_callbacks --test record_conversion_ownership
+      - name: Retained socket callbacks and resource cleanup
+        if: ${{ !cancelled() && inputs.suite == 'queued-sockets' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
+        run: cargo test --no-fail-fast --test call_effects --test queued_functions --test native_sockets --test channel_cycle_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context
       - name: Record queued-function evidence source
         if: always()
         shell: bash
@@ -1208,7 +1211,7 @@ jobs:
           CC: gcc
         run: cargo test --test closure_ownership fixed_function_values_preserve_aliases_and_effect_order -- --exact --nocapture
   fixed_functions_wasi:
-    if: inputs.suite == 'fixed-functions' || inputs.suite == 'channel-proof'
+    if: inputs.suite == 'fixed-functions' || inputs.suite == 'channel-proof' || (inputs.suite == 'queued-sockets' && inputs.native_runner == 'all')
     strategy:
       fail-fast: false
       matrix:

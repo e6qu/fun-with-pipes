@@ -100,9 +100,10 @@ fn has_function_channels(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) ->
     }
 }
 
-/// This first queued-function subset permits immutable data captures. Resources
-/// have independent lifetime rules; do not infer their hidden owners from an
-/// arrow type. Captured functions are checked by their actual origins below.
+/// Immutable data and socket handles cannot own a queue or callback. Sockets
+/// have shared value owners; their final release closes the descriptor. File
+/// captures violate source-level linear use, and other mutable owners still
+/// need a lifetime/cycle proof. Check functions by their actual origins below.
 fn queued_capture_type(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> Result<(), String> {
     if !seen.insert(ty.clone()) {
         return Ok(());
@@ -123,11 +124,10 @@ fn queued_capture_type(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> R
                     | "std::H2Stream"
                     | "std::GrpcCell"
                     | "std::File"
-                    | "std::Conn"
-                    | "std::Listener"
-                    | "std::UdpSocket"
             ) {
-                return Err(format!("--gc arc: cannot prove a queued function's captured `{ty}` owner; queue immutable data or keep this owner outside the callback"));
+                return Err(format!(
+                    "--gc arc: cannot prove a queued function's captured `{ty}` owner; queue immutable data or keep this owner outside the callback"
+                ));
             }
             for arg in args {
                 queued_capture_type(program, arg, seen)?;
@@ -483,7 +483,8 @@ impl Proof<'_> {
             Body::Prim(symbol) if matches!(symbol.as_str(), "task.spawn" | "task.within") => {
                 // A child starts with independent State and AD stacks. Carry
                 // callable captures, but never its parent's dynamic scopes.
-                // Queued closures exclude resource captures; task/stream
+                // Queued closures exclude captures with mutable back-edges;
+                // socket handles own no language values. Task/stream
                 // payloads and raw addresses remain excluded by ARC eligibility,
                 // so no mutable back-edge can publish this task to its thunk.
                 let callback = usize::from(symbol == "task.within");
@@ -1066,7 +1067,13 @@ mod tests {
     fn queued_capture_proof_follows_nested_function_owners() {
         for captured_type in [
             MT::con("std::String"),
+            MT::con("std::UdpSocket"),
+            MT::con("std::Listener"),
+            MT::con("std::Conn"),
             MT::con("std::File"),
+            MT::con("std::Task"),
+            MT::con("std::H2Stream"),
+            MT::con("std::GrpcCell"),
             MT::Con("std::Channel".into(), vec![MT::con("std::String")]),
         ] {
             let mut program = state_program(true);
@@ -1104,13 +1111,48 @@ mod tests {
             let nested = proof.partial(4, vec![captured.clone()]);
             for value in [captured, nested] {
                 let checked = proof.queued_targets(&value, &mut BTreeSet::new());
-                if captured_type == MT::con("std::String") {
+                if matches!(&captured_type, MT::Con(name, _) if matches!(name.as_str(),
+                    "std::String" | "std::UdpSocket" | "std::Listener" | "std::Conn"))
+                {
                     checked.unwrap();
                 } else {
                     assert!(checked
                         .unwrap_err()
                         .contains("cannot prove a queued function's captured"));
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn queued_socket_containers_do_not_hide_mutable_owners() {
+        let tree = MT::con("SocketTree");
+        for socket in ["std::UdpSocket", "std::Listener", "std::Conn"] {
+            let mut program = Program::default();
+            program.shapes.insert(
+                tree.clone(),
+                TypeShape::Adt(vec![
+                    ("Branch".into(), vec![tree.clone()]),
+                    ("Handle".into(), vec![MT::con(socket)]),
+                ]),
+            );
+            let handles = MT::Con("std::List".into(), vec![tree.clone()]);
+            queued_capture_type(&program, &handles, &mut BTreeSet::new()).unwrap();
+            for owner in [
+                "std::File",
+                "std::Task",
+                "std::Channel",
+                "std::H2Stream",
+                "std::GrpcCell",
+                "?",
+            ] {
+                let mixed = MT::Record(vec![
+                    ("handles".into(), handles.clone()),
+                    ("owner".into(), MT::con(owner)),
+                ]);
+                let error = queued_capture_type(&program, &mixed, &mut BTreeSet::new())
+                    .expect_err("a safe socket field must not hide another owner");
+                assert!(error.contains(owner.trim_start_matches("std::")), "{error}");
             }
         }
     }

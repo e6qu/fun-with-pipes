@@ -19,6 +19,78 @@ main = [
 ] | ignore
 "#;
 
+const HANDLED_CALLBACKS: &str = include_str!("fixtures/handled_callbacks.fwp");
+
+#[test]
+fn handlers_remove_effects_shared_with_callback_inputs_and_returned_records() {
+    let checked = check_source("handled-callbacks.fwp", HANDLED_CALLBACKS, None)
+        .unwrap_or_else(|error| panic!("{}", error.rendered));
+    let types = signatures(&checked);
+    assert!(
+        types.contains("checked : (() -> () ! {Error[String]}) -> Result[(), String]\n"),
+        "{types}"
+    );
+    for source in [
+        "bad : (() -> () ! {IO, Error[String]}) -> Result[(), String]\nbad = attempt (apply ())\n",
+        "bad : (() -> I64 ! {State[I64], IO}) -> (I64, I64)\nbad = run-state 7 (apply ())\n",
+    ] {
+        let error = check_source("unhandled-callback-io.fwp", source, None)
+            .err()
+            .unwrap_or_else(|| panic!("handler discarded an unrelated IO effect"));
+        assert!(error.rendered.contains("IO"), "{}", error.rendered);
+    }
+}
+
+#[test]
+fn handled_callback_application_matches_interpretation_and_native_execution() {
+    let dir = fwp::cgen::TempDir::new("handled-callbacks").unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(&source, HANDLED_CALLBACKS).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = Command::new(compiler)
+        .env("FWP_NO_OPT", "1")
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(reference.status.success(), "{reference:?}");
+    assert_eq!(
+        reference.stdout,
+        include_bytes!("fixtures/handled_callbacks.out")
+    );
+    assert!(reference.stderr.is_empty(), "{reference:?}");
+    for memory in ["arc", "tracing"] {
+        let cfile = dir.join("main.c");
+        let emitted = Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--gc", memory, "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile)
+            .output()
+            .unwrap();
+        assert!(emitted.status.success(), "{emitted:?}");
+        let code = std::fs::read_to_string(cfile).unwrap();
+        for opt in ["-O0", "-O2"] {
+            let binary = dir.join("main.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let stress = if memory == "arc" { "0" } else { "1" };
+            let actual = Command::new(binary)
+                .env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress)
+                .output()
+                .unwrap();
+            assert!(actual.status.success(), "{memory}/{opt}: {actual:?}");
+            assert_eq!(
+                (&actual.stdout, &actual.stderr),
+                (&reference.stdout, &reference.stderr)
+            );
+        }
+    }
+}
+
 #[test]
 fn comptime_rejects_runtime_handles_for_interpreted_and_native_programs() {
     let dir = fwp::cgen::TempDir::new("fwp-comptime-handle").unwrap();
@@ -307,6 +379,14 @@ read = match
 #[test]
 fn higher_order_callback_rows_allow_known_effect_weakening() {
     for source in [
+        r#"
+Consumer[a] = { consume: a -> () }
+wrap : ((I64 -> I64 ! e) -> I64 ! {Async | e}) -> Consumer[I64 -> I64 ! e] ! {Async | e}
+wrap = const Consumer { consume = ignore }
+consumer : Consumer[I64 -> I64] -> Consumer[I64 -> I64]
+consumer = id
+main = wrap (apply 3) | consumer | ignore
+"#,
         r#"
 pass-fn : (I64 -> I64 ! {Async | e}) -> (I64, I64) ! {Async | e}
 pass-fn = both (task.deadline 1h | apply 2) (apply 3)

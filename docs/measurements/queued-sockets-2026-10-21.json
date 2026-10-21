@@ -1,0 +1,551 @@
+{
+  "source": "d0d279306292a6288e3c0cf12a81450ac54f7177",
+  "workflow_run": 39568125065,
+  "scope": "Correctness and cleanup evidence, not a timing benchmark. One socket callback fixture executes 64 rounds in raw interpretation and native ARC/tracing at O0/O2 on six native hosts. Each round creates 6 listeners, 6 TCP connections and 10 UDP sockets. Native controls bound simultaneously live socket objects at 64, require zero at teardown and check that final release invalidates and closes the descriptor. ARC requires all managed allocator charges returned and zero collections. This does not count ARC operations or all libc/OpenSSL/OS storage, establish general bounded memory, or establish WASI socket support.",
+  "controls": [
+    "Removing queued value release must exceed the 64-live socket limit (exit 194).",
+    "Removing final socket close must leave an observable open descriptor (exit 195).",
+    "Ordinary queued string/function fixtures must detect omitted release via ARC managed-byte accounting (exit 193).",
+    "ARC binary disassembly excludes collector scan/mark/sweep routines; tracing controls retain the mark routine."
+  ],
+  "platforms": [
+    {
+      "runner": "macos-15",
+      "job": 119115307617,
+      "artifact": 12331201430,
+      "artifact_name": "queued-functions-macos-15",
+      "artifact_digest": "sha256:43a67039ae63462169eca2bedc116fca94d9d34b95cd1d66e5bddeb0ae212b04",
+      "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "complete_log_sha256": "6934216a95dab6618cfce04e8046345be6abe8f07411c5b4e41fc4aa7c2f835c",
+      "test_summaries": [
+        "test result: ok. 162 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.51s",
+        "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 36.96s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.33s",
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 27.10s",
+        "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 64.15s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.18s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.69s",
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.34s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.88s"
+      ],
+      "binaries": [
+        {
+          "file": "sockets-arc-O0.exe",
+          "memory": "arc",
+          "optimization": "O0",
+          "machine": "Mach-O 64-bit executable arm64",
+          "bytes": 552824,
+          "sha256": "375cc1ec07e637addc96a607e3ecc9204c88069688977aa2ab80c3c76375dcde",
+          "c_sha256": "ad3ff8bd23f9087456c827fbe0d6e8350de72212c75f9e3dbed5478e6d77d6f9",
+          "disassembly_sha256": "c7f9da737fe4777eb4f1f2e2b171dabb834dc6b0443bafab772403d2b97ea07c",
+          "collector_symbols": [],
+          "exit": 0
+        },
+        {
+          "file": "sockets-arc-O2.exe",
+          "memory": "arc",
+          "optimization": "O2",
+          "machine": "Mach-O 64-bit executable arm64",
+          "bytes": 540936,
+          "sha256": "18f54feba7fcfca0af869cdd82e2bcdb3a8a6f9b06b82aa521c10c2203ee9c0b",
+          "c_sha256": "ad3ff8bd23f9087456c827fbe0d6e8350de72212c75f9e3dbed5478e6d77d6f9",
+          "disassembly_sha256": "e4e50eaec36df0930283cbab106fcf399134aff0096ea283ee8f19bfc3cfce29",
+          "collector_symbols": [],
+          "exit": 0
+        },
+        {
+          "file": "sockets-tracing-O0.exe",
+          "memory": "tracing",
+          "optimization": "O0",
+          "machine": "Mach-O 64-bit executable arm64",
+          "bytes": 553752,
+          "sha256": "656e5d0beca489d40b1b464f1ce749482e90923b2c7e42f3d324f65375534e49",
+          "c_sha256": "610d28bde4ef7e85ebe60bb518b0cc0466e316158c5b5b5ed2b571fc324dc4e2",
+          "disassembly_sha256": "0427fdb7306cd1db84d304707697757806ddc4dbb3651611fd8ba86b9ba38c14",
+          "collector_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "exit": 0
+        },
+        {
+          "file": "sockets-tracing-O2.exe",
+          "memory": "tracing",
+          "optimization": "O2",
+          "machine": "Mach-O 64-bit executable arm64",
+          "bytes": 557960,
+          "sha256": "d0276aac0b7ed5f549719e7ba6adc3dae0732903c70ec55055bc225204224358",
+          "c_sha256": "610d28bde4ef7e85ebe60bb518b0cc0466e316158c5b5b5ed2b571fc324dc4e2",
+          "disassembly_sha256": "7a6caa410a2d8149ade4206da4a02c890bace15841156dd5df14328c27d5808a",
+          "collector_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "runner": "macos-15-intel",
+      "job": 119115307722,
+      "artifact": 12332225262,
+      "artifact_name": "queued-functions-macos-15-intel",
+      "artifact_digest": "sha256:745fd6c33902e0317cd2781b40caf04e2e408d810b4158a999ff1f9353949973",
+      "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-apple-darwin\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "complete_log_sha256": "512cddd0d7d687402a0e4803ff1517093cdadee2141509f1b914a9664f50366c",
+      "test_summaries": [
+        "test result: ok. 162 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.35s",
+        "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 120.62s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.67s",
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 69.96s",
+        "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 122.71s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.20s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.36s",
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 30.25s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 29.28s"
+      ],
+      "binaries": [
+        {
+          "file": "sockets-arc-O0.exe",
+          "memory": "arc",
+          "optimization": "O0",
+          "machine": "Mach-O 64-bit executable x86_64",
+          "bytes": 482680,
+          "sha256": "87e843408795a5e5da22f15c6165ba16c057e3838bdc184c0b811d603d3768d7",
+          "c_sha256": "ad3ff8bd23f9087456c827fbe0d6e8350de72212c75f9e3dbed5478e6d77d6f9",
+          "disassembly_sha256": "a183df7c4dd56057ea1cab04836a1e5948b7913216add0efd124f19ced5e4660",
+          "collector_symbols": [],
+          "exit": 0
+        },
+        {
+          "file": "sockets-arc-O2.exe",
+          "memory": "arc",
+          "optimization": "O2",
+          "machine": "Mach-O 64-bit executable x86_64",
+          "bytes": 577448,
+          "sha256": "fcf0c17e308048db1877ec505f95f64f3b3d98346ba23b4ac433b522749369d7",
+          "c_sha256": "ad3ff8bd23f9087456c827fbe0d6e8350de72212c75f9e3dbed5478e6d77d6f9",
+          "disassembly_sha256": "b8affce0cb95072fd4386d82c77c6eaa285b7dd69a79ce5dc1d07a81d37945c3",
+          "collector_symbols": [],
+          "exit": 0
+        },
+        {
+          "file": "sockets-tracing-O0.exe",
+          "memory": "tracing",
+          "optimization": "O0",
+          "machine": "Mach-O 64-bit executable x86_64",
+          "bytes": 491720,
+          "sha256": "98bc4c034b3636c7c07b294b7fd1da15fe712ae86f6d8175584570a8ceeb62e0",
+          "c_sha256": "610d28bde4ef7e85ebe60bb518b0cc0466e316158c5b5b5ed2b571fc324dc4e2",
+          "disassembly_sha256": "6ff0eec38ae057735a302c745dcc15a5e2bbe302b6f4bf72ce16e26b12e38a08",
+          "collector_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "exit": 0
+        },
+        {
+          "file": "sockets-tracing-O2.exe",
+          "memory": "tracing",
+          "optimization": "O2",
+          "machine": "Mach-O 64-bit executable x86_64",
+          "bytes": 586152,
+          "sha256": "75cadf9a35e1ad028d5a146f7da67b8f6154b6a291dd2cf4c692a9af276c64f9",
+          "c_sha256": "610d28bde4ef7e85ebe60bb518b0cc0466e316158c5b5b5ed2b571fc324dc4e2",
+          "disassembly_sha256": "1ceae30e1bfb0c16fb6e691b26a5ac5fad92fd870a449fc03144f5cf10aac9ee",
+          "collector_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "runner": "ubuntu-24.04-arm",
+      "job": 119115307845,
+      "artifact": 12331151644,
+      "artifact_name": "queued-functions-ubuntu-24.04-arm",
+      "artifact_digest": "sha256:a93f0f7f6b8b8cf014fca4ef5bf316e29fa3a3375f34e5a5313ff0e0407a30ef",
+      "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "complete_log_sha256": "a4d75814c91fb419f8873ac24f0b28f0548d2e21461e4d9a34a4b11e6c113c62",
+      "test_summaries": [
+        "test result: ok. 162 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.83s",
+        "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 44.69s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.48s",
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 38.16s",
+        "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 81.28s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.20s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.43s",
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.36s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.14s"
+      ],
+      "binaries": [
+        {
+          "file": "sockets-arc-O0.exe",
+          "memory": "arc",
+          "optimization": "O0",
+          "machine": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=a4eab34784e645cdcc5a406e66c8a46a1cea3fb9, for GNU/Linux 3.7.0, not stripped",
+          "bytes": 1025776,
+          "sha256": "4d81802575167b4d6e6c9f63ed23fc997753fcf3cf59e8aadc0f2fcef70b34e3",
+          "c_sha256": "ad3ff8bd23f9087456c827fbe0d6e8350de72212c75f9e3dbed5478e6d77d6f9",
+          "disassembly_sha256": "abc3a429b67b6c69a9f298a833075cfe0d8ee61ced7d5c286ae59a137950265b",
+          "collector_symbols": [],
+          "exit": 0
+        },
+        {
+          "file": "sockets-arc-O2.exe",
+          "memory": "arc",
+          "optimization": "O2",
+          "machine": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=735af678b662773540a6e6320ea642a9114e151c, for GNU/Linux 3.7.0, not stripped",
+          "bytes": 672064,
+          "sha256": "becd285a81e4d003bed356d14bee7e9835c1f3d3974c97ddfc6f31f8504e2977",
+          "c_sha256": "ad3ff8bd23f9087456c827fbe0d6e8350de72212c75f9e3dbed5478e6d77d6f9",
+          "disassembly_sha256": "be86c5852db7a2a589cc9d6915d4508b9ea6997526d2089291b8a9c36fd750dc",
+          "collector_symbols": [],
+          "exit": 0
+        },
+        {
+          "file": "sockets-tracing-O0.exe",
+          "memory": "tracing",
+          "optimization": "O0",
+          "machine": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=85e2745f35ac526fa9e5fc7dca28b428f46cd724, for GNU/Linux 3.7.0, not stripped",
+          "bytes": 1026424,
+          "sha256": "1d6e52480df5f3cf6dd07515daa5218078ca4364113f19f265b6e7267062a155",
+          "c_sha256": "610d28bde4ef7e85ebe60bb518b0cc0466e316158c5b5b5ed2b571fc324dc4e2",
+          "disassembly_sha256": "bd0e9b9010968de1c675217d4268683c3a052e10b473009ec710fe2696a5d231",
+          "collector_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "exit": 0
+        },
+        {
+          "file": "sockets-tracing-O2.exe",
+          "memory": "tracing",
+          "optimization": "O2",
+          "machine": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=95f087966bceef4d3c1a60c1b5f99a2476f163af, for GNU/Linux 3.7.0, not stripped",
+          "bytes": 672744,
+          "sha256": "b80a39913f4e2d8a0c4e0806a17fe075ad852bd276ab2c4d48c2a9a66609d558",
+          "c_sha256": "610d28bde4ef7e85ebe60bb518b0cc0466e316158c5b5b5ed2b571fc324dc4e2",
+          "disassembly_sha256": "2be0fe9a787c202da7ce8205c21f78879c3d0cfad7097c1525670b5757b01c45",
+          "collector_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all"
+          ],
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "runner": "ubuntu-latest",
+      "job": 119115307905,
+      "artifact": 12330847998,
+      "artifact_name": "queued-functions-ubuntu-latest",
+      "artifact_digest": "sha256:646b9dece4ddbcbec9c06464e805bf843fc99b41f3a29c50aadb954eb0aa10a0",
+      "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "complete_log_sha256": "892bff0ee50f9259888ec665498a31bad0a5464884d55e748c289b75daef4375",
+      "test_summaries": [
+        "test result: ok. 162 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.03s",
+        "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 24.19s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.53s",
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.95s",
+        "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 54.42s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.04s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.93s",
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.45s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.19s"
+      ],
+      "binaries": [
+        {
+          "file": "sockets-arc-O0.exe",
+          "memory": "arc",
+          "optimization": "O0",
+          "machine": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=5cd9693a68f58b9c3da53204213ae45fd0dd5be6, for GNU/Linux 3.2.0, not stripped",
+          "bytes": 1006168,
+          "sha256": "eb584c14ce28b8ec2627725e9fb7d1481006fc0b536c99ebf86e6a89e2aa2127",
+          "c_sha256": "ad3ff8bd23f9087456c827fbe0d6e8350de72212c75f9e3dbed5478e6d77d6f9",
+          "disassembly_sha256": "c1894cd783377c1542aa6e128f226b1d46fad4ef23ca211929396c03012b1963",
+          "collector_symbols": [],
+          "exit": 0
+        },
+        {
+          "file": "sockets-arc-O2.exe",
+          "memory": "arc",
+          "optimization": "O2",
+          "machine": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=321b2196aa78d5ea4c0d0c929a61b7464ff18a69, for GNU/Linux 3.2.0, not stripped",
+          "bytes": 673624,
+          "sha256": "4b2e747bbf2a20b00297124e7c24447824b6770e379fd9b3e0d310d1c2740af3",
+          "c_sha256": "ad3ff8bd23f9087456c827fbe0d6e8350de72212c75f9e3dbed5478e6d77d6f9",
+          "disassembly_sha256": "2531c52152fafecf4a2a8168699af9e42a17f9096d1d33d5aa021184c2f968d8",
+          "collector_symbols": [],
+          "exit": 0
+        },
+        {
+          "file": "sockets-tracing-O0.exe",
+          "memory": "tracing",
+          "optimization": "O0",
+          "machine": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=06151f8f169656f895e071d35ba0a8f1a9e1dd82, for GNU/Linux 3.2.0, not stripped",
+          "bytes": 1015048,
+          "sha256": "6ecca9d558d5895e4941089bc0e9ab3d7efa86813d9be8bef4374f851f5f9985",
+          "c_sha256": "610d28bde4ef7e85ebe60bb518b0cc0466e316158c5b5b5ed2b571fc324dc4e2",
+          "disassembly_sha256": "99363e17659c09031832fde4c2b9a307d149cb74f6eeca0b8884e52d95b9cd3c",
+          "collector_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "exit": 0
+        },
+        {
+          "file": "sockets-tracing-O2.exe",
+          "memory": "tracing",
+          "optimization": "O2",
+          "machine": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=131bca2302b8746cfcccc806da52c1aeaf43cb73, for GNU/Linux 3.2.0, not stripped",
+          "bytes": 682552,
+          "sha256": "401fd41114c8bc2a8d79fac9f0e65e183d8e9af518fb936e48040520262aba94",
+          "c_sha256": "610d28bde4ef7e85ebe60bb518b0cc0466e316158c5b5b5ed2b571fc324dc4e2",
+          "disassembly_sha256": "2379d6cc859c13e448910a4e2eee32c8199c6e558dff7f53f52cae8fa292dfbc",
+          "collector_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all"
+          ],
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "runner": "windows-11-arm",
+      "job": 119115307415,
+      "artifact": 12330319260,
+      "artifact_name": "queued-functions-windows-11-arm",
+      "artifact_digest": "sha256:af70c55b82b7a0a122e1716d55ecd728ec21ebf33949090e83d2c47c9f18302d",
+      "compiler": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: aarch64-w64-windows-gnu\nThread model: posix\nInstalledDir: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin\nConfiguration file: C:/a/_temp/llvm-mingw-20261006-ucrt-aarch64/bin/aarch64-w64-windows-gnu.cfg",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "complete_log_sha256": "7fb33366f21965c31f629626a8f5bb4824fbfe16bbe76db541f99117f4f069a2",
+      "test_summaries": [
+        "test result: ok. 163 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.90s",
+        "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 52.38s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.98s",
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 34.29s",
+        "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 72.67s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.55s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ],
+      "binaries": [
+        {
+          "file": "sockets-arc-O0.exe",
+          "memory": "arc",
+          "optimization": "O0",
+          "machine": "PE32+ executable (console) Aarch64, for MS Windows",
+          "bytes": 606208,
+          "sha256": "f9c3961e725aa60d58d31ccd0f573a82ecb1370c0ede10508c25fa8a44b6ce47",
+          "c_sha256": "ad3ff8bd23f9087456c827fbe0d6e8350de72212c75f9e3dbed5478e6d77d6f9",
+          "disassembly_sha256": "07c4e401484b7175c41432df24a49b904efa3ecbe5034ed977ac935118cb61e7",
+          "collector_symbols": [],
+          "exit": 0
+        },
+        {
+          "file": "sockets-arc-O2.exe",
+          "memory": "arc",
+          "optimization": "O2",
+          "machine": "PE32+ executable (console) Aarch64, for MS Windows",
+          "bytes": 594944,
+          "sha256": "bda732f822a49ea764853c97cc7114d8cbc43d9616bd0974d1d385097e7d2269",
+          "c_sha256": "ad3ff8bd23f9087456c827fbe0d6e8350de72212c75f9e3dbed5478e6d77d6f9",
+          "disassembly_sha256": "f7f325f1d1e78ce71bc85a820914b809fdb7e4018ff53c0c6ea80768eaee90c0",
+          "collector_symbols": [],
+          "exit": 0
+        },
+        {
+          "file": "sockets-tracing-O0.exe",
+          "memory": "tracing",
+          "optimization": "O0",
+          "machine": "PE32+ executable (console) Aarch64, for MS Windows",
+          "bytes": 615936,
+          "sha256": "6fe8e44646d2fd8b5852bc386829c6a0be2bc2810390d39ec5a97fd00b6b9885",
+          "c_sha256": "610d28bde4ef7e85ebe60bb518b0cc0466e316158c5b5b5ed2b571fc324dc4e2",
+          "disassembly_sha256": "b0439bf50f3a8e20d1300e84208a3058533304d66536a2a2bb06deb009e0b8c4",
+          "collector_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "exit": 0
+        },
+        {
+          "file": "sockets-tracing-O2.exe",
+          "memory": "tracing",
+          "optimization": "O2",
+          "machine": "PE32+ executable (console) Aarch64, for MS Windows",
+          "bytes": 602112,
+          "sha256": "8ea7204a3a0858e807fa06903dc5280572d2934e1bdc135fa46e53cbc4605c8b",
+          "c_sha256": "610d28bde4ef7e85ebe60bb518b0cc0466e316158c5b5b5ed2b571fc324dc4e2",
+          "disassembly_sha256": "eb0842e95f9a7a661a2564379076144060f9328768a805d67b1f53dbd427a205",
+          "collector_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "runner": "windows-2025",
+      "job": 119115307819,
+      "artifact": 12330932768,
+      "artifact_name": "queued-functions-windows-2025",
+      "artifact_digest": "sha256:ce0362db2504b9263378f56b6e05462df53b2cb9e5568ea0fe6e3761917eec3b",
+      "compiler": "clang version 23.1.3 (https://github.com/llvm/llvm-project.git 0d261d1ca552c95a8f007e061c787ac7132fbcbc)\nTarget: x86_64-w64-windows-gnu\nThread model: posix\nInstalledDir: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin\nConfiguration file: D:/a/_temp/llvm-mingw-20261006-ucrt-x86_64/bin/x86_64-w64-windows-gnu.cfg",
+      "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-pc-windows-msvc\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "complete_log_sha256": "95799423fd8de92ddf44d9e8229d8a2c7ab27552cd7dda9ae8e68983b8a455cd",
+      "test_summaries": [
+        "test result: ok. 163 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.88s",
+        "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 31.19s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.08s",
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 24.53s",
+        "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 54.20s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.22s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ],
+      "binaries": [
+        {
+          "file": "sockets-arc-O0.exe",
+          "memory": "arc",
+          "optimization": "O0",
+          "machine": "PE32+ executable (console) x86-64, for MS Windows",
+          "bytes": 631808,
+          "sha256": "28b9e4c6cdc83c60174239eabe8b2b9ee750c9b5e25339fc633832d986348e8e",
+          "c_sha256": "ad3ff8bd23f9087456c827fbe0d6e8350de72212c75f9e3dbed5478e6d77d6f9",
+          "disassembly_sha256": "02b860ae976032cdcebf7d9a99b988ce8f9ae9546e43f96d6b52905ef79b5ac6",
+          "collector_symbols": [],
+          "exit": 0
+        },
+        {
+          "file": "sockets-arc-O2.exe",
+          "memory": "arc",
+          "optimization": "O2",
+          "machine": "PE32+ executable (console) x86-64, for MS Windows",
+          "bytes": 669184,
+          "sha256": "9b6a29160b97671716a746dd47e59bfc94386f8e6a8e2abc1287129d8a6b0b07",
+          "c_sha256": "ad3ff8bd23f9087456c827fbe0d6e8350de72212c75f9e3dbed5478e6d77d6f9",
+          "disassembly_sha256": "146277e41681da42f5b44e6bc80c5582fd6339cab9753e6e6193aacc96dc2f2e",
+          "collector_symbols": [],
+          "exit": 0
+        },
+        {
+          "file": "sockets-tracing-O0.exe",
+          "memory": "tracing",
+          "optimization": "O0",
+          "machine": "PE32+ executable (console) x86-64, for MS Windows",
+          "bytes": 641024,
+          "sha256": "fe3668cd7975c553f17416ba47a868d8909e728b9b9e0532ce9cb57978ed9992",
+          "c_sha256": "610d28bde4ef7e85ebe60bb518b0cc0466e316158c5b5b5ed2b571fc324dc4e2",
+          "disassembly_sha256": "226503ca3dea15fae83b6e783bf12bbf89f1370847d81f7705363b0579ffb267",
+          "collector_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "exit": 0
+        },
+        {
+          "file": "sockets-tracing-O2.exe",
+          "memory": "tracing",
+          "optimization": "O2",
+          "machine": "PE32+ executable (console) x86-64, for MS Windows",
+          "bytes": 676864,
+          "sha256": "48e2a44eff46e99cbb0ad85a98b50b7477fc7e80a15350c6f816df36a5c9ce9c",
+          "c_sha256": "610d28bde4ef7e85ebe60bb518b0cc0466e316158c5b5b5ed2b571fc324dc4e2",
+          "disassembly_sha256": "96cf4b5d15d33d9b103c5cbbad18fa1db6980c623f59ebc3e9175c0557dc93f2",
+          "collector_symbols": [
+            "fwp_gc_scan",
+            "fwp_gc_mark_all",
+            "fwp_gc_sweep"
+          ],
+          "exit": 0
+        }
+      ]
+    }
+  ],
+  "handler_inference": {
+    "fixture": "tests/fixtures/handled_callbacks.fwp",
+    "scope": "Error and State handlers, aliases and returned records preserve their shared effect rows. IO output and caught errors match raw interpretation in native ARC/tracing at O0/O2 and WASI ARC at O1/O2. Type-checking controls reject missing unrelated IO and preserve ordinary callback weakening. WASI cleanup checks physical allocations, bytes and count-table entries against the entry baseline; an omitted free must exit 244. WASI binaries are WebAssembly version 1 run by Node on Linux ARM64/AMD64, not native Linux binaries or socket support. This report inspects their format and saved C; it does not claim a separate WASI disassembly audit.",
+    "wasi_platforms": [
+      {
+        "runner": "ubuntu-24.04-arm",
+        "job": 119115307857,
+        "artifact": 12331281767,
+        "artifact_name": "wasi-ownership-ubuntu-24.04-arm",
+        "artifact_digest": "sha256:2009ae8b37a1f06a2608e8678d2a8fdfd1c973f879c5cc8f83e7662ae8bd85d1",
+        "complete_log_sha256": "8ef3066eae3c46c8028a6eb0cbbcaa45307d658244e2d5cbf14adcef2d14df37",
+        "test_summaries": [
+          "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 524.68s",
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.45s"
+        ],
+        "binaries": [
+          {
+            "file": "handled-callbacks-O1.wasm",
+            "optimization": "O1",
+            "format": "WebAssembly version 1",
+            "bytes": 277176,
+            "sha256": "eb614c70d318825e83c446638c43c0b10faef3a04072c6a01f37e63087ea437c",
+            "c_sha256": "e91c91ab89900c7b71142f2cca30d1ec2d1f16e9ec1b94f05aae40103eac232a"
+          },
+          {
+            "file": "handled-callbacks-O2.wasm",
+            "optimization": "O2",
+            "format": "WebAssembly version 1",
+            "bytes": 283416,
+            "sha256": "332dbd12697c53ff1f35672976b90b644f1f610e0ed9ad82b0fd3531a1b5b39a",
+            "c_sha256": "e91c91ab89900c7b71142f2cca30d1ec2d1f16e9ec1b94f05aae40103eac232a"
+          }
+        ]
+      },
+      {
+        "runner": "ubuntu-latest",
+        "job": 119115308341,
+        "artifact": 12331600635,
+        "artifact_name": "wasi-ownership-ubuntu-latest",
+        "artifact_digest": "sha256:db38f1f25d303de09ad4b2ae43420a0c9d8d956f030f8ba9d52ea787ad5ed361",
+        "complete_log_sha256": "8ef55d7d31619b2809a6ec3c6355af64cadc38845d011ef4d6188e2b419a4405",
+        "test_summaries": [
+          "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 581.36s",
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 26.39s"
+        ],
+        "binaries": [
+          {
+            "file": "handled-callbacks-O1.wasm",
+            "optimization": "O1",
+            "format": "WebAssembly version 1",
+            "bytes": 277176,
+            "sha256": "eb614c70d318825e83c446638c43c0b10faef3a04072c6a01f37e63087ea437c",
+            "c_sha256": "e91c91ab89900c7b71142f2cca30d1ec2d1f16e9ec1b94f05aae40103eac232a"
+          },
+          {
+            "file": "handled-callbacks-O2.wasm",
+            "optimization": "O2",
+            "format": "WebAssembly version 1",
+            "bytes": 283416,
+            "sha256": "332dbd12697c53ff1f35672976b90b644f1f610e0ed9ad82b0fd3531a1b5b39a",
+            "c_sha256": "e91c91ab89900c7b71142f2cca30d1ec2d1f16e9ec1b94f05aae40103eac232a"
+          }
+        ]
+      }
+    ]
+  }
+}

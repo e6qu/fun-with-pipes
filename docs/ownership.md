@@ -124,7 +124,7 @@ traps. Unproved runtime sharing still uses tracing.
 | Arrays, maps and sets | Typed elements, counted storage, selected unique updates | Callback and alias contracts must be proved |
 | Strings and bytes | Counted leaves for proved copies/aliases | Unmodeled result families remain shared |
 | Closures | Owned captured arguments and typed call metadata; eligible functions with only fixed function captures use static records | Runtime-data captures retain ordinary ownership; retained unknown callbacks are not checked ARC |
-| Tasks and channels | Counted handles/results/queues; ARC admits acyclic nested channel types; proved immutable function captures are accepted | Resource-bearing or unknown queued captures, task/HTTP stream payloads and recursive channel ownership remain unproved |
+| Tasks and channels | Counted handles/results/queues; ARC admits acyclic nested channel types and proved captures, including shared sockets | Other resource-bearing or unknown queued captures, task/HTTP stream payloads and recursive channel ownership remain unproved |
 | Derivative tapes | Scoped owners and a bounded numeric workspace | Raw unscoped tape calls are not checked ARC |
 | External/network state | Explicit resource teardown where modeled | Freeing a C buffer does not prove the lifetime of every referenced fwp value |
 
@@ -391,10 +391,21 @@ an unknown source, which remains a rejection even if known functions reach the
 same path. The compiler must explicitly mark unmodeled runtime and foreign
 producers as unknown; an empty set must not stand in for missing analysis.
 
-The first admitted subset allows immutable scalar, string and container captures,
-including other functions whose captures pass the same check. Captured channels,
-tasks, files, connections and streams remain rejected, even when a particular
-program might use them without a cycle. Functions in a queued list or record
+The accepted subset allows immutable scalar, string and container captures,
+including other functions whose captures pass the same check, and shared
+`UdpSocket`, `Listener` and `Conn` handles. The [socket checks](measurements/queued-callbacks.md)
+passed on Linux, macOS and Windows, each on ARM64 and AMD64.
+These handles share a socket, but cannot own language values, callbacks or queues.
+A queue therefore cannot lead back to itself through one of these handles.
+A closure keeps its captured handle alive; receiving transfers ownership, dropping
+an undrained queue releases it, and releasing the final socket owner closes the
+OS descriptor. Explicit close still affects every alias.
+
+`File` is different: source type checking already forbids capturing this
+single-use resource in a reusable function. Pass the file as the final argument;
+removing a queue rejection cannot make repeated file use legal. Captured channels,
+tasks, HTTP/2 streams and gRPC cells remain rejected until their hidden owners
+have separate proofs. Functions in a queued list or record
 receive the same checks as functions queued directly. Empty containers need no
 invented callback. Unknown external function-bearing queues remain rejected.
 
@@ -421,6 +432,21 @@ payload restrictions until their hidden owners have separate proofs. Compare
 interpretation, native ARC/tracing and WASI, including cleanup counts and controls
 that deliberately omit a release. This targets a provable subset, not perfect
 cycle inference for arbitrary programs; it adds no proposed surface syntax.
+
+The [socket queue regression](../tests/fixtures/queued_sockets.fwp) uses an
+`Event` record containing a `check` function. This function captures a socket and,
+when called with `()`, returns whether its address is available. The queue owns
+the event after the creating function returns. Receiving and calling it twice
+should produce `True` both times. Explicitly closing a retained UDP alias instead
+makes it return `False`. Other cases drop undrained queues, catch a failure and
+cancel a blocked sender. Native tests count live socket objects over 64 rounds,
+check complete ARC teardown and deliberately omit queue release and socket close
+to check the leak detectors. Counters are inserted by the tests into generated C;
+ordinary programs keep the existing runtime and shared ownership costs. The
+[evidence guide](measurements/queued-callbacks.md) explains the counters, controls
+and inspected binaries. These are correctness checks, not performance measurements
+or a bound for arbitrary applications. Final production acceptance is recorded
+in the [handoff](development-state.md).
 
 ## Ownership contract checks
 

@@ -91,6 +91,20 @@ function arrow has an effect row. A call may use a larger surrounding effect
 context, but cannot silently widen the effects accepted by a nested callback.
 The inference code must preserve required effects when unifying fields and
 payloads. Handlers such as `attempt` and `run-state` remove the effect they handle.
+When a handler accepts a callback with `{Error[x] | e}` and returns a function
+with `e`, the two uses of `e` must stay related. For example,
+`attempt (apply ())` takes a function, calls it with unit and catches its error;
+the result must not still require that handled error. Adding `Error` only to a
+temporary callback type would lose this relationship when the callback's input
+is itself a function. Argument checking preserves these shared rows, including
+handlers returned inside records. Returning a function produces a value;
+accepting one consumes a value. The check follows that direction through record
+and variant fields, rather than treating every occurrence of the same effect
+variable as a returned effect. It still rejects unrelated required effects,
+such as IO under an error handler. The [runnable regression](../tests/fixtures/handled_callbacks.fwp)
+covers these cases. The [focused acceptance report](measurements/queued-callbacks.md)
+records passing native and WASI checks; the [handoff](development-state.md) tracks
+final production acceptance.
 Only the last arrow of a binding may have effects, so partial application does
 not run that action early. Non-function top-level values must be pure, except
 program/test entry points.
@@ -935,6 +949,13 @@ excluded from channel payloads because their hidden owners can lead back to the
 queue. The [queued-function extension](ownership.md#functions-stored-in-channels),
 accepted in PR #175, admits functions whose actual immutable captures are
 proved safe and checks their required scope when called after receiving.
+The current extension also admits shared socket handles: `fwp_sock` owns only
+a descriptor, kind and reference count. A TLS stream additionally owns OpenSSL
+state and copied protocol bytes, which contain no fwp values. Neither can own
+a channel or callback. Existing typed closure cleanup therefore releases these
+captures without creating a queue cycle; explicit close still changes every
+alias. Native validation is tracked in the linked queued-function contract.
+`File` remains single-use and cannot be captured by a reusable function.
 The [channel proof](ownership.md#ownership-boundaries) follows each channel's
 payload types and rejects a path back to that channel type. Immutable recursive
 containers remain allowed. Mutable
