@@ -36,6 +36,7 @@
 #endif
 #ifndef FWP_OWN_CONTEXT
 #include <ucontext.h>
+#define FWP_LIBC_CONTEXT 1
 #endif
 #include <sys/mman.h>
 #include <sys/resource.h>
@@ -184,8 +185,8 @@ struct fwp_task {
     fwp_win_context ctx;
 #elif defined(FWP_OWN_CONTEXT)
     fwp_ctx_t ctx;
-#elif !defined(FWP_FIBERS)
-    ucontext_t ctx;
+#elif defined(FWP_LIBC_CONTEXT)
+    ucontext_t *ctx; /* saved in the existing stack allocation */
 #endif
     char *stack;
     size_t stack_size;
@@ -290,6 +291,11 @@ static fwp_task *fwp_task_new(void) {
 }
 
 static fwp_task *fwp_gc_tasks = 0;
+#ifdef FWP_LIBC_CONTEXT
+/* The root uses the host's stack. Its saved CPU state is scanned with program
+ * data and cleared at teardown. Child contexts live above their usable frames. */
+static ucontext_t fwp_root_context;
+#endif
 
 #if FWP_GC && !defined(FWP_ARC_ONLY)
 /* the lowest address of a suspended task's stack in use */
@@ -336,6 +342,9 @@ static void fwp_tasks_init(void) {
     fwp_root = fwp_task_new();
 #ifdef _WIN32
     fwp_win_context_root(&fwp_root->ctx);
+#elif defined(FWP_LIBC_CONTEXT)
+    memset(&fwp_root_context, 0, sizeof fwp_root_context);
+    fwp_root->ctx = &fwp_root_context;
 #endif
     fwp_cur = fwp_root;
 #if defined(_WIN32) && defined(FWP_STATIC_MEMORY)
@@ -668,6 +677,9 @@ static void fwp_free_zombie(void) {
 #endif
 #endif
         fwp_zombie->stack = 0;
+#ifdef FWP_LIBC_CONTEXT
+        fwp_zombie->ctx = 0; /* a retained result cannot refer to a recycled stack */
+#endif
         if (fwp_zombie->gc_prev) fwp_zombie->gc_prev->gc_next = fwp_zombie->gc_next;
         else fwp_gc_tasks = fwp_zombie->gc_next;
         if (fwp_zombie->gc_next) fwp_zombie->gc_next->gc_prev = fwp_zombie->gc_prev;
@@ -719,7 +731,7 @@ static void fwp_switch(fwp_task *to) {
 #elif defined(FWP_OWN_CONTEXT)
     fwp_ctx_swap(&from->ctx.sp, to->ctx.sp);
 #else
-    swapcontext(&from->ctx, &to->ctx);
+    swapcontext(from->ctx, to->ctx);
 #endif
     fwp_free_zombie();
 }
@@ -1052,6 +1064,10 @@ static void CALLBACK fwp_win_task_entry(void *arg) {
 #endif
 
 static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, int64_t deadline, int detached) {
+#if defined(FWP_LIBC_CONTEXT) && defined(FWP_STATIC_MEMORY)
+    if (FWP_STATIC_TASK_STACK <= sizeof(ucontext_t) + _Alignof(ucontext_t))
+        fwp_static_full("task stack", FWP_STATIC_TASK_STACK, "--task-stack");
+#endif
     fwp_tasks_init();
     fwp_task *t = fwp_task_new();
     fwp_cleanup task_cleanup;
@@ -1144,12 +1160,19 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
         memcpy(sp + FWP_CTX_RET, &entry, sizeof entry);
         t->ctx.sp = sp;
     }
-#elif !defined(FWP_FIBERS) && !defined(_WIN32)
-    getcontext(&t->ctx);
-    t->ctx.uc_stack.ss_sp = t->stack;
-    t->ctx.uc_stack.ss_size = t->stack_size;
-    t->ctx.uc_link = 0;
-    makecontext(&t->ctx, fwp_task_main, 0);
+#elif defined(FWP_LIBC_CONTEXT)
+    /* Keep the large register image out of the frequently accessed task record.
+     * makecontext may use only the bytes below this aligned context. The context
+     * remains within the collector's scanned stack and outlives every switch. */
+    uintptr_t context = ((uintptr_t)t->stack + t->stack_size - sizeof(ucontext_t))
+        & ~(uintptr_t)(_Alignof(ucontext_t) - 1);
+    t->ctx = (ucontext_t *)context;
+    memset(t->ctx, 0, sizeof *t->ctx);
+    getcontext(t->ctx);
+    t->ctx->uc_stack.ss_sp = t->stack;
+    t->ctx->uc_stack.ss_size = context - (uintptr_t)t->stack;
+    t->ctx->uc_link = 0;
+    makecontext(t->ctx, fwp_task_main, 0);
 #endif
 #ifdef FWP_GCTX_OWNERS
     if (context_hold) {
@@ -1250,6 +1273,9 @@ static void fwp_native_tasks_finish(void) {
         fwp_mem_free(fwp_root);
     }
     fwp_root = fwp_cur = 0;
+#ifdef FWP_LIBC_CONTEXT
+    memset(&fwp_root_context, 0, sizeof fwp_root_context);
+#endif
 }
 #endif
 
@@ -2352,6 +2378,9 @@ static void fwp_library_tasks_finish(void) {
 #endif
     fwp_io_waiting = 0;
     fwp_cur = fwp_root = fwp_zombie = 0;
+#ifdef FWP_LIBC_CONTEXT
+    memset(&fwp_root_context, 0, sizeof fwp_root_context);
+#endif
     fwp_gc_tasks = fwp_ready_head = fwp_ready_tail = fwp_timers = 0;
     fwp_cleanups = 0;
     fwp_foreign_callbacks = 0;
