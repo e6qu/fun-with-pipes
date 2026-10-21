@@ -63,8 +63,9 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                 let release = "    if (!t->done || t->stack) abort();";
                 let root_release = "        fwp_mem_free(fwp_root);";
                 let finish = "\n    fwp_cl_finish();\n";
-                for needle in [create, release, root_release, finish] {
-                    assert_eq!(code.matches(needle).count(), 1, "{needle}");
+                // Library/WASI and executable shutdown each have a root release.
+                for (needle, count) in [(create, 1), (release, 1), (root_release, 2), (finish, 1)] {
+                    assert_eq!(code.matches(needle).count(), count, "{needle}");
                 }
                 code = code
                     .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic unsigned captured_task_live, captured_task_created;")
@@ -154,7 +155,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     std::fs::write(path.join(format!("{label}.stderr")), &actual.stderr).unwrap();
                     std::fs::write(
                         path.join(format!("{label}.status")),
-                        actual.status.to_string(),
+                        format!("{:?}\n", actual.status.code()),
                     )
                     .unwrap();
                     let (tool, flag) = if cfg!(target_os = "macos") {
@@ -195,6 +196,23 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                         Some(expected),
                         "{name}/{opt}: {omitted:?}"
                     );
+                    if name == "task-handles" {
+                        if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
+                            let path = std::path::PathBuf::from(path);
+                            let label = format!("task-handles-arc{opt}-missing-queue-owner");
+                            std::fs::write(path.join(format!("{label}.c")), &missing_drop).unwrap();
+                            std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                            std::fs::write(path.join(format!("{label}.stdout")), &omitted.stdout)
+                                .unwrap();
+                            std::fs::write(path.join(format!("{label}.stderr")), &omitted.stderr)
+                                .unwrap();
+                            std::fs::write(
+                                path.join(format!("{label}.status")),
+                                format!("{:?}\n", omitted.status.code()),
+                            )
+                            .unwrap();
+                        }
+                    }
                     if name == "sockets" {
                         let omitted_close = code.replace(
                             "    fwp_sock_final(s);",
@@ -228,8 +246,8 @@ keep = then2 const channel.close
 "#;
     for (name, body) in [
         ("self", "send-self = fork channel.send id keep\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n"),
-        ("task-computation", "wait : Task[()] -> () -> () ! {Async}\nwait = curry (.0 | task.await | ignore)\nkeep-task = keep | task.spawn | wait\nmain = callbacks 1 | tap (fork channel.send id keep-task) | channel.recv | option.map (apply ()) | ignore\n"),
-        ("task-result", "wait : Task[() -> () ! {Async}] -> () -> () ! {Async}\nwait = curry (.0 | task.await | option.map (apply ()) | ignore)\nkeep-task = keep | const | task.spawn | wait\nmain = callbacks 1 | tap (fork channel.send id keep-task) | channel.recv | option.map (apply ()) | ignore\n"),
+        ("task-computation", "Event = { read: () -> () ! {Async} }\nevents : I64 -> Channel[Event] ! {Async}\nevents = channel.make\nwait : Task[()] -> () -> () ! {Async}\nwait = curry (.0 | task.await | ignore)\nkeep-task = keep | task.spawn\nmain = (callbacks 1, events 1) | tap (fork channel.send .1 (.0 | keep-task | wait | make Event { read = id })) | .1 | channel.recv | option.map (.read | apply ()) | ignore\n"),
+        ("task-result", "Event = { read: () -> () ! {Async} }\nevents : I64 -> Channel[Event] ! {Async}\nevents = channel.make\nwait : Task[() -> () ! {Async}] -> () -> () ! {Async}\nwait = curry (.0 | task.await | option.map (apply ()) | ignore)\nkeep-task = keep | const | task.spawn\nmain = (callbacks 1, events 1) | tap (fork channel.send .1 (.0 | keep-task | wait | make Event { read = id })) | .1 | channel.recv | option.map (.read | apply ()) | ignore\n"),
         ("returned", "returned = keep | const | apply ()\nsend-self = fork channel.send id returned\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n"),
         ("nested", "lists : I64 -> Channel[List[() -> () ! {Async}]] ! {Async}\nlists = channel.make\nmain = lists 1 | tap (flip channel.send [keep (callbacks 1)]) | channel.recv | ignore\n"),
         ("two-queues", "main = (callbacks 1, callbacks 1) | tap (fork channel.send .0 (.1 | keep)) | tap (fork channel.send .1 (.0 | keep)) | both (.0 | channel.recv) (.1 | channel.recv) | ignore\n"),

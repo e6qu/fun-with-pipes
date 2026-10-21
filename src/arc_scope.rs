@@ -388,7 +388,7 @@ impl Proof<'_> {
     // Captures are fixed before a task is published, but its result is assigned
     // later. Any ownership cycle between tasks must include a result edge.
     // Follow every such edge through closure captures and other task owners.
-    // Repeated spawn sites may merge distinct tasks: rejection means a missing
+    // One specialized spawn summary may merge distinct tasks: rejection means a missing
     // proof, not that every execution necessarily creates a cycle.
     fn task_result_owners(
         &self,

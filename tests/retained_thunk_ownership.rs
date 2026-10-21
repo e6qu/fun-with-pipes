@@ -1,5 +1,9 @@
-//! Spawned tasks retain a callback owner and release captures on completion/cancel.
+//! Spawned tasks take a callback owner and release captures on completion/cancel.
 use std::process::Command;
+
+#[path = "support/client_allocations.rs"]
+mod allocations;
+
 const SOURCE: &str = r#"plain : String -> () -> I64
 plain = curry (.0 | string.length)
 sleeping : String -> () -> I64 ! {Async}
@@ -10,6 +14,8 @@ main = [
  task.spawn (plain ("input" | string.repeat 2)) | task.await | echo,
  task.spawn (sleeping ("input" | string.repeat 2)) | tap task.cancel | task.await | echo,
  task.spawn (word 17) | task.await | echo,
+ task.within 1h (plain ("deadline" | string.repeat 2)) | echo,
+ task.within 0ns (sleeping ("deadline" | string.repeat 2)) | echo,
 ] | ignore
 "#;
 #[test]
@@ -68,8 +74,7 @@ int main(void){
   V capture=fwp_rc_fresh(fwp_str_new("input",5));if(alias)fwp_rc_dup(capture);
   V fn=fwp_rc_fresh(fwp_pap(mode==2?SLEEPING:PLAIN,1,&capture));
   fwp_task *t=(fwp_task *)(uintptr_t)fSPAWN(fn);
-  if(*fwp_rc_slot(fn)!=2||*fwp_rc_slot(capture)!=alias+1)return 1;
-  fwp_closure_drop(fn);
+  if(*fwp_rc_slot(fn)!=1||*fwp_rc_slot(capture)!=alias+1)return 1;
   fwp_gc_collect();FWP_KEEP_ALIVE(capture);FWP_KEEP_ALIVE(PTR(t));
   if(mode==2)fwp_p_task_yield();
   if(mode)fwp_p_task_cancel(PTR(t));
@@ -83,7 +88,7 @@ int main(void){
  }
  // An integer that resembles a heap pointer remains an uncounted word.
  V scalar=fwp_rc_fresh(fwp_str_new("scalar",6));V fn=fwp_rc_fresh(fwp_pap(WORD,1,&scalar));
- fwp_task *t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_closure_drop(fn);V result=fwp_await(t);
+ fwp_task *t=(fwp_task *)(uintptr_t)fSPAWN(fn);V result=fwp_await(t);
  if(result==FWP_NONE||OBJ(result)->f[0]!=scalar||*fwp_rc_slot(scalar)!=1)return 7;
  fwp_rc_free_obj(fwp_rc_fresh(result));fwp_task_drop(PTR(t));fwp_rc_free_obj(scalar);
  // Unknown callback metadata retains the conservative shared fallback.
@@ -128,7 +133,7 @@ int main(void){
 }
 
 #[test]
-fn failing_spawn_preparation_releases_only_its_extra_thunk_owner() {
+fn failing_spawn_preparation_releases_transferred_owner_and_preserves_alias() {
     let dir =
         std::env::temp_dir().join(format!("fwp-retained-thunk-failure-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
@@ -188,7 +193,7 @@ int main(void){
   intptr_t budget_before=fwp_gc.budget;
   if(mode==0)fail_stack=1;else if(mode==2){scope.n=SIZE_MAX;scope.cap=SIZE_MAX;}else{uint8_t *slot=fwp_rc_slot(fn);*slot=254;fwp_rc_dup(fn);(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
   fwp_trap_recover=recover;fwp_trap_jb=&failed;fwp_trap_cleanup=0;
-  if(setjmp(failed)==0){fSPAWN(fn);return 1;}
+  if(setjmp(failed)==0){fwp_rc_dup(fn);fSPAWN(fn);return 1;}
   if(mode==0&&fail_stack)return 11;
   fwp_trap_recover=0;fwp_trap_jb=0;
   if(fwp_cleanups||fwp_cur->first_child||fwp_gc_tasks!=gc_before)return 2;
@@ -269,4 +274,120 @@ int main(void){
         }
     }
     std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn transferred_callbacks_remove_a_retain_release_pair() {
+    let dir = fwp::cgen::TempDir::new("task-callback-transfer").unwrap();
+    let source = dir.join("callbacks.fwp");
+    let cfile = dir.join("callbacks.c");
+    let binary = dir.join("callbacks.exe");
+    std::fs::write(&source, SOURCE).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = Command::new(compiler)
+        .env("FWP_NO_OPT", "1")
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(
+        reference.status.success() && reference.stderr.is_empty(),
+        "{reference:?}"
+    );
+    for memory in ["arc", "tracing"] {
+        let build = Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--gc", memory, "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile)
+            .output()
+            .unwrap();
+        assert!(build.status.success(), "{build:?}");
+        let generated = std::fs::read_to_string(&cfile).unwrap();
+        let measured = allocations::instrument_client_allocations(&generated);
+        let begin = "    fwp_value_owner owner = {thunk, fwp_closure_drop};";
+        let end = "    fwp_value_finish(&owner, &cleanup);\n    return t;";
+        assert_eq!(measured.matches(begin).count(), 1);
+        assert_eq!(measured.matches(end).count(), 1);
+        // Isolate the redundant runtime retain + caller release in identical C.
+        // This is not a comparison with a separately compiled old revision.
+        let redundant = measured.replace(begin, &format!("    if (client_active && fwp_rc_slot(thunk) && *fwp_rc_slot(thunk)) callback_pairs++;\n    fwp_rc_dup(thunk);\n{begin}"))
+            .replace(end, "    fwp_value_finish(&owner, &cleanup);\n    fwp_closure_drop(thunk);\n    return t;");
+        for opt in ["-O0", "-O2"] {
+            let mut results = Vec::new();
+            for (label, code) in [("transfer", &measured), ("redundant-pair", &redundant)] {
+                let code = code.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t callback_pairs;")
+                    .replace("    client_measure_end();", "    client_measure_end();\n    fprintf(stderr, \"callback-pairs\\t%llu\\n\", (unsigned long long)callback_pairs);");
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let output = Command::new(&binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                assert!(
+                    output.status.success(),
+                    "{memory}/{opt}/{label}: {output:?}"
+                );
+                assert_eq!(output.stdout, reference.stdout);
+                let stderr = String::from_utf8(output.stderr.clone()).unwrap();
+                let lines: Vec<_> = stderr.lines().collect();
+                assert_eq!(lines.len(), 2, "{stderr}");
+                let counts: Vec<u64> = lines[0]
+                    .strip_prefix("client-memory\t")
+                    .unwrap()
+                    .split('\t')
+                    .map(|v| v.parse().unwrap())
+                    .collect();
+                assert_eq!(counts.len(), 6);
+                let pairs: u64 = lines[1]
+                    .strip_prefix("callback-pairs\t")
+                    .unwrap()
+                    .parse()
+                    .unwrap();
+                if memory == "arc" {
+                    assert_eq!(counts[4..], [0, 0]);
+                }
+                if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(path).join("callback-transfer");
+                    std::fs::create_dir_all(&path).unwrap();
+                    let label = format!("{memory}{opt}-{label}");
+                    std::fs::write(path.join(format!("{label}.c")), &code).unwrap();
+                    std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                    std::fs::write(path.join(format!("{label}.stdout")), &output.stdout).unwrap();
+                    std::fs::write(path.join(format!("{label}.stderr")), &output.stderr).unwrap();
+                    std::fs::write(
+                        path.join(format!("{label}.status")),
+                        format!("{:?}\n", output.status.code()),
+                    )
+                    .unwrap();
+                }
+                results.push((counts, pairs));
+            }
+            let (moved, no_pairs) = &results[0];
+            let (retained, pairs) = &results[1];
+            assert_eq!(*no_pairs, 0);
+            assert!(
+                *pairs > 0,
+                "the workload must include counted callback owners"
+            );
+            assert_eq!(
+                moved[0..2],
+                retained[0..2],
+                "same allocation requests/bytes"
+            );
+            assert_eq!(
+                moved[3..],
+                retained[3..],
+                "same peak/final charge and collections"
+            );
+            assert_eq!(
+                retained[2] - moved[2],
+                *pairs,
+                "one retain per counted callback"
+            );
+        }
+    }
 }

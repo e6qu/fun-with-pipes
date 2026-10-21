@@ -164,7 +164,7 @@ int main(void){
  V text=fwp_apply_borrowed(OBJ(received)->f[0],1,&unit);if(text!=value||*fwp_rc_slot(value)!=2)return 30;
  text_drop(text);fwp_channel_drop(ch);fwp_closure_drop(OBJ(received)->f[0]);fwp_rc_free_obj(received);if(!dead(value))return 31;
  value=fwp_rc_fresh(fwp_str_new("task",4));fn=fwp_rc_fresh(fwp_pap(GIVE,1,&value));
- fwp_task *task=(fwp_task *)(uintptr_t)fwp_p_task_spawn_retained(fn,text_drop);fwp_closure_drop(fn);
+ fwp_task *task=(fwp_task *)(uintptr_t)fwp_p_task_spawn_owned(fn,text_drop);
  ch=fwp_p_channel_make_owned(1,fwp_task_drop);fwp_p_channel_send_owned(ch,PTR(task),fwp_task_drop);fwp_tasks_finish();
  if(*fwp_rc_slot(PTR(task))!=1||*fwp_rc_slot(value)!=1)return 32;
  fwp_channel_drop(ch);if(!dead(value))return 33;

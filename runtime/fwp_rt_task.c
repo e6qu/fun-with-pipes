@@ -1302,14 +1302,13 @@ static V fwp_await(fwp_task *t) {
 
 static V fwp_p_task_spawn(V thunk) { return PTR(fwp_spawn(thunk, 0)); }
 
-/* Borrowed at the compiler boundary, retained until the task takes it.
- * Protect only the extra reference if stack/scope preparation fails. */
-static fwp_task *fwp_spawn_retained(V thunk, int64_t deadline, void (*drop)(V)) {
+/* Transfer the caller's callback owner to the task. Keep it protected until
+ * stack/scope preparation succeeds and the task accepts responsibility. */
+static fwp_task *fwp_spawn_owned(V thunk, int64_t deadline, void (*drop)(V)) {
     if (!fwp_fns[CLO(thunk)->fn].owned) {
         fwp_rc_share(thunk);
         return fwp_spawn(thunk, deadline);
     }
-    fwp_rc_dup(thunk);
     fwp_value_owner owner = {thunk, fwp_closure_drop};
     fwp_cleanup cleanup;
     fwp_value_protect(&owner, &cleanup);
@@ -1324,8 +1323,8 @@ static fwp_task *fwp_spawn_retained(V thunk, int64_t deadline, void (*drop)(V)) 
     return t;
 }
 
-static V fwp_p_task_spawn_retained(V thunk, void (*drop)(V)) {
-    return PTR(fwp_spawn_retained(thunk, 0, drop));
+static V fwp_p_task_spawn_owned(V thunk, void (*drop)(V)) {
+    return PTR(fwp_spawn_owned(thunk, 0, drop));
 }
 
 static V fwp_p_task_await(V t) {
@@ -1355,9 +1354,14 @@ static V fwp_p_task_within(V d, V thunk) {
     return fwp_await(fwp_spawn(thunk, at));
 }
 
-static V fwp_p_task_within_retained(V d, V thunk, void (*drop)(V), void (*dup)(V)) {
+static V fwp_p_task_within_owned(V d, V thunk, void (*drop)(V), void (*dup)(V)) {
+    /* Reading the clock can trap before spawn takes the callback. */
+    fwp_value_owner callback = {thunk, fwp_closure_drop};
+    fwp_cleanup callback_cleanup;
+    fwp_value_protect(&callback, &callback_cleanup);
     int64_t at = fwp_after(d);
-    fwp_task *t = fwp_spawn_retained(thunk, at, drop);
+    fwp_value_finish(&callback, &callback_cleanup);
+    fwp_task *t = fwp_spawn_owned(thunk, at, drop);
     fwp_value_owner owner = {PTR(t), fwp_task_drop};
     fwp_cleanup cleanup;
     fwp_value_protect(&owner, &cleanup);

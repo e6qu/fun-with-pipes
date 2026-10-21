@@ -457,6 +457,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_QUEUED_FUNCTION_ARTIFACTS: queued-function-evidence
+      FWP_LTO: '0'
       FWP_QUEUED_GRPC_ARTIFACTS: queued-function-evidence/grpc-responses
     steps:
       - uses: actions/checkout@v7
@@ -521,7 +522,7 @@ jobs:
         run: cargo test --lib
       - name: ARC, channels, State, autodiff and loop cleanup
         if: ${{ !cancelled() && inputs.suite == 'channel-proof' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test typed_state_ownership --test scope_thunk_ownership --test ad_tape_scopes --test grpc_client_receive --test grpc_response_encoding --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested --test loop_ownership --test loop_preparation_ownership --test loop_unwind_ownership --test nested_loop_boxing --test inline_caf_ownership --test caf_ownership --test call_effects --test variant_alias_ownership --test variant_conversion_ownership --test compiler_call_liveness --test worker_preparation_ownership --test borrowed_callbacks --test record_conversion_ownership
+        run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test task_handle_ownership --test retained_thunk_ownership --test within_thunk_ownership --test typed_state_ownership --test scope_thunk_ownership --test ad_tape_scopes --test grpc_client_receive --test grpc_response_encoding --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested --test loop_ownership --test loop_preparation_ownership --test loop_unwind_ownership --test nested_loop_boxing --test inline_caf_ownership --test caf_ownership --test call_effects --test variant_alias_ownership --test variant_conversion_ownership --test compiler_call_liveness --test worker_preparation_ownership --test borrowed_callbacks --test record_conversion_ownership
       - name: Retained socket callbacks and resource cleanup
         if: ${{ !cancelled() && inputs.suite == 'queued-sockets' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test call_effects --test queued_functions --test native_sockets --test channel_cycle_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context
@@ -534,6 +535,9 @@ jobs:
       - name: REST startup deadlines and independently started shared executables
         if: ${{ !cancelled() && inputs.suite == 'channel-proof' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test rest
+      - name: Inspect executed task owners and callback count controls
+        if: ${{ !cancelled() && inputs.suite == 'channel-proof' }}
+        run: python3 scripts/inspect-task-owners.py --input queued-function-evidence
       - name: Record queued-function evidence source
         if: always()
         shell: bash

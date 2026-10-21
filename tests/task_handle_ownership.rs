@@ -81,7 +81,7 @@ static void option_drop(V v){if(v&&fwp_rc_release_last(v)){text_drop(OBJ(v)->f[0
 int main(void){
  fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
  V capture=fwp_rc_fresh(fwp_str_new("input",5));V fn=fwp_rc_fresh(fwp_pap(VALUE,1,&capture));
- fwp_task *t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_closure_drop(fn);
+ fwp_task *t=(fwp_task *)(uintptr_t)fSPAWN(fn);
  if(*fwp_rc_slot(PTR(t))!=2)return 1; // caller and scheduler
  fwp_rc_dup(PTR(t));V first=fAWAIT(PTR(t));
  if(first==FWP_NONE||OBJ(first)->f[0]!=capture||*fwp_rc_slot(capture)!=2)return 2;
@@ -93,13 +93,13 @@ int main(void){
  option_drop(second);if(!dead(capture))return 8;
  // Giving up the only handle before entry leaves the scheduler owner alive.
  capture=fwp_rc_fresh(fwp_str_new("early",5));fn=fwp_rc_fresh(fwp_pap(VALUE,1,&capture));
- t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_closure_drop(fn);fwp_task_drop(PTR(t));
+ t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_task_drop(PTR(t));
  if(*fwp_rc_slot(PTR(t))!=1)return 9;
  fwp_tasks_finish();if(!dead(capture))return 10;
  // The scope array holds done tasks after external handles are discarded.
  fwp_scope scope={0};fwp_cur->scope=&scope;
  capture=fwp_rc_fresh(fwp_str_new("scope",5));fn=fwp_rc_fresh(fwp_pap(VALUE,1,&capture));
- t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_closure_drop(fn);
+ t=(fwp_task *)(uintptr_t)fSPAWN(fn);
  if(*fwp_rc_slot(PTR(t))!=3)return 11;
  fwp_task_drop(PTR(t));fwp_tasks_finish();
  if(*fwp_rc_slot(PTR(t))!=1||*fwp_rc_slot(capture)!=1||t->stack||t->base||scope.tasks[0]!=t)return 12;
@@ -107,27 +107,27 @@ int main(void){
  if(!dead(capture)||fwp_cur->scope)return 13;
  for(int suspended=0;suspended<2;suspended++){
   capture=fwp_rc_fresh(fwp_str_new("cancel",6));fn=fwp_rc_fresh(fwp_pap(SLEEPING,1,&capture));
-  t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_closure_drop(fn);
+  t=(fwp_task *)(uintptr_t)fSPAWN(fn);
   if(suspended)fwp_p_task_yield();fwp_p_task_cancel(PTR(t));
   if(fAWAIT(PTR(t))!=FWP_NONE||!dead(capture)||*fwp_rc_slot(PTR(t))!=1||t->base)return 14;
   fwp_task_drop(PTR(t));
  }
  // Unmodeled boundaries promote the task graph to the tracing fallback.
  capture=fwp_rc_fresh(fwp_str_new("shared",6));fn=fwp_rc_fresh(fwp_pap(VALUE,1,&capture));
- t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_closure_drop(fn);fwp_rc_share(PTR(t));
+ t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_rc_share(PTR(t));
  V shared=fAWAIT(PTR(t));
  if(*fwp_rc_slot(PTR(t))||*fwp_rc_slot(capture)||OBJ(shared)->f[0]!=capture)return 24;
  fwp_task_drop(PTR(t));fwp_gc_collect();FWP_KEEP_ALIVE(shared);FWP_KEEP_ALIVE(PTR(t));
  if(STR(OBJ(shared)->f[0])->len!=6)return 25;option_drop(shared);
  // A finished old task still roots a young result through minor collection.
- fn=fwp_rc_fresh(fwp_pap(FRESH,0,NULL));t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_closure_drop(fn);
+ fn=fwp_rc_fresh(fwp_pap(FRESH,0,NULL));t=(fwp_task *)(uintptr_t)fSPAWN(fn);
  fwp_gc_collect();fwp_gc_collect();FWP_KEEP_ALIVE(PTR(t));fwp_tasks_finish();
  fwp_gc.major_next=0;size_t minors=fwp_gc.nminor;fwp_gc_collect();FWP_KEEP_ALIVE(PTR(t));
  if(fwp_gc.nminor!=minors+1||!t->result||STR(t->result)->len!=10||*fwp_rc_slot(t->result)!=1)return 23;
  fwp_task_drop(PTR(t));
  // An overflowing await retain releases the partial Option, not the cache.
  capture=fwp_rc_fresh(fwp_str_new("overflow",8));fn=fwp_rc_fresh(fwp_pap(VALUE,1,&capture));
- t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_closure_drop(fn);fwp_tasks_finish();
+ t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_tasks_finish();
  uint8_t *slot=fwp_rc_slot(capture);*slot=254;fwp_rc_dup(capture);(*fwp_rc_wide_link(slot))->count=SIZE_MAX;
  fwp_trap_recover=recover;fwp_trap_jb=&failed;fwp_trap_cleanup=0;
  if(setjmp(failed)==0){fAWAIT(PTR(t));return 15;}
@@ -137,7 +137,7 @@ int main(void){
  fwp_rc_forget_slot(slot);*slot=1;fwp_task_drop(PTR(t));if(!dead(capture))return 18;
  // A failed private await also gives up the deadline helper's task handle.
  capture=fwp_rc_fresh(fwp_str_new("private",7));fn=fwp_rc_fresh(fwp_pap(VALUE,1,&capture));
- V duration=fwp_record(1,(V[]){INT64_C(3600000000000)});fail_result_dup=1;
+ V duration=fwp_record(1,(V[]){INT64_C(3600000000000)});fail_result_dup=1;fwp_rc_dup(fn);
  fwp_trap_recover=recover;fwp_trap_jb=&failed;fwp_trap_cleanup=0;
  if(setjmp(failed)==0){fWITHIN(duration,fn);return 19;}
  fwp_trap_recover=0;fwp_trap_jb=0;fail_result_dup=0;
