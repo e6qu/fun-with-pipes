@@ -89,6 +89,10 @@ pub enum ResultOwnership {
     FreshOrAliasLeaf {
         argument: usize,
     },
+    /// Consume one leaf owner, returning it unchanged or releasing it after a copy.
+    OwnedLeaf {
+        argument: usize,
+    },
     /// The wrapper consumes the indicated argument on every path. It may
     /// reuse that container or return a copy; array.set wraps it in Option.
     OwnedContainer {
@@ -361,9 +365,10 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "task.cancel" => (&[B], R, None, &[]),
         "channel.make" | "channel.close" => (&[B], ResultOwnership::ChannelOperation, None, &[]),
         "channel.send" => (&[B, C], ResultOwnership::ChannelOperation, None, &[]),
-        "trim" | "trim-start" | "trim-end" | "lower" | "upper" | "string.reverse" => {
-            (&[B], ResultOwnership::FreshLeaf, None, &[])
+        "trim" | "trim-start" | "trim-end" | "lower" | "upper" => {
+            (&[C], ResultOwnership::OwnedLeaf { argument: 0 }, None, &[0])
         }
+        "string.reverse" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
         "concat" | "bytes.append" | "string.repeat" | "bytes.from-list" => {
             let args: &'static [Argument] = if symbol == "bytes.from-list" {
                 &[B]
@@ -561,7 +566,13 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "parse-int" | "parse-float" => (&[B], ResultOwnership::FreshTree, None, &[]),
         "length" | "hash" => (&[B], R, None, &[]),
         "string.to-bytes" => (&[B], ResultOwnership::AliasLeaf { argument: 0 }, None, &[0]),
-        "pad-left" | "pad-right" | "replace" => (
+        "replace" => (
+            &[B, B, C],
+            ResultOwnership::OwnedLeaf { argument: 2 },
+            None,
+            &[2],
+        ),
+        "pad-left" | "pad-right" => (
             &[B, B, B],
             ResultOwnership::FreshOrAliasLeaf { argument: 2 },
             None,
@@ -834,6 +845,10 @@ mod tests {
                     ResultOwnership::OwnedContainer { argument, .. }
                     | ResultOwnership::OwnedAccumulator { argument, .. } => {
                         assert_eq!(consumed, vec![argument], "{symbol}")
+                    }
+                    ResultOwnership::OwnedLeaf { argument } => {
+                        assert_eq!(consumed, vec![argument], "{symbol}");
+                        assert_eq!(c.aliases, &[argument], "{symbol}");
                     }
                     ResultOwnership::AliasTail { argument }
                     | ResultOwnership::AliasArgument { argument }

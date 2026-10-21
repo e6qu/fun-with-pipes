@@ -1203,13 +1203,18 @@ static V fwp_p_trim_impl(V s, int start, int end) {
     size_t a = 0, b = STR(s)->len;
     if (start) while (a < b && fwp_is_space(d[a])) a++;
     if (end) while (b > a && fwp_is_space(d[b - 1])) b--;
+    if (!a && b == STR(s)->len) return s;
     return fwp_str_new(d + a, b - a);
 }
 
 static V fwp_p_case(V s, int upper) {
+    size_t first = 0, length = STR(s)->len;
+    char low = upper ? 'a' : 'A', high = upper ? 'z' : 'Z';
+    while (first < length && (STR(s)->d[first] < low || STR(s)->d[first] > high)) first++;
+    if (first == length) return s;
     V r = fwp_str_new(STR(s)->d, STR(s)->len);
     char *d = STR(r)->d;
-    for (uint64_t i = 0; i < STR(r)->len; i++) {
+    for (size_t i = first; i < length; i++) {
         if (upper && d[i] >= 'a' && d[i] <= 'z') d[i] -= 32;
         if (!upper && d[i] >= 'A' && d[i] <= 'Z') d[i] += 32;
     }
@@ -1355,15 +1360,19 @@ static V fwp_p_ends_with(V p, V s) {
 
 static V fwp_p_replace(V from, V to, V s) {
     if (STR(from)->len == 0) return s;
-    fwp_buf b = {0};
+    if (STR(from)->len == STR(to)->len &&
+        !memcmp(STR(from)->d, STR(to)->d, STR(from)->len)) return s;
     const char *d = STR(s)->d, *end = d + STR(s)->len;
-    for (;;) {
-        const char *p = fwp_memmem(d, (size_t)(end - d), STR(from)->d, STR(from)->len);
-        if (!p) { buf_put(&b, d, (size_t)(end - d)); break; }
+    const char *p = fwp_memmem(d, (size_t)(end - d), STR(from)->d, STR(from)->len);
+    if (!p) return s;
+    fwp_buf b = {0};
+    do {
         buf_put(&b, d, (size_t)(p - d));
         buf_put(&b, STR(to)->d, STR(to)->len);
         d = p + STR(from)->len;
-    }
+        p = fwp_memmem(d, (size_t)(end - d), STR(from)->d, STR(from)->len);
+    } while (p);
+    buf_put(&b, d, (size_t)(end - d));
     return buf_to_str(&b);
 }
 

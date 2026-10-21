@@ -1,0 +1,19 @@
+check-text : String -> () ! {IO}
+check-text = make {
+    original = id,
+    lower = lower,
+    upper = upper,
+    trimmed = trim,
+    start = trim-start,
+    end = trim-end,
+    absent = replace "missing" "!",
+    identical = replace "AbC" "AbC",
+    empty = replace "" "!",
+    removed = replace "," "",
+    chain = lower | lower | trim | trim | replace "missing" "!",
+    nul = concat "\0taIL" | lower | replace "\0" "|",
+} | echo
+
+main = "FWP_TEXT_INPUT" | env.get | match
+    Some -> check-text
+    None -> "FWP_TEXT_INPUT is required" | prim.trap

@@ -8519,6 +8519,18 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                                     })?;
                                 s = format!("V result = {r}; if (result == l{argument}) fwp_rc_dup(result); else fwp_rc_fresh(result); return result;");
                             }
+                            ResultOwnership::OwnedLeaf { argument } => {
+                                let r = s
+                                    .strip_prefix("return ")
+                                    .and_then(|r| r.strip_suffix(';'))
+                                    .ok_or_else(|| {
+                                        format!(
+                                            "owned leaf primitive `{sym}` has no return expression"
+                                        )
+                                    })?;
+                                let drop = self.value_drop(&func.locals[argument]);
+                                s = format!("fwp_value_owner owner = {{l{argument}, {drop}}}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup); V result = {r}; if (result == l{argument}) return fwp_value_finish(&owner, &cleanup); fwp_rc_fresh(result); fwp_value_release(&owner); fwp_value_finish(&owner, &cleanup); return result;");
+                            }
                             _ => {}
                         }
                     }

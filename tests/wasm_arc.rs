@@ -288,6 +288,13 @@ fn synchronous_wasi_programs_match_interpretation_and_free_physical_storage() {
     }
     let dir = fwp::cgen::TempDir::new("wasi-arc-programs").unwrap();
     std::fs::write(dir.join("input.txt"), "owned UTF-8: λ\n").unwrap();
+    let text_transforms = format!(
+        "{}\nmain = range 0 8 | each (show | concat \" AbC, λ. \" | check-text)\n",
+        include_str!("fixtures/text_transform_ownership.fwp")
+            .split_once("main =")
+            .unwrap()
+            .0,
+    );
     let programs = [
         ("lists", "main = range 0 64 | map (const [1, 2, 3] | scan add 0 | repeat 4 | flatten | chunks 3 | flatten | sum) | sum | echo\n"),
         ("closures", r#"
@@ -324,6 +331,7 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
         ("vectors", include_str!("fixtures/vector_ownership.fwp")),
         ("ternary", include_str!("fixtures/ternary_ownership.fwp")),
         ("text-decoders", include_str!("fixtures/text_decoder_ownership.fwp")),
+        ("text-transforms", text_transforms.as_str()),
         ("metrics", include_str!("fixtures/metrics_ownership.fwp")),
         ("cpu-kernels", include_str!("fixtures/cpu_kernel_ownership.fwp")),
         ("mixed-tail-recursion", include_str!("fixtures/mixed_tail_recursion.fwp")),

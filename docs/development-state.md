@@ -6,8 +6,8 @@ Next: audit [PR #191](https://github.com/e6qu/fun-with-pipes/pull/191) at
 `12be5afcee7c81f1b98ffed2081d698e1124b000`: production `39688998592`,
 documentation `39688998567` and focused Linux GCC `39688997806`.
 Use `/private/tmp/fwp-audit-191-final.py` and `/private/tmp/fwp-audit-191-gcc.py`.
-Documentation, C/Rust benchmarks and the focused GCC check pass with full logs
-audited. Eight other production jobs are running. Fix every observed failure together, then
+Documentation, C/Rust benchmarks, focused GCC and ARM macOS GC-stress pass with
+full logs audited. Seven other production jobs are running. Fix every observed failure together, then
 require nine production jobs, documentation and the focused check for the exact
 head before squash merge. Continue all seven open plan areas afterward.
 Publication receipt: `/private/tmp/fwp-combined-publication.json`.
@@ -27,16 +27,42 @@ normalization into one pass; this is not a pure language-overhead measurement.
 
 The worktree additionally prepares the [descent comparison](application-acceptance.md#descent-with-and-without-a-saved-history):
 the same Rosenbrock gradient and 199 updates, with saved history versus current
-weights, at 3/33/129 dimensions. The runner workflow is prepared but not launched.
-Four small local cases match the prior verified interpreter and an independent
-analytic derivative. No native result or improvement is claimed yet.
+weights, at 3/33/129 dimensions. Source `4815e3d16c349ad5af2ecca9fe313924dfa00985`,
+tag `roadmap/revision-ad-application-4815e3d16c34`, runs in `39692176065`.
+Publication receipt: `/private/tmp/fwp-ad-application-publication.json`.
+Both complete Linux jobs pass with full logs audited. Independent inspection
+checks 24 executed binaries and their generated-C hashes. At 129 coordinates,
+keeping current weights reduces peak managed charge from 845,424 to 26,288 bytes;
+ARC timing changes are modest (about 1.7–3.5% lower medians), with mixed smaller
+cases. This compares program structures, excludes raw tape buffers and is not
+C/Rust overhead or a compiler improvement. Full results are in the preparation's
+`docs/measurements/ad-application.md` and dated JSON. Receipt:
+`/private/tmp/fwp-ad-application-acceptance.json`; artifacts:
+`/private/tmp/fwp-ad-application-evidence/4815e3d16c34`.
 
-The next optimization investigation is unchanged text: lower/upper/trim and
-replacement can avoid copies when bytes are unchanged. No compiler/runtime change
-has been made for this yet. Preserve original aliases and cleanup, consider
-consumed leaf ownership to avoid redundant retain/release pairs, and compare the
-same-host saved baseline C against any candidate. Count all additional sharing.
-Full builds and measurements remain on runners.
+The text candidate consumes the source owner for lower/upper/trim/replace,
+transfers it on an unchanged return and protects it until a changed copy is
+acquired. Changed results still copy; no in-place mutation is introduced.
+Primitive contracts and explicit frozen-inventory migrations cover all six
+symbols. New interpreter/native tests cover original aliases, embedded NUL,
+unchanged allocation counts, failure/cancellation and separate missing-owner
+controls. Windows, macOS and WASI schedules include the cases.
+
+Local `fwp-probe-owned-text.py` passes 12 macOS ARM64 C controls at O0/O2 in
+ARC/tracing modes. It combines saved baseline C with current helpers and an
+explicit owner boundary; **it does not validate the new Rust compiler**. The
+probe initially lacked a cancellation declaration and incorrectly counted the
+scheduler root as leaked text storage; both harness errors are repaired.
+`fwp-check-owned-text.py` passes formatting, workflow lint, primitive inventory
+and eleven runner tests. The paired measurement uses the accepted baseline C
+and candidate on the same host, six variants/24 balanced samples, with explicit
+requirements: fewer requests/bytes, no higher retains/managed peak, zero final
+charge. Timing regressions must remain visible and be investigated.
+
+Next: publish this coherent preparation and run both Linux GCC comparisons plus
+WASI ownership checks. Audit all failures, inspect executed binaries and report
+actual counts/timings before adopting it. No second PR is open; keep #191's
+passing delivery head fixed while its remaining gates run.
 
 Guarded local checks: `fwp-check-wordfreq-peers.py` passes nine C/Rust/interpreter
 cases; `fwp-check-ad-application.py` passes four paired descent cases;

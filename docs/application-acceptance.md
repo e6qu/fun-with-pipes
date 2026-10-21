@@ -112,5 +112,28 @@ these numbers cannot establish total autodiff memory use.
 Generated C, native binaries, disassembly and hashes are retained. The final
 observer requires no live tapes or managed charge; a control that omits tape
 retirement must fail. This does not establish constant memory for arbitrary AD,
-or bounded long-running retention from a clean exit alone. Runner results and
-budgets remain pending.
+or bounded long-running retention from a clean exit alone. The [first measured results](measurements/ad-application.md) show much lower
+managed peak storage with mixed, modest timing changes. Total-memory measurements
+and repeated-host timing budgets remain open.
+
+## Testing unchanged string ownership
+
+The next text candidate consumes the source owner for ASCII case conversion,
+trimming and replacement. If bytes do not change, the result receives that owner;
+if bytes change, a new string is created before the old owner is released.
+Other aliases retain their original bytes. Failure and cancellation must release
+the consumed owner; deliberately omitting either cleanup must fail the probe.
+
+For the two word-frequency inputs above, acceptance requires fewer allocation
+requests and requested bytes than the frozen baseline, no additional retains or
+higher managed peak charge, and zero final charge. These count requirements are
+set before measuring the candidate. All timing results, including regressions,
+remain reportable; a timing regression requires investigation before adoption.
+
+The paired runner recompiles the accepted baseline's generated C and the candidate
+with the same GCC flags. It also runs the same C/Rust peers. Six variants rotate
+and reverse order over 24 samples after two warmups. Baseline input hashes and
+managed counts must reproduce exactly. Downloaded baseline binaries are checked
+against their original report; the newly executed binaries have their own hashes,
+disassembly and size records. The explicit baseline source is
+`74263bccf8e2e67865e1863e2c04a296a97877bb`, run `39690307737`.

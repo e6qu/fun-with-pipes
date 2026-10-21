@@ -93,6 +93,22 @@ releases displaced owners. Scalar payloads are skipped; boxed I128/U128 values
 retain and release typed leaf references. Ordering, key identity and immutable
 aliases are preserved. Unmodeled callbacks retain explicit sharing and conservative roots.
 
+## String transformations
+
+`lower`, `upper`, `trim`, `trim-start` and `trim-end` consume one source-string
+owner. `replace from to source` borrows its pattern/replacement and consumes
+one source owner. `OwnedLeaf` names this compiler contract: a leaf has no managed
+children. The source stays protected while a changed result is allocated. An
+unchanged result transfers that same owner, without an extra retain/release pair;
+a changed result owns its copy and releases the consumed source.
+
+No bytes are changed in place. Other owners still see the original string.
+ASCII case conversion returns the source when no relevant ASCII letter changes;
+trim returns it when no boundary whitespace is removed. Replacement returns it
+for an empty pattern, equal pattern/replacement or no occurrence. Embedded NUL
+and non-ASCII bytes keep the existing length-aware behavior. These contracts are
+under validation; [the handoff](development-state.md) records actual checks.
+
 ## Registered unwind cleanup
 
 Cleanup registrations record owners acquired so far, so a failure during the
