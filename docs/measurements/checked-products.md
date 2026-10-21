@@ -5,7 +5,8 @@ recognize products whose bounds are known. For example, if `0 <= i < 2000000`,
 then `3*i` is nonnegative and below six million. Counting its decimal digits
 does not need a minus-sign case or cases for sixteen-digit numbers.
 
-The candidate preserves the overflow check for I64 and ISize multiplication,
+`I64` is a signed 64-bit integer; `ISize` is a signed machine-word integer,
+also 64 bits on the supported targets. The candidate preserves their overflow check,
 then returns the safe expression `x*y`. Previously it returned the C builtin's
 output variable. GCC 13.3 loses useful bounds through that variable in this
 program; the expression lets it recover them. Both operands have already been
@@ -17,7 +18,8 @@ if (__builtin_mul_overflow(x, y, &r)) fwp_trap_overflow("I64");
 return (V)(x * y);
 ```
 
-`__builtin_mul_overflow` safely computes the product and reports whether it fits.
+`V` is the generated runtime's value carrier. `__builtin_mul_overflow` safely
+computes the product and reports whether it fits.
 The trap terminates execution. Thus the following signed expression cannot
 overflow. This is a code-generation change, with no new language syntax.
 
