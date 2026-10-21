@@ -18,7 +18,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run', type=int, required=True)
     parser.add_argument('--source', required=True)
-    parser.add_argument('--comparison', choices=['legacy', 'matched'], required=True)
+    parser.add_argument('--comparison', choices=['legacy', 'matched', 'range'], required=True)
     parser.add_argument('--artifacts', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
@@ -27,8 +27,10 @@ def main():
         ['git', 'show', args.source + ':runtime/fwp_rt_ops.c'], text=True)
     hosts = []
     labels = ('c', 'rs', 'saved-fwp', 'rebuilt-fwp', 'candidate-fwp')
-    if args.comparison == 'matched':
+    if args.comparison != 'legacy':
         labels += ('matched-c', 'matched-rs', 'grouped-unhinted')
+    if args.comparison == 'range':
+        labels += ('recomputed-product',)
     for host, (machine, _) in audit.HOSTS.items():
         root = args.artifacts / ('integer-counting-' + host)
         report = json.loads((root / 'report.json').read_text())
@@ -57,8 +59,9 @@ def main():
                 assert report['builds'][label]['sourceSha256'] == audit.digest(root / (label + '.c'))
                 command = report['builds'][label]['command']
                 assert command[:5] == ['gcc', '-O2', '-std=gnu11', '-ffp-contract=off', '-w']
-                assert command[-3:] == ['-lm', '-lpthread', '-ldl']
-        if args.comparison == 'matched':
+                libraries = command[-5:-2] if args.comparison == 'range' else command[-3:]
+                assert libraries == ['-lm', '-lpthread', '-ldl']
+        if args.comparison != 'legacy':
             label = 'grouped-unhinted'
             assert (root / (label + '.c')).read_text() == candidate.replace(
                 new, new.replace('static inline ', 'static '))
@@ -78,26 +81,50 @@ def main():
                     **audit.binary(root / label, machine),
                     'assemblySha256': audit.digest(root / (label + '.asm'))}
             assert report['rustCompiler'].startswith('rustc ')
-            probes = args.artifacts / ('integer-counting-semantics-' + host)
-            expected = {f'semantics-{mode}{opt}' for mode in ('arc', 'tracing')
-                        for opt in ('-O0', '-O2')}
-            expected.update(f'allocation-check-{mode}{opt}-exit-{status}'
-                            for mode in ('arc', 'tracing') for opt in ('-O0', '-O2')
-                            for status in (0, 247))
-            assert {path.stem for path in probes.glob('*.exe')} == expected
-            checked = []
-            for label in sorted(expected):
-                code = probes / (label + '.c')
-                assembly = probes / (label + '.asm')
-                assert new in code.read_text() and assembly.stat().st_size > 0
-                if label.startswith('allocation-check-'):
-                    assert (probes / (label + '.stdout')).read_bytes() == b'40240\n'
-                    assert (probes / (label + '.stderr')).read_bytes() == b''
-                    injected = '(void)fwp_alloc_leaf(16); return (V)fwp_i64_chars((int64_t)l0);'
-                    assert (injected in code.read_text()) == label.endswith('-exit-247')
-                checked.append({'name': label, **audit.binary(probes / (label + '.exe'), machine),
-                                'sourceSha256': audit.digest(code), 'assemblySha256': audit.digest(assembly)})
-            report['semanticProbes'] = checked
+            if args.comparison == 'matched':
+                probes = args.artifacts / ('integer-counting-semantics-' + host)
+                expected = {f'semantics-{mode}{opt}' for mode in ('arc', 'tracing')
+                            for opt in ('-O0', '-O2')}
+                expected.update(f'allocation-check-{mode}{opt}-exit-{status}'
+                                for mode in ('arc', 'tracing') for opt in ('-O0', '-O2')
+                                for status in (0, 247))
+                assert {path.stem for path in probes.glob('*.exe')} == expected
+                checked = []
+                for label in sorted(expected):
+                    code = probes / (label + '.c')
+                    assembly = probes / (label + '.asm')
+                    assert new in code.read_text() and assembly.stat().st_size > 0
+                    if label.startswith('allocation-check-'):
+                        assert (probes / (label + '.stdout')).read_bytes() == b'40240\n'
+                        assert (probes / (label + '.stderr')).read_bytes() == b''
+                        injected = '(void)fwp_alloc_leaf(16); return (V)fwp_i64_chars((int64_t)l0);'
+                        assert (injected in code.read_text()) == label.endswith('-exit-247')
+                    checked.append({'name': label, **audit.binary(probes / (label + '.exe'), machine),
+                                    'sourceSha256': audit.digest(code), 'assemblySha256': audit.digest(assembly)})
+                report['semanticProbes'] = checked
+        if args.comparison == 'range':
+            experiment = report['arithmeticExperiment']
+            assert experiment['compilerChanged'] is False
+            old_multiply, new_multiply = experiment['originalMultiply'], experiment['recomputedMultiply']
+            assert old_multiply.count('return (V)r;') == 1
+            assert old_multiply.count('__builtin_mul_overflow(x, y, &r)') == 1
+            assert new_multiply == old_multiply.replace('return (V)r;', 'return (V)(x * y);')
+            assert candidate.count(old_multiply) == 1
+            label = 'recomputed-product'
+            assert (root / (label + '.c')).read_text() == candidate.replace(old_multiply, new_multiply)
+            assert report['builds'][label]['sourceSha256'] == audit.digest(root / (label + '.c'))
+            command = report['builds'][label]['command']
+            assert command[:5] == ['gcc', '-O2', '-std=gnu11', '-ffp-contract=off', '-w']
+            assert command[-5:-2] == ['-lm', '-lpthread', '-ldl']
+            assert report['binaries'][label] == {
+                **audit.binary(root / label, machine),
+                'assemblySha256': audit.digest(root / (label + '.asm'))}
+            report['compilerDumps'] = {}
+            for label in ('rebuilt-fwp', 'candidate-fwp', 'grouped-unhinted', 'recomputed-product', 'matched-c'):
+                for suffix in ('optimized', 'ranges'):
+                    path = root / (label + '.' + suffix)
+                    assert path.stat().st_size > 0
+                    report['compilerDumps'][path.name] = audit.digest(path)
         assert [item['cpu'] for item in report['measurements']] == report['allowedCpus']
         assert report['allowedCpus'] == sorted(set(report['allowedCpus'])) and report['allowedCpus']
         for result in report['measurements']:
@@ -120,7 +147,7 @@ def main():
                 for metric in ('medianWallNs', 'medianChildCpuNs'):
                     assert ratios[metric] == timing['candidate-fwp'][metric] / timing[peer][metric]
             assert set(result['candidateOverPeer']) == set(labels) - {'candidate-fwp'}
-        for label in ('rebuilt-fwp', 'candidate-fwp') + (('grouped-unhinted',) if args.comparison == 'matched' else ()):
+        for label in ('rebuilt-fwp', 'candidate-fwp') + (('grouped-unhinted',) if args.comparison != 'legacy' else ()) + (('recomputed-product',) if args.comparison == 'range' else ()):
             counts = report['managedMemory'][label]
             assert all(counts[key] == 0 for key in ('requests', 'requestedBytes', 'retains',
                        'peakChargedBytes', 'finalChargedBytes', 'collections'))
