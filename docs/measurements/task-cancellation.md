@@ -51,3 +51,20 @@ This is a storage comparison between two fwp layouts, not a C/Rust language
 benchmark. Allocator charge excludes task stacks, allocator metadata, pages and
 total process memory. No elapsed-time or resident-memory claim is made here.
 Smaller records alone do not prove lower total memory or faster execution.
+
+## WebAssembly return-state repair
+
+The cancellation review found unchecked table growth in the WebAssembly helper
+that records saved return points. Failed allocation could lead to a null-pointer
+access, and doubling could wrap the table capacity or byte count. The repair
+checks both limits before allocation and stops with a diagnostic if allocation
+fails. It also detects exhaustion of the helper's pointer-width identifier counter
+before zero or an older identifier can be reused. On wasm32 this counter permits
+at most 4,294,967,295 registrations per instance; this is an implementation limit,
+not a claim of indefinitely running task workloads.
+
+WASI tests exercise successful growth, forced allocation failure, identifier
+exhaustion, zero capacity and both arithmetic bounds. Small substituted limits
+test the bounds without requesting huge allocations. The runtime still uses the
+real integer limits. Failure tests replace `abort` with a distinctive exit code
+and require the exact diagnostic, so an unrelated memory trap cannot pass them.
