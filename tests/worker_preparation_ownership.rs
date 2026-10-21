@@ -126,11 +126,15 @@ int main(void) {
         cancelled_worker.ctx.top=fwp_gc.main_top;
 #endif
         if (mode==2) { fwp_cur=&cancelled_worker;fwp_budget=1000000; }
-        if (!setjmp(preparation) && !setjmp(cancelled_worker.base)) {
-            V result=fWORK(extra,boxed);
-            if ((mode!=3 && (box_alias || mode>=2)) || STR(result)->len!=16) return 1;
-            fwp_dropSTRING(result);
+        jmp_buf cancelled_worker_base; cancelled_worker.base=&cancelled_worker_base;
+        if (!setjmp(preparation)) {
+            if (!setjmp(cancelled_worker_base)) {
+                V result=fWORK(extra,boxed);
+                if ((mode!=3 && (box_alias || mode>=2)) || STR(result)->len!=16) return 1;
+                fwp_dropSTRING(result);
+            } else if (mode==3 || (mode<2 && !box_alias)) return 2;
         } else if (mode==3 || (mode<2 && !box_alias)) return 2;
+        cancelled_worker.base=NULL;
         fwp_cur=NULL;fail_field=-1;cancel_in_worker=0;fwp_trap_recover=NULL;fwp_trap_jb=NULL;
         if (fwp_cleanups || (mode==2 && !cancelled_worker.unwinding)) return 3;
         if (prepared_copies!=(box_alias ? (mode<2 ? mode : mode==4 ? 1 : 2) : 0)) return 15;

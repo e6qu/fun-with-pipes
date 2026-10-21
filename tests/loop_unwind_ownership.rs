@@ -177,7 +177,8 @@ int main(void) {
          * receive their scan boundary when their fiber starts. */
         cancelled_loop.ctx.top=fwp_gc.main_top;
 #endif
-        if (!setjmp(cancelled_loop.base)) {
+        jmp_buf cancelled_loop_base; cancelled_loop.base = &cancelled_loop_base;
+        if (!setjmp(cancelled_loop_base)) {
             if (mode==0) fwp_loopSTEP(state_box);
             else if (mode==1) fGENERIC(state_box);
             else if (mode==2) fDYNAMIC(PTR(&fcSTEP),state_box);
@@ -185,7 +186,7 @@ int main(void) {
             else fwp_loopNESTED(state_box);
             return 1;
         }
-        fwp_cur=NULL;
+        cancelled_loop.base=NULL;fwp_cur=NULL;
         if (!cancelled_loop.unwinding || fwp_cleanups || current_tick!=tick || !observed_text) {
             fprintf(stderr,"cancellation: mode=%d tick=%d current=%d unwinding=%d cleanup=%p text=%llu\n",
                 mode,tick,current_tick,cancelled_loop.unwinding,(void *)fwp_cleanups,

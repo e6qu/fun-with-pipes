@@ -71,8 +71,9 @@ int main(void) {
             /* This synthetic task executes on the main thread stack. */
             scope_cancelled_task.ctx.top=fwp_gc.main_top;
 #endif
-            if (!setjmp(scope_cancelled_task.base)) { fwp_p_ad_scope(PTR(&outer_scope_callback), FWP_UNIT);return 63; }
-            fwp_cur=scope_saved_task;
+            jmp_buf scope_cancelled_task_base; scope_cancelled_task.base = &scope_cancelled_task_base;
+            if (!setjmp(scope_cancelled_task_base)) { fwp_p_ad_scope(PTR(&outer_scope_callback), FWP_UNIT);return 63; }
+            scope_cancelled_task.base=NULL;fwp_cur=scope_saved_task;
             if (!scope_cancelled_task.unwinding) return 64;
         } else if (!setjmp(scope_recovered)) {
             if (fwp_p_ad_scope(PTR(&outer_scope_callback), FWP_UNIT)!=7 || scope_mode==1) return 67;

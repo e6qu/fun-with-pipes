@@ -115,13 +115,25 @@ the old isolated Fibonacci observation does not establish its cost for other
 workloads. The collector finds the values of a task that is switched out at a safe point
 as at any other switch: on its stack and in its saved registers.
 
-In the Linux glibc candidate, the saved register image occupies an aligned region
+On glibc Linux, the saved register image occupies an aligned region
 at the top of each child's existing stack allocation; active call frames use
 the space below it. The root task uses a separate static image because it runs
 on the host's stack. These bytes still exist, even though the heap task record
 is smaller. The usable child stack shrinks by the image and alignment padding;
 the total stack reservation is unchanged. See [the measurement and lifetime
 checks](measurements/task-contexts.md) for the sizes and current acceptance.
+
+Cancellation has a separate saved return point. The task entry function keeps
+that buffer in its own live frame; the heap task record borrows the address only
+until the task starts finishing. Completed handles retain the result, not a
+pointer into a recycled stack. This saves heap-record space while using more of
+the existing child stack. The [storage comparison](measurements/task-cancellation.md)
+records the six-host focused results and pending delivery acceptance.
+
+Windows fibers preserve the state needed to resume execution. Tracing builds
+also save a register copy for root scanning. The pending ARC change removes that
+collector-only copy and its stack marker; cancellation's return buffer remains.
+Both modes still use Windows fibers and preserve their floating-point state.
 
 Tasks started in a row get their turns in the order they were started,
 on both backends (the interpreter's threads take their places in the
