@@ -401,6 +401,15 @@ A closure keeps its captured handle alive; receiving transfers ownership, droppi
 an undrained queue releases it, and releasing the final socket owner closes the
 OS descriptor. Explicit close still affects every alias.
 
+The next extension, currently under validation, tracks data-queue creators.
+It admits a callback capturing a queue from `channel.make` only when its payload
+cannot contain functions and its nested queue owners have known sources. Native
+or unknown producers remain rejected as captures, including when mixed with
+known creators. Recursive queue types still fail the separate cycle check.
+The [new fixture](../tests/fixtures/queued_data_channels.fwp) exercises this path;
+its addition is not passing native support. See the [handoff](development-state.md)
+for current checks.
+
 `File` is different: source type checking already forbids capturing this
 single-use resource in a reusable function. Pass the file as the final argument;
 removing a queue rejection cannot make repeated file use legal. Captured channels,

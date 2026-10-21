@@ -27,6 +27,11 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
             include_str!("fixtures/queued_sockets.fwp"),
             include_str!("fixtures/queued_sockets.out"),
         ),
+        (
+            "data-queues",
+            include_str!("fixtures/queued_data_channels.fwp"),
+            include_str!("fixtures/queued_data_channels.out"),
+        ),
     ] {
         std::fs::write(&source, program).unwrap();
         let compiler = env!("CARGO_BIN_EXE_fwp");
@@ -48,6 +53,31 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     .arg(&cfile),
             );
             let mut code = std::fs::read_to_string(cfile).unwrap();
+            if name == "data-queues" {
+                let create = "    fwp_chan *c = (fwp_chan *)fwp_mem_alloc(sizeof(fwp_chan));";
+                let release = "    if (c->sendq.head || c->recvq.head) abort();";
+                let finish = "\n    fwp_cl_finish();\n";
+                for needle in [create, release, finish] {
+                    assert_eq!(code.matches(needle).count(), 1, "{needle}");
+                }
+                code = code
+                    .replace(
+                        "typedef uint64_t V;",
+                        "typedef uint64_t V;\nstatic unsigned queue_live, queue_created;",
+                    )
+                    .replace(
+                        create,
+                        &format!("{create}\n    queue_created++; if(++queue_live > 64) exit(198);"),
+                    )
+                    .replace(
+                        release,
+                        &format!("{release}\n    if(!queue_live) exit(199); queue_live--;"),
+                    )
+                    .replace(
+                        finish,
+                        &format!("{finish}    if(queue_live || !queue_created) exit(200);\n"),
+                    );
+            }
             if name == "sockets" {
                 // Count socket objects with value owners, not just managed bytes:
                 // a collected header is not evidence its OS handle was closed.
@@ -134,7 +164,11 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     }
                     fwp::cgen::compile_c(&missing_drop, &binary, opt).unwrap();
                     let omitted = run().output().unwrap();
-                    let expected = if name == "sockets" { 194 } else { 193 };
+                    let expected = match name {
+                        "sockets" => 194,
+                        "data-queues" => 198,
+                        _ => 193,
+                    };
                     assert_eq!(
                         omitted.status.code(),
                         Some(expected),

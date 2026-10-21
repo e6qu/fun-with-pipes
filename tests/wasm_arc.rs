@@ -700,22 +700,35 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
     let dir = fwp::cgen::TempDir::new("wasi-task-owners").unwrap();
     let source = dir.join("tasks.fwp");
     let mut failures = Vec::new();
-    for (fixture, program, expected) in [
+    for (fixture, program, expected, repetitions) in [
         (
             "tasks",
             include_str!("fixtures/task_channel_ownership.fwp"),
             include_str!("fixtures/task_channel_ownership.out"),
+            16,
         ),
         (
             "queued-functions",
             include_str!("fixtures/queued_function_tasks.fwp"),
             include_str!("fixtures/queued_function_tasks.out"),
+            16,
+        ),
+        (
+            "queued-data-channels",
+            include_str!("fixtures/queued_data_channels.fwp"),
+            include_str!("fixtures/queued_data_channels.out"),
+            1,
         ),
     ] {
-        let program = program.replace(
-            "main = () | round",
-            "main = range 0 16 | each (const () | round)",
-        );
+        let program = if repetitions == 1 {
+            program.to_owned()
+        } else {
+            assert_eq!(program.matches("main = () | round").count(), 1);
+            program.replace(
+                "main = () | round",
+                &format!("main = range 0 {repetitions} | each (const () | round)"),
+            )
+        };
         std::fs::write(&source, program).unwrap();
         let reference = checked(
             Command::new(env!("CARGO_BIN_EXE_fwp"))
@@ -723,7 +736,7 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
                 .env("FWP_NO_OPT", "1")
                 .arg(&source),
         );
-        assert_eq!(reference.stdout, expected.as_bytes().repeat(16));
+        assert_eq!(reference.stdout, expected.as_bytes().repeat(repetitions));
         for target in [fwp::cgen::Target::Wasi, fwp::cgen::Target::Browser] {
             let target_name = if target == fwp::cgen::Target::Wasi {
                 "wasm32-wasi"
