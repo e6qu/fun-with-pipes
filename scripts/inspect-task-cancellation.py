@@ -48,8 +48,14 @@ expected = {
     for memory in ['arc', 'tracing']
     for control in ['verified', 'missing-clear', 'missing-entry']
 }
-for binary in sorted(root.glob('*.exe')):
-    label = binary.stem
+if system == 'Windows':
+    expected |= {f'windows-context/abi-{variant}-O{opt}'
+                 for variant in ['arc', 'restored-snapshot'] for opt in range(3)}
+    expected |= {f'windows-context/cost-{variant}-O{opt}'
+                 for variant in ['snapshot', 'arc'] for opt in [0, 2]}
+    report['compilation']['windows_abi_native_optimizations'] = ['-O0', '-O1', '-O2']
+for binary in sorted(root.rglob('*.exe')):
+    label = binary.relative_to(root).with_suffix('').as_posix()
     assert label in expected, label
     data = binary.read_bytes()
     if system == 'Linux':
@@ -72,7 +78,8 @@ for binary in sorted(root.glob('*.exe')):
         root.joinpath(f'{label}.{kind}').write_bytes(output)
         outputs[kind] = dict(command=command, sha256=hashlib.sha256(output).hexdigest())
     status = root.joinpath(f'{label}.status').read_text().strip()
-    desired = 195 if 'missing-clear' in label else 194 if 'missing-entry' in label else 0
+    desired = (211 if 'restored-snapshot' in label else
+               195 if 'missing-clear' in label else 194 if 'missing-entry' in label else 0)
     assert status == f'Some({desired})', (label, status)
     stderr = root.joinpath(f'{label}.stderr').read_text()
     report['binaries'][label] = dict(
