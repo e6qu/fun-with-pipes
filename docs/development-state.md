@@ -2,15 +2,41 @@
 
 ## Next action
 
-Next: publish the final measurement/plan/handoff updates for
-[draft PR #182](https://github.com/e6qu/fun-with-pipes/pull/182), then mark it ready
-and audit all nine production jobs plus documentation on that exact final commit.
-Branch: `investigate-native-counting-costs`. Implementation is unchanged from
-verified preparation `a8859db10f34df4450eb608c4666785ebc5ae816`; only evidence and
-documents have changed locally. Do not merge the earlier intentionally skipped
-draft CI (`39528218956`). Squash-merge after full acceptance with an explicit
-one-line subject of at most 80 characters, empty body and no trailers/attribution.
-Standing authorization applies. Verify the merge tree and message afterward.
+Next: finish the U32 multiplication repair in [PR #182](https://github.com/e6qu/fun-with-pipes/pull/182),
+branch `investigate-native-counting-costs`. The PR is draft again. Production
+`39529772529` at `080b0ff6` was cancelled after finding that generated U32
+multiplication could overflow a signed 64-bit intermediate before checking the
+U32 bound. The benchmark and documentation `39529569466` passed; this superseded
+head is not accepted and must not be merged. The available complete logs show no test failures beyond cancellation; Linux
+AMD64 was cancelled before a runner started. Its log audit and receipt are
+`/private/tmp/fwp-audit-182.py` and `/private/tmp/fwp-182-acceptance.json`.
+
+The repair uses unsigned 64-bit multiplication, where all U32 products fit,
+then checks U32's maximum. New dynamic-input tests cover U8/U16/U32 boundaries,
+trap/effect order, unoptimized interpretation, ARC/tracing and O0/O2/O3 native
+code. UBSan checks the emitted U32 primitive at O1/O2; restoring the signed
+intermediate must trigger its overflow diagnostic. Existing scalar tests now
+fail when their C compiler is missing instead of silently skipping, and the
+U64 sanitizer executable has an explicit Windows suffix. These tests are written
+but not yet run; local native compilation remains prohibited. The focused Linux
+workflow now includes scalar traps alongside integer-output tests, collecting
+both targets even if one fails. Publish this repair, audit both focused hosts,
+then require all nine production gates and documentation on the final commit.
+
+After acceptance, squash-merge with an explicit one-line subject of at most
+80 characters and an empty body, without trailers or attribution. Verify the
+merge tree and message; cancel duplicate post-merge CI only after proving it
+checks the accepted tree. Standing authorization applies.
+
+Independent next-step preparation is in `/private/tmp/fwp-integer-range-probe`,
+branch `investigate-integer-range-information`, source
+`7a8803762e240998605c6442afbbb33ed8157133`. Measurement-only run `39530460995`
+is queued. It adds a ninth C variant that retains multiplication's overflow
+check and recomputes the safe product on its continuation, plus GCC range and
+optimized-tree dumps. No compiler code changes or second PR exist. This explicitly
+skips unchanged native preflight tests and cannot establish compiler acceptance.
+Audit the experiment while PR #182's repair is verified; preserve its source before any
+later rebase onto the accepted squash merge.
 
 Combined run `39528239204` and documentation `39528218865` pass. Both Linux jobs
 pass formatting, Clippy, all five integer tests, twelve binary inspections and the
@@ -97,9 +123,10 @@ Do not infer that a new algorithm explains that historical variation.
 Use `python3 scripts/local-guard.py` for local checks: 64 GiB free disk, target
 below 2 GiB, sampled aggregate RSS below 1 GiB and 180 seconds. Full builds,
 native compilation, full suites and benchmarks run on GitHub. No limits were
-raised. Recent free space is about 66 GiB; recheck before downloading artifacts.
+raised. Recent free space is about 65 GiB; recheck before downloading artifacts.
 
-Guarded checks: selected-run full-log audit 7.49s, artifact download 22.85s,
+Guarded checks: U32 repair Rust formatting and whitespace passed in 0.25s; documentation/commit/link audit passed in 2.58s. Native checks are pending on
+CI. Selected-run full-log audit 7.49s, artifact download 22.85s,
 independent matched-report audit 0.48s and final guide link audit 2.57s. Earlier
 Python syntax/helper selection/whitespace 0.13s; focused Rust
 formatting 0.25s; documentation 3.31s; first/grouped report audits 0.58/0.59s;

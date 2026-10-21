@@ -213,10 +213,10 @@ jobs:
       - run: cargo fmt --all -- --check
       - name: Check integer boundary tests
         if: ${{ !cancelled() }}
-        run: cargo clippy --test integer_output -- -D warnings
+        run: cargo clippy --test integer_output --test scalar_traps -- -D warnings
       - name: Verify interpreter, native boundaries, effects and allocations
         if: ${{ !cancelled() }}
-        run: cargo test --test integer_output
+        run: cargo test --no-fail-fast --test integer_output --test scalar_traps
       - name: Inspect all integer boundary and allocation controls
         if: ${{ !cancelled() }}
         shell: bash

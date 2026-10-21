@@ -107,6 +107,14 @@ lack that permission. Integer arithmetic checks overflow and division by zero;
 wrapping, saturating, overflowing and checked-result operations are explicit
 alternatives. Numeric conversions are explicit.
 
+Generated C must also avoid overflowing an intermediate before the language's
+check runs. For example, multiplying two `U32` values uses an unsigned 64-bit
+intermediate: `4294967295 * 4294967295` fits there, but exceeds signed 64-bit
+range. The compiler then checks the result against `U32`'s maximum and traps.
+Dynamic-input tests compare the unoptimized interpreter with native execution;
+C's undefined-behavior sanitizer checks the emitted multiplication, with the
+former signed intermediate as a control that must fail.
+
 ## Generics
 
 A definition is generic only when its signature declares type variables. For

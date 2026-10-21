@@ -62,9 +62,10 @@ fn outcome(c: &mut Command) -> String {
 
 #[test]
 fn traps_agree() {
-    if !have_cc() {
-        return;
-    }
+    assert!(
+        have_cc(),
+        "native scalar checks require a working C compiler"
+    );
     let dir = std::env::temp_dir().join(format!("fwp-scalar-traps-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let cache = dir.join("cache");
@@ -111,10 +112,181 @@ fn traps_agree() {
 }
 
 #[test]
-fn full_width_unsigned_products_have_defined_overflow() {
-    if !have_cc() {
-        return;
+fn narrow_unsigned_products_check_bounds_before_trapping() {
+    let dir = fwp::cgen::TempDir::new("unsigned-products").unwrap();
+    let input = dir.join("products.fwp");
+    let mut source = String::new();
+    let mut cases = Vec::new();
+    for (bits, root) in [(8, 15u64), (16, 255), (32, 65535)] {
+        let max = (1u64 << bits) - 1;
+        source.push_str(&format!(
+            "# expose: cli\nexport product{bits} : U{bits} -> U{bits} -> () ! {{IO}}\n\
+             product{bits} a b = [\"before\" | echo, a | mul b | echo, \"after\" | echo] | ignore\n"
+        ));
+        let mut pairs = vec![
+            (0, max),
+            (1, max),
+            (max, 1),
+            (max, 0),
+            (root, root),
+            (root + 1, root + 1),
+            (max, 2),
+            (max, max),
+        ];
+        if bits == 32 {
+            // Products immediately below/above I64::MAX: both must produce
+            // the language's U32 overflow trap, without overflowing C first.
+            pairs.extend([
+                (3037000499, 3037000499),
+                (3037000500, 3037000500),
+                (max, 2147483648),
+                (max, 2147483649),
+            ]);
+        }
+        for (a, b) in pairs {
+            let expected = match a.checked_mul(b).filter(|product| *product <= max) {
+                Some(product) => format!("before\n{product}\nafter\n--- stderr\n--- exit Some(0)"),
+                None => format!("before\n--- stderr\nfwp: trap: arithmetic overflow in U{bits}\n--- exit Some(101)"),
+            };
+            cases.push((bits, a, b, expected));
+        }
     }
+    std::fs::write(&input, source).unwrap();
+    for (bits, a, b, expected) in &cases {
+        let actual = outcome(
+            Command::new(fwp())
+                .env("FWP_NO_OPT", "1")
+                .env_remove("FWP_OUT")
+                .env("FWP_TRANSPORT", "stdio")
+                .args(["exec", "--interp", "--cli"])
+                .arg(&input)
+                .args([format!("product{bits}"), a.to_string(), b.to_string()]),
+        );
+        assert_eq!(&actual, expected, "interpreter U{bits}: {a} * {b}");
+    }
+    for memory in ["arc", "tracing"] {
+        let cfile = dir.join("products.c");
+        let emitted = Command::new(fwp())
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--cli", "--gc", memory, "--emit-c"])
+            .arg(&input)
+            .arg("-o")
+            .arg(&cfile)
+            .output()
+            .unwrap();
+        assert!(emitted.status.success(), "{emitted:?}");
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        for opt in ["-O0", "-O2", "-O3"] {
+            let binary = dir.join("products.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let stress = if memory == "arc" { "0" } else { "1" };
+            for (bits, a, b, expected) in &cases {
+                let actual = outcome(
+                    Command::new(&binary)
+                        .args([format!("product{bits}"), a.to_string(), b.to_string()])
+                        .env_remove("FWP_OUT")
+                        .env("FWP_TRANSPORT", "stdio")
+                        .env_remove("FWP_GC")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", stress),
+                );
+                assert_eq!(&actual, expected, "{memory}/{opt} U{bits}: {a} * {b}");
+            }
+        }
+        if memory == "tracing" {
+            continue;
+        }
+        // Test the emitted primitive itself under UBSan. Dynamic argv operands
+        // prevent constant folding from hiding undefined intermediate arithmetic.
+        let marker = "/* prim.mul : U32 -> U32 -> U32 */\n";
+        let (_, tail) = code.split_once(marker).expect("emitted U32 multiply");
+        let (body, _) = tail.split_once("\n}\n").unwrap();
+        let primitive = format!("{body}\n}}\n");
+        let name = body
+            .strip_prefix("static V ")
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let good_product = "uint64_t r = (uint64_t)l1 * (uint64_t)l0;";
+        assert_eq!(primitive.matches(good_product).count(), 1);
+        let broken = primitive.replace(good_product, "int64_t r = (int64_t)l1 * (int64_t)l0;");
+        for (label, implementation) in [("fixed", &primitive), ("negative-control", &broken)] {
+            let sanitized = format!(
+                r#"#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#endif
+typedef uint64_t V;
+static void fwp_trap_overflow(const char *type) {{
+    fprintf(stderr, "fwp: trap: arithmetic overflow in %s\n", type);
+    exit(101);
+}}
+{implementation}
+int main(int argc, char **argv) {{
+    if (argc != 3) return 2;
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0 ||
+        _setmode(_fileno(stderr), _O_BINARY) < 0) return 3;
+#endif
+    V a = strtoull(argv[1], 0, 10), b = strtoull(argv[2], 0, 10);
+    puts("before");
+    printf("%llu\n", (unsigned long long){name}(b, a));
+    puts("after");
+    return 0;
+}}
+"#
+            );
+            std::fs::write(&cfile, &sanitized).unwrap();
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.join(format!("{label}{opt}.exe"));
+                let (cc, flags) = fwp::cgen::c_compiler().unwrap();
+                let compiled = Command::new(cc)
+                    .args(flags)
+                    .args([
+                        opt,
+                        "-std=gnu11",
+                        "-fsanitize=undefined",
+                        "-fno-sanitize-recover=undefined",
+                    ])
+                    .arg(&cfile)
+                    .arg("-o")
+                    .arg(&binary)
+                    .output()
+                    .unwrap();
+                assert!(compiled.status.success(), "{label}/{opt}: {compiled:?}");
+                if label == "fixed" {
+                    for (_, a, b, expected) in cases.iter().filter(|case| case.0 == 32) {
+                        let actual =
+                            outcome(Command::new(&binary).args([a.to_string(), b.to_string()]));
+                        assert_eq!(&actual, expected, "UBSan/{opt}: {a} * {b}");
+                    }
+                } else {
+                    let actual = Command::new(&binary)
+                        .args(["4294967295", "4294967295"])
+                        .output()
+                        .unwrap();
+                    assert!(!actual.status.success(), "{actual:?}");
+                    assert!(
+                        String::from_utf8_lossy(&actual.stderr).contains("signed integer overflow"),
+                        "{actual:?}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn full_width_unsigned_products_have_defined_overflow() {
+    assert!(
+        have_cc(),
+        "native scalar checks require a working C compiler"
+    );
     let dir = std::env::temp_dir().join(format!("fwp-u64-products-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let input = dir.join("runtime.fwp");
@@ -161,7 +333,7 @@ int main(int argc, char **argv) {
         u64::MAX,
     ];
     for opt in ["-O1", "-O2"] {
-        let binary = dir.join(format!("products{opt}"));
+        let binary = dir.join(format!("products{opt}.exe"));
         let compiled = Command::new(std::env::var("CC").unwrap_or_else(|_| "cc".into()))
             .args([
                 opt,
