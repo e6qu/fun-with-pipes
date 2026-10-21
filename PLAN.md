@@ -93,6 +93,9 @@ outside the benchmark suite.
    Nested channels and selected queued functions already have native and
    WebAssembly acceptance. [Capturing locally created data queues](docs/measurements/queued-data-channels.md)
    passes focused native/WebAssembly checks; full delivery status is in the handoff.
+   The next extension proves [queued gRPC response captures](docs/measurements/queued-grpc-responses.md)
+   from their actual service constructor. Its native delivery, cancellation and
+   cleanup checks must pass before that support is accepted.
    Explicit weak handles remain a proposal. Prefer
    borrowing and scoped cleanup; distinguish a definite cycle from a missing proof.
    Reject unproved retention rather than silently use tracing.

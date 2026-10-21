@@ -340,8 +340,11 @@ jobs:
       - name: Queued gRPC response callbacks and transport cleanup
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: |
-          cargo test --test grpc queued_response_channels_release_transport_owners -- --nocapture
+          cargo test --test grpc queued_response_channels_ -- --nocapture
           cargo run -- fmt --check tests/grpc/queued.fwp tests/grpc/queued-client.fwp
+      - name: REST startup deadlines and independently started shared executables
+        if: ${{ !cancelled() && inputs.suite == 'channel-proof' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
+        run: cargo test --no-fail-fast --test rest
       - name: Record queued-function evidence source
         if: always()
         shell: bash
