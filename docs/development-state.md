@@ -2,26 +2,30 @@
 
 ## Next action
 
-Next: prepare the retained-resource ownership batch on branch
-`prove-retained-resource-ownership`, based on accepted merge `447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c`.
-No PR is open for this preparation. Group the proof, implementation, representative
-programs, failure/cancellation controls and readable documentation in one PR.
+Next: validate the retained-resource ownership batch on branch
+`prove-retained-resource-ownership`, based on accepted merge
+`447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c`. No PR is open yet.
 
-Start with `src/arc_scope.rs::queued_capture_type`, `src/arc.rs` and the
-[queued-function contract](ownership.md#functions-stored-in-channels). Audit a
-queued callback capturing an independently owned file: establish how the closure
-acquires, uses and releases that owner, including repeated calls, undrained/closed
-queues, failures and cancellation. Check the existing linear-use rules before
-relaxing any rejection. A file cannot itself own a queue, but that fact alone
-does not prove safe closure lifetime or resource use. Add a runnable acceptance
-program only when its complete contract is established; keep unsupported captures
-rejected with a precise explanation. Do not add weak handles or new syntax merely
-to bypass a missing proof. Ownership and removal of tracing remain the priority.
+The audit found that `src/infer.rs::check_effects` already rejects partial
+applications capturing `File`: reusable functions cannot consume a single-use
+file repeatedly. Preserve that rule. Socket handles are shared values instead;
+their runtime headers cannot own callbacks or queues, and their final owner
+closes the descriptor. `src/arc_scope.rs` now admits `UdpSocket`, `Listener` and
+`Conn` captures while preserving other mutable-owner rejections. See the
+[queued-function contract](ownership.md#functions-stored-in-channels).
+
+`tests/queued_functions.rs` adds a 64-round socket regression, native owner
+counters, complete ARC teardown and omitted-release/close controls. It covers
+received callbacks called twice, closed and undrained queues, explicit-close
+aliases, caught failure and cancelled blocked senders. Run the focused
+`channel-proof` workflow, audit every failure, then obtain all nine production
+gates and documentation at the final head. Tests have not run yet; no new socket
+queue support is verified. Expand missing cases before final publication.
 
 Read [PLAN.md](../PLAN.md), [ownership](ownership.md) and relevant
-[design](design.md) sections before changing code. The current edits only record
-the completed delivery and this next investigation; no ownership change has been
-implemented or verified in this preparation.
+[design](design.md) sections before changing code. No weak handles or new syntax
+were added. Focused local formatting (`rustfmt` on the two changed Rust files)
+and `git diff --check` passed under the guard in 0.25 seconds.
 
 ## Accepted delivery
 

@@ -22,6 +22,11 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
             include_str!("fixtures/queued_function_tasks.fwp"),
             include_str!("fixtures/queued_function_tasks.out"),
         ),
+        (
+            "sockets",
+            include_str!("fixtures/queued_sockets.fwp"),
+            include_str!("fixtures/queued_sockets.out"),
+        ),
     ] {
         std::fs::write(&source, program).unwrap();
         let compiler = env!("CARGO_BIN_EXE_fwp");
@@ -43,6 +48,21 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     .arg(&cfile),
             );
             let mut code = std::fs::read_to_string(cfile).unwrap();
+            if name == "sockets" {
+                // Count actual socket owners rather than managed bytes alone:
+                // a collected header is not evidence its OS handle was closed.
+                let create = "    s->refs = 1;";
+                let release = "    fwp_sock_final(s);";
+                let finish = "\n    fwp_cl_finish();\n";
+                for needle in [create, release, finish] {
+                    assert_eq!(code.matches(needle).count(), 1, "{needle}");
+                }
+                code = code
+                    .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic unsigned socket_live, socket_created[3];")
+                    .replace(create, &format!("{create}\n    socket_created[kind]++; if(++socket_live > 16) exit(194);"))
+                    .replace(release, &format!("{release}\n    if(s->fd != FWP_INVALID_SOCKET) exit(195); if(!socket_live) exit(196); socket_live--;"))
+                    .replace(finish, &format!("{finish}    if(socket_live || !socket_created[0] || !socket_created[1] || !socket_created[2]) exit(197);\n"));
+            }
             if name == "values" {
                 assert!(
                     code.contains("FWP_CHANNEL_RESULT_FIELDS);"),
@@ -104,7 +124,22 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     }
                     fwp::cgen::compile_c(&missing_drop, &binary, opt).unwrap();
                     let omitted = run().output().unwrap();
-                    assert_eq!(omitted.status.code(), Some(193), "{opt}: {omitted:?}");
+                    let expected = if name == "sockets" { 194 } else { 193 };
+                    assert_eq!(
+                        omitted.status.code(),
+                        Some(expected),
+                        "{name}/{opt}: {omitted:?}"
+                    );
+                    if name == "sockets" {
+                        let omitted_close = code.replace(
+                            "    fwp_sock_final(s);",
+                            "    /* omitted final socket close */",
+                        );
+                        assert_ne!(omitted_close, code);
+                        fwp::cgen::compile_c(&omitted_close, &binary, opt).unwrap();
+                        let omitted = run().output().unwrap();
+                        assert_eq!(omitted.status.code(), Some(195), "{opt}: {omitted:?}");
+                    }
                 } else {
                     let symbols = checked(Command::new("nm").arg(&binary));
                     assert!(
@@ -127,24 +162,54 @@ keep : Channel[() -> () ! {Async}] -> () -> () ! {Async}
 keep = then2 const channel.close
 "#;
     for (name, body) in [
-        ("self", "send-self = fork channel.send id keep\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n"),
-        ("returned", "returned = keep | const | apply ()\nsend-self = fork channel.send id returned\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n"),
-        ("nested", "lists : I64 -> Channel[List[() -> () ! {Async}]] ! {Async}\nlists = channel.make\nmain = lists 1 | tap (flip channel.send [keep (callbacks 1)]) | channel.recv | ignore\n"),
-        ("two-queues", "main = (callbacks 1, callbacks 1) | tap (fork channel.send .0 (.1 | keep)) | tap (fork channel.send .1 (.0 | keep)) | both (.0 | channel.recv) (.1 | channel.recv) | ignore\n"),
-        ("caught", "caught : Channel[() -> () ! {Async}] -> Result[(), () -> () ! {Async}]\ncaught = attempt (keep | fail)\nfrom-error = caught | match\n    Err _ -> id\n    Ok _ -> const task.yield\nmain = callbacks 1 | tap (fork channel.send id from-error) | channel.recv | option.map (apply ()) | ignore\n"),
+        (
+            "self",
+            "send-self = fork channel.send id keep\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n",
+        ),
+        (
+            "returned",
+            "returned = keep | const | apply ()\nsend-self = fork channel.send id returned\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n",
+        ),
+        (
+            "nested",
+            "lists : I64 -> Channel[List[() -> () ! {Async}]] ! {Async}\nlists = channel.make\nmain = lists 1 | tap (flip channel.send [keep (callbacks 1)]) | channel.recv | ignore\n",
+        ),
+        (
+            "two-queues",
+            "main = (callbacks 1, callbacks 1) | tap (fork channel.send .0 (.1 | keep)) | tap (fork channel.send .1 (.0 | keep)) | both (.0 | channel.recv) (.1 | channel.recv) | ignore\n",
+        ),
+        (
+            "caught",
+            "caught : Channel[() -> () ! {Async}] -> Result[(), () -> () ! {Async}]\ncaught = attempt (keep | fail)\nfrom-error = caught | match\n    Err _ -> id\n    Ok _ -> const task.yield\nmain = callbacks 1 | tap (fork channel.send id from-error) | channel.recv | option.map (apply ()) | ignore\n",
+        ),
     ] {
         let source = dir.join(format!("{name}.fwp"));
         std::fs::write(&source, format!("{prefix}\n{body}")).unwrap();
-        checked(Command::new(env!("CARGO_BIN_EXE_fwp"))
-            .env("FWP_NO_OPT", "1").args(["run", "--interp"]).arg(&source));
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .env("FWP_NO_OPT", "1")
+                .args(["run", "--interp"])
+                .arg(&source),
+        );
         let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
             .args(["build", "--gc", "arc", "--emit-c"])
-            .arg(&source).arg("-o").arg(dir.join("rejected.c"))
-            .output().unwrap();
-        assert!(!build.status.success(), "{name}: accepted an unproved captured channel");
+            .arg(&source)
+            .arg("-o")
+            .arg(dir.join("rejected.c"))
+            .output()
+            .unwrap();
+        assert!(
+            !build.status.success(),
+            "{name}: accepted an unproved captured channel"
+        );
         let error = String::from_utf8_lossy(&build.stderr);
-        assert!(error.contains("queued function") && error.contains("captured") && error.contains("Channel"), "{name}: {error}");
+        assert!(
+            error.contains("queued function")
+                && error.contains("captured")
+                && error.contains("Channel"),
+            "{name}: {error}"
+        );
     }
 }
 

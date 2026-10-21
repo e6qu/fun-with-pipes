@@ -391,10 +391,20 @@ an unknown source, which remains a rejection even if known functions reach the
 same path. The compiler must explicitly mark unmodeled runtime and foreign
 producers as unknown; an empty set must not stand in for missing analysis.
 
-The first admitted subset allows immutable scalar, string and container captures,
-including other functions whose captures pass the same check. Captured channels,
-tasks, files, connections and streams remain rejected, even when a particular
-program might use them without a cycle. Functions in a queued list or record
+The accepted subset allows immutable scalar, string and container captures,
+including other functions whose captures pass the same check. This branch also
+admits `UdpSocket`, `Listener` and `Conn` captures; native acceptance is pending.
+These handles share a socket, but cannot own language values, callbacks or queues.
+A queue therefore cannot lead back to itself through one of these handles.
+A closure keeps its captured handle alive; receiving transfers ownership, dropping
+an undrained queue releases it, and releasing the final socket owner closes the
+OS descriptor. Explicit close still affects every alias.
+
+`File` is different: source type checking already forbids capturing this
+single-use resource in a reusable function. Pass the file as the final argument;
+removing a queue rejection cannot make repeated file use legal. Captured channels,
+tasks, HTTP/2 streams and gRPC cells remain rejected until their hidden owners
+have separate proofs. Functions in a queued list or record
 receive the same checks as functions queued directly. Empty containers need no
 invented callback. Unknown external function-bearing queues remain rejected.
 
@@ -421,6 +431,17 @@ payload restrictions until their hidden owners have separate proofs. Compare
 interpretation, native ARC/tracing and WASI, including cleanup counts and controls
 that deliberately omit a release. This targets a provable subset, not perfect
 cycle inference for arbitrary programs; it adds no proposed surface syntax.
+
+The [socket queue regression](../tests/fixtures/queued_sockets.fwp) uses an
+`Event` record containing a `check` function. This function captures a socket and,
+when called with `()`, returns whether its address is available. The queue owns
+the event after the creating function returns. Receiving and calling it twice
+should produce `True` both times. Explicitly closing a retained UDP alias instead
+makes it return `False`. Other cases drop undrained queues, catch a failure and
+cancel a blocked sender. Native tests count live socket owners over 64 rounds,
+check complete ARC teardown and deliberately omit queue release and socket close
+to check the leak detectors. CI acceptance is pending; these are correctness
+checks, not performance measurements or a bound for arbitrary applications.
 
 ## Ownership contract checks
 

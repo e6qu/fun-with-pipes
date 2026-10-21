@@ -1,0 +1,50 @@
+# Each event owns a callback; each callback keeps one shared socket alive.
+# Testing its address avoids printing the OS-selected port.
+Event = { check: () -> Bool ! {Network} }
+events : I64 -> Channel[Event] ! {Async}
+events = channel.make
+udp-live : UdpSocket -> () -> Bool ! {Network}
+udp-live = curry (.0 | udp.local-addr | string.length | gt 0)
+listener-live : Listener -> () -> Bool ! {Network}
+listener-live = curry (.0 | tcp.local-addr | string.length | gt 0)
+connection-live : Conn -> () -> Bool ! {Network}
+connection-live = curry (.0 | tcp.peer-addr | string.length | gt 0)
+udp-event : () -> Event ! {Network, Error[IoError]}
+udp-event = const "127.0.0.1:0" | udp.bind | udp-live | make Event { check = id }
+listener-event : () -> Event ! {Network, Error[IoError]}
+listener-event = const "127.0.0.1:0" | tcp.listen | listener-live | make Event { check = id }
+connection-event : () -> Event ! {Async, Network, Error[IoError]}
+connection-event = const "127.0.0.1:0" | tcp.listen | both (tcp.local-addr | tcp.connect) tcp.accept | .0 | connection-live | make Event { check = id }
+enqueue : Event -> Channel[Event] ! {Async}
+enqueue = both (const 1 | events) id | tap (fork channel.send .0 .1) | .0
+check-twice : Event -> Bool ! {Network}
+check-twice = .check | both (apply ()) (apply ()) | eq (True, True)
+received : Channel[Event] -> Bool ! {Async, Network}
+received = channel.recv | option.map check-twice | option.unwrap-or False
+require : Bool -> ()
+require = if id (const ()) (const "socket ownership assertion failed" | prim.trap)
+closed-udp : () -> Event ! {Network, Error[IoError]}
+closed-udp = const "127.0.0.1:0" | udp.bind | both (udp-live | make Event { check = id }) id | tap (.1 | udp.close) | .0
+send-pending : Channel[Event] -> () -> Bool ! {Async, Network, Error[IoError]}
+send-pending = curry (fork channel.send .0 (.1 | udp-event))
+fail-queued : Channel[Event] -> () ! {Error[String]}
+fail-queued = const "expected" | fail
+round : () -> () ! {Async, Network, Error[IoError]}
+round =
+    tap (udp-event | enqueue | received | require)
+    | tap (listener-event | enqueue | tap channel.close | received | require)
+    | tap (connection-event | enqueue | received | require)
+    # Explicit close is visible through the callback's retained alias.
+    | tap (closed-udp | enqueue | received | eq False | require)
+    # Dropping undrained queues releases their callbacks and sockets.
+    | tap (udp-event | enqueue | ignore)
+    | tap (listener-event | enqueue | tap channel.close | ignore)
+    | tap (connection-event | enqueue | ignore)
+    # A caught failure unwinds a filled queue.
+    | tap (udp-event | enqueue | attempt fail-queued | ignore)
+    # Cancel a sender blocked by a full queue. Its pending event owns a socket.
+    | tap (udp-event | enqueue | send-pending | task.spawn | tap (const () | task.yield) | tap task.cancel | task.await | eq None | require)
+    # Sending to a closed queue releases the rejected event too.
+    | tap (udp-event | enqueue | tap channel.close | send-pending | apply () | eq False | require)
+    | ignore
+main = 0 | flip range 64 | each (const () | round) | const "socket queues released" | print
