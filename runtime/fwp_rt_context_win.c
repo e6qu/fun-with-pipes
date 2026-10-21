@@ -1,13 +1,17 @@
 /* Windows fibers own their ABI context and demand-committed stacks. The OS
  * context is opaque to the collector, so save nonvolatile registers in an
- * explicit root range before switching. Never treat a fiber handle as a stack. */
+ * explicit root range before switching in tracing builds. ARC uses only the OS
+ * context. Never treat a fiber handle as a stack. */
 #ifdef _WIN32
 #include <windows.h>
 
 typedef struct {
     void *fiber;
-    char *top, *sp;
+    char *top;
+#if FWP_GC && !defined(FWP_ARC_ONLY)
+    char *sp;
     jmp_buf registers;
+#endif
     int converted_thread;
 } fwp_win_context;
 
@@ -34,14 +38,20 @@ static void fwp_win_context_root(fwp_win_context *context) {
 static __attribute__((noinline)) void fwp_win_context_switch(
     fwp_win_context *from, const fwp_win_context *to
 ) {
+#if FWP_GC && !defined(FWP_ARC_ONLY)
     /* setjmp captures integer and floating-point nonvolatile registers on
      * both supported Windows ABIs. The stack range covers spilled values;
      * the explicit register range also preserves interior/one-past roots. */
     if (setjmp(from->registers)) abort();
     from->sp = fwp_gc_sp();
+#else
+    (void)from;
+#endif
     SwitchToFiber(to->fiber);
+#if FWP_GC && !defined(FWP_ARC_ONLY)
     from->sp = NULL;
     memset(from->registers, 0, sizeof from->registers);
+#endif
 }
 
 #if FWP_GC && !defined(FWP_ARC_ONLY)

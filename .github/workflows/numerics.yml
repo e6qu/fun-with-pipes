@@ -43,6 +43,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_TASK_CANCELLATION_ARTIFACTS: task-cancellation-evidence
+      FWP_WINDOWS_ARC_CONTEXT_ARTIFACTS: task-cancellation-evidence/windows-context
       FWP_LTO: '0'
       CARGO_PROFILE_DEV_OPT_LEVEL: '1'
       CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
@@ -93,6 +94,9 @@ jobs:
       - name: Synthetic task cancellation at compiler and numerical boundaries
         if: ${{ !cancelled() }}
         run: cargo test --no-fail-fast --test compiler_call_liveness --test runtime_call_ownership --test worker_preparation_ownership --test fold_unwind_ownership --test map_unwind_ownership --test selection_unwind_ownership --test zip_unwind_ownership --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace --test autodiff_nested --test blocked_matrix --test list_applicative_ownership --test collection_construction
+      - name: Windows fibers without collector snapshots
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        run: cargo test --no-fail-fast --test windows_context --test windows_static_memory
       - name: Static task-stack budgets
         if: ${{ !cancelled() }}
         shell: bash

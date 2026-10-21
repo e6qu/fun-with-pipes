@@ -2,90 +2,70 @@
 
 ## Next action
 
-Next: validate the batched cancellation-test repair on all six native hosts and
-both WebAssembly hosts. `/private/tmp/fwp-task-cancellation-publication.json`
-records the published source and focused run IDs for `task-cancellation-stack`.
-This is an isolated preparation in `/private/tmp/fwp-task-cancellation`;
-PR #187 remains the sole active delivery. Do not open another PR until it merges.
+Next: finish the task-cancellation and Windows ARC storage group on
+`task-cancellation-stack` in `/private/tmp/fwp-task-cancellation`. There is no PR
+for this preparation yet. Keep one active delivery PR: #187 is still waiting for
+its last Linux gate at `81bb3efa8e3f2cc5f3dd9f0ae9952709088c2905`.
+Its nine other gates passed; `/private/tmp/fwp-merge-187.py` rechecks all ten,
+merges with the authorized one-line subject and empty body, and verifies the
+resulting message, parent and tree. Do not reset healthy CI for a status edit.
 
-PR #187 tests `81bb3efa8e3f2cc5f3dd9f0ae9952709088c2905` in production run
-`39613713414` and documentation run `39613713402`. Documentation passed;
-production is running. Use `/private/tmp/fwp-audit-187-final.py` through the guard,
-fix every failure and use `/private/tmp/fwp-merge-187.py` only after all ten gates
-pass. The root worktree retains its handoff and merge receipt paths. Do not restart
-its healthy final-head CI for a preparation or a documentation-only update.
+## Accepted focused evidence
 
-## Cancellation-state preparation
+Cancellation return state now lives in the active task entry frame. The record
+borrows its address and clears it before retirement; retained handles cannot
+retain a stale stack pointer. WebAssembly return-table growth now checks
+allocation failure, arithmetic bounds and identifier exhaustion.
 
-Each task previously embedded a C `jmp_buf`, which saves the return point for
-cancellation. The candidate stores it in the still-active task entry frame and
-borrows its address. It clears the address before joining children or finishing;
-the root never uses this buffer. There is no extra allocation or runtime policy.
-Saved bytes move onto child stacks; they are not eliminated. See the
-[comparison guide](measurements/task-cancellation.md) for the lifetime argument,
-program, measurement scope and limits.
+Source `b37f5948d07128455a76e177f66448240bb47389` passed six native jobs in
+run `39625011684` and two WebAssembly jobs in `39625018036`. Immutable tag:
+`roadmap/revision-task-cancellation-b37f5948d071`.
+The [comparison](measurements/task-cancellation.md) explains inputs, counters,
+stack costs and limits; its raw report preserves all results. All 84 native
+binaries and 224 WebAssembly module headers were inspected; the latter include
+24 executed return-state controls. All complete job logs were audited.
+These are focused results, not final-head production acceptance.
 
-`arc_tasks` compares the old embedded layout with the candidate at native O0/O2,
-in ARC and tracing builds. It records requested/charged bytes, retains, native
-record alignment and generated C/binaries. Both comparisons disable collection.
-Separate correctness builds enable tracing stress/reuse checks; omitted pointer
-setup/clearing must fail with distinct statuses. Native runs are bounded and
-reaped on timeout. Retained-handle, scoped cleanup and WebAssembly JSPI/Asyncify
-checks also reject pointers that survive their task frame.
+Earlier failures were fixed across all jobs: invalid ARC reuse verification,
+18 synthetic tasks with obsolete embedded buffers, and missing native TLS test
+dependencies. A synthetic worker test now uses legal nested setjmp conditions.
+The old failed audit remains in `/private/tmp/fwp-task-cancellation-failed-1fd972ac14d0.json`.
 
-Focused suite `task-cancellation` covers all six native hosts with their production
-C compilers. It also runs task/scope, library-unload and static-budget checks;
-Linux installs strace before checking mapping budgets. `inspect-task-cancellation.py`
-verifies each binary's native architecture and records real disassembly, sections,
-hashes and host/toolchains. The existing `wasm-hosts` run checks actual
-JSPI/Asyncify execution. No native build, benchmark or full suite runs locally.
+## Additional Windows change under test
 
-The WebAssembly helper review also found unchecked return-state table growth.
-The published repair checks capacity/byte overflow, allocation failure and
-identifier exhaustion, with exact-diagnostic WASI tests. The earlier preparation
-runs were cancelled while queued; `/private/tmp/fwp-task-cancellation-prior-probe.json`
-records their states. The guide records the pointer-width identifier limit explicitly.
+Windows ARC now omits the collector-only register buffer and stack marker, plus
+snapshot/clearing work at each fiber switch. Tracing keeps them. New probes check
+pointer/floating registers, stack contents, rounding, repeated fiber teardown and
+host ownership at O0/O1/O2, with a restored-snapshot fault control. A matched
+O0/O2 ARC task comparison counts heap costs, snapshots and switches. Both native
+Windows hosts must execute these tests and retain all ten new actual binaries.
+The focused workflow also runs existing Windows root and static-memory tests.
+No execution result or cost for this addition is accepted yet.
 
-## Focused failures and repair
+The Windows production workflow now includes task-handle and timer-order checks
+and removes one duplicated loop-unwind invocation without losing coverage.
 
-All six native jobs at `1fd972ac14d0b16ab59b14975debbc6f8ef98b05` failed;
-complete logs are audited in `/private/tmp/fwp-task-cancellation-acceptance.json`.
-The native causes are an invalid ARC reuse-verification setting, synthetic tasks still
-using the old embedded buffer, and missing TLS dependencies in the focused job.
-The binary inspector correctly rejected the incomplete comparison.
+## Validation and delivery
 
-Local repairs in `/private/tmp/fwp-task-cancellation` set reuse verification only
-for tracing, update all 18 synthetic cancellation sites to borrow live local
-buffers, and install native macOS/Windows TLS dependencies. The worker-preparation
-test also now uses legal nested `setjmp` conditions. The focused workflow adds all
-14 affected test targets with production Rust optimization/check settings.
-The storage comparison explicitly disables link-time optimization for both layouts
-and records compiler flags, preventing source-size-dependent compilation choices.
-Formatting and whitespace checks passed for the nine changed Rust files through
-the local guard. Native execution of these repairs remains pending. The WebAssembly suites passed
-their actual WASI/JSPI/Asyncify checks; their native `arc_tasks` step hit the same
-invalid ARC setting. Both full logs were reviewed. Publish the repairs together
-and rerun both focused suites before accepting measurements.
-PR #187 remains unaffected with four accepted gates and no reported failures.
+Use `python3 scripts/local-guard.py COMMAND...` for serial focused checks.
+Formatting passed; native execution stays on GitHub. Preserve 64 GiB free disk,
+2 GiB generated target, 1 GiB sampled workload RSS and the 180-second deadline.
+No local native build, benchmark or full suite has run.
 
-## Checks and publication
-
-All local checks use `python3 scripts/local-guard.py COMMAND...` from the root
-worktree. `rustfmt --edition 2021 --check` passed for the three changed tests;
-`python3 -m py_compile` passed for the inspector. The native runner's
-`Coverage.test_repository_targets_are_assigned_exactly_once` passed. No test
-target was added or moved. Native execution and measurements remain pending;
-do not claim reduced process memory or faster execution. The documentation audit
-passed 79 link sets, 106 immutable pairs and seven roadmap areas.
-Publication receipt: `/private/tmp/fwp-task-cancellation-publication.json`.
-Do not restart healthy focused runs merely to publish a status update.
-
-After focused acceptance, inspect all saved binaries and measurements, fix any
-failures, then rebase onto PR #187's verified squash merge. Update the report and
-handoff, publish one substantial PR and require all nine production jobs plus
-documentation for its exact final head before squash merge.
+Publish the added Windows work and run both focused matrices. Audit every job
+and fix all failures; inspect actual Windows binaries and update the comparison.
+After #187 merges, rebase this group onto its verified merge and open one PR.
+Require all nine production gates plus documentation on the final head before
+squash merge. Use a single-line subject of at most 80 characters and an empty body;
+verify the actual commit message, sole parent and tested tree.
 
 ## Roadmap status
+
+All seven areas in [PLAN.md](../PLAN.md) remain open. These changes reduce task
+heap storage and unnecessary collector work; they do not finish tracing removal,
+eliminate ARC, prove a general speedup or establish C/Rust performance parity.
+The next ownership work must preserve failure/cancellation cleanup and measure
+representative programs before choosing an optimization.
 
 | Step | Status | Remaining work |
 |---|---|---|
