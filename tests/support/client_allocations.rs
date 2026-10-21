@@ -56,8 +56,8 @@ pub fn instrument_client_allocations(generated: &str) -> String {
             "    fwp_init_consts();\n    client_measure_begin();\n",
         ),
         (
-            "    fwp_cl_finish();\n",
-            "    fwp_cl_finish();\n    client_measure_end();\n",
+            "    /* Ownership observation point: before runtime teardown. */\n",
+            "    /* Ownership observation point: before runtime teardown. */\n    client_measure_end();\n",
         ),
     ] {
         assert_eq!(entry.matches(before).count(), 1);

@@ -39,6 +39,20 @@ int main(void) {
             sum ? "sum":"run",threads,atomic_load(&kernel_requests),atomic_load(&kernel_peak),kernel_managed_requests);
     }
     #ifndef KERNEL_BASELINE
+    const int64_t invalid_threads[] = {INT64_MIN,-1,0,257,INT64_MAX};
+    for(int sum=0;sum<2;sum++) for(size_t i=0;i<5;i++) {
+        kernel_counters_reset();
+        fwp_trap_recover=kernel_recover;fwp_trap_jb=&kernel_jump;fwp_trap_cleanup=fwp_cleanups;
+        if(!setjmp(kernel_jump)) {
+            /* Invalid count must trap before reading these absent inputs. */
+            if(sum) fwp_p_device_sum((V)invalid_threads[i],0,0,0,0);
+            else fwp_p_device_run((V)invalid_threads[i],0,0,0,0);
+            return 247;
+        }
+        fwp_trap_recover=NULL;fwp_trap_jb=NULL;
+        if(fwp_cleanups || atomic_load(&kernel_live) || atomic_load(&kernel_requests) ||
+           kernel_managed_requests || kernel_thread_attempts || fwp_gc.budget!=budget)return 248;
+    }
     for(int which=0;which<3;which++) {
         kernel_counters_reset();
         kernel_managed_left=which==0 ? 1:0;

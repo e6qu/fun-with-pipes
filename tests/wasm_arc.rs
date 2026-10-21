@@ -700,6 +700,43 @@ fn wasi_cpu_kernels_check_counts_before_32_bit_truncation() {
 }
 
 #[test]
+fn wasi_cpu_kernels_reject_invalid_workers_before_kernel_validation() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-kernel-workers").unwrap();
+    for operation in ["run", "sum"] {
+        for threads in [0, 257] {
+            let input = dir.join("workers.fwp");
+            // Malformed code and empty output must not mask an invalid setting.
+            let output = if operation == "run" {
+                "array.length"
+            } else {
+                "id"
+            };
+            std::fs::write(&input, format!("main = device.{operation} {threads} 0 ([99] | array.from-list) ([] | array.from-list) [] | {output} | echo\n")).unwrap();
+            let code = emit(&input, &dir.join("workers.c"), &[], "wasm32-wasi");
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.join("workers.wasm");
+                fwp::cgen::compile_for(&code, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+                let actual = wasi(&binary, dir.path()).output().unwrap();
+                assert_eq!(
+                    actual.status.code(),
+                    Some(101),
+                    "{operation}/{threads}/{opt}: {actual:?}"
+                );
+                assert!(actual.stdout.is_empty(), "{actual:?}");
+                assert!(
+                    String::from_utf8_lossy(&actual.stderr)
+                        .contains("device: thread count must be between 1 and 256"),
+                    "{actual:?}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn fixed_function_captures_initialize_in_wasi() {
     if !available() {
         return;
@@ -797,6 +834,12 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
             include_str!("fixtures/queued_task_handles.out"),
             1,
         ),
+        (
+            "task-await-fields",
+            include_str!("fixtures/task_await_fields.fwp"),
+            include_str!("fixtures/task_await_fields.out"),
+            1,
+        ),
     ] {
         let program = if repetitions == 1 {
             program.to_owned()
@@ -821,7 +864,10 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
             } else {
                 "wasm32-browser"
             };
-            let ordinary = emit(&source, &dir.join("tasks.c"), &[], target_name);
+            let ordinary = emit(&source, &dir.join("tasks.c"), &["-O1"], target_name);
+            if fixture == "task-await-fields" {
+                assert!(ordinary.contains("= fwp_task_await_fields("));
+            }
             let mut measured = measured_program(&ordinary);
             let retire = "    if (fwp_zombie && fwp_zombie != fwp_cur) {";
             assert_eq!(measured.matches(retire).count(), 1);
@@ -845,10 +891,13 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
             let drop = "c->owner.queue_drop(element);";
             assert_eq!(measured.matches(drop).count(), 1);
             let missing_queue = measured.replace(drop, "(void)element;");
-            let (retained_label, retained) = if fixture == "tasks" {
-                ("missing-state", &missing_state)
-            } else {
-                ("missing-queue", &missing_queue)
+            let result_drop = "if (t->result_drop && result) t->result_drop(result);";
+            assert_eq!(measured.matches(result_drop).count(), 1);
+            let missing_result = measured.replace(result_drop, "/* omit cached result owner */");
+            let (retained_label, retained) = match fixture {
+                "tasks" => ("missing-state", &missing_state),
+                "task-await-fields" => ("missing-result", &missing_result),
+                _ => ("missing-queue", &missing_queue),
             };
             for asyncify in [false, true] {
                 if asyncify && !have_asyncify {

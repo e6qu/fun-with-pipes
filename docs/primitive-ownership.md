@@ -220,15 +220,19 @@ allocation rather than freeing an interior pointer from its bump heap.
 
 ## Task result and deadline boundaries
 
-The runtime owns fresh typed result wrappers from task.await, task.within and
-channel receives. Wrappers own their pointer-bearing payloads; scalar words
+Escaping task/receive results and task.within results own typed wrappers.
+Immediate await/receive matches can carry fields directly, as described in the
+[await comparison](measurements/task-await-fields.md). A wrapper owns its
+pointer-bearing payload; scalar words
 do not select reference destructors. task.deadline borrows its typed argument
 and retains the returned alias instead of forcing it into runtime sharing.
-The candidate `task.spawn` and `task.within` contracts consume one callback owner;
+The `task.spawn` and `task.within` contracts consume one callback owner;
 the compiler duplicates it first only if another use needs an independent owner.
 The task keeps that owner through preparation, completion or cancellation.
-Deadline calls protect it while reading the clock. These changes are awaiting
-[platform validation](measurements/queued-task-handles.md#transferring-task-callbacks).
+Deadline calls protect it while reading the clock. These contracts passed
+[PR #190](roadmap-history.md#queued-task-owners-and-callback-transfers-pr-190);
+[the comparison](measurements/queued-task-handles.md#transferring-task-callbacks)
+records the saved retains and unchanged allocations.
 Scope results remain protected through joining and unwind. Counted
 task handles own typed cached results; repeated awaits return separate owners.
 Typed sends consume message owners and transfer them into the queue; the compiler
@@ -353,8 +357,8 @@ lifetimes. CPU workers retain no language references after the call. Reporting
 worker-start failure joins already started workers before releasing borrowed
 inputs or pending output. Whole-service ownership needs the separate
 [gRPC and HTTP contracts](ownership.md#checked-arc-delivery); these individual
-primitives alone cannot prove it. Retained foreign callbacks and GPU execution
-still need separate lifetime proofs. Socket handles have
+primitives alone cannot prove it. Retained foreign callbacks still need separate
+lifetime proofs. Socket handles have
 [their own contracts](ownership.md#tcp-and-tls-socket-owners).
 
 ## Copied service data

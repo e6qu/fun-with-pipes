@@ -97,8 +97,8 @@ fn udp_results_preserve_values_aliases_and_release_storage() {
                     "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t udp_budget=fwp_gc.budget_given;\n",
                 )
                 .replace(
-                    "    fwp_cl_finish();\n",
-                    "    fwp_cl_finish();\n    if(fwp_gc.budget<udp_budget) { fprintf(stderr,\"UDP charged storage left: %lld\\n\",(long long)(udp_budget-fwp_gc.budget)); exit(248); }\n",
+                    "    /* Ownership observation point: before runtime teardown. */\n",
+                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget<udp_budget) { fprintf(stderr,\"UDP charged storage left: %lld\\n\",(long long)(udp_budget-fwp_gc.budget)); exit(248); }\n",
                 );
             let body = if arc {
                 body.replace(

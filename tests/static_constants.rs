@@ -59,7 +59,7 @@ fn constants_need_no_startup_heap_and_preserve_layout_and_aliases() {
                 .find("static void *fwp_main_thread(void *arg) {")
                 .unwrap();
             let (runtime, entry) = measured.split_at(main);
-            let finish = "    fwp_cl_finish();\n";
+            let finish = "    /* Ownership observation point: before runtime teardown. */\n";
             assert_eq!(entry.matches(finish).count(), 1);
             let entry = if memory == "arc" {
                 entry.replace(finish, &format!("{finish}    if(fwp_gc.ncollect || fwp_gc.budget != fwp_gc.budget_given)exit(214);\n"))

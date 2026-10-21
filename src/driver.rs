@@ -508,10 +508,7 @@ pub fn run_tests(prog: &crate::ir::Program, out: &mut dyn std::io::Write) -> (us
     let (mut pass, mut fail) = (0, 0);
     for (name, id) in &prog.tests {
         let mut sink = Vec::new();
-        let r = {
-            let mut it = Interp::new(prog, Box::new(&mut sink));
-            it.call_root(*id)
-        };
+        let r = Interp::new(prog, Box::new(&mut sink)).and_then(|mut it| it.call_root(*id));
         let status = match r {
             Ok(v) if v.as_bool() => {
                 pass += 1;

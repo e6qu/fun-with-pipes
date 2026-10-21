@@ -1,4 +1,4 @@
-//! Native shared libraries used by foreign calls, TLS and OpenCL.
+//! Native shared libraries used by foreign calls and TLS.
 use std::ffi::{c_void, CStr};
 use std::path::Path;
 

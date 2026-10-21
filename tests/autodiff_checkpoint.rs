@@ -162,7 +162,7 @@ fn checkpoint_tapes_are_bounded_and_released_without_collection() {
         let (runtime, main) = code.split_at(start);
         let code = format!("{runtime}{}", main
             .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t checkpoint_budget=fwp_gc.budget_given;\n")
-            .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    for(int64_t i=0;i<fwp_ntapes;i++) if(fwp_tapes[i].live)exit(193);\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < checkpoint_budget)exit(194);\n    fprintf(stderr,\"%lld\\n\",(long long)checkpoint_peak);\n"));
+            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    for(int64_t i=0;i<fwp_ntapes;i++) if(fwp_tapes[i].live)exit(193);\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < checkpoint_budget)exit(194);\n    fprintf(stderr,\"%lld\\n\",(long long)checkpoint_peak);\n"));
         for opt in ["-O1", "-O2"] {
             let binary = dir.join("memory.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();

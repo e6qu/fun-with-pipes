@@ -38,7 +38,7 @@ fn quad_reverse_preserves_low_bits_exponent_range_and_reclaims_owned_values() {
             .unwrap();
         let (runtime, entry) = code.split_at(start);
         let entry = entry.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t precision_budget=fwp_gc.budget_given; precision_calls=precision_bytes=0;\n")
-            .replace("    fwp_cl_finish();\n", r#"    fwp_cl_finish();
+            .replace("    /* Ownership observation point: before runtime teardown. */\n", r#"    /* Ownership observation point: before runtime teardown. */
     if(fwp_owned_tapes)exit(193);
     for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(194);
 #if FWP_ARC_ONLY

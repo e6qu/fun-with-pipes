@@ -1,14 +1,13 @@
 # Queued callbacks that retain task handles
 
-This candidate follows the accepted task-record changes in PR #189. Its current
-checks and delivery status are in [the handoff](../development-state.md). Focused
-results alone do not establish final production acceptance.
+This extension passed full production acceptance in [PR #190](../roadmap-history.md#queued-task-owners-and-callback-transfers-pr-190).
+The measurements below keep their exact source revisions.
 
 A task handle keeps a task's result available for later `task.await` calls. A
 callback is a function saved for a later call. Saving a callback in a channel can
 therefore keep its captured task alive after the original caller finishes.
 
-The candidate compiler follows the task's producer, the computation it will run,
+The compiler follows the task's producer, the computation it will run,
 and its eventual result. Each can hide another owner. It accepts a queued capture
 only when those owners are proved and cannot point back to a function queue.
 Unknown task producers stay rejected. This introduces no new runtime wrapper,
@@ -16,7 +15,7 @@ weak handle, implicit cleanup or reference-count operation.
 
 Task results need a separate check: unlike captures fixed before publication,
 a task's result is assigned later. A result that owns its producing task, directly
-or through a returned closure, would make a reference-count cycle. The candidate
+or through a returned closure, would make a reference-count cycle. The compiler
 rejects flows that can return to that task. Several creations can share one
 compile-time summary when their task result types match. If this obscures whether a captured task is older than its owner,
 the compiler rejects the result graph. This can reject safe programs: the
@@ -160,7 +159,7 @@ and generated C; O0 callback-transfer routines were disassembled independently.
 The report rechecks counter differences and absence of tracing entry points in
 ARC binaries. Both WebAssembly artifacts contain 32 executed task-capture modules
 whose headers, source/output hashes and available symbols were inspected.
-Final production acceptance of the combined delivery remains pending.
+[PR #190](../roadmap-history.md#queued-task-owners-and-callback-transfers-pr-190) records full production acceptance of the combined delivery.
 
 Clock conversion also checks the signed nanosecond range before narrowing, including
 elapsed monotonic time. The interpreter now reports the same range errors and keeps

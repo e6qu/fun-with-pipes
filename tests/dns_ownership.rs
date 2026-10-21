@@ -68,8 +68,8 @@ fn dns_results_preserve_values_aliases_and_release_storage() {
                     "    fwp_init_consts();\n    intptr_t dns_budget=fwp_gc.budget;\n",
                 )
                 .replace(
-                    "    fwp_cl_finish();\n",
-                    "    fwp_cl_finish();\n    if(fwp_gc.budget!=dns_budget) exit(248);\n",
+                    "    /* Ownership observation point: before runtime teardown. */\n",
+                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget!=dns_budget) exit(248);\n",
                 );
             let mut measured = code.clone();
             measured.replace_range(start..end, &body);

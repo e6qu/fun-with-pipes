@@ -124,7 +124,7 @@ traps. Unproved runtime sharing still uses tracing.
 | Arrays, maps and sets | Typed elements, counted storage, selected unique updates | Callback and alias contracts must be proved |
 | Strings and bytes | Counted leaves for proved copies/aliases | Unmodeled result families remain shared |
 | Closures | Owned captured arguments and typed call metadata; eligible functions with only fixed function captures use static records | Runtime-data captures retain ordinary ownership; retained unknown callbacks are not checked ARC |
-| Tasks and channels | Counted handles/results/queues; ARC admits acyclic nested channel types and proved captures, including shared sockets | Other resource-bearing or unknown queued captures, HTTP stream payloads and recursive channel ownership remain unproved; [direct task messages](measurements/task-channels.md) are a candidate awaiting validation |
+| Tasks and channels | Counted handles/results/queues; ARC admits acyclic nested channel types and proved captures, including shared sockets | Other resource-bearing or unknown queued captures, HTTP stream payloads and recursive channel ownership remain unproved; [direct task messages](measurements/task-channels.md) passed PR #190 |
 | Derivative tapes | Scoped owners and a bounded numeric workspace | Raw unscoped tape calls are not checked ARC |
 | External/network state | Explicit resource teardown where modeled | Freeing a C buffer does not prove the lifetime of every referenced fwp value |
 
@@ -424,13 +424,12 @@ until it is released. This does not grant the same contract to arbitrary externa
 channels. [The service example and checks](measurements/queued-grpc-responses.md)
 explain this distinction and record what has been verified.
 
-The [task-handle preparation](measurements/queued-task-handles.md) extends the
-same proof to known task computations and results. It also checks whether a
-result can own its producing task through a returned callback. These changes
-are under validation, not accepted platform support. Unknown task producers
-remain rejected. The [direct task message candidate](measurements/task-channels.md)
-extends the same computation/result proof to handles sent directly, with
-separate unknown-queue classification. Its acceptance remains pending.
+The [task-handle proof](measurements/queued-task-handles.md) follows known task
+computations and results, including whether a result can own its producing task
+through a returned callback. [Direct task messages](measurements/task-channels.md)
+use the same proof, with separate classification of unknown queues. Both passed
+[PR #190](roadmap-history.md#queued-task-owners-and-callback-transfers-pr-190).
+Unknown task producers remain rejected.
 
 For example, an event can retain a text queue until someone calls its `read`
 function. `Channel[String]` stores text; `Channel[Event]` stores records containing
@@ -939,10 +938,21 @@ The following rules explain common boundaries:
 State operations need a proved handler. Returning a closure does not extend its
 old handler's lifetime, though it can run under a new one. The checker follows
 known targets, captures and stored values; unknown targets are rejected.
+A partial application is a function with some arguments already supplied. The
+proof keeps separate records of those saved arguments for calls inside and
+outside a State handler. A plain fold must not acquire the State requirements
+of another fold merely because both use the same `uncurry` helper. This does not
+keep a handler alive: an escaped callback is checked where it is actually called.
 Derivative tokens likewise do not extend tape lifetime. Stale, mixed or cross-task
 tokens trap. F128/nested tapes own typed weights; scope exit, failure, cancellation
 and library teardown release them. Workspace reuse is bounded and counted
 separately from returned arrays. See [numerics](numerics.md#reverse-mode).
+
+`rev.jacobian f` calls `f` once to count outputs, then once per output row to
+compute derivatives. The counting pass has its own tape scope, just like each
+row. Temporary tapes must be released before the next expression, including when
+`f` creates a tape that it never uses. These scope repairs are under validation;
+see [the handoff](development-state.md) for checked revisions and remaining gates.
 
 Process calls borrow arguments/input during execution. `process.run` and
 `process.run-input` return owned status/output/error records; `process.call`
@@ -1361,7 +1371,7 @@ Scoped failure cleanup and deliberate missing-reset tests enforce that distincti
 Keep the cache, shared-reader and decoder failure controls while extending these
 owners. Test partial construction and every last-owner case; retain deliberately
 broken variants to prove that missing cleanup is detected. HTTP/2 handlers are
-accepted in PR #163; GPU resource ownership remains work.
+accepted in PR #163. GPU execution is outside the CPU-only design.
 
 ### Checked gRPC clients and services
 

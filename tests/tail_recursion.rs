@@ -82,9 +82,15 @@ fn deep_self_recursion_preserves_swaps_aliases_effects_and_failure_order() {
                     .unwrap();
                 let (runtime, main) = code.split_at(start);
                 assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-                assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
+                assert_eq!(
+                    main.matches(
+                        "    /* Ownership observation point: before runtime teardown. */\n"
+                    )
+                    .count(),
+                    1
+                );
                 let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t tail_budget = fwp_gc.budget;\n")
-                    .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.budget < tail_budget) { fprintf(stderr, \"tail recursion retained %ld bytes\\n\", (long)(tail_budget-fwp_gc.budget)); exit(193); }\n");
+                    .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget < tail_budget) { fprintf(stderr, \"tail recursion retained %ld bytes\\n\", (long)(tail_budget-fwp_gc.budget)); exit(193); }\n");
                 code = format!("{runtime}{main}");
             }
             for opt in ["-O0", "-O2"] {

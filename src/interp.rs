@@ -96,15 +96,27 @@ pub struct Interp<'p> {
     pub(crate) root_err: *mut (dyn Write + 'p),
     /// Tasks spawned inside each enclosing `task.scope`.
     pub(crate) scopes: Vec<Vec<std::sync::Arc<crate::sched::TaskShared>>>,
-    /// The foreign function shim, loaded on the first foreign C call.
-    pub(crate) ffi: Rc<RefCell<Option<Rc<crate::ffi_interp::FfiLib>>>>,
+    /// Immutable foreign-call bridge, prepared before evaluation begins.
+    pub(crate) ffi: Option<Rc<crate::ffi_interp::FfiLib>>,
     /// The gRPC context of the task: outgoing metadata, call deadline and
     /// the call being served.
     pub(crate) grpc: crate::grpc::TaskCtx,
 }
 
 impl<'p> Interp<'p> {
-    pub fn new(prog: &'p Program, mut out: Box<dyn Write + 'p>) -> Self {
+    /// Prepare foreign C bridges before evaluating any language expression.
+    pub fn new(prog: &'p Program, mut out: Box<dyn Write + 'p>) -> R<Self> {
+        let ffi = if prog
+            .funcs
+            .iter()
+            .any(|f| matches!(f.body, Body::ForeignC { .. }))
+        {
+            Some(Rc::new(
+                crate::ffi_interp::prepare(prog).map_err(Ctl::Trap)?,
+            ))
+        } else {
+            None
+        };
         let seed = std::env::var("FWP_SEED")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -117,7 +129,7 @@ impl<'p> Interp<'p> {
         let root_out: *mut (dyn Write + 'p) = &mut *out;
         let mut err: Box<dyn Write + 'p> = Box::new(std::io::stderr());
         let root_err: *mut (dyn Write + 'p) = &mut *err;
-        Interp {
+        Ok(Interp {
             prog,
             control_stdin: CONTROL_STDIN.with(|flag| flag.get()),
             debugger: None,
@@ -132,9 +144,9 @@ impl<'p> Interp<'p> {
             root_out,
             root_err,
             scopes: Vec::new(),
-            ffi: Rc::new(RefCell::new(None)),
+            ffi,
             grpc: Default::default(),
-        }
+        })
     }
 
     /// Set both the writer and the stable pointee forwarded to child tasks.
@@ -1668,12 +1680,19 @@ pub fn run_main(prog: &Program, args: Vec<String>) -> RunResult {
     let out = std::io::LineWriter::new(stdout.lock());
     #[cfg(not(target_family = "wasm"))]
     let out = std::io::BufWriter::new(stdout.lock());
-    let mut it = Interp::new(prog, Box::new(out));
-    it.args = args;
     let Some(main) = prog.main else {
         eprintln!("fwp: no `main` binding");
         return RunResult { exit_code: 2 };
     };
+    let mut it = match Interp::new(prog, Box::new(out)) {
+        Ok(it) => it,
+        Err(error) => {
+            return RunResult {
+                exit_code: report(&Err(error), prog),
+            }
+        }
+    };
+    it.args = args;
     let r = it.call_root(main);
     let _ = it.out.flush();
     let code = report(&r, prog);

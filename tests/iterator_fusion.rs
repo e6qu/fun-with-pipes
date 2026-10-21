@@ -192,7 +192,7 @@ main = [
         let (runtime, main) = code.split_at(start);
         let measured = format!("{runtime}{}", main
             .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t array_budget=fwp_gc.budget;\n")
-            .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < array_budget) exit(193);\n"));
+            .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < array_budget) exit(193);\n"));
         for opt in ["-O1", "-O2"] {
             let binary = dir.join(if cfg!(windows) {
                 "arrays.exe"

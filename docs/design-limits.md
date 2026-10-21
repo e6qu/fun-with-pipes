@@ -62,13 +62,12 @@ and the implemented [precision and tape contracts](numerics.md#reverse-mode).
 **5. CPU numerics fits the design; portable GPU execution without runtime
 compilation needs a narrower scope.** Improve known CPU kernels while preserving
 their rounding/reduction rules; do not silently enable reassociation or fused
-operations to match a different numerical contract. The present OpenCL path
-compiles source at runtime. Loading an intermediate binary is not sufficient
-proof of no runtime compilation: [OpenCL binaries can contain intermediate code](https://registry.khronos.org/OpenCL/specs/unified/refpages/man/html/clCreateProgramWithBinary.html).
-An ahead-of-time device path would need supported toolchain/device artifacts and
-verified loading behavior. Arbitrary runtime-created kernels on arbitrary devices
-are not a promised extension. The decision between a bounded ahead-of-time path
-and removing runtime GPU execution remains open; no JIT exception is authorized.
+operations to match a different numerical contract. Remove the runtime OpenCL
+compiler rather than make a JIT exception. An ahead-of-time device proposal would
+need supported toolchain/device artifacts and verified loading behavior. An
+intermediate binary alone does not prove this: [OpenCL binaries can contain
+intermediate code](https://registry.khronos.org/OpenCL/specs/unified/refpages/man/html/clCreateProgramWithBinary.html).
+Arbitrary runtime-created kernels on arbitrary GPUs are not a promised extension.
 
 **6. Dependable measurement is achievable; noise-free or universal overhead
 numbers are not.** Repeated same-host comparisons can distinguish useful effects

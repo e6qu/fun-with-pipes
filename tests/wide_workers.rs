@@ -202,7 +202,7 @@ main = [
                         .unwrap();
                     let (runtime, main) = code.split_at(start);
                     let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t wide_budget=fwp_gc.budget;\n")
-                        .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(!FWP_USE_GC && fwp_gc.budget<wide_budget) exit(193);\n");
+                        .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(!FWP_USE_GC && fwp_gc.budget<wide_budget) exit(193);\n");
                     code = format!("{runtime}{main}");
                     // ARC has no collector; tracing stress intentionally changes its budget.
                     code = code.replace("!FWP_USE_GC", if gc == "arc" { "1" } else { "0" });

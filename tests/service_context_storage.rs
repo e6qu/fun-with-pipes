@@ -33,9 +33,13 @@ static double context_start_charge;
         .unwrap();
     let (prefix, body) = code.split_at(main);
     assert_eq!(body.matches("    fwp_init_consts();\n").count(), 1);
-    assert_eq!(body.matches("    fwp_cl_finish();\n").count(), 1);
+    assert_eq!(
+        body.matches("    /* Ownership observation point: before runtime teardown. */\n")
+            .count(),
+        1
+    );
     let body = body.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    context_start_charge=fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);context_measure=1;\n")
-        .replace("    fwp_cl_finish();\n", r#"    fwp_cl_finish();
+        .replace("    /* Ownership observation point: before runtime teardown. */\n", r#"    /* Ownership observation point: before runtime teardown. */
     context_measure=0;
     fprintf(stderr,"context %llu %llu %.0f %zu\n",context_requests,context_bytes,
         fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget)-context_start_charge,fwp_gc.ncollect);

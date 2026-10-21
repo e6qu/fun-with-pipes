@@ -35,5 +35,4 @@ main = [
     | map (vector.to-list | take 2)
     | show
     | print,
-    vector [0.0, 1.0] | tensor.lazy | soft | tensor.opencl | print,
 ] | ignore

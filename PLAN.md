@@ -74,7 +74,7 @@ ownership and removal of GC are the primary design priority.
 | 2 | Remove avoidable costs from functional code | Define and test a representative set of pipes, partial applications, closures, records, variants, iteration and state patterns whose known targets/lifetimes permit direct calls, loops and elimination of intermediate heap objects; establish constant-stack execution for eligible self-tail recursion in native code and the interpreter; report necessary storage, dispatch and sharing costs outside those patterns. |
 | 3 | Improve machine-level performance | Set per-workload budgets from repeated equivalent-work C/Rust baselines on named ARM64/AMD64 hosts; diagnose known regressions and meet those budgets without hiding slower results; inspect register use, spills, vector instructions and layout while preserving arithmetic and failure rules. |
 | 4 | Improve differentiation speed, memory and precision | Validate supported derivative operations and precision; meet measured time/memory budgets for selected sizes and nesting depths; resolve known regressions; report recording, recomputation, output and workspace costs separately. No constant-memory or zero-overhead promise for arbitrary differentiation. |
-| 5 | Strengthen numerical kernels | Meet accuracy and measured time/memory budgets for selected CPU arrays, reductions and matrix products. Resolve the runtime-compilation conflict separately; claim GPU support only for explicitly supported devices with ahead-of-time artifacts and real execution evidence. |
+| 5 | Strengthen numerical kernels | Meet accuracy and measured time/memory budgets for selected CPU arrays, reductions and matrix products. Remove runtime device compilation; keep GPU execution outside this CPU roadmap. |
 | 6 | Make performance comparisons dependable | Establish a reproducible comparison protocol with current revisions, comparable algorithms and explicit arithmetic rules; retain repeated samples and environment details; report timing, memory, compilation/startup and binary-size costs; define regression thresholds and how inconclusive results are investigated. |
 | 7 | Validate the language with larger programs | Select a finite acceptance suite of numerical, collection-heavy and long-running applications; test its supported targets and memory modes, including failure/cancellation and bounded-live repeated work; fix observed implementation and usability issues. Add coverage as features expand, without treating this suite as proof for all programs. |
 
@@ -88,52 +88,26 @@ outside the benchmark suite.
 
 ### Immediate priorities
 
-1. Extend [cycle-safe ownership contracts](docs/ownership.md#proposed-cycle-policy)
-   for persistent subscriptions, retained resource captures and cyclic data graphs.
-   Nested channels and selected queued functions already have native and
-   WebAssembly acceptance. [Capturing locally created data queues](docs/measurements/queued-data-channels.md)
-   passed full acceptance in [PR #185](docs/roadmap-history.md#queued-callbacks-retaining-data-queues-pr-185).
-   [Queued gRPC response captures](docs/measurements/queued-grpc-responses.md)
-   passed full acceptance in
-   [PR #186](docs/roadmap-history.md#queued-service-responses-and-bounded-server-startup-pr-186),
-   including native delivery, cancellation and cleanup from the actual service constructor.
-   The next [task-ownership group](docs/measurements/queued-task-handles.md) adds
-   proofs for queued task captures, rejects result back-references, and transfers
-   callback owners directly into spawned tasks. Its combined platform validation
-   is pending; keep these claims separate from accepted deliveries.
-   Explicit weak handles remain a proposal. Prefer
-   borrowing and scoped cleanup; distinguish a definite cycle from a missing proof.
-   Reject unproved retention rather than silently use tracing.
-   The [direct task message candidate](docs/measurements/task-channels.md) follows
-   queued task captures, reusing runtime task ownership while extending the
-   compiler's queue-cycle proof. Its tests and platform acceptance are pending.
-2. Investigate remaining matched C/Rust gaps in integer counting. The
-   [grouped-counting measurements](docs/measurements/integer-counting.md) show
-   roughly half the former fwp CPU time, while preserving slower controls and
-   substantial gaps against peers using the same algorithm; [PR #182](docs/roadmap-history.md#grouped-integer-counting-and-u32-overflow-pr-182)
-   passed full native acceptance. The [checked-product change](docs/measurements/checked-products.md)
-   preserves numeric bounds and passed [full native acceptance in PR #183](docs/roadmap-history.md#checked-product-bounds-pr-183).
-   Its O2 loops improve, while O0/O1 emit an extra
-   product and matched C still leads. Do not weaken arithmetic or trap order. Earlier
-   variability of identical AMD64 binaries remains unexplained by these results.
-   Resource-owning tail frames and mutual recursion still need separate proofs.
-
-3. Use representative applications and equivalent-work measurements to select
-   the next costs to remove: dynamic closures/calls, input copies, container
-   layout, numerical workspace and derivative recording. Use the accepted
-   [numeric representation measurements](docs/benchmarks.md#numeric-hash-specialization)
-   as baselines, preserving mixed timings and C/Rust gaps. Investigate known
-   regressions before claiming a performance improvement.
-   The [task-context comparison](docs/measurements/task-contexts.md) investigates
-   smaller scheduler heap records while counting saved CPU state, usable stack
-   space and process memory separately. It passed [full acceptance in PR #187](docs/roadmap-history.md#smaller-linux-task-heap-records-pr-187);
-   moving storage is not eliminating it.
-   [Task-record measurements](docs/measurements/task-records.md), accepted in
-   [PR #189](docs/roadmap-history.md#compact-task-records-and-repaired-native-validation-pr-189),
-   establish 32 fewer bytes per ARC task with unchanged allocation/retain counts
-   and platform-dependent peak savings. Smaller records do not establish a timing
-   gain. Use that baseline to measure retained task owners and temporary results.
-
+1. Extend [ownership contracts](docs/ownership.md#proposed-cycle-policy) at the
+   remaining boundaries: persistent subscriptions, externally retained callbacks,
+   raw pointers and cyclic data graphs. Known queued task/data/response captures
+   have delivery evidence in [ownership](docs/ownership.md); those completed
+   extensions are baselines, not new tasks. Prefer borrowing and scoped cleanup.
+   Weak handles remain a proposal. Distinguish missing proofs from definite cycles,
+   and reject unproved retention instead of silently enabling tracing.
+2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
+   [Integer counting](docs/measurements/integer-counting.md) and
+   [checked products](docs/measurements/checked-products.md) retain slower controls,
+   optimization-level differences and unexplained AMD64 variability. Resource-owning
+   tail frames and mutual recursion still need separate lifetime proofs.
+3. Select larger representative applications and use equivalent-work measurements
+   to choose the next costs to remove: dynamic calls, input copies, container
+   layout, numerical workspace and derivative recording. Establish workload-specific
+   time/memory budgets before claiming improvement. The [benchmark index](docs/benchmarks.md)
+   records current comparisons and their limits. For example,
+   [direct await fields](docs/measurements/task-await-fields.md) remove 34 allocation
+   requests from one fixture, without changing its retains or peak storage; that
+   does not demonstrate a timing gain or parity with C/Rust.
 
 All seven work areas remain open. The syntax and native-platform foundations
 are implemented; the main remaining work is ownership, representation,
@@ -183,13 +157,13 @@ choices, not fallbacks.
 A just-in-time compiler (JIT), which compiles running program code during
 execution, is explicitly excluded. It is not deferred or a future optimization
 option. Keep native compilation ahead of execution and the interpreter; do not
-add a JIT to either the compiler or the generated runtime.
+add a JIT to either the compiler or the generated runtime. Prepare interpreter
+foreign-call bridges before evaluation; no C compiler starts during a foreign call.
 
-The existing OpenCL path builds device source at runtime through `clBuildProgram`.
-That is an existing implementation gap against this direction, not an exception
-or proof of ahead-of-time device compilation. Step 5 must resolve device build
-and loading requirements before claiming the policy holds for GPU execution;
-do not expand runtime kernel compilation.
+Remove the existing runtime OpenCL compiler and its GPU API. Keep the CPU kernel
+interpreter, which evaluates instructions without generating machine code. A
+future GPU proposal would require explicitly supported ahead-of-time artifacts
+and real device execution evidence; it is not required to finish this plan.
 
 ## Deferred expansions
 

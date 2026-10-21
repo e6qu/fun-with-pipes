@@ -66,9 +66,13 @@ main = range 0 128 | each exercise
                 .unwrap();
             let (runtime, main) = code.split_at(start);
             assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-            assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
+            assert_eq!(
+                main.matches("    /* Ownership observation point: before runtime teardown. */\n")
+                    .count(),
+                1
+            );
             let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t clock_budget = fwp_gc.budget;\n")
-                .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < clock_budget) exit(231);\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < clock_budget) exit(231);\n");
             code = format!("{runtime}{main}");
         }
         let binary = dir.join("clocks.exe");

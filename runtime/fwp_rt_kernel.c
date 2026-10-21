@@ -685,7 +685,7 @@ static void *fwp_kjob_thread(void *p) {
 /* units split into contiguous ranges, one per thread (the first on the
  * calling thread) */
 static void fwp_kernel_parallel(const fwp_kernel *k, int sum, size_t n, size_t units, int64_t threads, double *out) {
-    size_t t = threads < 1 ? 1 : threads > 256 ? 256 : (size_t)threads;
+    size_t t = (size_t)threads;
     if (t > units) t = units ? units : 1;
 #ifdef __wasi__
     t = 1;
@@ -805,6 +805,8 @@ static void fwp_kernel_prepare(fwp_kernel *k, V code, V consts, V inputs, uint64
 }
 
 static V fwp_p_device_run(V threads, V nv, V code, V consts, V inputs) {
+    if ((int64_t)threads < 1 || (int64_t)threads > 256)
+        fwp_trap("device: thread count must be between 1 and 256");
     uint64_t count = (int64_t)nv < 0 ? 0 : (uint64_t)nv;
     fwp_kernel_owner owner = {0};
     fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_kernel_release, &owner);
@@ -823,6 +825,8 @@ static V fwp_p_device_run(V threads, V nv, V code, V consts, V inputs) {
 }
 
 static V fwp_p_device_sum(V threads, V nv, V code, V consts, V inputs) {
+    if ((int64_t)threads < 1 || (int64_t)threads > 256)
+        fwp_trap("device: thread count must be between 1 and 256");
     uint64_t count = (int64_t)nv < 0 ? 0 : (uint64_t)nv;
     fwp_kernel_owner owner = {0};
     fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_kernel_release, &owner);
@@ -838,278 +842,6 @@ static V fwp_p_device_sum(V threads, V nv, V code, V consts, V inputs) {
     FWP_KEEP_ALIVE(code); FWP_KEEP_ALIVE(consts); FWP_KEEP_ALIVE(inputs);
     return fwp_from_f64(total);
 }
-
-/* ------------------------------------------------------------------ OpenCL
- *
- * libOpenCL is loaded with dlopen on first use (FWP_OPENCL_LIB names
- * another library); without it, or without a device with double
- * precision, the GPU device is unavailable. */
-
-#if !defined(__wasi__) && (defined(__linux__) || defined(__APPLE__))
-#include <dlfcn.h>
-
-typedef void *fwp_clp;
-static struct {
-    int tried;
-    char error[256];
-    int32_t (*get_platforms)(uint32_t, fwp_clp *, uint32_t *);
-    int32_t (*get_devices)(fwp_clp, uint64_t, uint32_t, fwp_clp *, uint32_t *);
-    int32_t (*device_info)(fwp_clp, uint32_t, size_t, void *, size_t *);
-    fwp_clp (*create_context)(const intptr_t *, uint32_t, const fwp_clp *, void *, void *, int32_t *);
-    fwp_clp (*create_queue)(fwp_clp, fwp_clp, uint64_t, int32_t *);
-    fwp_clp (*program_with_source)(fwp_clp, uint32_t, const char **, const size_t *, int32_t *);
-    int32_t (*build_program)(fwp_clp, uint32_t, const fwp_clp *, const char *, void *, void *);
-    int32_t (*build_info)(fwp_clp, fwp_clp, uint32_t, size_t, void *, size_t *);
-    fwp_clp (*create_kernel)(fwp_clp, const char *, int32_t *);
-    fwp_clp (*create_buffer)(fwp_clp, uint64_t, size_t, void *, int32_t *);
-    int32_t (*set_arg)(fwp_clp, uint32_t, size_t, const void *);
-    int32_t (*enqueue)(fwp_clp, fwp_clp, uint32_t, const size_t *, const size_t *, const size_t *,
-                       uint32_t, const fwp_clp *, fwp_clp *);
-    int32_t (*read_buffer)(fwp_clp, fwp_clp, uint32_t, size_t, size_t, void *, uint32_t,
-                           const fwp_clp *, fwp_clp *);
-    int32_t (*finish)(fwp_clp);
-    int32_t (*release_mem)(fwp_clp);
-    int32_t (*release_kernel)(fwp_clp);
-    int32_t (*release_program)(fwp_clp);
-    void *library;
-    int32_t (*release_queue)(fwp_clp), (*release_context)(fwp_clp);
-    fwp_clp device, context, queue;
-} fwp_cl;
-
-static int fwp_cl_pick(void) {
-    uint32_t np = 0;
-    if (fwp_cl.get_platforms(0, 0, &np) != 0 || np == 0) {
-        snprintf(fwp_cl.error, sizeof fwp_cl.error, "no OpenCL device: there is no OpenCL platform");
-        return 0;
-    }
-    fwp_clp *ps = (fwp_clp *)fwp_k_malloc(np * sizeof(fwp_clp));
-    fwp_cl.get_platforms(np, ps, &np);
-    uint64_t types[2] = {1 << 2, 0xffffffffu};
-    for (int ti = 0; ti < 2; ti++) {
-        for (uint32_t p = 0; p < np; p++) {
-            uint32_t nd = 0;
-            if (fwp_cl.get_devices(ps[p], types[ti], 0, 0, &nd) != 0 || nd == 0) continue;
-            fwp_clp *ds = (fwp_clp *)fwp_k_malloc(nd * sizeof(fwp_clp));
-            fwp_cl.get_devices(ps[p], types[ti], nd, ds, &nd);
-            for (uint32_t d = 0; d < nd; d++) {
-                char ext[8192];
-                size_t len = 0;
-                if (fwp_cl.device_info(ds[d], 0x1030, sizeof ext - 1, ext, &len) == 0) {
-                    ext[len < sizeof ext ? len : sizeof ext - 1] = 0;
-                    if (strstr(ext, "cl_khr_fp64")) {
-                        fwp_cl.device = ds[d];
-                        free(ds);
-                        free(ps);
-                        return 1;
-                    }
-                }
-            }
-            free(ds);
-        }
-    }
-    free(ps);
-    snprintf(fwp_cl.error, sizeof fwp_cl.error,
-             "no OpenCL device: no OpenCL device supports double precision (cl_khr_fp64)");
-    return 0;
-}
-
-/* Calls finish before releasing a successful queue, then release the context
- * while the dynamically loaded entry points are still valid. Partial load
- * failure uses the same ownership path and preserves the cached diagnostic. */
-static void fwp_cl_finish(void) {
-    if (fwp_cl.queue) {
-        fwp_cl.finish(fwp_cl.queue);
-        fwp_cl.release_queue(fwp_cl.queue);
-        fwp_cl.queue = 0;
-    }
-    if (fwp_cl.context) {
-        fwp_cl.release_context(fwp_cl.context);
-        fwp_cl.context = 0;
-    }
-    if (fwp_cl.library) {
-        dlclose(fwp_cl.library);
-        fwp_cl.library = 0;
-    }
-}
-
-static int fwp_cl_load(void) {
-    if (fwp_cl.tried) return fwp_cl.queue != 0;
-    fwp_cl.tried = 1;
-    const char *env = getenv("FWP_OPENCL_LIB");
-    void *h = 0;
-    if (env && *env) {
-        h = dlopen(env, RTLD_NOW);
-        if (!h) {
-            snprintf(fwp_cl.error, sizeof fwp_cl.error,
-                     "no OpenCL device: the OpenCL library (%s) could not be loaded", env);
-            return 0;
-        }
-    } else {
-#ifdef __APPLE__
-        h = dlopen("/System/Library/Frameworks/OpenCL.framework/OpenCL", RTLD_NOW);
-#else
-        h = dlopen("libOpenCL.so.1", RTLD_NOW);
-        if (!h) h = dlopen("libOpenCL.so", RTLD_NOW);
-#endif
-        if (!h) {
-            snprintf(fwp_cl.error, sizeof fwp_cl.error,
-#ifdef __APPLE__
-                     "no OpenCL device: the OpenCL framework could not be loaded");
-#else
-                     "no OpenCL device: the OpenCL library (libOpenCL.so.1, libOpenCL.so) could not be loaded");
-#endif
-            return 0;
-        }
-    }
-    fwp_cl.library = h;
-#define FWP_CL_SYM(field, name) \
-    if (!(*(void **)&fwp_cl.field = dlsym(h, name))) { \
-        snprintf(fwp_cl.error, sizeof fwp_cl.error, "no OpenCL device: the OpenCL library has no `%s`", name); \
-        fwp_cl_finish(); \
-        return 0; \
-    }
-    FWP_CL_SYM(get_platforms, "clGetPlatformIDs")
-    FWP_CL_SYM(get_devices, "clGetDeviceIDs")
-    FWP_CL_SYM(device_info, "clGetDeviceInfo")
-    FWP_CL_SYM(create_context, "clCreateContext")
-    FWP_CL_SYM(create_queue, "clCreateCommandQueue")
-    FWP_CL_SYM(program_with_source, "clCreateProgramWithSource")
-    FWP_CL_SYM(build_program, "clBuildProgram")
-    FWP_CL_SYM(build_info, "clGetProgramBuildInfo")
-    FWP_CL_SYM(create_kernel, "clCreateKernel")
-    FWP_CL_SYM(create_buffer, "clCreateBuffer")
-    FWP_CL_SYM(set_arg, "clSetKernelArg")
-    FWP_CL_SYM(enqueue, "clEnqueueNDRangeKernel")
-    FWP_CL_SYM(read_buffer, "clEnqueueReadBuffer")
-    FWP_CL_SYM(finish, "clFinish")
-    FWP_CL_SYM(release_mem, "clReleaseMemObject")
-    FWP_CL_SYM(release_kernel, "clReleaseKernel")
-    FWP_CL_SYM(release_program, "clReleaseProgram")
-    FWP_CL_SYM(release_queue, "clReleaseCommandQueue")
-    FWP_CL_SYM(release_context, "clReleaseContext")
-#undef FWP_CL_SYM
-    if (!fwp_cl_pick()) { fwp_cl_finish(); return 0; }
-    int32_t err = 0;
-    fwp_cl.context = fwp_cl.create_context(0, 1, &fwp_cl.device, 0, 0, &err);
-    if (!fwp_cl.context || err) {
-        snprintf(fwp_cl.error, sizeof fwp_cl.error, "no OpenCL device: clCreateContext failed (%d)", (int)err);
-        fwp_cl_finish();
-        return 0;
-    }
-    fwp_cl.queue = fwp_cl.create_queue(fwp_cl.context, fwp_cl.device, 0, &err);
-    if (!fwp_cl.queue || err) {
-        snprintf(fwp_cl.error, sizeof fwp_cl.error, "no OpenCL device: clCreateCommandQueue failed (%d)", (int)err);
-        fwp_cl_finish();
-        return 0;
-    }
-    return 1;
-}
-
-static V fwp_p_gpu_available(void) { return fwp_cl_load() ? FWP_TRUE : FWP_FALSE; }
-
-static V fwp_cl_err(const char *msg) {
-    V s = fwp_cstr(msg);
-    return fwp_data(1, 1, &s);
-}
-
-static V fwp_p_gpu_run(V src, V nv, V consts, V inputs) {
-    if (!fwp_cl_load()) return fwp_cl_err(fwp_cl.error);
-    size_t n = (int64_t)nv < 0 ? 0 : (size_t)(int64_t)nv;
-    if (n == 0) {
-        V a = fwp_arr_new(0);
-        return fwp_data(0, 1, &a);
-    }
-    char msg[16640];
-    int32_t err = 0;
-    const char *text = STR(src)->d;
-    fwp_clp prog = fwp_cl.program_with_source(fwp_cl.context, 1, &text, 0, &err);
-    if (!prog || err) {
-        snprintf(msg, sizeof msg, "OpenCL: clCreateProgramWithSource failed (%d)", (int)err);
-        return fwp_cl_err(msg);
-    }
-    fwp_clp kernel = 0, mems[260];
-    size_t nmem = 0, nin = fwp_list_len(inputs);
-    double *result = 0;
-    msg[0] = 0;
-    if (nin > 256) {
-        snprintf(msg, sizeof msg, "OpenCL: too many inputs");
-        goto done;
-    }
-    if (fwp_cl.build_program(prog, 1, &fwp_cl.device, "-cl-fp32-correctly-rounded-divide-sqrt", 0, 0) != 0) {
-        char log[16384];
-        size_t len = 0;
-        fwp_cl.build_info(prog, fwp_cl.device, 0x1183, sizeof log - 1, log, &len);
-        log[len < sizeof log ? len : sizeof log - 1] = 0;
-        size_t l = strlen(log);
-        while (l > 0 && (log[l - 1] == '\n' || log[l - 1] == ' ')) log[--l] = 0;
-        snprintf(msg, sizeof msg, "OpenCL: building the kernel failed:\n%s", log);
-        goto done;
-    }
-    kernel = fwp_cl.create_kernel(prog, "fwp_kernel", &err);
-    if (!kernel || err) {
-        snprintf(msg, sizeof msg, "OpenCL: clCreateKernel failed (%d)", (int)err);
-        goto done;
-    }
-    /* buffers: the output, the constants, then the inputs */
-    for (size_t i = 0; i < nin + 2; i++) {
-        V a = i == 0 ? 0 : i == 1 ? consts : OBJ(inputs)->f[0];
-        if (i >= 2) inputs = OBJ(inputs)->f[1];
-        size_t len = i == 0 ? n : fwp_array_len(a);
-        uint64_t flags = i == 0 ? (1 << 1) : (1 << 2);
-        void *host = (i > 0 && len > 0) ? (void *)((const V *)fwp_array_data(a)) : 0;
-        if (host) flags |= 1 << 5;
-        mems[nmem] = fwp_cl.create_buffer(fwp_cl.context, flags, (len ? len : 1) * sizeof(double), host, &err);
-        if (!mems[nmem] || err) {
-            snprintf(msg, sizeof msg, "OpenCL: clCreateBuffer failed (%d)", (int)err);
-            goto done;
-        }
-        nmem++;
-    }
-    int64_t nn = (int64_t)n;
-    int32_t st = fwp_cl.set_arg(kernel, 0, sizeof(fwp_clp), &mems[0]);
-    st |= fwp_cl.set_arg(kernel, 1, sizeof(fwp_clp), &mems[1]);
-    st |= fwp_cl.set_arg(kernel, 2, 8, &nn);
-    for (size_t i = 0; i < nin; i++) st |= fwp_cl.set_arg(kernel, (uint32_t)(3 + i), sizeof(fwp_clp), &mems[2 + i]);
-    if (st) {
-        snprintf(msg, sizeof msg, "OpenCL: clSetKernelArg failed");
-        goto done;
-    }
-    size_t global = n;
-    st = fwp_cl.enqueue(fwp_cl.queue, kernel, 1, 0, &global, 0, 0, 0, 0);
-    if (st) {
-        snprintf(msg, sizeof msg, "OpenCL: clEnqueueNDRangeKernel failed (%d)", (int)st);
-        goto done;
-    }
-    result = (double *)fwp_k_malloc(n * sizeof(double));
-    st = fwp_cl.read_buffer(fwp_cl.queue, mems[0], 1, 0, n * sizeof(double), result, 0, 0, 0);
-    fwp_cl.finish(fwp_cl.queue);
-    if (st) snprintf(msg, sizeof msg, "OpenCL: clEnqueueReadBuffer failed (%d)", (int)st);
-done:
-    for (size_t i = 0; i < nmem; i++) fwp_cl.release_mem(mems[i]);
-    if (kernel) fwp_cl.release_kernel(kernel);
-    fwp_cl.release_program(prog);
-    if (msg[0]) {
-        free(result);
-        return fwp_cl_err(msg);
-    }
-    V r = fwp_arr_new(n);
-    memcpy(ARR(r)->d, result, n * sizeof(double));
-    free(result);
-    return fwp_data(0, 1, &r);
-}
-
-#else
-
-static void fwp_cl_finish(void) {}
-static V fwp_p_gpu_available(void) { return FWP_FALSE; }
-
-static V fwp_p_gpu_run(V src, V nv, V consts, V inputs) {
-    (void)src; (void)nv; (void)consts; (void)inputs;
-    V s = fwp_cstr("no OpenCL device: OpenCL is not available on this target");
-    return fwp_data(1, 1, &s);
-}
-
-#endif
 
 /* F64 matrix fast path: exact shape guards preserve cast/malformed fallback. */
 /* Three 32-by-32 F64 tile payloads occupy 24 KiB. */

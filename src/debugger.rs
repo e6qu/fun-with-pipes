@@ -631,10 +631,13 @@ pub fn run(args: &[String]) -> i32 {
         &program,
     )));
     debugger.borrow_mut().program_input = program_input;
-    let mut interpreter = crate::interp::Interp::new(
+    let mut interpreter = match crate::interp::Interp::new(
         &program,
         Box::new(ProgramOutput(debugger.clone(), "output")),
-    );
+    ) {
+        Ok(interpreter) => interpreter,
+        Err(error) => return crate::interp::report(&Err(error), &program),
+    };
     interpreter.set_error_writer(Box::new(ProgramOutput(debugger.clone(), "stderr")));
     interpreter.debugger = Some(debugger.clone());
     let result = interpreter.call_root(main);

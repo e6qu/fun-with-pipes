@@ -412,7 +412,10 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
         } else {
             Box::new(std::io::stdout())
         };
-        let mut it = Interp::new(prog, program_out);
+        let mut it = match Interp::new(prog, program_out) {
+            Ok(it) => it,
+            Err(error) => return report(&Err(error), prog),
+        };
         let fv = Value::Closure(std::rc::Rc::new(crate::value::Closure {
             func: fid,
             args: vec![],

@@ -71,7 +71,7 @@ main = range 0 4 | each round
         );
         let mut code = std::fs::read_to_string(&cfile).unwrap();
         if memory == "arc" {
-            let finish = "\n    fwp_cl_finish();\n";
+            let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
             assert_eq!(code.matches(finish).count(), 1);
             code = code.replace(
                 finish,
