@@ -256,13 +256,13 @@ example, `Link = | Node (Channel[Link])` is still rejected even if a particular
 program would drain every queue. This is a missing proof about all executions,
 not a claim that every value of `Link` is cyclic.
 
-Tasks and HTTP stream handles remain excluded from queue payloads. Functions
-are accepted only when the capture and call-scope checks below succeed.
-A function or task can capture the sending channel; an HTTP stream handle can
-reach the channel through its connection-owned handler. These paths can form
-a cycle without mentioning the channel in the result type; the check therefore examines the complete payload type.
-This proof adds no runtime fields, checks, weak references or implicit draining.
-Each search visits a reachable type once; checking C distinct channel types in a
+HTTP stream handles remain excluded: their connection-owned handler can lead
+back to the queue. Functions need the capture and call-scope checks below.
+The [task-message extension](measurements/task-channels.md) follows each known
+task's computation and result owners; its result type alone cannot reveal a
+captured queue. Unknown producers remain rejected. These flow checks supplement
+the payload-type check without new runtime fields, weak handles or draining.
+The payload-type search visits a reachable type once; checking C channel types in a
 graph of V types and E field links takes at most O(C × (V + E)) graph visits.
 The compiler checks each channel separately so an outer queue cannot hide a
 cycle in an inner one. This remains a conservative eligibility rule, not a ban
@@ -1391,8 +1391,9 @@ separately and require a failure, in addition to normal and cancellation checks.
 
 Wire messages encode data, not managed pointers or callable captures. Local
 queues follow their separate [capture proof](#functions-stored-in-channels);
-the new function subset does not add serialization of functions. Queue payloads
-still exclude tasks, HTTP stream handles and recursive channel ownership.
+the local function/task extensions do not serialize functions or task handles.
+HTTP stream payloads and recursive channel ownership remain excluded. Known local
+task messages use the separate computation/result proof described above.
 Request/connection owners and borrowed
 task links retain their existing contracts. ARC binaries still allocate and
 count shared owners; removing the collector does not make networking a zero-cost

@@ -2,85 +2,110 @@
 
 ## Next action
 
-Next: publish the audited correction and run all six native hosts plus both
-WebAssembly hosts on branch `task-channel-owners`, worktree
-`/private/tmp/fwp-task-channel-owners`. Keep this combined ownership work in one
-PR, then require all nine final-head production gates and documentation.
+Next: require all nine production jobs and documentation for the final head of
+[PR #190](https://github.com/e6qu/fun-with-pipes/pull/190), audit every full log, then
+squash merge. Keep one delivery PR. Continue through all seven open areas of
+[PLAN.md](../PLAN.md) after each accepted merge.
 
-This group contains callback-owner transfer, clock fixes, captured-task proofs,
-direct task messages and clearer measurement docs. The parent delivery is verified
-#189 merge `030fa3374e36459d9a774379e2116ac42ed5db1d`. The separate next allocation
-group remains local on `task-await-fields`; rebase it after this correction.
+## Current delivery
 
-Read [the task-message contract](measurements/task-channels.md) and
-[the callback measurements](measurements/queued-task-handles.md). Unknown task
-producers and captured task-bearing queues remain rejected. Direct task messages
-change the compiler proof, without new runtime representation or count operations.
+Worktree `/private/tmp/fwp-task-channel-owners`, branch `task-channel-owners`,
+source `bf78c7ab8fcc052b5931165f28393450b9106d21`, immutable tag
+`roadmap/revision-task-channels-bf78c7ab8fcc`. The final documentation/workflow
+commit follows this measured source; the publication receipt records its head
+and final production/documentation runs. Final gates must pass before merging. All six native and both WebAssembly jobs in focused run
+`39666299981` passed; every complete log is audited, with no remaining failure.
+Publication: `/private/tmp/fwp-task-channel-corrected-publication.json`.
+Audit: `/private/tmp/fwp-audit-task-channel-corrected.py`; its separate acceptance
+receipt records every completed job's full log. Early batch logs alone are not
+job acceptance. Use `/private/tmp/fwp-audit-early-ownership.py` when needed.
 
-## Checks and remaining work
+The group transfers callbacks into tasks without redundant retains, proves queued
+captured tasks/direct Task messages, rejects unproved result cycles, and checks
+clock failure/range handling. Unknown producers and captured task-bearing queues
+remain rejected. See [task messages](measurements/task-channels.md) and
+[callback measurements](measurements/queued-task-handles.md).
+The final commit records this evidence, corrects stale Task exclusions in the
+reference docs, and repairs one auxiliary workflow argument-order error. Four Cargo test selections now precede the test-harness separator,
+so the requested targets actually run. The running focused source is preserved.
 
-Guarded rustfmt and `git diff --check` pass. The verified #188 compiler
-`/private/tmp/fwp-check-compiler-fc138650/fwp` formats/type-checks the expanded
-fixture; raw interpretation prints `task captures released`. Both new negative
-examples also execute successfully under raw interpretation. These checks do not
-validate the changed Rust proof or native ownership. Full builds stay on CI.
+Current-source inspection receipts are under
+`/private/tmp/fwp-task-channel-evidence/bf78c7ab8fcc`; completed inspectors must not
+be rerun over existing reports. Native helper:
+`/private/tmp/fwp-inspect-task-channels.py --runner HOST --llvm-bin LLVM_DIR`.
+WASM helper: `/private/tmp/fwp-inspect-task-channel-wasm.py --runner HOST`.
+All six native and both WASM inspections are complete: 132 native binaries and
+64 task-channel modules. The report is `docs/measurements/task-channels-2026-10-21.json`.
 
-The documentation example prints `Some "ready"` under raw interpretation; the
-frozen primitive inventory passes. The first roadmap check found this handoff
-missing its required seven-row status table; that table is restored below.
-The full preflight audit is complete for source
-`5542803edd48496248c5eb547195f16f821bf3c6`, run `39659304312`. Both WebAssembly jobs
-passed. Linux passed 169 compiler unit tests, all other ownership tests, four
-queued gRPC checks, its 22-binary inspector and all 28 REST tests. Exactly one
-new negative test expected the wrong diagnostic: a TaskResult callback makes
-`Channel[Task[TaskResult]]` function-bearing, so that existing check rejects it
-before the general task check. The correction requires the specific channel type
-and correct ownership diagnostic for each case; no compiler rejection is relaxed.
-Full logs and the failed-source receipt are preserved by
-`/private/tmp/fwp-audit-task-channel-preflight.py`.
+Earlier source `5542803e` failed exactly one diagnostic expectation; both WASM
+jobs and all other Linux tests passed. The repaired expectation requires the
+specific function-bearing queue diagnostic for a task result containing a callback.
+No compiler proof was relaxed. Keep the failed-source receipt separate.
 
-The full-matrix dispatcher stopped on that failure before publishing any tag or
-starting jobs. The correction also publishes ownership batch logs before longer
-transport tests, with pipefail preserving failure status. Focused native/WASM jobs
-now use production's Rust O1 compiler/test profile with debug assertions and
-overflow checks retained. Generated-C settings and coverage are unchanged.
-Actionlint, diff and roadmap checks pass via `/private/tmp/fwp-check-task-channel-docs.py`;
-recheck the corrected Rust test before publication. These scheduling changes have
-no measured cycle-time result yet.
-Both new negative programs pass raw interpretation and prior-compiler tracing
-on macOS ARM64 O0 under GC/reuse stress. They are rejection tests, not examples of
-supported ARC programs. Require the corrected full matrix before acceptance.
+## Measurements and accepted parent
 
-Separate next-group preparation now lives in `/private/tmp/fwp-task-await-fields`,
-branch `task-await-fields`, based on this published source. Local commit `1da61ef1c1461fb7272eb71d9f2d83f02af95838` adds direct await
-fields and matched allocation controls; the changed compiler is unverified.
-Keep that preparation separate while this group's validation finishes. Private
-`task.within` owner removal still needs a distinct lifetime proof.
+Callback source `521a160091040207067601ca3e57d7cc444e33f0` passed all eight focused
+jobs in `39656585197`. All full logs, 132 native binaries and 64 task-capture WASM
+modules were inspected. Five task creations use 10 → 5 retains, with allocation
+requests and managed bytes unchanged. No timing or C/Rust-parity claim. The JSON
+report/guide are in docs/measurements; raw evidence is under
+`/private/tmp/fwp-task-owner-evidence/521a16009104`. That source predates direct
+Task messages and the following await optimization.
 
-## Preceding delivery evidence
+PR #189 passed nine production jobs and docs at `4dfc2be3`, then merged as
+`030fa3374e36459d9a774379e2116ac42ed5db1d` with identical tree and a verified
+single-line subject. Receipt: `/private/tmp/fwp-189-final-acceptance.json`.
+Redundant same-tree production jobs were cancelled before execution; post-merge
+docs passed. The primary workspace stays detached at that merge, with only this
+handoff dirty. Implementation belongs in the named worktrees.
 
-PR #189 passed all final gates and squash-merged as
-`030fa3374e36459d9a774379e2116ac42ed5db1d`, with identical tree and verified subject.
-Its final head is `4dfc2be31c62c9e54271692ac8638fbb66ca786b`, production run
-`39641372026`, docs `39641321443`. Audit with `/private/tmp/fwp-audit-189-final.py`
-which preserves the accepted receipt and verified merge.
-Rebasing onto `6e8d7aaee421a9c43891d368821783371e934906` is complete.
-Preserve source `521a1600` and its immutable tag.
+## Next substantial group
 
-The preceding callback-owner source passed all six native and both WebAssembly
-jobs; every full log was audited. Its source is
-`521a160091040207067601ca3e57d7cc444e33f0`, focused run `39656585197`.
-`/private/tmp/fwp-audit-task-owners-corrected.py` keeps its separate receipt.
-All 132 native binaries and 64 task-capture WebAssembly modules were inspected.
-The source-specific JSON and plain guide are ready in docs/measurements; five
-creations show 10 → 5 retains with allocations/bytes unchanged. No timing claim.
-Do not overwrite this source/report when extending the direct-task proof.
+Worktree `/private/tmp/fwp-task-await-fields`, branch `task-await-fields`.
+Published source `bed604ef5275e6600028bd5f3892c927b6653cad`, corrected preflight
+`39670240111` (Linux AMD64 and both WASM hosts). No second PR exists.
+Publication: `/private/tmp/fwp-task-await-repair-publication.json`.
+Audit: `/private/tmp/fwp-audit-task-await-repair.py`.
 
-All seven areas in [PLAN.md](../PLAN.md) remain open. Continue substantial groups,
-one delivery PR at a time, after exact-head gates pass. Every commit/merge subject
-must be one line, at most 80 characters, with no body, trailers or attribution.
-Use the primary workspace's `scripts/local-guard.py` for serial focused checks:
-64 GiB free disk, 2 GiB target, 1 GiB aggregate sampled RSS and 180 seconds.
+Immediate awaits can pass tag/payload fields directly instead of temporary Some
+boxes; escaping options retain their representation and shared results their
+required owners. The matched control restores 34 boxes. Counts and support must
+be reported per source; inspect the Linux evidence before stating measured savings.
+The group also separates partial captures created inside/outside State handlers
+and scopes `rev.jacobian`'s output-counting pass. Regressions check escaped stateful
+callbacks and repeated tape cleanup before shutdown. The ARC corpus now rejects
+unexpected exclusions instead of silently counting them.
+
+Previous preflight `39666813009`, source `82905d6b`, is fully audited: Linux passed;
+both WASM hosts failed only eight ineffective missing-State controls each. This
+fixture creates no State storage. The repair deliberately omits cached task-result
+destruction instead. Preserve that failed-source receipt. No new Rust compiler
+was built locally. Guarded formatting, frozen primitive inventory, eleven runner
+unit checks, workflow/docs checks, 27 raw-interpreter derivative outputs and
+library-doc generation pass. Compiler unit tests and the completed Linux ownership batch now pass at
+`bed604ef`; the early batch log is fully audited. Corpus, transport and both WASM
+jobs still need full audits. Early receipt:
+`/private/tmp/fwp-task-await-repair-early-logs/ownership-log-ubuntu-latest.json`.
+
+The accepted parent Linux corpus ran 75 of 86 programs, rejected eight, and checked
+three compile errors. The two scope repairs address two of those rejections.
+GPU, foreign-pointer and invalid cross-task AD reasons stay explicit. Evidence:
+`/private/tmp/fwp-189-arc-corpus`; minimized cases/IR:
+`/private/tmp/fwp-arc-corpus-isolation`. These Linux results are not all-platform
+acceptance. The next group's own handoff contains its local probe details. Further prepared
+repairs free leaked raw buffers in the C-interop example and require all 27 tape
+cleanup observations to run. The repaired example and omitted-free control pass
+raw interpretation/macOS ARM64 O0 checks with the prior verified compiler; those
+additional changes still need publication and CI.
+
+## Delivery and resource rules
+
+Use the primary `python3 scripts/local-guard.py COMMAND...` for serial focused
+checks. Preserve 64 GiB free disk, target below 2 GiB, sampled aggregate RSS below
+1 GiB and the 180-second deadline. Full builds/suites/benchmarks stay on runners.
+Fix every observed failure; do not weaken controls. Squash only after exact-head
+nine production jobs plus docs pass, with one line ≤80 characters, empty body,
+no trailers or attribution. Standing authorization applies. Continue the plan.
 
 ## Roadmap status
 

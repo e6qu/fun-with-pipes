@@ -141,8 +141,10 @@ boundary; it does not establish tracing-free eligibility.
 Channel close preserves queued values. Explicit drain breaks the tested counted
 cycle, while unreachable shared cycles still need tracing. Checked ARC admits
 nested channels when following their payload types cannot lead back to the same
-channel type. Tasks and HTTP stream handles remain excluded at any nested
-position because their hidden owners can lead back to the queue. The
+channel type. HTTP stream handles remain excluded because their hidden owners
+can lead back to the queue. The [task-message extension](measurements/task-channels.md)
+also follows each known task's computation and result; unknown producers and
+captured task-bearing queues remain rejected. The
 [queued-function capture proof](ownership.md#functions-stored-in-channels)
 checks actual captures and call scopes separately. The queue owns each
 retained message and the last channel owner releases remaining messages. See the

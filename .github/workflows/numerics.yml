@@ -1360,7 +1360,7 @@ jobs:
         run: cargo test --lib
       - name: Queue capture and receiver-scope regressions
         if: ${{ !cancelled() && matrix.part == 'queued' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested -- --nocapture --test compiler_call_liveness --test worker_preparation_ownership --test borrowed_callbacks --test record_conversion_ownership
+        run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested --test compiler_call_liveness --test worker_preparation_ownership --test borrowed_callbacks --test record_conversion_ownership -- --nocapture
       - name: Preserve the compiler for bounded diagnostic checks
         if: ${{ !cancelled() && matrix.part == 'queued' }}
         uses: actions/upload-artifact@v7
