@@ -10,7 +10,7 @@ for delivery status. The PR now includes a U32 multiplication repair absent from
 this preparation base. The earlier `080b0ff6` production run was cancelled.
 Do not merge or publish a second PR from this older base.
 
-Once PR #182 passes all nine production gates and documentation and is squash
+Next: once PR #182 passes all nine production gates and documentation and is squash
 merged, transplant this preparation onto that accepted merge. Preserve its
 compiler fixes and current handoff. Then implement and test the range-preserving
 multiplication candidate below in the next coherent batch.
@@ -64,3 +64,15 @@ primary project objective. JIT is excluded.
 Local work remains serial and guarded: 64 GiB free disk, target below 2 GiB,
 aggregate RSS below 1 GiB and 180 seconds. Full builds, native compilation,
 full tests and measurements run on GitHub; do not raise or bypass guard limits.
+
+## Roadmap status
+
+| Step | Status | Remaining work |
+|---|---|---|
+| 1 | In progress | Remove tracing; prove retained ownership and cleanup. |
+| 2 | In progress | Eliminate avoidable functional allocations and count traffic. |
+| 3 | In progress | Resolve measured machine-code and performance gaps. |
+| 4 | In progress | Improve differentiation time, memory and precision. |
+| 5 | In progress | Validate numerical kernels and ahead-of-time GPU policy. |
+| 6 | In progress | Establish equivalent-work comparisons and budgets. |
+| 7 | In progress | Validate larger programs and bounded live memory. |
