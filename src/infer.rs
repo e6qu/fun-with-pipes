@@ -552,7 +552,34 @@ impl<'a> Infer<'a> {
     /// A function value can satisfy a parameter that permits additional known
     /// effects. Widen only its temporary outer row, preserving effect variables
     /// shared with function-valued inputs; this is unrelated to caller effects.
-    fn argument_type(&mut self, expected: &Type, actual: &Type) -> Type {
+    fn argument_type(&mut self, expected: &Type, actual: &Type, callee: &Type) -> Type {
+        fn row_without(table: &TypeTable, row: &Row, tail: TV, label: &str) -> bool {
+            let row = table.flatten_row(row);
+            row.tail == Some(tail) && !row.fields.iter().any(|(name, _)| name == label)
+        }
+        fn result_without(table: &TypeTable, ty: &Type, tail: TV, label: &str) -> bool {
+            let visit = |ty: &Type| result_without(table, ty, tail, label);
+            match table.resolve(ty) {
+                Type::Fun(input, output, row) => {
+                    row_without(table, &row, tail, label)
+                        || visit(&input)
+                        || visit(&output)
+                        || table
+                            .flatten_row(&row)
+                            .fields
+                            .iter()
+                            .any(|(_, ty)| visit(ty))
+                }
+                Type::Con(_, args) => args.iter().any(visit),
+                Type::App(head, args) => visit(&head) || args.iter().any(visit),
+                Type::Record(row) => table
+                    .flatten_row(&row)
+                    .fields
+                    .iter()
+                    .any(|(_, ty)| visit(ty)),
+                Type::Var(_) | Type::Nat(_) | Type::NatOp(..) => false,
+            }
+        }
         let Type::Fun(_, _, permitted) = self.env.table.resolve(expected) else {
             return actual.clone();
         };
@@ -578,6 +605,20 @@ impl<'a> Infer<'a> {
             effects.tail = Some(self.env.table.fresh(Kind::Eff, self.level));
         }
         for (label, payload) in permitted.fields {
+            // A handler may accept {Error | e} and return a function using e.
+            // Keep that prefix on the callback's shared row: adding Error only
+            // to a temporary copy would unify the callback's row with e and
+            // leak its handled Error into the result. Follow returned records
+            // too; this is a type relationship, not a special case for names.
+            if permitted.tail.is_some_and(|tail| {
+                let Type::Fun(_, result, call) = self.env.table.resolve(callee) else {
+                    return false;
+                };
+                row_without(&self.env.table, &call, tail, &label)
+                    || result_without(&self.env.table, &result, tail, &label)
+            }) {
+                continue;
+            }
             if !effects
                 .fields
                 .iter()
@@ -1602,7 +1643,7 @@ impl<'a> Infer<'a> {
             let r = self.fresh();
             match self.env.table.resolve(&tf) {
                 Type::Fun(p, _, _) => {
-                    let argument = self.argument_type(&p, &ta);
+                    let argument = self.argument_type(&p, &ta, &tf);
                     self.unify_presented(
                         arg.span,
                         &p,

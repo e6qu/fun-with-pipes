@@ -92,7 +92,7 @@ call-closed =
     | tap (fork channel.send .0 .1)
     | .0
     | channel.recv
-    | option.map (.call | attempt | apply () | result.is-ok)
+    | option.map (.call | attempt (apply ()) | result.is-ok)
     | eq (Some False)
     | require
 send-pending : Channel[Event] -> () -> Bool ! {Async, Network, Error[IoError]}

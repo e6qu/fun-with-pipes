@@ -543,9 +543,7 @@ impl Proof<'_> {
             }
             Body::Prim(symbol) if matches!(symbol.as_str(), "get" | "put" | "modify") => {
                 if scoped & STATE == 0 {
-                    return Err(format!(
-                        "--gc arc: primitive `{symbol}` has no tracing-free lifetime policy outside a State scope"
-                    ));
+                    return Err(format!("--gc arc: primitive `{symbol}` has no tracing-free lifetime policy outside a State scope"));
                 }
                 match symbol.as_str() {
                     "get" => Ok(self.state_values.clone()),
@@ -573,9 +571,7 @@ impl Proof<'_> {
                 ) =>
             {
                 if scoped & AD == 0 {
-                    return Err(format!(
-                        "--gc arc: primitive `{symbol}` has no tracing-free lifetime policy outside an autodiff scope"
-                    ));
+                    return Err(format!("--gc arc: primitive `{symbol}` has no tracing-free lifetime policy outside an autodiff scope"));
                 }
                 if symbol == "ad.tape-owned" {
                     // Stored scalar operations may execute during a later

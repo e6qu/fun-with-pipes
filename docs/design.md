@@ -91,6 +91,14 @@ function arrow has an effect row. A call may use a larger surrounding effect
 context, but cannot silently widen the effects accepted by a nested callback.
 The inference code must preserve required effects when unifying fields and
 payloads. Handlers such as `attempt` and `run-state` remove the effect they handle.
+When a handler accepts a callback with `{Error[x] | e}` and returns a function
+with `e`, the two uses of `e` must stay related. For example,
+`attempt (apply ())` takes a function, calls it with unit and catches its error;
+the result must not still require that handled error. Adding `Error` only to a
+temporary callback type would lose this relationship when the callback's input
+is itself a function. Argument checking preserves these shared rows, including
+handlers returned inside records. It still rejects unrelated required effects,
+such as IO under an error handler. This repair is pending native validation.
 Only the last arrow of a binding may have effects, so partial application does
 not run that action early. Non-function top-level values must be pure, except
 program/test entry points.

@@ -49,7 +49,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
             );
             let mut code = std::fs::read_to_string(cfile).unwrap();
             if name == "sockets" {
-                // Count actual socket owners rather than managed bytes alone:
+                // Count socket objects with value owners, not just managed bytes:
                 // a collected header is not evidence its OS handle was closed.
                 // Each of 64 rounds opens 6 listeners, 6 connections and 10 UDP
                 // sockets. The 64-live ceiling allows original resource frames
@@ -172,54 +172,24 @@ keep : Channel[() -> () ! {Async}] -> () -> () ! {Async}
 keep = then2 const channel.close
 "#;
     for (name, body) in [
-        (
-            "self",
-            "send-self = fork channel.send id keep\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n",
-        ),
-        (
-            "returned",
-            "returned = keep | const | apply ()\nsend-self = fork channel.send id returned\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n",
-        ),
-        (
-            "nested",
-            "lists : I64 -> Channel[List[() -> () ! {Async}]] ! {Async}\nlists = channel.make\nmain = lists 1 | tap (flip channel.send [keep (callbacks 1)]) | channel.recv | ignore\n",
-        ),
-        (
-            "two-queues",
-            "main = (callbacks 1, callbacks 1) | tap (fork channel.send .0 (.1 | keep)) | tap (fork channel.send .1 (.0 | keep)) | both (.0 | channel.recv) (.1 | channel.recv) | ignore\n",
-        ),
-        (
-            "caught",
-            "caught : Channel[() -> () ! {Async}] -> Result[(), () -> () ! {Async}]\ncaught = attempt (keep | fail)\nfrom-error = caught | match\n    Err _ -> id\n    Ok _ -> const task.yield\nmain = callbacks 1 | tap (fork channel.send id from-error) | channel.recv | option.map (apply ()) | ignore\n",
-        ),
+        ("self", "send-self = fork channel.send id keep\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n"),
+        ("returned", "returned = keep | const | apply ()\nsend-self = fork channel.send id returned\nmain = callbacks 1 | tap send-self | channel.recv | option.map (apply ()) | ignore\n"),
+        ("nested", "lists : I64 -> Channel[List[() -> () ! {Async}]] ! {Async}\nlists = channel.make\nmain = lists 1 | tap (flip channel.send [keep (callbacks 1)]) | channel.recv | ignore\n"),
+        ("two-queues", "main = (callbacks 1, callbacks 1) | tap (fork channel.send .0 (.1 | keep)) | tap (fork channel.send .1 (.0 | keep)) | both (.0 | channel.recv) (.1 | channel.recv) | ignore\n"),
+        ("caught", "caught : Channel[() -> () ! {Async}] -> Result[(), () -> () ! {Async}]\ncaught = attempt (keep | fail)\nfrom-error = caught | match\n    Err _ -> id\n    Ok _ -> const task.yield\nmain = callbacks 1 | tap (fork channel.send id from-error) | channel.recv | option.map (apply ()) | ignore\n"),
     ] {
         let source = dir.join(format!("{name}.fwp"));
         std::fs::write(&source, format!("{prefix}\n{body}")).unwrap();
-        checked(
-            Command::new(env!("CARGO_BIN_EXE_fwp"))
-                .env("FWP_NO_OPT", "1")
-                .args(["run", "--interp"])
-                .arg(&source),
-        );
+        checked(Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env("FWP_NO_OPT", "1").args(["run", "--interp"]).arg(&source));
         let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
             .args(["build", "--gc", "arc", "--emit-c"])
-            .arg(&source)
-            .arg("-o")
-            .arg(dir.join("rejected.c"))
-            .output()
-            .unwrap();
-        assert!(
-            !build.status.success(),
-            "{name}: accepted an unproved captured channel"
-        );
+            .arg(&source).arg("-o").arg(dir.join("rejected.c"))
+            .output().unwrap();
+        assert!(!build.status.success(), "{name}: accepted an unproved captured channel");
         let error = String::from_utf8_lossy(&build.stderr);
-        assert!(
-            error.contains("queued function")
-                && error.contains("captured")
-                && error.contains("Channel"),
-            "{name}: {error}"
-        );
+        assert!(error.contains("queued function") && error.contains("captured") && error.contains("Channel"), "{name}: {error}");
     }
 }
 

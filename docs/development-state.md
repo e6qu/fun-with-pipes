@@ -2,9 +2,25 @@
 
 ## Next action
 
-Next: validate the retained-resource ownership batch on branch
-`prove-retained-resource-ownership`, based on accepted merge
-`447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c`. [PR #184](https://github.com/e6qu/fun-with-pipes/pull/184) is a draft.
+Next: finish the handler inference repair discovered while testing socket queues,
+then complete focused and production validation for [PR #184](https://github.com/e6qu/fun-with-pipes/pull/184).
+Branch `prove-retained-resource-ownership` is based on accepted merge
+`447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c`; published head is `2121a9b5`.
+
+All six native socket jobs in `39563352313` have passed their test steps (last
+Intel macOS artifact upload was finishing). Five complete logs and 20 saved
+binaries have been audited; finish the sixth and generate the evidence report.
+The repair stays in this PR: `attempt (apply ())` incorrectly retained Error in
+its result type because argument weakening inserted the handled label into a
+temporary row, losing its relationship to the callback input. The same pattern
+can affect State handlers and returned records. `src/infer.rs::argument_type`
+now preserves labels where the callee shares the remaining row with its output;
+this is structural, not a special case for named handlers. New `call_effects`
+checks cover aliases, records, State, native/interpreter agreement, and rejection
+of unrelated IO effects. These edits are not yet remotely tested. Publish with
+`suite=queued-sockets,native_runner=ubuntu-latest` for early feedback, then use
+all platforms and the full nine production gates before merge. Existing source
+acceptance and missing-effect rejection tests must keep passing.
 
 The audit found that `src/infer.rs::check_effects` already rejects partial
 applications capturing `File`: reusable functions cannot consume a single-use
@@ -21,9 +37,9 @@ twice, closed and undrained queues, aliases, caught failure, blocked senders and
 cancellation during UDP receive, TCP accept and TCP read. Unit tests preserve
 rejection through mixed records and recursive containers.
 
-Run `numerics.yml` with `suite=queued-sockets,native_runner=all` for the current
-batch, audit every failure, then require all nine production gates and docs at
-the final head. This focused option retains six native platforms and tests the
+Focused `queued-sockets` run `39563352313` tests published head `2121a9b5`.
+Audit every failure, then require all nine production gates and docs at the final
+head. Use `/private/tmp/fwp-audit-184-sockets.py` to retain complete job logs. This focused option retains six native platforms and tests the
 changed queue proof alongside socket/resource cleanup. The broader `channel-proof`
 run `39561654177` at `9232cdf4e790dbe2b728cb0e5d96c1a55ab4fd4d` is still finishing.
 Both WASI jobs passed; the completed Linux AMD64 job found only the new fixture's

@@ -438,9 +438,10 @@ when called with `()`, returns whether its address is available. The queue owns
 the event after the creating function returns. Receiving and calling it twice
 should produce `True` both times. Explicitly closing a retained UDP alias instead
 makes it return `False`. Other cases drop undrained queues, catch a failure and
-cancel a blocked sender. Native tests count live socket owners over 64 rounds,
+cancel a blocked sender. Native tests count live socket objects over 64 rounds,
 check complete ARC teardown and deliberately omit queue release and socket close
-to check the leak detectors. CI acceptance is pending; these are correctness
+to check the leak detectors. Counters are inserted by the tests into generated C;
+ordinary programs keep the existing runtime and shared ownership costs. CI acceptance is pending; these are correctness
 checks, not performance measurements or a bound for arbitrary applications.
 
 ## Ownership contract checks

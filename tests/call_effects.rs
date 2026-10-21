@@ -19,6 +19,107 @@ main = [
 ] | ignore
 "#;
 
+const HANDLED_CALLBACKS: &str = r#"
+checked : (() -> () ! {Error[String]}) -> Result[(), String]
+checked = attempt (apply ())
+ErrorCall = { call: () -> () ! {Error[String]} }
+checked-record : ErrorCall -> Result[(), String]
+checked-record = .call | attempt (apply ())
+handle : (a -> b ! {Error[x] | e}) -> a -> Result[b, x] ! e
+handle = attempt
+alias-check : (() -> () ! {Error[String]}) -> Result[(), String]
+alias-check = handle (apply ())
+Deferred[a] = { run: a }
+defer : (a -> b ! {Error[x] | e}) -> Deferred[a -> Result[b, x] ! e]
+defer = attempt | make Deferred { run = id }
+deferred : Deferred[(() -> () ! {Error[String]}) -> Result[(), String]]
+deferred = defer (apply ())
+read-state : (() -> I64 ! {State[I64]}) -> (I64, I64)
+read-state = run-state 7 (apply ())
+checked-io : (() -> () ! {IO, Error[String]}) -> Result[(), String] ! {IO}
+checked-io = attempt (apply ())
+fail-now : () -> () ! {Error[String]}
+fail-now = const "expected" | fail
+print-fail : () -> () ! {IO, Error[String]}
+print-fail = tap (const "before" | print) | fail-now
+main = [
+    checked fail-now | echo,
+    checked (const ()) | echo,
+    ErrorCall { call = fail-now } | checked-record | echo,
+    alias-check fail-now | echo,
+    deferred | .run | apply fail-now | echo,
+    read-state get | echo,
+    checked-io print-fail | echo,
+] | ignore
+"#;
+
+#[test]
+fn handlers_remove_effects_shared_with_callback_inputs_and_returned_records() {
+    let checked = check_source("handled-callbacks.fwp", HANDLED_CALLBACKS, None)
+        .unwrap_or_else(|error| panic!("{}", error.rendered));
+    let types = signatures(&checked);
+    assert!(
+        types.contains("checked : (() -> () ! {Error[String]}) -> Result[(), String]\n"),
+        "{types}"
+    );
+    for source in [
+        "bad : (() -> () ! {IO, Error[String]}) -> Result[(), String]\nbad = attempt (apply ())\n",
+        "bad : (() -> I64 ! {State[I64], IO}) -> (I64, I64)\nbad = run-state 7 (apply ())\n",
+    ] {
+        let error = check_source("unhandled-callback-io.fwp", source, None)
+            .err()
+            .unwrap_or_else(|| panic!("handler discarded an unrelated IO effect"));
+        assert!(error.rendered.contains("IO"), "{}", error.rendered);
+    }
+}
+
+#[test]
+fn handled_callback_application_matches_interpretation_and_native_execution() {
+    let dir = fwp::cgen::TempDir::new("handled-callbacks").unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(&source, HANDLED_CALLBACKS).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = Command::new(compiler)
+        .env("FWP_NO_OPT", "1")
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(reference.status.success(), "{reference:?}");
+    assert_eq!(reference.stdout, b"Err \"expected\"\nOk ()\nErr \"expected\"\nErr \"expected\"\nErr \"expected\"\n(7, 7)\nbefore\nErr \"expected\"\n");
+    assert!(reference.stderr.is_empty(), "{reference:?}");
+    for memory in ["arc", "tracing"] {
+        let cfile = dir.join("main.c");
+        let emitted = Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--gc", memory, "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile)
+            .output()
+            .unwrap();
+        assert!(emitted.status.success(), "{emitted:?}");
+        let code = std::fs::read_to_string(cfile).unwrap();
+        for opt in ["-O0", "-O2"] {
+            let binary = dir.join("main.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let stress = if memory == "arc" { "0" } else { "1" };
+            let actual = Command::new(binary)
+                .env_remove("FWP_GC")
+                .env("FWP_GC_STRESS", stress)
+                .env("FWP_GC_VERIFY", stress)
+                .env("FWP_REUSE_VERIFY", stress)
+                .output()
+                .unwrap();
+            assert!(actual.status.success(), "{memory}/{opt}: {actual:?}");
+            assert_eq!(
+                (&actual.stdout, &actual.stderr),
+                (&reference.stdout, &reference.stderr)
+            );
+        }
+    }
+}
+
 #[test]
 fn comptime_rejects_runtime_handles_for_interpreted_and_native_programs() {
     let dir = fwp::cgen::TempDir::new("fwp-comptime-handle").unwrap();
