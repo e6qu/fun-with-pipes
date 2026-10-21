@@ -9610,7 +9610,12 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             }
             _ => vec![main],
         };
-        crate::arc::check(prog, &entries)?;
+        let entry_channels = if matches!(&mode, Mode::Service) {
+            crate::arc::EntryChannels::GrpcResponses
+        } else {
+            crate::arc::EntryChannels::Unknown
+        };
+        crate::arc::check(prog, &entries, entry_channels)?;
     }
     let mut g = Gen {
         resource_captures: crate::resource::has_socket_values(&prog.funcs, &prog.shapes),
