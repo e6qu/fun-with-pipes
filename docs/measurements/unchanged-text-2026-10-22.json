@@ -1,0 +1,2498 @@
+{
+  "reports": [
+    {
+      "source": "67b684506bb4a7220ed56aec82c45a6c44b09fb0",
+      "host": "ubuntu-latest",
+      "machine": "x86_64",
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.26\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cCompiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "rustCompiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "environment": {
+        "FWP_LTO": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "arguments": {
+        "compiler": "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+        "cc": "gcc",
+        "rustc": "rustc",
+        "objdump": "objdump",
+        "nm": "nm",
+        "time": "/usr/bin/time",
+        "case": [
+          "4096:64",
+          "65536:1024"
+        ],
+        "warmups": 2,
+        "samples": 24,
+        "timeout": 180,
+        "host": "ubuntu-latest",
+        "output": "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence",
+        "baseline": "wordfreq-before",
+        "baseline_source": "74263bccf8e2e67865e1863e2c04a296a97877bb"
+      },
+      "baselineSource": "74263bccf8e2e67865e1863e2c04a296a97877bb",
+      "baselineGeneratedCHashes": {
+        "before-arc": "9cd977f86ff4b3fdc49bea676a3991f58722630bc2731d42523167444929de76",
+        "before-tracing": "6f48be934a71820c715b5b4c16d71afa1014aa8915d4557a82aea019547bbe8a"
+      },
+      "commands": [
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/wordfreq_bench.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/c"
+        ],
+        [
+          "rustc",
+          "--edition=2021",
+          "-C",
+          "opt-level=2",
+          "-C",
+          "overflow-checks=yes",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/wordfreq_bench.rs",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/rust"
+        ],
+        [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--gc",
+          "arc",
+          "-O2",
+          "--emit-c",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/examples/wordfreq.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc.c"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--gc",
+          "tracing",
+          "-O2",
+          "--emit-c",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/examples/wordfreq.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing.c"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ]
+      ],
+      "buildNs": {
+        "c": 69253642,
+        "rust": 258296298,
+        "fwp-arc-frontend": 308840802,
+        "fwp-arc": 1093419152,
+        "fwp-arc-profile": 1075708843,
+        "fwp-tracing-frontend": 314214935,
+        "fwp-tracing": 1348047266,
+        "fwp-tracing-profile": 1207761048,
+        "before-arc": 1098724749,
+        "before-arc-profile": 1077057678,
+        "before-tracing": 1260034754,
+        "before-tracing-profile": 1245271752
+      },
+      "binaries": {
+        "c": {
+          "sha256": "af35d7ed0936ec33f30f53158f66a4d6285bcd59dfc6a11b12c8a3aab74d626d",
+          "bytes": 16552,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/c:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000001650\n\n",
+          "buildNs": 69253642
+        },
+        "rust": {
+          "sha256": "bca13b57547fb709e86aa28c4d48bd49a5d0691234a0febb0c4a85493bff1165",
+          "bytes": 4567768,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/rust:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000015d90\n\n",
+          "buildNs": 258296298
+        },
+        "fwp-arc": {
+          "sha256": "f05a221c2bd42a29321eb9366c37072b17940bb63e1bf206006a63c736fdb4e7",
+          "bytes": 102240,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x00000000000039c0\n\n",
+          "buildNs": 1093419152
+        },
+        "fwp-tracing": {
+          "sha256": "ff38beb7f5932fa85a01d327f8c238ae3a9c8fb843644b470ea6cc75ddcd06b0",
+          "bytes": 110968,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000003a30\n\n",
+          "buildNs": 1348047266
+        },
+        "before-arc": {
+          "sha256": "ac38c3acbd7dfb7ba55edd1f0482b6074df73a55f4c277d9cbef057254fd9ad1",
+          "bytes": 102240,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x00000000000039c0\n\n",
+          "buildNs": 1098724749
+        },
+        "before-tracing": {
+          "sha256": "b72ac0f47a8544061d1845af224cdd6b71ceba43f11bef86b816baaa7ce6a684",
+          "bytes": 110968,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000003a30\n\n",
+          "buildNs": 1260034754
+        }
+      },
+      "results": {
+        "4096-64": {
+          "tokens": 4096,
+          "vocabulary": 64,
+          "inputBytes": 46696,
+          "inputSha256": "a0aaf42271d64f12020436b3483630e2afcfe58d63c927fd8f264a2defe15274",
+          "samplesNs": {
+            "c": [
+              1243616,
+              1271137,
+              1564949,
+              1172169,
+              2219871,
+              1111348,
+              1058759,
+              1017677,
+              1059971,
+              1121532,
+              1042635,
+              1197637,
+              1159450,
+              1156235,
+              1124297,
+              2546821,
+              1144988,
+              1120572,
+              1127121,
+              1129384,
+              2535734,
+              1059690,
+              1105979,
+              1119670
+            ],
+            "rust": [
+              1468754,
+              1553771,
+              1477847,
+              1464227,
+              1433111,
+              1444678,
+              1719430,
+              1683496,
+              1424237,
+              1511808,
+              1860391,
+              2169996,
+              1464367,
+              1545860,
+              1452830,
+              1441633,
+              1427422,
+              1403896,
+              1529936,
+              1467582,
+              1380120,
+              1496545,
+              2605689,
+              2089745
+            ],
+            "fwp-arc": [
+              2206471,
+              2291187,
+              2263266,
+              2282785,
+              2565409,
+              2639360,
+              3068734,
+              2296596,
+              2289795,
+              2267091,
+              2346421,
+              3762425,
+              2220151,
+              2515924,
+              2116555,
+              2640673,
+              2151008,
+              2707042,
+              2636245,
+              2275403,
+              2728644,
+              2153692,
+              2128493,
+              2223336
+            ],
+            "fwp-tracing": [
+              3630156,
+              2333972,
+              2221433,
+              2190566,
+              2527892,
+              2209245,
+              2199329,
+              2181794,
+              2783877,
+              3439521,
+              2346651,
+              2239991,
+              2326831,
+              3249044,
+              2201774,
+              2628844,
+              2322565,
+              2151318,
+              2140973,
+              2148543,
+              3284969,
+              2076065,
+              2390297,
+              2199010
+            ],
+            "before-arc": [
+              3223246,
+              2538199,
+              2730727,
+              3560853,
+              2494202,
+              2473401,
+              3073932,
+              2786872,
+              2695865,
+              2464708,
+              2506080,
+              2864698,
+              2621043,
+              2522725,
+              2796235,
+              2555655,
+              2481033,
+              2515565,
+              2417367,
+              2464287,
+              2437457,
+              2459210,
+              2483026,
+              2797737
+            ],
+            "before-tracing": [
+              3411309,
+              2995144,
+              2718008,
+              2860582,
+              2579009,
+              2593071,
+              2465529,
+              2979380,
+              2810467,
+              2502384,
+              2643767,
+              3113160,
+              2473461,
+              2551829,
+              3365820,
+              2554312,
+              2579070,
+              2610837,
+              2480992,
+              2496957,
+              2629525,
+              2631298,
+              3447693,
+              2564628
+            ]
+          },
+          "medianNs": {
+            "c": 1128252.5,
+            "rust": 1473300.5,
+            "fwp-arc": 2290491.0,
+            "fwp-tracing": 2281278.0,
+            "before-arc": 2530462.0,
+            "before-tracing": 2620181.0
+          },
+          "ratios": {
+            "fwp-arc": {
+              "c": 2.030122689734789,
+              "rust": 1.5546665463019933
+            },
+            "fwp-tracing": {
+              "c": 2.021956964420642,
+              "rust": 1.548413239525813
+            }
+          },
+          "orders": [
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ],
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ]
+          ],
+          "candidateOverBaseline": {
+            "arc": 0.9051671196801216,
+            "tracing": 0.8706566454760186
+          },
+          "peakProcessRssBytes": {
+            "c": 1941504,
+            "rust": 2494464,
+            "fwp-arc": 2662400,
+            "fwp-tracing": 2670592,
+            "before-arc": 2662400,
+            "before-tracing": 2670592
+          },
+          "managedProfiles": {
+            "fwp-arc": {
+              "requests": 15583,
+              "requestedBytes": 490854,
+              "retains": 8650,
+              "peakChargedBytes": 487176,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "fwp-tracing": {
+              "requests": 15583,
+              "requestedBytes": 490854,
+              "retains": 8650,
+              "peakChargedBytes": 487176,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-arc": {
+              "requests": 24865,
+              "requestedBytes": 668304,
+              "retains": 8650,
+              "peakChargedBytes": 557064,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-tracing": {
+              "requests": 24865,
+              "requestedBytes": 668304,
+              "retains": 8650,
+              "peakChargedBytes": 557064,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          }
+        },
+        "65536-1024": {
+          "tokens": 65536,
+          "vocabulary": 1024,
+          "inputBytes": 747112,
+          "inputSha256": "76bbb0dd75f6c1944bdb76dffcdca62251bcfc98851dc648ae983d7da8592160",
+          "samplesNs": {
+            "c": [
+              8673594,
+              8716768,
+              8879323,
+              8905713,
+              8618371,
+              8722157,
+              8619833,
+              8526112,
+              8410068,
+              8445952,
+              8413264,
+              8541746,
+              8718672,
+              9363839,
+              8775537,
+              8729848,
+              8701696,
+              8524720,
+              8403499,
+              8410940,
+              8500895,
+              8303318,
+              8382527,
+              8589257
+            ],
+            "rust": [
+              12641928,
+              12657622,
+              12852725,
+              12824092,
+              12470260,
+              12494016,
+              12763340,
+              12558994,
+              12200426,
+              12650881,
+              12491323,
+              12664422,
+              12406024,
+              12504592,
+              12877592,
+              12661187,
+              12704102,
+              12391282,
+              12612944,
+              12688628,
+              12612294,
+              12589540,
+              12512784,
+              12783251
+            ],
+            "fwp-arc": [
+              22464056,
+              23548072,
+              27275314,
+              23014922,
+              27521675,
+              22203264,
+              22158357,
+              22713599,
+              27754523,
+              26144337,
+              21782192,
+              22653730,
+              22213149,
+              22855553,
+              22801742,
+              21836133,
+              22235312,
+              27364838,
+              21889082,
+              22206088,
+              22013069,
+              22497505,
+              21782343,
+              27829465
+            ],
+            "fwp-tracing": [
+              22467721,
+              22240079,
+              21655753,
+              23583054,
+              22475673,
+              22873890,
+              27428734,
+              26870797,
+              22309112,
+              21564156,
+              23505488,
+              26781944,
+              22006319,
+              21659308,
+              21813630,
+              28096526,
+              22372258,
+              22585157,
+              27603908,
+              22794491,
+              23384076,
+              27879491,
+              22513720,
+              22148872
+            ],
+            "before-arc": [
+              34176740,
+              27583717,
+              33423069,
+              26782695,
+              27400071,
+              27326971,
+              26834523,
+              26770958,
+              27736876,
+              27030356,
+              26551699,
+              27569946,
+              31644320,
+              28719451,
+              27464158,
+              26822916,
+              27818179,
+              26964308,
+              26963096,
+              27200883,
+              32573734,
+              27788885,
+              26573691,
+              27426552
+            ],
+            "before-tracing": [
+              29186722,
+              34834476,
+              29440884,
+              34947616,
+              29301354,
+              29306111,
+              29257187,
+              33437711,
+              29323668,
+              33336598,
+              28457758,
+              34589308,
+              28193221,
+              28568334,
+              28391259,
+              29488214,
+              34927836,
+              34344020,
+              29445240,
+              34324000,
+              28672551,
+              34434135,
+              28475825,
+              35153324
+            ]
+          },
+          "medianNs": {
+            "c": 8603814.0,
+            "rust": 12627436.0,
+            "fwp-arc": 22575617.5,
+            "fwp-tracing": 22549438.5,
+            "before-arc": 27413311.5,
+            "before-tracing": 29443062.0
+          },
+          "ratios": {
+            "fwp-arc": {
+              "c": 2.623908129580672,
+              "rust": 1.7878227614853879
+            },
+            "fwp-tracing": {
+              "c": 2.6208654092243275,
+              "rust": 1.7857495773488774
+            }
+          },
+          "orders": [
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ],
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ]
+          ],
+          "candidateOverBaseline": {
+            "arc": 0.8235275588649696,
+            "tracing": 0.765865944921082
+          },
+          "peakProcessRssBytes": {
+            "c": 4689920,
+            "rust": 6418432,
+            "fwp-arc": 10809344,
+            "fwp-tracing": 10698752,
+            "before-arc": 11870208,
+            "before-tracing": 11878400
+          },
+          "managedProfiles": {
+            "fwp-arc": {
+              "requests": 248807,
+              "requestedBytes": 7852294,
+              "retains": 138250,
+              "peakChargedBytes": 7794440,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "fwp-tracing": {
+              "requests": 248807,
+              "requestedBytes": 7852294,
+              "retains": 138250,
+              "peakChargedBytes": 7794440,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-arc": {
+              "requests": 397353,
+              "requestedBytes": 10692144,
+              "retains": 138250,
+              "peakChargedBytes": 8912904,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-tracing": {
+              "requests": 397353,
+              "requestedBytes": 10692144,
+              "retains": 138250,
+              "peakChargedBytes": 8912904,
+              "finalChargedBytes": 0,
+              "collections": 1
+            }
+          }
+        }
+      },
+      "acceptanceFailures": [],
+      "sourceHashes": {
+        "examples/wordfreq.fwp": "520eedac90a0360dc4de954bd3ab5cc939118a17c058746d37448bafd66493bd",
+        "tests/fixtures/wordfreq_bench.c": "45206b29b3e17c0784a2ed605e195def227d346609ecfe1e131c11f9054f4ccc",
+        "tests/fixtures/wordfreq_bench.rs": "47c11b0e732926220192555716e2ceafacda9ae4a2f5495c00b0d58ca081d530",
+        "scripts/measure-wordfreq.py": "d7eaefcf9f99d62e2a48cf672a223758859a847aa504918599ca9d886e3eac0b",
+        "scripts/measure-iteration.py": "fe7cc4d2931eccf157012ade4a37235910f701e39d3ffa96f1874d0a6f96137b"
+      },
+      "scope": "Whole process including input read, normalization, sorted-map counting, ranking, printing and teardown. Input generation and compilation excluded. Timings use uninstrumented binaries; fresh-process RSS and fwp managed counters are separate. C/Rust implement only ASCII; input fixtures are ASCII. fwp also accepts UTF-8 text, with ASCII-only lowercasing. All materialize normalized words and use sorted contiguous key/count pairs. String/list layout, allocation growth, sorting and buffering implementations differ. C/Rust combine the three normalization passes; fwp may allocate intermediate strings. Managed counters exclude raw buffers, allocator metadata, stacks and process startup; they are not comparable to whole-process RSS. No C/Rust allocation counts are claimed. Ratios are per-host fwp median / peer median; all samples retained. Before variants recompile saved baseline C with this run's toolchain and flags. All six variants run in balanced order on this host; baseline counts must reproduce exactly. Candidate allocation requests/bytes must fall with no higher retains or managed peak. Timing is reported even when slower; no timing budget or language-wide speed claim is established."
+    },
+    {
+      "source": "67b684506bb4a7220ed56aec82c45a6c44b09fb0",
+      "host": "ubuntu-24.04-arm",
+      "machine": "aarch64",
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cCompiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "rustCompiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "environment": {
+        "FWP_LTO": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "arguments": {
+        "compiler": "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+        "cc": "gcc",
+        "rustc": "rustc",
+        "objdump": "objdump",
+        "nm": "nm",
+        "time": "/usr/bin/time",
+        "case": [
+          "4096:64",
+          "65536:1024"
+        ],
+        "warmups": 2,
+        "samples": 24,
+        "timeout": 180,
+        "host": "ubuntu-24.04-arm",
+        "output": "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence",
+        "baseline": "wordfreq-before",
+        "baseline_source": "74263bccf8e2e67865e1863e2c04a296a97877bb"
+      },
+      "baselineSource": "74263bccf8e2e67865e1863e2c04a296a97877bb",
+      "baselineGeneratedCHashes": {
+        "before-arc": "9cd977f86ff4b3fdc49bea676a3991f58722630bc2731d42523167444929de76",
+        "before-tracing": "6f48be934a71820c715b5b4c16d71afa1014aa8915d4557a82aea019547bbe8a"
+      },
+      "commands": [
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/wordfreq_bench.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/c"
+        ],
+        [
+          "rustc",
+          "--edition=2021",
+          "-C",
+          "opt-level=2",
+          "-C",
+          "overflow-checks=yes",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/wordfreq_bench.rs",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/rust"
+        ],
+        [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--gc",
+          "arc",
+          "-O2",
+          "--emit-c",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/examples/wordfreq.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc.c"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--gc",
+          "tracing",
+          "-O2",
+          "--emit-c",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/examples/wordfreq.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing.c"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ]
+      ],
+      "buildNs": {
+        "c": 78365507,
+        "rust": 362621728,
+        "fwp-arc-frontend": 324362556,
+        "fwp-arc": 1338322241,
+        "fwp-arc-profile": 1316419357,
+        "fwp-tracing-frontend": 323440103,
+        "fwp-tracing": 1514223459,
+        "fwp-tracing-profile": 1469226682,
+        "before-arc": 1403911725,
+        "before-arc-profile": 1321867637,
+        "before-tracing": 1527750036,
+        "before-tracing-profile": 1486601460
+      },
+      "binaries": {
+        "c": {
+          "sha256": "25d62737682b3b24d07fce56b3f3797d77c472b6b06f39d262442eb54004b0c5",
+          "bytes": 70912,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/c:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000000e00\n\n",
+          "buildNs": 78365507
+        },
+        "rust": {
+          "sha256": "651f2ba189a33a8c4d9219cd914e525948bbf3d7697ba9610bb093a3052572e9",
+          "bytes": 4697984,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/rust:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000008ec0\n\n",
+          "buildNs": 362621728
+        },
+        "fwp-arc": {
+          "sha256": "4b80655b98b38ba259389c95a550b454d93b4e75cff59092fe9a1104459ec2ce",
+          "bytes": 152720,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000002640\n\n",
+          "buildNs": 1338322241
+        },
+        "fwp-tracing": {
+          "sha256": "c1e675746416b31c4deff8ee1482fd496769e840c9ab05bfd51da7a5c35a9ac4",
+          "bytes": 153192,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000002700\n\n",
+          "buildNs": 1514223459
+        },
+        "before-arc": {
+          "sha256": "7c8d82a22fa5cfbb45b25d8a3ee8244e57f834c32530572552e4a5c62cc828c7",
+          "bytes": 152720,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000002640\n\n",
+          "buildNs": 1403911725
+        },
+        "before-tracing": {
+          "sha256": "162ffe14a0bafd572c40fdd36a7bdc7aee8647f22d651c0f24868471ae07b270",
+          "bytes": 153192,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000002700\n\n",
+          "buildNs": 1527750036
+        }
+      },
+      "results": {
+        "4096-64": {
+          "tokens": 4096,
+          "vocabulary": 64,
+          "inputBytes": 46696,
+          "inputSha256": "a0aaf42271d64f12020436b3483630e2afcfe58d63c927fd8f264a2defe15274",
+          "samplesNs": {
+            "c": [
+              2475760,
+              1457371,
+              1489701,
+              1449995,
+              1508917,
+              1527302,
+              1373425,
+              1325087,
+              1381961,
+              1470300,
+              1331503,
+              1349584,
+              1400074,
+              1456316,
+              1519870,
+              1489581,
+              1396833,
+              1505061,
+              1414602,
+              1355992,
+              1353751,
+              1392521,
+              1438955,
+              1354296
+            ],
+            "rust": [
+              1853865,
+              1906492,
+              1844393,
+              1823080,
+              1939140,
+              1834713,
+              1937860,
+              1906803,
+              1782663,
+              2989826,
+              1974718,
+              1901899,
+              1782495,
+              1812728,
+              1770119,
+              1791704,
+              1880131,
+              1807056,
+              1950277,
+              1909227,
+              1725541,
+              1956981,
+              1983070,
+              1875186
+            ],
+            "fwp-arc": [
+              3802647,
+              2691055,
+              2644262,
+              2774210,
+              2780018,
+              3856032,
+              2757625,
+              2674615,
+              2652382,
+              2697711,
+              2771570,
+              2692543,
+              2712080,
+              2813500,
+              2714904,
+              2547146,
+              2766122,
+              2589284,
+              3827032,
+              3928267,
+              2893214,
+              2799419,
+              3049396,
+              2726368
+            ],
+            "fwp-tracing": [
+              2757481,
+              2722768,
+              2853941,
+              3741725,
+              2891262,
+              2897407,
+              3051476,
+              2747833,
+              2893910,
+              2772674,
+              4005653,
+              3106854,
+              3842848,
+              2640237,
+              2685863,
+              2640917,
+              2731456,
+              2617196,
+              2910279,
+              3847688,
+              3440122,
+              2845284,
+              3921522,
+              3199122
+            ],
+            "before-arc": [
+              3070133,
+              3039020,
+              3057860,
+              3180192,
+              3174977,
+              3093589,
+              3095582,
+              3176296,
+              4498679,
+              4184508,
+              3019970,
+              3086718,
+              3264035,
+              4149179,
+              2987410,
+              3002938,
+              2957080,
+              3124726,
+              4267495,
+              3052580,
+              2978225,
+              4343866,
+              3171488,
+              3568222
+            ],
+            "before-tracing": [
+              3083077,
+              3187793,
+              3168248,
+              4240342,
+              3092133,
+              3272204,
+              3249755,
+              3187769,
+              3089789,
+              3094917,
+              2996298,
+              3058220,
+              3072957,
+              3404640,
+              4252814,
+              3079725,
+              3062845,
+              3322013,
+              3164112,
+              3044668,
+              3097910,
+              3161848,
+              3286308,
+              3099414
+            ]
+          },
+          "medianNs": {
+            "c": 1426778.5,
+            "rust": 1877658.5,
+            "fwp-arc": 2761873.5,
+            "fwp-tracing": 2892586.0,
+            "before-arc": 3110154.0,
+            "before-tracing": 3130631.0
+          },
+          "ratios": {
+            "fwp-arc": {
+              "c": 1.9357409016185765,
+              "rust": 1.4709136405794772
+            },
+            "fwp-tracing": {
+              "c": 2.0273546314301765,
+              "rust": 1.5405282696507379
+            }
+          },
+          "orders": [
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ],
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ]
+          ],
+          "candidateOverBaseline": {
+            "arc": 0.8880182460418359,
+            "tracing": 0.9239626132878643
+          },
+          "peakProcessRssBytes": {
+            "c": 1683456,
+            "rust": 2048000,
+            "fwp-arc": 2265088,
+            "fwp-tracing": 2207744,
+            "before-arc": 2265088,
+            "before-tracing": 2281472
+          },
+          "managedProfiles": {
+            "fwp-arc": {
+              "requests": 15583,
+              "requestedBytes": 490854,
+              "retains": 8650,
+              "peakChargedBytes": 487176,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "fwp-tracing": {
+              "requests": 15583,
+              "requestedBytes": 490854,
+              "retains": 8650,
+              "peakChargedBytes": 487176,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-arc": {
+              "requests": 24865,
+              "requestedBytes": 668304,
+              "retains": 8650,
+              "peakChargedBytes": 557064,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-tracing": {
+              "requests": 24865,
+              "requestedBytes": 668304,
+              "retains": 8650,
+              "peakChargedBytes": 557064,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          }
+        },
+        "65536-1024": {
+          "tokens": 65536,
+          "vocabulary": 1024,
+          "inputBytes": 747112,
+          "inputSha256": "76bbb0dd75f6c1944bdb76dffcdca62251bcfc98851dc648ae983d7da8592160",
+          "samplesNs": {
+            "c": [
+              10167080,
+              10392026,
+              10373306,
+              10394595,
+              10336579,
+              10107183,
+              10183632,
+              10030398,
+              10156624,
+              10319434,
+              10155263,
+              10071759,
+              10269689,
+              10161295,
+              10366227,
+              10202080,
+              10138303,
+              10204449,
+              10186265,
+              10204376,
+              10065254,
+              10148320,
+              10198072,
+              10119930
+            ],
+            "rust": [
+              13139135,
+              13266721,
+              13339571,
+              13353290,
+              13374882,
+              13191496,
+              13176448,
+              13192424,
+              13154520,
+              13375843,
+              13332803,
+              13386675,
+              13215224,
+              13397059,
+              13047494,
+              13197705,
+              13114336,
+              13186144,
+              13356042,
+              13335442,
+              13255841,
+              13208592,
+              13435396,
+              13646114
+            ],
+            "fwp-arc": [
+              27986078,
+              28103152,
+              28004703,
+              28136617,
+              28137808,
+              28118728,
+              28042255,
+              28361099,
+              28257178,
+              28274778,
+              28185408,
+              28565670,
+              27760499,
+              28046415,
+              28469821,
+              27855644,
+              27978414,
+              27858276,
+              28442716,
+              27915805,
+              27847236,
+              28459581,
+              28046615,
+              27890786
+            ],
+            "fwp-tracing": [
+              28240018,
+              27953869,
+              28246977,
+              28324138,
+              28195937,
+              28482765,
+              28470140,
+              28856162,
+              28214265,
+              28156696,
+              28297987,
+              28259305,
+              27992342,
+              28466845,
+              28515637,
+              28027311,
+              27765083,
+              27732835,
+              28411212,
+              28152200,
+              27877653,
+              28329027,
+              28308834,
+              27176657
+            ],
+            "before-arc": [
+              33595185,
+              34729017,
+              34109736,
+              33945966,
+              34187961,
+              34194897,
+              33532937,
+              33971638,
+              33911013,
+              33855117,
+              33703930,
+              34053711,
+              34465269,
+              33368030,
+              34139376,
+              33408334,
+              33039266,
+              33071266,
+              34273562,
+              33639418,
+              34038870,
+              33849892,
+              33072067,
+              33226297
+            ],
+            "before-tracing": [
+              35839007,
+              35604107,
+              35739446,
+              36286821,
+              36199115,
+              35439298,
+              35946288,
+              35458530,
+              35455874,
+              35316015,
+              35372897,
+              35723093,
+              35411785,
+              35083965,
+              35755318,
+              35449442,
+              34873106,
+              35200838,
+              35604932,
+              35487866,
+              36376030,
+              35324552,
+              35514777,
+              34825838
+            ]
+          },
+          "medianNs": {
+            "c": 10184948.5,
+            "rust": 13261281.0,
+            "fwp-arc": 28074883.5,
+            "fwp-tracing": 28243497.5,
+            "before-arc": 33883065.0,
+            "before-tracing": 35473198.0
+          },
+          "ratios": {
+            "fwp-arc": {
+              "c": 2.7565071634873757,
+              "rust": 2.117056678008708
+            },
+            "fwp-tracing": {
+              "c": 2.773062377291353,
+              "rust": 2.1297714376160193
+            }
+          },
+          "orders": [
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ],
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ]
+          ],
+          "candidateOverBaseline": {
+            "arc": 0.8285815790277532,
+            "tracing": 0.7961925930670248
+          },
+          "peakProcessRssBytes": {
+            "c": 4431872,
+            "rust": 6119424,
+            "fwp-arc": 10420224,
+            "fwp-tracing": 10465280,
+            "before-arc": 11513856,
+            "before-tracing": 11476992
+          },
+          "managedProfiles": {
+            "fwp-arc": {
+              "requests": 248807,
+              "requestedBytes": 7852294,
+              "retains": 138250,
+              "peakChargedBytes": 7794440,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "fwp-tracing": {
+              "requests": 248807,
+              "requestedBytes": 7852294,
+              "retains": 138250,
+              "peakChargedBytes": 7794440,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-arc": {
+              "requests": 397353,
+              "requestedBytes": 10692144,
+              "retains": 138250,
+              "peakChargedBytes": 8912904,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-tracing": {
+              "requests": 397353,
+              "requestedBytes": 10692144,
+              "retains": 138250,
+              "peakChargedBytes": 8912904,
+              "finalChargedBytes": 0,
+              "collections": 1
+            }
+          }
+        }
+      },
+      "acceptanceFailures": [],
+      "sourceHashes": {
+        "examples/wordfreq.fwp": "520eedac90a0360dc4de954bd3ab5cc939118a17c058746d37448bafd66493bd",
+        "tests/fixtures/wordfreq_bench.c": "45206b29b3e17c0784a2ed605e195def227d346609ecfe1e131c11f9054f4ccc",
+        "tests/fixtures/wordfreq_bench.rs": "47c11b0e732926220192555716e2ceafacda9ae4a2f5495c00b0d58ca081d530",
+        "scripts/measure-wordfreq.py": "d7eaefcf9f99d62e2a48cf672a223758859a847aa504918599ca9d886e3eac0b",
+        "scripts/measure-iteration.py": "fe7cc4d2931eccf157012ade4a37235910f701e39d3ffa96f1874d0a6f96137b"
+      },
+      "scope": "Whole process including input read, normalization, sorted-map counting, ranking, printing and teardown. Input generation and compilation excluded. Timings use uninstrumented binaries; fresh-process RSS and fwp managed counters are separate. C/Rust implement only ASCII; input fixtures are ASCII. fwp also accepts UTF-8 text, with ASCII-only lowercasing. All materialize normalized words and use sorted contiguous key/count pairs. String/list layout, allocation growth, sorting and buffering implementations differ. C/Rust combine the three normalization passes; fwp may allocate intermediate strings. Managed counters exclude raw buffers, allocator metadata, stacks and process startup; they are not comparable to whole-process RSS. No C/Rust allocation counts are claimed. Ratios are per-host fwp median / peer median; all samples retained. Before variants recompile saved baseline C with this run's toolchain and flags. All six variants run in balanced order on this host; baseline counts must reproduce exactly. Candidate allocation requests/bytes must fall with no higher retains or managed peak. Timing is reported even when slower; no timing budget or language-wide speed claim is established."
+    }
+  ],
+  "inspection": [
+    {
+      "host": "ubuntu-latest",
+      "variant": "c",
+      "sha256": "af35d7ed0936ec33f30f53158f66a4d6285bcd59dfc6a11b12c8a3aab74d626d",
+      "bytes": 16552,
+      "machine": 62,
+      "tracing_excluded": false,
+      "textSectionBytes": 1578
+    },
+    {
+      "host": "ubuntu-latest",
+      "variant": "rust",
+      "sha256": "bca13b57547fb709e86aa28c4d48bd49a5d0691234a0febb0c4a85493bff1165",
+      "bytes": 4567768,
+      "machine": 62,
+      "tracing_excluded": false,
+      "textSectionBytes": 257075
+    },
+    {
+      "host": "ubuntu-latest",
+      "variant": "fwp-arc",
+      "sha256": "f05a221c2bd42a29321eb9366c37072b17940bb63e1bf206006a63c736fdb4e7",
+      "bytes": 102240,
+      "machine": 62,
+      "tracing_excluded": true,
+      "textSectionBytes": 48338
+    },
+    {
+      "host": "ubuntu-latest",
+      "variant": "fwp-tracing",
+      "sha256": "ff38beb7f5932fa85a01d327f8c238ae3a9c8fb843644b470ea6cc75ddcd06b0",
+      "bytes": 110968,
+      "machine": 62,
+      "tracing_excluded": false,
+      "textSectionBytes": 56146
+    },
+    {
+      "host": "ubuntu-latest",
+      "variant": "before-arc",
+      "sha256": "ac38c3acbd7dfb7ba55edd1f0482b6074df73a55f4c277d9cbef057254fd9ad1",
+      "bytes": 102240,
+      "machine": 62,
+      "tracing_excluded": true,
+      "textSectionBytes": 48978
+    },
+    {
+      "host": "ubuntu-latest",
+      "variant": "before-tracing",
+      "sha256": "b72ac0f47a8544061d1845af224cdd6b71ceba43f11bef86b816baaa7ce6a684",
+      "bytes": 110968,
+      "machine": 62,
+      "tracing_excluded": false,
+      "textSectionBytes": 56610
+    },
+    {
+      "host": "ubuntu-latest",
+      "control": "tracing-O0-missing-cancel-owner",
+      "sha256": "063592c2d5099a0ea3ba34d8a08297b0c7473f3ab8b77ce0bb52d78a0d3a55b7",
+      "cSha256": "4bb878e2e1c2386c331c3d7bfd2e180f41c788a654e034574d30b20bb73027a8",
+      "bytes": 432816,
+      "machine": 62
+    },
+    {
+      "host": "ubuntu-latest",
+      "control": "tracing-O2-missing-owner",
+      "sha256": "ffb2e4c3f5c098c87c082bf964f20dbe1ffc52fb8c3a0ab5b5be76a8ff93ccd3",
+      "cSha256": "ac4e1c02335239a3df2c39f50b917180b514bc4421cf077f5ed75f22901b3760",
+      "bytes": 84256,
+      "machine": 62
+    },
+    {
+      "host": "ubuntu-latest",
+      "control": "arc-O2-protected",
+      "sha256": "4160167445b3e6b5fbe1b0dfcc7642950b82dba427fee7fb0e2f0208909b3e91",
+      "cSha256": "c764c19798e24c97e9bf505656f0c1b8877342d53fcd1e090e5e43ec9187669e",
+      "bytes": 71448,
+      "machine": 62
+    },
+    {
+      "host": "ubuntu-latest",
+      "control": "tracing-O2-protected",
+      "sha256": "6928c2d22421eca9737deb1470570698513b2378aa2797fc1f5e1032b035fd5b",
+      "cSha256": "c4440139bb673e9022390dbf7984cbdde3876ba4bd2640cf7a67f4240d53820a",
+      "bytes": 84256,
+      "machine": 62
+    },
+    {
+      "host": "ubuntu-latest",
+      "control": "tracing-O0-missing-owner",
+      "sha256": "35cee8833d34fc2be2f1b39dc9f6f7516700aa9b8b13d669ae77a5f62296fe65",
+      "cSha256": "ac4e1c02335239a3df2c39f50b917180b514bc4421cf077f5ed75f22901b3760",
+      "bytes": 432816,
+      "machine": 62
+    },
+    {
+      "host": "ubuntu-latest",
+      "control": "arc-O2-missing-cancel-owner",
+      "sha256": "d250a335c54a3e6cb7a65914e43697558165fc02db6fded1eac831af18a496d0",
+      "cSha256": "d9df18e364e8de26db7addf84f450304d07ed0b24419dd2b49de07eae85a15e6",
+      "bytes": 71448,
+      "machine": 62
+    },
+    {
+      "host": "ubuntu-latest",
+      "control": "arc-O2-missing-owner",
+      "sha256": "adb14f928b72b9c70f5a8965a8442c619fb092398b5fca85f46106822c2658c8",
+      "cSha256": "79715a4637820e1bf5fc47e0c43c6f6aa240a3898b6bb1cfcfaedc805b69f73f",
+      "bytes": 71448,
+      "machine": 62
+    },
+    {
+      "host": "ubuntu-latest",
+      "control": "arc-O0-missing-cancel-owner",
+      "sha256": "04565f5325abcef9f391649839ca7b6010ef96fc5ee96531ecac8dea5614ac29",
+      "cSha256": "d9df18e364e8de26db7addf84f450304d07ed0b24419dd2b49de07eae85a15e6",
+      "bytes": 423936,
+      "machine": 62
+    },
+    {
+      "host": "ubuntu-latest",
+      "control": "arc-O0-protected",
+      "sha256": "4ed980d328f125e3e683159b3774743cee2ca2494a0ee66de6429574853ac3ca",
+      "cSha256": "c764c19798e24c97e9bf505656f0c1b8877342d53fcd1e090e5e43ec9187669e",
+      "bytes": 423936,
+      "machine": 62
+    },
+    {
+      "host": "ubuntu-latest",
+      "control": "tracing-O2-missing-cancel-owner",
+      "sha256": "efd7685ef7658c3624552b104b330f394f83ea64d4afba1a293f92c706f91897",
+      "cSha256": "4bb878e2e1c2386c331c3d7bfd2e180f41c788a654e034574d30b20bb73027a8",
+      "bytes": 84256,
+      "machine": 62
+    },
+    {
+      "host": "ubuntu-latest",
+      "control": "arc-O0-missing-owner",
+      "sha256": "45c71e292490ddf66bcfd26678882a99d1cc354ecb015c6928c20ba66fd3b585",
+      "cSha256": "79715a4637820e1bf5fc47e0c43c6f6aa240a3898b6bb1cfcfaedc805b69f73f",
+      "bytes": 423936,
+      "machine": 62
+    },
+    {
+      "host": "ubuntu-latest",
+      "control": "tracing-O0-protected",
+      "sha256": "b00708676e13543c002db206d980346de663bd270b41335a21db7fac93879886",
+      "cSha256": "c4440139bb673e9022390dbf7984cbdde3876ba4bd2640cf7a67f4240d53820a",
+      "bytes": 432816,
+      "machine": 62
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "variant": "c",
+      "sha256": "25d62737682b3b24d07fce56b3f3797d77c472b6b06f39d262442eb54004b0c5",
+      "bytes": 70912,
+      "machine": 183,
+      "tracing_excluded": false,
+      "textSectionBytes": 1552
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "variant": "rust",
+      "sha256": "651f2ba189a33a8c4d9219cd914e525948bbf3d7697ba9610bb093a3052572e9",
+      "bytes": 4697984,
+      "machine": 183,
+      "tracing_excluded": false,
+      "textSectionBytes": 231660
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "variant": "fwp-arc",
+      "sha256": "4b80655b98b38ba259389c95a550b454d93b4e75cff59092fe9a1104459ec2ce",
+      "bytes": 152720,
+      "machine": 183,
+      "tracing_excluded": true,
+      "textSectionBytes": 47836
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "variant": "fwp-tracing",
+      "sha256": "c1e675746416b31c4deff8ee1482fd496769e840c9ab05bfd51da7a5c35a9ac4",
+      "bytes": 153192,
+      "machine": 183,
+      "tracing_excluded": false,
+      "textSectionBytes": 58316
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "variant": "before-arc",
+      "sha256": "7c8d82a22fa5cfbb45b25d8a3ee8244e57f834c32530572552e4a5c62cc828c7",
+      "bytes": 152720,
+      "machine": 183,
+      "tracing_excluded": true,
+      "textSectionBytes": 48492
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "variant": "before-tracing",
+      "sha256": "162ffe14a0bafd572c40fdd36a7bdc7aee8647f22d651c0f24868471ae07b270",
+      "bytes": 153192,
+      "machine": 183,
+      "tracing_excluded": false,
+      "textSectionBytes": 58844
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "control": "tracing-O0-missing-cancel-owner",
+      "sha256": "f5c4499d1d65df12e59de3497794ea5f30c7d611d704ca77f0dbd62083e6f4f9",
+      "cSha256": "4bb878e2e1c2386c331c3d7bfd2e180f41c788a654e034574d30b20bb73027a8",
+      "bytes": 456512,
+      "machine": 183
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "control": "tracing-O2-missing-owner",
+      "sha256": "71ada642eea7e4ed43c4548d329469ac963a157830c67bf306afa1f2a43d6b3e",
+      "cSha256": "ac4e1c02335239a3df2c39f50b917180b514bc4421cf077f5ed75f22901b3760",
+      "bytes": 85448,
+      "machine": 183
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "control": "arc-O2-protected",
+      "sha256": "733668790e69aceeae3059d42bfa007a1ff3359cc3c0b44783da3036d0d2ab31",
+      "cSha256": "c764c19798e24c97e9bf505656f0c1b8877342d53fcd1e090e5e43ec9187669e",
+      "bytes": 85008,
+      "machine": 183
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "control": "tracing-O2-protected",
+      "sha256": "95b973b91ca9c8e58c8cda109d0c67286ec4e42b1147de58684102cafd059bc0",
+      "cSha256": "c4440139bb673e9022390dbf7984cbdde3876ba4bd2640cf7a67f4240d53820a",
+      "bytes": 85448,
+      "machine": 183
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "control": "tracing-O0-missing-owner",
+      "sha256": "973e0a5fa432396b0653d114f071bbb9f18afff835bd5d7b138a5e9fc03275b1",
+      "cSha256": "ac4e1c02335239a3df2c39f50b917180b514bc4421cf077f5ed75f22901b3760",
+      "bytes": 456512,
+      "machine": 183
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "control": "arc-O2-missing-cancel-owner",
+      "sha256": "4afceb8cb842a23d76360dbd2019f21dd61277d1b3cb901184a6d979ed0d9646",
+      "cSha256": "d9df18e364e8de26db7addf84f450304d07ed0b24419dd2b49de07eae85a15e6",
+      "bytes": 85008,
+      "machine": 183
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "control": "arc-O2-missing-owner",
+      "sha256": "ad52244e971f9500d684a2660cef9f59ca4b524a284183ad7106fa72ee964638",
+      "cSha256": "79715a4637820e1bf5fc47e0c43c6f6aa240a3898b6bb1cfcfaedc805b69f73f",
+      "bytes": 85008,
+      "machine": 183
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "control": "arc-O0-missing-cancel-owner",
+      "sha256": "6f43104b235f50f6fbf8456786e392059d4b1017e241a9f52b9ba576c4ce8f2c",
+      "cSha256": "d9df18e364e8de26db7addf84f450304d07ed0b24419dd2b49de07eae85a15e6",
+      "bytes": 455864,
+      "machine": 183
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "control": "arc-O0-protected",
+      "sha256": "b5fb374ed8d6ec348940756df11489546f523f9ad75c84c5136fd77a1688465a",
+      "cSha256": "c764c19798e24c97e9bf505656f0c1b8877342d53fcd1e090e5e43ec9187669e",
+      "bytes": 455864,
+      "machine": 183
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "control": "tracing-O2-missing-cancel-owner",
+      "sha256": "00647567e707eab73b3957b7e9d114bbf510bddab67c78cf3c6f53d16f041122",
+      "cSha256": "4bb878e2e1c2386c331c3d7bfd2e180f41c788a654e034574d30b20bb73027a8",
+      "bytes": 85448,
+      "machine": 183
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "control": "arc-O0-missing-owner",
+      "sha256": "70065f61ab8f7f885acc431df6c900fac2dd78727560b4b292872c94b0854c52",
+      "cSha256": "79715a4637820e1bf5fc47e0c43c6f6aa240a3898b6bb1cfcfaedc805b69f73f",
+      "bytes": 455864,
+      "machine": 183
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "control": "tracing-O0-protected",
+      "sha256": "ed8373158f7b57b1232b3b5bf0ce6bfcf75472d4ee5ced07bbc149b1a4598186",
+      "cSha256": "c4440139bb673e9022390dbf7984cbdde3876ba4bd2640cf7a67f4240d53820a",
+      "bytes": 456512,
+      "machine": 183
+    }
+  ]
+}

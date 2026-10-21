@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -2291,6 +2291,39 @@ jobs:
         with:
           name: wordfreq-${{ matrix.runner }}
           path: wordfreq-evidence/
+          if-no-files-found: error
+  wordfreq_repeat:
+    if: inputs.suite == 'wordfreq-repeat'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download the explicit accepted word-frequency comparison
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          SOURCE: ${{ inputs.source_revision }}
+        run: |
+          test -n "$EVIDENCE_RUN" && test -n "$SOURCE"
+          gh run view "$EVIDENCE_RUN" --json headSha,conclusion > evidence-run.json
+          python3 -c 'import json, os; r=json.load(open("evidence-run.json")); assert r["conclusion"] == "success" and r["headSha"] == os.environ["SOURCE"]'
+          gh run download "$EVIDENCE_RUN" --name "wordfreq-${{ matrix.runner }}" --dir wordfreq-input
+      - name: Repeat accepted binaries and compare stack estimates
+        env:
+          SOURCE: ${{ inputs.source_revision }}
+        run: >-
+          python3 scripts/repeat-wordfreq.py --input wordfreq-input --source "$SOURCE"
+          --cc gcc --nm nm --objdump objdump --host "${{ matrix.runner }}"
+          --warmups 2 --samples 24 --timeout 180 --output wordfreq-repeat
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: wordfreq-repeat-${{ matrix.runner }}
+          path: wordfreq-repeat/
           if-no-files-found: error
   ad_application:
     if: inputs.suite == 'ad-application'

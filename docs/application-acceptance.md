@@ -14,7 +14,7 @@ performance and platform requirements in the last column.
 | [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; current test repeats a six-file tree 64 times | `tests/directory_report.rs`: interpreter/native agreement and final managed storage | Add a larger tree, permission/error controls and repeated live-memory measurements |
 | [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scale file sizes; measure input/output storage separately; record failure cleanup |
 | Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](benchmarks.md#current-numerical-comparison-and-record-moves) | Repeat current-revision comparisons; set per-size budgets; include a larger numerical application |
-| Derivative application | Rosenbrock descent from alternating −1.2/1.0 inputs: 3, 33 and 129 dimensions, 199 gradient updates | [Descent comparison](#descent-with-and-without-a-saved-history); measurements pending; existing nested/workspace checks remain | Measure retained history and workspace separately; set time/memory budgets and extend native evidence |
+| Derivative application | Rosenbrock descent from alternating −1.2/1.0 inputs: 3, 33 and 129 dimensions, 199 gradient updates | [Measured descent comparison](measurements/ad-application.md) on two Linux hosts; nested/workspace checks remain | Measure retained history and workspace separately; set time/memory budgets and extend native evidence |
 | Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](benchmarks.md#server-memory-after-completed-remote-calls) | Consolidate one repeatable service scenario with bounded concurrency, disconnects and repeated live-memory samples |
 
 Before declaring this suite accepted, name the exact revisions, inputs and native
@@ -64,7 +64,8 @@ this is not a Unicode benchmark or a pure measurement of compiler overhead.
 
 The timer includes process launch, reading the saved input, all computation,
 allocation, printing and teardown. Input generation and compilation are excluded.
-Two warmups precede sixteen samples; order rotates and reverses, giving each
+The initial four-variant baseline uses sixteen samples after two warmups; the
+paired six-variant comparison below uses 24. Order rotates and reverses, giving each
 implementation every position equally. Keep every sample. A ratio of 1.25 means
 fwp's median took 25% more time than that named peer on that host and input.
 
@@ -78,7 +79,8 @@ never enter the timing comparison. ARC binaries must omit tracing symbols and
 finish with zero managed charge and collections.
 
 **Status:** the [first Linux C/Rust baseline](measurements/wordfreq.md) passes
-with independently inspected binaries. No performance improvement is claimed. See the
+with independently inspected binaries. The [text candidate](measurements/unchanged-text.md)
+adds paired measurements and explicit count requirements. See the
 [session handoff](development-state.md) for the actual validation state.
 
 ## Descent with and without a saved history

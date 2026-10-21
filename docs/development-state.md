@@ -6,8 +6,8 @@ Next: audit [PR #191](https://github.com/e6qu/fun-with-pipes/pull/191) at
 `12be5afcee7c81f1b98ffed2081d698e1124b000`: production `39688998592`,
 documentation `39688998567` and focused Linux GCC `39688997806`.
 Use `/private/tmp/fwp-audit-191-final.py` and `/private/tmp/fwp-audit-191-gcc.py`.
-Documentation, C/Rust benchmarks, focused GCC and ARM macOS GC-stress pass with
-full logs audited. Seven other production jobs are running. Fix every observed failure together, then
+Documentation, C/Rust benchmarks, focused GCC and both ARM macOS jobs pass with
+full logs audited. Six other production jobs are running. Fix every observed failure together, then
 require nine production jobs, documentation and the focused check for the exact
 head before squash merge. Continue all seven open plan areas afterward.
 Publication receipt: `/private/tmp/fwp-combined-publication.json`.
@@ -59,9 +59,22 @@ and candidate on the same host, six variants/24 balanced samples, with explicit
 requirements: fewer requests/bytes, no higher retains/managed peak, zero final
 charge. Timing regressions must remain visible and be investigated.
 
-Next: publish this coherent preparation and run both Linux GCC comparisons plus
-WASI ownership checks. Audit all failures, inspect executed binaries and report
-actual counts/timings before adopting it. No second PR is open; keep #191's
+Text preparation source `67b684506bb4a7220ed56aec82c45a6c44b09fb0`, immutable tag
+`roadmap/revision-owned-text-67b684506bb4`, is published. Linux GCC paired
+comparisons run in `39694262883`; WASI ownership runs in `39694266236`.
+Both complete Linux word-frequency jobs pass with full logs audited. Independent
+inspection covers twelve timed binaries and 24 ownership controls. The large
+case drops from 397,353 to 248,807 requests with unchanged 138,250 retains and
+lower managed peak; ARC medians fall 17–18% within each paired session, but
+remain 2.62–2.76× C and 1.79–2.12× Rust. Code sections shrink although whole
+file sizes do not. WASI jobs are still running. The report is the preparation's
+`docs/measurements/unchanged-text.md`; artifacts are in
+`/private/tmp/fwp-owned-text-evidence/67b684506bb4`. Publication: `/private/tmp/fwp-owned-text-publication.json`;
+auditor: `/private/tmp/fwp-audit-owned-text.py`.
+Next: audit remaining WASI jobs and publish a repeat using the same six binaries,
+including GCC per-function stack estimates whose rebuilt instructions must match.
+The repeat needs no fwp compiler build. All final native gates are still required
+before adopting the preparation. No second PR is open; keep #191's
 passing delivery head fixed while its remaining gates run.
 
 Guarded local checks: `fwp-check-wordfreq-peers.py` passes nine C/Rust/interpreter

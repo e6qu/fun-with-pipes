@@ -58,9 +58,8 @@ sample per host/implementation, including process startup and library storage.
 It is not a retained-memory measurement, and it must not be subtracted from the
 managed counters to infer a particular runtime component's cost.
 
-The next investigation is text normalization: `lower`, `trim` and `replace`
-currently copy strings on paths that can leave their bytes unchanged. Establish
-which copies can be removed while preserving aliases, cleanup and trap order.
-Count any added or removed reference traffic as well as allocation savings;
-compare the old and new generated programs in the same measurement run. A clean
-exit and fewer allocations alone would not prove a speedup.
+The [unchanged-text comparison](unchanged-text.md) follows this baseline. It
+removes copies when case conversion, trimming or replacement leave bytes
+unchanged, checks aliases and cleanup, and measures old/new generated programs
+in the same runner session. That report owns the candidate's counts, timing and
+acceptance status; this page preserves the original C/Rust baseline.
