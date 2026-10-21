@@ -38,8 +38,9 @@ passed on Linux AMD64 and ARM64 at source
 `roadmap/revision-checked-product-b57e2dcd`. Both complete logs were audited.
 [The raw report](checked-products-2026-10-21.json) retains every timing sample,
 source and binary hash, compiler command, CPU description and memory counter.
-The [session handoff](../development-state.md) records full-platform acceptance;
-these focused results alone do not establish it.
+The later [PR #183 delivery record](../roadmap-history.md#checked-product-bounds-pr-183)
+records passing full-platform acceptance. The focused measurements above remain
+tied to their original source and hosts.
 
 GCC 13.3.0 builds C and generated C at O2; Rust 1.99.1 uses `-O`. fwp uses
 tracing mode and `-ffp-contract=off`, without link-time optimization. There are

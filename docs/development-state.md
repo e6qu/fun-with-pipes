@@ -2,103 +2,71 @@
 
 ## Next action
 
-Next: publish and accept the combined checked-product PR on branch
-`preserve-checked-product-ranges`. The shared workspace is
-`/Users/zardoz/projects/fun-with-pipes`; the temporary preparation worktree has
-been removed after moving its clean branch here. Require all nine production
-jobs and documentation for the final PR head, audit every complete log and fix
-every failure. Then squash-merge with an explicit one-line subject, at most
-80 characters, and an empty body; verify the tree and message. Do not restart
-passing gates for handoff-only updates.
+Next: prepare the retained-resource ownership batch on branch
+`prove-retained-resource-ownership`, based on accepted merge `447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c`.
+No PR is open for this preparation. Group the proof, implementation, representative
+programs, failure/cancellation controls and readable documentation in one PR.
 
-[PR #182](roadmap-history.md#grouped-integer-counting-and-u32-overflow-pr-182)
-is accepted and merged as `36fbb04097e8ab3d09a02b0eebf9060002e4fe91`.
-All nine production jobs `39533108586` and documentation `39532459370` passed
-at `817805a18bd97e90090b36e7baf589d011048fd6`, with clean full logs. The squash
-tree matches exactly and its 64-character message has no body or trailers.
-Receipt: `/private/tmp/fwp-182-final-acceptance.json`. Duplicate post-merge CI
-`39542814814` and documentation `39542814748` were cancelled only after verifying
-the accepted tree. This branch was rebased onto that merge without changing
-its files; `/private/tmp/fwp-range-rebase.json` records the old/new heads and tree.
-The former local handoff is saved at `/private/tmp/fwp-182-pre-merge-handoff.md`.
+Start with `src/arc_scope.rs::queued_capture_type`, `src/arc.rs` and the
+[queued-function contract](ownership.md#functions-stored-in-channels). Audit a
+queued callback capturing an independently owned file: establish how the closure
+acquires, uses and releases that owner, including repeated calls, undrained/closed
+queues, failures and cancellation. Check the existing linear-use rules before
+relaxing any rejection. A file cannot itself own a queue, but that fact alone
+does not prove safe closure lifetime or resource use. Add a runnable acceptance
+program only when its complete contract is established; keep unsupported captures
+rejected with a precise explanation. Do not add weak handles or new syntax merely
+to bypass a missing proof. Ownership and removal of tracing remain the priority.
 
-## Current change and evidence
+Read [PLAN.md](../PLAN.md), [ownership](ownership.md) and relevant
+[design](design.md) sections before changing code. The current edits only record
+the completed delivery and this next investigation; no ownership change has been
+implemented or verified in this preparation.
 
-Signed I64/ISize multiplication keeps its overflow check, then exposes the
-proven-safe product expression to C optimization. The [measurement guide](measurements/checked-products.md)
-explains the workload, comparisons, instructions, tests and tradeoffs. The
-[raw report](measurements/checked-products-2026-10-21.json) retains every sample.
+## Accepted delivery
 
-Source `b57e2dcda716ebd27007d01aaf5e4e79d22518b6` is preserved by published tag
-`roadmap/revision-checked-product-b57e2dcd`. Focused run `39536765734` passes
-on both Linux architectures; complete logs are audited clean in
-`/private/tmp/fwp-range-native-audit.json`. Each job passes formatting, Clippy,
-five integer-output tests, four scalar-trap tests, twelve counting and fourteen
-scalar binary inspections, and the nine-way measurement. Actual compiler C
-matches the measured candidate byte-for-byte, and its instruction section and
-output match on both hosts. Full production/documentation acceptance is pending.
+[PR #183](roadmap-history.md#checked-product-bounds-pr-183) is squash-merged.
+All nine production jobs in `39543123372` and documentation `39543123369` passed
+at `3606d072d0f708b600f44050ab9cafe1390bceee`. Every complete log was audited clean.
+Merge `447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c` has the identical tested tree
+`40b47a0670c38bc0b05c6dbd1afefd3ad5f7d7c5`. Its verified message is exactly
+`Preserve numeric bounds after checked multiplication`: one line, 52 characters, no body,
+trailers or attribution. Receipt: `/private/tmp/fwp-183-final-acceptance.json`.
+The redundant post-merge production run `39557406360` was cancelled after tree
+verification; post-merge documentation `39557406176` passed.
 
-The signed test covers 173 runtime operand pairs for each of I64 and ISize,
-unoptimized interpretation, ARC/tracing at O0/O1/O2/O3, effect/trap order and
-O1/O2/O3 undefined-behavior sanitizer checks. Removing the overflow guard must
-produce a signed-overflow diagnostic. Saved ordinary binaries confirm that
-O2/O3 reuse the checked product; O0/O1 emit an extra product. Document this
-cost; the measured O2 benefit is not a claim about every optimization level.
+The [measurement guide](measurements/checked-products.md) and
+[raw report](measurements/checked-products-2026-10-21.json) retain the comparisons,
+binary evidence and limits. O2 counting loops improve, but matched C remains
+faster, AMD64 timings vary by CPU and O0/O1 emit an extra product. Tracing remains
+in the measured binaries. These results do not finish a roadmap work area.
 
-On EPYC 7763/N2, O2 child CPU medians fall 14.6–29.0% / 17.9–18.3% relative
-to grouped fwp on the same CPUs. C remains faster. AMD64 varies substantially
-by CPU ID, including mixed comparisons with Rust; its cause is unresolved.
-Instruction sections shrink 64/112 bytes; AMD64's normal 40-byte frame
-disappears. Managed counters remain zero after initialization, with a working
-16-byte allocation control. Tracing code remains in the binaries.
+## Evidence and local resources
 
-Artifacts: `/private/tmp/fwp-compiled-range-costs`; download manifest:
-`download-audit.json` there. Byte-identical immutable baseline inputs share
-hardlinks with `/private/tmp/fwp-integer-range-costs`; both artifact trees are
-complete. Independent source/binary/sample audit passed in 0.60s:
-`/private/tmp/fwp-compiled-range-audited.json`. Ordinary instruction inspection
-and timing-ratio review passed in 0.13s with `/private/tmp/fwp-range-review.py`.
-The first schema-inspection command used a dict operation on a list and failed;
-the corrected inspection and independent report audit pass.
-Documentation, immutable-tag, commit-message and whitespace checks pass under
-the guard (2.56s): `python3 scripts/check-roadmap.py` and `git diff --cached --check`.
-The first handoff check caught a missing roadmap-status table; it was restored
-before the passing rerun. The readable guide and report do not change compiler
-or test code from the focused source.
+Measured source `b57e2dcda716ebd27007d01aaf5e4e79d22518b6` remains available through
+`roadmap/revision-checked-product-b57e2dcd`. Focused run `39536765734` passed on
+both Linux architectures, including actual compiler C/instruction equality,
+runtime-input and sanitizer controls. Receipts: `/private/tmp/fwp-range-native-audit.json`
+and `/private/tmp/fwp-compiled-range-audited.json`; complete artifacts:
+`/private/tmp/fwp-compiled-range-costs`. Immutable baseline inputs share hardlinks
+with `/private/tmp/fwp-integer-range-costs`. The older handoff is preserved at
+`/private/tmp/fwp-183-pre-merge-handoff.md`; detailed delivery history belongs in
+[the history index](roadmap-history.md), not a competing next-action list.
 
-## Earlier preparation
+Use `python3 scripts/local-guard.py` for serial local checks. Full builds, native
+execution, full suites and measurements run on GitHub. Preserve 64 GiB free disk,
+target data below 2 GiB, sampled aggregate RSS below 1 GiB and the 180-second
+deadline. No limits were raised. The final log audit passed in 18.26s; merge
+verification passed in 9.34s. Recheck free space before downloading artifacts.
+The merged-status documentation and next handoff pass `python3 scripts/check-roadmap.py`
+and `git diff --check` under the guard (3.78s).
 
-The original saved-C experiment `7a8803762e240998605c6442afbbb33ed8157133`
-is retained by `roadmap/revision-integer-range-7a880376`. Measurement-only run
-`39530460995` passed on both hosts, but skipped native semantic preflight and
-did not modify the compiler. Audit: `/private/tmp/fwp-range-counting-audit.json`;
-artifacts/report: `/private/tmp/fwp-integer-range-costs` and
-`/private/tmp/fwp-integer-range-audited.json`. Use `--comparison range` for it;
-use `--comparison compiled-range` for the implemented candidate.
-
-Preparation run `39535767609` at `40d01bcc` was cancelled while both jobs were
-queued; no tests ran. Its replacement above includes complete scalar artifacts.
-The old preparation branch remains at `ca72a9cde7e3ef4eb6e7d911110e8937a3f419b2`.
-
-## Resources and remaining project work
-
-Use `python3 scripts/local-guard.py` for serial local checks. Full builds,
-native execution, complete suites and measurements belong on GitHub runners.
-Keep 64 GiB free, generated target below 2 GiB, sampled aggregate RSS below
-1 GiB and the 180-second deadline. Latest artifact download left about 65.3 GiB;
-recheck before more downloads. No limits were raised or checks bypassed.
-
-On October 21, authorized cleanup removed 304.74 MiB of obsolete binaries and
-disassembly after verifying remote recovery artifacts. Manifest:
-`/private/tmp/fwp-disk-cleanup-2026-10-21.json`. The first two counting artifact
-trees are now partial; restore their remote artifacts before another binary
-audit. Current matched/range evidence and source files were preserved.
-
-All seven [plan](../PLAN.md) work areas remain open. Ownership and removal of
-tracing are primary; default native execution still includes tracing. Retained
-resources, persistent subscriptions, resource-owning tail frames and mutual
-recursion need further proofs. Do not let microbenchmarks displace representative
-applications or claim a completed memory/performance roadmap. JIT is excluded.
+Authorized cleanup manifests are `/private/tmp/fwp-disk-cleanup-2026-10-20.json`,
+`/private/tmp/fwp-disk-cleanup-second-2026-10-20.json`,
+`/private/tmp/fwp-disk-cleanup-extra-generated-2026-10-20.json` and
+`/private/tmp/fwp-disk-cleanup-2026-10-21.json`. The earliest counting artifact
+trees are partial; restore their verified remote artifacts before binary audits.
+Current matched/range evidence and sources remain intact.
 
 ## Roadmap status
 
