@@ -412,7 +412,7 @@ for current checks.
 
 `File` is different: source type checking already forbids capturing this
 single-use resource in a reusable function. Pass the file as the final argument;
-removing a queue rejection cannot make repeated file use legal. Captured channels,
+removing a queue rejection cannot make repeated file use legal. Other captured channels,
 tasks, HTTP/2 streams and gRPC cells remain rejected until their hidden owners
 have separate proofs. Functions in a queued list or record
 receive the same checks as functions queued directly. Empty containers need no
