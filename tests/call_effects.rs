@@ -47,7 +47,7 @@ main = [
     checked (const ()) | echo,
     ErrorCall { call = fail-now } | checked-record | echo,
     alias-check fail-now | echo,
-    deferred | .run | apply fail-now | echo,
+    apply fail-now (deferred | .run) | echo,
     read-state get | echo,
     checked-io print-fail | echo,
 ] | ignore
@@ -408,6 +408,14 @@ read = match
 #[test]
 fn higher_order_callback_rows_allow_known_effect_weakening() {
     for source in [
+        r#"
+Consumer[a] = { consume: a -> () }
+wrap : ((I64 -> I64 ! e) -> I64 ! {Async | e}) -> Consumer[I64 -> I64 ! e] ! {Async | e}
+wrap = const Consumer { consume = ignore }
+consumer : Consumer[I64 -> I64] -> Consumer[I64 -> I64]
+consumer = id
+main = wrap (apply 3) | consumer | ignore
+"#,
         r#"
 pass-fn : (I64 -> I64 ! {Async | e}) -> (I64, I64) ! {Async | e}
 pass-fn = both (task.deadline 1h | apply 2) (apply 3)

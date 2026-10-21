@@ -5,7 +5,7 @@
 Next: finish the handler inference repair discovered while testing socket queues,
 then complete focused and production validation for [PR #184](https://github.com/e6qu/fun-with-pipes/pull/184).
 Branch `prove-retained-resource-ownership` is based on accepted merge
-`447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c`; published head is `2121a9b5`.
+`447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c`; published head is `f448c3b7`.
 
 All six native socket jobs in `39563352313` have passed their test steps (last
 Intel macOS artifact upload was finishing). Five complete logs and 20 saved
@@ -17,7 +17,14 @@ can affect State handlers and returned records. `src/infer.rs::argument_type`
 now preserves labels where the callee shares the remaining row with its output;
 this is structural, not a special case for named handlers. New `call_effects`
 checks cover aliases, records, State, native/interpreter agreement, and rejection
-of unrelated IO effects. These edits are not yet remotely tested. Publish with
+of unrelated IO effects. Probe `39566088635` completed with four `call_effects` failures: two came from
+ambiguous pipe grouping in the new deferred-function example; two exposed the
+need to distinguish produced functions from accepted callbacks. Other unit and
+socket/resource targets passed. Both causes are repaired locally: use an explicit
+application for the function-valued record field, and follow input/output
+direction through function types and actual record/variant fields. A new
+`Consumer` record control passes in the accepted compiler and must keep passing.
+The revised changes are not yet remotely tested. Publish with
 `suite=queued-sockets,native_runner=ubuntu-latest` for early feedback, then use
 all platforms and the full nine production gates before merge. Existing source
 acceptance and missing-effect rejection tests must keep passing.

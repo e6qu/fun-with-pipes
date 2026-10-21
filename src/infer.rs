@@ -557,27 +557,63 @@ impl<'a> Infer<'a> {
             let row = table.flatten_row(row);
             row.tail == Some(tail) && !row.fields.iter().any(|(name, _)| name == label)
         }
-        fn result_without(table: &TypeTable, ty: &Type, tail: TV, label: &str) -> bool {
-            let visit = |ty: &Type| result_without(table, ty, tail, label);
-            match table.resolve(ty) {
+        fn result_without(
+            env: &Env,
+            ty: &Type,
+            tail: TV,
+            label: &str,
+            produced: bool,
+            visiting: &mut HashSet<(String, bool)>,
+        ) -> bool {
+            match env.table.resolve(ty) {
+                // Inputs reverse direction: an accepted callback's smaller
+                // row does not mean the surrounding function handles an effect.
                 Type::Fun(input, output, row) => {
-                    row_without(table, &row, tail, label)
-                        || visit(&input)
-                        || visit(&output)
-                        || table
-                            .flatten_row(&row)
-                            .fields
-                            .iter()
-                            .any(|(_, ty)| visit(ty))
+                    (produced && row_without(&env.table, &row, tail, label))
+                        || result_without(env, &input, tail, label, !produced, visiting)
+                        || result_without(env, &output, tail, label, produced, visiting)
                 }
-                Type::Con(_, args) => args.iter().any(visit),
-                Type::App(head, args) => visit(&head) || args.iter().any(visit),
-                Type::Record(row) => table
+                Type::Record(row) => env
+                    .table
                     .flatten_row(&row)
                     .fields
                     .iter()
-                    .any(|(_, ty)| visit(ty)),
-                Type::Var(_) | Type::Nat(_) | Type::NatOp(..) => false,
+                    .any(|(_, ty)| result_without(env, ty, tail, label, produced, visiting)),
+                Type::Con(name, args) => {
+                    if !visiting.insert((name.clone(), produced)) {
+                        return false;
+                    }
+                    let found = if let Some(row) = env.table.expand_record(&name, &args) {
+                        row.fields
+                            .iter()
+                            .any(|(_, ty)| result_without(env, ty, tail, label, produced, visiting))
+                    } else if let Some(TypeDef {
+                        params,
+                        kind: TypeDefKind::Adt { ctors },
+                        ..
+                    }) = env.types.get(&name)
+                    {
+                        let map = params.iter().copied().zip(args.iter().cloned()).collect();
+                        ctors.iter().any(|ctor| {
+                            env.ctors[ctor].fields.iter().any(|field| {
+                                result_without(
+                                    env,
+                                    &TypeTable::subst(field, &map),
+                                    tail,
+                                    label,
+                                    produced,
+                                    visiting,
+                                )
+                            })
+                        })
+                    } else {
+                        args.iter()
+                            .any(|ty| result_without(env, ty, tail, label, produced, visiting))
+                    };
+                    visiting.remove(&(name, produced));
+                    found
+                }
+                Type::Var(_) | Type::App(..) | Type::Nat(_) | Type::NatOp(..) => false,
             }
         }
         let Type::Fun(_, _, permitted) = self.env.table.resolve(expected) else {
@@ -615,7 +651,7 @@ impl<'a> Infer<'a> {
                     return false;
                 };
                 row_without(&self.env.table, &call, tail, &label)
-                    || result_without(&self.env.table, &result, tail, &label)
+                    || result_without(self.env, &result, tail, &label, true, &mut HashSet::new())
             }) {
                 continue;
             }
