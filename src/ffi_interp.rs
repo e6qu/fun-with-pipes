@@ -6,7 +6,6 @@
 
 use std::collections::HashMap;
 use std::ffi::{c_char, c_void, CStr, CString};
-use std::rc::Rc;
 
 use crate::ffi::{self, CType};
 use crate::interp::{Ctl, Interp, R};

@@ -126,7 +126,7 @@ fn cpu_worker_limits_match_availability_and_both_backends() {
             &path,
             format!(
                 r#"
-count : () -> I64 ! {IO}
+count : () -> I64 ! {{IO}}
 count = const "FWP_TEST_WORKERS" | env.get | option.and-then parse-int | (match
     Some _ -> id
     None -> "test requires FWP_TEST_WORKERS" | prim.trap)

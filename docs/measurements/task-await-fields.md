@@ -1,7 +1,8 @@
 # Matching task results without a temporary box
 
-This optimization is under development, after the combined task-ownership group.
-It is not verified platform support. See [the handoff](../development-state.md).
+Immediate task-result matches avoid a temporary heap object. The measured source
+passes six native and two WebAssembly focused jobs. Final delivery checks remain
+separate; see [the handoff](../development-state.md).
 
 `Task[String]` is a handle to a computation that returns text. Awaiting it produces
 an `Option[String]`: `Some` contains the successful result; `None` means that the
@@ -15,7 +16,7 @@ read = task.await | match
     None -> 0
 ```
 
-`! {Async}` permits waiting. The candidate passes the option's tag and payload
+`! {Async}` permits waiting. The compiler passes the option's tag and payload
 directly to this match as C fields. It removes the temporary heap object around
 `Some`; it does not remove the text, task record or task stack. An option saved in
 a list or otherwise escaping the direct match still has its ordinary representation.
@@ -54,14 +55,46 @@ memory. Frontend optimization is O1; native C settings are O0/O2 with link-time
 optimization disabled in the focused workflow. ARC and tracing modes run separately.
 Collection/reuse stress is a separate correctness run, outside the count comparison.
 
-No measured saving is reported yet. Required evidence includes all six native
-hosts, both WebAssembly hosts, generated C and executed machine-code inspection.
-The runtime probe also deliberately omits the result retain and must fail while
-an independent alias keeps the storage safe to inspect. Overflow and cancellation
-checks must preserve other owners. Final production acceptance remains separate.
-The first WebAssembly preflight exposed an ineffective negative test: this
-example creates no State storage, so omitting State cleanup cannot detect a leak.
-Its corrected control omits destruction of cached task results instead. Existing
-State and queue cleanup controls remain on the fixtures that exercise them.
-This is a comparison of two fwp representations, not a timing benchmark or a
-claim of parity with C/Rust. Required sharing and task storage remain costs.
+## Measured result
+
+The [2026-10-22 report](task-await-fields-2026-10-22.json) records source
+`f2b5d400fedaca3a24208cd3bcdf08f2ebe51c61`, tag
+`roadmap/revision-await-fields-f2b5d400feda`, and all eight passing jobs in
+[the focused run](https://github.com/e6qu/fun-with-pipes/actions/runs/39678830873).
+Every complete log was audited. At both C O0 and O2, on Linux/macOS/Windows ARM64
+and AMD64, the fixture makes **134 → 100 allocation requests** and requests
+**544 fewer bytes**. Retains stay at 54; peak managed storage is unchanged.
+These results hold in both checked ARC and tracing modes.
+
+The ARC byte totals are the same on both architectures within these groups:
+
+| Native hosts | Requested bytes, boxed control → direct fields | Peak managed bytes, both versions |
+|---|---:|---:|
+| Linux and macOS, ARM64/AMD64 | 8,869 → 8,325 | 1,488 |
+| Windows, ARM64/AMD64 | 9,205 → 8,661 | 1,552 |
+
+Tracing totals differ by host because their task storage differs; the report
+retains each value. Every counted run ends with zero managed charge and zero
+collections. This fixture reduces allocation traffic, not peak storage. It has no
+execution-time, process-memory or C/Rust comparison. Required sharing, text,
+task records and stacks still cost space and work.
+
+Independent inspection covers 204 executed native binaries, including all 48
+await comparisons, and 64 executed await WebAssembly modules. Native file headers
+confirm the recorded architecture. At O0 the boxed control's await helper calls
+`fwp_await_owned`; the direct-fields helper does not. ARC symbols exclude the
+tracing scan, mark and sweep functions. The report retains generated-C, binary,
+output and inspection hashes, compiler versions, flags and hardware details.
+Binary sizes are recorded; no code-size or register-use improvement is claimed.
+
+Native probes deliberately omit the result retain and must fail while an alias
+keeps storage safe to inspect. Overflow and cancellation checks preserve other
+owners. WebAssembly runs WASI/browser entry paths with JSPI/Asyncify at O1/O2;
+missing scheduler shutdown or cached-result release must fail. These execution
+checks use Node and do not establish coverage of every browser engine.
+
+The same source verifies partial-capture State scopes, repeated Jacobian tape
+cleanup and the repaired C-interop buffer releases. Earlier failed controls are
+not acceptance: the first WASM control omitted State cleanup in a fixture with no
+State storage, and an earlier Windows buffer observer preceded platform headers.
+The accepted source fixes both without relaxing the ownership proof.

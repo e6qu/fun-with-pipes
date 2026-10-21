@@ -357,9 +357,9 @@ startup. If a requested native worker cannot start, it joins every worker alread
 started, frees pending storage and reports a trap. It does not silently execute
 missing workers on the caller. Counts are validated before conversion to WASI's
 32-bit address size; final reduction blocks use remaining lengths to avoid index
-overflow. Focused native, WASI, allocation-failure and worker-failure checks pass;
-full delivery acceptance is recorded in
-[PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
+overflow. The output-storage and failure-cleanup checks passed native and WASI
+validation in [PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
+The new worker-range rules require the current validation recorded in the handoff.
 [Measured storage costs](benchmarks.md#cpu-tensor-output-storage) distinguish the
 removed buffer from remaining allocations. No timing improvement is claimed here.
 

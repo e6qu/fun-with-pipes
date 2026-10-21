@@ -1972,7 +1972,7 @@ jobs:
           git rev-parse HEAD > kernel-evidence/source.txt
           set -o pipefail
           cargo test --no-fail-fast --test cpu_kernel_ownership --test stdlib_doc 2>&1 | tee kernel-evidence/ownership.log
-      - name: CPU worker limits, interpreter agreement and strict ARC corpus
+      - name: CPU worker limits and interpreter agreement
         if: ${{ !cancelled() && inputs.suite == 'kernels' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         shell: bash
         run: |
@@ -1995,8 +1995,10 @@ jobs:
       - name: Maintained programs after removal of runtime GPU compilation
         if: ${{ !cancelled() && inputs.suite == 'kernels' && runner.os != 'Windows' }}
         env:
-          FWP_ARC_CORPUS_ARTIFACTS: kernel-evidence/corpus
-        run: cargo test --test arc_corpus -- --nocapture
+          FWP_ARC_ARTIFACTS: kernel-evidence/corpus
+        run: |
+          cargo test --test arc_corpus -- --nocapture
+          test -s kernel-evidence/corpus/corpus.txt
       - name: CPU kernel size validation order
         if: ${{ !cancelled() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact

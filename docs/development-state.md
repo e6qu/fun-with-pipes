@@ -2,30 +2,36 @@
 
 ## Next action
 
-Next: publish the combined CPU/foreign-bridge repair, run its Linux AMD64 and
-both WebAssembly preflights, audit every complete log, then extend to six native
-hosts. Merge #190 only after its exact-head gates pass. The next delivery PR will
-combine await fields, State/Jacobian repairs, raw-buffer cleanup, CPU execution
-and foreign-call preparation. Keep one active delivery PR; continue all seven
-areas of [PLAN.md](../PLAN.md) after each accepted merge.
+Next: publish the accumulated compilation/workflow repairs and completed await
+report, then run the CPU preflight before the combined delivery. The preceding
+`245fefda` preflight is fully audited; its only failures are repaired below.
+Merge #190 after its two remaining Linux gates pass, preserve the measured tags,
+and base the next PR on that merge. Keep one active delivery PR and continue
+all seven areas of [PLAN.md](../PLAN.md) after every accepted merge.
 
 ## Current sources
 
 - Delivery [#190](https://github.com/e6qu/fun-with-pipes/pull/190): head
   `4cdf8afa8647cfdaecbc338429bf8a1c1a158210`, production `39673092514`, docs
-  `39673088884`. Benchmark, four macOS jobs and documentation pass; Linux and
-  Windows jobs remain running. Auditor `/private/tmp/fwp-audit-190-final.py`;
+  `39673088884`. Benchmark, four macOS jobs, both Windows jobs and documentation pass;
+  both Linux jobs remain running. Auditor `/private/tmp/fwp-audit-190-final.py`;
   merger `/private/tmp/fwp-merge-190.py` requires all ten accepted checks.
 - Await measurements: `f2b5d400fedaca3a24208cd3bcdf08f2ebe51c61`, immutable tag
   `roadmap/revision-await-fields-f2b5d400feda`, run `39678830873`.
-  Linux ARM64, Windows ARM64 and both WebAssembly jobs pass; four native jobs
-  remain running. Auditor `/private/tmp/fwp-audit-task-await-observer.py`.
+  All eight jobs pass; every complete log is audited. Auditor `/private/tmp/fwp-audit-task-await-observer.py`.
   Preserve this source for binary/count comparisons; do not open a separate PR.
 - Combined branch `native-kernel-contracts`, worktree
   `/private/tmp/fwp-native-kernel-contracts`, includes that await source.
   Published CPU source `4ce0f3aa93349a098d850fe175c6e8ceab4b1867`, tag
   `roadmap/revision-cpu-contracts-4ce0f3aa9334`, run `39678998800`, failed.
-  All three complete logs are audited. Repairs below are uncommitted.
+  All three complete logs are audited. Follow-up `245fefda7e8f`, tag
+  `roadmap/revision-cpu-repair-245fefda7e8f`, run `39682721876`, is also fully
+  audited: both WASM jobs pass; Linux fails only the unused FFI import and Rust
+  test-string escaping. All executed Linux targets pass, including CPU ownership,
+  FFI/tooling, 81/86 corpus programs, size limits and sanitizer controls.
+  Both compilation errors are repaired locally; the complete numerics harness
+  compiles in a guarded standalone check. The corpus artifact variable is also
+  corrected and Windows production now explicitly runs `numerics`.
 
 ## Changes and failures
 
@@ -36,8 +42,10 @@ The C-interop example frees copied sorting/formatting buffers; omitted-free
 controls must fail. Await measurement helpers are
 `/private/tmp/fwp-inspect-task-await-native.py`,
 `/private/tmp/fwp-inspect-task-await-wasm.py` and
-`/private/tmp/fwp-build-task-await-report.py`. Require passing source logs and
-204 native/64 await-module inspections before generating the report.
+`/private/tmp/fwp-build-task-await-report.py`. All source logs and 204 native/64 await-module inspections are complete.
+[The report](measurements/task-await-fields.md) records 134 → 100 allocation
+requests and 544 fewer requested bytes, with retains and peak storage unchanged.
+The JSON is `measurements/task-await-fields-2026-10-22.json`.
 
 CPU changes remove runtime OpenCL compilation and obsolete GPU APIs, return
 kernel values directly and require worker counts 1–256. Ownership observations
@@ -80,7 +88,11 @@ benchmarks stay on GitHub runners. No new Rust compiler was built locally.
 Scripts and acceptance receipts are under `/private/tmp`. First CPU publication
 and audit: `fwp-cpu-contracts-publication.json`, `fwp-audit-cpu-contracts.py`.
 After #190 merges, preserve measured tags and base the combined delivery on that
-merge. Require nine final-head production jobs plus documentation before squash.
+merge. The production matrix already runs native CPU/FFI tests and both WASM suites.
+The Windows jobs now include `numerics` to require the new worker-range tests.
+Use those exact-head gates for the combined delivery; await measurements retain
+their independent six-native/two-WASM evidence, without a separate delivery cycle
+per component. Require nine final-head production jobs plus documentation before squash.
 Use one-line commit subjects ≤80 characters with empty bodies and no trailers.
 Preserve 64 GiB free disk, target below 2 GiB and sampled workload RSS below 1 GiB;
 never raise or bypass guard limits. Fix every encountered issue.
