@@ -57,6 +57,9 @@ jobs:
       - name: Context ownership, register roots and matched layout measurements
         if: ${{ !cancelled() }}
         run: cargo test --test task_context_storage -- --nocapture
+      - name: Matched process memory and complete elapsed samples
+        if: ${{ !cancelled() }}
+        run: python3 scripts/measure-task-context-processes.py --input task-context-evidence --output task-context-evidence/processes.json --repetitions 9 --timeout 30
       - name: Task, scope and cancellation regressions
         if: ${{ !cancelled() }}
         run: cargo test --no-fail-fast --test task_ownership --test task_handle_ownership --test arc_tasks --test task_timer_order --test typed_state_ownership --test loop_unwind_ownership --test resource_frames

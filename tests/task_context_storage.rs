@@ -259,7 +259,7 @@ fn task_context_storage_preserves_output_and_cleanup() {
             replace(
                 &mut measured,
                 "    client_measure_end();\n",
-                &format!("    client_measure_end();\n{layout_report}"),
+                &format!("    client_measure_end();\n{layout_report}    fprintf(stderr, \"process-peak-kib\\t%ld\\n\", fwp_gc_status_kb(\"VmHWM\"));\n"),
                 1,
             );
             if layout == "stack" {
@@ -299,7 +299,14 @@ fn task_context_storage_preserves_output_and_cleanup() {
                     .collect();
                 assert_eq!(values.len(), 6);
                 assert_eq!(values[4..], [0, 0], "{memory}/{label}: {stderr}");
-                assert_eq!(stderr.lines().count(), 2, "{stderr}");
+                let peak: u64 = stderr
+                    .lines()
+                    .find_map(|line| line.strip_prefix("process-peak-kib\t"))
+                    .unwrap()
+                    .parse()
+                    .unwrap();
+                assert!(peak > 0, "whole-process peak memory unavailable: {stderr}");
+                assert_eq!(stderr.lines().count(), 3, "{stderr}");
             }
             if memory == "arc" && layout == "stack" {
                 let mut broken = measured;
