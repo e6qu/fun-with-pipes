@@ -115,6 +115,14 @@ Dynamic-input tests compare the unoptimized interpreter with native execution;
 C's undefined-behavior sanitizer checks the emitted multiplication, with the
 former signed intermediate as a control that must fail.
 
+For signed 64-bit multiplication (I64 and ISize), generated C keeps the overflow
+check and returns the safe `x*y` expression afterward. This exposes operand
+bounds that GCC can lose through the overflow builtin's output variable. Both
+operands are already evaluated; no source effects repeat. The expression is
+reached only when its product fits. The [checked-product measurements](measurements/checked-products.md)
+show the O2 benefit, the extra product emitted at O0/O1, correctness controls and
+remaining C/Rust gaps. This is not a promise of improvement for every program.
+
 ## Generics
 
 A definition is generic only when its signature declares type variables. For

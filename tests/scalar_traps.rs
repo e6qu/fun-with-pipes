@@ -366,3 +366,208 @@ int main(int argc, char **argv) {
     }
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn signed_products_preserve_bounds_effects_and_defined_intermediates() {
+    let dir = fwp::cgen::TempDir::new("signed-products").unwrap();
+    let input = dir.join("products.fwp");
+    let artifacts = std::env::var_os("FWP_SIGNED_PRODUCT_ARTIFACTS").map(PathBuf::from);
+    std::fs::write(
+        &input,
+        "# expose: cli\nexport product : I64 -> I64 -> () ! {IO}\n\
+         product = curry (tap (const \"before\" | echo) | uncurry mul | tap echo | const \"after\" | echo)\n\
+         # expose: cli\nexport size-product : ISize -> ISize -> () ! {IO}\n\
+         size-product = curry (tap (const \"before\" | echo) | uncurry mul | tap echo | const \"after\" | echo)\n",
+    )
+    .unwrap();
+    // Runtime inputs cover signs, exact limits and both sides of the square-root
+    // boundary. i128 computes every I64 product independently without overflow.
+    let values = [
+        i64::MIN,
+        i64::MIN + 1,
+        -3037000500,
+        -3037000499,
+        -2,
+        -1,
+        0,
+        1,
+        2,
+        3037000499,
+        3037000500,
+        i64::MAX - 1,
+        i64::MAX,
+    ];
+    let mut pairs: Vec<_> = values
+        .iter()
+        .flat_map(|a| values.iter().map(move |b| (*a, *b)))
+        .collect();
+    pairs.extend([
+        (i64::MAX / 2, 2),
+        (i64::MAX / 2 + 1, 2),
+        (i64::MIN / 2, 2),
+        (i64::MIN / 2 - 1, 2),
+    ]);
+    let cases: Vec<_> = [("product", "I64"), ("size-product", "ISize")]
+        .into_iter()
+        .flat_map(|(name, ty)| pairs.iter().map(move |&(a, b)| {
+            let product = i128::from(a) * i128::from(b);
+            let expected = if (i128::from(i64::MIN)..=i128::from(i64::MAX)).contains(&product) {
+                format!("before\n{product}\nafter\n--- stderr\n--- exit Some(0)")
+            } else {
+                format!("before\n--- stderr\nfwp: trap: arithmetic overflow in {ty}\n--- exit Some(101)")
+            };
+            (name, a, b, expected)
+        }))
+        .collect();
+    for (name, a, b, expected) in &cases {
+        let actual = outcome(
+            Command::new(fwp())
+                .env("FWP_NO_OPT", "1")
+                .env_remove("FWP_OUT")
+                .env("FWP_TRANSPORT", "stdio")
+                .args(["exec", "--interp", "--cli"])
+                .arg(&input)
+                .args([(*name).into(), a.to_string(), b.to_string()]),
+        );
+        assert_eq!(&actual, expected, "interpreter/{name}: {a} * {b}");
+    }
+    for memory in ["arc", "tracing"] {
+        let cfile = dir.join("products.c");
+        let emitted = Command::new(fwp())
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--cli", "--gc", memory, "--emit-c"])
+            .arg(&input)
+            .arg("-o")
+            .arg(&cfile)
+            .output()
+            .unwrap();
+        assert!(emitted.status.success(), "{emitted:?}");
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        if let Some(root) = &artifacts {
+            std::fs::create_dir_all(root).unwrap();
+            std::fs::write(root.join(format!("products-{memory}.c")), &code).unwrap();
+        }
+        for opt in ["-O0", "-O1", "-O2", "-O3"] {
+            let binary = dir.join("products.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            if let Some(root) = &artifacts {
+                std::fs::copy(&binary, root.join(format!("products-{memory}{opt}.exe"))).unwrap();
+            }
+            let stress = if memory == "arc" { "0" } else { "1" };
+            for (name, a, b, expected) in &cases {
+                let actual = outcome(
+                    Command::new(&binary)
+                        .args([(*name).into(), a.to_string(), b.to_string()])
+                        .env_remove("FWP_OUT")
+                        .env("FWP_TRANSPORT", "stdio")
+                        .env_remove("FWP_GC")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", stress),
+                );
+                assert_eq!(&actual, expected, "{memory}/{opt}/{name}: {a} * {b}");
+            }
+        }
+        if memory == "tracing" {
+            continue;
+        }
+        let (_, tail) = code
+            .split_once("/* prim.mul : I64 -> I64 -> I64 */\n")
+            .unwrap();
+        let (body, _) = tail.split_once("\n}\n").unwrap();
+        let primitive = format!("{body}\n}}\n");
+        let name = body
+            .strip_prefix("static V ")
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let check = "if (__builtin_mul_overflow(x, y, &r)) fwp_trap_overflow(\"I64\");";
+        assert_eq!(primitive.matches(check).count(), 1);
+        assert!(primitive.contains("return (V)(x * y);"));
+        let broken = primitive.replace(check, "");
+        for (label, implementation) in [("checked", &primitive), ("unchecked-control", &broken)] {
+            let sanitized = format!(
+                r#"#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#endif
+typedef uint64_t V;
+static void fwp_trap_overflow(const char *type) {{
+    fprintf(stderr, "fwp: trap: arithmetic overflow in %s\n", type);
+    exit(101);
+}}
+{implementation}
+int main(int argc, char **argv) {{
+    if (argc != 3) return 2;
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0 ||
+        _setmode(_fileno(stderr), _O_BINARY) < 0) return 3;
+#endif
+    V a = (V)strtoll(argv[1], 0, 10), b = (V)strtoll(argv[2], 0, 10);
+    puts("before");
+    printf("%lld\n", (long long)(int64_t){name}(b, a));
+    puts("after");
+    return 0;
+}}
+"#
+            );
+            std::fs::write(&cfile, &sanitized).unwrap();
+            if let Some(root) = &artifacts {
+                std::fs::write(root.join(format!("{label}.c")), &sanitized).unwrap();
+            }
+            for opt in ["-O1", "-O2", "-O3"] {
+                let binary = dir.join(format!("{label}{opt}.exe"));
+                let (cc, flags) = fwp::cgen::c_compiler().unwrap();
+                let compiled = Command::new(cc)
+                    .args(flags)
+                    .args([
+                        opt,
+                        "-std=gnu11",
+                        "-fsanitize=undefined",
+                        "-fno-sanitize-recover=undefined",
+                    ])
+                    .arg(&cfile)
+                    .arg("-o")
+                    .arg(&binary)
+                    .output()
+                    .unwrap();
+                assert!(compiled.status.success(), "{label}/{opt}: {compiled:?}");
+                if let Some(root) = &artifacts {
+                    std::fs::copy(&binary, root.join(format!("{label}{opt}.exe"))).unwrap();
+                }
+                if label == "checked" {
+                    for (_, a, b, expected) in cases.iter().filter(|case| case.0 == "product") {
+                        let actual =
+                            outcome(Command::new(&binary).args([a.to_string(), b.to_string()]));
+                        assert_eq!(&actual, expected, "UBSan/{opt}: {a} * {b}");
+                    }
+                } else {
+                    let actual = Command::new(&binary)
+                        .args(["9223372036854775807", "2"])
+                        .output()
+                        .unwrap();
+                    if let Some(root) = &artifacts {
+                        std::fs::write(root.join(format!("{label}{opt}.stdout")), &actual.stdout)
+                            .unwrap();
+                        std::fs::write(root.join(format!("{label}{opt}.stderr")), &actual.stderr)
+                            .unwrap();
+                        std::fs::write(
+                            root.join(format!("{label}{opt}.status")),
+                            format!("{:?}\n", actual.status.code()),
+                        )
+                        .unwrap();
+                    }
+                    assert!(!actual.status.success(), "{actual:?}");
+                    assert!(
+                        String::from_utf8_lossy(&actual.stderr).contains("signed integer overflow"),
+                        "{actual:?}"
+                    );
+                }
+            }
+        }
+    }
+}

@@ -37,7 +37,7 @@ def main():
     assert platform.machine() == architecture
     assert re.fullmatch('[0-9a-f]{40}', args.source)
     labels = ('c', 'rs', 'saved-fwp', 'rebuilt-fwp', 'candidate-fwp',
-              'matched-c', 'matched-rs', 'grouped-unhinted')
+              'matched-c', 'matched-rs', 'grouped-unhinted', 'recomputed-product')
     assert args.rounds > 0 and args.rounds % (2 * len(labels)) == 0
     assert args.warmups > 0
     out = args.output.resolve()
@@ -80,6 +80,15 @@ def main():
     assert candidate.replace(new_helper, old_helper) == original
     assert new_helper.count('static inline ') == 2
     unhinted = candidate.replace(new_helper, new_helper.replace('static inline ', 'static '))
+    # A generated-C experiment only: retain the overflow check, then express
+    # the known-safe product separately so GCC can infer its numeric range.
+    multiply, = re.findall(
+        r'/\* prim.mul : I64 -> I64 -> I64 \*/\nstatic V f\d+\(V l0, V l1\) \{.*?\n\}',
+        candidate, re.S)
+    assert multiply.count('if (__builtin_mul_overflow(x, y, &r)) fwp_trap_overflow("I64");') == 1
+    assert multiply.count('return (V)r;') == 1
+    recomputed_multiply = multiply.replace('return (V)r;', 'return (V)(x * y);')
+    recomputed = candidate.replace(multiply, recomputed_multiply)
     builds = {}
     managed = {}
     for kind, tool, flags in [('c', args.cc, ['-O2']), ('rs', args.rustc, ['-O'])]:
@@ -88,16 +97,21 @@ def main():
         source.write_bytes((ROOT / 'bench/text-length' / ('main.' + kind)).read_bytes())
         executable = out / label
         command = [tool, *flags, source, '-o', executable]
+        if kind == 'c':
+            command += [f'-fdump-tree-optimized={out / (label + ".optimized")}',
+                        f'-fdump-tree-evrp={out / (label + ".ranges")}']
         run(command, environment)
         executables[label] = executable
         builds[label] = {'command': list(map(str, command)), 'sourceSha256': audit.digest(source)}
     for label, code in [('rebuilt-fwp', original), ('candidate-fwp', candidate),
-                        ('grouped-unhinted', unhinted)]:
+                        ('grouped-unhinted', unhinted), ('recomputed-product', recomputed)]:
         cfile = out / (label + '.c')
         cfile.write_text(code)
         executable = out / label
         command = [args.cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w',
-                   cfile, '-o', executable, '-lm', '-lpthread', '-ldl']
+                   cfile, '-o', executable, '-lm', '-lpthread', '-ldl',
+                   f'-fdump-tree-optimized={out / (label + ".optimized")}',
+                   f'-fdump-tree-evrp={out / (label + ".ranges")}']
         run(command, environment)
         executables[label] = executable
         builds[label] = {'command': list(map(str, command)), 'sourceSha256': audit.digest(cfile)}
@@ -187,6 +201,9 @@ def main():
         'affinityPolicy': args.affinity, 'allowedCpus': affinity,
         'rounds': args.rounds, 'warmups': args.warmups,
         'oldHelper': old_helper, 'candidateHelper': new_helper,
+        'arithmeticExperiment': {'originalMultiply': multiply,
+                                 'recomputedMultiply': recomputed_multiply,
+                                 'rewriteScope': 'saved generated C'},
         'builds': builds, 'binaries': binaries, 'managedMemory': managed,
         'measurements': measurements,
         'scope': 'C, Rust and fwp count decimal characters for i and checked 3*i over '
@@ -197,6 +214,11 @@ def main():
                  'remaining overhead; comparison with old peers also changes algorithms. '
                  'All matched helpers carry ordinary inline hints, not forced inlining. '
                  'Grouped-unhinted removes only the two fwp inline hints to isolate their cost. '
+                 'Recomputed-product keeps the same signed overflow check and expresses '
+                 'the product again on its non-overflow continuation. This comparison rewrites '
+                 'saved generated C. The workflow separately verifies actual compiler-produced '
+                 'C and its executable; measurements alone do not establish full arithmetic acceptance. '
+                 'GCC range and optimized tree dumps accompany each C rebuild. '
                  'Rebuilt fwp uses unchanged saved C; candidate changes only integer '
                  'digit counting to descending decimal groups. Both use GCC O2, no LTO. Balanced '
                  'whole-process timing includes startup, output and shutdown; wall '

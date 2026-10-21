@@ -203,6 +203,7 @@ jobs:
       RUST_TEST_THREADS: 1
       FWP_LTO: '0'
       FWP_INTEGER_LENGTH_ARTIFACTS: integer-counting-semantics
+      FWP_SIGNED_PRODUCT_ARTIFACTS: integer-product-semantics
     steps:
       - uses: actions/checkout@v7
         with:
@@ -226,6 +227,15 @@ jobs:
           for binary in integer-counting-semantics/*.exe; do
             objdump -d "$binary" > "${binary%.exe}.asm"
           done
+      - name: Inspect scalar multiplication binaries and sanitizer controls
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(find integer-product-semantics -name '*.exe' | wc -l)" -eq 14
+          for binary in integer-product-semantics/*.exe; do
+            objdump -d "$binary" > "${binary%.exe}.asm"
+          done
       - name: Compare signed decimal counters on each allowed CPU
         if: ${{ !cancelled() }}
         env:
@@ -233,7 +243,19 @@ jobs:
           EVIDENCE_RUN: ${{ inputs.evidence_run }}
           PROGRAM_SOURCE: ${{ inputs.source_revision }}
           PROFILE_HOST: ${{ matrix.runner }}
-        run: python3 scripts/measure-integer-counting.py --run "$EVIDENCE_RUN" --source "$PROGRAM_SOURCE" --host "$PROFILE_HOST" --cc gcc --rustc rustc --affinity each-allowed --rounds 48 --warmups 2 --output integer-counting-evidence
+        run: python3 scripts/measure-integer-counting.py --run "$EVIDENCE_RUN" --source "$PROGRAM_SOURCE" --host "$PROFILE_HOST" --cc gcc --rustc rustc --affinity each-allowed --rounds 54 --warmups 2 --output integer-counting-evidence
+      - name: Verify actual compiler output against the measured range candidate
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          target/debug/fwp build bench/text-length/main.fwp --gc tracing -O2 --emit-c -o integer-counting-evidence/compiler-produced.c
+          cmp integer-counting-evidence/recomputed-product.c integer-counting-evidence/compiler-produced.c
+          target/debug/fwp build bench/text-length/main.fwp --gc tracing -O2 -o integer-counting-evidence/compiler-produced
+          integer-counting-evidence/compiler-produced > integer-counting-evidence/compiler-produced.stdout 2> integer-counting-evidence/compiler-produced.stderr
+          printf '28518516\n' | cmp - integer-counting-evidence/compiler-produced.stdout
+          test ! -s integer-counting-evidence/compiler-produced.stderr
+          objdump -d integer-counting-evidence/compiler-produced > integer-counting-evidence/compiler-produced.asm
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -241,10 +263,16 @@ jobs:
           path: integer-counting-evidence/
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
-        if: always()
+        if: ${{ always() }}
         with:
           name: integer-counting-semantics-${{ matrix.runner }}
           path: integer-counting-semantics/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integer-product-semantics-${{ matrix.runner }}
+          path: integer-product-semantics/
           if-no-files-found: error
   queued_function_proof:
     if: inputs.suite == 'channel-proof'
