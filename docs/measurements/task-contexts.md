@@ -12,6 +12,8 @@ existing stack allocation, above its usable call frames. The task record holds
 a pointer. The root task uses the host's stack, so its image occupies runtime
 static storage instead. The runtime clears that image at teardown and clears
 completed child pointers before reusing their stacks.
+Programs that create no task do not initialize or clear a saved root image.
+The new task-free check and an unconditional-clear control verify this boundary.
 
 The saved bytes still exist. This change reduces heap record size and allocator
 rounding; it does not eliminate CPU state or guarantee lower process memory.

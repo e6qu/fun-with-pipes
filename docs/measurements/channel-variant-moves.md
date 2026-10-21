@@ -90,7 +90,8 @@ pass on all six native platforms and both WebAssembly hosts at `a59328d765adab49
 whose compiler, runtime, tests and workflows match the measured source.
 Each Unix host passes 214 checks, each Windows host 215, and each WebAssembly host
 18, none ignored or filtered. All eight complete logs were audited.
-Final production acceptance remains required; follow the [handoff](../development-state.md).
+[PR #179](../roadmap-history.md#matched-payload-moves-and-direct-call-borrows-pr-179)
+subsequently passed the final-head production and documentation gates.
 
 The first focused run failed because only the scalar test function was reachable
 from its entry point; the compiler correctly omitted the other two functions.

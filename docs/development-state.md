@@ -2,14 +2,19 @@
 
 ## Next action
 
-Next: publish the corrected `task-contexts` measurement, then inspect every process
-sample on native Linux ARM64 and AMD64. Candidate-only correctness assertions
+Next: publish the conditional root-image cleanup and task-free regression, then
+audit the complete native Linux ARM64/AMD64 probe. The preceding corrected run
+`39604262777` at `c26da6b4a429bd0987b36004b0a523658ae2bd1e` remains queued and
+will be cancelled as superseded. Candidate-only correctness assertions
 must run in separate binaries, so they cannot bias the timed pair. The first proof at
 `c4a6fb0abb70704662f2736a5ee981e62f1b3f31`, run `39600508036`, passed both jobs;
 their complete logs and 62 actual native binaries were inspected. This is isolated
 preparation on `measure-native-task-contexts` in `/private/tmp/fwp-task-contexts`,
 based on PR #186 head `fa2d5098573220833bda06e30af9f534181edc0d`.
 Do not open another PR while #186 remains active.
+Current audit: `/private/tmp/fwp-audit-task-context-matched.py`; receipt
+`/private/tmp/fwp-task-context-matched-audit.json`. Publication metadata is
+`/private/tmp/fwp-task-context-matched-probe.json`.
 Use `/private/tmp/fwp-audit-task-context-probe.py`; receipt
 `/private/tmp/fwp-task-context-first-audit.json`. The first run `39600295147`
 was superseded before acceptance: the child must be created before the root's
@@ -70,7 +75,9 @@ binary hashes, ranges and candidate/control ratios. These new samples are pendin
 The intermediate run `39603525279` at `03bb8b3f9795c2d2aa851b4140e8d66845e4a969`
 still included candidate-only assertions in its timed binaries; do not use its
 timings as an equivalent-work result. It is superseded by the corrected source.
-The runtime implementation is unchanged. The corrected probe also tests library
+The latest runtime revision avoids clearing a saved root image when no task has
+created one; a task-free program checks this at O0/O2 in ARC/tracing, and an
+unconditional-clear control must exit 197. The corrected probe also tests library
 unload, including a deliberately omitted root-image clear, and static-memory
 budgets with `strace` installed so the no-later-mappings check actually executes.
 
@@ -91,6 +98,10 @@ error block; the original complete CI disassembly hashes remain in the receipts.
 The accepted PR #184 macOS compiler interpreted the small source fixture as 528
 and emitted C to inspect teardown order; that does not test the changed runtime.
 All candidate native execution belongs on GitHub runners.
+
+Documentation cleanup replaces obsolete handoff links for accepted borrowing,
+sets, hashing, constants, recursion and queued-callback work with its actual
+delivery evidence. The guarded documentation audit passes before publication.
 
 ## Roadmap status
 

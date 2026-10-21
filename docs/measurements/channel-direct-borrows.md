@@ -92,4 +92,6 @@ including nested containers and function captures. Ordinary compile-time file
 contents work in both engines; native O0/O2 executables still print the contents
 after the input file is removed. The final production matrix includes the broader
 ownership coverage and three added Windows targets. Focused Linux success is
-not complete platform acceptance; follow the [handoff](../development-state.md).
+not complete platform acceptance.
+[PR #179](../roadmap-history.md#matched-payload-moves-and-direct-call-borrows-pr-179)
+subsequently passed all nine production jobs and documentation on its final head.
