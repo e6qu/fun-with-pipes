@@ -46,6 +46,29 @@ function-result =
     | make Event { read = id }
 fail-with : Channel[Event] -> () ! {Error[String]}
 fail-with = const "expected" | fail
+# Direct messages own the same task handles, without wrapping them in callbacks.
+jobs : I64 -> Channel[Task[String]] ! {Async}
+jobs = channel.make
+enqueue-task : Task[String] -> Channel[Task[String]] ! {Async}
+enqueue-task = both (const 1 | jobs) id | tap (fork channel.send .0 .1) | .0
+receive-task : Channel[Task[String]] -> Option[String] ! {Async}
+receive-task = channel.recv | option.and-then task.await
+fail-tasks : Channel[Task[String]] -> () ! {Error[String]}
+fail-tasks = const "expected task failure" | fail
+Packet = { task: Task[String], label: String }
+packets : I64 -> Channel[Packet] ! {Async}
+packets = channel.make
+packet : String -> Packet ! {Async}
+packet = make Packet { task = start, label = id }
+enqueue-packet : Packet -> Channel[Packet] ! {Async}
+enqueue-packet =
+    both (const 1 | packets) id | tap (fork channel.send .0 .1) | .0
+read-packet : Packet -> () ! {Async}
+read-packet =
+    .task
+    | both task.await task.await
+    | eq (Some "packet", Some "packet")
+    | require
 round : () -> () ! {Async}
 round =
     tap
@@ -84,6 +107,46 @@ round =
         | attempt fail-with
         | eq (Err "expected")
         | require)
+    | tap (const 1 | jobs | channel.close)
+    | tap (const "direct"
+        | start
+        | enqueue-task
+        | receive-task
+        | eq (Some "direct")
+        | require)
+    | tap (const slow
+        | task.spawn
+        | tap task.cancel
+        | enqueue-task
+        | receive-task
+        | eq None
+        | require)
+    | tap (const "task closed"
+        | start
+        | enqueue-task
+        | tap channel.close
+        | receive-task
+        | eq (Some "task closed")
+        | require)
+    | tap (const "task undrained"
+        | start
+        | enqueue-task
+        | tap channel.close
+        | ignore)
+    | tap (const "task failed"
+        | start
+        | enqueue-task
+        | attempt fail-tasks
+        | eq (Err "expected task failure")
+        | require)
+    | tap (const "packet"
+        | packet
+        | enqueue-packet
+        | channel.recv
+        | option.map read-packet
+        | eq (Some ())
+        | require)
+    | tap (const "packet undrained" | packet | enqueue-packet | ignore)
     | task.yield
 main =
     range 0 64 | each (const () | round) | const "task captures released" | echo

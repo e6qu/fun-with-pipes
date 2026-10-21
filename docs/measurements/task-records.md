@@ -1,18 +1,18 @@
 # Compact task records
 
-All six native focused jobs passed. The measurements below describe this fixed
-program; full production acceptance is still pending. The
-[handoff](../development-state.md) records the current delivery checks.
+All six native focused jobs passed. [PR #189](../roadmap-history.md#compact-task-records-and-repaired-native-validation-pr-189)
+also passed all nine final production jobs and documentation before squash merge.
+The measurements below describe this fixed program.
 
 A task is a computation that can pause while other tasks run. Its heap record
 stores scheduling state, owners, results and links to its parent and children.
 Flags such as “ready” and “cancelled” each hold a true/false value. They previously
-occupied C integers; the candidate stores them as individual C boolean bytes and
+occupied C integers; the runtime stores them as individual C boolean bytes and
 places the thunk-ownership flag beside the others. Pointers and numeric fields
 retain their natural alignment. These are bytes, not packed bit fields requiring
 shared-word updates. Scheduling still happens on one runtime thread.
 
-The candidate also omits the saved stack marker from checked ARC task records.
+The runtime also omits the saved stack marker from checked ARC task records.
 That marker exists to help tracing GC scan suspended stacks. ARC does not scan
 roots, so its switches no longer capture it. Tracing retains the field and write.
 The live-task list remains in both modes: shutdown and cancellation need it even

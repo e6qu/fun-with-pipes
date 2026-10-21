@@ -269,6 +269,84 @@ keep = then2 const channel.close
 }
 
 #[test]
+fn direct_task_messages_reject_computation_and_result_queue_owners() {
+    let dir = fwp::cgen::TempDir::new("queued-task-cycles").unwrap();
+    for (name, source) in [
+        (
+            "computation",
+            r#"
+jobs : I64 -> Channel[Task[String]] ! {Async}
+jobs = channel.make
+keep : Channel[Task[String]] -> () -> String ! {Async}
+keep = curry (.0 | channel.close | const "done")
+main = jobs 1 | tap (fork channel.send id (keep | task.spawn)) | channel.recv | option.and-then task.await | ignore
+"#,
+        ),
+        (
+            "result",
+            r#"
+TaskResult = { close: () -> () ! {Async} }
+jobs : I64 -> Channel[Task[TaskResult]] ! {Async}
+jobs = channel.make
+keep : Channel[Task[TaskResult]] -> () -> () ! {Async}
+keep = curry (.0 | channel.close)
+start = keep | make TaskResult { close = id } | const | task.spawn
+main = jobs 1 | tap (fork channel.send id start) | channel.recv | option.and-then task.await | option.map (.close | apply ()) | ignore
+"#,
+        ),
+    ] {
+        let input = dir.join(format!("{name}.fwp"));
+        let cfile = dir.join("tracing.c");
+        let compiler = env!("CARGO_BIN_EXE_fwp");
+        std::fs::write(&input, source).unwrap();
+        let reference = checked(
+            Command::new(compiler)
+                .env("FWP_NO_OPT", "1")
+                .args(["run", "--interp"])
+                .arg(&input),
+        );
+        checked(
+            Command::new(compiler)
+                .args(["build", "-O1", "--gc", "tracing", "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        for opt in ["-O0", "-O2"] {
+            let binary = dir.join("tracing.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let actual = checked(
+                Command::new(binary)
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", "1"),
+            );
+            assert_eq!(
+                (&actual.stdout, &actual.stderr),
+                (&reference.stdout, &reference.stderr)
+            );
+        }
+        let build = Command::new(compiler)
+            .args(["build", "-O1", "--gc", "arc", "--emit-c"])
+            .arg(&input)
+            .arg("-o")
+            .arg(dir.join("rejected.c"))
+            .output()
+            .unwrap();
+        assert!(
+            !build.status.success(),
+            "{name}: accepted an unproved queue owner"
+        );
+        let error = String::from_utf8_lossy(&build.stderr);
+        assert!(
+            error.contains("task-bearing channel") || error.contains("acyclic task result"),
+            "{name}: {error}"
+        );
+    }
+}
+
+#[test]
 fn task_results_reject_a_cached_self_owner_without_a_channel() {
     let dir = fwp::cgen::TempDir::new("task-result-cycle").unwrap();
     let source = dir.join("cycle.fwp");

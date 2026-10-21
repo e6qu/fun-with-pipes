@@ -18,6 +18,7 @@ enum Origin {
     Queue(FuncId),
     GrpcSender(FuncId),
     UnknownQueue,
+    UnknownOwnerQueue,
     Task(FuncId),
     UnknownTask,
 }
@@ -34,7 +35,7 @@ impl Origin {
     fn queue(self) -> bool {
         matches!(
             self,
-            Self::Queue(_) | Self::GrpcSender(_) | Self::UnknownQueue
+            Self::Queue(_) | Self::GrpcSender(_) | Self::UnknownQueue | Self::UnknownOwnerQueue
         )
     }
 }
@@ -92,38 +93,50 @@ fn has_functions(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
     }
 }
 
-fn has_function_channels(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
+fn has_owner_channels(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> bool {
     if !seen.insert(ty.clone()) {
         return false;
     }
     match ty {
         MT::Fun(a, b) => {
-            has_function_channels(program, a, seen) || has_function_channels(program, b, seen)
+            has_owner_channels(program, a, seen) || has_owner_channels(program, b, seen)
         }
         MT::Record(fields) => fields
             .iter()
-            .any(|(_, field)| has_function_channels(program, field, seen)),
+            .any(|(_, field)| has_owner_channels(program, field, seen)),
         MT::Con(name, args) => {
-            (name == "std::Channel"
-                && args
-                    .iter()
-                    .any(|arg| has_functions(program, arg, &mut BTreeSet::new())))
+            name == "?"
+                || (name == "std::Channel"
+                    && args.iter().any(|arg| {
+                        has_functions(program, arg, &mut BTreeSet::new())
+                            || has_tasks(program, arg, &mut BTreeSet::new())
+                    }))
                 || args
                     .iter()
-                    .any(|arg| has_function_channels(program, arg, seen))
+                    .any(|arg| has_owner_channels(program, arg, seen))
                 || match program.shapes.get(ty) {
                     Some(TypeShape::Record(fields)) => fields
                         .iter()
-                        .any(|(_, field)| has_function_channels(program, field, seen)),
+                        .any(|(_, field)| has_owner_channels(program, field, seen)),
                     Some(TypeShape::Adt(variants)) => variants.iter().any(|(_, fields)| {
                         fields
                             .iter()
-                            .any(|field| has_function_channels(program, field, seen))
+                            .any(|field| has_owner_channels(program, field, seen))
                     }),
                     _ => false,
                 }
         }
         MT::Nat(_) => false,
+    }
+}
+
+// Keep unknown mutable payload owners distinct from unknown data-only queues.
+// A checked type can exclude a Task/callback, but cannot establish its producer.
+fn unknown_queue(program: &Program, ty: &MT) -> Origin {
+    if has_owner_channels(program, ty, &mut BTreeSet::new()) {
+        Origin::UnknownOwnerQueue
+    } else {
+        Origin::UnknownQueue
     }
 }
 
@@ -216,6 +229,9 @@ fn queued_capture_type(program: &Program, ty: &MT, seen: &mut BTreeSet<MT>) -> R
                 if has_functions(program, payload, &mut BTreeSet::new()) {
                     return Err(format!("--gc arc: cannot prove a queued function's captured function-bearing channel `{ty}`"));
                 }
+                if has_tasks(program, payload, &mut BTreeSet::new()) {
+                    return Err(format!("--gc arc: cannot prove a queued owner's captured task-bearing channel `{ty}`"));
+                }
             }
             for arg in args {
                 queued_capture_type(program, arg, seen)?;
@@ -261,7 +277,7 @@ impl Proof<'_> {
     }
 
     fn captured_queues(&self, values: &Targets, seen: &mut BTreeSet<Origin>) -> Result<(), String> {
-        if values.contains(&Origin::UnknownQueue) {
+        if values.contains(&Origin::UnknownQueue) || values.contains(&Origin::UnknownOwnerQueue) {
             return Err("--gc arc: cannot prove the producer of a queued function's captured channel; use a data queue from channel.make or a proved gRPC response channel".into());
         }
         for origin in values {
@@ -386,7 +402,8 @@ impl Proof<'_> {
     }
 
     // Captures are fixed before a task is published, but its result is assigned
-    // later. Any ownership cycle between tasks must include a result edge.
+    // later. Direct cycles between tasks need a result edge. Mutable queue edges
+    // have a separate queued-value proof.
     // Follow every such edge through closure captures and other task owners.
     // One specialized spawn summary may merge distinct tasks: rejection means a missing
     // proof, not that every execution necessarily creates a cycle.
@@ -422,7 +439,7 @@ impl Proof<'_> {
                         )?;
                     }
                 }
-                Origin::UnknownTask | Origin::UnknownFunction => {
+                Origin::UnknownTask | Origin::UnknownFunction | Origin::UnknownOwnerQueue => {
                     return Err(
                         "--gc arc: cannot prove the owners of an unknown task result".into(),
                     );
@@ -434,8 +451,8 @@ impl Proof<'_> {
                         }
                     }
                 }
-                // External function-bearing channels are rejected at entry;
-                // data payload types cannot contain task owners or cycles.
+                // Unknown data-only queues cannot contain a task or callback.
+                // Unknown queues that may own either are rejected above.
                 Origin::UnknownQueue | Origin::Function(..) => {}
             }
         }
@@ -610,7 +627,7 @@ impl Proof<'_> {
                 })
                 .collect(),
             Value::Native(value) if matches!(value.as_ref(), crate::sched::Native::Chan(_)) => {
-                Targets::from([Origin::UnknownQueue])
+                Targets::from([Origin::UnknownOwnerQueue])
             }
             Value::Native(value) if matches!(value.as_ref(), crate::sched::Native::Task(_)) => {
                 Targets::from([Origin::UnknownTask])
@@ -636,6 +653,11 @@ impl Proof<'_> {
     /// Aggregate fields share origins. A checked type rules out unrelated
     /// queue/function fields, but never proves an unknown origin of its own kind.
     fn refine_origins(&self, values: &mut Targets, ty: &MT) {
+        if !has_owner_channels(self.program, ty, &mut BTreeSet::new())
+            && values.remove(&Origin::UnknownOwnerQueue)
+        {
+            values.insert(Origin::UnknownQueue);
+        }
         if matches!(ty, MT::Con(name, _) if name == "std::Task") {
             values.retain(|origin| match origin {
                 Origin::Task(id) => crate::ir::same_type(
@@ -672,6 +694,7 @@ impl Proof<'_> {
             Origin::Queue(_)
             | Origin::GrpcSender(_)
             | Origin::UnknownQueue
+            | Origin::UnknownOwnerQueue
             | Origin::Task(_)
             | Origin::UnknownTask => false,
             Origin::UnknownFunction => true,
@@ -802,7 +825,10 @@ impl Proof<'_> {
                                 result.insert(Origin::UnknownFunction);
                             }
                             if has_channels(self.program, ty, &mut BTreeSet::new()) {
-                                result.insert(Origin::UnknownQueue);
+                                result.insert(unknown_queue(
+                                    self.program,
+                                    function.ty.params(function.arity as usize).1,
+                                ));
                             }
                             if has_tasks(self.program, ty, &mut BTreeSet::new()) {
                                 result.insert(Origin::UnknownTask);
@@ -835,6 +861,9 @@ impl Proof<'_> {
                         return Err("--gc arc: cannot prove the source of a queued function".into());
                     }
                     self.queued_targets(&args[1], &mut BTreeSet::new())?;
+                }
+                if self.validate && has_tasks(self.program, payload, &mut BTreeSet::new()) {
+                    self.queued_value(payload, &args[1], &mut BTreeSet::new())?;
                 }
                 self.changed |= join(self.channel_values.entry(channel).or_default(), &args[1]);
                 Ok(Targets::new())
@@ -969,7 +998,10 @@ impl Proof<'_> {
                         }
                         Some(c) if !c.aliases.is_empty() || c.callback.is_some() => {}
                         _ => {
-                            result.insert(Origin::UnknownQueue);
+                            result.insert(unknown_queue(
+                                self.program,
+                                function.ty.params(function.arity as usize).1,
+                            ));
                         }
                     }
                 }
@@ -1084,7 +1116,7 @@ impl Proof<'_> {
                     Targets::new()
                 };
                 if has_channels(self.program, result_type, &mut BTreeSet::new()) {
-                    result.insert(Origin::UnknownQueue);
+                    result.insert(unknown_queue(self.program, result_type));
                 }
                 if has_tasks(self.program, result_type, &mut BTreeSet::new()) {
                     result.insert(Origin::UnknownTask);
@@ -1122,15 +1154,15 @@ pub(crate) fn check(
     entries: &[FuncId],
     entry_channels: EntryChannels,
 ) -> Result<(), String> {
-    let queued_functions = program.funcs.iter().any(|function| {
+    let queued_owners = program.funcs.iter().any(|function| {
         let mut seen = BTreeSet::new();
-        has_function_channels(program, &function.ty, &mut seen)
+        has_owner_channels(program, &function.ty, &mut seen)
             || function
                 .locals
                 .iter()
-                .any(|ty| has_function_channels(program, ty, &mut seen))
+                .any(|ty| has_owner_channels(program, ty, &mut seen))
     });
-    if !queued_functions && !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "task.spawn" | "ad.tape" | "ad.push" | "ad.backward" | "ad.tape-owned" | "ad.push-owned" | "ad.backward-owned" | "run-state" | "get" | "put" | "modify"))) {
+    if !queued_owners && !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "task.spawn" | "ad.tape" | "ad.push" | "ad.backward" | "ad.tape-owned" | "ad.push-owned" | "ad.backward-owned" | "run-state" | "get" | "put" | "modify"))) {
         return Ok(());
     }
     let mut proof = Proof {
@@ -1173,9 +1205,9 @@ pub(crate) fn check(
             false
         };
         for ty in function.ty.params(function.arity as usize).0 {
-            if has_function_channels(program, ty, &mut BTreeSet::new()) {
+            if has_owner_channels(program, ty, &mut BTreeSet::new()) {
                 return Err(
-                    "--gc arc: external function-bearing channels have no proved queue ownership"
+                    "--gc arc: external function-bearing channels or task-bearing channels have no proved queue ownership"
                         .into(),
                 );
             }
@@ -1203,7 +1235,7 @@ pub(crate) fn check(
                     origins.insert(if grpc_response && index + 1 == function.arity as usize {
                         Origin::GrpcSender(entry)
                     } else {
-                        Origin::UnknownQueue
+                        unknown_queue(program, ty)
                     });
                 }
                 if has_tasks(program, ty, &mut BTreeSet::new()) {
@@ -1660,6 +1692,117 @@ mod tests {
     }
 
     #[test]
+    fn direct_task_messages_need_known_computations_without_queue_back_edges() {
+        for record in [false, true] {
+            let unit = MT::unit();
+            let text = MT::con("std::String");
+            let boolean = MT::con("std::Bool");
+            let integer = MT::con("std::I64");
+            let callback = arrow(unit.clone(), text.clone());
+            let task = MT::Con("std::Task".into(), vec![text]);
+            let payload = if record {
+                MT::Record(vec![("task".into(), task.clone())])
+            } else {
+                task.clone()
+            };
+            let queue = MT::Con("std::Channel".into(), vec![payload.clone()]);
+            let message = |task| {
+                if record {
+                    Expr::Record(vec![task])
+                } else {
+                    task
+                }
+            };
+            let make = Expr::Call(1, vec![Expr::Const(Value::I64(1))]);
+            let mut program = Program {
+                main: Some(0),
+                funcs: vec![
+                    Func {
+                        name: "main".into(),
+                        arity: 0,
+                        locals: vec![queue.clone()],
+                        ty: boolean.clone(),
+                        body: Body::Expr(Expr::Call(
+                            4,
+                            vec![make.clone(), message(Expr::Call(2, vec![Expr::Func(3)]))],
+                        )),
+                    },
+                    Func {
+                        name: "make".into(),
+                        arity: 1,
+                        locals: vec![integer.clone()],
+                        ty: arrow(integer, queue.clone()),
+                        body: Body::Prim("channel.make".into()),
+                    },
+                    Func {
+                        name: "spawn".into(),
+                        arity: 1,
+                        locals: vec![callback.clone()],
+                        ty: arrow(callback.clone(), task.clone()),
+                        body: Body::Prim("task.spawn".into()),
+                    },
+                    Func {
+                        name: "work".into(),
+                        arity: 1,
+                        locals: vec![unit.clone()],
+                        ty: callback.clone(),
+                        body: Body::Expr(Expr::Const(Value::str("done"))),
+                    },
+                    Func {
+                        name: "send".into(),
+                        arity: 2,
+                        locals: vec![queue.clone(), payload.clone()],
+                        ty: arrow(queue.clone(), arrow(payload, boolean.clone())),
+                        body: Body::Prim("channel.send".into()),
+                    },
+                    Func {
+                        name: "capture-queue".into(),
+                        arity: 2,
+                        locals: vec![queue.clone(), unit.clone()],
+                        ty: arrow(queue.clone(), callback),
+                        body: Body::Expr(Expr::Const(Value::str("captured"))),
+                    },
+                ],
+                ..Program::default()
+            };
+            check(&program, &[0], EntryChannels::Unknown).unwrap();
+            crate::arc::check(&program, &[0], EntryChannels::Unknown).unwrap();
+            let cyclic = Expr::Call(
+                2,
+                vec![Expr::Apply(Box::new(Expr::Func(5)), vec![Expr::Local(0)])],
+            );
+            program.funcs[0].body = Body::Expr(Expr::Let(
+                0,
+                Box::new(make.clone()),
+                Box::new(Expr::Call(4, vec![Expr::Local(0), message(cyclic)])),
+            ));
+            assert!(check(&program, &[0], EntryChannels::Unknown)
+                .unwrap_err()
+                .contains("task-bearing channel"));
+
+            program.funcs[0].arity = 1;
+            program.funcs[0].locals = vec![task.clone()];
+            program.funcs[0].ty = arrow(task, boolean);
+            program.funcs[0].body = Body::Expr(Expr::Call(4, vec![make, message(Expr::Local(0))]));
+            assert!(check(&program, &[0], EntryChannels::Unknown)
+                .unwrap_err()
+                .contains("captured task producer"));
+
+            // A task-bearing external queue triggers proof even without spawn.
+            program.funcs = vec![Func {
+                name: "entry".into(),
+                arity: 1,
+                locals: vec![queue.clone()],
+                ty: arrow(queue, unit),
+                body: Body::Expr(Expr::Const(Value::unit())),
+            }];
+            assert!(check(&program, &[0], EntryChannels::Unknown)
+                .unwrap_err()
+                .contains("external function-bearing channels or task-bearing channels"));
+        }
+    }
+
+    #[test]
     fn a_task_result_cannot_own_its_producer_through_a_returned_function() {
         let callback = arrow(MT::unit(), MT::unit());
         let record = MT::Record(vec![("read".into(), callback.clone())]);
@@ -1927,6 +2070,25 @@ mod tests {
         assert!(fields.contains(&Origin::UnknownQueue));
         proof.refine_origins(&mut fields, &MT::con("std::String"));
         assert!(fields.is_empty());
+
+        let task_queue = MT::Con(
+            "std::Channel".into(),
+            vec![MT::Con("std::Task".into(), vec![MT::con("std::String")])],
+        );
+        assert_eq!(
+            unknown_queue(&program, &task_queue),
+            Origin::UnknownOwnerQueue
+        );
+        let mut unknown = Targets::from([Origin::UnknownOwnerQueue]);
+        proof.refine_origins(&mut unknown, &task_queue);
+        assert!(proof
+            .task_result_owners(0, &unknown, &mut BTreeSet::new())
+            .is_err());
+        proof.refine_origins(&mut unknown, &leaf);
+        assert_eq!(unknown, Targets::from([Origin::UnknownQueue]));
+        proof
+            .task_result_owners(0, &unknown, &mut BTreeSet::new())
+            .unwrap();
     }
 
     #[test]
