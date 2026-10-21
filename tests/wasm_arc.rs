@@ -744,7 +744,19 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
                 "wasm32-browser"
             };
             let ordinary = emit(&source, &dir.join("tasks.c"), &[], target_name);
-            let measured = measured_program(&ordinary);
+            let mut measured = measured_program(&ordinary);
+            let retire = "    if (fwp_zombie && fwp_zombie != fwp_cur) {";
+            assert_eq!(measured.matches(retire).count(), 1);
+            measured = measured.replace(
+                retire,
+                &format!("{retire}\n        if (fwp_zombie->base) _Exit(246);"),
+            );
+            let finish = "static void fwp_fiber_tasks_finish(void) {";
+            assert_eq!(measured.matches(finish).count(), 1);
+            measured = measured.replace(
+                finish,
+                &format!("{finish}\n    if (fwp_root && fwp_root->base) _Exit(246);"),
+            );
             let release = "    fwp_fiber_tasks_finish();";
             assert_eq!(measured.matches(release).count(), 1);
             let omitted = measured.replace(release, "    /* omit scheduler shutdown */");

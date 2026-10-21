@@ -85,7 +85,7 @@ int main(void){
  if(*fwp_rc_slot(PTR(t))!=2)return 1; // caller and scheduler
  fwp_rc_dup(PTR(t));V first=fAWAIT(PTR(t));
  if(first==FWP_NONE||OBJ(first)->f[0]!=capture||*fwp_rc_slot(capture)!=2)return 2;
- if(*fwp_rc_slot(PTR(t))!=2||t->stack)return 3; // two caller aliases, no scheduler
+ if(*fwp_rc_slot(PTR(t))!=2||t->stack||t->base)return 3; // two caller aliases, no scheduler or stack borrow
  V second=fAWAIT(PTR(t));if(OBJ(second)->f[0]!=capture||*fwp_rc_slot(capture)!=3)return 4;
  fwp_task_drop(PTR(t));if(*fwp_rc_slot(PTR(t))!=1)return 5;
  fwp_task_drop(PTR(t));if(*fwp_rc_slot(capture)!=2)return 6;
@@ -102,14 +102,14 @@ int main(void){
  t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_closure_drop(fn);
  if(*fwp_rc_slot(PTR(t))!=3)return 11;
  fwp_task_drop(PTR(t));fwp_tasks_finish();
- if(*fwp_rc_slot(PTR(t))!=1||*fwp_rc_slot(capture)!=1||t->stack||scope.tasks[0]!=t)return 12;
+ if(*fwp_rc_slot(PTR(t))!=1||*fwp_rc_slot(capture)!=1||t->stack||t->base||scope.tasks[0]!=t)return 12;
  fwp_scope_owner scope_owner={fwp_cur,&scope,fwp_handlers};fwp_scope_release(&scope_owner);
  if(!dead(capture)||fwp_cur->scope)return 13;
  for(int suspended=0;suspended<2;suspended++){
   capture=fwp_rc_fresh(fwp_str_new("cancel",6));fn=fwp_rc_fresh(fwp_pap(SLEEPING,1,&capture));
   t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_closure_drop(fn);
   if(suspended)fwp_p_task_yield();fwp_p_task_cancel(PTR(t));
-  if(fAWAIT(PTR(t))!=FWP_NONE||!dead(capture)||*fwp_rc_slot(PTR(t))!=1)return 14;
+  if(fAWAIT(PTR(t))!=FWP_NONE||!dead(capture)||*fwp_rc_slot(PTR(t))!=1||t->base)return 14;
   fwp_task_drop(PTR(t));
  }
  // Unmodeled boundaries promote the task graph to the tracing fallback.
@@ -175,7 +175,7 @@ int main(void){
     let unique_probe = r#"
 static int entered,finished,mode;
 static double charged(void){return fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);}
-static void finish(void *arg){(void)arg;finished++;}
+static void finish(void *arg){(void)arg;if(fwp_cur->base)_Exit(206);finished++;}
 static void worker(void *arg,int stop){
  (void)arg;if(stop)return;fwp_check_cancel();entered++;
  if(mode==2){fwp_park(0,0);fwp_check_cancel();}
