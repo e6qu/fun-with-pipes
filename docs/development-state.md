@@ -1,115 +1,66 @@
 # Session handoff
 
-## Next action
+## Current delivery comes first
 
-Next: run suite `integer-range` on this preparation branch and audit the
-controlled C experiment. PR #182 remains on final head `080b0ff6`, with production
-`39529772529` and documentation `39529569466` required before its authorized
-squash merge. Do not modify that PR head or create another PR while it is open.
+This is a preparation checkout at `/private/tmp/fwp-integer-range-probe`, branch
+`investigate-integer-range-information`, based on `080b0ff6`. It is not a second
+PR. [PR #182](https://github.com/e6qu/fun-with-pipes/pull/182) is active in the main
+checkout, `/Users/zardoz/projects/fun-with-pipes`. Its handoff is authoritative
+for delivery status. The PR now includes a U32 multiplication repair absent from
+this preparation base. The earlier `080b0ff6` production run was cancelled.
+Do not merge or publish a second PR from this older base.
 
-This checkout is `/private/tmp/fwp-integer-range-probe`, branch
-`investigate-integer-range-information`, based on `080b0ff6`. Only measurement
-code/workflow/handoff change here. The compiler is unchanged. The ninth measured
-variant retains the I64 multiplication overflow check and recomputes `x*y` only
-on its non-overflow continuation. Compare it with current grouped/inlined fwp,
-matched C/Rust and saved controls on each allowed CPU. Retain all 54 rounds,
-source/binary hashes, storage counts, disassembly and GCC range/optimized dumps.
+Once PR #182 passes all nine production gates and documentation and is squash
+merged, transplant this preparation onto that accepted merge. Preserve its
+compiler fixes and current handoff. Then implement and test the range-preserving
+multiplication candidate below in the next coherent batch.
 
-This is an experiment on generated C, not verified support for a compiler change.
-The explicit `integer-range` suite skips the unchanged native-test preflight;
-that skip is not acceptance. Any selected compiler implementation still needs
-boundary/trap-order tests on both engines and the complete production matrix.
+## Completed experiment
 
-## Current implementation and evidence
+Measurement source `7a8803762e240998605c6442afbbb33ed8157133` is preserved by
+`roadmap/revision-integer-range-7a880376`. Run `39530460995` passed on Linux AMD64
+and ARM64; both complete logs are audited clean in
+`/private/tmp/fwp-range-counting-audit.json`. Compiler code is unchanged.
 
-The [measurement guide](measurements/integer-counting.md) explains the workload,
-comparisons, timing scope and limits. The candidate counts decimal digits in
-groups of 16, 8, 4, 2 and 1 instead of repeatedly dividing by ten. Signed values
-use unsigned magnitude, including I64's minimum, then add the sign. No lookup
-table or heap storage is added. Existing checked arithmetic and trap order remain.
-Boundary inputs cover both sides of every representable power of ten, both signs,
-and unsigned extremes; repaired native/interpreter and independent binary-payload
-checks pass in the selected run.
+The ninth variant changes only generated I64 multiplication: it keeps
+`__builtin_mul_overflow(x, y, &r)` and the overflow trap, then returns `x*y`
+instead of `r`. That expression is reached only when the mathematical product
+fits I64. In this workload GCC recovers loop bounds from the expression and
+removes sign/large-number cases; it also carries `3*i` as an induction variable.
+The source check remains; this is not permission to weaken checked arithmetic.
 
-| Preparation | Source | Measurement / focused checks / documentation |
-|---|---|---|
-| Shared counting loop, not selected | `995d3ecfd451700ec93e0fc1b326f8be0503bad5` | `39525618134` passed / `39525621027` failed: assertion and missing binaries / `39525810747` passed |
-| Grouped counting, before inline hints | `5852017124334bb199ff653741b068f9b8c9f979` | `39526333980` passed / `39526336925` failed: same assertion and missing binaries / `39526267015` passed |
+Nine controls run for 54 balanced rounds plus two warmups on each of four
+allowed CPUs per runner. Both hosts use GCC 13.3.0. Against the grouped/inlined
+fwp control in the same session, child CPU medians fall roughly 10–15% on EPYC
+9V74 and 18% on Neoverse-N2. Matched C remains faster. This is two runner
+sessions, not a universal speed guarantee. Compare the exact per-CPU ratios
+before writing final performance claims.
 
-Both earlier measurement runs and documentation logs are audited clean. Their
-failed native runs came from comparing binary output with text in the new test;
-missing semantic binaries caused the following inspection failure. All other
-targets passed. The assertion repair passes in the selected run. Earlier timing
-results, including slower candidates, remain in the guide and raw reports.
+Artifacts: `/private/tmp/fwp-integer-range-costs`. Independent sample, source,
+binary and GCC-dump audit: `/private/tmp/fwp-integer-range-audited.json`. The
+validator is `scripts/summarize-integer-counting.py --comparison range`; guarded
+validation passed in 0.48s after correcting its explicit compiler-flag check.
+All timed outputs and separate managed-storage controls pass; native semantic
+preflight was explicitly skipped, so this experiment cannot accept a compiler
+change. The validator is published in `30e5ac65`.
 
-Current artifacts: `/private/tmp/fwp-counting-costs` and
-`/private/tmp/fwp-grouped-counting-costs`. Full-log receipts:
-`/private/tmp/fwp-counting-preparation-audit.json` and
-`/private/tmp/fwp-grouped-counting-audit.json`; audit scripts use the same stems.
-The report validator is `scripts/summarize-integer-counting.py`, with explicit
-`--comparison legacy` for the first experiments and `matched` for the current run.
-It verifies source replacement, binary/disassembly hashes, every sample/median,
-ratios, zero managed storage counts and the injected-allocation control.
+## Next implementation and checks
 
-Saved baseline inputs come from `62ed104504b9e9a032434223120785e3cc37a47f`, focused
-run `39469883481`, tag `roadmap/revision-record-borrows-62ed1045`. The first new
-experiments are preserved by `roadmap/revision-integer-loop-995d3ecf` and
-`roadmap/revision-integer-groups-58520171`. The selected source is preserved by
-`roadmap/revision-integer-matched-a8859db1`. All generated
-source, binaries, disassembly and raw samples remain in the artifacts.
+Preserve the existing overflow test before exposing the safe I64 product.
+Add runtime-input tests for zero, both signs, I64 extrema and values immediately
+around overflow boundaries. Compare the unoptimized interpreter with optimized
+native execution, including effects before and after a trap. Use GCC and Clang,
+ARC/tracing, optimization levels and sanitizers; constant folding must not hide
+unsafe intermediate arithmetic. Check ordinary unbounded multiplication too:
+a bounded benchmark does not establish costs for arbitrary operands.
 
-The contributor guide's obsolete claim of no third-party Rust crates is corrected
-to match existing Rustyline/ctrlc dependencies. Historical benchmark reports remain
-tied to their actual source and algorithm; current peers are updated together.
+Measure actual compiler-produced C and binaries against the saved experiment
+and matched C/Rust peers. Inspect both instruction streams, stack use and code
+size, preserve all samples and report remaining gaps. Only then select the
+compiler change and run the full acceptance matrix. Follow [PLAN.md](../PLAN.md)
+for all seven remaining work areas; ownership and removing tracing remain the
+primary project objective. JIT is excluded.
 
-## Accepted base and remaining goals
-
-[PR #181](roadmap-history.md#temporary-channel-borrows-and-failure-cleanup-pr-181)
-passed all nine production gates and documentation at `2038c926`. Its squash
-merge `c98da7a5b3d859fee69120cf3452dcdecc904979` has the identical tested tree
-`2fc33e8e7b238402acfc30efe3aee753ac4a018c`. Receipt:
-`/private/tmp/fwp-181-acceptance.json`. The one-line 59-character message has no
-body or trailers. Duplicate production run `39503544541` was cancelled; duplicate
-documentation `39503544342` passed.
-
-All seven roadmap areas remain open. Default native execution still includes
-tracing GC; JIT is excluded. Retained resources, persistent subscriptions,
-resource-owning tail frames and mutual recursion need further proofs. Earlier
-identical binaries had variable AMD64 CPU time; its cause remains unresolved.
-Do not infer that a new algorithm explains that historical variation.
-
-## Local checks and resources
-
-Use `python3 scripts/local-guard.py` for local checks: 64 GiB free disk, target
-below 2 GiB, sampled aggregate RSS below 1 GiB and 180 seconds. Full builds,
-native compilation, full suites and benchmarks run on GitHub. No limits were
-raised. Recent free space is about 66 GiB; recheck before downloading artifacts.
-
-Guarded checks: selected-run full-log audit 7.49s, artifact download 22.85s,
-independent matched-report audit 0.48s and final guide link audit 2.57s. Earlier
-Python syntax/helper selection/whitespace 0.13s; focused Rust
-formatting 0.25s; documentation 3.31s; first/grouped report audits 0.58/0.59s;
-artifact downloads 8.62/8.05/17.61s. Full-log audits took 4–7s each. The sandboxed
-guard initially could not inspect `ps`; its approved invocation passed. Direct
-Git launches previously hit OS process-group signal permissions; Python-supervised
-Git passed under the same guard. No checks or guard limits were bypassed.
-
-Prior authorized cleanup reclaimed 6.553 GiB of obsolete generated downloads after
-verifying remote recovery artifacts. Sources, reports, logs and current evidence
-were preserved. Recovery manifests: `/private/tmp/fwp-disk-cleanup-2026-10-20.json`,
-`/private/tmp/fwp-disk-cleanup-second-2026-10-20.json` and
-`/private/tmp/fwp-disk-cleanup-extra-generated-2026-10-20.json`.
-Some older Rust artifacts are `*.codex-archive.gz`; preserve them and compare
-decoded bytes explicitly when needed, without assuming raw files exist.
-
-## Roadmap status
-
-| Step | Status | Remaining work |
-|---|---|---|
-| 1 | In progress | Remove tracing; prove retained ownership and cleanup. |
-| 2 | In progress | Eliminate avoidable functional allocations and count traffic. |
-| 3 | In progress | Resolve measured machine-code and performance gaps. |
-| 4 | In progress | Improve differentiation time, memory and precision. |
-| 5 | In progress | Validate numerical kernels and ahead-of-time GPU policy. |
-| 6 | In progress | Establish equivalent-work comparisons and budgets. |
-| 7 | In progress | Validate larger programs and bounded live memory. |
+Local work remains serial and guarded: 64 GiB free disk, target below 2 GiB,
+aggregate RSS below 1 GiB and 180 seconds. Full builds, native compilation,
+full tests and measurements run on GitHub; do not raise or bypass guard limits.
