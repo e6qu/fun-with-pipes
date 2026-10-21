@@ -21,8 +21,12 @@ The [cancellation-only comparison](measurements/task-cancellation.md) has earlie
 six-host evidence. The added Windows fiber probe passed its first execution but
 its assertion expected LF instead of the C runtime's CRLF output on both Windows
 architectures. That stopped the remaining variants and left incomplete artifacts.
-This merge is not full platform acceptance. [PR #189](https://github.com/e6qu/fun-with-pipes/pull/189)
-repairs the assertion and reruns every variant with the
+The completed [production run](https://github.com/e6qu/fun-with-pipes/actions/runs/39635039734)
+has six passing jobs, these two Windows failures, and a macOS ARM64 GC-stress
+failure resolving crates.io before compilation. Every full log was audited;
+documentation passed. This merge is not full platform acceptance.
+[PR #189](https://github.com/e6qu/fun-with-pipes/pull/189) repairs the assertion
+and dependency fetching, and reruns every variant with the
 [compact-record measurements](measurements/task-records.md). Its final production
 acceptance is tracked in the handoff; do not treat this early merge as acceptance.
 

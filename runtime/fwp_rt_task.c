@@ -268,7 +268,7 @@ static int64_t fwp_dur_ns(V d) { return (int64_t)OBJ(d)->f[0]; }
 static int64_t fwp_after(V d) {
     int64_t n = fwp_dur_ns(d), now = fwp_now_ns();
     if (n <= 0) return now;
-    return n > INT64_MAX - now ? INT64_MAX : now + n;
+    return now > INT64_MAX - n ? INT64_MAX : now + n;
 }
 
 /* a task is collected once it finished and nothing refers to it */

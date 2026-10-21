@@ -297,7 +297,7 @@ fn transferred_callbacks_remove_a_retain_release_pair() {
     for memory in ["arc", "tracing"] {
         let build = Command::new(compiler)
             .env_remove("FWP_NO_OPT")
-            .args(["build", "--gc", memory, "--emit-c"])
+            .args(["build", "-O1", "--gc", memory, "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile)

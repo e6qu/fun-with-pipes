@@ -134,6 +134,14 @@ fn duration(ns: i64) -> Value {
     Value::tuple(vec![Value::I64(ns)])
 }
 
+fn unix_nanoseconds(time: std::time::SystemTime) -> R<i64> {
+    let ns = match time.duration_since(std::time::UNIX_EPOCH) {
+        Ok(elapsed) => elapsed.as_nanos() as i128,
+        Err(before_epoch) => -(before_epoch.duration().as_nanos() as i128),
+    };
+    i64::try_from(ns).map_err(|_| Ctl::Trap("system time exceeds Duration range".into()))
+}
+
 impl<'p> Interp<'p> {
     /// Standard library primitives; `None` if `sym` is not one of them.
     pub(crate) fn prim_std(
@@ -970,13 +978,11 @@ impl<'p> Interp<'p> {
                 "env.get" => {
                     opt(std::env::var_os(a[0].as_str()).map(|v| Value::str(&v.to_string_lossy())))
                 }
-                "time.monotonic" => duration(start_instant().elapsed().as_nanos() as i64),
-                "time.unix" => duration(
-                    std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .map(|d| d.as_nanos() as i64)
-                        .unwrap_or(0),
+                "time.monotonic" => duration(
+                    i64::try_from(start_instant().elapsed().as_nanos())
+                        .map_err(|_| Ctl::Trap("monotonic time exceeds Duration range".into()))?,
                 ),
+                "time.unix" => duration(unix_nanoseconds(std::time::SystemTime::now())?),
                 _ => return Ok(None),
             }))
         })();
@@ -1129,4 +1135,32 @@ fn set(value: &Value) -> &BTreeSet<Value> {
         panic!("expected set")
     };
     values
+}
+
+#[cfg(test)]
+mod clock_tests {
+    use super::unix_nanoseconds;
+    use crate::interp::Ctl;
+    use std::time::{Duration, UNIX_EPOCH};
+
+    #[test]
+    fn unix_clock_preserves_signed_nanoseconds_and_rejects_overflow() {
+        // Windows SystemTime has 100 ns resolution. Use exact ticks on every host.
+        for ns in [0, -100, 100, i64::MIN / 100 * 100, i64::MAX / 100 * 100] {
+            let magnitude = Duration::from_nanos(ns.unsigned_abs());
+            let time = if ns < 0 {
+                UNIX_EPOCH - magnitude
+            } else {
+                UNIX_EPOCH + magnitude
+            };
+            assert!(matches!(unix_nanoseconds(time), Ok(actual) if actual == ns));
+        }
+        for time in [
+            UNIX_EPOCH + Duration::from_nanos((i64::MAX as u64 / 100 + 1) * 100),
+            UNIX_EPOCH - Duration::from_nanos((i64::MIN.unsigned_abs() / 100 + 1) * 100),
+        ] {
+            assert!(matches!(unix_nanoseconds(time), Err(Ctl::Trap(message))
+                if message == "system time exceeds Duration range"));
+        }
+    }
 }

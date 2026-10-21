@@ -128,7 +128,7 @@ int main(void){
 }
 
 #[test]
-fn clock_failure_releases_the_deadline_callback_and_reports_clock_errors() {
+fn clock_failures_and_range_limits_release_deadline_callbacks() {
     let dir = fwp::cgen::TempDir::new("task-clock-owner").unwrap();
     let source = dir.join("clock.fwp");
     let cfile = dir.join("clock.c");
@@ -137,7 +137,7 @@ fn clock_failure_releases_the_deadline_callback_and_reports_clock_errors() {
     let compiler = env!("CARGO_BIN_EXE_fwp");
     for memory in ["arc", "tracing"] {
         let build = Command::new(compiler)
-            .args(["build", "--gc", memory, "--emit-c"])
+            .args(["build", "-O1", "--gc", memory, "--emit-c"])
             .arg(&source)
             .arg("-o")
             .arg(&cfile)
@@ -160,11 +160,27 @@ fn clock_failure_releases_the_deadline_callback_and_reports_clock_errors() {
             r#"static int fail_clock;
 #ifdef _WIN32
 static BOOL probe_clock_counter(LARGE_INTEGER *p) {
- if(fail_clock)return FALSE;return QueryPerformanceCounter(p);
+ if(fail_clock==1)return FALSE;
+ if(fail_clock>=2){p->QuadPart=(fail_clock==2||fail_clock==4)?INT64_MAX:INT64_MIN;return TRUE;}
+ return QueryPerformanceCounter(p);
+}
+static BOOL probe_clock_frequency(LARGE_INTEGER *p) {
+ if(fail_clock>=2){p->QuadPart=fail_clock>=4?1000000000:1;return TRUE;}
+ return QueryPerformanceFrequency(p);
+}
+static void probe_wall_clock(FILETIME *p) {
+ if(fail_clock==6){uint64_t ticks=UINT64_C(116444736000000000)-1;p->dwHighDateTime=ticks>>32;p->dwLowDateTime=(DWORD)ticks;return;}
+ if(fail_clock>=2){p->dwHighDateTime=p->dwLowDateTime=fail_clock==2?UINT32_MAX:0;return;}
+ GetSystemTimePreciseAsFileTime(p);
 }
 #else
 static int probe_clock_read(clockid_t id,struct timespec *p) {
- if(fail_clock){errno=EIO;return -1;}return clock_gettime(id,p);
+ if(fail_clock==1){errno=EIO;return -1;}
+ if(fail_clock==6){p->tv_sec=-1;p->tv_nsec=999999900;return 0;}
+ if(fail_clock==2||fail_clock==3){p->tv_sec=fail_clock==2?INT64_MAX:INT64_MIN;p->tv_nsec=0;return 0;}
+ if(fail_clock==4){p->tv_sec=INT64_MAX/1000000000;p->tv_nsec=INT64_MAX%1000000000;return 0;}
+ if(fail_clock==5){p->tv_sec=INT64_MIN/1000000000-1;p->tv_nsec=1000000000+INT64_MIN%1000000000;return 0;}
+ return clock_gettime(id,p);
 }
 #endif
 static int64_t fwp_now_ns(void) {"#,
@@ -173,6 +189,14 @@ static int64_t fwp_now_ns(void) {"#,
             (
                 "if (!QueryPerformanceCounter(&counter) ||",
                 "if (!probe_clock_counter(&counter) ||",
+            ),
+            (
+                "!QueryPerformanceFrequency(&frequency))",
+                "!probe_clock_frequency(&frequency))",
+            ),
+            (
+                "GetSystemTimePreciseAsFileTime(&now);",
+                "probe_wall_clock(&now);",
             ),
             (
                 "if (clock_gettime(CLOCK_MONOTONIC, &t) != 0)",
@@ -196,28 +220,45 @@ static int recover_clock(void){return 1;}
 static void drop_text(V v){if(fwp_rc_release_last(v))fwp_rc_free_obj(v);}
 int main(void){
  fwp_gc_start(__builtin_frame_address(0));fwp_fns=fwp_fn_table;fwp_init_consts();fwp_tasks_init();
- for(int alias=0;alias<2;alias++){
+ for(int fault=1;fault<=3;fault++)for(int alias=0;alias<2;alias++){
   V capture=fwp_rc_fresh(fwp_str_new("clock",5));
   fwp_rc_dup(capture); /* inspect the capture through an independent owner */
   V fn=fwp_rc_fresh(fwp_pap(WORK,1,&capture));if(alias)fwp_rc_dup(fn);
   V duration=fwp_record(1,(V[]){INT64_C(3600000000000)});
-  fail_clock=1;fwp_trap_recover=recover_clock;fwp_trap_jb=&clock_failed;fwp_trap_cleanup=0;
+  fail_clock=fault;fwp_trap_recover=recover_clock;fwp_trap_jb=&clock_failed;fwp_trap_cleanup=0;
   if(setjmp(clock_failed)==0){fwp_p_task_within_owned(duration,fn,drop_text,fwp_rc_dup);return 1;}
   fwp_trap_recover=0;fwp_trap_jb=0;fail_clock=0;
-  if(strcmp(fwp_trap_msg,"cannot read monotonic clock"))return 8;
+  if(strcmp(fwp_trap_msg,fault==1?"cannot read monotonic clock":"monotonic time exceeds Duration range"))return 8;
   if(fwp_cleanups||fwp_gc_tasks||fwp_cur->first_child)return 2;
   if(*fwp_rc_slot(capture)!=1+alias)return 3;
   if(alias){if(*fwp_rc_slot(fn)!=1)return 4;fwp_closure_drop(fn);}
   if(*fwp_rc_slot(capture)!=1||STR(capture)->len!=5)return 5;
   drop_text(capture);
  }
-#ifndef _WIN32
- fail_clock=1;fwp_trap_recover=recover_clock;fwp_trap_jb=&clock_failed;fwp_trap_cleanup=0;
- if(setjmp(clock_failed)==0){fwp_unix_ns();return 6;}
- fwp_trap_recover=0;fwp_trap_jb=0;fail_clock=0;
- if(strcmp(fwp_trap_msg,"cannot read system clock"))return 9;
- if(fwp_cleanups)return 7;
+ for(int fault=1;fault<=3;fault++){
+#ifdef _WIN32
+  if(fault==1)continue; /* This Windows API has no read-error return. */
 #endif
+  fail_clock=fault;fwp_trap_recover=recover_clock;fwp_trap_jb=&clock_failed;fwp_trap_cleanup=0;
+  if(setjmp(clock_failed)==0){fwp_unix_ns();return 6;}
+  fwp_trap_recover=0;fwp_trap_jb=0;fail_clock=0;
+  if(strcmp(fwp_trap_msg,fault==1?"cannot read system clock":"system time exceeds Duration range"))return 9;
+  if(fwp_cleanups)return 7;
+ }
+ fail_clock=6;if(fwp_unix_ns()!=-100)return 14;
+ V positive=fwp_record(1,(V[]){2});
+ fail_clock=4;
+ if(fwp_now_ns()!=INT64_MAX||fwp_after(positive)!=INT64_MAX)return 10;
+ fail_clock=5;
+ if(fwp_now_ns()!=INT64_MIN||fwp_after(positive)!=INT64_MIN+2)return 11;
+ for(int fault=4;fault<=5;fault++){
+  fail_clock=fault;fwp_start_time=fault==4?-1:1;
+  fwp_trap_recover=recover_clock;fwp_trap_jb=&clock_failed;fwp_trap_cleanup=0;
+  if(setjmp(clock_failed)==0){fwp_p_time_monotonic();return 12;}
+  fwp_trap_recover=0;fwp_trap_jb=0;
+  if(strcmp(fwp_trap_msg,"monotonic time exceeds Duration range"))return 13;
+ }
+ fail_clock=0;
  fwp_tasks_finish();return 0;
 }
 "#
@@ -239,9 +280,10 @@ int main(void){
                 let code = format!("{code}\n{probe}");
                 fwp::cgen::compile_c(&code, &binary, opt).unwrap();
                 let result = Command::new(&binary)
-                    .env("FWP_GC_STRESS", "0")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", "1")
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", if memory == "arc" { "0" } else { "1" })
+                    .env("FWP_GC_VERIFY", if memory == "arc" { "0" } else { "1" })
+                    .env("FWP_REUSE_VERIFY", if memory == "arc" { "0" } else { "1" })
                     .output()
                     .unwrap();
                 if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {

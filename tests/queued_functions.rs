@@ -52,7 +52,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
             checked(
                 Command::new(compiler)
                     .env_remove("FWP_NO_OPT")
-                    .args(["build", "--gc", memory, "--emit-c"])
+                    .args(["build", "-O1", "--gc", memory, "--emit-c"])
                     .arg(&source)
                     .arg("-o")
                     .arg(&cfile),
@@ -410,7 +410,7 @@ main = callbacks 1 | tap (flip channel.send (choose True)) | channel.recv | opti
         checked(
             Command::new(compiler)
                 .env("FWP_NO_OPT", "1")
-                .args(["build", "--gc", memory, "--emit-c"])
+                .args(["build", "-O1", "--gc", memory, "--emit-c"])
                 .arg(&source)
                 .arg("-o")
                 .arg(&cfile),
@@ -503,7 +503,7 @@ fn queued_remote_iterators_reject_hidden_stream_owners() {
         (true, "arc", false),
     ] {
         let mut build = Command::new(env!("CARGO_BIN_EXE_fwp"));
-        build.args(["build", "--gc", memory, "--emit-c"]);
+        build.args(["build", "-O1", "--gc", memory, "--emit-c"]);
         if remote {
             build.args(["--service", "greeter"]);
         }

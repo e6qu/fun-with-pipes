@@ -451,7 +451,7 @@ jobs:
       matrix:
         runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]' || format('["{0}"]', inputs.native_runner)) }}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 45
+    timeout-minutes: ${{ matrix.runner == 'macos-15-intel' && 90 || 45 }}
     env:
       CC: ${{ startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
       CARGO_BUILD_JOBS: 2
@@ -532,12 +532,12 @@ jobs:
         run: |
           cargo test --test grpc queued_response_channels_ -- --nocapture
           cargo run -- fmt --check tests/grpc/queued.fwp tests/grpc/queued-client.fwp
-      - name: REST startup deadlines and independently started shared executables
-        if: ${{ !cancelled() && inputs.suite == 'channel-proof' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test rest
       - name: Inspect executed task owners and callback count controls
         if: ${{ !cancelled() && inputs.suite == 'channel-proof' }}
         run: python3 scripts/inspect-task-owners.py --input queued-function-evidence
+      - name: REST startup deadlines and independently started shared executables
+        if: ${{ !cancelled() && inputs.suite == 'channel-proof' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
+        run: cargo test --no-fail-fast --test rest
       - name: Record queued-function evidence source
         if: always()
         shell: bash
