@@ -42,25 +42,32 @@ has no errors or panic diagnostics; receipt `/private/tmp/fwp-grpc-sender-probe.
 ## Required native evidence
 
 The new `tests/grpc/queued.fwp` fixture queues callbacks capturing a response
-channel, including tuple/record and nested-queue paths. Its client makes 64 calls:
+channel, including tuple/record and nested-queue paths. Its client makes 72 calls:
 repeated sends, undrained/closed queues, rejected sends, caught errors and
-blocked-task cancellation. The accepted PR #184 compiler, verified by SHA-256,
+blocked-task cancellation and cancellation by the remote caller after the server
+acknowledges holding the callback. The accepted PR #184 compiler, verified by SHA-256,
 formatted both fixtures and matched their explicit raw interpreter output locally.
 This checks source semantics, not the new ARC proof.
 
 `tests/support/queued_grpc_responses.rs` uses the existing gRPC server/client
 helpers. It compares raw interpretation with native ARC/tracing at O0/O2, measures
 live response channels and final stream/connection/task and managed-storage
-cleanup, and deliberately omits a queued release. These native checks have not
-run yet. Generated C, binaries, disassembly, symbols and logs are retained by the
+cleanup, and deliberately omits a queued release. First integration run
+`39588799090` at `ebd4d61eb351964018c1950c6bbf3ab04a93272d` failed because the test
+enabled reuse verification in ARC mode. That mode intentionally retains released
+storage and ARC rejects it. Ordinary tracing now keeps reuse verification;
+measured runs explicitly disable it so they can check physical cleanup.
+Every other step passed. Complete audit: `/private/tmp/fwp-grpc-sender-integration.json`.
+The repair and expanded cancellation test still need native verification.
+Generated C, binaries, disassembly, symbols and logs are retained by the
 focused workflow. No speed or C/Rust parity claim is involved.
 WASI has no native gRPC server claim; keep its existing ownership regression gates.
 
 `tests/support/grpc_server_measurement.rs` and `tests/fixtures/server-memory/probe.c`
 provide existing post-request cleanup instrumentation. Reuse it where suitable;
 keep timing/allocation claims separate from correctness. The `channel-proof`
-workflow already covers six native hosts and two WASI hosts; add an explicit
-filtered gRPC integration step if the new test goes in `tests/grpc.rs`.
+workflow covers six native hosts and two WASI hosts; its explicit filtered gRPC
+step now runs this integration and checks fixture formatting on native hosts.
 Do not replace unknown producers with type-based acceptance or tracing.
 
 ## Local work
@@ -68,8 +75,9 @@ Do not replace unknown producers with type-based acceptance or tracing.
 Run checks through `python3 scripts/local-guard.py`, serially and at low priority.
 No local full build, native C compilation, full test gate or benchmark. Preserve
 64 GiB free disk, target below 2 GiB, sampled RSS below 1 GiB and the 180-second
-limit. Disk pressure stopped one source check before execution. After recoverable
-cache cleanup it ran through the guard successfully. Latest free space: 64.40 GiB,
+limit. Disk pressure stopped two source checks before execution. After recoverable
+cache cleanup and other disk activity subsiding, both ran through the unchanged
+guard successfully. Latest free space: 66.55 GiB,
 still fluctuating. The main handoff records cleanup receipts. APFS copy-on-write
 clones preserve every path and independent contents of identical evidence files;
 receipt `/private/tmp/fwp-identical-evidence-clone-cleanup.json`. No compiler/test

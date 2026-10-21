@@ -703,8 +703,8 @@ native output callbacks borrow that value only for the duration of the callback
 and keep their callback payload after the channel header. Queue and callback
 cleanup share alternative header fields; sends retain their direct callback
 pointer. The [ownership guide](ownership.md) describes the lifetime rules, and
-[history](roadmap-history.md) records production acceptance in PR #160. The next
-checked ARC extension excludes tracing from eligible service binaries.
+[history](roadmap-history.md) records production acceptance in PR #160. Checked
+ARC also excludes tracing from eligible service binaries.
 
 The same delivery gives server requests and connections explicit owners and
 lets known fold callbacks borrow captures and collection elements while owning
@@ -965,6 +965,16 @@ stay unknown when combined with known sources. Checking every value sent into a
 nested queue prevents a known outer creator from hiding an unknown inner owner.
 The [data-queue checks](measurements/queued-data-channels.md) cover native and
 WebAssembly cleanup; this changes the compile-time proof, not runtime storage.
+
+Service emission supplies one further explicit producer contract: the final
+response-channel argument of a served gRPC method comes from `g_sink_value`.
+It owns a stream and connection, with static message encoding metadata and no
+language callback. Task identities in that transport are borrowed and cleared
+before task destruction. A queued function may therefore retain this channel
+when its payload passes the same data-only check. Other entry modes and unknown
+channel arguments keep their rejection. A matching function signature alone
+does not establish the contract. [The gRPC capture checks](measurements/queued-grpc-responses.md)
+describe the program, cleanup counters and current validation status.
 
 The [channel proof](ownership.md#ownership-boundaries) follows each channel's
 payload types and rejects a path back to that channel type. Immutable recursive

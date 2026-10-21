@@ -66,3 +66,12 @@ nested = curry (both (.1 | hold) (.0 | show)
     | make Event { send = id }
     | enqueue
     | receive-once)
+
+# The acknowledgement proves that the server owns the queued callback before
+# the client cancels the request. The long sleep is interrupted, never awaited.
+export peer-cancelled : I64 -> Channel[String] -> () ! {Async}
+peer-cancelled = curry (both (event | enqueue) .1
+    | tap (.1 | flip channel.send "ready" | require)
+    | tap (const 60s | task.sleep)
+    | .0
+    | receive-once)
