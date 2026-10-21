@@ -61,8 +61,9 @@ omitting a free must fail with exit code 244. This is not WASI socket support.
 
 Dispatch `.github/workflows/numerics.yml` with `suite=queued-sockets` and
 `native_runner=all`. This runs six native jobs and two WASI jobs. Native hosts are
-Linux, macOS and Windows, each on ARM64 and AMD64. Full production CI remains a
-separate merge requirement; the [handoff](../development-state.md) records it.
+Linux, macOS and Windows, each on ARM64 and AMD64.
+[PR #184](../roadmap-history.md#queued-socket-callbacks-and-handler-inference-pr-184)
+also passed the separate final-head production and documentation gates.
 
 The [machine-readable report](queued-sockets-2026-10-21.json) identifies the exact
 source, run, jobs, artifact hashes, compilers and inspected binaries. Native

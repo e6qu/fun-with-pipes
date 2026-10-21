@@ -12,6 +12,23 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Queued service responses and bounded server startup (PR #186)
+
+Queued callbacks can retain a response channel supplied by an actual gRPC service
+entry. Unknown producers retain their existing restrictions. Repeated delivery,
+failure and cancellation checks release request owners; the
+[report](measurements/queued-grpc-responses.md) separates the still-live listener.
+REST startup now kills and reaps a silent child, and tests reuse compiled fixtures
+while starting fresh server processes.
+
+[PR #186](https://github.com/e6qu/fun-with-pipes/pull/186) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39597478599)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39597478465)
+at `fa2d5098573220833bda06e30af9f534181edc0d`. Complete logs were audited.
+Squash merge `d516a0919a3f24a7c28817a32782908df77dd95d` has the identical tree
+and a verified one-line message without body or trailers. This extends checked
+ARC eligibility; allocation and shared-owner counting costs remain.
+
 ## Queued callbacks retaining data queues (PR #185)
 
 Callbacks stored in channels can retain locally created data-only queues,

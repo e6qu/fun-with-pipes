@@ -94,8 +94,9 @@ outside the benchmark suite.
    WebAssembly acceptance. [Capturing locally created data queues](docs/measurements/queued-data-channels.md)
    passed full acceptance in [PR #185](docs/roadmap-history.md#queued-callbacks-retaining-data-queues-pr-185).
    [Queued gRPC response captures](docs/measurements/queued-grpc-responses.md)
-   now pass six-platform native delivery, cancellation and cleanup checks from
-   their actual service constructor. Final production delivery is in the handoff.
+   passed full acceptance in
+   [PR #186](docs/roadmap-history.md#queued-service-responses-and-bounded-server-startup-pr-186),
+   including native delivery, cancellation and cleanup from the actual service constructor.
    Explicit weak handles remain a proposal. Prefer
    borrowing and scoped cleanup; distinguish a definite cycle from a missing proof.
    Reject unproved retention rather than silently use tracing.
@@ -116,6 +117,10 @@ outside the benchmark suite.
    [numeric representation measurements](docs/benchmarks.md#numeric-hash-specialization)
    as baselines, preserving mixed timings and C/Rust gaps. Investigate known
    regressions before claiming a performance improvement.
+   The [task-context comparison](docs/measurements/task-contexts.md) investigates
+   smaller scheduler heap records while counting saved CPU state, usable stack
+   space and process memory separately. Its handoff records pending acceptance;
+   moving storage is not eliminating it.
 
 All seven work areas remain open. The syntax and native-platform foundations
 are implemented; the main remaining work is ownership, representation,

@@ -156,7 +156,7 @@ partial construction, updates, aliases and cleanup. Constants, nested sets,
 JSON, text/binary decoding, hashing and WASI have regression coverage.
 [Measured storage](benchmarks.md#compact-set-storage-measured-allocation-size)
 records six-host byte counts and the binary inspection, separately from timing.
-[The handoff](development-state.md) distinguishes added checks from passing runs.
+[PR #172](roadmap-history.md#compact-set-storage-pr-172) records full acceptance.
 
 ## Cached numeric map reads
 
@@ -189,7 +189,9 @@ variant after the read preserves eligible direct-field results without an
 intermediate box. `tests/cached_map_borrows.rs` checks these paths, including
 reentrant aliases, deliberate missing-cleanup controls and raw-interpreter
 agreement. [Measurements](benchmarks.md#compiler-proved-cached-map-reads) separate
-count savings from timing; [the handoff](development-state.md) records acceptance.
+count savings from timing;
+[PR #167](roadmap-history.md#interactive-tools-and-cached-map-borrows-pr-167)
+records acceptance.
 
 ## Ownership boundaries
 
@@ -284,12 +286,14 @@ fresh-text/fresh-function/shared-text message and two per shared-function messag
 Allocations and peak charged storage are unchanged. Focused Linux checks pass,
 including independent aliases and a deliberately leaked-owner control. Broader
 ownership checks pass on all six native platforms and both WebAssembly hosts.
-Final production acceptance is tracked in the [handoff](development-state.md).
+[PR #179](roadmap-history.md#matched-payload-moves-and-direct-call-borrows-pr-179)
+records production acceptance.
 
 ### Borrowing across direct calls
 
-Direct-call borrowing is implemented; the [handoff](development-state.md) tracks
-platform acceptance. A **direct call** names a function known to the
+Direct-call borrowing passed
+[PR #179 acceptance](roadmap-history.md#matched-payload-moves-and-direct-call-borrows-pr-179).
+A **direct call** names a function known to the
 compiler. When that function uses an argument only during the call and does not
 store or return its counted storage, the caller can keep ownership throughout
 the call. Every caller must already need the same counted values afterward.
@@ -317,6 +321,8 @@ and its native callback context alive. The separate checks for queued captures,
 cycles and State/autodiff scopes still apply in ARC mode. Resource scopes still
 prevent selection. The [function-channel measurements](measurements/function-channel-borrows.md)
 record passing focused Linux checks, including native-context destruction.
+[PR #180](roadmap-history.md#function-channel-borrows-and-integer-text-pr-180)
+records full production acceptance of this extension.
 
 Failure or cancellation releases caller-owned storage through the caller's
 cleanup scope. Generic function entries still consume their inputs, including
@@ -407,8 +413,9 @@ cannot contain functions and its nested queue owners have known sources. Unknown
 producers remain rejected as captures, including when mixed with
 known creators. Recursive queue types still fail the separate cycle check.
 The [cleanup checks](measurements/queued-data-channels.md) pass on all six native
-platforms and both WebAssembly hosts. See the [handoff](development-state.md)
-for full production acceptance.
+platforms and both WebAssembly hosts.
+[PR #185](roadmap-history.md#queued-callbacks-retaining-data-queues-pr-185)
+records full production acceptance.
 
 The service extension admits one known native producer: a served gRPC method's
 response channel. Its stream and connection own protocol data, without an owning
@@ -506,8 +513,9 @@ to check the leak detectors. Counters are inserted by the tests into generated C
 ordinary programs keep the existing runtime and shared ownership costs. The
 [evidence guide](measurements/queued-callbacks.md) explains the counters, controls
 and inspected binaries. These are correctness checks, not performance measurements
-or a bound for arbitrary applications. Final production acceptance is recorded
-in the [handoff](development-state.md).
+or a bound for arbitrary applications.
+[PR #184](roadmap-history.md#queued-socket-callbacks-and-handler-inference-pr-184)
+records production acceptance.
 
 ## Ownership contract checks
 
@@ -815,7 +823,7 @@ Native ARC preprocessing omits marking, root scanning and sweeping, including
 their scheduler and Windows fiber helpers. This must hold even at `-O0`: GCC
 previously kept unused tracing functions that Clang removed. Typed finalizers,
 explicit destruction and scheduler stack-position helpers remain. The
-[handoff](development-state.md) records validation of this repair; binary checks
+[delivery history](roadmap-history.md) records accepted revisions; binary checks
 cover ARC exclusion and an ordinary tracing control.
 
 | Entry or boundary | Implemented contract | Evidence and limits |
@@ -962,8 +970,9 @@ The interpreter's existing buffered encoding supplies an independent reference.
 Native/WASI checks compare hashes across scalar widths and nested containers,
 keep aliases live, count both libc and managed allocations inside hash calls,
 and verify that restoring the old buffered implementation fails the zero-allocation
-check. [The handoff](development-state.md) records which checks have passed; this
-change alone is not a measured timing improvement or a C/Rust parity claim.
+check. [PR #151](roadmap-history.md#synchronous-wasi-ownership-and-streaming-hashes-pr-151)
+records acceptance; later numeric specialization is recorded in PR #174. These
+correctness checks alone are not a timing improvement or C/Rust parity claim.
 
 ## Vector-library results
 
@@ -1441,4 +1450,4 @@ strings. They have no heap owner to retain or release; immutable updates still
 allocate a separate result. This removes startup heap allocations rather than
 adding an allowance for them to leak checks. Runtime-computed cached values still
 need their usual owners. See [layouts and initialization](design.md#compile-time-values-in-static-storage)
-and [current verification](development-state.md).
+and [PR #169 acceptance](roadmap-history.md#static-constants-and-complete-shutdown-checks-pr-169).

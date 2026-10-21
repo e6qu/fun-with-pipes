@@ -103,8 +103,9 @@ and variant fields, rather than treating every occurrence of the same effect
 variable as a returned effect. It still rejects unrelated required effects,
 such as IO under an error handler. The [runnable regression](../tests/fixtures/handled_callbacks.fwp)
 covers these cases. The [focused acceptance report](measurements/queued-callbacks.md)
-records passing native and WASI checks; the [handoff](development-state.md) tracks
-final production acceptance.
+records passing native and WASI checks;
+[PR #184](roadmap-history.md#queued-socket-callbacks-and-handler-inference-pr-184)
+records full production acceptance.
 Only the last arrow of a binding may have effects, so partial application does
 not run that action early. Non-function top-level values must be pure, except
 program/test entry points.
@@ -277,7 +278,7 @@ WASI. Once allocation succeeds, filling inline keys cannot call user code,
 allocate or fail. Boxed I128/U128 keys keep ordinary construction. Aliased lists
 also keep their storage; the transformation requires an immediate range input.
 `FWP_MAP_BUILD=0` disables this transformation for controlled comparisons.
-[The handoff](development-state.md) distinguishes implementation from acceptance.
+[PR #173](roadmap-history.md#direct-integer-range-sets-pr-173) records acceptance.
 
 ## Borrowing array data inside loops
 
@@ -354,7 +355,8 @@ Both have an eight-byte length header. For example, a newly built three-key set
 requests 32 bytes instead of the previous 56; allocator metadata, padding and any
 separately allocated keys add to this amount. Unique insertion may reserve extra
 capacity. [The ownership contract](ownership.md#compact-set-storage) explains
-shared updates and cleanup; [the handoff](development-state.md) records validation.
+shared updates and cleanup;
+[PR #172](roadmap-history.md#compact-set-storage-pr-172) records acceptance.
 
 `FWP_MAP_BUILD=0` disables this transformation for controlled comparisons.
 Focused local checks cover raw/optimized interpretation, native O1/O2, ARC,
@@ -444,8 +446,9 @@ String solely for that print. The argument still evaluates before output.
 Shared strings and displays for other types keep their normal evaluation.
 This removes one managed allocation; it does not promise allocation-free libc
 IO or a timing improvement. The [report](measurements/integer-output-2026-10-20.json)
-records the six-host checks and actual code sizes; the
-[handoff](development-state.md) records production acceptance.
+records the six-host checks and actual code sizes;
+[PR #174](roadmap-history.md#numeric-hashing-and-integer-output-pr-174)
+records production acceptance.
 The combined `hash` evidence suite checks all six native hosts. Once it passes,
 `integer-output-report` takes its `evidence_run` and full `source_revision`, checks
 all 76 hash, output and neighboring ownership tests on each host, and inspects
@@ -477,8 +480,9 @@ inlining. [Controlled comparisons](measurements/integer-counting.md) record the
 algorithm, call/size tradeoffs and current validation.
 The [Linux measurements](measurements/integer-text.md) record zero managed leaf
 allocations in the probe, actual machine code and comparison with direct
-character counting in C/Rust. The [handoff](development-state.md) tracks full
-production acceptance.
+character counting in C/Rust.
+[PR #180](roadmap-history.md#function-channel-borrows-and-integer-text-pr-180)
+records production acceptance; PR #182 subsequently improved digit counting.
 
 ## Runtime
 
@@ -539,8 +543,9 @@ resource slots retain their existing lowering. The compiler keeps the original
 remaining expression nodes so failure-cleanup plans still identify their scopes.
 [Focused checks and measurements](measurements/channel-variant-moves.md) pass
 on Linux ARM64/AMD64; broader ownership checks pass on all six native platforms
-and both WebAssembly hosts. Final production acceptance is tracked in the
-[handoff](development-state.md).
+and both WebAssembly hosts.
+[PR #179](roadmap-history.md#matched-payload-moves-and-direct-call-borrows-pr-179)
+records production acceptance.
 
 A function used as a value may receive a boxed record even when its compiled
 body accepts separate fields. The entry code reads those fields before calling
@@ -551,7 +556,8 @@ and each prepared field until the body takes responsibility, including failure
 partway through preparation. The outer record stays alive until the call ends.
 Records containing resources retain their existing lifetime treatment. This
 removes redundant count operations at eligible calls; the outer allocation and
-runtime uniqueness check remain. Validation is tracked in the handoff.
+runtime uniqueness check remain. [Delivery history](roadmap-history.md) preserves
+the accepted revisions and their validation scope.
 
 The compiler also handles selecting a field from a consumed heap record
 when that field is its only value needing reference-counted storage. A record
@@ -746,8 +752,9 @@ These objects have no heap ownership count and cannot be uniquely reused.
 Updating a constant array or map creates owned storage and leaves the constant
 unchanged. Program data size and initialization stores remain costs; this is not
 zero memory use or a claim that all cached values avoid allocation. Values computed
-at runtime retain their existing ownership rules. The
-[handoff](development-state.md) records verification of this change.
+at runtime retain their existing ownership rules.
+[PR #169](roadmap-history.md#static-constants-and-complete-shutdown-checks-pr-169)
+records acceptance of static constants and complete cleanup.
 
 ## Tail calls and recursion
 
@@ -780,8 +787,10 @@ next set of parameter values. Generated C prepares those values, retires unused
 storage-reuse tokens and jumps to the function's entry check. Existing wide
 numeric workers retain their own native loop. Each backend therefore keeps
 bounded call-stack space for the recurrence, including native O0 builds.
-The current revision's [handoff](development-state.md) records validation;
-implementation is not itself platform acceptance.
+[PR #169](roadmap-history.md#static-constants-and-complete-shutdown-checks-pr-169)
+established full acceptance after the initial shutdown repairs;
+[PR #171](roadmap-history.md#mixed-tail-recursion-pr-171) extended the proof to
+functions that also make ordinary recursive calls.
 
 Eligibility requires at least one direct self call in tail position and the
 frame's types to describe plain immutable data. A function may also contain
@@ -861,8 +870,8 @@ not identify which transformation occurred. Native regression tests retain gener
 `FWP_TAIL_ARTIFACTS` names an output directory. Mixed-call tests compare deep
 optimized execution with a smaller raw-interpreter reference, including O0/O2,
 aliases, failure order and cancellation. These are correctness checks, not timing
-comparisons; the [handoff](development-state.md) distinguishes pending checks from
-accepted results.
+comparisons; [the accepted mixed-recursion delivery](roadmap-history.md#mixed-tail-recursion-pr-171)
+records their scope and remaining exclusions.
 
 ## Numerical specialization
 
@@ -909,7 +918,8 @@ Checked local types preserve nominal aggregates and their child cleanup rules.
 The transformation applies only when at most one tuple field is tested; complete
 tuple uses, multiple tested fields and protected original resource bindings keep
 their existing lowering. [Measurements](measurements/channel-match-results.md) record allocation, count
-and machine-code changes; [the handoff](development-state.md) tracks full validation.
+and machine-code changes;
+[PR #178](roadmap-history.md#direct-matches-and-callbacks-pr-178) records acceptance.
 No execution-time improvement has been established.
 
 The F64 matrix path uses blocks of 32 over contiguous arrays, checks dimensions
@@ -1088,8 +1098,9 @@ Channel handles do not need plain-data payloads for this call convention.
 Keeping the same channel owner after the call preserves its queued values and
 native sink context regardless of payload representation. This does not prove
 the payload graph acyclic: `arc.rs` and `arc_scope.rs` still check stored captures,
-cycles and call scopes independently. The extended handle proof is tracked in
-the handoff until native cleanup tests and measurements pass.
+cycles and call scopes independently.
+[PR #180](roadmap-history.md#function-channel-borrows-and-integer-text-pr-180)
+records acceptance of the handle extension, cleanup checks and measurements.
 
 Ownership lowering also forwards temporary aliases into borrowed call arguments.
 For example, an inlined call may name a channel field, use it to send, then keep
@@ -1100,8 +1111,10 @@ a later read of another field as sufficient. Borrowing calculations inside
 record fields can qualify; storing the alias itself in a field cannot.
 Calls, argument evaluation and
 traps stay in order. Consuming or unknown uses, escapes and resource scopes keep
-ordinary ownership. The [handoff](development-state.md) records actual validation;
-simple alias tests alone do not establish a count reduction in a larger program.
+ordinary ownership.
+[PR #181](roadmap-history.md#temporary-channel-borrows-and-failure-cleanup-pr-181)
+records measured count reductions and failure-cleanup acceptance; simple alias
+tests alone do not establish a reduction in a larger program.
 
 The caller keeps borrowed values and original record boxes visible to tracing
 through the call, and remains responsible for failure and cancellation cleanup.
