@@ -124,7 +124,7 @@ traps. Unproved runtime sharing still uses tracing.
 | Arrays, maps and sets | Typed elements, counted storage, selected unique updates | Callback and alias contracts must be proved |
 | Strings and bytes | Counted leaves for proved copies/aliases | Unmodeled result families remain shared |
 | Closures | Owned captured arguments and typed call metadata; eligible functions with only fixed function captures use static records | Runtime-data captures retain ordinary ownership; retained unknown callbacks are not checked ARC |
-| Tasks and channels | Counted handles/results/queues; ARC admits acyclic nested channel types; proved immutable function captures are accepted | Resource-bearing or unknown queued captures, task/HTTP stream payloads and recursive channel ownership remain unproved |
+| Tasks and channels | Counted handles/results/queues; ARC admits acyclic nested channel types and proved immutable captures; shared socket capture validation is pending below | Other resource-bearing or unknown queued captures, task/HTTP stream payloads and recursive channel ownership remain unproved |
 | Derivative tapes | Scoped owners and a bounded numeric workspace | Raw unscoped tape calls are not checked ARC |
 | External/network state | Explicit resource teardown where modeled | Freeing a C buffer does not prove the lifetime of every referenced fwp value |
 

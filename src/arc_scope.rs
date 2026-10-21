@@ -1129,6 +1129,39 @@ mod tests {
     }
 
     #[test]
+    fn queued_socket_containers_do_not_hide_mutable_owners() {
+        let tree = MT::con("SocketTree");
+        for socket in ["std::UdpSocket", "std::Listener", "std::Conn"] {
+            let mut program = Program::default();
+            program.shapes.insert(
+                tree.clone(),
+                TypeShape::Adt(vec![
+                    ("Branch".into(), vec![tree.clone()]),
+                    ("Handle".into(), vec![MT::con(socket)]),
+                ]),
+            );
+            let handles = MT::Con("std::List".into(), vec![tree.clone()]);
+            queued_capture_type(&program, &handles, &mut BTreeSet::new()).unwrap();
+            for owner in [
+                "std::File",
+                "std::Task",
+                "std::Channel",
+                "std::H2Stream",
+                "std::GrpcCell",
+                "?",
+            ] {
+                let mixed = MT::Record(vec![
+                    ("handles".into(), handles.clone()),
+                    ("owner".into(), MT::con(owner)),
+                ]);
+                let error = queued_capture_type(&program, &mixed, &mut BTreeSet::new())
+                    .expect_err("a safe socket field must not hide another owner");
+                assert!(error.contains(owner.trim_start_matches("std::")), "{error}");
+            }
+        }
+    }
+
+    #[test]
     fn runtime_function_producers_and_external_queues_need_known_sources() {
         let mut program = state_program(true);
         let getter = program.funcs[1].ty.clone();

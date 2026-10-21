@@ -935,6 +935,13 @@ excluded from channel payloads because their hidden owners can lead back to the
 queue. The [queued-function extension](ownership.md#functions-stored-in-channels),
 accepted in PR #175, admits functions whose actual immutable captures are
 proved safe and checks their required scope when called after receiving.
+The current extension also admits shared socket handles: `fwp_sock` owns only
+a descriptor, kind and reference count. A TLS stream additionally owns OpenSSL
+state and copied protocol bytes, which contain no fwp values. Neither can own
+a channel or callback. Existing typed closure cleanup therefore releases these
+captures without creating a queue cycle; explicit close still changes every
+alias. Native validation is tracked in the linked queued-function contract.
+`File` remains single-use and cannot be captured by a reusable function.
 The [channel proof](ownership.md#ownership-boundaries) follows each channel's
 payload types and rejects a path back to that channel type. Immutable recursive
 containers remain allowed. Mutable

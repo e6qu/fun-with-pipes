@@ -51,6 +51,9 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
             if name == "sockets" {
                 // Count actual socket owners rather than managed bytes alone:
                 // a collected header is not evidence its OS handle was closed.
+                // Each of 64 rounds opens 6 listeners, 6 connections and 10 UDP
+                // sockets. The 64-live ceiling allows original resource frames
+                // within a round, but detects retention accumulating across them.
                 let create = "    s->refs = 1;";
                 let release = "    fwp_sock_final(s);";
                 let finish = "\n    fwp_cl_finish();\n";
@@ -61,7 +64,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic unsigned socket_live, socket_created[3];")
                     .replace(create, &format!("{create}\n    socket_created[kind]++; if(++socket_live > 64) exit(194);"))
                     .replace(release, &format!("    fwp_socket_t observed_fd = s->fd;\n{release}\n    if(s->fd != FWP_INVALID_SOCKET) exit(195);\n    if(observed_fd != FWP_INVALID_SOCKET) {{ struct sockaddr_storage addr; socklen_t len = sizeof addr; if(getsockname(observed_fd, (struct sockaddr *)&addr, &len) == 0) exit(195); }}\n    if(!socket_live) exit(196); socket_live--;"))
-                    .replace(finish, &format!("{finish}    if(socket_live || !socket_created[0] || !socket_created[1] || !socket_created[2]) exit(197);\n"));
+                    .replace(finish, &format!("{finish}    if(socket_live || socket_created[0] != 64*6 || socket_created[1] != 64*6 || socket_created[2] != 64*10) {{ fprintf(stderr,\"socket accounting: live=%u listeners=%u connections=%u udp=%u\\n\", socket_live, socket_created[0], socket_created[1], socket_created[2]); exit(197); }}\n"));
             }
             if name == "values" {
                 assert!(
@@ -90,7 +93,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                         .env("FWP_REUSE_VERIFY", stress);
                     command
                 };
-                let actual = checked(&mut run());
+                let actual = run().output().unwrap();
                 if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
                     let path = std::path::PathBuf::from(path);
                     std::fs::create_dir_all(&path).unwrap();
@@ -98,6 +101,12 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     std::fs::write(path.join(format!("{label}.c")), &code).unwrap();
                     std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
                     std::fs::write(path.join(format!("{label}.stdout")), &actual.stdout).unwrap();
+                    std::fs::write(path.join(format!("{label}.stderr")), &actual.stderr).unwrap();
+                    std::fs::write(
+                        path.join(format!("{label}.status")),
+                        actual.status.to_string(),
+                    )
+                    .unwrap();
                     let (tool, flag) = if cfg!(target_os = "macos") {
                         ("otool", "-tvV")
                     } else if cfg!(target_os = "windows") {
@@ -108,6 +117,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                     let assembly = checked(Command::new(tool).arg(flag).arg(&binary));
                     std::fs::write(path.join(format!("{label}.asm")), assembly.stdout).unwrap();
                 }
+                assert!(actual.status.success(), "{name}/{memory}/{opt}: {actual:?}");
                 assert_eq!(
                     (&actual.stdout, &actual.stderr),
                     (&reference.stdout, &reference.stderr),

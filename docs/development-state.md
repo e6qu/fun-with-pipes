@@ -4,7 +4,7 @@
 
 Next: validate the retained-resource ownership batch on branch
 `prove-retained-resource-ownership`, based on accepted merge
-`447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c`. No PR is open yet.
+`447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c`. [PR #184](https://github.com/e6qu/fun-with-pipes/pull/184) is a draft.
 
 The audit found that `src/infer.rs::check_effects` already rejects partial
 applications capturing `File`: reusable functions cannot consume a single-use
@@ -15,17 +15,40 @@ closes the descriptor. `src/arc_scope.rs` now admits `UdpSocket`, `Listener` and
 [queued-function contract](ownership.md#functions-stored-in-channels).
 
 `tests/queued_functions.rs` adds a 64-round socket regression, native owner
-counters, complete ARC teardown and omitted-release/close controls. It covers
-received callbacks called twice, closed and undrained queues, explicit-close
-aliases, caught failure and cancelled blocked senders. Run the focused
-`channel-proof` workflow, audit every failure, then obtain all nine production
-gates and documentation at the final head. Tests have not run yet; no new socket
-queue support is verified. Expand missing cases before final publication.
+counters, descriptor-close checks, complete ARC teardown and deliberately
+omitted queue-release/socket-close controls. It covers received callbacks called
+twice, closed and undrained queues, aliases, caught failure, blocked senders and
+cancellation during UDP receive, TCP accept and TCP read. Unit tests preserve
+rejection through mixed records and recursive containers.
 
-Read [PLAN.md](../PLAN.md), [ownership](ownership.md) and relevant
-[design](design.md) sections before changing code. No weak handles or new syntax
-were added. Focused local formatting (`rustfmt` on the two changed Rust files)
-and `git diff --check` passed under the guard in 0.25 seconds.
+Run `numerics.yml` with `suite=queued-sockets,native_runner=all` for the current
+batch, audit every failure, then require all nine production gates and docs at
+the final head. This focused option retains six native platforms and tests the
+changed queue proof alongside socket/resource cleanup. The broader `channel-proof`
+run `39561654177` at `9232cdf4e790dbe2b728cb0e5d96c1a55ab4fd4d` is still finishing.
+Both WASI jobs passed; the completed Linux AMD64 job found only the new fixture's
+three task-effect errors. Those are repaired together: handle IoError with
+`attempt` before spawning, and declare the existing task callback effect set.
+Continue auditing every other job; receipt `/private/tmp/fwp-184-focused.json`.
+No new native socket queue support is verified yet.
+
+For lightweight local source checks, the accepted PR #183 macOS ARM64 compiler
+is `/private/tmp/fwp-183-macos-compiler/fwp-macos-arm64/fwp`. Both its artifact
+archive and executable hashes were verified against GitHub/manifest metadata;
+receipts are beside it. It predates this ARC eligibility change, so use it only
+for unchanged source semantics, formatting and tracing C emission. Under
+`scripts/local-guard.py`, `check tests/fixtures/queued_sockets.fwp` passes;
+`run --interp` with and without `FWP_NO_OPT=1` matches the expected 64-round output
+(10.31s and 10.30s). Tracing `build --emit-c` passes without compiling C locally.
+The generated C is `/private/tmp/fwp-184-sockets-baseline.c`; instrumentation sites
+are unique. This is not native execution evidence for the candidate compiler.
+
+`cargo fmt --all -- --check`, `git diff --check`, the primitive inventory (394
+declarations, 384 symbols, 40 aliases), doc links and all 11 native-runner tooling
+tests pass under the guard; the combined last check took 12.86s. An initial
+wrong-edition formatter invocation was corrected before this run; obsolete
+focused run `39561434828` is cancelled. Read [PLAN.md](../PLAN.md),
+[ownership](ownership.md) and relevant [design](design.md) sections before edits.
 
 ## Accepted delivery
 
