@@ -40,12 +40,15 @@ def main():
             for layout in ['heap', 'stack']:
                 binary = directory / memory / f'{layout}-{opt}.exe'
                 data = binary.read_bytes()
+                code = binary.with_suffix('.c').read_bytes()
+                for check in [b'_Exit(193)', b'_Exit(195)', b'_Exit(196)']:
+                    assert check not in code, 'layout-specific verification must not affect timing'
                 assert data[:6] == b'\x7fELF\x02\x01'
                 assert struct.unpack_from('<H', data, 18)[0] == machine
                 paths[layout] = binary
                 binaries.append(dict(memory=memory, optimization=opt, layout=layout,
                     sha256=hashlib.sha256(data).hexdigest(), bytes=len(data),
-                    c_sha256=hashlib.sha256(binary.with_suffix('.c').read_bytes()).hexdigest()))
+                    c_sha256=hashlib.sha256(code).hexdigest()))
             for repetition in range(args.repetitions):
                 order = ['heap', 'stack'] if repetition % 2 == 0 else ['stack', 'heap']
                 for layout in order:
@@ -89,6 +92,7 @@ def main():
         time_scope='Parent monotonic elapsed time around spawning and waiting for each complete child, including startup, output capture and teardown. These short processes do not isolate context-switch latency; ratios are observations for this workload, not a general speed claim.',
         ratio='Candidate divided by preceding layout: 1 means equal, below 1 means less, above 1 means more. Raw samples and ranges preserve variability; no significance claim.',
         flags='fwp emission at O1; generated C at the named O0/O2, -std=gnu11 -ffp-contract=off -w and normal runtime links. Measurement settings explicitly disable tracing collections and reuse verification and enable physical freeing.',
+        instrumentation='Both variants use the same allocation-counting and final reporting hooks. Candidate-specific stack bounds, cleared pointers and root-image assertions execute in separate verification binaries, excluded from these measurements.',
         task_layout_fields=['task_record_bytes', 'task_record_alignment', 'saved_context_bytes', 'root_static_context_bytes'],
         repetitions=args.repetitions, timeout_seconds=args.timeout, binary_records=binaries,
         samples=samples, comparisons=summaries)

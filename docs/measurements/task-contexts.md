@@ -16,7 +16,8 @@ completed child pointers before reusing their stacks.
 The saved bytes still exist. This change reduces heap record size and allocator
 rounding; it does not eliminate CPU state or guarantee lower process memory.
 The root static image and each child's context plus any alignment padding must
-be counted separately. glibc still performs context switching, including its
+be counted separately. Child call frames have that much less usable space within
+the unchanged stack reservation. glibc still performs context switching, including its
 signal-mask and floating-point environment handling.
 
 ## What is compared
@@ -85,7 +86,9 @@ and signal-mask restoration. Task, scope, cancellation and 72-call service clean
 regressions pass on both hosts.
 
 The expanded probe adds nine fresh-process samples per layout, memory mode and
-optimization level. It alternates execution order. Linux `VmHWM` records the peak
+optimization level. It alternates execution order. Both layouts have the same
+allocation-counting and reporting hooks. Candidate-only lifetime and bounds
+assertions run in separate verification binaries, excluded from timing. Linux `VmHWM` records the peak
 resident memory observed at the post-task-teardown checkpoint, before final
 allocator/process exit. This includes startup and shared mappings, not just fwp
 values, and is not private physical memory. Elapsed time includes process startup,
