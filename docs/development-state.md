@@ -59,6 +59,20 @@ storage and ARC rejects it. Ordinary tracing now keeps reuse verification;
 measured runs explicitly disable it so they can check physical cleanup.
 Every other step passed. Complete audit: `/private/tmp/fwp-grpc-sender-integration.json`.
 The repair and expanded cancellation test still need native verification.
+They are published as `00047164b42108dd7e66bffc6b48baf83b310fbf`. Probe
+`39589899500` released all 72 response channels, all streams and the connection,
+but retained 544 managed bytes relative to readiness. Source inspection identifies
+the still-live listener's lazily allocated Linux descriptor table (512 bytes) and
+wait record (32 bytes). The prepared measurement now identifies the exact live
+listener objects and rejects any charge beyond them, without a guessed allowance
+or test-only disposal. It also verifies there are no connection wait records.
+That correction still needs native validation. Complete log and C are in
+`/private/tmp/fwp-grpc-retention-evidence`; audit `fwp-grpc-sender-repaired.json`.
+New native checks inspect ELF/Mach-O/PE headers
+as well as C, symbols and disassembly; emulated output cannot count as native.
+The next prepared revision reports ARC/tracing and O0/O2 as four independent
+tests, with separate scratch and artifact directories. A failure in one must
+not prevent the others from running.
 Generated C, binaries, disassembly, symbols and logs are retained by the
 focused workflow. No speed or C/Rust parity claim is involved.
 WASI has no native gRPC server claim; keep its existing ownership regression gates.
@@ -69,6 +83,22 @@ keep timing/allocation claims separate from correctness. The `channel-proof`
 workflow covers six native hosts and two WASI hosts; its explicit filtered gRPC
 step now runs this integration and checks fixture formatting on native hosts.
 Do not replace unknown producers with type-based acceptance or tracing.
+
+## Service test-harness repair
+
+Inspection of slow REST tests found startup could block indefinitely on a silent
+or partial first line, before its server handle existed for cleanup. The prepared
+repair reads asynchronously, enforces an explicit deadline, and kills/reaps failed
+startup. Its regression uses a silent interpreted child and a 100 ms deadline.
+
+Three immutable tracing server executables (API, authentication and forms) are
+now shared within one test process, eliminating four duplicate compilations.
+Each existing test still starts a fresh server, keeps its requests and explicit
+stress setting, and reports failures independently. ARC and distinct source
+builds remain separate. The full focused matrix includes the entire REST target.
+This preparation has not run yet; fewer compilations is not a measured wall-time
+improvement. Earlier target durations are in
+`/private/tmp/fwp-184-test-duration-review.json` and include competing tests.
 
 ## Local work
 

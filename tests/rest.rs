@@ -10,7 +10,8 @@ use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
-use std::time::Duration;
+use std::sync::{Arc, LazyLock, Mutex};
+use std::time::{Duration, Instant};
 
 fn fwp() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_fwp"))
@@ -54,27 +55,69 @@ impl Drop for Server {
     }
 }
 
-/// Start a server and read the address it listens on.
-fn start(mut cmd: Command) -> Server {
+/// Read the address without allowing a silent or partial line to defeat the
+/// startup deadline. Failed startup always kills and reaps the child.
+fn start(mut cmd: Command, timeout: Duration) -> Server {
     let mut child = cmd
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
         .spawn()
         .expect("start server");
     let mut stderr = BufReader::new(child.stderr.take().unwrap());
-    let mut line = String::new();
-    stderr.read_line(&mut line).expect("read address");
-    let addr = line
-        .trim()
-        .strip_prefix("fwp: rest listening on http://")
-        .unwrap_or_else(|| panic!("unexpected first line: {:?}", line))
-        .to_string();
-    // keep draining stderr so that the server never blocks on it
-    std::thread::spawn(move || {
-        let mut rest = String::new();
-        let _ = stderr.read_to_string(&mut rest);
+    let log = Arc::new(Mutex::new(String::new()));
+    let output = log.clone();
+    let (ready, address) = std::sync::mpsc::channel();
+    let reader = std::thread::spawn(move || {
+        let mut ready = Some(ready);
+        let mut line = String::new();
+        while stderr.read_line(&mut line).is_ok_and(|n| n > 0) {
+            output.lock().unwrap().push_str(&line);
+            if let Some(addr) = line.trim().strip_prefix("fwp: rest listening on http://") {
+                if let Some(sender) = ready.take() {
+                    let _ = sender.send(addr.to_owned());
+                }
+            }
+            line.clear();
+        }
     });
-    Server { child, addr }
+    match address.recv_timeout(timeout) {
+        Ok(addr) => Server { child, addr },
+        Err(error) => {
+            let _ = child.kill();
+            let _ = child.wait();
+            let _ = reader.join();
+            panic!(
+                "REST server did not start ({error}): {}",
+                log.lock().unwrap()
+            );
+        }
+    }
+}
+
+#[test]
+fn server_startup_deadline_covers_silent_processes() {
+    let dir = temp_dir("silent-startup");
+    let file = dir.join("silent.fwp");
+    std::fs::write(&file, "main = 30s | task.sleep\n").unwrap();
+    let began = Instant::now();
+    let result = std::panic::catch_unwind(|| {
+        let mut command = Command::new(fwp());
+        command.args(["run", "--interp"]).arg(&file);
+        start(command, Duration::from_millis(100))
+    });
+    let error = match result {
+        Err(error) => error,
+        Ok(_) => panic!("a silent process must not count as a ready server"),
+    };
+    let message = error
+        .downcast_ref::<String>()
+        .expect("startup failure message");
+    assert!(message.contains("timed out"), "{message}");
+    assert!(
+        began.elapsed() < Duration::from_secs(15),
+        "startup ignored its deadline"
+    );
+    std::fs::remove_dir_all(dir).unwrap();
 }
 
 fn interpreted(file: &Path) -> Server {
@@ -82,10 +125,10 @@ fn interpreted(file: &Path) -> Server {
     cmd.args(["serve", "--rest", "--interp"])
         .arg(file)
         .args(["--listen", "127.0.0.1:0"]);
-    start(cmd)
+    start(cmd, Duration::from_secs(60))
 }
 
-fn native(file: &Path, dir: &Path, mode: &str, stress: bool) -> Server {
+fn compile_server(file: &Path, dir: &Path, mode: &str) -> PathBuf {
     let exe = dir.join("server");
     let out = Command::new(fwp())
         .arg("build")
@@ -99,11 +142,30 @@ fn native(file: &Path, dir: &Path, mode: &str, stress: bool) -> Server {
         "build failed: {}",
         String::from_utf8_lossy(&out.stderr)
     );
+    exe
+}
+
+fn native(exe: &Path, stress: bool) -> Server {
     let mut cmd = Command::new(exe);
     cmd.args(["--listen", "127.0.0.1:0"])
         .env("FWP_GC_STRESS", if stress { "16" } else { "0" });
-    start(cmd)
+    start(cmd, Duration::from_secs(60))
 }
+
+// Only immutable executable bytes are shared within this test process. Every
+// call starts a fresh server with its own listener, state and stress setting.
+// ARC builds remain separate; no executable is reused across test processes.
+static API_EXECUTABLE: LazyLock<PathBuf> =
+    LazyLock::new(|| compile_server(&fixture("api.fwp"), &temp_dir("shared-api"), "tracing"));
+static SECURE_EXECUTABLE: LazyLock<PathBuf> = LazyLock::new(|| {
+    compile_server(
+        &fixture("secure.fwp"),
+        &temp_dir("shared-secure"),
+        "tracing",
+    )
+});
+static FORMS_EXECUTABLE: LazyLock<PathBuf> =
+    LazyLock::new(|| compile_server(&fixture("forms.fwp"), &temp_dir("shared-forms"), "tracing"));
 
 /// One request on its own connection: the status, the headers and the
 /// body of the response.
@@ -412,9 +474,7 @@ fn api_native() {
         eprintln!("skipping: no C compiler");
         return;
     }
-    let dir = temp_dir("api-native");
-    exercise_api(&native(&fixture("api.fwp"), &dir, "tracing", false));
-    let _ = std::fs::remove_dir_all(dir);
+    exercise_api(&native(&API_EXECUTABLE, false));
 }
 
 fn exercise_books(srv: &Server) {
@@ -487,7 +547,7 @@ fn books_example() {
     exercise_books(&interpreted(&file));
     if have_cc() {
         let dir = temp_dir("books-native");
-        exercise_books(&native(&file, &dir, "tracing", false));
+        exercise_books(&native(&compile_server(&file, &dir, "tracing"), false));
         let _ = std::fs::remove_dir_all(dir);
     }
 }
@@ -784,9 +844,7 @@ fn secure_native() {
         eprintln!("skipping: no C compiler");
         return;
     }
-    let dir = temp_dir("secure-native");
-    exercise_secure(&native(&fixture("secure.fwp"), &dir, "tracing", false));
-    let _ = std::fs::remove_dir_all(dir);
+    exercise_secure(&native(&SECURE_EXECUTABLE, false));
 }
 
 /// `--cors` and `FWP_REST_CORS` replace the origins of `# cors:`.
@@ -801,7 +859,7 @@ fn cors_from_the_command_line() {
             "--cors",
             "https://a.example, https://b.example",
         ]);
-    let srv = start(cmd);
+    let srv = start(cmd, Duration::from_secs(60));
     let allowed = |origin: &str| {
         http_with(&srv.addr, "GET", "/health", &[("origin", origin)], None)
             .1
@@ -816,7 +874,7 @@ fn cors_from_the_command_line() {
         .arg(fixture("api.fwp"))
         .args(["--listen", "127.0.0.1:0"])
         .env("FWP_REST_CORS", "*");
-    let srv = start(cmd);
+    let srv = start(cmd, Duration::from_secs(60));
     let (_, headers, _) = http_with(
         &srv.addr,
         "GET",
@@ -1429,7 +1487,7 @@ fn client_round_trip() {
     }
     drop(srv);
     if have_cc() {
-        let srv = native(&fixture("api.fwp"), &dir, "tracing", false);
+        let srv = native(&API_EXECUTABLE, false);
         let exe = dir.join("roundtrip");
         let b = Command::new(fwp())
             .arg("build")
@@ -1485,7 +1543,7 @@ fn secure_client_round_trip() {
     golden(&fixture("secureroundtrip.out"), &got);
     drop(srv);
     if have_cc() {
-        let srv = native(&fixture("secure.fwp"), &dir, "tracing", false);
+        let srv = native(&SECURE_EXECUTABLE, false);
         let exe = dir.join("secureroundtrip");
         let b = Command::new(fwp())
             .arg("build")
@@ -2112,9 +2170,7 @@ fn forms_and_formats_native() {
         eprintln!("skipping: no C compiler");
         return;
     }
-    let dir = temp_dir("forms-native");
-    exercise_forms(&native(&fixture("forms.fwp"), &dir, "tracing", true));
-    let _ = std::fs::remove_dir_all(dir);
+    exercise_forms(&native(&FORMS_EXECUTABLE, true));
 }
 
 /// The document lists the media types of bodies and responses.
@@ -2213,7 +2269,13 @@ fn media_type_errors() {
 
 /// Run a client program against a server, interpreted, then natively
 /// against a native server: both print the same.
-fn client_runs(server: &Path, client_dir: &Path, program: &str, golden_out: &Path) {
+fn client_runs(
+    server: &Path,
+    executable: &LazyLock<PathBuf>,
+    client_dir: &Path,
+    program: &str,
+    golden_out: &Path,
+) {
     let srv = interpreted(server);
     let run = Command::new(fwp())
         .args(["run", "--interp"])
@@ -2230,7 +2292,7 @@ fn client_runs(server: &Path, client_dir: &Path, program: &str, golden_out: &Pat
     golden(golden_out, &got);
     drop(srv);
     if have_cc() {
-        let srv = native(server, client_dir, "tracing", true);
+        let srv = native(executable, true);
         let exe = client_dir.join("client");
         let b = Command::new(fwp())
             .arg("build")
@@ -2269,6 +2331,7 @@ fn forms_client_round_trip() {
     .unwrap();
     client_runs(
         &fixture("forms.fwp"),
+        &FORMS_EXECUTABLE,
         &dir,
         "formsroundtrip.fwp",
         &fixture("formsroundtrip.out"),
@@ -2355,6 +2418,7 @@ fn swagger_documents() {
     .unwrap();
     client_runs(
         &fixture("forms.fwp"),
+        &FORMS_EXECUTABLE,
         &dir,
         "swaggerroundtrip.fwp",
         &fixture("swaggerroundtrip.out"),
@@ -2420,7 +2484,16 @@ fn uploads_example() {
 #[test]
 fn checked_arc_rest_preserves_api_authentication_and_form_results() {
     let dir = fwp::cgen::TempDir::new("rest-arc").unwrap();
-    exercise_api(&native(&fixture("api.fwp"), dir.path(), "arc", false));
-    exercise_secure(&native(&fixture("secure.fwp"), dir.path(), "arc", false));
-    exercise_forms(&native(&fixture("forms.fwp"), dir.path(), "arc", false));
+    exercise_api(&native(
+        &compile_server(&fixture("api.fwp"), dir.path(), "arc"),
+        false,
+    ));
+    exercise_secure(&native(
+        &compile_server(&fixture("secure.fwp"), dir.path(), "arc"),
+        false,
+    ));
+    exercise_forms(&native(
+        &compile_server(&fixture("forms.fwp"), dir.path(), "arc"),
+        false,
+    ));
 }

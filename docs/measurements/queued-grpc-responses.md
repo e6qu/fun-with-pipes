@@ -60,8 +60,12 @@ and servers, under checked ARC and tracing at O0/O2. Ordinary tracing servers us
 collection stress and verification. Separate measured servers disable collection
 and count response channels, completed calls, finalized streams/connections and
 remaining tasks. The final sample follows all 72 calls and connection teardown.
-It requires zero live response channels/tasks and no remaining managed allocation
-charge relative to server readiness. These counters exclude OS buffers, allocator
+It requires zero live response channels/tasks. The service still listens, so the
+test separately identifies its socket-wait storage, allocated lazily after the
+readiness baseline. Linux keeps a descriptor table and one wait record; macOS
+and Windows keep a polling array. Checks require those objects to belong only
+to the listener. No managed allocation charge beyond those actual objects may
+remain. There is no fixed byte allowance. These counters exclude OS buffers, allocator
 metadata, process memory and stack pools.
 
 A deliberately broken ARC server omits release of queued values. Response-channel
@@ -73,8 +77,11 @@ must retain marking. This does not establish a performance improvement.
 
 The initial compiler prototype passed Linux checks at
 `867cc9a1889d948fa0002c82736c2aa79d305c35`. The first eight source cases also matched
-the accepted compiler's raw interpreter locally. The full native integration
-and remote-cancellation addition are still awaiting validation; consult
+the accepted compiler's raw interpreter locally; the expanded 72-call fixture
+also passes raw interpretation. Early integration checks exposed an incompatible
+ARC diagnostic setting and an incomplete measurement baseline: Linux's live
+listener accounted for 544 bytes after request cleanup. The corrected native
+checks and remote-cancellation addition are still awaiting full validation; consult
 [the handoff](../development-state.md) before treating them as supported.
 
 For the complete focused matrix, dispatch `.github/workflows/numerics.yml` with
