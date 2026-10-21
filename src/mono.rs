@@ -977,8 +977,8 @@ impl<'a> Mono<'a> {
             }
         }
         let result = {
-            let mut it = crate::interp::Interp::new(&self.prog, Box::new(std::io::stderr()));
-            let r = it.call(tmp, vec![]);
+            let r = crate::interp::Interp::new(&self.prog, Box::new(std::io::stderr()))
+                .and_then(|mut it| it.call(tmp, vec![]));
             r.map_err(|c| match c {
                 crate::interp::Ctl::Fail(v, t) => format!(
                     "`comptime` evaluation failed: {}",

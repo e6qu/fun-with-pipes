@@ -74,7 +74,7 @@ fn temporary_channel_fields_preserve_owners_and_nonlocal_cleanup() {
         ],
         ..Program::default()
     };
-    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(std::io::sink()));
+    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(std::io::sink())).unwrap();
     assert_eq!(interpreter.call(3, vec![]).unwrap(), Value::unit());
     let code = fwp::cgen::generate(&program).unwrap().replace(
         "int main(int argc, char **argv)",
@@ -239,7 +239,7 @@ fn borrowed_function_channels_preserve_native_context_destruction() {
         ],
         ..Program::default()
     };
-    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(std::io::sink()));
+    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(std::io::sink())).unwrap();
     assert_eq!(interpreter.call(4, vec![]).unwrap(), Value::unit());
     let emitted = fwp::cgen::generate(&program).unwrap();
     let marker = "/* caller-owned parameters: 0 */";
@@ -396,7 +396,7 @@ fn direct_borrowed_fields_preserve_owners_on_success_failure_and_cancellation() 
     });
     p.main = Some(4);
     fwp::ir::check_locals(&p).unwrap();
-    let mut interpreter = fwp::interp::Interp::new(&p, Box::new(Vec::new()));
+    let mut interpreter = fwp::interp::Interp::new(&p, Box::new(Vec::new())).unwrap();
     assert_eq!(
         interpreter
             .call(2, vec![Value::str("input"), Value::I64(0)])

@@ -126,13 +126,13 @@ fn cpu_worker_limits_match_availability_and_both_backends() {
             &path,
             format!(
                 r#"
-count : I64
-count = "FWP_TEST_WORKERS" | env.get | option.and-then parse-int | (match
+count : () -> I64 ! {IO}
+count = const "FWP_TEST_WORKERS" | env.get | option.and-then parse-int | (match
     Some _ -> id
     None -> "test requires FWP_TEST_WORKERS" | prim.trap)
 kernel : Kernel
 kernel = vector [1.0, 2.0] | tensor.lazy | tensor.kernel
-main = count | CpuParallel | tap (device.available | echo) | flip {operation} kernel | echo
+main = () | count | CpuParallel | tap (device.available | echo) | flip {operation} kernel | echo
 "#
             ),
         )

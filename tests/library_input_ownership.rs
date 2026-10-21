@@ -156,7 +156,7 @@ fn program() -> Program {
 #[test]
 fn library_input_copies_transfer_or_release_exactly_once() {
     let p = program();
-    let mut interp = fwp::interp::Interp::new(&p, Box::new(Vec::new()));
+    let mut interp = fwp::interp::Interp::new(&p, Box::new(Vec::new())).unwrap();
     assert_eq!(
         interp.call(0, vec![Value::Str("héllo".into())]).unwrap(),
         Value::I64(5)

@@ -492,8 +492,11 @@ pointer element widths use the same representation (2/2/16 bytes).
   Checked ARC admits callbacks with copied numeric/Boolean/unit C arguments and
   results; raw pointers and callbacks returning managed C addresses remain
   outside that ownership contract.
-- The interpreter reaches C through a generated shim library, built with
-  the system C compiler and loaded with `dlsym`.
+- Before evaluation, the interpreter builds and loads a small C bridge using
+  the system C compiler. The bridge converts fwp values to C arguments and back.
+  Preparation failure prevents the program from starting; foreign calls during
+  evaluation never start a compiler. The REPL and interpreter debugger continue
+  to reject foreign C calls; use an ahead-of-time native build there.
 - `--link` adds C sources, objects or libraries (`-lm`, `-L/dir`,
   `util.c`) for both backends.
 - `fwp build --staticlib` or `--cdylib` turns the exported functions into

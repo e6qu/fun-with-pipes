@@ -76,6 +76,94 @@ fn foreign_functions_interpreted() {
 }
 
 #[test]
+fn foreign_bridges_compile_before_program_effects() {
+    let scratch = fwp::cgen::TempDir::new("ffi-compile-phase").unwrap();
+    let probe = scratch.join("compiler.exe");
+    let compiled = Command::new("rustc")
+        .args(["--edition", "2021"])
+        .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/ffi_compiler_phase.rs"))
+        .arg("-o")
+        .arg(&probe)
+        .output()
+        .unwrap();
+    assert!(compiled.status.success(), "{compiled:?}");
+    let input = scratch.join("main.fwp");
+    std::fs::write(
+        &input,
+        r#"
+foreign "C" abs : I32 -> I32
+main = ["effect" | file.write-new "effect.txt", -7i32 | abs | echo] | ignore
+"#,
+    )
+    .unwrap();
+    let marker = scratch.join("effect.txt");
+    let native = scratch.join("native.exe");
+    let mut build = Command::new(fwp());
+    build
+        .current_dir(scratch.path())
+        .env("CC", &probe)
+        .env("FWP_TEST_CC", cc())
+        .env("FWP_TEST_EFFECT", &marker)
+        .args(["build", "-O1"])
+        .arg(&input)
+        .arg("-o")
+        .arg(&native);
+    let built = build.output().unwrap();
+    assert!(built.status.success(), "{built:?}");
+    assert!(!marker.exists());
+    for optimized in [false, true] {
+        let mut run = Command::new(fwp());
+        run.current_dir(scratch.path())
+            .env("CC", &probe)
+            .env("FWP_TEST_CC", cc())
+            .env("FWP_TEST_EFFECT", &marker)
+            .args(["run", "--interp"])
+            .arg(&input);
+        if optimized {
+            run.env_remove("FWP_NO_OPT");
+        } else {
+            run.env("FWP_NO_OPT", "1");
+        }
+        let actual = run.output().unwrap();
+        assert!(actual.status.success(), "{optimized}: {actual:?}");
+        assert_eq!(actual.stdout, b"7\n");
+        assert!(actual.stderr.is_empty(), "{actual:?}");
+        assert_eq!(std::fs::read(&marker).unwrap(), b"effect");
+        std::fs::remove_file(&marker).unwrap();
+    }
+    let actual = Command::new(&native)
+        .current_dir(scratch.path())
+        .output()
+        .unwrap();
+    assert!(actual.status.success(), "{actual:?}");
+    assert_eq!(actual.stdout, b"7\n");
+    assert_eq!(std::fs::read(&marker).unwrap(), b"effect");
+    // Prove that the launcher really detects compilation after an effect.
+    let late = Command::new(&probe)
+        .env("FWP_TEST_CC", cc())
+        .env("FWP_TEST_EFFECT", &marker)
+        .arg("--version")
+        .output()
+        .unwrap();
+    assert_eq!(late.status.code(), Some(88));
+    assert!(String::from_utf8_lossy(&late.stderr).contains("compiler started after program effect"));
+    std::fs::remove_file(&marker).unwrap();
+    // Setup failures must not partially execute the program.
+    let unavailable = Command::new(fwp())
+        .current_dir(scratch.path())
+        .env("FWP_NO_OPT", "1")
+        .env("CC", scratch.join("missing-compiler"))
+        .args(["run", "--interp"])
+        .arg(&input)
+        .output()
+        .unwrap();
+    assert_eq!(unavailable.status.code(), Some(101));
+    assert!(unavailable.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&unavailable.stderr).contains("cannot run C compiler"));
+    assert!(!marker.exists());
+}
+
+#[test]
 fn foreign_functions_native() {
     if !have(&cc()) {
         return;

@@ -100,11 +100,13 @@ fn boxed_projection_transfers_unique_fields_and_preserves_shared_values() {
     };
     assert_eq!(
         fwp::interp::Interp::new(&p, Box::new(Vec::new()))
+            .unwrap()
             .call(0, vec![input()])
             .unwrap(),
         Value::str("kept")
     );
     assert!(fwp::interp::Interp::new(&p, Box::new(Vec::new()))
+        .unwrap()
         .call(2, vec![input()])
         .is_err());
     let dir = fwp::cgen::TempDir::new("boxed-projection").unwrap();

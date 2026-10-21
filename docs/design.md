@@ -1072,7 +1072,9 @@ startup; it is not a macOS universal-binary requirement.
 Removing tracing GC and reducing ARC overhead are active goals in the
 [project plan](../PLAN.md). General collector-free execution is not implemented.
 A just-in-time compiler (JIT) is explicitly excluded from the project direction;
-native fwp functions compile ahead of execution. The CPU-only numerical design
+native fwp functions compile ahead of execution. The interpreter prepares its C
+foreign-call bridge before evaluating language code, including failure reporting
+before program effects. Its calls do not compile code. The CPU-only numerical design
 removes runtime OpenCL compilation; validation of that change is recorded in the
 [handoff](development-state.md). CPU kernels interpret their arithmetic instruction
 arrays without generating machine code. GPU execution, a replacement backend and

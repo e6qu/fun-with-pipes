@@ -186,7 +186,8 @@ choices, not fallbacks.
 A just-in-time compiler (JIT), which compiles running program code during
 execution, is explicitly excluded. It is not deferred or a future optimization
 option. Keep native compilation ahead of execution and the interpreter; do not
-add a JIT to either the compiler or the generated runtime.
+add a JIT to either the compiler or the generated runtime. Prepare interpreter
+foreign-call bridges before evaluation; no C compiler starts during a foreign call.
 
 Remove the existing runtime OpenCL compiler and its GPU API. Keep the CPU kernel
 interpreter, which evaluates instructions without generating machine code. A

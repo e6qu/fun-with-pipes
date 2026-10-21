@@ -43,11 +43,13 @@ fn repeated_known_function_aliases_become_direct_calls() {
     fwp::ir::check_locals(&program).unwrap();
     let input = vec![Value::str("aλ🙂")];
     let reference = fwp::interp::Interp::new(&program, Box::new(Vec::new()))
+        .unwrap()
         .call(1, input.clone())
         .unwrap();
     fwp::opt::optimize(&mut program);
     fwp::ir::check_locals(&program).unwrap();
     let result = fwp::interp::Interp::new(&program, Box::new(Vec::new()))
+        .unwrap()
         .call(1, input)
         .unwrap();
     assert_eq!(result, reference);
@@ -102,11 +104,13 @@ fn matching_a_local_callback_record_exposes_the_direct_call() {
     };
     fwp::ir::check_locals(&program).unwrap();
     let reference = fwp::interp::Interp::new(&program, Box::new(Vec::new()))
+        .unwrap()
         .call(1, vec![Value::I64(7)])
         .unwrap();
     fwp::opt::optimize(&mut program);
     fwp::ir::check_locals(&program).unwrap();
     let actual = fwp::interp::Interp::new(&program, Box::new(Vec::new()))
+        .unwrap()
         .call(1, vec![Value::I64(7)])
         .unwrap();
     assert_eq!(actual, reference);
@@ -170,15 +174,17 @@ fn ignored_constant_in_a_matched_tuple_still_evaluates() {
         ..Program::default()
     };
     fwp::ir::check_locals(&program).unwrap();
-    let reference =
-        fwp::interp::Interp::new(&program, Box::new(Vec::new())).call(2, vec![Value::I64(7)]);
+    let reference = fwp::interp::Interp::new(&program, Box::new(Vec::new()))
+        .unwrap()
+        .call(2, vec![Value::I64(7)]);
     assert!(
         matches!(&reference, Err(fwp::interp::Ctl::Trap(message)) if message.contains("division by zero"))
     );
     fwp::opt::optimize(&mut program);
     fwp::ir::check_locals(&program).unwrap();
-    let actual =
-        fwp::interp::Interp::new(&program, Box::new(Vec::new())).call(2, vec![Value::I64(7)]);
+    let actual = fwp::interp::Interp::new(&program, Box::new(Vec::new()))
+        .unwrap()
+        .call(2, vec![Value::I64(7)]);
     assert_eq!(format!("{actual:?}"), format!("{reference:?}"));
 }
 

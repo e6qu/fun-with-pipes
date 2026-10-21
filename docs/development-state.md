@@ -1,50 +1,89 @@
 # Session handoff
 
-## Current preparation
+## Next action
 
-Branch `native-kernel-contracts`, worktree `/private/tmp/fwp-native-kernel-contracts`,
-starts at `f2b5d400`, including the Windows observer repair. No PR or CI
-acceptance exists for this group.
-PR #190 and the await/scope group precede it; their immutable sources and receipts
-are recorded in the primary workspace handoff. Keep one delivery PR at a time.
+Next: publish the combined CPU/foreign-bridge repair, run its Linux AMD64 and
+both WebAssembly preflights, audit every complete log, then extend to six native
+hosts. Merge #190 only after its exact-head gates pass. The next delivery PR will
+combine await fields, State/Jacobian repairs, raw-buffer cleanup, CPU execution
+and foreign-call preparation. Keep one active delivery PR; continue all seven
+areas of [PLAN.md](../PLAN.md) after each accepted merge.
 
-Remove the runtime OpenCL compiler to enforce the no-JIT policy; keep CPU kernels,
-remove obsolete GPU APIs and validate CPU worker counts explicitly (1–256).
-Preserve CPU arithmetic order, cleanup, allocation controls and immutable evidence.
-Migrate instrumentation off the removed OpenCL cleanup function without removing
-ownership observations. Update examples and generated library docs together.
+## Current sources
 
-## Next checks
+- Delivery [#190](https://github.com/e6qu/fun-with-pipes/pull/190): head
+  `4cdf8afa8647cfdaecbc338429bf8a1c1a158210`, production `39673092514`, docs
+  `39673088884`. Benchmark, four macOS jobs and documentation pass; Linux and
+  Windows jobs remain running. Auditor `/private/tmp/fwp-audit-190-final.py`;
+  merger `/private/tmp/fwp-merge-190.py` requires all ten accepted checks.
+- Await measurements: `f2b5d400fedaca3a24208cd3bcdf08f2ebe51c61`, immutable tag
+  `roadmap/revision-await-fields-f2b5d400feda`, run `39678830873`.
+  Linux ARM64, Windows ARM64 and both WebAssembly jobs pass; four native jobs
+  remain running. Auditor `/private/tmp/fwp-audit-task-await-observer.py`.
+  Preserve this source for binary/count comparisons; do not open a separate PR.
+- Combined branch `native-kernel-contracts`, worktree
+  `/private/tmp/fwp-native-kernel-contracts`, includes that await source.
+  Published CPU source `4ce0f3aa93349a098d850fe175c6e8ceab4b1867`, tag
+  `roadmap/revision-cpu-contracts-4ce0f3aa9334`, run `39678998800`, failed.
+  All three complete logs are audited. Repairs below are uncommitted.
 
-Next: publish this preparation for Linux AMD64 and both WASM hosts using the
-`kernels` suite. Then audit every complete log, repair failures and extend to the
-six native hosts. No second delivery PR while #190 is open. All seven project
-areas remain open. The await group runs `39678830873` at `f2b5d400`; its previous
-full run `39675022652` is still being audited after the Windows header failures.
+## Changes and failures
 
-Guarded local checks pass:
+Immediate `task.await | match` can carry fields directly, avoiding temporary
+Some boxes. The matched control restores 34 boxes. State partial captures retain
+creation-scope information; Jacobian output counting gets its own tape scope.
+The C-interop example frees copied sorting/formatting buffers; omitted-free
+controls must fail. Await measurement helpers are
+`/private/tmp/fwp-inspect-task-await-native.py`,
+`/private/tmp/fwp-inspect-task-await-wasm.py` and
+`/private/tmp/fwp-build-task-await-report.py`. Require passing source logs and
+204 native/64 await-module inspections before generating the report.
 
-- `/private/tmp/fwp-check-cpu-contracts.py`: formatting, generated library docs,
-  workflow lint, declaration inventory and documentation audit. The inventory has
-  392 declarations; removing two GPU primitives leaves no coarse review bucket.
-  That is not a proof that all programs have safe tracing-free lifetimes.
-- `/private/tmp/fwp-probe-cpu-contracts.py`: current C executor in prior generated
-  runtime metadata, macOS ARM64 O1. Invalid counts allocate nothing. Normal
-  cleanup passes; omitted input/output cleanup each exits 248 as required.
-- `/private/tmp/fwp-check-kernel-schedule.py`: eleven runner tests pass; all
-  remaining integration targets still have exactly one native shard assignment.
+CPU changes remove runtime OpenCL compilation and obsolete GPU APIs, return
+kernel values directly and require worker counts 1–256. Ownership observations
+stay at the same teardown boundary after removing the OpenCL cleanup function.
+The immutable comparison baseline is unchanged.
 
-Run those scripts through the primary `scripts/local-guard.py`. No full local
-compiler build was performed. New library type checking, interpreter/native
-agreement and platform acceptance remain CI work. The historical kernel baseline
-is unchanged and its section delimiters remain explicit in the comparison test.
+The first CPU preflight found three native tests and one test on each WASM host
+still calling removed private helpers. One native test defined an IO constant.
+Repairs use the public CPU API and an explicit IO function. All other completed
+test targets pass. The Linux strict corpus executes 81/86 programs, with two
+explicit exclusions and three expected compile errors. This is partial evidence.
+Size/sanitizer checks skipped after failure; the repaired workflow runs remaining
+checks despite earlier test failures and publishes CPU logs before longer checks.
 
-## Delivery rules
+Interpreter C bridges previously compiled at the first foreign call. The repair
+makes interpreter construction fallible and prepares bridges before evaluation;
+foreign calls share the prepared library. REPL/debugger foreign-call restrictions
+remain explicit. A compiler-launcher regression detects compilation after a file
+write and checks that missing compilers fail before any program effect.
 
-Use the primary workspace's local guard; full builds and suites stay on runners.
-Require nine exact-head production jobs and documentation before squash merge.
-Commit messages are one line, at most 80 characters, with no body or trailers.
-Continue [PLAN.md](../PLAN.md) after acceptance; no JIT or compatibility layer.
+## Local checks and acceptance limits
+
+Run focused scripts through the primary workspace's
+`python3 scripts/local-guard.py python3 SCRIPT`. Full Rust builds, suites and
+benchmarks stay on GitHub runners. No new Rust compiler was built locally.
+
+- `fwp-check-cpu-contracts.py`: formatting, generated library docs, workflow lint,
+  frozen inventory and docs checks pass. The inventory has 392 declarations and
+  no coarse review bucket; that does not prove all program lifetimes safe.
+- `fwp-check-kernel-schedule.py`: eleven runner tests pass, with all native
+  integration targets assigned exactly once.
+- `fwp-probe-cpu-contracts.py`: current C executor in prior compiler metadata,
+  macOS ARM64 O1. Invalid counts allocate nothing; omitted cleanup exits 248.
+- `fwp-check-cpu-library.py` and `fwp-check-cpu-worker-example.py`: repaired
+  examples pass raw interpretation using the current library/prior compiler.
+- `fwp-probe-foreign-preparation.py`: native program returns 7; old interpreter
+  reproduces compilation after the file write; launcher control exits 88.
+  This validates the regression control, not the new Rust implementation.
+
+Scripts and acceptance receipts are under `/private/tmp`. First CPU publication
+and audit: `fwp-cpu-contracts-publication.json`, `fwp-audit-cpu-contracts.py`.
+After #190 merges, preserve measured tags and base the combined delivery on that
+merge. Require nine final-head production jobs plus documentation before squash.
+Use one-line commit subjects ≤80 characters with empty bodies and no trailers.
+Preserve 64 GiB free disk, target below 2 GiB and sampled workload RSS below 1 GiB;
+never raise or bypass guard limits. Fix every encountered issue.
 
 ## Roadmap status
 

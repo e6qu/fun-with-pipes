@@ -66,6 +66,7 @@ fn discarded_effectful_constructor_fields_keep_their_nominal_types() {
     p.main = Some(2);
     fwp::ir::check_locals(&p).unwrap();
     let reference = fwp::interp::Interp::new(&p, Box::new(Vec::new()))
+        .unwrap()
         .call(0, vec![Value::Str("input".into())])
         .unwrap();
     assert_eq!(reference, Value::I64(17));
@@ -82,6 +83,7 @@ fn discarded_effectful_constructor_fields_keep_their_nominal_types() {
         "discarded constructor context must not become unknown: {locals:?}"
     );
     let result = fwp::interp::Interp::new(&p, Box::new(Vec::new()))
+        .unwrap()
         .call(0, vec![Value::Str("input".into())])
         .unwrap();
     assert_eq!(result, reference);

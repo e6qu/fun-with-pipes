@@ -1,7 +1,7 @@
 //! The C ABI of `foreign "C"` functions and of exported library functions:
 //! how fwp types map to C types. The C backend calls C functions directly;
 //! the interpreter calls them through a generated shim library (built with
-//! the system C compiler and loaded with `dlopen`) whose functions take
+//! the system C compiler and loaded before evaluation) whose functions take
 //! their arguments as 64-bit words.
 //!
 //! | fwp | C |

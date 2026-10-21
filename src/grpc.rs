@@ -2602,6 +2602,11 @@ pub fn serve(prog: &Program, listen: Option<String>, tls: Option<tls::ServerFile
         );
         return 1;
     }
+    let stdout = std::io::stdout();
+    let mut it = match Interp::new(prog, Box::new(std::io::LineWriter::new(stdout))) {
+        Ok(it) => it,
+        Err(error) => return crate::interp::report(&Err(error), prog),
+    };
     let l = match bind(&addr) {
         Ok(l) => l,
         Err(e) => {
@@ -2615,8 +2620,6 @@ pub fn serve(prog: &Program, listen: Option<String>, tls: Option<tls::ServerFile
         "fwp: service {} listening on {}{}",
         server.module, scheme, local
     );
-    let stdout = std::io::stdout();
-    let mut it = Interp::new(prog, Box::new(std::io::LineWriter::new(stdout)));
     match accept_loop(&mut it, l, server, ctx) {
         Ok(()) => 0,
         Err(_) => 1,
@@ -2896,7 +2899,7 @@ mod stream_source_tests {
     #[test]
     fn cached_positions_release_the_source_after_end_and_last_early_owner() {
         let program = Program::default();
-        let mut it = Interp::new(&program, Box::new(std::io::sink()));
+        let mut it = Interp::new(&program, Box::new(std::io::sink())).unwrap();
         for count in [1, 32, 128] {
             for results in [false, true] {
                 for early in [false, true] {
@@ -2969,7 +2972,7 @@ mod stream_source_tests {
     #[test]
     fn cached_error_ends_release_sources_and_failed_reads_keep_them() {
         let program = Program::default();
-        let mut it = Interp::new(&program, Box::new(std::io::sink()));
+        let mut it = Interp::new(&program, Box::new(std::io::sink())).unwrap();
         for results in [false, true] {
             for malformed in [false, true] {
                 let source = queued(&program, 0, results, INTERNAL);
@@ -3006,7 +3009,7 @@ mod stream_source_tests {
     fn sender_cancelled_before_entry_does_not_force_input() {
         let program = Program::default();
         for cancelled in [false, true] {
-            let mut it = Interp::new(&program, Box::new(std::io::sink()));
+            let mut it = Interp::new(&program, Box::new(std::io::sink())).unwrap();
             let source = queued(&program, 0, false, OK);
             source.stream.borrow_mut().remote_end = false;
             let before = source.conn.borrow().out.clone();
@@ -3079,7 +3082,7 @@ mod stream_source_tests {
             ..Program::default()
         };
         for results in [false, true] {
-            let mut it = Interp::new(&program, Box::new(std::io::sink()));
+            let mut it = Interp::new(&program, Box::new(std::io::sink())).unwrap();
             let mut source = queued(&program, 2, results, OK);
             Rc::get_mut(&mut source).unwrap().dec =
                 Decoder::Fwp(Value::Closure(Rc::new(Closure {
@@ -3105,7 +3108,7 @@ mod stream_source_tests {
     #[test]
     fn recursive_and_cancelled_waiters_preserve_the_active_reader() {
         let program = Program::default();
-        let mut it = Interp::new(&program, Box::new(std::io::sink()));
+        let mut it = Interp::new(&program, Box::new(std::io::sink())).unwrap();
         let source = queued(&program, 0, false, OK);
         let cell = Rc::new(RefCell::new(StreamCell::Pending(source.clone())));
         source.reader.set(Arc::as_ptr(&it.task));

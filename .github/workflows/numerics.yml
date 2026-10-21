@@ -1710,7 +1710,7 @@ jobs:
         if: inputs.suite == 'paths' || inputs.suite == 'filesystem'
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
       - name: Retrieve immutable CPU kernel baseline
-        if: inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders'
+        if: ${{ !cancelled() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: |
           git fetch --no-tags --depth=1 origin 21a621c699d11a84c05f955935dc95dcfb8adbf2
           git show 21a621c699d11a84c05f955935dc95dcfb8adbf2:runtime/fwp_rt_kernel.c > kernel-baseline.c
@@ -1962,27 +1962,49 @@ jobs:
           path: decoder-evidence/
           if-no-files-found: ignore
       - name: CPU kernel ownership
-        if: inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders'
+        if: ${{ !cancelled() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         env:
           FWP_KERNEL_ARTIFACTS: kernel-evidence
           FWP_KERNEL_BASELINE: kernel-baseline.c
-        run: cargo test --no-fail-fast --test cpu_kernel_ownership --test stdlib_doc
+        shell: bash
+        run: |
+          mkdir -p kernel-evidence
+          git rev-parse HEAD > kernel-evidence/source.txt
+          set -o pipefail
+          cargo test --no-fail-fast --test cpu_kernel_ownership --test stdlib_doc 2>&1 | tee kernel-evidence/ownership.log
       - name: CPU worker limits, interpreter agreement and strict ARC corpus
         if: ${{ !cancelled() && inputs.suite == 'kernels' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test numerics --test stdlib_doc
+        shell: bash
+        run: |
+          mkdir -p kernel-evidence
+          set -o pipefail
+          cargo test --no-fail-fast --test numerics --test stdlib_doc 2>&1 | tee kernel-evidence/api.log
+      - name: Publish CPU diagnostics before longer corpus checks
+        if: ${{ !cancelled() && inputs.suite == 'kernels' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: kernel-logs-${{ matrix.runner }}
+          path: |
+            kernel-evidence/source.txt
+            kernel-evidence/ownership.log
+            kernel-evidence/api.log
+          if-no-files-found: error
+      - name: Foreign bridges before evaluation and interactive tooling
+        if: ${{ !cancelled() && inputs.suite == 'kernels' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
+        run: cargo test --no-fail-fast --test ffi --test foreign_callback_ownership --test repl --test debugger
       - name: Maintained programs after removal of runtime GPU compilation
         if: ${{ !cancelled() && inputs.suite == 'kernels' && runner.os != 'Windows' }}
         env:
           FWP_ARC_CORPUS_ARTIFACTS: kernel-evidence/corpus
         run: cargo test --test arc_corpus -- --nocapture
       - name: CPU kernel size validation order
-        if: inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders'
+        if: ${{ !cancelled() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact
       - name: Interpreter final reduction block
-        if: inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders'
+        if: ${{ !cancelled() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --lib numerics::kernel_boundary_tests::final_reduction_block_does_not_wrap_at_the_address_limit -- --exact
       - name: CPU kernel sanitized size and cleanup controls
-        if: (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && runner.os != 'Windows'
+        if: ${{ !cancelled() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && runner.os != 'Windows' }}
         run: cargo test --test device_bounds device_allocations_are_bounded_and_cleanup_controls_detect_omissions -- --exact
       - uses: actions/upload-artifact@v7
         if: always() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders')
