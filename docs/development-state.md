@@ -12,15 +12,16 @@ Do not merge or publish a second PR from this older base.
 
 Next: once PR #182 passes all nine production gates and documentation and is squash
 merged, transplant this preparation onto that accepted merge. Preserve its
-compiler fixes and current handoff. Then implement and test the range-preserving
-multiplication candidate below in the next coherent batch.
+compiler fixes and current handoff. Then verify the range-preserving multiplication candidate below in the next
+coherent batch.
 
 ## Completed experiment
 
 Measurement source `7a8803762e240998605c6442afbbb33ed8157133` is preserved by
 `roadmap/revision-integer-range-7a880376`. Run `39530460995` passed on Linux AMD64
 and ARM64; both complete logs are audited clean in
-`/private/tmp/fwp-range-counting-audit.json`. Compiler code is unchanged.
+`/private/tmp/fwp-range-counting-audit.json`. That measurement source did not
+change compiler code.
 
 The ninth variant changes only generated I64 multiplication: it keeps
 `__builtin_mul_overflow(x, y, &r)` and the overflow trap, then returns `x*y`
@@ -44,7 +45,17 @@ All timed outputs and separate managed-storage controls pass; native semantic
 preflight was explicitly skipped, so this experiment cannot accept a compiler
 change. The validator is published in `30e5ac65`.
 
-## Next implementation and checks
+## Candidate implementation and remaining checks
+
+The local candidate changes the returned expression for signed 64-bit
+multiplication (I64 and ISize), after its existing overflow check. A new scalar regression uses runtime CLI operands,
+independent i128 expectations for both types, both memory modes and native builds
+at O0/O1/O2/O3.
+Its UBSan controls check the actual emitted primitive at O1/O2/O3 and deliberately
+remove the overflow check to prove the sanitizer detects the unsafe product.
+Guarded formatting, whitespace and documentation checks pass (2.66s); native
+execution is still pending. The ISize extension also passes formatting (0.13s).
+Do not claim this implementation is accepted or publish another PR before #182.
 
 Preserve the existing overflow test before exposing the safe I64 product.
 Add runtime-input tests for zero, both signs, I64 extrema and values immediately

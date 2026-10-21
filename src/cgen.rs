@@ -1490,7 +1490,14 @@ impl Scalar {
                 None => s.push_str(&format!("if (__builtin_{}_overflow(x, y, &r)) {}", op, ovf)),
             },
         }
-        format!("{}\n    return (V)r;", s)
+        // The preceding overflow check proves this product fits I64. Exposing
+        // the expression on that continuation lets the C compiler retain operand
+        // range information that it can lose through the builtin's output slot.
+        let result = match (self, op) {
+            (Scalar::Signed(64), "mul") => "(x * y)",
+            _ => "r",
+        };
+        format!("{s}\n    return (V){result};")
     }
 }
 
