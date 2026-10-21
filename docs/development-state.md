@@ -2,12 +2,15 @@
 
 ## Next action
 
-Next: publish the accumulated compilation/workflow repairs and completed await
-report, then run the CPU preflight before the combined delivery. The preceding
-`245fefda` preflight is fully audited; its only failures are repaired below.
+Next: audit source `4d482aa6d49730f788bf9b0b0d3e31e7e9e69b2d` in CPU
+preflight `39685395310` with `/private/tmp/fwp-audit-cpu-evidence.py`.
+Publication `/private/tmp/fwp-cpu-evidence-publication.json`; immutable tag
+`roadmap/revision-cpu-evidence-4d482aa6d497`. It contains every identified repair
+and the completed await report. The preceding `245fefda` run is fully audited.
 Merge #190 after its two remaining Linux gates pass, preserve the measured tags,
-and base the next PR on that merge. Keep one active delivery PR and continue
+and base the combined PR on that merge. Keep one active delivery PR and continue
 all seven areas of [PLAN.md](../PLAN.md) after every accepted merge.
+
 
 ## Current sources
 
@@ -29,9 +32,17 @@ all seven areas of [PLAN.md](../PLAN.md) after every accepted merge.
   audited: both WASM jobs pass; Linux fails only the unused FFI import and Rust
   test-string escaping. All executed Linux targets pass, including CPU ownership,
   FFI/tooling, 81/86 corpus programs, size limits and sanitizer controls.
-  Both compilation errors are repaired locally; the complete numerics harness
+  Both compilation errors are repaired in `4d482aa6`; the complete numerics harness
   compiles in a guarded standalone check. The corpus artifact variable is also
   corrected and Windows production now explicitly runs `numerics`.
+  At `4d482aa6`, Clippy and CPU ownership pass. The worker-limit test now
+  executes but enables forbidden tracing/reuse verification on ARC binaries.
+  The local fix explicitly selects all runtime settings by memory mode, preserving
+  immediate ARC freeing. An obsolete interpreter thread clamp is replaced by
+  a checked internal precondition; valid counts still use fewer workers for small
+  inputs. The complete Linux job is audited and has no other failure. A named-host
+  CPU preflight now omits the duplicate WASM jobs; `native_runner=all` and
+  final production retain their full coverage.
 
 ## Changes and failures
 
@@ -81,6 +92,10 @@ benchmarks stay on GitHub runners. No new Rust compiler was built locally.
   macOS ARM64 O1. Invalid counts allocate nothing; omitted cleanup exits 248.
 - `fwp-check-cpu-library.py` and `fwp-check-cpu-worker-example.py`: repaired
   examples pass raw interpretation using the current library/prior compiler.
+- `fwp-probe-cpu-worker-limits.py`: current C executor with prior-compiler
+  private-helper metadata, both operations and all seven boundary counts under
+  explicit ARC/tracing settings at O0/O2: all 56 cases pass. Public API/compiler
+  acceptance remains CI work.
 - `fwp-probe-foreign-preparation.py`: native program returns 7; old interpreter
   reproduces compilation after the file write; launcher control exits 88.
   This validates the regression control, not the new Rust implementation.

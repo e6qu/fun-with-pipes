@@ -717,7 +717,8 @@ impl Kernel<'_> {
 /// Split `units` units into `threads` contiguous ranges, as the C
 /// runtime does.
 fn ranges(units: usize, threads: usize) -> Vec<(usize, usize)> {
-    let t = threads.clamp(1, 256).min(units.max(1));
+    debug_assert!((1..=256).contains(&threads));
+    let t = threads.min(units.max(1));
     (0..t)
         .map(|i| (i * units / t, (i + 1) * units / t))
         .collect()

@@ -153,6 +153,10 @@ main = () | count | CpuParallel | tap (device.available | echo) | flip {operatio
             continue;
         }
         for memory in ["arc", "tracing"] {
+            // ARC must free storage immediately; tracing-only stress and
+            // retained poisoned objects are deliberately forbidden in that mode.
+            let verification = if memory == "arc" { "0" } else { "1" };
+            let collector = if memory == "arc" { "off" } else { "on" };
             for opt in ["-O0", "-O2"] {
                 let binary = dir.0.join("workers.exe");
                 let mut command = Command::new(fwp());
@@ -167,9 +171,10 @@ main = () | count | CpuParallel | tap (device.available | echo) | flip {operatio
                             &binary,
                             &[
                                 ("FWP_TEST_WORKERS", setting),
-                                ("FWP_GC_STRESS", "1"),
-                                ("FWP_GC_VERIFY", "1"),
-                                ("FWP_REUSE_VERIFY", "1")
+                                ("FWP_GC", collector),
+                                ("FWP_GC_STRESS", verification),
+                                ("FWP_GC_VERIFY", verification),
+                                ("FWP_REUSE_VERIFY", verification)
                             ]
                         ),
                         *expected,

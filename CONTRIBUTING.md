@@ -76,10 +76,13 @@ refreshing the registry. A failed initial fetch remains a failed job; no alterna
 registry or dependency version is selected. Network behavior inside fwp tests is
 unchanged.
 
-For an
-early native probe in `numerics.yml`, `native_runner` selects one runner instead
-of the suite's matrix. Use `all` for complete evidence; report collectors still
-require every expected native host. This does not change production acceptance.
+For an early native probe in `numerics.yml`, `native_runner` selects one runner
+instead of the suite's native matrix. In `kernels` and `queued-sockets`, a named
+runner also omits the two WebAssembly jobs; `native_runner=all` runs those jobs
+alongside all six native hosts. This lets a CPU-only test repair run promptly.
+Use `all` for complete focused evidence; report collectors still require every
+expected host. Production acceptance continues to require its full matrix,
+including both Linux WebAssembly suites.
 The task/channel proof and WebAssembly jobs use production's Rust O1 compiler/test
 profile with debug assertions and overflow checks enabled. Generated C still uses
 the explicit O0/O1/O2 settings requested by each test. The native ownership batch

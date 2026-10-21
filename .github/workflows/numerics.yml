@@ -1441,7 +1441,7 @@ jobs:
           CC: gcc
         run: cargo test --test closure_ownership fixed_function_values_preserve_aliases_and_effect_order -- --exact --nocapture
   fixed_functions_wasi:
-    if: inputs.suite == 'fixed-functions' || inputs.suite == 'channel-proof' || inputs.suite == 'kernels' || (inputs.suite == 'queued-sockets' && inputs.native_runner == 'all')
+    if: inputs.suite == 'fixed-functions' || inputs.suite == 'channel-proof' || ((inputs.suite == 'kernels' || inputs.suite == 'queued-sockets') && inputs.native_runner == 'all')
     strategy:
       fail-fast: false
       matrix:
