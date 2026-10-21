@@ -59,5 +59,9 @@ hosts, both WebAssembly hosts, generated C and executed machine-code inspection.
 The runtime probe also deliberately omits the result retain and must fail while
 an independent alias keeps the storage safe to inspect. Overflow and cancellation
 checks must preserve other owners. Final production acceptance remains separate.
+The first WebAssembly preflight exposed an ineffective negative test: this
+example creates no State storage, so omitting State cleanup cannot detect a leak.
+Its corrected control omits destruction of cached task results instead. Existing
+State and queue cleanup controls remain on the fixtures that exercise them.
 This is a comparison of two fwp representations, not a timing benchmark or a
 claim of parity with C/Rust. Required sharing and task storage remain costs.

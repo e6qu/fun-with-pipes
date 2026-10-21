@@ -14,11 +14,14 @@ square : List[t] -> t where Ring[t], Dup[t]
 square = head | option.unwrap-or zero | fork mul id id
 cube : List[t] -> t where Ring[t], Dup[t]
 cube = head | option.unwrap-or zero | fork mul id (fork mul id id)
+with-unused : List[Rev[F64]] -> List[Rev[F64]]
+with-unused = tap (length | ad.tape | ignore) | map (fork mul id id)
 "#;
 const MAIN: &str = r#"
 main = [
     [0.0] | grad (grad square | sum) | eq [2.0] | echo,
     [3.0] | grad (grad (grad cube | sum) | sum) | eq [6.0] | echo,
+    [2.0, 3.0] | rev.jacobian (map (fork mul id id)) | eq [[4.0, 0.0], [0.0, 6.0]] | echo,
     [2.0, 3.0] | rev.jacobian (grad product) | eq [[0.0, 1.0], [1.0, 0.0]] | echo,
     [0.5] | grad (grad (head | option.unwrap-or zero | sin) | sum)
         | head | option.unwrap-or zero | add (sin 0.5) | abs | lt 1e-14 | echo,
@@ -31,6 +34,8 @@ main = [
         | flatten | sum | eq 130.0 | echo,
     [1.0] | grad (grad (rev._replay 300 (map (add one)) | square) | sum)
         | eq [2.0] | echo,
+    range 0 16 | each (const [2.0, 3.0] | rev.jacobian with-unused
+        | eq [[4.0, 0.0], [0.0, 6.0]] | echo),
 ] | ignore
 "#;
 
@@ -46,7 +51,7 @@ fn nested_reverse_derivatives_match_analytic_values_and_both_engines() {
             .args(["run", "--interp"])
             .arg(&source),
     );
-    assert_eq!(reference.stdout, "True\n".repeat(10).as_bytes());
+    assert_eq!(reference.stdout, "True\n".repeat(27).as_bytes());
     assert!(reference.stderr.is_empty());
     for arc in [false, true] {
         for opt in ["-O1", "-O2"] {
@@ -66,6 +71,18 @@ fn nested_reverse_derivatives_match_analytic_values_and_both_engines() {
                 .find("static void *fwp_main_thread(void *arg) {")
                 .unwrap();
             let (runtime, main) = code.split_at(start);
+            // Observe cleanup before the next expression, not just after global
+            // shutdown. The Jacobian's counting pass creates an unused raw tape;
+            // each of sixteen rounds must release it along with its row tapes.
+            let print = "static V fwp_p_print(V s) {";
+            assert_eq!(runtime.matches(print).count(), 1);
+            let runtime = runtime.replace(
+                print,
+                &format!(
+                "static void nested_tapes_finished(void);\n{print}\n    nested_tapes_finished();"
+            ),
+            );
+            let runtime = format!("{runtime}\nstatic void nested_tapes_finished(void) {{\n    if(fwp_owned_tapes)exit(196);\n    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(197);\n}}\n");
             let checked_code = format!("{runtime}{}", main
                 .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t nested_budget=fwp_gc.budget_given;\n")
                 .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_owned_tapes)exit(193);\n    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(194);\n#if FWP_ARC_ONLY\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget<nested_budget)exit(195);\n#endif\n"));

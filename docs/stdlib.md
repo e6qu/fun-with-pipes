@@ -2626,7 +2626,8 @@ grad-vector : (Vector[Rev[t], n] -> Rev[t]) -> Vector[t, n] -> Vector[t, n] wher
 vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where ReverseScalar[t], Dup[t]
 
 # The Jacobian in reverse mode, one backward pass per output (rows are
-# outputs, columns are inputs, as for `jacobian`).
+# outputs, columns are inputs, as for `jacobian`). It first evaluates f once
+# to count its outputs, then once per row. Each evaluation has its own tape scope.
 rev.jacobian : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[List[t]] where ReverseScalar[t], Zero[t], One[t], Dup[t]
 
 # Checkpointed vector-Jacobian products for repeated pure steps. A checkpoint

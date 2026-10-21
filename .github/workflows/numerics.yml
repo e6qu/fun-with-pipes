@@ -549,6 +549,11 @@ jobs:
       - name: Retained socket callbacks and resource cleanup
         if: ${{ !cancelled() && inputs.suite == 'queued-sockets' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test call_effects --test queued_functions --test native_sockets --test channel_cycle_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context
+      - name: ARC examples and explicit remaining rejection reasons
+        if: ${{ !cancelled() && inputs.suite == 'channel-proof' && runner.os != 'Windows' }}
+        env:
+          FWP_ARC_ARTIFACTS: queued-function-evidence/corpus
+        run: cargo test --test arc_corpus -- --nocapture
       - name: Queued gRPC response callbacks and transport cleanup
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         shell: bash
@@ -1361,7 +1366,7 @@ jobs:
         run: cargo test --lib
       - name: Queue capture and receiver-scope regressions
         if: ${{ !cancelled() && matrix.part == 'queued' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested -- --nocapture --test compiler_call_liveness --test worker_preparation_ownership --test borrowed_callbacks --test record_conversion_ownership
+        run: cargo test --no-fail-fast --test queued_functions --test arc_execution --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested --test compiler_call_liveness --test worker_preparation_ownership --test borrowed_callbacks --test record_conversion_ownership -- --nocapture
       - name: Preserve the compiler for bounded diagnostic checks
         if: ${{ !cancelled() && matrix.part == 'queued' }}
         uses: actions/upload-artifact@v7

@@ -939,10 +939,21 @@ The following rules explain common boundaries:
 State operations need a proved handler. Returning a closure does not extend its
 old handler's lifetime, though it can run under a new one. The checker follows
 known targets, captures and stored values; unknown targets are rejected.
+Partial applications created with different active handlers have separate capture
+summaries. For example, a plain fold must not acquire the State requirements of
+another fold merely because both use the same `uncurry` helper. This distinction
+is internal to the proof; it does not keep a handler alive. An escaped callback
+is checked in the scope where it is actually called.
 Derivative tokens likewise do not extend tape lifetime. Stale, mixed or cross-task
 tokens trap. F128/nested tapes own typed weights; scope exit, failure, cancellation
 and library teardown release them. Workspace reuse is bounded and counted
 separately from returned arrays. See [numerics](numerics.md#reverse-mode).
+
+`rev.jacobian f` calls `f` once to count outputs, then once per output row to
+compute derivatives. The counting pass has its own tape scope, just like each
+row. Temporary tapes must be released before the next expression, including when
+`f` creates a tape that it never uses. These scope repairs are under validation;
+see [the handoff](development-state.md) for checked revisions and remaining gates.
 
 Process calls borrow arguments/input during execution. `process.run` and
 `process.run-input` return owned status/output/error records; `process.call`

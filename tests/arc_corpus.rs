@@ -74,34 +74,21 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
             );
             report.push_str(&format!("rejected\t{name}\t{reason:?}\n"));
             rejected += 1;
-            if [
-                "any_sized",
-                "basics",
-                "case_of_case",
-                "collections_build",
-                "comptime",
-                "float_literals",
-                "forward_aliases",
-                "fusion_find_trap",
-                "fusion_iter",
-                "fusion_lists",
-                "fusion_traps",
-                "loop_nested_state",
-                "map_lookup_match",
-                "opt_constant_order",
-                "optimizer",
-                "reuse_aliasing",
-                "show_ints",
-                "traits",
-                "trap_format_count",
-                "unboxed_records",
-                "optimizer_bounded",
-            ]
-            .contains(&name)
-            {
-                failures.push(format!(
-                    "previously eligible ARC program {name} was rejected: {reason}"
-                ));
+            // Keep the remaining gaps explicit. Any new rejection, including
+            // a newly added example, needs a repair rather than a passing count.
+            let expected = match name {
+                "ad_task_reuse" => Some("outside an autodiff scope"),
+                "devices" => {
+                    Some("primitive `device.gpu-available` has no tracing-free ownership contract")
+                }
+                "ffi" => Some("type `Ptr[U8]` has no tracing-free ownership contract"),
+                "stdlib_fixes" | "trap_tensor_fills" | "trap_tensor_length" => {
+                    Some("primitive `device.gpu-run` has no tracing-free ownership contract")
+                }
+                _ => None,
+            };
+            if !expected.is_some_and(|message| reason.contains(message)) {
+                failures.push(format!("unexpected ARC rejection of {name}: {reason}"));
             }
         } else {
             let code = std::fs::read_to_string(&cfile).unwrap();
@@ -189,7 +176,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
             std::fs::write(path.join("corpus.txt"), &report).unwrap();
         }
     }
-    assert!(executed > 0 && rejected > 0);
+    assert!(executed > 0);
     assert_eq!(executed + rejected + compile_errors, total);
     report.push_str(&format!(
         "total={total} executed={executed} rejected={rejected} compile-errors={compile_errors}\n"

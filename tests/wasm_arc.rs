@@ -854,10 +854,13 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
             let drop = "c->owner.queue_drop(element);";
             assert_eq!(measured.matches(drop).count(), 1);
             let missing_queue = measured.replace(drop, "(void)element;");
-            let (retained_label, retained) = if matches!(fixture, "tasks" | "task-await-fields") {
-                ("missing-state", &missing_state)
-            } else {
-                ("missing-queue", &missing_queue)
+            let result_drop = "if (t->result_drop && result) t->result_drop(result);";
+            assert_eq!(measured.matches(result_drop).count(), 1);
+            let missing_result = measured.replace(result_drop, "/* omit cached result owner */");
+            let (retained_label, retained) = match fixture {
+                "tasks" => ("missing-state", &missing_state),
+                "task-await-fields" => ("missing-result", &missing_result),
+                _ => ("missing-queue", &missing_queue),
             };
             for asyncify in [false, true] {
                 if asyncify && !have_asyncify {

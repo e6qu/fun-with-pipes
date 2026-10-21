@@ -2,14 +2,48 @@
 
 ## Next action
 
-Next: validate and publish the direct task-await result candidate on branch
-`task-await-fields`, worktree `/private/tmp/fwp-task-await-fields`. It is based on
-corrected ownership source `bf78c7ab8fcc052b5931165f28393450b9106d21`. It has no
-published CI source yet. Keep this preparation separate while PR #190 finishes
-validation; there is no second delivery PR.
+Next: finish auditing preflight `39666813009` at
+`82905d6b1a46d6bbb16ecdbcb034b0871da0ff10`, then publish the accumulated repairs
+and scope fixes together. Worktree `/private/tmp/fwp-task-await-fields`, branch
+`task-await-fields`, is based on PR #190 source `bf78c7ab`. No second PR exists. A discovered auxiliary workflow command placed four Cargo
+test selections after the harness separator; these now precede `-- --nocapture`,
+so all intended targets actually run. The same repair is included in PR #190.
+Audit with `/private/tmp/fwp-audit-task-await-preflight.py`; keep its failed-source
+receipt. Full final-head acceptance is still required after the corrected tests.
 
-[The comparison protocol](measurements/task-await-fields.md) explains the program,
-restored-box control, expected counts and limits. No saving is measured yet.
+The complete Linux job passed. Both WebAssembly hosts failed only the new
+fixture's eight missing-State controls each: it allocates no State, so deleting State cleanup
+cannot leak. The repaired control deletes cached task-result destruction instead.
+All three full job logs are now audited; there are no other failures. Publication receipt:
+`/private/tmp/fwp-task-await-publication.json`.
+
+The same group now repairs two existing ARC example failures:
+
+- `iteration_consumers`: all 22 expressions work separately; a plain fold and a
+  stateful fold failed together because partial captures shared one summary. The
+  proof now distinguishes creation scopes, while checking calls in their actual
+  invocation scope. A regression also rejects an escaped stateful partial.
+- `autodiff_reverse`: `rev.jacobian` counted outputs without a tape scope. That
+  pass now has scoped cleanup. Repeated Jacobians with deliberately unused tapes
+  check release before each printed result, not only at global shutdown.
+
+The previously accepted Linux corpus executed 75 of 86 programs, rejected eight
+and verified three compile errors. Its old test permitted arbitrary new ARC
+rejections outside a small named subset. The candidate requires every program to
+execute unless it matches one of six explicit remaining rejection reasons. GPU,
+foreign-pointer and deliberately invalid cross-task AD cases remain visible gaps;
+this is not evidence of support. Source-specific corpus evidence is saved under
+`/private/tmp/fwp-189-arc-corpus`; minimized programs/IR are under
+`/private/tmp/fwp-arc-corpus-isolation`. Unix focused CI now runs this stricter test.
+
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-check-scope-repairs.py`
+passes rustfmt, fwp formatting, all 27 derivative outputs under the prior compiler's
+raw interpreter, standalone generated-library-doc refresh and diff checks. The
+initial fwp formatting failure was fixed. The changed Rust proof, new library
+implementation and pre-shutdown probes are not yet CI verified.
+
+[The allocation comparison](measurements/task-await-fields.md) explains the
+program, restored-box control, expected counts and limits. No saving is measured yet.
 
 ## Candidate and checks
 
@@ -45,13 +79,13 @@ rustfmt, fixture/raw interpretation, 394-declaration frozen ownership inventory,
 The later workflow edit publishes ownership logs before REST tests; actionlint
 and documentation checks pass via `/private/tmp/fwp-check-task-channel-docs.py`. No full compiler build ran locally.
 
-Remaining before publication: confirm the
+Remaining before acceptance: confirm the
 matched control and WebAssembly cleanup controls under the changed compiler on
 CI, inspect actual generated C and binaries, and record actual counts. Do not
 interpret the expected 34-box difference as a result before those tests pass.
 Full builds, benchmarks and full gates stay on runners. Use the primary guard;
 keep 64 GiB free disk, target below 2 GiB, sampled RSS below 1 GiB and 180 seconds.
-Latest disk check: 67 GiB free. Do not raise limits.
+Latest disk check: 66 GiB free. Do not raise limits.
 
 ## Preceding ownership delivery
 
