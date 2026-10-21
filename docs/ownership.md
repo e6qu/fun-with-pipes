@@ -939,11 +939,11 @@ The following rules explain common boundaries:
 State operations need a proved handler. Returning a closure does not extend its
 old handler's lifetime, though it can run under a new one. The checker follows
 known targets, captures and stored values; unknown targets are rejected.
-Partial applications created with different active handlers have separate capture
-summaries. For example, a plain fold must not acquire the State requirements of
-another fold merely because both use the same `uncurry` helper. This distinction
-is internal to the proof; it does not keep a handler alive. An escaped callback
-is checked in the scope where it is actually called.
+A partial application is a function with some arguments already supplied. The
+proof keeps separate records of those saved arguments for calls inside and
+outside a State handler. A plain fold must not acquire the State requirements
+of another fold merely because both use the same `uncurry` helper. This does not
+keep a handler alive: an escaped callback is checked where it is actually called.
 Derivative tokens likewise do not extend tape lifetime. Stale, mixed or cross-task
 tokens trap. F128/nested tapes own typed weights; scope exit, failure, cancellation
 and library teardown release them. Workspace reuse is bounded and counted

@@ -79,13 +79,13 @@ fn nested_reverse_derivatives_match_analytic_values_and_both_engines() {
             let runtime = runtime.replace(
                 print,
                 &format!(
-                "static void nested_tapes_finished(void);\n{print}\n    nested_tapes_finished();"
+                "static unsigned nested_scope_checks;\nstatic void nested_tapes_finished(void);\n{print}\n    nested_tapes_finished();"
             ),
             );
-            let runtime = format!("{runtime}\nstatic void nested_tapes_finished(void) {{\n    if(fwp_owned_tapes)exit(196);\n    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(197);\n}}\n");
+            let runtime = format!("{runtime}\nstatic void nested_tapes_finished(void) {{\n    nested_scope_checks++;\n    if(fwp_owned_tapes)exit(196);\n    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(197);\n}}\n");
             let checked_code = format!("{runtime}{}", main
                 .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t nested_budget=fwp_gc.budget_given;\n")
-                .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_owned_tapes)exit(193);\n    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(194);\n#if FWP_ARC_ONLY\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget<nested_budget)exit(195);\n#endif\n"));
+                .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(nested_scope_checks != 27)exit(198);\n    if(fwp_owned_tapes)exit(193);\n    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(194);\n#if FWP_ARC_ONLY\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget<nested_budget)exit(195);\n#endif\n"));
             let binary = dir.join("nested.exe");
             fwp::cgen::compile_c(&checked_code, &binary, opt).unwrap();
             let output = checked(

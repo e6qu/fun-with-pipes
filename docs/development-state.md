@@ -2,125 +2,109 @@
 
 ## Next action
 
-Next: finish auditing preflight `39666813009` at
-`82905d6b1a46d6bbb16ecdbcb034b0871da0ff10`, then publish the accumulated repairs
-and scope fixes together. Worktree `/private/tmp/fwp-task-await-fields`, branch
-`task-await-fields`, is based on PR #190 source `bf78c7ab`. No second PR exists. A discovered auxiliary workflow command placed four Cargo
-test selections after the harness separator; these now precede `-- --nocapture`,
-so all intended targets actually run. The same repair is included in PR #190.
-Audit with `/private/tmp/fwp-audit-task-await-preflight.py`; keep its failed-source
-receipt. Full final-head acceptance is still required after the corrected tests.
+Next: publish and audit the complete six-native/two-WebAssembly focused matrix
+for this group, then inspect its executed binaries and record source-specific
+allocation counts. Keep this preparation separate until PR #190 merges; there
+must be only one delivery PR. All seven areas of [PLAN.md](../PLAN.md) remain open.
 
-The complete Linux job passed. Both WebAssembly hosts failed only the new
-fixture's eight missing-State controls each: it allocates no State, so deleting State cleanup
-cannot leak. The repaired control deletes cached task-result destruction instead.
-All three full job logs are now audited; there are no other failures. Publication receipt:
-`/private/tmp/fwp-task-await-publication.json`.
+Worktree `/private/tmp/fwp-task-await-fields`, branch `task-await-fields`.
+The next publication receipt is `/private/tmp/fwp-task-await-full-publication.json`;
+it records the exact source, immutable tag and run. Final production acceptance
+will still require nine jobs and documentation after the preceding PR merges.
 
-The same group now repairs two existing ARC example failures:
+## Changes in this group
 
-- `iteration_consumers`: all 22 expressions work separately; a plain fold and a
-  stateful fold failed together because partial captures shared one summary. The
-  proof now distinguishes creation scopes, while checking calls in their actual
-  invocation scope. A regression also rejects an escaped stateful partial.
-- `autodiff_reverse`: `rev.jacobian` counted outputs without a tape scope. That
-  pass now has scoped cleanup. Repeated Jacobians with deliberately unused tapes
-  check release before each printed result, not only at global shutdown.
+- Immediate `task.await | match` passes tag/payload fields directly, removing a
+  temporary Some box. Escaping options keep their representation; shared results
+  keep required owners. Cancellation and retain failures preserve existing order.
+- Partial applications created inside/outside State handlers keep separate saved
+  argument summaries. An escaped function is still checked where it is called.
+  This repairs two individually valid folds being rejected when combined.
+- `rev.jacobian` counts outputs in its own tape scope, then computes rows in their
+  existing scopes. Repeated Jacobians with deliberately unused tapes must release
+  them before each print. The observer must run for all 27 printed checks.
+- The ARC example suite rejects unexpected exclusions instead of silently counting
+  them. Six explicitly excluded programs remain: GPU operations, foreign pointers, and an
+  intentionally invalid cross-task derivative program. These are not tested support.
+- The C-interop example now frees raw sorting/formatting buffers after copying its
+  results, including buffers allocated by nested qsort callbacks. A separate
+  physical-buffer counter detects omitted frees. Raw pointers remain outside
+  checked ARC; this fixes the existing example without relaxing that policy.
 
-The previously accepted Linux corpus executed 75 of 86 programs, rejected eight
-and verified three compile errors. Its old test permitted arbitrary new ARC
-rejections outside a small named subset. The candidate requires every program to
-execute unless it matches one of six explicit remaining rejection reasons. GPU,
-foreign-pointer and deliberately invalid cross-task AD cases remain visible gaps;
-this is not evidence of support. Source-specific corpus evidence is saved under
-`/private/tmp/fwp-189-arc-corpus`; minimized programs/IR are under
-`/private/tmp/fwp-arc-corpus-isolation`. Unix focused CI now runs this stricter test.
+[The await comparison](measurements/task-await-fields.md) describes the input,
+control, expected counts and limits. Sixteen string tasks are awaited twice;
+integer and F128 results add two reads, giving 34 restored Some boxes in the
+matched control. Cancellation and an escaping option have no count difference.
+This is a comparison of two fwp representations, not elapsed time or C/Rust parity.
+The focused artifact inventory includes 34 native binaries per host: the prior
+22 controls, eight await comparisons, and four raw-buffer controls.
 
-`python3 scripts/local-guard.py python3 /private/tmp/fwp-check-scope-repairs.py`
-passes rustfmt, fwp formatting, all 27 derivative outputs under the prior compiler's
-raw interpreter, standalone generated-library-doc refresh and diff checks. The
-initial fwp formatting failure was fixed. The changed Rust proof, new library
-implementation and pre-shutdown probes are not yet CI verified.
+## Verified preflight and remaining checks
 
-[The allocation comparison](measurements/task-await-fields.md) explains the
-program, restored-box control, expected counts and limits. No saving is measured yet.
+Source `bed604ef5275e6600028bd5f3892c927b6653cad` passed all three jobs in
+`39670240111`: Linux AMD64 and both WebAssembly hosts. Every complete log is
+audited. Publication `/private/tmp/fwp-task-await-repair-publication.json`, audit
+`/private/tmp/fwp-audit-task-await-repair.py`, receipt
+`/private/tmp/fwp-task-await-repair-acceptance.json`. Compiler units, the new State
+regression, Jacobian cleanup, stricter corpus, 30-binary inspector and transport
+checks pass. The corpus executes 77 of 86 programs, rejects six with the stated
+reasons, and verifies three expected compile errors; the accepted parent executed
+75. This source predates the raw-buffer repair and required observer
+call count; those additional changes need the next matrix.
 
-## Candidate and checks
+The preceding `82905d6b` preflight is fully audited: Linux passed; both WASM hosts
+failed only eight ineffective missing-State controls each. The await fixture
+creates no State storage. Its corrected control omits cached task-result cleanup
+instead; that repair passes at `bed604ef`. Preserve the failed-source receipt;
+do not count the old run as acceptance.
 
-Immediate task-await matches receive Option tag/payload fields directly. Escaping
-options retain their ordinary representation. Task results keep their independent
-owner; shared payloads still need a typed retain before the borrowed handle can
-be released. The existing channel result struct is shared with this representation.
-No source syntax, task layout or cycle policy changes.
+No new Rust compiler was built locally. Guarded checks from the primary workspace:
 
-Tests add repeated text awaits, cancellation, integer and F128 results, an option
-stored in a list, pointer-like integer bits, physical aliases and retain overflow.
-The matched C control restores 34 temporary boxes while preserving result retains.
-Native artifacts expand from 22 to 30 binaries; WebAssembly runs the new fixture
-under WASI/browser, JSPI/Asyncify and O1/O2 with cleanup controls.
+- `/private/tmp/fwp-check-await-fields.py` and
+  `/private/tmp/fwp-validate-await-preparation.py`: formatting, raw interpretation,
+  frozen primitive inventory, eleven native-runner checks, workflow/docs checks.
+- `/private/tmp/fwp-probe-await-fields.py`: matching task runtime transplanted into
+  prior-compiler metadata, macOS ARM64 O0 GC/reuse checks; omitted retain exits 26.
+- `/private/tmp/fwp-check-scope-repairs.py`: all 27 derivative outputs under raw
+  interpretation, formatting and generated library docs.
+- `/private/tmp/fwp-probe-interop-buffer-repair.py`: golden raw interpretation and
+  macOS ARM64 O0 native GC/reuse checks; repaired code exits 0, omitted frees 211.
+- `/private/tmp/fwp-check-final-scope-batch.py`: formatting, both changed workflows,
+  inspector syntax, documentation links and diff checks.
 
-Guarded commands from the primary workspace:
+Each command is run as `python3 scripts/local-guard.py python3 SCRIPT` from the
+primary workspace. The prior verified compiler is
+`/private/tmp/fwp-check-compiler-fc138650/fwp`. Local probes do not establish the
+remaining platform evidence. Full builds, suites and benchmarks stay on runners.
 
-- `python3 scripts/local-guard.py python3 /private/tmp/fwp-check-await-fields.py`:
-  rustfmt, fwp formatting/type check, raw interpretation and diff check pass.
-  The verified #188 compiler supplies metadata; this does not check the changed
-  Rust code generator. Initial fixture syntax mistakes were corrected first.
-- `python3 scripts/local-guard.py python3 /private/tmp/fwp-probe-await-fields.py`:
-  macOS ARM64 O0 runtime probe passes with GC stress/verification and reuse
-  verification off/on; missing-result-retain control exits 26 as required.
-  The helper transplants the matching task runtime into prior compiler metadata.
-  Its first injection assertion was too broad; the target is now the complete
-  direct-result return sequence. The initial mixed old/new spawn runtime was
-  corrected before the passing run. No new compiler build ran locally.
+## Preceding delivery
 
-Static validation also passed via `/private/tmp/fwp-validate-await-preparation.py`:
-rustfmt, fixture/raw interpretation, 394-declaration frozen ownership inventory,
-11 native-runner unit checks, workflow syntax and 82 documentation link sets.
-The later workflow edit publishes ownership logs before REST tests; actionlint
-and documentation checks pass via `/private/tmp/fwp-check-task-channel-docs.py`. No full compiler build ran locally.
+[PR #190](https://github.com/e6qu/fun-with-pipes/pull/190) is the sole active PR,
+worktree `/private/tmp/fwp-task-channel-owners`, final head
+`4cdf8afa8647cfdaecbc338429bf8a1c1a158210`. All eight focused jobs passed at
+`bf78c7ab`, with complete log audits and inspection of 132 native binaries and
+64 task-channel WebAssembly modules. Final production `39673092514` has the
+benchmark job passed and eight native jobs running. Documentation `39673088884`
+passed. Audit `/private/tmp/fwp-audit-190-final.py`; merge only after all exact-head
+gates pass using `/private/tmp/fwp-merge-190.py`. Its publication/receipt paths
+are `/private/tmp/fwp-task-channel-corrected-publication.json` and
+`/private/tmp/fwp-190-final-acceptance.json`.
 
-Remaining before acceptance: confirm the
-matched control and WebAssembly cleanup controls under the changed compiler on
-CI, inspect actual generated C and binaries, and record actual counts. Do not
-interpret the expected 34-box difference as a result before those tests pass.
-Full builds, benchmarks and full gates stay on runners. Use the primary guard;
-keep 64 GiB free disk, target below 2 GiB, sampled RSS below 1 GiB and 180 seconds.
-Latest disk check: 66 GiB free. Do not raise limits.
+After merging #190, retain the measured source tags, rebase this branch onto the
+verified merge, resolve the handoff to this group's actual status, and open the
+next substantial PR. The auxiliary Cargo argument-order repair is already present
+in both branches. Preserve the separate callback baseline `521a1600`: its 10 → 5
+retains result does not measure the new await fields. PR #189 is already accepted
+and merged as `030fa337`; do not restart its completed work.
 
-## Preceding ownership delivery
+## Resource and delivery rules
 
-[PR #190](https://github.com/e6qu/fun-with-pipes/pull/190) is the single draft
-ownership delivery, worktree `/private/tmp/fwp-task-channel-owners`, corrected
-source `bf78c7ab8fcc052b5931165f28393450b9106d21`. Focused run `39666299981` checks
-six native hosts and both WebAssembly hosts. Audit with
-`/private/tmp/fwp-audit-task-channel-corrected.py`; keep its separate receipt.
-
-The predecessor `5542803e` audit is complete. Both WebAssembly jobs passed; Linux
-had exactly one wrong diagnostic expectation in the new negative test. Its task
-result contains a callback, so the function-bearing channel check rejects it
-first. The correction requires that specific diagnostic/type for that case.
-All other ownership tests, four gRPC checks, 22-binary inspection and 28 REST tests
-passed. No compiler rejection was relaxed. The correction also publishes batch
-logs early and matches production's checked Rust O1 profile. This preparation
-inherits those repairs after rebasing; preserve the separate measured source.
-
-The earlier callback source `521a160091040207067601ca3e57d7cc444e33f0` has all six
-native and both WebAssembly jobs passed in `39656585197`; every full log is audited. Audit `/private/tmp/fwp-audit-task-owners-corrected.py`.
-All 132 native binaries and 64 task-capture WebAssembly modules have independent
-inspection, with the source-specific report saved in docs/measurements. That source does not
-establish acceptance for the later direct Task-message proof or this candidate.
-Preserve the separate source IDs and receipts.
-
-PR #189 passed all nine production jobs and docs at `4dfc2be3`, then squash-merged
-as `030fa3374e36459d9a774379e2116ac42ed5db1d`, with identical tree and verified
-single-line subject. The redundant same-tree production run was cancelled before
-any steps; post-merge documentation also passed and was fully audited.
-Receipt: `/private/tmp/fwp-189-final-acceptance.json`.
-
-All seven areas in [PLAN.md](../PLAN.md) remain open. Keep one delivery PR at a
-time, fix all encountered issues, require final-head nine production jobs and
-docs, then squash with a one-line subject of at most 80 characters and empty body.
-No trailers or attribution. Continue through the plan after each verified merge.
+Use the primary resource guard for serial checks: 64 GiB free disk, target below
+2 GiB, sampled aggregate RSS below 1 GiB and a 180-second deadline. Never raise
+limits or bypass a refusal. Fix all observed failures together before publishing
+repairs; preserve healthy running heads. Squash only after exact-head nine
+production jobs and docs pass, with one line ≤80 characters, empty body, no
+trailers or attribution. Continue the plan after every accepted merge.
 
 ## Roadmap status
 

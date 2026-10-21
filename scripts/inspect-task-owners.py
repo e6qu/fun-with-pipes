@@ -40,9 +40,11 @@ expected.update({f'clock-owners/{memory}-O{opt}-{variant}': status
 expected.update({f'await-fields/{memory}-O{opt}-{variant}': 0
                  for memory in ['arc', 'tracing'] for opt in [0, 2]
                  for variant in ['fields', 'boxed-control']})
+expected.update({f'interop-buffers/{variant}-O{opt}': status
+                 for opt in [0, 2] for variant, status in [('released', 0), ('missing-free', 211)]})
 observed = {p.relative_to(root).with_suffix('').as_posix() for p in root.rglob('*.exe')
             if p.relative_to(root).as_posix().startswith(
-                ('task-handles-', 'callback-transfer/', 'clock-owners/', 'await-fields/'))}
+                ('task-handles-', 'callback-transfer/', 'clock-owners/', 'await-fields/', 'interop-buffers/'))}
 assert observed == set(expected), (sorted(set(expected) - observed), sorted(observed - set(expected)))
 report = dict(source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
               os=system, architecture=architecture, platform=platform.platform(),
@@ -101,6 +103,8 @@ for label, expected_status in sorted(expected.items()):
         assert not stderr, label
         if label.startswith('clock-owners/'):
             assert not stdout, label
+        elif label.startswith('interop-buffers/'):
+            assert stdout == Path('tests/run/ffi.out').read_bytes(), label
         elif expected_status == 0:
             assert stdout == b'task captures released\n', label
     report['binaries'][label] = record

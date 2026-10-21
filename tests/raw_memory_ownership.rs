@@ -5,6 +5,116 @@ use fwp::value::Value;
 use std::process::Command;
 
 #[test]
+fn interop_example_releases_sorting_and_formatting_buffers() {
+    let dir = fwp::cgen::TempDir::new("fwp-interop-buffers").unwrap();
+    let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/run/ffi.fwp");
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = Command::new(compiler)
+        .env("FWP_NO_OPT", "1")
+        .env("FWP_SEED", "42")
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(reference.status.success(), "{reference:?}");
+    assert_eq!(
+        reference.stdout,
+        std::fs::read(source.with_extension("out")).unwrap()
+    );
+    assert!(reference.stderr.is_empty());
+    let cfile = dir.join("interop.c");
+    let emitted = Command::new(compiler)
+        .env_remove("FWP_NO_OPT")
+        .args(["build", "--emit-c", "-O1"])
+        .arg(&source)
+        .arg("-o")
+        .arg(&cfile)
+        .output()
+        .unwrap();
+    assert!(emitted.status.success(), "{emitted:?}");
+    let original = std::fs::read_to_string(cfile).unwrap();
+    let allocation = "void *p = calloc(n, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    return (V)(uintptr_t)p;";
+    let release = "free((void *)(uintptr_t)l0);\n    return FWP_UNIT;";
+    assert!(original.contains(allocation) && original.contains(release));
+    // Observe only raw mem.alloc/mem.free buffers, independently of managed
+    // runtime storage. Reentrant qsort comparators allocate their own buffers.
+    let observer = r#"
+#include <stdlib.h>
+static void *interop_buffers[64];
+static unsigned interop_live, interop_created;
+static void *interop_alloc(size_t size) {
+    void *p=calloc(size,1);
+    if(!p)return p;
+    for(unsigned i=0;i<64;i++)if(!interop_buffers[i]){
+        interop_buffers[i]=p;interop_live++;interop_created++;return p;
+    }
+    exit(212);
+}
+static void interop_free(void *p) {
+    for(unsigned i=0;i<64;i++)if(interop_buffers[i]==p){
+        interop_buffers[i]=0;interop_live--;free(p);return;
+    }
+    exit(213);
+}
+"#;
+    let code = original
+        .replace(
+            allocation,
+            &allocation.replace("calloc(n, 1)", "interop_alloc(n)"),
+        )
+        .replace(
+            release,
+            "interop_free((void *)(uintptr_t)l0);\n    return FWP_UNIT;",
+        )
+        .replace(
+            "    fwp_cl_finish();\n",
+            "    if(interop_live || interop_created<3)exit(211);\n    fwp_cl_finish();\n",
+        );
+    assert!(code.contains("if(interop_live || interop_created<3)exit(211);"));
+    for opt in ["-O0", "-O2"] {
+        for (label, candidate, status) in [
+            ("released", code.clone(), 0),
+            (
+                "missing-free",
+                code.replace(
+                    "interop_free((void *)(uintptr_t)l0);",
+                    "/* omit raw buffer release */",
+                ),
+                211,
+            ),
+        ] {
+            let binary = dir.join("interop.exe");
+            let measured = format!("{observer}\n{candidate}");
+            fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
+            let actual = Command::new(&binary)
+                .env("FWP_SEED", "42")
+                .env("FWP_GC_STRESS", "1")
+                .env("FWP_GC_VERIFY", "1")
+                .env("FWP_REUSE_VERIFY", "1")
+                .output()
+                .unwrap();
+            if let Some(artifacts) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
+                let artifacts = std::path::PathBuf::from(artifacts).join("interop-buffers");
+                std::fs::create_dir_all(&artifacts).unwrap();
+                let artifact = artifacts.join(format!("{label}{opt}"));
+                std::fs::write(artifact.with_extension("c"), &measured).unwrap();
+                std::fs::copy(&binary, artifact.with_extension("exe")).unwrap();
+                std::fs::write(artifact.with_extension("stdout"), &actual.stdout).unwrap();
+                std::fs::write(artifact.with_extension("stderr"), &actual.stderr).unwrap();
+                std::fs::write(
+                    artifact.with_extension("status"),
+                    format!("{:?}\n", actual.status.code()),
+                )
+                .unwrap();
+            }
+            assert_eq!(actual.status.code(), Some(status), "{opt}: {actual:?}");
+            assert_eq!(actual.stdout, reference.stdout, "{opt}");
+            assert!(actual.stderr.is_empty(), "{opt}: {actual:?}");
+        }
+    }
+}
+
+#[test]
 fn string_copies_survive_their_source_buffers() {
     let string = MT::con("std::String");
     let ptr = MT::Con("std::Ptr".into(), vec![MT::con("std::U8")]);
