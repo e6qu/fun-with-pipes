@@ -119,8 +119,10 @@ The C loop uses its numeric bounds to eliminate impossible cases and replace
 some digit counting with comparisons and constants. fwp still computes the sign
 and tests large-number cases for `3*i`, despite the bounded source input. That is
 an observed instruction difference; its share of the timing gap is not isolated.
-The next controlled investigation should preserve more numeric-range information
-through generated C without weakening checked arithmetic or trap order.
+The subsequent [checked-product experiment](checked-products.md) preserves more
+numeric-range information through generated C without weakening checked arithmetic
+or trap order. Its results and lower-optimization costs are recorded separately;
+the numbers on this page describe the earlier grouped-counting change.
 
 ## Correctness and earlier experiments
 

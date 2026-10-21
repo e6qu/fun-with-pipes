@@ -1,101 +1,98 @@
 # Session handoff
 
-## Current delivery comes first
+## Next action
 
-This is a preparation checkout at `/private/tmp/fwp-integer-range-probe`, branch
-`preserve-checked-product-ranges`, based on the current PR head `817805a1`. It is not a second
-PR. [PR #182](https://github.com/e6qu/fun-with-pipes/pull/182) is active in the main
-checkout, `/Users/zardoz/projects/fun-with-pipes`. Its handoff is authoritative
-for delivery status. This preparation now includes the PR's U32 repair. The active production run is
-`39533108586`; focused and documentation checks pass. Do not merge or publish a
-second PR before this delivery is accepted.
+Next: finish accepting [PR #182](https://github.com/e6qu/fun-with-pipes/pull/182)
+before opening another PR. Its unchanged final head is
+`817805a18bd97e90090b36e7baf589d011048fd6`, production run `39533108586`,
+documentation `39532459370`. The main checkout's handoff and
+`/private/tmp/fwp-182-final-acceptance.json` hold its current status.
+The merge helper `/private/tmp/fwp-merge-182.py` rechecks all nine production
+jobs and documentation, then verifies the squash tree and exact one-line message.
 
-Next: run and audit the prepared candidate's focused checks while PR #182 runs.
-The first preparation run `39535767609` at `40d01bcc` was cancelled while both
-jobs were queued, before any tests started. The replacement bundles clearer
-saved-C report metadata and all fourteen scalar binary/disassembly controls;
-the cancelled run establishes no support.
-Once PR #182 passes all nine production gates and documentation and is squash
-merged, rebase this preparation from `817805a1` onto the accepted merge. Preserve its
-compiler fixes and current handoff. Then finish verifying the range-preserving multiplication candidate below in the next
-coherent batch.
+This preparation checkout is `/private/tmp/fwp-integer-range-probe`, branch
+`preserve-checked-product-ranges`, based on `817805a1` and including its U32 fix.
+After #182 merges, rebase this branch from that head onto the accepted squash
+commit, update this handoff and history, and publish the coherent next PR.
+No second PR exists yet. Do not mistake focused acceptance for the full matrix.
 
-## Completed experiment
+## Prepared change and evidence
 
-Measurement source `7a8803762e240998605c6442afbbb33ed8157133` is preserved by
-`roadmap/revision-integer-range-7a880376`. Run `39530460995` passed on Linux AMD64
-and ARM64; both complete logs are audited clean in
-`/private/tmp/fwp-range-counting-audit.json`. That measurement source did not
-change compiler code.
+Signed I64/ISize multiplication keeps its overflow check, then exposes the
+proven-safe product expression to C optimization. The [measurement guide](measurements/checked-products.md)
+explains the workload, comparisons, instructions, tests and tradeoffs. The
+[raw report](measurements/checked-products-2026-10-21.json) retains every sample.
 
-The ninth variant changes only generated I64 multiplication: it keeps
-`__builtin_mul_overflow(x, y, &r)` and the overflow trap, then returns `x*y`
-instead of `r`. That expression is reached only when the mathematical product
-fits I64. In this workload GCC recovers loop bounds from the expression and
-removes sign/large-number cases; it also carries `3*i` as an induction variable.
-The source check remains; this is not permission to weaken checked arithmetic.
+Source `b57e2dcda716ebd27007d01aaf5e4e79d22518b6` is preserved by published tag
+`roadmap/revision-checked-product-b57e2dcd`. Focused run `39536765734` passes
+on both Linux architectures; complete logs are audited clean in
+`/private/tmp/fwp-range-native-audit.json`. Each job passes formatting, Clippy,
+five integer-output tests, four scalar-trap tests, twelve counting and fourteen
+scalar binary inspections, and the nine-way measurement. Actual compiler C
+matches the measured candidate byte-for-byte, and its instruction section and
+output match on both hosts. Full production/documentation acceptance is pending.
 
-Nine controls run for 54 balanced rounds plus two warmups on each of four
-allowed CPUs per runner. Both hosts use GCC 13.3.0. Against the grouped/inlined
-fwp control in the same session, child CPU medians fall roughly 10–15% on EPYC
-9V74 and 18% on Neoverse-N2. Matched C remains faster. This is two runner
-sessions, not a universal speed guarantee. Compare the exact per-CPU ratios
-before writing final performance claims.
+The signed test covers 173 runtime operand pairs for each of I64 and ISize,
+unoptimized interpretation, ARC/tracing at O0/O1/O2/O3, effect/trap order and
+O1/O2/O3 undefined-behavior sanitizer checks. Removing the overflow guard must
+produce a signed-overflow diagnostic. Saved ordinary binaries confirm that
+O2/O3 reuse the checked product; O0/O1 emit an extra product. Document this
+cost; the measured O2 benefit is not a claim about every optimization level.
 
-Artifacts: `/private/tmp/fwp-integer-range-costs`. Independent sample, source,
-binary and GCC-dump audit: `/private/tmp/fwp-integer-range-audited.json`. The
-validator is `scripts/summarize-integer-counting.py --comparison range`; guarded
-validation passed in 0.48s after correcting its explicit compiler-flag check.
-All timed outputs and separate managed-storage controls pass; native semantic
-preflight was explicitly skipped, so this experiment cannot accept a compiler
-change. The original preparation is preserved on branch
-`investigate-integer-range-information` at `ca72a9cde7e3ef4eb6e7d911110e8937a3f419b2`.
-The active branch contains only its new changes above `817805a1`.
+On EPYC 7763/N2, O2 child CPU medians fall 14.6–29.0% / 17.9–18.3% relative
+to grouped fwp on the same CPUs. C remains faster. AMD64 varies substantially
+by CPU ID, including mixed comparisons with Rust; its cause is unresolved.
+Instruction sections shrink 64/112 bytes; AMD64's normal 40-byte frame
+disappears. Managed counters remain zero after initialization, with a working
+16-byte allocation control. Tracing code remains in the binaries.
 
-## Candidate implementation and remaining checks
+Artifacts: `/private/tmp/fwp-compiled-range-costs`; download manifest:
+`download-audit.json` there. Byte-identical immutable baseline inputs share
+hardlinks with `/private/tmp/fwp-integer-range-costs`; both artifact trees are
+complete. Independent source/binary/sample audit passed in 0.60s:
+`/private/tmp/fwp-compiled-range-audited.json`. Ordinary instruction inspection
+and timing-ratio review passed in 0.13s with `/private/tmp/fwp-range-review.py`.
+The first schema-inspection command used a dict operation on a list and failed;
+the corrected inspection and independent report audit pass.
+Documentation, immutable-tag, commit-message and whitespace checks pass under
+the guard (2.56s): `python3 scripts/check-roadmap.py` and `git diff --cached --check`.
+The first handoff check caught a missing roadmap-status table; it was restored
+before the passing rerun. The readable guide and report do not change compiler
+or test code from the focused source.
 
-The local candidate changes the returned expression for signed 64-bit
-multiplication (I64 and ISize), after its existing overflow check. A new scalar regression uses runtime CLI operands,
-independent i128 expectations for both types, both memory modes and native builds
-at O0/O1/O2/O3.
-The focused `integer-counting` suite includes these scalar tests and now requires
-actual compiler-produced C to match the measured range candidate exactly. It also
-builds, executes and saves the real compiler-produced binary, exact output and
-disassembly. The report audit uses explicit `--comparison compiled-range` to
-check this source, instruction section and all twelve semantic/control binaries;
-`--comparison range` remains for the historical measurement-only run. The
-old measurement-only `integer-range` option is removed; its original source/run
-remain preserved.
+## Earlier preparation
 
-The scalar tests retain eight ordinary binaries plus six sanitizer/control
-binaries, their C source and the failing control's diagnostics. CI disassembles
-all fourteen so ordinary dynamic multiplication can be inspected as well as the
-bounded counting loop.
+The original saved-C experiment `7a8803762e240998605c6442afbbb33ed8157133`
+is retained by `roadmap/revision-integer-range-7a880376`. Measurement-only run
+`39530460995` passed on both hosts, but skipped native semantic preflight and
+did not modify the compiler. Audit: `/private/tmp/fwp-range-counting-audit.json`;
+artifacts/report: `/private/tmp/fwp-integer-range-costs` and
+`/private/tmp/fwp-integer-range-audited.json`. Use `--comparison range` for it;
+use `--comparison compiled-range` for the implemented candidate.
 
-Its UBSan controls check the actual emitted primitive at O1/O2/O3 and deliberately
-remove the overflow check to prove the sanitizer detects the unsafe product.
-Guarded formatting, whitespace and documentation checks pass; native
-execution is still pending. The ISize extension also passes formatting (0.13s).
-Do not claim this implementation is accepted or publish another PR before #182.
+Preparation run `39535767609` at `40d01bcc` was cancelled while both jobs were
+queued; no tests ran. Its replacement above includes complete scalar artifacts.
+The old preparation branch remains at `ca72a9cde7e3ef4eb6e7d911110e8937a3f419b2`.
 
-Preserve the existing overflow test before exposing the safe I64 product.
-Add runtime-input tests for zero, both signs, I64 extrema and values immediately
-around overflow boundaries. Compare the unoptimized interpreter with optimized
-native execution, including effects before and after a trap. Use GCC and Clang,
-ARC/tracing, optimization levels and sanitizers; constant folding must not hide
-unsafe intermediate arithmetic. Check ordinary unbounded multiplication too:
-a bounded benchmark does not establish costs for arbitrary operands.
+## Resources and remaining project work
 
-Measure actual compiler-produced C and binaries against the saved experiment
-and matched C/Rust peers. Inspect both instruction streams, stack use and code
-size, preserve all samples and report remaining gaps. Only then select the
-compiler change and run the full acceptance matrix. Follow [PLAN.md](../PLAN.md)
-for all seven remaining work areas; ownership and removing tracing remain the
-primary project objective. JIT is excluded.
+Use `python3 scripts/local-guard.py` for serial local checks. Full builds,
+native execution, complete suites and measurements belong on GitHub runners.
+Keep 64 GiB free, generated target below 2 GiB, sampled aggregate RSS below
+1 GiB and the 180-second deadline. Latest artifact download left about 65.3 GiB;
+recheck before more downloads. No limits were raised or checks bypassed.
 
-Local work remains serial and guarded: 64 GiB free disk, target below 2 GiB,
-aggregate RSS below 1 GiB and 180 seconds. Full builds, native compilation,
-full tests and measurements run on GitHub; do not raise or bypass guard limits.
+On October 21, authorized cleanup removed 304.74 MiB of obsolete binaries and
+disassembly after verifying remote recovery artifacts. Manifest:
+`/private/tmp/fwp-disk-cleanup-2026-10-21.json`. The first two counting artifact
+trees are now partial; restore their remote artifacts before another binary
+audit. Current matched/range evidence and source files were preserved.
+
+All seven [plan](../PLAN.md) work areas remain open. Ownership and removal of
+tracing are primary; default native execution still includes tracing. Retained
+resources, persistent subscriptions, resource-owning tail frames and mutual
+recursion need further proofs. Do not let microbenchmarks displace representative
+applications or claim a completed memory/performance roadmap. JIT is excluded.
 
 ## Roadmap status
 
