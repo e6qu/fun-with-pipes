@@ -797,6 +797,12 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
             include_str!("fixtures/queued_task_handles.out"),
             1,
         ),
+        (
+            "task-await-fields",
+            include_str!("fixtures/task_await_fields.fwp"),
+            include_str!("fixtures/task_await_fields.out"),
+            1,
+        ),
     ] {
         let program = if repetitions == 1 {
             program.to_owned()
@@ -821,7 +827,10 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
             } else {
                 "wasm32-browser"
             };
-            let ordinary = emit(&source, &dir.join("tasks.c"), &[], target_name);
+            let ordinary = emit(&source, &dir.join("tasks.c"), &["-O1"], target_name);
+            if fixture == "task-await-fields" {
+                assert!(ordinary.contains("= fwp_task_await_fields("));
+            }
             let mut measured = measured_program(&ordinary);
             let retire = "    if (fwp_zombie && fwp_zombie != fwp_cur) {";
             assert_eq!(measured.matches(retire).count(), 1);
@@ -845,7 +854,7 @@ fn wasi_tasks_release_captures_channels_stacks_and_scheduler() {
             let drop = "c->owner.queue_drop(element);";
             assert_eq!(measured.matches(drop).count(), 1);
             let missing_queue = measured.replace(drop, "(void)element;");
-            let (retained_label, retained) = if fixture == "tasks" {
+            let (retained_label, retained) = if matches!(fixture, "tasks" | "task-await-fields") {
                 ("missing-state", &missing_state)
             } else {
                 ("missing-queue", &missing_queue)

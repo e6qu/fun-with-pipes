@@ -729,6 +729,12 @@ preserve aliasing and alignment rules while exposing loads/stores to the C
 compiler's vectorizer. Shape validation bounds each access; floating-point
 accumulation order and separate multiplication/addition remain unchanged.
 
+The [direct-await candidate](measurements/task-await-fields.md) also exposes an
+immediately matched task result as tag/payload fields. It removes the temporary
+Option box while retaining the cached task result for other handles and later
+awaits. Its measured allocation comparison and platform validation are pending;
+options that escape the direct match retain their ordinary representation.
+
 ## Compile-time values in static storage
 
 A value produced by `comptime` is already known when C is generated. For example,

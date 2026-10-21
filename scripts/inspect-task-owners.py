@@ -37,9 +37,12 @@ expected.update({f'callback-transfer/{memory}-O{opt}-{variant}': 0
 expected.update({f'clock-owners/{memory}-O{opt}-{variant}': status
                  for memory in ['arc', 'tracing'] for opt in [0, 2]
                  for variant, status in [('protected', 0), ('missing-owner', 3)]})
+expected.update({f'await-fields/{memory}-O{opt}-{variant}': 0
+                 for memory in ['arc', 'tracing'] for opt in [0, 2]
+                 for variant in ['fields', 'boxed-control']})
 observed = {p.relative_to(root).with_suffix('').as_posix() for p in root.rglob('*.exe')
             if p.relative_to(root).as_posix().startswith(
-                ('task-handles-', 'callback-transfer/', 'clock-owners/'))}
+                ('task-handles-', 'callback-transfer/', 'clock-owners/', 'await-fields/'))}
 assert observed == set(expected), (sorted(set(expected) - observed), sorted(observed - set(expected)))
 report = dict(source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
               os=system, architecture=architecture, platform=platform.platform(),
@@ -83,14 +86,15 @@ for label, expected_status in sorted(expected.items()):
                   c_sha256=hashlib.sha256(code).hexdigest(), status=expected_status,
                   stdout_sha256=hashlib.sha256(stdout).hexdigest(),
                   stderr_sha256=hashlib.sha256(stderr).hexdigest(), inspection=outputs)
-    if label.startswith('callback-transfer/'):
+    if label.startswith(('callback-transfer/', 'await-fields/')):
+        counter = 'callback-pairs' if label.startswith('callback-transfer/') else 'await-boxes'
         lines = stderr.decode().splitlines()
         assert len(lines) == 2 and lines[0].startswith('client-memory\t')
         counts = [int(n) for n in lines[0].split('\t')[1:]]
-        assert len(counts) == 6 and lines[1].startswith('callback-pairs\t')
+        assert len(counts) == 6 and lines[1].startswith(counter + '\t')
         record['counters'] = dict(zip(['allocation_requests', 'requested_bytes', 'retains',
                                       'peak_managed_charge', 'final_managed_charge', 'collections'], counts, strict=True))
-        record['restored_pairs'] = int(lines[1].split('\t')[1])
+        record['restored_pairs' if counter == 'callback-pairs' else 'restored_boxes'] = int(lines[1].split('\t')[1])
         if arc:
             assert counts[4:] == [0, 0], (label, counts)
     else:
@@ -109,5 +113,13 @@ for memory in ['arc', 'tracing']:
         for key, value in after['counters'].items():
             expected_value = value + before['restored_pairs'] if key == 'retains' else value
             assert before['counters'][key] == expected_value, (memory, opt, key)
+        boxed = report['binaries'][f'await-fields/{memory}-O{opt}-boxed-control']
+        fields = report['binaries'][f'await-fields/{memory}-O{opt}-fields']
+        assert boxed['restored_boxes'] == 34 and fields['restored_boxes'] == 0
+        assert boxed['stdout_sha256'] == fields['stdout_sha256']
+        assert boxed['counters']['allocation_requests'] - fields['counters']['allocation_requests'] == 34
+        assert boxed['counters']['requested_bytes'] > fields['counters']['requested_bytes']
+        assert boxed['counters']['retains'] == fields['counters']['retains']
+        assert boxed['counters']['collections'] == fields['counters']['collections']
 root.joinpath('task-owner-inspection.json').write_text(json.dumps(report, indent=2) + '\n')
 print(f'Inspected {len(expected)} executed task-owner binaries on {system} {architecture}')

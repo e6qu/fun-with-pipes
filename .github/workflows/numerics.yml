@@ -522,8 +522,9 @@ jobs:
       - name: Task-capture example formatting and types
         if: ${{ !cancelled() }}
         run: |
-          cargo run -- fmt --check tests/fixtures/queued_task_handles.fwp
+          cargo run -- fmt --check tests/fixtures/queued_task_handles.fwp tests/fixtures/task_await_fields.fwp
           cargo run -- check tests/fixtures/queued_task_handles.fwp
+          cargo run -- check tests/fixtures/task_await_fields.fwp
       - name: Compiler proof unit tests
         if: ${{ !cancelled() }}
         run: cargo test --lib

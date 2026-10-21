@@ -1291,13 +1291,31 @@ static void fwp_tasks_abort(void) {
 
 static V fwp_opt_result(fwp_task *t) { return t->has_result ? fwp_some(t->result) : FWP_NONE; }
 
-static V fwp_await(fwp_task *t) {
+static void fwp_wait_for_task(fwp_task *t) {
     while (!t->done) {
         fwp_check_cancel();
         fwp_park(&t->waiters, 0);
         fwp_check_cancel();
     }
+}
+
+static V fwp_await(fwp_task *t) {
+    fwp_wait_for_task(t);
     return fwp_opt_result(t);
+}
+
+/* A direct Option result uses two C fields instead of a heap box. */
+typedef struct { V tag, value; } fwp_option_result;
+static fwp_option_result fwp_task_await_fields(V handle, void (*dup)(V)) {
+    fwp_tasks_init();
+    fwp_task *t = (fwp_task *)(uintptr_t)handle;
+    fwp_wait_for_task(t);
+    if (!t->has_result) return (fwp_option_result){0, FWP_NONE};
+    V value = t->result;
+    /* The caller keeps its borrowed task alive across this fallible retain.
+     * The task keeps its own result for independent aliases and later awaits. */
+    if (dup) dup(value);
+    return (fwp_option_result){1, value};
 }
 
 static V fwp_p_task_spawn(V thunk) { return PTR(fwp_spawn(thunk, 0)); }
@@ -1631,9 +1649,8 @@ typedef enum {
     FWP_CHANNEL_RESULT_BOXED,
     FWP_CHANNEL_RESULT_FIELDS
 } fwp_channel_result_form;
-typedef struct { V tag, value; } fwp_channel_result;
-static fwp_channel_result fwp_chan_recv_owned(V ch, int64_t at, void (*dup)(V),
-                                             fwp_channel_result_form form) {
+static fwp_option_result fwp_chan_recv_owned(V ch, int64_t at, void (*dup)(V),
+                                            fwp_channel_result_form form) {
     fwp_tasks_init();
     fwp_chan *c = (fwp_chan *)(uintptr_t)ch;
     for (;;) {
@@ -1648,11 +1665,11 @@ static fwp_channel_result fwp_chan_recv_owned(V ch, int64_t at, void (*dup)(V),
             c->head = (c->head + 1) % c->size;
             c->len--;
             fwp_wake_all(&c->sendq);
-            return (fwp_channel_result){1, result};
+            return (fwp_option_result){1, result};
         }
-        if (c->closed || c->sink) return (fwp_channel_result){0, FWP_NONE};
+        if (c->closed || c->sink) return (fwp_option_result){0, FWP_NONE};
         fwp_check_cancel();
-        if (at && fwp_now_ns() >= at) return (fwp_channel_result){0, FWP_NONE};
+        if (at && fwp_now_ns() >= at) return (fwp_option_result){0, FWP_NONE};
         fwp_park(&c->recvq, at);
         fwp_check_cancel();
     }

@@ -133,6 +133,9 @@ outside the benchmark suite.
    establish 32 fewer bytes per ARC task with unchanged allocation/retain counts
    and platform-dependent peak savings. Smaller records do not establish a timing
    gain. Use that baseline to measure retained task owners and temporary results.
+   The [direct-await candidate](docs/measurements/task-await-fields.md) removes
+   temporary options before immediate matches; its allocation controls and
+   platform validation remain pending.
 
 
 All seven work areas remain open. The syntax and native-platform foundations

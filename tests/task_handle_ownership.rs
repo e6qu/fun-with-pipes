@@ -87,6 +87,9 @@ int main(void){
  if(first==FWP_NONE||OBJ(first)->f[0]!=capture||*fwp_rc_slot(capture)!=2)return 2;
  if(*fwp_rc_slot(PTR(t))!=2||t->stack||t->base)return 3; // two caller aliases, no scheduler or stack borrow
  V second=fAWAIT(PTR(t));if(OBJ(second)->f[0]!=capture||*fwp_rc_slot(capture)!=3)return 4;
+ fwp_option_result fields=fwp_task_await_fields(PTR(t),fwp_rc_dup);
+ if(fields.tag!=1||fields.value!=capture||*fwp_rc_slot(capture)!=4)return 26;
+ text_drop(fields.value);
  fwp_task_drop(PTR(t));if(*fwp_rc_slot(PTR(t))!=1)return 5;
  fwp_task_drop(PTR(t));if(*fwp_rc_slot(capture)!=2)return 6;
  option_drop(first);if(*fwp_rc_slot(capture)!=1||STR(capture)->len!=5)return 7;
@@ -110,6 +113,8 @@ int main(void){
   t=(fwp_task *)(uintptr_t)fSPAWN(fn);
   if(suspended)fwp_p_task_yield();fwp_p_task_cancel(PTR(t));
   if(fAWAIT(PTR(t))!=FWP_NONE||!dead(capture)||*fwp_rc_slot(PTR(t))!=1||t->base)return 14;
+  fields=fwp_task_await_fields(PTR(t),fwp_rc_dup);
+  if(fields.tag||fields.value!=FWP_NONE)return 27;
   fwp_task_drop(PTR(t));
  }
  // Unmodeled boundaries promote the task graph to the tracing fallback.
@@ -134,6 +139,11 @@ int main(void){
  fwp_trap_recover=0;fwp_trap_jb=0;
  if(fwp_cleanups||*fwp_rc_slot(PTR(t))!=1||(*fwp_rc_wide_link(slot))->count!=SIZE_MAX)return 16;
  if(fwp_reuse_verify?OBJ(await_option)->tag!=0xdead:*fwp_rc_slot(await_option)!=0)return 17;
+ // Direct fields allocate no outer Option and preserve the task on retain failure.
+ fwp_trap_recover=recover;fwp_trap_jb=&failed;fwp_trap_cleanup=0;
+ if(setjmp(failed)==0){fwp_task_await_fields(PTR(t),fwp_rc_dup);return 28;}
+ fwp_trap_recover=0;fwp_trap_jb=0;
+ if(fwp_cleanups||*fwp_rc_slot(PTR(t))!=1||(*fwp_rc_wide_link(slot))->count!=SIZE_MAX)return 29;
  fwp_rc_forget_slot(slot);*slot=1;fwp_task_drop(PTR(t));if(!dead(capture))return 18;
  // A failed private await also gives up the deadline helper's task handle.
  capture=fwp_rc_fresh(fwp_str_new("private",7));fn=fwp_rc_fresh(fwp_pap(VALUE,1,&capture));
@@ -154,6 +164,12 @@ int main(void){
     let no_result = runtime.replace(
         "if (t->result_drop && result) t->result_drop(result);",
         "/* omit cached result destruction */",
+    );
+    let direct_retain = "if (dup) dup(value);\n    return (fwp_option_result){1, value};";
+    assert_eq!(runtime.matches(direct_retain).count(), 1);
+    let no_fields_duplicate = runtime.replace(
+        direct_retain,
+        "/* omit direct await result retain */\n    return (fwp_option_result){1, value};",
     );
     let no_scheduler = runtime.replace(
         "if (ownership == FWP_TASK_SHARED) fwp_task_drop(PTR(finished));",
@@ -248,6 +264,7 @@ int main(void){
         assert!(out.status.success(), "disabled task freeing {opt}: {out:?}");
         for (control, code) in [
             (&no_duplicate, 2),
+            (&no_fields_duplicate, 26),
             (&no_result, 6),
             (&no_scheduler, 3),
             (&no_scope, 11),

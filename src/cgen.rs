@@ -3460,9 +3460,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
-    /// Counted receive results can move their payload directly into a matched
-    /// variant's fields. Uncounted runtime calls retain their existing ABI.
-    fn channel_receive_type(&self, id: FuncId) -> Option<MT> {
+    /// A matched Option can expose a counted handle's payload as direct fields.
+    /// Channels transfer the queued owner; task awaits duplicate the shared result.
+    fn owned_option_type(&self, id: FuncId) -> Option<MT> {
         if !self.g.reuse {
             return None;
         }
@@ -3470,13 +3470,24 @@ impl<'g, 'p> FnGen<'g, 'p> {
         let Body::Prim(symbol) = &function.body else {
             return None;
         };
-        let channel = match symbol.as_str() {
-            "channel.recv" if function.arity == 1 => 0,
-            "channel.recv-for" if function.arity == 2 => 1,
+        let (owner, container) = match symbol.as_str() {
+            "channel.recv" if function.arity == 1 => (0, "std::Channel"),
+            "channel.recv-for" if function.arity == 2 => (1, "std::Channel"),
+            "task.await" if function.arity == 1 => (0, "std::Task"),
             _ => return None,
         };
-        match &function.locals[channel] {
-            MT::Con(name, fields) if name == "std::Channel" && fields.len() == 1 => {
+        let MT::Con(result_name, result_fields) = self.ret_type(id) else {
+            return None;
+        };
+        if result_name != "std::Option" || result_fields.len() != 1 {
+            return None;
+        }
+        match &function.locals[owner] {
+            MT::Con(name, fields)
+                if name == container
+                    && fields.len() == 1
+                    && crate::ir::same_type(&self.g.prog.shapes, &fields[0], &result_fields[0]) =>
+            {
                 Some(fields[0].clone())
             }
             _ => None,
@@ -3525,7 +3536,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 Expr::Call(id, args)
                     if m == 1
                         && args.len() == fg.g.prog.funcs[*id].arity as usize
-                        && fg.channel_receive_type(*id).is_some() =>
+                        && fg.owned_option_type(*id).is_some() =>
                 {
                     Some(true)
                 }
@@ -3640,9 +3651,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             Expr::Call(id, args)
                 if m == 1
                     && args.len() == self.g.prog.funcs[*id].arity as usize
-                    && self.channel_receive_type(*id).is_some() =>
+                    && self.owned_option_type(*id).is_some() =>
             {
-                let element = self.channel_receive_type(*id).unwrap();
+                let element = self.owned_option_type(*id).unwrap();
                 let values = self.args(args);
                 let pending = self.begin_call(e as *const Expr);
                 let duplicate = if crate::rc::needs_rc(&self.g.prog.shapes, &element) {
@@ -3650,13 +3661,21 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 } else {
                     "NULL"
                 };
-                let (channel, deadline) = if values.len() == 2 {
-                    (&values[1], format!("fwp_after({})", values[0]))
-                } else {
-                    (&values[0], "0".into())
-                };
                 let result = self.fresh();
-                self.line(&format!("fwp_channel_result {result} = fwp_chan_recv_owned({channel}, {deadline}, {duplicate}, FWP_CHANNEL_RESULT_FIELDS);"));
+                if matches!(&self.g.prog.funcs[*id].body, Body::Prim(symbol) if symbol == "task.await")
+                {
+                    self.line(&format!(
+                        "fwp_option_result {result} = fwp_task_await_fields({}, {duplicate});",
+                        values[0]
+                    ));
+                } else {
+                    let (channel, deadline) = if values.len() == 2 {
+                        (&values[1], format!("fwp_after({})", values[0]))
+                    } else {
+                        (&values[0], "0".into())
+                    };
+                    self.line(&format!("fwp_option_result {result} = fwp_chan_recv_owned({channel}, {deadline}, {duplicate}, FWP_CHANNEL_RESULT_FIELDS);"));
+                }
                 self.keep_borrowed_args(*id, &values, None, &[]);
                 self.end_call(pending);
                 (format!("{result}.tag"), vec![format!("{result}.value")])

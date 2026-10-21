@@ -1,0 +1,37 @@
+text : String -> () -> String
+text = const
+
+read : Task[String] -> I64 ! {Async}
+read = task.await | match
+    Some -> string.length
+    None -> 0
+
+twice : Task[String] -> I64 ! {Async}
+twice = both read read | uncurry add
+
+round : I64 -> I64 ! {Async}
+round = show | text | task.spawn | twice
+
+sleeping : () -> String ! {Async}
+sleeping = const 1h | task.sleep | const "cancelled"
+
+read-int : Task[I64] -> I64 ! {Async}
+read-int = task.await | match
+    Some -> id
+    None -> 0
+
+read-wide : Task[F128] -> F128 ! {Async}
+read-wide = task.await | match
+    Some -> add 0.5f128
+    None -> 0.0f128
+
+main = [
+    range 0 16 | map round | sum | echo,
+    task.spawn sleeping | tap task.cancel | read | echo,
+    task.spawn (const 17) | read-int | echo,
+    task.spawn (const 1.5f128) | read-wide | echo,
+    task.spawn (text ("escape" | string.repeat 2))
+    | task.await
+    | singleton
+    | echo,
+] | ignore

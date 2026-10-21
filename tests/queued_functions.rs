@@ -685,7 +685,7 @@ main = texts 1 | tap (flip channel.send (give "capture")) | channel.recv | optio
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
     );
-    let receive = "static fwp_channel_result fwp_chan_recv_owned(";
+    let receive = "static fwp_option_result fwp_chan_recv_owned(";
     assert_eq!(runtime.matches(receive).count(), 1);
     runtime = runtime.replace(receive, &format!("static int fail_option;\nstatic V queue_option(V x) {{ if(fail_option) {{ fail_option=0; fwp_trap(\"queue allocation probe\"); }} return fwp_some(x); }}\n{receive}"));
     let option = "fwp_rc_fresh(fwp_some(x))";
