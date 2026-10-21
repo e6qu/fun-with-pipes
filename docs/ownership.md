@@ -403,12 +403,19 @@ OS descriptor. Explicit close still affects every alias.
 
 The data-queue extension tracks queue creators. It admits a callback capturing
 a queue from `channel.make` only when its payload
-cannot contain functions and its nested queue owners have known sources. Native
-or unknown producers remain rejected as captures, including when mixed with
+cannot contain functions and its nested queue owners have known sources. Unknown
+producers remain rejected as captures, including when mixed with
 known creators. Recursive queue types still fail the separate cycle check.
 The [cleanup checks](measurements/queued-data-channels.md) pass on all six native
 platforms and both WebAssembly hosts. See the [handoff](development-state.md)
 for full production acceptance.
+
+The service extension admits one known native producer: a served gRPC method's
+response channel. Its stream and connection own protocol data, without an owning
+path back to a language callback. A retained callback keeps that transport alive
+until it is released. This does not grant the same contract to arbitrary external
+channels. [The service example and checks](measurements/queued-grpc-responses.md)
+explain this distinction and record what has been verified.
 
 For example, an event can retain a text queue until someone calls its `read`
 function. `Channel[String]` stores text; `Channel[Event]` stores records containing

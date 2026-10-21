@@ -15,6 +15,16 @@ require =
         (const "queued response client assertion failed" | prim.trap)
 failed : I64 -> Channel[String] -> () ! {Async}
 failed = curry (attempt (uncurry queued.failed) | eq (Err "expected") | require)
+request : (I64, Channel[String]) -> () -> () ! {Async}
+request = curry (.0 | uncurry queued.peer-cancelled)
+peer-cancelled : I64 -> Channel[String] -> () ! {Async}
+peer-cancelled = curry (both .1 (request | task.spawn)
+    | tap (.0 | channel.recv | eq (Some "ready") | require)
+    | .1
+    | tap task.cancel
+    | task.await
+    | eq None
+    | require)
 round : I64 -> () ! {Async, IO}
 round =
     tap (queued.reply | take-replies | echo)
@@ -25,5 +35,6 @@ round =
     | tap (queued.rejected | take-replies | echo)
     | tap (failed | take-replies | echo)
     | tap (queued.nested | take-replies | echo)
+    | tap (peer-cancelled | take-replies | echo)
     | ignore
 main = range 0 8 | each round

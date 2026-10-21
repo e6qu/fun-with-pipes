@@ -64,6 +64,47 @@ fn compile(code: &str, label: &str, opt: &str, artifacts: &Path, arc: bool) -> P
     let binary = artifacts.join(format!("{label}.exe"));
     std::fs::write(artifacts.join(format!("{label}.c")), code).unwrap();
     fwp::cgen::compile_c(code, &binary, opt).unwrap();
+    // Inspect the executable header, so an emulated executable cannot count
+    // as native architecture coverage merely because it happens to run.
+    let bytes = std::fs::read(&binary).unwrap();
+    assert!(bytes.len() >= 64, "{label}: truncated executable");
+    let machine = if bytes.starts_with(b"\x7fELF") {
+        assert_eq!(&bytes[4..6], &[2, 1], "64-bit little-endian ELF");
+        match u16::from_le_bytes(bytes[18..20].try_into().unwrap()) {
+            62 => "x86_64",
+            183 => "aarch64",
+            other => panic!("{label}: unexpected ELF machine {other}"),
+        }
+    } else if bytes.starts_with(b"MZ") {
+        let pe = u32::from_le_bytes(bytes[60..64].try_into().unwrap()) as usize;
+        assert_eq!(&bytes[pe..pe + 4], b"PE\0\0");
+        assert_eq!(
+            u16::from_le_bytes(bytes[pe + 24..pe + 26].try_into().unwrap()),
+            0x20b
+        );
+        match u16::from_le_bytes(bytes[pe + 4..pe + 6].try_into().unwrap()) {
+            0x8664 => "x86_64",
+            0xaa64 => "aarch64",
+            other => panic!("{label}: unexpected PE machine {other}"),
+        }
+    } else {
+        assert_eq!(
+            &bytes[..4],
+            b"\xcf\xfa\xed\xfe",
+            "single-architecture Mach-O"
+        );
+        match u32::from_le_bytes(bytes[4..8].try_into().unwrap()) {
+            0x1000007 => "x86_64",
+            0x100000c => "aarch64",
+            other => panic!("{label}: unexpected Mach-O machine {other}"),
+        }
+    };
+    assert_eq!(
+        machine,
+        std::env::consts::ARCH,
+        "{label}: non-native binary"
+    );
+    std::fs::write(artifacts.join(format!("{label}.architecture")), machine).unwrap();
     let (tool, flag) = if cfg!(target_os = "macos") {
         ("otool", "-tvV")
     } else if cfg!(target_os = "windows") {
@@ -166,7 +207,7 @@ fn queued_response_channels_release_transport_owners() {
                 .env_remove("FWP_GC")
                 .env("FWP_GC_STRESS", stress)
                 .env("FWP_GC_VERIFY", stress)
-                .env("FWP_REUSE_VERIFY", "1");
+                .env("FWP_REUSE_VERIFY", stress);
             let ordinary = start(command, Duration::from_secs(60));
             check_output(
                 client(None, Some(&ordinary.addr)),
@@ -193,12 +234,12 @@ fn queued_response_channels_release_transport_owners() {
                 let mut command = Command::new(&binary);
                 command
                     .args(["--listen", "127.0.0.1:0"])
-                    .env("FWP_SERVER_MEASURE_CALLS", "64")
+                    .env("FWP_SERVER_MEASURE_CALLS", "72")
                     .env("FWP_GC", "off")
                     .env("FWP_FREE", "1")
                     .env("FWP_GC_STRESS", "0")
                     .env("FWP_GC_VERIFY", "0")
-                    .env("FWP_REUSE_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", "0")
                     .env("FWP_GC_STATS", "0");
                 let mut server = start(command, Duration::from_secs(60));
                 if variant == "omitted-release" {
@@ -248,7 +289,7 @@ fn queued_response_channels_release_transport_owners() {
                         .split('\t')
                         .map(|n| n.parse().unwrap())
                         .collect();
-                    assert_eq!(&responses[..2], &[64, 0], "{case}");
+                    assert_eq!(&responses[..2], &[72, 0], "{case}");
                     assert!((1..=8).contains(&responses[2]), "{case}");
                     let final_counts: Vec<u64> = log
                         .lines()
@@ -262,7 +303,7 @@ fn queued_response_channels_release_transport_owners() {
                     assert_eq!(final_counts[5], 0, "{case}: collector ran");
                     assert_eq!(
                         &final_counts[6..],
-                        &[64, 64, 1, 1, 1, 64, 0, 0, 0],
+                        &[72, 72, 1, 1, 1, 72, 0, 0, 0],
                         "{case}"
                     );
                     std::fs::write(
