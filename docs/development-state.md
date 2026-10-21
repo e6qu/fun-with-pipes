@@ -2,13 +2,21 @@
 
 ## Next action
 
-Next: finish [PR #189](https://github.com/e6qu/fun-with-pipes/pull/189),
-`compact-task-records` in the primary workspace. Publish the measured results,
-then require all nine production jobs and documentation for that final commit.
-Audit every completed log, fix every failure together, and squash only after
-acceptance. The base is the user's early #188 merge
-`ffcf04763990356fb3cb3913d6414082e00aa178`. Continue through PLAN.md afterward;
-keep one delivery PR at a time.
+Next: validate the task-capture preparation on branch `queued-task-captures`,
+worktree `/private/tmp/fwp-queued-task-captures`. The candidate follows known task
+computations/results and checks whether a result can own its producer. Native
+and WebAssembly tests cover queued handles, aliases, cancellation, undrained
+queues and deliberately omitted releases. Rust formatting passed. The verified #188 macOS compiler formatted and
+type-checked the new fixture; its raw interpreter produced the expected output.
+That compiler also accepted the recursive task-result cycle for ARC emission.
+The new proof, native execution and WebAssembly checks remain unverified. Read the
+[measurement plan](measurements/queued-task-handles.md).
+
+[PR #189](https://github.com/e6qu/fun-with-pipes/pull/189) remains the sole active
+PR. Its final commit is `4dfc2be31c62c9e54271692ac8638fbb66ca786b`; production run
+`39641372026` and documentation run `39641321443` must pass and be audited before
+squash merge. The primary workspace keeps that delivery unchanged. Rebase this
+preparation onto the verified merge before opening its substantial next PR.
 
 ## Measured change and checks
 
@@ -67,17 +75,6 @@ Temporary helpers and receipts under `/private/tmp`:
   preserves the cancelled duplicate's diagnostics.
 - Final production run IDs and the exact delivery commit belong in the
   publication/acceptance receipts after publication. Preserve the measured source.
-
-## Following ownership group
-
-Preparation is isolated at `/private/tmp/fwp-queued-task-captures`, branch
-`queued-task-captures`, based on measured source `c10934f5dadf`. It is unpublished
-and unverified. The draft proof follows a captured task's known producer,
-computation and result; unknown task producers and mutable callback back-edges
-remain rejected. Initial unit tests and a repeated task-capture fixture are in
-progress. Complete adversarial result/alias/cancellation checks, native and
-WebAssembly cleanup measurements and documentation before delivery. Rebase this
-preparation onto #189's verified merge; do not create a competing PR.
 
 ## Roadmap status
 

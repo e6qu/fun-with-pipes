@@ -463,6 +463,19 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+      - name: Cache locked Rust dependencies
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies before offline builds
+        shell: bash
+        env:
+          CARGO_NET_RETRY: '5'
+          CARGO_HTTP_TIMEOUT: '30'
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - name: Native Windows toolchain
         if: runner.os == 'Windows'
         shell: pwsh
@@ -498,6 +511,11 @@ jobs:
         run: |
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output queued-function-evidence/inventory.json
           python3 scripts/test-native-test-runner.py
+      - name: Task-capture example formatting and types
+        if: ${{ !cancelled() }}
+        run: |
+          cargo run -- fmt --check tests/fixtures/queued_task_handles.fwp
+          cargo run -- check tests/fixtures/queued_task_handles.fwp
       - name: Compiler proof unit tests
         if: ${{ !cancelled() }}
         run: cargo test --lib
@@ -1407,6 +1425,19 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
+      - name: Cache locked Rust dependencies
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies before offline builds
+        shell: bash
+        env:
+          CARGO_NET_RETRY: '5'
+          CARGO_HTTP_TIMEOUT: '30'
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v7
         with:
           node-version: 24

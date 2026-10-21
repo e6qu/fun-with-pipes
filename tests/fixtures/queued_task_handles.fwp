@@ -1,0 +1,89 @@
+# A queued function owns a known task. The task's computation and result must
+# have no owning path back to a function queue, even before the task starts.
+Event = { read: () -> Option[String] ! {Async} }
+events : I64 -> Channel[Event] ! {Async}
+events = channel.make
+read-task : Task[String] -> () -> Option[String] ! {Async}
+read-task = curry (.0 | task.await)
+from-task : Task[String] -> Event
+from-task = read-task | make Event { read = id }
+start : String -> Task[String] ! {Async}
+start = const | task.spawn
+event : String -> Event ! {Async}
+event = start | from-task
+enqueue : Event -> Channel[Event] ! {Async}
+enqueue = both (const 1 | events) id | tap (fork channel.send .0 .1) | .0
+receive : Channel[Event] -> Option[String] ! {Async}
+receive = channel.recv | option.and-then (.read | apply ())
+require : Bool -> ()
+require = if id (const ()) (const "queued task assertion failed" | prim.trap)
+aliases : Event -> () ! {Async}
+aliases =
+    .read
+    | both (apply ()) (apply ())
+    | eq (Some "twice", Some "twice")
+    | require
+slow : () -> String ! {Async}
+slow = const 1h | task.sleep | const "too late"
+cancelled : () -> Event ! {Async}
+cancelled = const slow | task.spawn | tap task.cancel | from-task
+nested-read : Task[Task[String]] -> () -> Option[String] ! {Async}
+nested-read = curry (.0 | task.await | option.and-then task.await)
+nested : String -> Event ! {Async}
+nested = start | const | task.spawn | nested-read | make Event { read = id }
+Text = { text: String }
+returned : Text -> () -> String
+returned = .text | const
+read-returned : Task[() -> String] -> () -> Option[String] ! {Async}
+read-returned = curry (.0 | task.await | option.map (apply ()))
+function-result : String -> Event ! {Async}
+function-result =
+    make Text { text = id }
+    | returned
+    | const
+    | task.spawn
+    | read-returned
+    | make Event { read = id }
+fail-with : Channel[Event] -> () ! {Error[String]}
+fail-with = const "expected" | fail
+round : () -> () ! {Async}
+round =
+    tap
+        (const "first" | event | enqueue | receive | eq (Some "first") | require)
+    | tap (const "twice"
+        | event
+        | enqueue
+        | channel.recv
+        | option.map aliases
+        | eq (Some ())
+        | require)
+    | tap (cancelled | enqueue | receive | eq None | require)
+    | tap (const "nested"
+        | nested
+        | enqueue
+        | receive
+        | eq (Some "nested")
+        | require)
+    | tap (const "returned"
+        | function-result
+        | enqueue
+        | receive
+        | eq (Some "returned")
+        | require)
+    | tap (const "closed"
+        | event
+        | enqueue
+        | tap channel.close
+        | receive
+        | eq (Some "closed")
+        | require)
+    | tap (const "undrained" | event | enqueue | tap channel.close | ignore)
+    | tap (const "failed"
+        | event
+        | enqueue
+        | attempt fail-with
+        | eq (Err "expected")
+        | require)
+    | task.yield
+main =
+    range 0 64 | each (const () | round) | const "task captures released" | echo
