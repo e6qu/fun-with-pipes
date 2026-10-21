@@ -121,6 +121,10 @@ outside the benchmark suite.
    smaller scheduler heap records while counting saved CPU state, usable stack
    space and process memory separately. Its handoff records pending acceptance;
    moving storage is not eliminating it.
+   [Cancellation-state storage](docs/measurements/task-cancellation.md) is the
+   next preparation: borrow the live entry frame instead of embedding its saved
+   return state in every heap task record. Native and WebAssembly acceptance
+   remain pending; measure stack costs as well as smaller records.
 
 All seven work areas remain open. The syntax and native-platform foundations
 are implemented; the main remaining work is ownership, representation,

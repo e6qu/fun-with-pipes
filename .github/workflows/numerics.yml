@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -30,6 +30,63 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  task_cancellation_storage:
+    if: inputs.suite == 'task-cancellation'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]' || format('["{0}"]', inputs.native_runner)) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    env:
+      CC: ${{ startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      FWP_TASK_CANCELLATION_ARTIFACTS: task-cancellation-evidence
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Native Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/setup-windows.ps1
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - name: Cancellation storage, matched costs and broken-lifetime controls
+        if: ${{ !cancelled() }}
+        run: cargo test --test arc_tasks -- --nocapture
+      - name: Task handles, scopes, cancellation and library unload
+        if: ${{ !cancelled() }}
+        run: cargo test --no-fail-fast --test task_handle_ownership --test task_ownership --test task_timer_order --test loop_unwind_ownership --test typed_state_ownership --test library_unload
+      - name: Static task-stack budgets
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = Linux ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends strace
+            strace -V
+          fi
+          cargo test --test static_memory -- --skip golden_programs_with_static_memory
+      - name: Record source, host, toolchains and actual machine code
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p task-cancellation-evidence
+          git rev-parse HEAD > task-cancellation-evidence/source.txt
+          rustc -Vv > task-cancellation-evidence/rust.txt
+          "$CC" --version > task-cancellation-evidence/cc.txt
+          python3 scripts/inspect-task-cancellation.py --input task-cancellation-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: task-cancellation-${{ matrix.runner }}
+          path: task-cancellation-evidence/
+          if-no-files-found: error
   task_context_storage:
     if: inputs.suite == 'task-contexts'
     strategy:

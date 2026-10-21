@@ -201,7 +201,7 @@ struct fwp_task {
     int owns_thunk;
     enum fwp_task_ownership ownership;
     void (*result_drop)(V);
-    jmp_buf base;
+    jmp_buf *base; /* borrowed from the live task entry frame; null after unwind */
     /* saved runtime state */
     fwp_handler *handlers;
     fwp_cleanup *cleanups;
@@ -864,7 +864,7 @@ static void fwp_check_cancel(void) {
     t->unwinding = 1;
     fwp_cleanup_unwind(0);
     if (t == fwp_root) fwp_root_cancelled();
-    longjmp(t->base, 1);
+    longjmp(*t->base, 1);
 }
 
 /* The slice of the current task is over: unwind it if it was cancelled
@@ -930,7 +930,9 @@ static void fwp_task_main(void) {
     fwp_free_zombie();
     fwp_new_slice();
     fwp_task *t = fwp_cur;
-    if (setjmp(t->base) == 0) {
+    jmp_buf base;
+    t->base = &base;
+    if (setjmp(base) == 0) {
         if (t->cfn) {
             t->cfn(t->carg, 0);
         } else {
@@ -957,6 +959,7 @@ static void fwp_task_main(void) {
         t->trap_cleanup = 0;
         t->cfn(t->carg, 1);
     }
+    t->base = 0; /* no cancellation jump can outlive this entry frame */
     t->unwinding = 1;
     fwp_handlers = 0;
     fwp_state_restore(0);
