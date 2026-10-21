@@ -78,12 +78,14 @@ static void probe_context_roots(void) {
     sigaddset(&clear, SIGUSR1);
     if (fesetround(FE_UPWARD) || sigprocmask(SIG_UNBLOCK, &clear, NULL)) _Exit(194);
     fwp_tasks_init();
-    register char *held __asm__(PROBE_REGISTER) = fwp_alloc_leaf(64);
-    strcpy(held, "root saved register");
-    probe_hidden = (uintptr_t)held ^ PROBE_HIDE;
+    /* Create the child before the value, so getcontext cannot copy the tested
+     * pointer from the parent's registers into the child's initial image. */
     fwp_task *child = fwp_spawn_task(0, probe_root_reader, NULL, 0, 0);
     fwp_task_own_internal(child, 0);
     if (fwp_dequeue() != child) _Exit(194);
+    register char *held __asm__(PROBE_REGISTER) = fwp_alloc_leaf(64);
+    strcpy(held, "root saved register");
+    probe_hidden = (uintptr_t)held ^ PROBE_HIDE;
     fwp_make_ready(fwp_root);
     fwp_enter(child);
     __asm__ volatile("" : "+r"(held));
