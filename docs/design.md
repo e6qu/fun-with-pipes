@@ -97,8 +97,14 @@ with `e`, the two uses of `e` must stay related. For example,
 the result must not still require that handled error. Adding `Error` only to a
 temporary callback type would lose this relationship when the callback's input
 is itself a function. Argument checking preserves these shared rows, including
-handlers returned inside records. It still rejects unrelated required effects,
-such as IO under an error handler. This repair is pending native validation.
+handlers returned inside records. Returning a function produces a value;
+accepting one consumes a value. The check follows that direction through record
+and variant fields, rather than treating every occurrence of the same effect
+variable as a returned effect. It still rejects unrelated required effects,
+such as IO under an error handler. The [runnable regression](../tests/fixtures/handled_callbacks.fwp)
+covers these cases. The [focused acceptance report](measurements/queued-callbacks.md)
+records passing native and WASI checks; the [handoff](development-state.md) tracks
+final production acceptance.
 Only the last arrow of a binding may have effects, so partial application does
 not run that action early. Non-function top-level values must be pure, except
 program/test entry points.
