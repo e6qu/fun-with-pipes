@@ -2,71 +2,56 @@
 
 ## Next action
 
-Next: require all nine production jobs plus documentation for the final head of
-[PR #184](https://github.com/e6qu/fun-with-pipes/pull/184). Audit every completed log
-and fix every failure before merging.
-Then squash-merge with one subject under 80 characters and an empty body.
-Standing authorization remains in effect; no merge is authorized by focused
-checks alone.
+Next: run a Linux AMD64 CI probe for the data-queue capture proof, fix all
+failures, then run the full native and WebAssembly focused matrix. This is
+preparation for the next substantial PR; do not open another PR before #184
+passes its final gates and is merged. No new ownership support is verified yet.
 
-Branch `prove-retained-resource-ownership` is based on accepted PR #183 merge
-`447a18f8b1ac4b7faa2c655fa2ea7a24d4e0c44c`. Implementation `d0d27930` passed all
-eight jobs in focused run `39568125065`: six native platforms and two WASI hosts.
-The review commit adds the evidence report and documentation only.
+Branch `prove-data-queue-captures` is in `/private/tmp/fwp-data-queue-captures`,
+based on PR #184 review commit `0509937311ffd94171da9e2213c387d23e81739a`.
+PR #184 remains active in `/Users/zardoz/projects/fun-with-pipes`; its final CI
+is `39570320517`, with documentation `39570319685`. Its exact-head audit and
+conditional merge helpers are `/private/tmp/fwp-audit-184-final.py` and
+`/private/tmp/fwp-merge-184.py`. Keep the two checkouts and evidence separate.
+After the squash merge, transplant this preparation onto the accepted main
+commit, retaining its changes and the updated delivery history.
 
-## Current implementation
+## Implementation being checked
 
-Queued callbacks can capture `UdpSocket`, `Listener` and `Conn`. Their runtime
-objects cannot own a callback or queue; existing shared ownership keeps the
-socket alive and closes it on final release. Files retain their single-use rule.
-Channels, tasks, HTTP/2 streams and gRPC cells remain excluded as captures.
-The [ownership contract](ownership.md#functions-stored-in-channels) explains this
-subset. Ordinary runtime representation is unchanged.
+The finite ownership analysis now tracks known queue creators and unknown queue
+sources alongside function origins. A queued callback may capture a data-only
+queue created by `channel.make`, including through records, lists or other
+proved data queues. It checks values ever sent into nested queues; a known
+creator must not hide an unknown owner in its contents. Existing type checks
+still reject recursive queue ownership and function-bearing captured channels.
+Tasks, HTTP streams, gRPC cells and single-use files remain excluded captures.
+No runtime representation, weak-reference API or source syntax changes.
 
-The same PR fixes `attempt (apply ())` incorrectly retaining its handled Error
-effect. `src/infer.rs::argument_type` preserves the shared remaining effect row
-through returned functions, records and variants, while distinguishing accepted
-callbacks from produced values. Tests cover Error/State handlers, aliases,
-returned records, required IO and ordinary callback rules. The shared
-[handler fixture](../tests/fixtures/handled_callbacks.fwp) runs in the interpreter,
-native code and WASI. No syntax or named-handler special cases were added.
+Unit controls cover known/unknown producer joins, nested contents, empty
+containers, unrelated aggregate fields and callback-bearing queues. The new
+`queued_data_channels.fwp` fixture covers delivery, repeated reads, aliases,
+records/lists, nested and undrained queues, failure, blocked sends and
+cancellation. Native tests instrument live queue objects with a 64-object bound
+and require complete teardown; removing queue release must fail with exit 198.
+The same fixture joins asynchronous WASI/browser-loader tests in JSPI and
+Asyncify modes at O1/O2. These checks are added, not yet passed.
 
-## Validation and evidence
+## Checks and limits
 
-The [evidence guide](measurements/queued-callbacks.md) explains the scope and links
-the machine-readable report. All complete focused logs were audited. All 24
-native socket binaries match their platform and expected output; ARC excludes
-collector routines and tracing controls retain marking. Socket-object counts,
-descriptor closure and managed allocator teardown pass, including deliberately
-broken cleanup controls. Four WASI handler modules match interpretation and pass
-physical-allocation, byte and count-table teardown checks. These are correctness
-results, not performance or total-process memory claims.
+The accepted PR #183 macOS ARM64 compiler formatted the new fixture and its raw
+interpreter printed `data queues released` for all 64 rounds. The first draft's
+cancellation callback did not match task.spawn's permitted effect row; its
+stored Wait function now declares that existing API contract explicitly. The
+ordinary Event function keeps only Async. This source check does not validate
+the new ARC proof. Rust formatting is applied; no local build or native C
+compilation was run. Use `python3 scripts/local-guard.py` for all local checks.
 
-Receipts and reproducible audit scripts are under `/private/tmp`:
-`fwp-184-final-focused.json`, `fwp-audit-184-final-focused.py`,
-`fwp-184-final-download.py`, `fwp-184-wasi-evidence.py` and
-`fwp-184-final-report.py`. Downloaded artifacts and digest receipts are in
-`fwp-184-final-evidence/`. Source and run constants are explicit; do not reuse
-an older receipt as acceptance of a changed compiler.
-
-Earlier runs exposed fixture effects and handler-row inference failures. Their
-complete logs remain in `fwp-184-focused.json`, `fwp-184-handlers-probe.json` and
-`fwp-184-handlers-direction.json`; the final focused run verifies the repairs.
-No known failure is being deferred. Local guarded formatting, whitespace,
-primitive inventory and native-runner tooling checks passed. Full builds and
-native execution ran on GitHub, not locally.
-
-## Local resources
-
-Use `python3 scripts/local-guard.py` for serial local checks. Preserve 64 GiB
-free disk, target data below 2 GiB, sampled workload RSS below 1 GiB and the
-180-second limit. Move builds, full suites and measurements to GitHub.
-
-The hash-verified PR #183 macOS ARM64 compiler is
-`/private/tmp/fwp-183-macos-compiler/fwp-macos-arm64/fwp`; receipts are beside it.
-It can format source and check unchanged semantics, but predates both compiler
-changes here. Do not use it to claim candidate acceptance. Accepted older
-delivery details are in [history](roadmap-history.md#checked-product-bounds-pr-183).
+The prior full-CI timing review and next ownership notes are in
+`/private/tmp/fwp-183-test-duration-review.json` and
+`/private/tmp/fwp-184-next-ownership-notes.md`. They identify repeated REST server
+builds as a cycle-time investigation, without claiming a measured improvement.
+Disk remains close to the 64 GiB floor. Preserve current inspected binaries;
+cleanup receipts are recorded in the main checkout's handoff. Never raise limits.
 
 ## Roadmap status
 

@@ -1,0 +1,129 @@
+# Each callback owns a data queue. The data queue cannot store a callback,
+# so this ownership chain has no edge back to the callback queue.
+Event = { read: () -> String ! {Async} }
+texts : I64 -> Channel[String] ! {Async}
+texts = channel.make
+events : I64 -> Channel[Event] ! {Async}
+events = channel.make
+queues : I64 -> Channel[Channel[String]] ! {Async}
+queues = channel.make
+read-text : Channel[String] -> () -> String ! {Async}
+read-text = curry (.0 | channel.recv | option.unwrap-or "closed")
+filled : String -> Channel[String] ! {Async}
+filled = both (const 2 | texts) id | tap (fork channel.send .0 .1) | .0
+event : String -> Event ! {Async}
+event = filled | read-text | make Event { read = id }
+enqueue : Event -> Channel[Event] ! {Async}
+enqueue = both (const 1 | events) id | tap (fork channel.send .0 .1) | .0
+received : Channel[Event] -> String ! {Async}
+received =
+    channel.recv | option.map (.read | apply ()) | option.unwrap-or "missing"
+require : Bool -> ()
+require = if id (const ()) (const "queued data assertion failed" | prim.trap)
+twice : Event -> () ! {Async}
+twice = .read | both (apply ()) (apply ()) | eq ("first", "second") | require
+two-values : () -> Event ! {Async}
+two-values =
+    const "first"
+    | filled
+    | tap (flip channel.send "second")
+    | read-text
+    | make Event { read = id }
+closed-alias : () -> Event ! {Async}
+closed-alias =
+    const 1
+    | texts
+    | both (read-text | make Event { read = id }) id
+    | tap (.1 | channel.close)
+    | .0
+read-nested : Channel[Channel[String]] -> () -> String ! {Async}
+read-nested = curry (.0
+    | channel.recv
+    | option.map (channel.recv | option.unwrap-or "closed")
+    | option.unwrap-or "missing")
+nested : String -> Event ! {Async}
+nested =
+    filled
+    | both (const 1 | queues) id
+    | tap (fork channel.send .0 .1)
+    | .0
+    | read-nested
+    | make Event { read = id }
+Holder = { queue: Channel[String] }
+read-holder : Holder -> () -> String ! {Async}
+read-holder = curry (.0 | .queue | channel.recv | option.unwrap-or "closed")
+wrapped : String -> Event ! {Async}
+wrapped =
+    filled | make Holder { queue = id } | read-holder | make Event { read = id }
+read-list : List[Channel[String]] -> () -> String ! {Async}
+read-list =
+    curry (.0 | head | option.and-then channel.recv | option.unwrap-or "empty")
+listed : String -> Event ! {Async}
+listed = filled | singleton | read-list | make Event { read = id }
+empty : () -> Event
+empty = const [] | read-list | make Event { read = id }
+fail-queued : Channel[Event] -> () ! {Error[String]}
+fail-queued = const "expected" | fail
+send-pending : Channel[Event] -> () -> Bool ! {Async}
+send-pending = curry (fork channel.send .0 (.1 | const "pending" | event))
+# task.spawn accepts this explicit set of callback effects. Its queued function
+# uses that contract; ordinary Event callbacks keep their narrower Async effect.
+Wait = { read: () -> String ! {Async, IO, Network, FileIO} }
+waits : I64 -> Channel[Wait] ! {Async}
+waits = channel.make
+cancel-received : () -> () ! {Async}
+cancel-received =
+    const 1
+    | texts
+    | read-text
+    | make Wait { read = id }
+    | both (const 1 | waits) id
+    | tap (fork channel.send .0 .1)
+    | .0
+    | channel.recv
+    | option.map (.read
+        | task.spawn
+        | tap (const () | task.yield)
+        | tap task.cancel
+        | task.await)
+    | eq (Some None)
+    | require
+round : () -> () ! {Async}
+round =
+    tap (const "direct" | event | enqueue | received | eq "direct" | require)
+    | tap (two-values | enqueue | channel.recv | option.map twice | ignore)
+    | tap (closed-alias | enqueue | received | eq "closed" | require)
+    | tap (const "nested" | nested | enqueue | received | eq "nested" | require)
+    | tap
+        (const "record" | wrapped | enqueue | received | eq "record" | require)
+    | tap (const "list" | listed | enqueue | received | eq "list" | require)
+    | tap (empty | enqueue | received | eq "empty" | require)
+    | tap (const "undrained" | nested | enqueue | ignore)
+    | tap (const "closed" | event | enqueue | tap channel.close | ignore)
+    | tap (const "failure" | event | enqueue | attempt fail-queued | ignore)
+    | tap (const "full"
+        | event
+        | enqueue
+        | send-pending
+        | task.spawn
+        | tap (const () | task.yield)
+        | tap task.cancel
+        | task.await
+        | eq None
+        | require)
+    | tap (const "closed"
+        | event
+        | enqueue
+        | tap channel.close
+        | send-pending
+        | apply ()
+        | eq False
+        | require)
+    | tap cancel-received
+    | ignore
+main =
+    0
+    | flip range 64
+    | each (const () | round)
+    | const "data queues released"
+    | print
