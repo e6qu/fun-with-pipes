@@ -47,6 +47,19 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+      - name: Cache locked Rust dependencies
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies before offline builds
+        shell: bash
+        env:
+          CARGO_NET_RETRY: '5'
+          CARGO_HTTP_TIMEOUT: '30'
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - name: OpenSSL 3
         run: |
           brew install openssl@3
@@ -159,6 +172,19 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
+      - name: Cache locked Rust dependencies
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies before offline builds
+        shell: bash
+        env:
+          CARGO_NET_RETRY: '5'
+          CARGO_HTTP_TIMEOUT: '30'
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - name: OpenSSL 3
         run: |
           brew install openssl@3
@@ -238,6 +264,19 @@ jobs:
           components: rustfmt, clippy
           # fwp itself as WebAssembly (tests/browser.rs, the playground)
           targets: wasm32-wasip1
+      - name: Cache locked Rust dependencies
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies before offline builds
+        shell: bash
+        env:
+          CARGO_NET_RETRY: '5'
+          CARGO_HTTP_TIMEOUT: '30'
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -337,6 +376,19 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
+      - name: Cache locked Rust dependencies
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies before offline builds
+        shell: bash
+        env:
+          CARGO_NET_RETRY: '5'
+          CARGO_HTTP_TIMEOUT: '30'
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - name: OpenSSL headers (TLS)
         run: sudo apt-get update && sudo apt-get install -y libssl-dev
       - name: Generated standard-library docs preflight

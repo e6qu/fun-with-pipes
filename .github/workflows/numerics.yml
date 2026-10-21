@@ -43,6 +43,7 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_TASK_CANCELLATION_ARTIFACTS: task-cancellation-evidence
+      FWP_TASK_RECORD_ARTIFACTS: task-cancellation-evidence/records
       FWP_WINDOWS_ARC_CONTEXT_ARTIFACTS: task-cancellation-evidence/windows-context
       FWP_LTO: '0'
       CARGO_PROFILE_DEV_OPT_LEVEL: '1'
@@ -56,6 +57,19 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+      - name: Cache locked Rust dependencies
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies before offline builds
+        shell: bash
+        env:
+          CARGO_NET_RETRY: '5'
+          CARGO_HTTP_TIMEOUT: '30'
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - name: Native Windows toolchain
         if: runner.os == 'Windows'
         shell: pwsh
@@ -94,6 +108,9 @@ jobs:
       - name: Synthetic task cancellation at compiler and numerical boundaries
         if: ${{ !cancelled() }}
         run: cargo test --no-fail-fast --test compiler_call_liveness --test runtime_call_ownership --test worker_preparation_ownership --test fold_unwind_ownership --test map_unwind_ownership --test selection_unwind_ownership --test zip_unwind_ownership --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace --test autodiff_nested --test blocked_matrix --test list_applicative_ownership --test collection_construction
+      - name: Saved task registers and stack roots
+        if: ${{ !cancelled() }}
+        run: cargo test --test task_context_storage
       - name: Windows fibers without collector snapshots
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         run: cargo test --no-fail-fast --test windows_context --test windows_static_memory
@@ -2739,6 +2756,19 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-wasip1
+      - name: Cache locked Rust dependencies
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies before offline builds
+        shell: bash
+        env:
+          CARGO_NET_RETRY: '5'
+          CARGO_HTTP_TIMEOUT: '30'
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v7
         with:
           node-version: 24

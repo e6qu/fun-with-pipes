@@ -194,12 +194,12 @@ struct fwp_task {
     fwp_task *first_child, *next_sibling, *prev_sibling; /* live children */
     fwp_wl children_done; /* the task itself, waiting for its children */
     fwp_wl waiters;       /* tasks awaiting this one */
-    int done, cancelled, unwinding, has_result, ready, timed, timed_out, io_ready;
+    _Bool done, cancelled, unwinding, has_result, ready, timed, timed_out, io_ready;
+    _Bool owns_thunk;
+    enum fwp_task_ownership ownership;
     int64_t deadline; /* monotonic ns, 0 = none */
     int64_t wake_at;  /* timer while parked, 0 = none */
     V thunk, result;
-    int owns_thunk;
-    enum fwp_task_ownership ownership;
     void (*result_drop)(V);
     jmp_buf *base; /* borrowed from the live task entry frame; null after unwind */
     /* saved runtime state */
@@ -228,10 +228,10 @@ struct fwp_task {
     fwp_task *tprev, *tnext;    /* timer list */
     fwp_wl *wl;                 /* list this task is parked on */
     fwp_task *wprev, *wnext;
-    /* tasks with a stack, whose stacks hold roots for the collector
-     * (runtime/fwp_rt_gc.c): scanned from the stack pointer saved when
-     * the task was switched out */
-    char *gc_sp;
+#if FWP_GC && !defined(FWP_ARC_ONLY)
+    char *gc_sp; /* suspended stack bound used only by tracing */
+#endif
+    /* Live tasks: also needed by ARC for cancellation and shutdown. */
     fwp_task *gc_prev, *gc_next;
 };
 
@@ -721,7 +721,7 @@ static void fwp_switch(fwp_task *to) {
     if (to == from) return;
     fwp_leave(from);
     fwp_enter(to);
-#if FWP_GC
+#if FWP_GC && !defined(FWP_ARC_ONLY)
     from->gc_sp = fwp_gc_sp();
 #endif
 #ifdef FWP_FIBERS

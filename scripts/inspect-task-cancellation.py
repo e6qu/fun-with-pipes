@@ -48,6 +48,10 @@ expected = {
     for memory in ['arc', 'tracing']
     for control in ['verified', 'missing-clear', 'missing-entry']
 }
+expected |= {f'records/{memory}-{layout}-O{opt}'
+             for memory in ['arc', 'tracing']
+             for layout in ['preceding', 'compact'] for opt in [0, 2]}
+expected |= {f'records/{memory}-verified-O2' for memory in ['arc', 'tracing']}
 if system == 'Windows':
     expected |= {f'windows-context/abi-{variant}-O{opt}'
                  for variant in ['arc', 'restored-snapshot'] for opt in range(3)}
@@ -85,7 +89,8 @@ for binary in sorted(root.rglob('*.exe')):
     report['binaries'][label] = dict(
         machine=machine, bytes=len(data), sha256=hashlib.sha256(data).hexdigest(),
         c_sha256=hashlib.sha256(binary.with_suffix('.c').read_bytes()).hexdigest(),
-        status=desired, stderr=stderr, inspection=outputs)
+        status=desired, stderr=stderr, inspection=outputs,
+        source_kind='standalone C' if '/abi-' in label else 'generated fwp O1')
 root.joinpath('inspection.json').write_text(json.dumps(report, indent=2) + '\n')
 assert set(report['binaries']) == expected, sorted(expected - set(report['binaries']))
 print(f'Inspected {len(expected)} native binaries on {system} {architecture}')

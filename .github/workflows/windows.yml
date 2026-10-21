@@ -34,6 +34,19 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
+      - name: Cache locked Rust dependencies
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies before offline builds
+        shell: bash
+        env:
+          CARGO_NET_RETRY: '5'
+          CARGO_HTTP_TIMEOUT: '30'
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - name: Native C toolchain for foreign calls
         shell: pwsh
         id: windows_toolchain

@@ -85,7 +85,7 @@ fn arc_fibers_preserve_live_registers_without_collector_snapshots() {
             if expected == 0 {
                 assert_eq!(
                     out.stdout,
-                    b"ARC fibers preserve registers, stack, rounding and host ownership\n"
+                    b"ARC fibers preserve registers, stack, rounding and host ownership\r\n"
                 );
             } else {
                 assert!(out.stdout.is_empty());
