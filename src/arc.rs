@@ -4,6 +4,13 @@ use crate::ir::{Body, Program, TypeShape, MT};
 use crate::ownership::{Argument, Callback, ResultOwnership};
 use std::collections::HashSet;
 
+/// Producer contract for channel arguments supplied by an entry's caller.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum EntryChannels {
+    Unknown,
+    GrpcResponses,
+}
+
 /// Prove that a queue's payload cannot reach another channel of the same type.
 /// `value_type` checks each reachable channel type independently, so every cycle
 /// through a queue is rejected, including cycles inside a nested queue. Immutable
@@ -140,13 +147,17 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
     }
 }
 
-pub(crate) fn check(prog: &Program, entries: &[crate::ir::FuncId]) -> Result<(), String> {
+pub(crate) fn check(
+    prog: &Program,
+    entries: &[crate::ir::FuncId],
+    entry_channels: EntryChannels,
+) -> Result<(), String> {
     if let Some(name) = prog.unchecked_native_declarations.first() {
         return Err(format!(
             "--gc arc: native declaration `{name}` has no checked ownership signature"
         ));
     }
-    crate::arc_scope::check(prog, entries)?;
+    crate::arc_scope::check(prog, entries, entry_channels)?;
     let mut seen = HashSet::new();
     for f in &prog.funcs {
         let reject = |reason: String| format!("--gc arc: `{}`: {reason}", f.name);

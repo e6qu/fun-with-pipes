@@ -2,79 +2,66 @@
 
 ## Next action
 
-Next: require all nine production jobs plus documentation for the final head
-of the data-queue capture PR on `prove-data-queue-captures`. Audit every completed
-log and fix every failure. Then squash-merge with an explicit one-line subject
-under 80 characters and an empty body. Standing authorization remains in effect;
-focused checks alone do not authorize merge. Keep one active PR.
+Next: finish the gRPC response-channel capture proof, add native service tests
+for delivery, failure and cancellation, then run focused checks on GitHub.
+This is unverified preparation in `/private/tmp/fwp-grpc-sender-captures`, branch
+`prove-grpc-sender-captures`, based on PR #185 head
+`73850bd3b6ac460a7e077cea8cd1128f9913aea0`. No second PR exists.
 
-PR #184 passed all ten gates and was squash-merged as
-`b3401149955ff6e0aaa1d70044b527aec20f2e5f`. Its tested head `0509937311ffd94171da9e2213c387d23e81739a`
-and merge have identical trees. The [history](roadmap-history.md#queued-socket-callbacks-and-handler-inference-pr-184)
-records acceptance; local receipt `/private/tmp/fwp-184-final-acceptance.json`
-verifies the message, parent and tree. Do not repeat that completed delivery.
+PR #185 remains active in `/Users/zardoz/projects/fun-with-pipes`. Its production
+run is `39584128319`, docs `39584128240`; full acceptance is not complete.
+Use `/private/tmp/fwp-audit-185-final.py` and `fwp-merge-185.py` there. Preserve
+that final head while its gates run. After it merges, transplant this preparation
+onto accepted main before opening the next PR. All commit messages remain one
+line, at most 80 characters, with no body or trailers.
 
-This checkout is `/private/tmp/fwp-data-queue-captures`, based on that accepted
-main commit. All eight focused jobs in
-`39578006890` passed at `3e3385c12fda3097b39f901146b4290bb32161e5`; remote tag
-`roadmap/revision-data-queues-3e3385c12fda` preserves that source. Only a source
-comment, documentation and evidence changed afterward. Final-head production
-checks remain required; their IDs will be recorded locally after publication.
+## Producer contract under development
 
-## What changed
+`g_run_method` alone calls `g_sink_value`, with a codec whose captured function
+is zero. This response channel owns a stream and connection. gRPC connections
+have no `g_web` handler; server descriptors contain static metadata. Stream task
+identities and waiter lists are borrowed, not owning callback references.
+`g_sink_drop` releases the stream and connection; typed cleanup already exists.
+These facts suggest a safe producer contract, not general native-channel safety.
 
-The ownership analysis tracks known queue creators and unknown sources alongside
-functions. A queued callback may capture a data-only queue from `channel.make`,
-including through records, lists and nested data queues. Every value sent into a
-nested queue is checked. A known outer creator cannot hide an unknown inner owner.
-Function-return summaries now preserve queue origins; the first probe exposed
-that they previously erased all non-function origins. A full-analysis unit control
-covers that repair. First probe audit: `/private/tmp/fwp-data-queue-probe.json`.
+The prototype adds explicit `arc::EntryChannels::{Unknown, GrpcResponses}`.
+Only `cgen::Mode::Service` supplies the response contract. `arc_scope` records
+`Origin::GrpcSender(method)` for the last channel argument of a matching served
+method with channel output. Its type still needs the data-only capture proof.
+Other arguments and external channels stay unknown. The queue-source walk now
+handles both ordinary queues and native response senders. No runtime changes.
 
-Function-bearing captured queues, recursive queue ownership, unknown/native
-producers, tasks, HTTP streams, gRPC cells and single-use files retain their
-restrictions. No runtime layout, weak-reference API or syntax changes were added.
-The [ownership guide](ownership.md#functions-stored-in-channels) includes an
-explained example; the [evidence guide](measurements/queued-data-channels.md)
-states exactly what the checks measure and exclude.
+A new full-analysis unit control checks that identical signatures/service metadata
+are insufficient without the explicit entry contract, that another channel input
+stays unknown, and that a missing method contract is rejected. Existing 24 unit
+calls now pass the unknown policy explicitly. Only formatting/whitespace checks
+have run; compiler build and tests have not run yet.
 
-## Verified checks
+## Required native evidence
 
-The focused matrix covers six native platforms and two Linux WebAssembly hosts.
-Every complete log was audited. All 24 native binaries have the expected
-architecture, output, generated C and disassembly. ARC excludes collector routines;
-tracing controls retain marking. The 64-round fixture verifies normal delivery,
-aliases, nested queues, failure, blocked sends and cancellation. Queue counts return
-to zero; deliberately omitted releases fail with exit 198.
+Use the existing `tests/grpc.rs` server/client helpers. A new service fixture should
+queue callbacks capturing a response channel, including tuple/record and nested
+queue paths. Exercise repeated sends, undrained/closed queues, rejected sends,
+caught errors and blocked-task cancellation across repeated requests. Compare
+raw interpretation with native ARC/tracing at O0/O2. Count live native response
+channels, stream/connection cleanup and managed bytes; deliberately omit a queued
+release to verify detection. Inspect actual C, native binaries and disassembly.
+WASI has no native gRPC server claim; keep its existing ownership regression gates.
 
-Both WebAssembly hosts pass WASI/browser-loader execution under Node, with JSPI
-and Asyncify at O1/O2. All 64 modules, saved C and successful-run symbol listings
-were inspected. Physical-allocation/count-table teardown passes; omitted scheduler
-or queue cleanup fails with exit 244. This is not an actual-browser test, speed
-benchmark, retain/release count or total-process memory bound.
+`tests/support/grpc_server_measurement.rs` and `tests/fixtures/server-memory/probe.c`
+provide existing post-request cleanup instrumentation. Reuse it where suitable;
+keep timing/allocation claims separate from correctness. The `channel-proof`
+workflow already covers six native hosts and two WASI hosts; add an explicit
+filtered gRPC integration step if the new test goes in `tests/grpc.rs`.
+Do not replace unknown producers with type-based acceptance or tracing.
 
-Local receipts and scripts: `/private/tmp/fwp-data-queue-matrix.json`,
-`fwp-audit-data-queue-matrix.py`, `fwp-data-queue-evidence.py`,
-`fwp-data-queue-wasi-evidence.py` and `fwp-data-queue-report.py`.
-Inspected files and download digests are in `/private/tmp/fwp-data-queue-evidence`;
-verified ZIP containers were removed to save space. The report retains artifact
-IDs and digests for recovery. The accepted PR #183 macOS compiler also checked
-raw interpretation of the fixture and the documentation example. Full builds and
-native execution ran on GitHub, not locally.
+## Local work
 
-## Local resources and next investigations
-
-Use `python3 scripts/local-guard.py COMMAND...` for serial local checks. Preserve
-64 GiB free disk, target data below 2 GiB, sampled workload RSS below 1 GiB and
-the 180-second deadline. Last measured free space was 64.35 GiB. Do not raise limits.
-The main handoff records verified cache cleanup, including 388 MiB of byte-identical
-older inputs whose canonical copies remain. Current inspected binaries are retained.
-
-The previous full-CI timing review is `/private/tmp/fwp-183-test-duration-review.json`.
-Repeated REST server compilation is a possible cycle-time investigation, not a
-measured improvement. Research notes are `/private/tmp/fwp-184-next-ownership-notes.md`;
-its candidate data-queue scope is now implemented, not a task to repeat. Select the
-next ownership gap from maintained programs and explicit producer contracts.
+Run checks through `python3 scripts/local-guard.py`, serially and at low priority.
+No local full build, native C compilation, full test gate or benchmark. Preserve
+64 GiB free disk, target below 2 GiB, sampled RSS below 1 GiB and the 180-second
+limit. Free disk was 65.19 GiB before this small checkout. The main handoff records
+cleanup receipts; modified and evidence-containing historical checkouts remain.
 
 ## Roadmap status
 
