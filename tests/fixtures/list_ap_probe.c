@@ -72,10 +72,11 @@ static int flat_probe(void) {
             /* This synthetic task executes on the main thread stack. */
             ap_cancelled_task.ctx.top=fwp_gc.main_top;
 #endif
-            if(!setjmp(ap_cancelled_task.base)) {
+            jmp_buf ap_cancelled_task_base; ap_cancelled_task.base = &ap_cancelled_task_base;
+            if (!setjmp(ap_cancelled_task_base)) {
                 fwp_p_flat_map_owned(PTR(&flat_callback),inputs,fwp_rc_dup,ap_drop_element,ap_drop_list);return 98;
             }
-            fwp_cur=ap_saved_task;if(!ap_cancelled_task.unwinding) return 98;
+            ap_cancelled_task.base=NULL;fwp_cur=ap_saved_task;if(!ap_cancelled_task.unwinding) return 98;
         } else if(!setjmp(ap_recovered)) {
             V result=fwp_p_flat_map_owned(PTR(&flat_callback),inputs,fwp_rc_dup,ap_drop_element,ap_drop_list);
             if(ap_mode) return 98;
@@ -123,8 +124,9 @@ int main(void) {
             /* This synthetic task executes on the main thread stack. */
             ap_cancelled_task.ctx.top=fwp_gc.main_top;
 #endif
-            if(!setjmp(ap_cancelled_task.base)) { fwp_p_list_ap_owned(fs,xs,ap_drop_element,ap_drop_list);return 82; }
-            fwp_cur=ap_saved_task;if(!ap_cancelled_task.unwinding) return 83;
+            jmp_buf ap_cancelled_task_base; ap_cancelled_task.base = &ap_cancelled_task_base;
+            if (!setjmp(ap_cancelled_task_base)) { fwp_p_list_ap_owned(fs,xs,ap_drop_element,ap_drop_list);return 82; }
+            ap_cancelled_task.base=NULL;fwp_cur=ap_saved_task;if(!ap_cancelled_task.unwinding) return 83;
         } else if(!setjmp(ap_recovered)) {
             V result=fwp_p_list_ap_owned(fs,xs,ap_drop_element,ap_drop_list);
             if(ap_mode) return 84;

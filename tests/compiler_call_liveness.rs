@@ -120,9 +120,11 @@ int main(void){
   fwp_handlers=&h;
   memset(&cancelled_alias_task,0,sizeof cancelled_alias_task);
   if(mode==2){
-   if(!setjmp(cancelled_alias_task.base)){
+   jmp_buf cancelled_alias_task_base; cancelled_alias_task.base = &cancelled_alias_task_base;
+   if (!setjmp(cancelled_alias_task_base)){
     (void)f1(fwp_rc_fresh(fwp_record(2,(V[]){live_channel,42})));return 76;
    }
+   cancelled_alias_task.base=NULL;
    if(!cancelled_alias_task.unwinding)return 76;
   }else if(!setjmp(h.jb)){
    V returned=f1(fwp_rc_fresh(fwp_record(2,(V[]){live_channel,42})));
@@ -460,8 +462,9 @@ int main(void) {
   if(alias) fwp_rc_dup(input_value);
   memset(&cancelled_borrowed_task,0,sizeof cancelled_borrowed_task);
   cancel_borrowed_entry=1;
-  if(!setjmp(cancelled_borrowed_task.base)) { f2(input_value,0); return 11; }
-  fwp_cur=0; cancel_borrowed_entry=0;
+  jmp_buf cancelled_borrowed_task_base; cancelled_borrowed_task.base = &cancelled_borrowed_task_base;
+  if (!setjmp(cancelled_borrowed_task_base)) { f2(input_value,0); return 11; }
+  cancelled_borrowed_task.base=NULL; fwp_cur=0; cancel_borrowed_entry=0;
   if(!cancelled_borrowed_task.unwinding || fwp_cleanups) return 12;
   if(alias) {
    if(*fwp_rc_slot(input_value)!=1 || STR(input_value)->len!=5) return 13;
@@ -900,8 +903,10 @@ int main(void) {
     cancelled_task.cancelled = 1;
     fwp_cur = &cancelled_task;
     fwp_budget = 0;
-    if (!setjmp(cancelled_task.base)) { HOLD(PTR(&entry_fn), incoming); return 1; }
+    jmp_buf cancelled_task_base; cancelled_task.base = &cancelled_task_base;
+    if (!setjmp(cancelled_task_base)) { HOLD(PTR(&entry_fn), incoming); return 1; }
     fwp_cur = 0;
+    cancelled_task.base=NULL;
     if (entered_callback || fwp_cleanups || !cancelled_task.unwinding) return 2;
     if (fwp_reuse_verify ? STR(incoming)->len != 0 : *fwp_rc_slot(incoming) != 0) return 3;
     puts("incoming owners release before cancellation");

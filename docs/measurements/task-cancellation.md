@@ -31,9 +31,13 @@ unoptimized interpreter and a stored expected result.
 
 [The test](../../tests/arc_tasks.rs) generates C once for each of ARC and tracing
 mode, at fwp optimization level O1. It reconstructs the old embedded `jmp_buf`
-layout in that same generated C. Both layouts compile at native O0 and O2 using
-the production compiler for the host. Both contain identical allocation hooks;
-candidate-only lifetime assertions run in separate binaries.
+layout in that same generated C. Both compile at native O0 (unoptimized) and O2
+(optimized) using the production compiler for the host, with
+`-std=gnu11 -ffp-contract=off -w`. The focused workflow disables optimization
+across compiled units at the final link (`FWP_LTO=0`), so source length cannot
+silently select a different compilation path for one layout. Artifacts record
+these settings and the platform link libraries. Both layouts contain identical
+allocation hooks; candidate-only lifetime assertions run in separate binaries.
 
 For each pair it reports managed allocation requests, requested bytes, reference
 count increments, peak allocator charge, final charge and collection count.

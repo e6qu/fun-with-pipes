@@ -43,6 +43,13 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_TASK_CANCELLATION_ARTIFACTS: task-cancellation-evidence
+      FWP_LTO: '0'
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -54,6 +61,27 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
+      - uses: actions/cache/restore@v6
+        id: cancellation_tls_cache
+        if: runner.os == 'Windows'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native Windows TLS dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v6
+        if: runner.os == 'Windows' && env.FWP_WINDOWS_DEPS_READY == '1' && steps.cancellation_tls_cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets -- -D warnings
       - name: Cancellation storage, matched costs and broken-lifetime controls
@@ -62,6 +90,9 @@ jobs:
       - name: Task handles, scopes, cancellation and library unload
         if: ${{ !cancelled() }}
         run: cargo test --no-fail-fast --test task_handle_ownership --test task_ownership --test task_timer_order --test loop_unwind_ownership --test typed_state_ownership --test library_unload
+      - name: Synthetic task cancellation at compiler and numerical boundaries
+        if: ${{ !cancelled() }}
+        run: cargo test --no-fail-fast --test compiler_call_liveness --test runtime_call_ownership --test worker_preparation_ownership --test fold_unwind_ownership --test map_unwind_ownership --test selection_unwind_ownership --test zip_unwind_ownership --test ad_tape_scopes --test ad_tape_ownership --test autodiff_workspace --test autodiff_nested --test blocked_matrix --test list_applicative_ownership --test collection_construction
       - name: Static task-stack budgets
         if: ${{ !cancelled() }}
         shell: bash

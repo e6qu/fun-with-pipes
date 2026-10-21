@@ -18,6 +18,7 @@ root = args.input
 system = os.environ['RUNNER_OS']
 architecture = os.environ['RUNNER_ARCH']
 assert architecture in {'X64', 'ARM64'}, architecture
+assert os.environ['FWP_LTO'] == '0'
 host_commands = {
     'Linux': ['lscpu'],
     'macOS': ['sysctl', 'machdep.cpu', 'hw.memsize'],
@@ -31,7 +32,12 @@ inspection_commands = {
 }
 report = dict(source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
               os=system, architecture=architecture, platform=platform.platform(),
-              cpu=subprocess.check_output(host_commands[system], text=True), binaries={})
+              cpu=subprocess.check_output(host_commands[system], text=True),
+              compilation=dict(compiler=os.environ['CC'], fwp_optimization='O1',
+                  native_optimizations=['-O0', '-O2'], link_time_optimization=False,
+                  flags=['-std=gnu11', '-ffp-contract=off', '-w'],
+                  runtime_libraries=['-lm', '-lws2_32', '-lshell32'] if system == 'Windows'
+                                    else ['-lm', '-lpthread']), binaries={})
 expected = {
     f'{memory}-{layout}{opt}'
     for memory in ['arc', 'tracing']

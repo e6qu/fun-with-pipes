@@ -63,8 +63,9 @@ int main(void) {
             /* This synthetic task executes on the main thread stack. */
             cancelled_task.ctx.top=fwp_gc.main_top;
 #endif
-            if (!setjmp(cancelled_task.base)) { fwp_p_ad_backward(selected_base,outputs,seeds);return 34; }
-            fwp_cur=saved_current;
+            jmp_buf cancelled_task_base; cancelled_task.base = &cancelled_task_base;
+            if (!setjmp(cancelled_task_base)) { fwp_p_ad_backward(selected_base,outputs,seeds);return 34; }
+            cancelled_task.base=NULL;fwp_cur=saved_current;
             if (!cancelled_task.unwinding) return 35;
         } else if (!setjmp(recovered)) {
             V result=fwp_p_ad_backward(selected_base,outputs,seeds);

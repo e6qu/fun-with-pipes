@@ -124,8 +124,9 @@ int main(void){
             /* This synthetic task executes on the main thread stack. */
             workspace_cancelled.ctx.top=fwp_gc.main_top;
 #endif
-            if(!setjmp(workspace_cancelled.base)){fwp_p_ad_backward(workspace_base,workspace_outputs,workspace_seeds);return 197;}
-            fwp_cur=workspace_saved_task;if(!workspace_cancelled.unwinding)return 198;
+            jmp_buf workspace_cancelled_base; workspace_cancelled.base = &workspace_cancelled_base;
+            if (!setjmp(workspace_cancelled_base)){fwp_p_ad_backward(workspace_base,workspace_outputs,workspace_seeds);return 197;}
+            workspace_cancelled.base=NULL;fwp_cur=workspace_saved_task;if(!workspace_cancelled.unwinding)return 198;
         } else if(!setjmp(workspace_recovered)){
             V result=fwp_rc_fresh(fwp_p_ad_backward(workspace_base,workspace_outputs,workspace_seeds));
             if(workspace_mode==1)return 199;fwp_rc_free_arr(result);

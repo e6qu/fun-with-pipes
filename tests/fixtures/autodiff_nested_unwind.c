@@ -33,8 +33,9 @@ int main(int argc, char **argv) {
         nested_cancelled.ctx.top = saved->ctx.top;
 #endif
         fwp_cur = &nested_cancelled;
-        if (!setjmp(nested_cancelled.base)) { NESTED_MAIN(); return 191; }
-        fwp_cur = saved;
+        jmp_buf nested_cancelled_base; nested_cancelled.base = &nested_cancelled_base;
+        if (!setjmp(nested_cancelled_base)) { NESTED_MAIN(); return 191; }
+        nested_cancelled.base=NULL;fwp_cur = saved;
         if (!nested_cancelled.unwinding) return 192;
     } else if (!setjmp(nested_recovered)) {
         NESTED_MAIN();
