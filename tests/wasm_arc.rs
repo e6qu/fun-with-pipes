@@ -61,6 +61,78 @@ fn emit(source: &Path, cfile: &Path, entry: &[&str], target: &str) -> String {
     code
 }
 
+#[test]
+fn wasi_return_state_table_checks_growth_allocation_and_identifiers() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-return-state").unwrap();
+    let tail = r#"
+int main(void) {
+    uint32_t capacity = PROBE_CASE == 5 ? 0 : 2;
+    uintptr_t saved[10] = {0};
+    fwp_sj_entry *table = calloc(capacity + 1, sizeof *table);
+    if (!table) return 218;
+    if (PROBE_CASE == 2) fwp_setjmp_id = UINTPTR_MAX;
+    for (uint32_t i = 0; i < 10; i++) {
+        table = saveSetjmp(&saved[i], i + 1, table, capacity);
+        capacity = getTempRet0();
+        if (!saved[i] || table[i + 1].id) return 218;
+        for (uint32_t j = 0; j <= i; j++)
+            if (testSetjmp(saved[j], table, capacity) != j + 1) return 218;
+    }
+    if (PROBE_CASE) return 219; /* every failure case must stop in the helper */
+    if (capacity != 16 || probe_reallocations != 3) return 218;
+    free(table);
+    puts("return states preserved");
+    return 0;
+}
+"#;
+    for (case, diagnostic) in [
+        (0, ""),
+        (1, "cannot grow WebAssembly return-state table"),
+        (2, "WebAssembly return-state identifiers exhausted"),
+        (3, "WebAssembly return-state table too large"),
+        (4, "WebAssembly return-state table too large"),
+        (5, "WebAssembly return-state table too large"),
+    ] {
+        let source = format!(
+            "#define PROBE_CASE {case}\n{}\n{}\n{tail}",
+            include_str!("fixtures/wasm_return_state.c"),
+            include_str!("../runtime/wasm/sjlj.c")
+        );
+        for opt in ["-O1", "-O2"] {
+            let label = format!("return-state-{case}{opt}");
+            let binary = dir.join(format!("{label}.wasm"));
+            fwp::cgen::compile_for(&source, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+            let output = wasi(&binary, dir.path()).output().unwrap();
+            if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                let path = std::path::PathBuf::from(path);
+                std::fs::create_dir_all(&path).unwrap();
+                std::fs::write(path.join(format!("{label}.c")), &source).unwrap();
+                std::fs::copy(&binary, path.join(format!("{label}.wasm"))).unwrap();
+                std::fs::write(path.join(format!("{label}.stdout")), &output.stdout).unwrap();
+                std::fs::write(path.join(format!("{label}.stderr")), &output.stderr).unwrap();
+            }
+            assert_eq!(
+                output.status.code(),
+                Some(if case == 0 { 0 } else { 217 }),
+                "{label}: {output:?}"
+            );
+            if case == 0 {
+                assert_eq!(output.stdout, b"return states preserved\n");
+                assert!(output.stderr.is_empty());
+            } else {
+                assert!(output.stdout.is_empty());
+                assert_eq!(
+                    String::from_utf8_lossy(&output.stderr),
+                    format!("fwp: {diagnostic}\n")
+                );
+            }
+        }
+    }
+}
+
 fn allocator_source(source: &Path, cfile: &Path) -> String {
     let code = emit(source, cfile, &[], "wasm32-wasi")
         .replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1");

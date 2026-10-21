@@ -2,8 +2,9 @@
 
 ## Next action
 
-Next: publish `task-cancellation-stack` for focused native and WebAssembly
-validation. This is an isolated preparation in `/private/tmp/fwp-task-cancellation`;
+Next: audit native run `39615869608` and WebAssembly run `39615873962` for
+`8a1cbe3d824a4e9fbc3fd642504567813d61d8f6` on `task-cancellation-stack`.
+This is an isolated preparation in `/private/tmp/fwp-task-cancellation`;
 PR #187 remains the sole active delivery. Do not open another PR until it merges.
 
 PR #187 tests `81bb3efa8e3f2cc5f3dd9f0ae9952709088c2905` in production run
@@ -38,6 +39,12 @@ verifies each binary's native architecture and records real disassembly, section
 hashes and host/toolchains. Run `wasm-hosts` separately for actual JSPI/Asyncify
 execution. No native build, benchmark or full suite runs locally.
 
+The WebAssembly helper review also found unchecked return-state table growth.
+The local repair checks capacity/byte overflow, allocation failure and identifier
+exhaustion, with exact-diagnostic WASI tests. This repair is not in the first
+published focused source above; batch any focused failures with it before the
+next push. The guide records the pointer-width identifier limit explicitly.
+
 ## Checks and publication
 
 All local checks use `python3 scripts/local-guard.py COMMAND...` from the root
@@ -45,8 +52,11 @@ worktree. `rustfmt --edition 2021 --check` passed for the three changed tests;
 `python3 -m py_compile` passed for the inspector. The native runner's
 `Coverage.test_repository_targets_are_assigned_exactly_once` passed. No test
 target was added or moved. Native execution and measurements remain pending;
-do not claim reduced process memory or faster execution. Run the documentation
-audit before publishing and preserve one-line commit messages.
+do not claim reduced process memory or faster execution. The documentation audit
+passed 79 link sets, 106 immutable pairs and seven roadmap areas.
+Publication receipt: `/private/tmp/fwp-task-cancellation-publication.json`.
+Keep this local status update until the evidence is ready; do not restart healthy
+focused runs merely to publish the handoff.
 
 After focused acceptance, inspect all saved binaries and measurements, fix any
 failures, then rebase onto PR #187's verified squash merge. Update the report and

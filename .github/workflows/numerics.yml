@@ -2727,6 +2727,9 @@ jobs:
       - name: Loader exception boundaries
         if: inputs.suite == 'wasm-hosts'
         run: node tests/wasm/loader-errors.mjs
+      - name: Return-state growth and allocation failure
+        if: ${{ !cancelled() && inputs.suite == 'wasm-hosts' }}
+        run: cargo test --test wasm_arc wasi_return_state_table_checks_growth_allocation_and_identifiers -- --exact --nocapture
       - name: Task owners through JSPI and Asyncify
         if: inputs.suite == 'wasm-hosts'
         run: cargo test --test wasm_arc wasi_tasks_release_captures_channels_stacks_and_scheduler -- --exact --nocapture
