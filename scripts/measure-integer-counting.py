@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare saved decimal counters and a one-loop candidate on each allowed CPU."""
+"""Compare saved decimal counters and a grouped-digit candidate on each allowed CPU."""
 import argparse
 import importlib.util
 import json
@@ -68,9 +68,9 @@ def main():
     for executable in executables.values():
         executable.chmod(0o755)
     original = (directory / 'text-length-generated.c').read_text()
-    # The helper has a loop body, so match through the function's column-zero
-    # closing brace instead of the first closing brace inside that loop.
-    pattern = r'static int64_t fwp_i64_chars\(int64_t x\) \{.*?\n\}'
+    # Match both complete helpers, including nested conditional/loop bodies.
+    pattern = (r'static int64_t fwp_u64_chars\(uint64_t x\) \{.*?\n\}\n\n'
+               r'static int64_t fwp_i64_chars\(int64_t x\) \{.*?\n\}')
     old_helper, = re.findall(pattern, original, re.S)
     new_helper, = re.findall(pattern, (ROOT / 'runtime/fwp_rt_ops.c').read_text(), re.S)
     assert old_helper != new_helper
@@ -177,8 +177,8 @@ def main():
         'scope': 'C, Rust and fwp count decimal characters for i and checked 3*i over '
                  '0 <= i < 2000000, with checked accumulation and output 28518516. '
                  'C/Rust and saved fwp executables come from the audited earlier run. '
-                 'Rebuilt fwp uses unchanged saved C; candidate changes only signed '
-                 'digit counting to one loop. Both use GCC O2, no LTO. Balanced '
+                 'Rebuilt fwp uses unchanged saved C; candidate changes only integer '
+                 'digit counting to descending decimal groups. Both use GCC O2, no LTO. Balanced '
                  'whole-process timing includes startup, output and shutdown; wall '
                  'time includes Python subprocess launch, child CPU excludes parent '
                  'and descheduling. Compilation, audit and memory instrumentation '

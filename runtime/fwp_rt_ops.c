@@ -359,15 +359,18 @@ static V fwp_show_i64(V v) {
 
 static int64_t fwp_u64_chars(uint64_t x) {
     int64_t n = 1;
-    while (x >= 10) { x /= 10; n++; }
+    /* Remove decimal digit groups, largest first. U64 has at most 20 digits. */
+    if (x >= UINT64_C(10000000000000000)) { x /= UINT64_C(10000000000000000); n += 16; }
+    if (x >= UINT64_C(100000000)) { x /= UINT64_C(100000000); n += 8; }
+    if (x >= UINT64_C(10000)) { x /= UINT64_C(10000); n += 4; }
+    if (x >= UINT64_C(100)) { x /= UINT64_C(100); n += 2; }
+    if (x >= UINT64_C(10)) n++;
     return n;
 }
 
 static int64_t fwp_i64_chars(int64_t x) {
     uint64_t magnitude = x < 0 ? (uint64_t)0 - (uint64_t)x : (uint64_t)x;
-    int64_t n = 1 + (x < 0);
-    while (magnitude >= 10) { magnitude /= 10; n++; }
-    return n;
+    return fwp_u64_chars(magnitude) + (x < 0);
 }
 
 static void fwp_display_top(V v, const fwp_desc *d, FILE *out) {

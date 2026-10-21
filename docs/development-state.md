@@ -5,12 +5,24 @@
 Next: run the controlled [integer-counting comparison](measurements/integer-counting.md)
 and focused scalar-text correctness suite on GitHub from branch
 `investigate-native-counting-costs`, based on accepted merge `c98da7a5`.
-The candidate shares one signed digit-counting loop; no speed benefit is yet
-established. The experiment compares saved C/Rust/fwp, rebuilt unchanged fwp and
+The candidate counts decimal digits in groups of 16, 8, 4, 2 and 1; no speed
+benefit is yet established. The earlier shared-loop candidate was 1–4% slower
+than an unchanged rebuild on AMD64 and is not selected as an improvement. The experiment compares saved C/Rust/fwp, rebuilt unchanged fwp and
 the candidate on every allowed CPU, preserving all samples and generated code.
 Boundary tests now cover both sides of all signed/unsigned decimal transitions.
-No PR is open. Bundle the verified optimization, measurement and documentation
-in one PR; require all nine production gates and documentation before squash merge.
+[Draft PR #182](https://github.com/e6qu/fun-with-pipes/pull/182) groups this work.
+Preparation `995d3ecfd451700ec93e0fc1b326f8be0503bad5` has controlled measurement
+run `39525618134`, focused scalar-text run `39525621027` and documentation run
+`39525810747`. Measurement and documentation passed; focused checks are
+still running. Both measurement logs are audited clean, as is documentation.
+Saved artifacts: `/private/tmp/fwp-counting-costs`; full-log receipt:
+`/private/tmp/fwp-counting-preparation-audit.json`. Production run `39525810735` is intentionally skipped for
+the draft; it is not acceptance. Audit all completed jobs and retained samples
+before marking the PR ready. Require all nine final-head production gates and
+documentation before squash merge. Keep its subject one line, at most 80
+characters, with an explicit empty body and no trailers or attribution.
+The contributor guide's obsolete claim of no third-party Rust crates is also
+corrected to match the existing Rustyline/ctrlc dependencies in Cargo.toml.
 Local Python syntax passed in 0.12s and focused Rust formatting in 0.13s under
 the unchanged guard. The first sandboxed guard invocation could not read `ps`;
 its approved invocation passed. Native builds and execution remain on GitHub.

@@ -1,13 +1,20 @@
 # Comparing integer character counters
 
-This experiment asks whether sharing one decimal-counting loop reduces the cost
-of `show | string.length` on signed integers. For example, `-17` has three
-characters: two digits and a minus sign. The current candidate computes the
-unsigned magnitude and sign once, then counts digits. Unsigned subtraction
-handles the smallest signed integer without overflowing signed negation.
+This experiment asks how to reduce the cost of `show | string.length` without
+building a string. For example, `-17` has three characters: two digits and a minus
+sign. The candidate counts decimal digits in groups of 16, 8, 4, 2 and 1 rather
+than dividing by ten for every digit. For `123456`, dividing by 10,000 removes
+four digits and leaves `12`; one more comparison gives six digits in total.
+Signed values first use their unsigned magnitude, then add one for a minus sign.
+Unsigned subtraction handles the smallest signed integer without overflowing
+signed negation. No lookup table, allocation or new runtime setting is needed.
 
 The candidate is under investigation. No speed improvement or explanation of
-earlier timing variation is established yet. See the [handoff](../development-state.md)
+earlier timing variation is established yet. An earlier candidate merely shared
+one loop between positive and negative values; its AMD64 CPU medians were about
+1–4% higher than an unchanged rebuild, so it was not selected as an improvement.
+That experiment's source is `995d3ecf`, run `39525618134`; both Linux hosts passed
+and the complete results are retained. See the [handoff](../development-state.md)
 for the current source and checks.
 
 ## What runs
@@ -26,7 +33,7 @@ Five executables run on the same GitHub Linux machine:
 | Saved Rust | Handwritten direct-counting comparison. |
 | Saved fwp | Repeat the exact previously measured binary. |
 | Rebuilt fwp | Compile the unchanged saved generated C to expose rebuild differences. |
-| Candidate fwp | Compile that C with only the signed counting helper replaced. |
+| Candidate fwp | Compile that C with only the integer counting helpers replaced. |
 
 The script verifies the source run, its successful jobs, input source hashes,
 saved benchmark samples and executable architectures before use. Both rebuilds
