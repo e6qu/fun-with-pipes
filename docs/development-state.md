@@ -2,11 +2,19 @@
 
 ## Next action
 
-Next: publish and run the `task-contexts` focused probe on native Linux ARM64
-and AMD64. Fix all failures before choosing this representation. This is isolated
+Next: publish the expanded `task-contexts` measurement, then inspect every process
+sample on native Linux ARM64 and AMD64. The first proof at
+`c4a6fb0abb70704662f2736a5ee981e62f1b3f31`, run `39600508036`, passed both jobs;
+their complete logs and 62 actual native binaries were inspected. This is isolated
 preparation on `measure-native-task-contexts` in `/private/tmp/fwp-task-contexts`,
 based on PR #186 head `fa2d5098573220833bda06e30af9f534181edc0d`.
 Do not open another PR while #186 remains active.
+Use `/private/tmp/fwp-audit-task-context-probe.py`; receipt
+`/private/tmp/fwp-task-context-first-audit.json`. The first run `39600295147`
+was superseded before acceptance: the child must be created before the root's
+test value, so its initial register image cannot accidentally retain that value.
+Cancellation and source receipts are `/private/tmp/fwp-task-context-probe.json`
+and `fwp-task-context-initial-superseded.json`.
 
 PR #186's exact-head production run is `39597478599`, docs `39597478465`.
 The main workspace holds that branch and its current handoff. Use
@@ -34,7 +42,7 @@ bytes, context bytes on each stack and root static bytes separately, along with
 managed allocations and final cleanup. No whole-process memory or speed claim.
 The existing stack reservation and pool remain outside managed-allocation counts.
 
-## Prepared checks
+## Verified focused checks
 
 `tests/task_context_storage.rs` reconstructs the preceding heap layout in otherwise
 identical generated C as an experimental control. Production code has no layout
@@ -49,8 +57,15 @@ existing libc context implementation.
 A separate C probe excludes ordinary stack copies while checking values held
 in root/child saved register images. O0/O2 collection must preserve those values;
 deliberately hiding a root or child image must exit 191/192. It also checks
-floating-point rounding and signal-mask restoration. These checks are prepared,
-not yet verified. Failures in probe isolation are not evidence of runtime support.
+floating-point rounding and signal-mask restoration. Both hosts passed all ten
+deliberate omission controls across O0/O2. The managed-byte results and their
+limits are in [the measurement guide](measurements/task-contexts.md).
+
+The expanded probe adds nine fresh processes per layout, memory mode and C
+optimization level. It records peak resident memory through the post-task-teardown
+checkpoint and elapsed time through complete process exit. Those are different
+scopes; neither isolates context-switch cost. The script retains raw samples,
+binary hashes, ranges and candidate/control ratios. These new samples are pending.
 
 The focused workflow includes task/scope/cancellation regressions and all four
 queued service-response cleanup cases. Its two Linux jobs are independent. Full
@@ -62,7 +77,10 @@ explicit macOS shard inventory, but its libc-only tests execute on Linux.
 
 Keep checks serial through `python3 scripts/local-guard.py COMMAND...`, preserving
 64 GiB free disk, target below 2 GiB, sampled RSS below 1 GiB and the 180-second
-limit. No local builds, native C compilation or full test gates. Rustfmt passed.
+limit. No local builds, native C compilation or full test gates. Rustfmt, Python
+syntax, documentation checks and the 11 native-runner controls passed. Independent
+bounded LLVM disassembly corrected 11 AMD64 excerpts that had selected GCC's cold
+error block; the original complete CI disassembly hashes remain in the receipts.
 The accepted PR #184 macOS compiler interpreted the small source fixture as 528
 and emitted C to inspect teardown order; that does not test the changed runtime.
 All candidate native execution belongs on GitHub runners.
