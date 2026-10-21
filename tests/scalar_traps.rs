@@ -121,7 +121,7 @@ fn narrow_unsigned_products_check_bounds_before_trapping() {
         let max = (1u64 << bits) - 1;
         source.push_str(&format!(
             "# expose: cli\nexport product{bits} : U{bits} -> U{bits} -> () ! {{IO}}\n\
-             product{bits} a b = [\"before\" | echo, a | mul b | echo, \"after\" | echo] | ignore\n"
+             product{bits} = curry (tap (const \"before\" | echo) | uncurry mul | tap echo | const \"after\" | echo)\n"
         ));
         let mut pairs = vec![
             (0, max),

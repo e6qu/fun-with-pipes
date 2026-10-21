@@ -2,26 +2,33 @@
 
 ## Next action
 
-Next: finish the U32 multiplication repair in [PR #182](https://github.com/e6qu/fun-with-pipes/pull/182),
-branch `investigate-native-counting-costs`. The PR is draft again. Production
-`39529772529` at `080b0ff6` was cancelled after finding that generated U32
-multiplication could overflow a signed 64-bit intermediate before checking the
-U32 bound. The benchmark and documentation `39529569466` passed; this superseded
-head is not accepted and must not be merged. The available complete logs show no test failures beyond cancellation; Linux
-AMD64 was cancelled before a runner started. Its log audit and receipt are
-`/private/tmp/fwp-audit-182.py` and `/private/tmp/fwp-182-acceptance.json`.
+Next: verify the repaired scalar test fixture in [PR #182](https://github.com/e6qu/fun-with-pipes/pull/182),
+branch `investigate-native-counting-costs`. The PR remains draft. Focused run
+`39531898954` at `c46a4e582a5ecc715c1238b46547d0cba29f4507` failed on both Linux
+hosts: the new test used unsupported named-argument definition syntax and failed
+before exercising multiplication. It now uses ordinary tacit `curry`/`uncurry`
+composition. Both complete logs are audited: all five integer-output tests, the
+two existing scalar tests, binary inspections, measurements, formatting and
+Clippy passed. Documentation `39531903399` passed. Receipt and script:
+`/private/tmp/fwp-u32-counting-audit.json` and the matching `.py` path.
+Publish the fixture repair, verify both focused hosts, then require all nine
+production gates and documentation on that exact final commit.
 
-The repair uses unsigned 64-bit multiplication, where all U32 products fit,
-then checks U32's maximum. New dynamic-input tests cover U8/U16/U32 boundaries,
-trap/effect order, unoptimized interpretation, ARC/tracing and O0/O2/O3 native
-code. UBSan checks the emitted U32 primitive at O1/O2; restoring the signed
-intermediate must trigger its overflow diagnostic. Existing scalar tests now
-fail when their C compiler is missing instead of silently skipping, and the
-U64 sanitizer executable has an explicit Windows suffix. These tests are written
-but not yet run; local native compilation remains prohibited. The focused Linux
-workflow now includes scalar traps alongside integer-output tests, collecting
-both targets even if one fails. Publish this repair, audit both focused hosts,
-then require all nine production gates and documentation on the final commit.
+The U32 repair uses unsigned 64-bit multiplication, where all U32 products fit,
+then checks U32's maximum. The former signed intermediate could overflow before
+that check. New dynamic-input tests cover U8/U16/U32 boundaries, trap/effect
+order, unoptimized interpretation, ARC/tracing and O0/O2/O3 native code. UBSan
+checks the emitted U32 primitive at O1/O2; restoring the signed intermediate
+must trigger its overflow diagnostic. Native verification of the new test is
+still pending. Existing scalar tests now fail when their C compiler is missing
+instead of silently skipping, and the U64 sanitizer executable has an explicit
+Windows suffix. The focused workflow collects both test targets even if one fails.
+
+Superseded production `39529772529` at `080b0ff6` was cancelled for this repair.
+The benchmark and documentation `39529569466` passed. Available logs show no
+test failures beyond cancellation; Linux AMD64 never received a runner. Audit:
+`/private/tmp/fwp-audit-182.py`; receipt: `/private/tmp/fwp-182-acceptance.json`.
+This superseded head is not accepted and must not be merged.
 
 After acceptance, squash-merge with an explicit one-line subject of at most
 80 characters and an empty body, without trailers or attribution. Verify the
@@ -31,11 +38,15 @@ checks the accepted tree. Standing authorization applies.
 Independent next-step preparation is in `/private/tmp/fwp-integer-range-probe`,
 branch `investigate-integer-range-information`, source
 `7a8803762e240998605c6442afbbb33ed8157133`. Measurement-only run `39530460995`
-is queued. It adds a ninth C variant that retains multiplication's overflow
+passed on both hosts; full logs are audited clean in
+`/private/tmp/fwp-range-counting-audit.json`. It adds a ninth C variant that retains multiplication's overflow
 check and recomputes the safe product on its continuation, plus GCC range and
 optimized-tree dumps. No compiler code changes or second PR exist. This explicitly
 skips unchanged native preflight tests and cannot establish compiler acceptance.
-Audit the experiment while PR #182's repair is verified; preserve its source before any
+Its artifacts are in `/private/tmp/fwp-integer-range-costs`; an independent audit
+passed in 0.48s after correcting its explicit compiler-flag expectation. The
+validator update is local to the preparation worktree and the audited report is
+`/private/tmp/fwp-integer-range-audited.json`. Compiler code remains unchanged; preserve its source before any
 later rebase onto the accepted squash merge.
 
 Combined run `39528239204` and documentation `39528218865` pass. Both Linux jobs
