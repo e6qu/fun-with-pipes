@@ -479,8 +479,9 @@ int main(void) {
     captured = fwp_rc_fresh(fwp_str_new("cancel capture", 14));
     function_value = fwp_rc_fresh(fwp_pap(FUNCTION, 1, (V[]){captured}));
     cancelled_call.cancelled = 1; fwp_cur = &cancelled_call; fwp_budget = 0;
-    if (!setjmp(cancelled_call.base)) { fwp_apply_owned(function_value, 1, (V[]){0}); return 1; }
-    fwp_cur = 0;
+    jmp_buf cancelled_call_base; cancelled_call.base = &cancelled_call_base;
+    if (!setjmp(cancelled_call_base)) { fwp_apply_owned(function_value, 1, (V[]){0}); return 1; }
+    cancelled_call.base = NULL; fwp_cur = 0;
     if (!cancelled_call.unwinding || fwp_cleanups) return 2;
     if (fwp_reuse_verify) {
         if (CLO(function_value)->fn != 0xdead || STR(captured)->len != 0) return 3;

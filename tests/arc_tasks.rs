@@ -223,7 +223,7 @@ fn cancellation_state_uses_the_entry_stack_and_preserves_cleanup() {
                             .env("FWP_GC_STRESS", stress)
                             .env("FWP_GC_VERIFY", stress)
                             .env("FWP_GC_STATS", "0")
-                            .env("FWP_REUSE_VERIFY", "1"),
+                            .env("FWP_REUSE_VERIFY", stress),
                         &path,
                         &label,
                         60,

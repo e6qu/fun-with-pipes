@@ -2,8 +2,9 @@
 
 ## Next action
 
-Next: audit native run `39615869608` and WebAssembly run `39615873962` for
-`8a1cbe3d824a4e9fbc3fd642504567813d61d8f6` on `task-cancellation-stack`.
+Next: validate the batched cancellation-test repair on all six native hosts and
+both WebAssembly hosts. `/private/tmp/fwp-task-cancellation-publication.json`
+records the published source and focused run IDs for `task-cancellation-stack`.
 This is an isolated preparation in `/private/tmp/fwp-task-cancellation`;
 PR #187 remains the sole active delivery. Do not open another PR until it merges.
 
@@ -36,14 +37,36 @@ Focused suite `task-cancellation` covers all six native hosts with their product
 C compilers. It also runs task/scope, library-unload and static-budget checks;
 Linux installs strace before checking mapping budgets. `inspect-task-cancellation.py`
 verifies each binary's native architecture and records real disassembly, sections,
-hashes and host/toolchains. Run `wasm-hosts` separately for actual JSPI/Asyncify
-execution. No native build, benchmark or full suite runs locally.
+hashes and host/toolchains. The existing `wasm-hosts` run checks actual
+JSPI/Asyncify execution. No native build, benchmark or full suite runs locally.
 
 The WebAssembly helper review also found unchecked return-state table growth.
-The local repair checks capacity/byte overflow, allocation failure and identifier
-exhaustion, with exact-diagnostic WASI tests. This repair is not in the first
-published focused source above; batch any focused failures with it before the
-next push. The guide records the pointer-width identifier limit explicitly.
+The published repair checks capacity/byte overflow, allocation failure and
+identifier exhaustion, with exact-diagnostic WASI tests. The earlier preparation
+runs were cancelled while queued; `/private/tmp/fwp-task-cancellation-prior-probe.json`
+records their states. The guide records the pointer-width identifier limit explicitly.
+
+## Focused failures and repair
+
+All six native jobs at `1fd972ac14d0b16ab59b14975debbc6f8ef98b05` failed;
+complete logs are audited in `/private/tmp/fwp-task-cancellation-acceptance.json`.
+The native causes are an invalid ARC reuse-verification setting, synthetic tasks still
+using the old embedded buffer, and missing TLS dependencies in the focused job.
+The binary inspector correctly rejected the incomplete comparison.
+
+Local repairs in `/private/tmp/fwp-task-cancellation` set reuse verification only
+for tracing, update all 18 synthetic cancellation sites to borrow live local
+buffers, and install native macOS/Windows TLS dependencies. The worker-preparation
+test also now uses legal nested `setjmp` conditions. The focused workflow adds all
+14 affected test targets with production Rust optimization/check settings.
+The storage comparison explicitly disables link-time optimization for both layouts
+and records compiler flags, preventing source-size-dependent compilation choices.
+Formatting and whitespace checks passed for the nine changed Rust files through
+the local guard. Native execution of these repairs remains pending. The WebAssembly suites passed
+their actual WASI/JSPI/Asyncify checks; their native `arc_tasks` step hit the same
+invalid ARC setting. Both full logs were reviewed. Publish the repairs together
+and rerun both focused suites before accepting measurements.
+PR #187 remains unaffected with four accepted gates and no reported failures.
 
 ## Checks and publication
 
@@ -55,8 +78,7 @@ target was added or moved. Native execution and measurements remain pending;
 do not claim reduced process memory or faster execution. The documentation audit
 passed 79 link sets, 106 immutable pairs and seven roadmap areas.
 Publication receipt: `/private/tmp/fwp-task-cancellation-publication.json`.
-Keep this local status update until the evidence is ready; do not restart healthy
-focused runs merely to publish the handoff.
+Do not restart healthy focused runs merely to publish a status update.
 
 After focused acceptance, inspect all saved binaries and measurements, fix any
 failures, then rebase onto PR #187's verified squash merge. Update the report and

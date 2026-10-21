@@ -25,8 +25,9 @@ int main(void){
             /* This synthetic task executes on the main thread stack. */
             matrix_cancelled.ctx.top=fwp_gc.main_top;
 #endif
-            if(!setjmp(matrix_cancelled.base)){fwp_p_matrix_mul_f64(33,35,31,left,right);return 219;}
-            fwp_cur=0;if(!matrix_cancelled.unwinding)return 220;
+            jmp_buf matrix_cancelled_base; matrix_cancelled.base = &matrix_cancelled_base;
+            if (!setjmp(matrix_cancelled_base)){fwp_p_matrix_mul_f64(33,35,31,left,right);return 219;}
+            matrix_cancelled.base=NULL;fwp_cur=0;if(!matrix_cancelled.unwinding)return 220;
         }
         if(fwp_gc.freed-freed<8+33*31*8)return 217;
         if(fwp_cleanups || fwp_array_len(left)!=33*35 || fwp_array_len(right)!=35*31)return 221;

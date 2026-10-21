@@ -57,7 +57,8 @@ static int build_case(int op, int failure, int callback, int cancel, int *steps)
     }
     fwp_trap_recover = build_recover; fwp_trap_jb = &build_jump;
     fwp_trap_cleanup = fwp_cleanups;
-    if (setjmp(build_task.base)) {
+    jmp_buf build_task_base; build_task.base = &build_task_base;
+    if (setjmp(build_task_base)) {
         if (!cancel) return 214;
     } else if (setjmp(build_jump)) {
         if (!failure && !callback) return 214;
@@ -71,7 +72,7 @@ static int build_case(int op, int failure, int callback, int cancel, int *steps)
         if (!is_set && MAP(result)->d[1] != 3) return 212;
         fwp_rc_free_obj(result);
     }
-    build_armed = 0; fwp_cur = build_saved_task;
+    build_task.base = NULL; build_armed = 0; fwp_cur = build_saved_task;
     fwp_trap_recover = NULL; fwp_trap_jb = NULL;
     *steps = build_step;
     if (build_live) { fprintf(stderr, "collection live allocations: %d\n", build_live); return 213; }
