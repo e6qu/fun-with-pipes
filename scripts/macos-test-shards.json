@@ -76,6 +76,7 @@
     "grpc_tls_pool_identity",
     "grpc_connection_addresses",
     "task_timer_order",
+    "task_context_storage",
     "variant_conversion_ownership",
     "text_ownership",
     "map_ownership",

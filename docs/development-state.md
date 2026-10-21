@@ -2,95 +2,70 @@
 
 ## Next action
 
-Next: audit all nine production jobs plus documentation for the queued service
-response PR on `prove-grpc-sender-captures`. Fix every failure, then squash-merge
-with an explicit one-line subject under 80 characters and an empty body. The main
-workspace `/Users/zardoz/projects/fun-with-pipes` holds this delivery branch.
-Do not confuse the passing focused matrix with final-head production acceptance.
+Next: publish and run the `task-contexts` focused probe on native Linux ARM64
+and AMD64. Fix all failures before choosing this representation. This is isolated
+preparation on `measure-native-task-contexts` in `/private/tmp/fwp-task-contexts`,
+based on PR #186 head `fa2d5098573220833bda06e30af9f534181edc0d`.
+Do not open another PR while #186 remains active.
 
-PR #185 passed all ten gates and was squash-merged as
-`f9bd49d9f9416b471326090f1a423282d476b1a9`. Its tested head `73850bd3b6ac460a7e077cea8cd1128f9913aea0`
-and merge have identical trees; the [history](roadmap-history.md#queued-callbacks-retaining-data-queues-pr-185)
-records acceptance. Receipt `/private/tmp/fwp-185-final-acceptance.json` verifies
-the message, parent and tree. Do not repeat that completed delivery.
+PR #186's exact-head production run is `39597478599`, docs `39597478465`.
+The main workspace holds that branch and its current handoff. Use
+`/private/tmp/fwp-audit-186-final.py` and `fwp-merge-186.py`; merge only after
+all nine production gates plus documentation pass. Standing authorization covers
+publication and squash merge with a one-line subject under 80 characters and
+an empty body. PR #185 is already accepted and merged; its history is recorded.
 
-All eight jobs of focused run `39591489617` passed at
-`0b1d6c115893eb9dc37536b2b3345ccbdcc74155`. Remote tag
-`roadmap/revision-grpc-responses-0b1d6c115893` preserves that source. Only workflow
-coverage/failure propagation, documentation and evidence changed afterward;
-rebasing onto accepted main preserved the source tree. Every complete log and
-all six native artifact sets were audited: 84 binaries, 24 cleanup samples and
-12 deliberate leak controls. The [report](measurements/queued-grpc-responses-2026-10-21.json)
-preserves costs and peak variation, with no timing claim. Local receipts are
-`/private/tmp/fwp-grpc-sender-matrix.json` and per-host `inspection.json` files
-under `/private/tmp/fwp-grpc-sender-evidence`.
+## Candidate and measurement boundary
 
-Standing authorization covers publishing, fixes and squash merge after all nine
-production jobs plus documentation pass. Supply a one-line subject under
-80 characters and an empty body; verify message, parent and tree afterward.
-Failing tests are work to fix. Keep one active PR, and do not restart healthy CI
-for handoff-only updates.
+The accepted service samples use a 5,296-byte task record on Linux ARM64 and
+1,584 bytes on Linux AMD64. glibc's saved CPU context occupies much of that record.
+The prototype puts child contexts at an aligned address in the existing task
+stack, above all usable call frames. The task record holds a pointer. It keeps
+glibc's context switching, signal-mask and floating-point behavior.
 
-## Changes and ownership boundary
+The root uses its host's stack, so its context lives in runtime static storage.
+The collector scans that storage with program data. Initialization and both
+executable/library teardown clear the image; completed child records clear their
+context pointers before their stacks can be reused. A static stack budget too
+small for a context fails before allocating/publishing a task.
 
-A queued callback can retain a served gRPC response channel under checked ARC.
-The service emitter supplies an explicit `EntryChannels::GrpcResponses` contract
-for that method's final response argument. The transport owns protocol data,
-not language callbacks; typed cleanup releases its stream and connection.
-Arbitrary external channels, other entry modes and unrelated channel arguments
-remain unknown. Payload/cycle/scope checks still apply. No runtime layout or
-syntax change. A full-analysis unit test checks both acceptance and rejection
-boundaries. [The guide](measurements/queued-grpc-responses.md) explains the program.
+This shifts storage; it does not eliminate the saved CPU state. Report task-record
+bytes, context bytes on each stack and root static bytes separately, along with
+managed allocations and final cleanup. No whole-process memory or speed claim.
+The existing stack reservation and pool remain outside managed-allocation counts.
 
-The nine-case fixture makes 72 calls, including repeated sends, unreceived and
-closed queues, rejected sends, errors, nested queues, blocked sends and remote
-cancellation. Acknowledgement orders cancellation after the server retains the
-callback. Tests compare raw interpretation with native ARC/tracing at O0/O2.
-Each measured sample must release every response channel, stream, connection and
-child task. The still-live listener's actual socket-wait objects are identified
-separately; no other managed charge may remain. Both ARC omission controls must
-exit 201. These are cleanup results, not speed or C/Rust parity claims.
+## Prepared checks
 
-Two earlier probes failed because of test settings/boundaries, now repaired:
-ARC cannot enable reuse verification's deliberate retention; the listener's lazy
-wait storage cannot be counted as a leaked request. Current focused checks pass
-on six native platforms. Generated C, actual ELF/Mach-O/PE binaries, disassembly,
-symbols and counters are retained. Two WebAssembly jobs preserve ownership
-regressions; they do not establish WebAssembly gRPC server support.
+`tests/task_context_storage.rs` reconstructs the preceding heap layout in otherwise
+identical generated C as an experimental control. Production code has no layout
+switch or compatibility branch. Both versions must match the interpreter's 528
+result for 32 tasks, under ARC/tracing at O0/O2, with zero final managed charge.
+The test records generated C, ELF architecture, actual disassembly, symbols,
+section sizes, counters and layouts. It checks stack bounds/alignment, clears
+retained completed-task pointers and checks root-state teardown. An omitted root
+clear must exit 193. ARC binaries must exclude collector routines and retain the
+existing libc context implementation.
 
-## Incidental fixes and final-head coverage
+A separate C probe excludes ordinary stack copies while checking values held
+in root/child saved register images. O0/O2 collection must preserve those values;
+deliberately hiding a root or child image must exit 191/192. It also checks
+floating-point rounding and signal-mask restoration. These checks are prepared,
+not yet verified. Failures in probe isolation are not evidence of runtime support.
 
-REST startup now enforces a deadline and kills/reaps a silent child. The full
-REST target passes on all six native hosts. Three immutable tracing executables
-replace seven compilations; each test still starts a fresh server. This removes
-four duplicate builds without claiming a measured elapsed-time improvement.
+The focused workflow includes task/scope/cancellation regressions and all four
+queued service-response cleanup cases. Its two Linux jobs are independent. Full
+production acceptance across all nine jobs, including static-memory and library-unload
+coverage, is still required before any later merge. The new test target is in the
+explicit macOS shard inventory, but its libc-only tests execute on Linux.
 
-Workflow changes add all four response tests to production Windows
-(the existing filter ran only stream-alias tests), and make the focused test-plus-
-formatter step use Bash so a successful formatter cannot hide a failed test.
-Linux/macOS production gates already run the full gRPC target. Production source
-and tests have not changed after the focused matrix; final-head CI remains required.
+## Local work
 
-## Local checks and resources
-
-Use `python3 scripts/local-guard.py COMMAND...` serially. No local full builds,
-native C compilation, full suites or benchmarks. Preserve 64 GiB free disk,
-target below 2 GiB, sampled workload RSS below 1 GiB and the 180-second deadline.
-Disk pressure stopped two source checks; both later passed through the unchanged
-guard. No limits changed. Free space fluctuates around the floor.
-
-The accepted PR #184 macOS compiler formatted both fixtures and matched their
-72-call raw interpreter output. The guarded documentation audit passed: 77 link
-sets, 106 immutable preparation pairs/tags and seven roadmap steps. All native
-compilation and execution occurred on GitHub. The previous local handoff and cleanup receipts are saved under
-`/private/tmp/fwp-185-root-handoff.md` and `fwp-*-cleanup*.json`. No unique evidence
-or branch was removed.
-
-After this delivery, investigate measured task-record storage and remaining count
-traffic before choosing an optimization. `/private/tmp/fwp-next-task-storage-notes.md`
-records the current evidence and required context-switch checks. No implementation
-choice or speed claim has been made. Persistent subscriptions, unknown retained
-owners and cycle policy remain part of the broader memory work.
+Keep checks serial through `python3 scripts/local-guard.py COMMAND...`, preserving
+64 GiB free disk, target below 2 GiB, sampled RSS below 1 GiB and the 180-second
+limit. No local builds, native C compilation or full test gates. Rustfmt passed.
+The accepted PR #184 macOS compiler interpreted the small source fixture as 528
+and emitted C to inspect teardown order; that does not test the changed runtime.
+All candidate native execution belongs on GitHub runners.
 
 ## Roadmap status
 
