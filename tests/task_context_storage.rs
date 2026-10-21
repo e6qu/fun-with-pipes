@@ -48,9 +48,9 @@ fn run(command: &mut Command, path: &Path, label: &str, seconds: u64) -> Output 
     }
 }
 
-fn generated(path: &Path, memory: &str) -> String {
+fn generated(path: &Path, memory: &str, program: &str) -> String {
     let source = path.join("tasks.fwp");
-    std::fs::write(&source, PROGRAM).unwrap();
+    std::fs::write(&source, program).unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
     let reference = run(
         Command::new(compiler)
@@ -104,12 +104,13 @@ fn heap_context(code: &str) -> String {
         1,
     );
     replace(&mut code, "static ucontext_t fwp_root_context;", "", 1);
-    replace(
-        &mut code,
+    for clear in [
+        "        memset(&fwp_root_context, 0, sizeof fwp_root_context);\n",
+        "    if (fwp_root) memset(&fwp_root_context, 0, sizeof fwp_root_context);\n",
         "    memset(&fwp_root_context, 0, sizeof fwp_root_context);\n",
-        "",
-        3,
-    );
+    ] {
+        replace(&mut code, clear, "", 1);
+    }
     replace(&mut code, "    fwp_root->ctx = &fwp_root_context;\n", "", 1);
     replace(
         &mut code,
@@ -131,7 +132,7 @@ fn heap_context(code: &str) -> String {
     code
 }
 
-fn compile(code: &str, path: &Path, label: &str, opt: &str) -> PathBuf {
+fn compile(code: &str, path: &Path, label: &str, opt: &str, uses_context: bool) -> PathBuf {
     std::fs::write(path.join(format!("{label}.c")), code).unwrap();
     let binary = path.join(format!("{label}.exe"));
     fwp::cgen::compile_c(code, &binary, opt).unwrap();
@@ -162,10 +163,12 @@ fn compile(code: &str, path: &Path, label: &str, opt: &str) -> PathBuf {
         );
         if tool == "nm" {
             let symbols = String::from_utf8_lossy(&result.stdout);
-            assert!(
-                symbols.contains("swapcontext"),
-                "{label} changed the context implementation"
-            );
+            if uses_context {
+                assert!(
+                    symbols.contains("swapcontext"),
+                    "{label} changed the context implementation"
+                );
+            }
             if code.contains("#define FWP_ARC_ONLY 1") {
                 for collector in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
                     assert!(!symbols.contains(collector), "{label} retains {collector}");
@@ -179,7 +182,7 @@ fn compile(code: &str, path: &Path, label: &str, opt: &str) -> PathBuf {
 #[test]
 fn saved_context_roots_and_machine_state() {
     let path = directory("roots");
-    let code = generated(&path, "tracing");
+    let code = generated(&path, "tracing", PROGRAM);
     for opt in ["-O0", "-O2"] {
         for (layout, original) in [("heap", heap_context(&code)), ("stack", code.clone())] {
             let mut instrumented = original;
@@ -215,7 +218,7 @@ fn saved_context_roots_and_machine_state() {
             }
             for (variant, text, expected) in variants {
                 let label = format!("{layout}{opt}-{variant}");
-                let binary = compile(&text, &path, &label, opt);
+                let binary = compile(&text, &path, &label, opt, true);
                 let actual = run(
                     Command::new(binary)
                         .env("FWP_GC_STRESS", "0")
@@ -252,7 +255,7 @@ fn saved_context_roots_and_machine_state() {
 fn task_context_storage_preserves_output_and_cleanup() {
     for memory in ["arc", "tracing"] {
         let path = directory(memory);
-        let code = generated(&path, memory);
+        let code = generated(&path, memory, PROGRAM);
         for (layout, original) in [("heap", heap_context(&code)), ("stack", code.clone())] {
             let mut measured = allocations::instrument_client_allocations(&original);
             let layout_report = format!("    fprintf(stderr, \"task-layout\\t%zu\\t%zu\\t%zu\\t%zu\\n\", sizeof(fwp_task), _Alignof(fwp_task), sizeof(ucontext_t), (size_t){});\n", if layout == "stack" { "sizeof(ucontext_t)" } else { "0" });
@@ -277,7 +280,7 @@ fn task_context_storage_preserves_output_and_cleanup() {
                     variants.push((format!("{layout}{opt}-verified"), checked));
                 }
                 for (label, source) in variants {
-                    let binary = compile(source, &path, &label, opt);
+                    let binary = compile(source, &path, &label, opt, true);
                     let actual = run(
                         Command::new(binary)
                             .env("FWP_GC", "off")
@@ -319,9 +322,14 @@ fn task_context_storage_preserves_output_and_cleanup() {
             }
             if memory == "arc" && layout == "stack" {
                 let mut broken = verified.unwrap();
-                replace(&mut broken, "    fwp_root = fwp_cur = 0;\n#ifdef FWP_LIBC_CONTEXT\n    memset(&fwp_root_context, 0, sizeof fwp_root_context);\n#endif", "    fwp_root = fwp_cur = 0;", 1);
+                replace(
+                    &mut broken,
+                    "        memset(&fwp_root_context, 0, sizeof fwp_root_context);\n",
+                    "",
+                    1,
+                );
                 let label = "missing-root-clear-O2";
-                let binary = compile(&broken, &path, label, "-O2");
+                let binary = compile(&broken, &path, label, "-O2", true);
                 let actual = run(
                     Command::new(binary)
                         .env("FWP_GC", "off")
@@ -339,6 +347,64 @@ fn task_context_storage_preserves_output_and_cleanup() {
                     "{}",
                     String::from_utf8_lossy(&actual.stderr)
                 );
+            }
+        }
+    }
+}
+
+#[test]
+fn taskless_entry_does_not_clear_unused_context_storage() {
+    for memory in ["arc", "tracing"] {
+        let path = directory(&format!("taskless-{memory}"));
+        let mut code = generated(&path, memory, "main = 528 | echo\n");
+        let clear = "memset(&fwp_root_context, 0, sizeof fwp_root_context);";
+        replace(
+            &mut code,
+            clear,
+            "(probe_context_clears++, memset(&fwp_root_context, 0, sizeof fwp_root_context));",
+            3,
+        );
+        replace(
+            &mut code,
+            "    fwp_native_tasks_finish();\n",
+            "    fwp_native_tasks_finish();\n    if (probe_context_clears || fwp_root || fwp_cur) _Exit(197);\n",
+            1,
+        );
+        code = format!("static int probe_context_clears;\n{code}");
+        for opt in ["-O0", "-O2"] {
+            let mut variants = vec![("ordinary", code.clone(), 0)];
+            if memory == "arc" && opt == "-O2" {
+                let mut broken = code.clone();
+                replace(
+                    &mut broken,
+                    "    fwp_native_tasks_finish();\n",
+                    "    fwp_native_tasks_finish();\n    (probe_context_clears++, memset(&fwp_root_context, 0, sizeof fwp_root_context));\n",
+                    1,
+                );
+                variants.push(("unconditional-clear", broken, 197));
+            }
+            for (variant, source, status) in variants {
+                let label = format!("{variant}{opt}");
+                let binary = compile(&source, &path, &label, opt, false);
+                let actual = run(
+                    Command::new(binary)
+                        .env("FWP_GC_STRESS", "0")
+                        .env("FWP_GC_VERIFY", "0")
+                        .env("FWP_REUSE_VERIFY", "0"),
+                    &path,
+                    &label,
+                    30,
+                );
+                assert_eq!(
+                    actual.status.code(),
+                    Some(status),
+                    "{memory}/{label}: {}",
+                    String::from_utf8_lossy(&actual.stderr)
+                );
+                assert!(actual.stderr.is_empty());
+                if status == 0 {
+                    assert_eq!(actual.stdout, b"528\n");
+                }
             }
         }
     }

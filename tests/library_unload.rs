@@ -237,8 +237,8 @@ int main(void) {{
     ];
     if cfg!(all(target_os = "linux", target_env = "gnu")) {
         controls.push((
-            "    fwp_cur = fwp_root = fwp_zombie = 0;\n#ifdef FWP_LIBC_CONTEXT\n    memset(&fwp_root_context, 0, sizeof fwp_root_context);\n#endif",
-            "    fwp_cur = fwp_root = fwp_zombie = 0; /* missing saved register cleanup */",
+            "    if (fwp_root) memset(&fwp_root_context, 0, sizeof fwp_root_context);\n",
+            "    /* missing saved register cleanup */\n",
             3,
         ));
     }

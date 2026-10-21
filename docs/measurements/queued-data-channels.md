@@ -60,5 +60,6 @@ disassembly audit or execution in an actual browser engine.
 Dispatch `.github/workflows/numerics.yml` with `suite=channel-proof` and
 `native_runner=all`. The [report](queued-data-channels-2026-10-21.json) records the
 exact compiler source, eight jobs, artifact digests, native compilers and inspected
-outputs. All completed logs were audited. Full production acceptance remains a
-separate requirement recorded in the [handoff](../development-state.md).
+outputs. All completed logs were audited.
+[PR #185](../roadmap-history.md#queued-callbacks-retaining-data-queues-pr-185)
+also passed the separate final-head production and documentation gates.

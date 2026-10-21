@@ -116,6 +116,10 @@ outside the benchmark suite.
    [numeric representation measurements](docs/benchmarks.md#numeric-hash-specialization)
    as baselines, preserving mixed timings and C/Rust gaps. Investigate known
    regressions before claiming a performance improvement.
+   The [task-context comparison](docs/measurements/task-contexts.md) investigates
+   smaller scheduler heap records while counting saved CPU state, usable stack
+   space and process memory separately. Its handoff records pending acceptance;
+   moving storage is not eliminating it.
 
 All seven work areas remain open. The syntax and native-platform foundations
 are implemented; the main remaining work is ownership, representation,

@@ -1270,12 +1270,12 @@ static void fwp_native_tasks_finish(void) {
     if (fwp_root) {
         if (fwp_root->first_child || fwp_root->st || fwp_state_len || fwp_state_owners)
             abort();
+#ifdef FWP_LIBC_CONTEXT
+        memset(&fwp_root_context, 0, sizeof fwp_root_context);
+#endif
         fwp_mem_free(fwp_root);
     }
     fwp_root = fwp_cur = 0;
-#ifdef FWP_LIBC_CONTEXT
-    memset(&fwp_root_context, 0, sizeof fwp_root_context);
-#endif
 }
 #endif
 
@@ -2377,10 +2377,10 @@ static void fwp_library_tasks_finish(void) {
     if (fwp_poll_fds || fwp_poll_cap) abort();
 #endif
     fwp_io_waiting = 0;
-    fwp_cur = fwp_root = fwp_zombie = 0;
 #ifdef FWP_LIBC_CONTEXT
-    memset(&fwp_root_context, 0, sizeof fwp_root_context);
+    if (fwp_root) memset(&fwp_root_context, 0, sizeof fwp_root_context);
 #endif
+    fwp_cur = fwp_root = fwp_zombie = 0;
     fwp_gc_tasks = fwp_ready_head = fwp_ready_tail = fwp_timers = 0;
     fwp_cleanups = 0;
     fwp_foreign_callbacks = 0;
