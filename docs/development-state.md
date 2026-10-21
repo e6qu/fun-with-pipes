@@ -2,37 +2,23 @@
 
 ## Next action
 
-Next: publish the final measurement/plan/handoff updates for
-[draft PR #182](https://github.com/e6qu/fun-with-pipes/pull/182), then mark it ready
-and audit all nine production jobs plus documentation on that exact final commit.
-Branch: `investigate-native-counting-costs`. Implementation is unchanged from
-verified preparation `a8859db10f34df4450eb608c4666785ebc5ae816`; only evidence and
-documents have changed locally. Do not merge the earlier intentionally skipped
-draft CI (`39528218956`). Squash-merge after full acceptance with an explicit
-one-line subject of at most 80 characters, empty body and no trailers/attribution.
-Standing authorization applies. Verify the merge tree and message afterward.
+Next: run suite `integer-range` on this preparation branch and audit the
+controlled C experiment. PR #182 remains on final head `080b0ff6`, with production
+`39529772529` and documentation `39529569466` required before its authorized
+squash merge. Do not modify that PR head or create another PR while it is open.
 
-Combined run `39528239204` and documentation `39528218865` pass. Both Linux jobs
-pass formatting, Clippy, all five integer tests, twelve binary inspections and the
-eight-way measurement. Full logs are audited clean; receipt:
-`/private/tmp/fwp-matched-counting-audit.json` (audit script uses the same stem).
-Artifacts: `/private/tmp/fwp-matched-counting-costs`. The guarded independent
-report audit passed in 0.48s; all samples and native probes are recorded in
-`docs/measurements/integer-counting-matched-2026-10-21.json`.
+This checkout is `/private/tmp/fwp-integer-range-probe`, branch
+`investigate-integer-range-information`, based on `080b0ff6`. Only measurement
+code/workflow/handoff change here. The compiler is unchanged. The ninth measured
+variant retains the I64 multiplication overflow check and recomputes `x*y` only
+on its non-overflow continuation. Compare it with current grouped/inlined fwp,
+matched C/Rust and saved controls on each allowed CPU. Retain all 54 rounds,
+source/binary hashes, storage counts, disassembly and GCC range/optimized dumps.
 
-The selected helpers use groups and ordinary inline hints. On Xeon 8573C/N2,
-child CPU time falls about 48% relative to unchanged fwp. Matched C/Rust remain
-faster: fwp extra CPU is 56.7–62.5% / 18.2–22.9% on Xeon, and 142.2–142.9% /
-29.5–30.1% on N2. The normal loops have no calls or stack traffic; AMD64 adds a
-fixed 40-byte entry frame, and instruction sections grow 368/448 bytes. Managed
-storage counts remain zero in this workload; tracing remains in the binaries.
-The guide records every tradeoff and the slower unhinted Xeon control.
-
-Next investigation after acceptance: generated C retains sign/large-value cases
-for the checked `3*i` product that the C peer eliminates using the loop bounds.
-Preserve checked arithmetic and trap order when testing ways to retain range
-information. The cause of historical identical-binary variability is still open.
-All seven roadmap areas remain open, with ownership/removal of tracing primary.
+This is an experiment on generated C, not verified support for a compiler change.
+The explicit `integer-range` suite skips the unchanged native-test preflight;
+that skip is not acceptance. Any selected compiler implementation still needs
+boundary/trap-order tests on both engines and the complete production matrix.
 
 ## Current implementation and evidence
 
