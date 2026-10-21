@@ -12,8 +12,9 @@ with its caller; they do not force inlining.
 The measured program uses roughly half its former CPU time on the two hosts
 below. Matched C/Rust implementations remain faster. This is a specific program
 comparison, not universal language overhead or completion of the performance
-roadmap. Linux focused verification passes; the [handoff](../development-state.md)
-records full native acceptance.
+roadmap. [PR #182's delivery record](../roadmap-history.md#grouped-integer-counting-and-u32-overflow-pr-182)
+records passing full native acceptance. The subsequent [checked-product change](checked-products.md)
+has separate measurements and acceptance status.
 
 ## Program and results
 

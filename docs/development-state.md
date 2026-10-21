@@ -2,21 +2,27 @@
 
 ## Next action
 
-Next: finish accepting [PR #182](https://github.com/e6qu/fun-with-pipes/pull/182)
-before opening another PR. Its unchanged final head is
-`817805a18bd97e90090b36e7baf589d011048fd6`, production run `39533108586`,
-documentation `39532459370`. The main checkout's handoff and
-`/private/tmp/fwp-182-final-acceptance.json` hold its current status.
-The merge helper `/private/tmp/fwp-merge-182.py` rechecks all nine production
-jobs and documentation, then verifies the squash tree and exact one-line message.
+Next: publish and accept the combined checked-product PR on branch
+`preserve-checked-product-ranges`. The shared workspace is
+`/Users/zardoz/projects/fun-with-pipes`; the temporary preparation worktree has
+been removed after moving its clean branch here. Require all nine production
+jobs and documentation for the final PR head, audit every complete log and fix
+every failure. Then squash-merge with an explicit one-line subject, at most
+80 characters, and an empty body; verify the tree and message. Do not restart
+passing gates for handoff-only updates.
 
-This preparation checkout is `/private/tmp/fwp-integer-range-probe`, branch
-`preserve-checked-product-ranges`, based on `817805a1` and including its U32 fix.
-After #182 merges, rebase this branch from that head onto the accepted squash
-commit, update this handoff and history, and publish the coherent next PR.
-No second PR exists yet. Do not mistake focused acceptance for the full matrix.
+[PR #182](roadmap-history.md#grouped-integer-counting-and-u32-overflow-pr-182)
+is accepted and merged as `36fbb04097e8ab3d09a02b0eebf9060002e4fe91`.
+All nine production jobs `39533108586` and documentation `39532459370` passed
+at `817805a18bd97e90090b36e7baf589d011048fd6`, with clean full logs. The squash
+tree matches exactly and its 64-character message has no body or trailers.
+Receipt: `/private/tmp/fwp-182-final-acceptance.json`. Duplicate post-merge CI
+`39542814814` and documentation `39542814748` were cancelled only after verifying
+the accepted tree. This branch was rebased onto that merge without changing
+its files; `/private/tmp/fwp-range-rebase.json` records the old/new heads and tree.
+The former local handoff is saved at `/private/tmp/fwp-182-pre-merge-handoff.md`.
 
-## Prepared change and evidence
+## Current change and evidence
 
 Signed I64/ISize multiplication keeps its overflow check, then exposes the
 proven-safe product expression to C optimization. The [measurement guide](measurements/checked-products.md)

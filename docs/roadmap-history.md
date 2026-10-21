@@ -12,6 +12,29 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Grouped integer counting and U32 overflow (PR #182)
+
+Integer display lengths now count decimal digits in groups. Ordinary inline
+hints remove counting-helper calls in the measured loop. The [report](measurements/integer-counting.md)
+records roughly 48% less child CPU time on Xeon 8573C/N2, remaining matched
+C/Rust gaps, a larger instruction section and AMD64's fixed 40-byte entry frame.
+Managed counting-workload allocations remain zero; tracing remains in the binary.
+
+The same delivery fixes U32 multiplication: every U32 product fits an unsigned
+64-bit intermediate, while some overflowed the former signed intermediate before
+fwp could trap. Runtime-input and sanitizer controls preserve results, effect
+order and overflow behavior, including a deliberately faulty signed control.
+
+[PR #182](https://github.com/e6qu/fun-with-pipes/pull/182) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39533108586)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39532459370)
+at `817805a18bd97e90090b36e7baf589d011048fd6`; every complete log was audited.
+Squash merge `36fbb04097e8ab3d09a02b0eebf9060002e4fe91` has the identical tree
+`18912402dff52e3c5a535de2dc560f1d447193cd`. Its verified message is
+`Count integer digits in groups and fix U32 multiplication overflow`: one line,
+64 characters, with no body or trailers. Duplicate post-merge production
+`39542814814` and documentation `39542814748` were cancelled.
+
 ## Temporary channel borrows and failure cleanup (PR #181)
 
 Temporary channel names can borrow an owner still needed after the operation,

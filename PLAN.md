@@ -97,8 +97,8 @@ outside the benchmark suite.
 2. Investigate remaining matched C/Rust gaps in integer counting. The
    [grouped-counting measurements](docs/measurements/integer-counting.md) show
    roughly half the former fwp CPU time, while preserving slower controls and
-   substantial gaps against peers using the same algorithm. Full acceptance is
-   tracked in the handoff. The [checked-product candidate](docs/measurements/checked-products.md)
+   substantial gaps against peers using the same algorithm; [PR #182](docs/roadmap-history.md#grouped-integer-counting-and-u32-overflow-pr-182)
+   passed full native acceptance. The [checked-product candidate](docs/measurements/checked-products.md)
    preserves numeric bounds and passes focused Linux checks; complete native
    acceptance remains required. Its O2 loops improve, while O0/O1 emit an extra
    product and matched C still leads. Do not weaken arithmetic or trap order. Earlier
