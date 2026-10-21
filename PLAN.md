@@ -74,7 +74,7 @@ ownership and removal of GC are the primary design priority.
 | 2 | Remove avoidable costs from functional code | Define and test a representative set of pipes, partial applications, closures, records, variants, iteration and state patterns whose known targets/lifetimes permit direct calls, loops and elimination of intermediate heap objects; establish constant-stack execution for eligible self-tail recursion in native code and the interpreter; report necessary storage, dispatch and sharing costs outside those patterns. |
 | 3 | Improve machine-level performance | Set per-workload budgets from repeated equivalent-work C/Rust baselines on named ARM64/AMD64 hosts; diagnose known regressions and meet those budgets without hiding slower results; inspect register use, spills, vector instructions and layout while preserving arithmetic and failure rules. |
 | 4 | Improve differentiation speed, memory and precision | Validate supported derivative operations and precision; meet measured time/memory budgets for selected sizes and nesting depths; resolve known regressions; report recording, recomputation, output and workspace costs separately. No constant-memory or zero-overhead promise for arbitrary differentiation. |
-| 5 | Strengthen numerical kernels | Meet accuracy and measured time/memory budgets for selected CPU arrays, reductions and matrix products. Resolve the runtime-compilation conflict separately; claim GPU support only for explicitly supported devices with ahead-of-time artifacts and real execution evidence. |
+| 5 | Strengthen numerical kernels | Meet accuracy and measured time/memory budgets for selected CPU arrays, reductions and matrix products. Remove runtime device compilation; keep GPU execution outside this CPU roadmap. |
 | 6 | Make performance comparisons dependable | Establish a reproducible comparison protocol with current revisions, comparable algorithms and explicit arithmetic rules; retain repeated samples and environment details; report timing, memory, compilation/startup and binary-size costs; define regression thresholds and how inconclusive results are investigated. |
 | 7 | Validate the language with larger programs | Select a finite acceptance suite of numerical, collection-heavy and long-running applications; test its supported targets and memory modes, including failure/cancellation and bounded-live repeated work; fix observed implementation and usability issues. Add coverage as features expand, without treating this suite as proof for all programs. |
 
@@ -188,11 +188,10 @@ execution, is explicitly excluded. It is not deferred or a future optimization
 option. Keep native compilation ahead of execution and the interpreter; do not
 add a JIT to either the compiler or the generated runtime.
 
-The existing OpenCL path builds device source at runtime through `clBuildProgram`.
-That is an existing implementation gap against this direction, not an exception
-or proof of ahead-of-time device compilation. Step 5 must resolve device build
-and loading requirements before claiming the policy holds for GPU execution;
-do not expand runtime kernel compilation.
+Remove the existing runtime OpenCL compiler and its GPU API. Keep the CPU kernel
+interpreter, which evaluates instructions without generating machine code. A
+future GPU proposal would require explicitly supported ahead-of-time artifacts
+and real device execution evidence; it is not required to finish this plan.
 
 ## Deferred expansions
 

@@ -700,6 +700,43 @@ fn wasi_cpu_kernels_check_counts_before_32_bit_truncation() {
 }
 
 #[test]
+fn wasi_cpu_kernels_reject_invalid_workers_before_kernel_validation() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-kernel-workers").unwrap();
+    for operation in ["run", "sum"] {
+        for threads in [0, 257] {
+            let input = dir.join("workers.fwp");
+            // Malformed code and empty output must not mask an invalid setting.
+            let output = if operation == "run" {
+                "array.length"
+            } else {
+                "id"
+            };
+            std::fs::write(&input, format!("main = device.{operation} {threads} 0 ([99] | array.from-list) ([] | array.from-list) [] | {output} | echo\n")).unwrap();
+            let code = emit(&input, &dir.join("workers.c"), &[], "wasm32-wasi");
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.join("workers.wasm");
+                fwp::cgen::compile_for(&code, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+                let actual = wasi(&binary, dir.path()).output().unwrap();
+                assert_eq!(
+                    actual.status.code(),
+                    Some(101),
+                    "{operation}/{threads}/{opt}: {actual:?}"
+                );
+                assert!(actual.stdout.is_empty(), "{actual:?}");
+                assert!(
+                    String::from_utf8_lossy(&actual.stderr)
+                        .contains("device: thread count must be between 1 and 256"),
+                    "{actual:?}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn fixed_function_captures_initialize_in_wasi() {
     if !available() {
         return;

@@ -68,8 +68,8 @@ fn cpu_kernel_results_preserve_values_aliases_and_release_storage() {
                     "    fwp_init_consts();\n    intptr_t cpu_kernel_budget=fwp_gc.budget;\n",
                 )
                 .replace(
-                    "    fwp_cl_finish();\n",
-                    "    fwp_cl_finish();\n    if(fwp_gc.budget!=cpu_kernel_budget) exit(248);\n",
+                    "    /* Ownership observation point: before runtime teardown. */\n",
+                    "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget!=cpu_kernel_budget) exit(248);\n",
                 );
             let mut measured = code.clone();
             measured.replace_range(start..end, &body);
@@ -109,10 +109,7 @@ fn probe_code(code: String) -> String {
     let start = code
         .find("/* ---------------------------------------------------------------- kernels */")
         .unwrap();
-    let end = start
-        + code[start..]
-            .find("/* ------------------------------------------------------------------ OpenCL")
-            .unwrap();
+    let end = start + code[start..].find("/* F64 matrix fast path:").unwrap();
     let kernel = code[start..end]
         .replace("fwp_k_malloc(", "kernel_malloc(")
         .replace("free(", "kernel_free(")
@@ -201,19 +198,17 @@ fn compare_kernel_allocations_with_the_immutable_runtime_baseline() {
         return;
     };
     let baseline = std::fs::read_to_string(baseline_path).unwrap();
-    let range = |code: &str| {
+    let range = |code: &str, end_marker: &str| {
         let start = code
             .find("/* ---------------------------------------------------------------- kernels */")
             .unwrap();
-        let end = start
-            + code[start..]
-                .find(
-                    "/* ------------------------------------------------------------------ OpenCL",
-                )
-                .unwrap();
+        let end = start + code[start..].find(end_marker).unwrap();
         start..end
     };
-    let old_kernel = &baseline[range(&baseline)];
+    let old_kernel = &baseline[range(
+        &baseline,
+        "/* ------------------------------------------------------------------ OpenCL",
+    )];
     assert!(old_kernel.contains("double *out = (double *)fwp_k_malloc(n * sizeof(double));"));
     assert!(old_kernel.contains("memcpy(ARR(r)->d, out, n * sizeof(double));"));
     let dir = fwp::cgen::TempDir::new("cpu-kernel-baseline").unwrap();
@@ -224,7 +219,7 @@ fn compare_kernel_allocations_with_the_immutable_runtime_baseline() {
         false,
         &dir,
     );
-    code.replace_range(range(&code), old_kernel);
+    code.replace_range(range(&code, "/* F64 matrix fast path:"), old_kernel);
     let code = format!("#define KERNEL_BASELINE 1\n{}", probe_code(code));
     let binary = dir.join("baseline.exe");
     fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();

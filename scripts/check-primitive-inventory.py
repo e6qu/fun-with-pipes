@@ -70,9 +70,10 @@ observed = dict(head=head, baselineHead=baseline['head'], baselineSha256=baselin
                 status='Observed candidate; contract assertions have not passed')
 args.output.with_suffix('.observed.json').write_text(json.dumps(observed, indent=2) + '\n')
 scalar_math = {'asin': 1, 'acos': 1, 'atan': 1, 'sinh': 1, 'cosh': 1, 'tanh': 1, 'asinh': 1, 'acosh': 1, 'atanh': 1, 'log2': 1, 'log10': 1, 'log1p': 1, 'exp2': 1, 'expm1': 1, 'atan2': 2, 'hypot': 2}
-assert len(rows) == len(baseline['rows']) + 5 + len(scalar_math)
+removed_symbols = {'device.gpu-available', 'device.gpu-run'}
+assert len(rows) == len(baseline['rows']) + 5 + len(scalar_math) - len(removed_symbols)
 assert len({(row['file'], row['declared']) for row in rows}) == len(rows)
-assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 5 + len(scalar_math)
+assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 5 + len(scalar_math) - len(removed_symbols)
 assert sum(row['aliased'] for row in rows) == 40
 raw_symbols = {'mem.alloc', 'mem.free', 'mem.string', 'ptr.cast', 'ptr.at',
                'ptr.read', 'ptr.write', 'ptr.read-string', 'ptr.address'}
@@ -92,7 +93,10 @@ service_scopes = {
 }
 new_keys = {('lib/prelude.fwp', name) for name in scalar_math} | scope_keys | {('lib/autodiff.fwp', name) for name in owned_tapes}
 leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.help', 'zlib.gzip', 'zlib.gzip-chunk', 'zlib.deflate', 'ws.accept', 'ws.deflate', 'ws.key', 'zlib.gzip-end', 'ws.close-payload', 'ws.frame'}
-assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row in rows}
+removed_keys = {('lib/tensor.fwp', symbol) for symbol in removed_symbols}
+assert removed_keys <= set(baseline_rows)
+assert not removed_symbols & {row['symbol'] for row in rows}
+assert (set(baseline_rows) | new_keys) - removed_keys == {(row['file'], row['declared']) for row in rows}
 # These reviewed contract changes are checked against the frozen baseline.
 bundle_contracts = {}
 for symbol in ['tcp.listen', 'tcp.connect', 'tcp.accept']:
@@ -357,14 +361,18 @@ assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | s
 expected_counts = dict(baseline['counts'])
 expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes) + len(scalar_math)
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22
+for key in removed_keys:
+    expected_counts[baseline_rows[key]['bucket']] -= 1
 expected_counts['flat_scalar_signature'] -= 1
 for before in promoted:
     expected_counts[before['bucket']] -= 1
     expected_counts['contract'] += 1
-assert counts == expected_counts, counts
+assert all(count >= 0 for count in expected_counts.values()), expected_counts
+expected_counts = {bucket: count for bucket, count in expected_counts.items() if count}
+assert counts == expected_counts, (counts, expected_counts)
 review = [row for row in rows if row['bucket'] == 'runtime_or_specialization_review']
 review_symbols = len({row['symbol'] for row in review})
-assert review_symbols == baseline['reviewSymbols'] - len(raw_symbols) - 22 - len({x['symbol'] for x in promoted if x['bucket'] == 'runtime_or_specialization_review'})
+assert review_symbols == baseline['reviewSymbols'] - len(raw_symbols) - 22 - sum(baseline_rows[key]['bucket'] == 'runtime_or_specialization_review' for key in removed_keys) - len({x['symbol'] for x in promoted if x['bucket'] == 'runtime_or_specialization_review'})
 report = {
     'head': head,
     'declarations': len(rows), 'distinctSymbols': len({row['symbol'] for row in rows}), 'explicitAliases': 40,
@@ -373,6 +381,7 @@ report = {
     'baselineSha256': baseline_hash,
     'changedContractSymbols': sorted(changed_symbols),
     'addedContractSymbols': sorted(name for _, name in new_keys),
+    'removedSymbols': sorted(removed_symbols),
     'sourceHashes': source_hashes,
     'rows': rows,
     'status': 'Expected contract changes verified',

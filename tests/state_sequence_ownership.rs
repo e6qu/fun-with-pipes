@@ -384,7 +384,7 @@ fn each_avoids_allocating_a_discarded_result_list() {
                 assert_eq!(code.matches(marker).count(), 1);
                 code = code.replace(marker, &format!("{marker} each_calls++;"));
             }
-            let finish = "    fwp_cl_finish();\n";
+            let finish = "    /* Ownership observation point: before runtime teardown. */\n";
             let main = code
                 .find("static void *fwp_main_thread(void *arg) {")
                 .unwrap();

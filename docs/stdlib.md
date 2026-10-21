@@ -2651,8 +2651,7 @@ rewrite expressions before evaluation.
 
 Expressions implement the numeric traits (`Ring`, `Field`, `Floating`),
 so generic numeric code builds fused elementwise kernels. They run on a
-`Device`: `Cpu`, `CpuParallel n` (n threads) or `Gpu` (OpenCL, when a
-device with double precision is present). Elementwise results are the
+`Device`: `Cpu` or `CpuParallel n` (up to n workers). Elementwise results are the
 same on every CPU device and in both backends, bit for bit; reductions
 (`tensor.sum`) add blocks of 4096 elements from the left and then the
 block sums from the left, whatever the number of threads, so they are
@@ -2661,8 +2660,8 @@ reproducible too. See docs/numerics.md.
 A tensor expression is a description of elementwise array arithmetic.
 A leaf supplies an input vector; a kernel executes the combined operations.
 Building the description costs work and storage, even before evaluating elements.
-Cpu uses one thread; CpuParallel requests worker threads; Gpu uses a supported
-OpenCL device. Availability must be checked separately from successful execution.
+Cpu uses one thread; CpuParallel accepts worker limits from 1 to 256.
+Availability checks that setting; worker startup can still fail.
 Tutorial 20 explains realization, reduction (combining elements) and gradients.
 
 ```fwp
@@ -2726,17 +2725,14 @@ rec graph.size : TensorExpr[n] -> I64
 # Constant folding: combine constants and nested scalings.
 rec graph.constant-fold : TensorExpr[n] -> TensorExpr[n]
 
-# Where kernels run. `CpuParallel n` splits the elements into n contiguous
-# ranges, one per thread (in WebAssembly, one thread). `Gpu` is the first
-# OpenCL device with double precision (a GPU if there is one); it needs
-# libOpenCL at run time (`FWP_OPENCL_LIB` names another library).
+# CPU execution policy. `CpuParallel n` permits up to n workers, including
+# the calling thread; n must be between 1 and 256. Fewer work blocks use
+# fewer workers. WebAssembly executes serially. No runtime code compilation.
 Device =
     | Cpu
     | CpuParallel I64
-    | Gpu
 
-# Whether a device can run kernels here (`Gpu`: an OpenCL device with
-# double precision was found).
+# Whether the CPU worker setting is valid for execution.
 device.available : Device -> Bool
 device.name : Device -> String
 
@@ -2755,31 +2751,19 @@ tensor.kernel-of : I64 -> TensorExpr[n] -> Kernel
 # The kernel of an expression (a trap when it is made only of fills).
 tensor.kernel : TensorExpr[n] -> Kernel
 
-# Run a kernel on a device: an error when the device cannot run it.
-kernel.run : Device -> Kernel -> Result[Array[F64], String]
+# Compute the kernel's array. Invalid CPU worker counts trap before execution.
+kernel.run : Device -> Kernel -> Array[F64]
 
-# The sum of a kernel's elements, in blocks of 4096 from the left (on the
-# GPU, the elements are computed there and summed on the CPU).
-kernel.sum : Device -> Kernel -> Result[F64, String]
+# Sum in blocks of 4096 from the left, then add block sums from the left.
+# Invalid CPU worker counts trap before execution.
+kernel.sum : Device -> Kernel -> F64
 
-# Evaluate an expression on a device; an error when the device is not
-# available.
-tensor.try-realize-on : Device -> TensorExpr[n] -> Result[Vector[F64, n], String]
-
-# Evaluate an expression on a device (a trap with the reason when the
-# device is not available).
+# Evaluate an expression using the explicit CPU execution policy.
 realize-on : Device -> TensorExpr[n] -> Vector[F64, n]
 
-# The sum of the elements of an expression, in a fixed order (see above).
+# Sum an expression in the fixed block order described by `kernel.sum`.
 tensor.sum-on : Device -> TensorExpr[n] -> F64
 tensor.sum : TensorExpr[n] -> F64
-
-# The OpenCL C source of an expression's kernel: `fwp_kernel(out, k, n,
-# x0, x1, ...)` computes element i of n from the inputs xj and the
-# constants k, in the order of the CPU kernel (FP_CONTRACT OFF: no fused
-# multiply-add).
-tensor.opencl : TensorExpr[n] -> String
-tensor.opencl-of : Kernel -> String
 
 # The gradient of the sum of an expression's elements with respect to
 # each of its leaves (`tensor.lazy` vectors, in order from the left), by

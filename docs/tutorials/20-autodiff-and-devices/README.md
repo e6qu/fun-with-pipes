@@ -32,23 +32,20 @@ A tensor expression describes arithmetic over an array. `tensor.lazy` creates
 an input expression; applying `soft` builds the expression `ln(exp(x) + 1)`.
 Building this description does work, but does not yet evaluate every element.
 `tensor.sum-on` evaluates and sums it on a selected device. A **kernel** here
-is the compiled loop that performs the arithmetic for each element. Combining
+is an instruction array evaluated by compiled CPU loops for each element. Combining
 the operations into that loop avoids arrays for intermediate `exp` and `add`
 results.
 
-`Cpu` uses one CPU thread; `CpuParallel 4` requests four. CPU sums add blocks of
+`Cpu` uses one CPU thread; `CpuParallel 4` permits up to four. CPU sums add blocks of
 4096 elements in a fixed order and then add the block sums in order, so changing
 the thread count does not change that addition order. The test below compares
 both results; it does not benchmark their speed. `tensor.grad` builds derivatives
 of the sum with respect to each input leaf; the sample prints the first two
 elements of each resulting gradient vector.
 
-`Gpu` uses OpenCL, an interface for running kernels on a supported device.
-`tensor.opencl` prints the OpenCL C source without executing it. Execution needs
-an OpenCL library and a device with double-precision support. Check
-`device.available Gpu`; an unavailable device makes `realize-on Gpu` fail with
-the reason. Device math libraries may differ; the printed CPU agreement below
-does not establish identical GPU results.
+Worker limits must be between 1 and 256. `device.available (CpuParallel 4)`
+returns `True`; a limit of 0 or 257 is invalid and traps when used. Small kernels
+use fewer workers; WebAssembly executes serially. GPU execution is not supported.
 
 ## The program
 
@@ -92,7 +89,6 @@ main = [
     | map (vector.to-list | take 2)
     | show
     | print,
-    vector [0.0, 1.0] | tensor.lazy | soft | tensor.opencl | print,
 ] | ignore
 ```
 
@@ -107,20 +103,6 @@ build an executable with `fwp build docs/tutorials/20-autodiff-and-devices/main.
 1410.6489026879174
 1410.6489026879174
 [[0.006692850924284856, 0.006759660510713249]]
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
-#pragma OPENCL FP_CONTRACT OFF
-__kernel void fwp_kernel(__global double *out, __global const double *k, const long n, __global const double *x0) {
-    const long i = get_global_id(0);
-    if (i >= n) return;
-    double s0, s1;
-    s0 = x0[i];
-    s0 = exp(s0);
-    s1 = k[0];
-    s0 = s0 + s1;
-    s0 = log(s0);
-    out[i] = s0;
-}
-
 ```
 
 The expected output checks interpreter/native agreement for this program,

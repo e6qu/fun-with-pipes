@@ -7193,8 +7193,6 @@ impl<'p> Gen<'p> {
                     ("ad.backward", "fwp_p_ad_backward(l0, l1, l2)"),
                     ("device.run", "fwp_p_device_run(l0, l1, l2, l3, l4)"),
                     ("device.sum", "fwp_p_device_sum(l0, l1, l2, l3, l4)"),
-                    ("device.gpu-available", "fwp_p_gpu_available()"),
-                    ("device.gpu-run", "fwp_p_gpu_run(l0, l1, l2, l3)"),
                     ("syntax.show", "fwp_p_syntax_show(l0)"),
                     ("write", "fwp_p_write(l0)"),
                     ("eprint", "fwp_p_eprint(l0)"),
@@ -10736,7 +10734,7 @@ static const fwp_exec_spec exec_spec{i} = {{
     if let Mode::Library = mode {
         let _ = write!(
             out,
-            "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_GC\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n    fwp_lib_ready = 0;\n#ifdef FWP_GCTX_OWNERS\n    g_connections_finish();\n#endif\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    fwp_cl_finish();\n    fwp_tape_finish();\n    fwp_gc_finish();\n#ifdef FWP_GCTX_OWNERS\n    g_environment_finish();\n#endif\n#ifdef FWP_TLS\n    fwp_tls_clients_finish();\n#endif\n    fwp_closure_drop_finish();\n    fwp_sockets_finish();\n}}\n#endif\n",
+            "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_GC\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n    fwp_lib_ready = 0;\n#ifdef FWP_GCTX_OWNERS\n    g_connections_finish();\n#endif\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    /* Ownership observation point: before runtime teardown. */\n    fwp_tape_finish();\n    fwp_gc_finish();\n#ifdef FWP_GCTX_OWNERS\n    g_environment_finish();\n#endif\n#ifdef FWP_TLS\n    fwp_tls_clients_finish();\n#endif\n    fwp_closure_drop_finish();\n    fwp_sockets_finish();\n}}\n#endif\n",
             g.const_init, lib_defs
         );
         return Ok(out);
@@ -10822,7 +10820,7 @@ static void *fwp_main_thread(void *arg) {{
 #endif
     fwp_native_tasks_finish();
 #endif
-    fwp_cl_finish();
+    /* Ownership observation point: before runtime teardown. */
 #ifdef FWP_FIBERS
     fwp_fiber_tasks_finish();
 #endif

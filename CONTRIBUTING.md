@@ -228,7 +228,7 @@ can infer the suffix when launching a program; symbol readers and file APIs cann
   The math object uses fixed-size integer storage and links without a C++ runtime.
   HTTP/2, gzip, protobuf, JSON and YAML are implemented here.
   The C runtime uses the C library, pthreads,
-  OpenSSL (for TLS) and the OpenCL loader (for devices, loaded when used).
+  OpenSSL for TLS.
 - **The interpreter is the reference.** Every feature works in both
   engines, the interpreter (`src/interp.rs`) and the C backend
   (`src/cgen.rs`, `runtime/*.c`), and the two agree byte for byte on

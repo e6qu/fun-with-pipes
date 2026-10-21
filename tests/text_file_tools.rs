@@ -70,9 +70,15 @@ fn maintained_text_tools_release_repeated_and_retained_results() {
                     .unwrap();
                 let (runtime, main) = code.split_at(start);
                 assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-                assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
+                assert_eq!(
+                    main.matches(
+                        "    /* Ownership observation point: before runtime teardown. */\n"
+                    )
+                    .count(),
+                    1
+                );
                 let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t text_budget = fwp_gc.budget;\n")
-                    .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < text_budget) exit(239);\n");
+                    .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget < text_budget) exit(239);\n");
                 code = format!("{runtime}{measured}");
             }
             let binary = root.join("tool.exe");

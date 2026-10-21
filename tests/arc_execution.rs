@@ -105,9 +105,13 @@ main = range 0 129 | map (choose | checks) | length | echo
                 .unwrap();
             let (runtime, main) = code.split_at(main_start);
             assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-            assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
+            assert_eq!(
+                main.matches("    /* Ownership observation point: before runtime teardown. */\n")
+                    .count(),
+                1
+            );
             let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t arc_budget = fwp_gc.budget;\n")
-                .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < arc_budget || fwp_gc.freed <= 0) { fprintf(stderr,\"ARC unreclaimed bytes: %ld\\n\",(long)(arc_budget-fwp_gc.budget)); exit(193); }\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < arc_budget || fwp_gc.freed <= 0) { fprintf(stderr,\"ARC unreclaimed bytes: %ld\\n\",(long)(arc_budget-fwp_gc.budget)); exit(193); }\n");
             let measured = format!("{runtime}{main}");
             if let Some(path) = std::env::var_os("FWP_ARC_ARTIFACTS") {
                 let destination = std::path::PathBuf::from(path);

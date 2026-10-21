@@ -351,8 +351,8 @@ lifetimes. CPU workers retain no language references after the call. Reporting
 worker-start failure joins already started workers before releasing borrowed
 inputs or pending output. Whole-service ownership needs the separate
 [gRPC and HTTP contracts](ownership.md#checked-arc-delivery); these individual
-primitives alone cannot prove it. Retained foreign callbacks and GPU execution
-still need separate lifetime proofs. Socket handles have
+primitives alone cannot prove it. Retained foreign callbacks still need separate
+lifetime proofs. Socket handles have
 [their own contracts](ownership.md#tcp-and-tls-socket-owners).
 
 ## Copied service data

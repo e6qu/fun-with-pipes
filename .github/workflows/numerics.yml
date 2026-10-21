@@ -671,7 +671,7 @@ jobs:
                      'cached_map_borrows', 'arc_corpus', 'arc_execution', 'udp_ownership',
                      'autodiff_nested', 'foreign_callback_ownership', 'autodiff_precision',
                      'native_sockets', 'autodiff_checkpoint', 'library_unload',
-                     'opencl_lifetime', 'softfloat_core']
+                     'softfloat_core']
           metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--no-deps', '--format-version', '1']))
           command = ['cargo', 'test', '--no-run', '--message-format=json']
           for target in targets:
@@ -1441,7 +1441,7 @@ jobs:
           CC: gcc
         run: cargo test --test closure_ownership fixed_function_values_preserve_aliases_and_effect_order -- --exact --nocapture
   fixed_functions_wasi:
-    if: inputs.suite == 'fixed-functions' || inputs.suite == 'channel-proof' || (inputs.suite == 'queued-sockets' && inputs.native_runner == 'all')
+    if: inputs.suite == 'fixed-functions' || inputs.suite == 'channel-proof' || inputs.suite == 'kernels' || (inputs.suite == 'queued-sockets' && inputs.native_runner == 'all')
     strategy:
       fail-fast: false
       matrix:
@@ -1598,7 +1598,7 @@ jobs:
         part: ${{ fromJSON(inputs.suite == 'http-clients' && '["ownership","comparisons"]' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc') && '["server","client","calls"]' || '["all"]') }}
         runner: ${{ fromJSON(inputs.native_runner != 'all' && format('["{0}"]', inputs.native_runner) || (inputs.suite == 'stream-storage' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux') && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows' || inputs.suite == 'tcp-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 25
+    timeout-minutes: ${{ inputs.suite == 'kernels' && 45 || 25 }}
     env:
       CC: ${{ inputs.suite == 'fields' && startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
       CARGO_BUILD_JOBS: 2
@@ -1967,6 +1967,14 @@ jobs:
           FWP_KERNEL_ARTIFACTS: kernel-evidence
           FWP_KERNEL_BASELINE: kernel-baseline.c
         run: cargo test --no-fail-fast --test cpu_kernel_ownership --test stdlib_doc
+      - name: CPU worker limits, interpreter agreement and strict ARC corpus
+        if: ${{ !cancelled() && inputs.suite == 'kernels' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
+        run: cargo test --no-fail-fast --test numerics --test stdlib_doc
+      - name: Maintained programs after removal of runtime GPU compilation
+        if: ${{ !cancelled() && inputs.suite == 'kernels' && runner.os != 'Windows' }}
+        env:
+          FWP_ARC_CORPUS_ARTIFACTS: kernel-evidence/corpus
+        run: cargo test --test arc_corpus -- --nocapture
       - name: CPU kernel size validation order
         if: inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders'
         run: cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact

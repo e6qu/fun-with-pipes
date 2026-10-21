@@ -1,6 +1,4 @@
-# Fused tensor kernels on devices: every CPU device gives the same bits as
-# the sequential evaluation, reductions are reproducible, and the GPU is
-# reported unavailable without OpenCL.
+# Fused CPU kernels preserve element results and reduction order across workers.
 
 # 0.0, 1.0, ... with a size known when the program runs
 idx : I64 -> Vector[F64, _]
@@ -76,9 +74,8 @@ main = [
     small | realize-on (CpuParallel 2) | echo,
     small | tensor.sum | echo,
     small | tensor.kernel | echo,
-    small | tensor.opencl | print,
     grad-expr | tensor.grad | echo,
     grad-expr | tensor.grad-on (CpuParallel 2) | echo,
     [Cpu, CpuParallel 4, CpuParallel 0] | map device.available | echo,
-    [Cpu, CpuParallel 4, Gpu] | map device.name | echo,
+    [Cpu, CpuParallel 4] | map device.name | echo,
 ] | ignore

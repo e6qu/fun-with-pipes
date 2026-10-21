@@ -1372,7 +1372,7 @@ Scoped failure cleanup and deliberate missing-reset tests enforce that distincti
 Keep the cache, shared-reader and decoder failure controls while extending these
 owners. Test partial construction and every last-owner case; retain deliberately
 broken variants to prove that missing cleanup is detected. HTTP/2 handlers are
-accepted in PR #163; GPU resource ownership remains work.
+accepted in PR #163. GPU execution is outside the CPU-only design.
 
 ### Checked gRPC clients and services
 

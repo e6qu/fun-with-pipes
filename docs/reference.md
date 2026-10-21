@@ -923,7 +923,6 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_SERVICE_<M>_CA`, `_INSECURE`, `_SERVER_NAME`, `_CERT`, `_KEY` | the TLS options of the clients of service `M`: a CA file, no verification, the server name, a client certificate and key (see [tls.md](tls.md#services)) |
 | `FWP_REST_CORS` | the origins (separated by commas, or `*`) that may call a REST server from browsers, without `--cors` (see [rest.md](rest.md#cors)) |
 | `SSL_CERT_FILE`, `SSL_CERT_DIR` | OpenSSL's: the CA certificates TLS clients trust instead of the system's (see [tls.md](tls.md#client-options)) |
-| `FWP_OPENCL_LIB` | the OpenCL library of the `Gpu` device instead of `libOpenCL.so.1` (see [numerics.md](numerics.md#devices)) |
 | `FWP_OPENSSL_DIR` | OpenSSL prefix for host native include/link paths and the interpreter's loader; ignored by Linux cross builds (see [tls.md](tls.md#openssl)) |
 | `FWP_NO_OPT=1` | disables the IR optimizer (inlining, specialization, fusion) |
 | `FWP_ARRAY_FUSION=0` | when compiling: retain separate numeric Array map/fold/length stages for comparison; normal fusion requires pure terminating callbacks with compatible trap behavior |

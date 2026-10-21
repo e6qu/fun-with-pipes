@@ -93,7 +93,7 @@ def profile(code):
     code = code.replace('return hash_state;', 'hash_profile_active=0; return hash_state;')
     start = code.index('static void *fwp_main_thread(void *arg) {')
     prefix, body = code[:start], code[start:]
-    marker = '    fwp_cl_finish();\n'
+    marker = '    /* Ownership observation point: before runtime teardown. */\n'
     assert body.count(marker) == 1
     body = body.replace(marker, marker+r'''
     fprintf(stderr,"{\"hashBufferRequests\":%llu,\"hashBufferRequestedBytes\":%llu,\"peakHashBufferCapacityBytes\":%zu}\n",(unsigned long long)hash_profile_requests,(unsigned long long)hash_profile_bytes,hash_profile_peak);

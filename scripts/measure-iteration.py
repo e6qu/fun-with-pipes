@@ -68,9 +68,9 @@ static void iteration_sample(void);
 static void iteration_sample(void){if(iteration_active){double live=iteration_charge()-iteration_start_charge;if(live>iteration_peak)iteration_peak=live;}}
 '''
     assert body.count('    fwp_init_consts();\n') == 1
-    assert body.count('    fwp_cl_finish();\n') == 1
+    assert body.count('    /* Ownership observation point: before runtime teardown. */\n') == 1
     body = body.replace('    fwp_init_consts();\n', '    fwp_init_consts();\n    iteration_start_charge=iteration_charge();iteration_active=1;\n')
-    body = body.replace('    fwp_cl_finish();\n', '''    fwp_cl_finish();
+    body = body.replace('    /* Ownership observation point: before runtime teardown. */\n', '''    /* Ownership observation point: before runtime teardown. */
     iteration_active=0;
     fprintf(stderr,"{\\"requests\\":%llu,\\"requestedBytes\\":%llu,\\"retains\\":%llu,\\"peakChargedBytes\\":%.0f,\\"finalChargedBytes\\":%.0f,\\"collections\\":%zu}\\n",(unsigned long long)iteration_requests,(unsigned long long)iteration_bytes,(unsigned long long)iteration_retains,iteration_peak,iteration_charge()-iteration_start_charge,fwp_gc.ncollect);
 ''')

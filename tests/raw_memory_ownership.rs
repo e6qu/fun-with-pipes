@@ -70,8 +70,8 @@ static void interop_free(void *p) {
             "interop_free((void *)(uintptr_t)l0);\n    return FWP_UNIT;",
         )
         .replace(
-            "    fwp_cl_finish();\n",
-            "    if(interop_live || interop_created<3)exit(211);\n    fwp_cl_finish();\n",
+            "    /* Ownership observation point: before runtime teardown. */\n",
+            "    if(interop_live || interop_created<3)exit(211);\n    /* Ownership observation point: before runtime teardown. */\n",
         );
     assert!(code.contains("if(interop_live || interop_created<3)exit(211);"));
     for opt in ["-O0", "-O2"] {

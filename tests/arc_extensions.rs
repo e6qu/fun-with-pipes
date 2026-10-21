@@ -172,9 +172,9 @@ main = [
                 .unwrap();
             let (runtime, body) = emitted.split_at(main);
             let body = body.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t extension_budget = fwp_gc.budget;\n")
-                .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.budget < extension_budget) { fprintf(stderr, \"unreclaimed: %ld\\n\", (long)(extension_budget-fwp_gc.budget)); exit(193); }\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.budget < extension_budget) { fprintf(stderr, \"unreclaimed: %ld\\n\", (long)(extension_budget-fwp_gc.budget)); exit(193); }\n");
             let body = if name == "scoped-ad" {
-                body.replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    for (int64_t i=0;i<fwp_ntapes;i++) if(fwp_tapes[i].live) exit(194);\n    if(fwp_tape_cached_bytes > FWP_AD_WORKSPACE_BUDGET) exit(195);\n")
+                body.replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    for (int64_t i=0;i<fwp_ntapes;i++) if(fwp_tapes[i].live) exit(194);\n    if(fwp_tape_cached_bytes > FWP_AD_WORKSPACE_BUDGET) exit(195);\n")
             } else {
                 body
             };

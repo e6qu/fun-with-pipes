@@ -215,7 +215,7 @@ fn arc_commands_reclaim_arguments_frames_defaults_and_errors() {
     let (runtime, main) = code.split_at(start);
     let measured = format!("{runtime}{}", main
         .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t protocol_budget=fwp_gc.budget_given;\n")
-        .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < protocol_budget) { fprintf(stderr,\"protocol bytes left: %ld\\n\",(long)(protocol_budget-fwp_gc.budget)); exit(193); }\n"));
+        .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < protocol_budget) { fprintf(stderr,\"protocol bytes left: %ld\\n\",(long)(protocol_budget-fwp_gc.budget)); exit(193); }\n"));
     for opt in ["-O1", "-O2"] {
         let binary = dir.join(if cfg!(windows) {
             "owners.exe"

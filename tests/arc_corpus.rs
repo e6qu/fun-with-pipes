@@ -78,13 +78,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
             // a newly added example, needs a repair rather than a passing count.
             let expected = match name {
                 "ad_task_reuse" => Some("outside an autodiff scope"),
-                "devices" => {
-                    Some("primitive `device.gpu-available` has no tracing-free ownership contract")
-                }
                 "ffi" => Some("type `Ptr[U8]` has no tracing-free ownership contract"),
-                "stdlib_fixes" | "trap_tensor_fills" | "trap_tensor_length" => {
-                    Some("primitive `device.gpu-run` has no tracing-free ownership contract")
-                }
                 _ => None,
             };
             if !expected.is_some_and(|message| reason.contains(message)) {
@@ -97,10 +91,14 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
                 .unwrap();
             let (runtime, main) = code.split_at(start);
             assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-            assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
+            assert_eq!(
+                main.matches("    /* Ownership observation point: before runtime teardown. */\n")
+                    .count(),
+                1
+            );
             // Final teardown must release every charge, including scheduler storage.
             let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t arc_budget = fwp_gc.budget_given;\n")
-                .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if (fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < arc_budget) { fprintf(stderr, \"ARC unreclaimed bytes: %ld\\n\", (long)(arc_budget-fwp_gc.budget)); exit(193); }\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if (fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < arc_budget) { fprintf(stderr, \"ARC unreclaimed bytes: %ld\\n\", (long)(arc_budget-fwp_gc.budget)); exit(193); }\n");
             let measured = format!("{runtime}{main}");
             let binary = scratch.join(name);
             fwp::cgen::compile_c(&measured, &binary, "-O1").unwrap();

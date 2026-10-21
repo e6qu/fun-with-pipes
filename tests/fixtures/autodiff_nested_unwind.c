@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
         if (nested_mode) return 191;
     } else if (!nested_mode || strcmp(fwp_trap_msg,"managed tape unwind control")) return 192;
     fwp_handlers = NULL;
-    fwp_caf_finish(); fwp_cl_finish(); fwp_tasks_finish();
+    fwp_caf_finish(); /* Ownership observation point: before runtime teardown. */ fwp_tasks_finish();
     if (fwp_cleanups || fwp_owned_tapes) return 193;
     for (int64_t i=0;i<fwp_ntapes;i++) if (fwp_tapes[i].live) return 194;
     if (!nested_expected_frees || nested_actual_frees != nested_expected_frees) return 195;
