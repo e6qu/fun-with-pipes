@@ -2,106 +2,81 @@
 
 ## Next action
 
-Next: publish the conditional root-image cleanup and task-free regression, then
-audit the complete native Linux ARM64/AMD64 probe. The preceding corrected run
-`39604262777` at `c26da6b4a429bd0987b36004b0a523658ae2bd1e` remains queued and
-will be cancelled as superseded. Candidate-only correctness assertions
-must run in separate binaries, so they cannot bias the timed pair. The first proof at
-`c4a6fb0abb70704662f2736a5ee981e62f1b3f31`, run `39600508036`, passed both jobs;
-their complete logs and 62 actual native binaries were inspected. This is isolated
-preparation on `measure-native-task-contexts` in `/private/tmp/fwp-task-contexts`,
-based on PR #186 head `fa2d5098573220833bda06e30af9f534181edc0d`.
-Do not open another PR while #186 remains active.
-Current audit: `/private/tmp/fwp-audit-task-context-matched.py`; receipt
-`/private/tmp/fwp-task-context-matched-audit.json`. Publication metadata is
-`/private/tmp/fwp-task-context-matched-probe.json`.
-Use `/private/tmp/fwp-audit-task-context-probe.py`; receipt
-`/private/tmp/fwp-task-context-first-audit.json`. The first run `39600295147`
-was superseded before acceptance: the child must be created before the root's
-test value, so its initial register image cannot accidentally retain that value.
-Cancellation and source receipts are `/private/tmp/fwp-task-context-probe.json`
-and `fwp-task-context-initial-superseded.json`.
+Next: publish the prepared task-storage change as one PR, then audit all nine
+production jobs plus documentation for its final head. Fix every failure.
+Use a one-line subject under 80 characters and an empty body; verify message,
+parent and tree. Standing authorization covers publication, repairs and merging.
 
-PR #186's exact-head production run is `39597478599`, docs `39597478465`.
-The main workspace holds that branch and its current handoff. Use
-`/private/tmp/fwp-audit-186-final.py` and `fwp-merge-186.py`; merge only after
-all nine production gates plus documentation pass. Standing authorization covers
-publication and squash merge with a one-line subject under 80 characters and
-an empty body. PR #185 is already accepted and merged; its history is recorded.
+PR #186 passed all ten gates and was squash-merged as
+`d516a0919a3f24a7c28817a32782908df77dd95d`, with the same tree as tested head
+`fa2d5098573220833bda06e30af9f534181edc0d`. Receipt
+`/private/tmp/fwp-186-final-acceptance.json` verifies its message, parent and tree;
+[history](roadmap-history.md#queued-service-responses-and-bounded-server-startup-pr-186)
+records the accepted change. Do not repeat that merge. The first post-merge run
+query returned none; recheck `fwp-cancel-186-duplicates.py` before publication.
 
-## Candidate and measurement boundary
+The branch `measure-native-task-contexts` is in `/private/tmp/fwp-task-contexts`.
+Commit its final report/docs, then rebase from the tested PR #186 head onto the
+verified squash merge. The tested source tag is already preserved. Check that
+runtime/tests still match that source, move the branch to the main workspace and
+publish one PR. The draft description is `/private/tmp/fwp-task-context-pr.md`.
 
-The accepted service samples use a 5,296-byte task record on Linux ARM64 and
-1,584 bytes on Linux AMD64. glibc's saved CPU context occupies much of that record.
-The prototype puts child contexts at an aligned address in the existing task
-stack, above all usable call frames. The task record holds a pointer. It keeps
-glibc's context switching, signal-mask and floating-point behavior.
+## Task storage and evidence
 
-The root uses its host's stack, so its context lives in runtime static storage.
-The collector scans that storage with program data. Initialization and both
-executable/library teardown clear the image; completed child records clear their
-context pointers before their stacks can be reused. A static stack budget too
-small for a context fails before allocating/publishing a task.
+glibc Linux child tasks save CPU state in an aligned region of their existing
+stack allocation. The root task uses static storage. This shrinks heap task
+records without replacing glibc's switching, signal-mask or floating-point
+behavior. Call frames have less usable stack space; saved state still occupies
+memory. Completed task pointers and root state clear before their storage can
+be reused. Programs that never use tasks do not initialize or clear root state.
 
-This shifts storage; it does not eliminate the saved CPU state. Report task-record
-bytes, context bytes on each stack and root static bytes separately, along with
-managed allocations and final cleanup. No whole-process memory or speed claim.
-The existing stack reservation and pool remain outside managed-allocation counts.
+Both jobs in focused run `39606188022` passed at
+`dec32109b52b8783c7234cd5c72e242583742a4c`. Remote tag
+`roadmap/revision-task-contexts-dec32109b52b` preserves that source. Both complete
+logs were audited: no failed steps, test failures or panic diagnostics.
+All 80 actual ELF binaries, generated C, symbols and disassembly were inspected.
+The [guide](measurements/task-contexts.md) introduces the program and storage
+terms; the [report](measurements/task-contexts-2026-10-21.json) retains 144 matched
+process samples, actual binary/static sizes and the separate service comparison.
 
-## Verified focused checks
+Checks cover register-only roots through collection, rounding/signal restoration,
+stack bounds/alignment, task-free execution, cancellation, library unload,
+static budgets and complete request cleanup. Twelve context controls deliberately
+break root scanning, teardown or task-free cleanup; library and service tests
+also retain their own broken-cleanup controls. `strace` was installed, so the
+static-memory mapping check executed. Timed binaries exclude candidate-only
+correctness assertions. The earlier biased timing run is excluded in the report.
 
-`tests/task_context_storage.rs` reconstructs the preceding heap layout in otherwise
-identical generated C as an experimental control. Production code has no layout
-switch or compatibility branch. Both versions must match the interpreter's 528
-result for 32 tasks, under ARC/tracing at O0/O2, with zero final managed charge.
-The test records generated C, ELF architecture, actual disassembly, symbols,
-section sizes, counters and layouts. It checks stack bounds/alignment, clears
-retained completed-task pointers and checks root-state teardown. An omitted root
-clear must exit 193. ARC binaries must exclude collector routines and retain the
-existing libc context implementation.
+For 32 tasks, peak managed charge falls from 54,592 to 25,024 bytes on AMD64 and
+206,656 to 29,248 on ARM64. Allocation requests/retains remain 227/159. Median
+process-memory changes are smaller; timings are mixed, with overlapping ranges.
+Some code/file sizes grow. No general speed, zero-ARC or GC-removal claim.
+The 72-call service retains 481 count operations and ends with only its identified
+544-byte live listener storage. It does not prove orderly listener shutdown.
 
-A separate C probe excludes ordinary stack copies while checking values held
-in root/child saved register images. O0/O2 collection must preserve those values;
-deliberately hiding a root or child image must exit 191/192. It also checks
-floating-point rounding and signal-mask restoration. Both hosts passed all ten
-deliberate omission controls across O0/O2. The managed-byte results and their
-limits are in [the measurement guide](measurements/task-contexts.md).
+Full production acceptance remains required: Linux/macOS/Windows on both
+architectures, both Mac GC-stress jobs, C/Rust benchmarks and documentation.
+The new context test target executes on glibc Linux; its zero tests on other
+platforms do not establish native support. Existing platform gates remain intact.
 
-The expanded probe adds nine fresh processes per layout, memory mode and C
-optimization level. It records peak resident memory through the post-task-teardown
-checkpoint and elapsed time through complete process exit. Those are different
-scopes; neither isolates context-switch cost. The script retains raw samples,
-binary hashes, ranges and candidate/control ratios. These new samples are pending.
-The intermediate run `39603525279` at `03bb8b3f9795c2d2aa851b4140e8d66845e4a969`
-still included candidate-only assertions in its timed binaries; do not use its
-timings as an equivalent-work result. It is superseded by the corrected source.
-The latest runtime revision avoids clearing a saved root image when no task has
-created one; a task-free program checks this at O0/O2 in ARC/tracing, and an
-unconditional-clear control must exit 197. The corrected probe also tests library
-unload, including a deliberately omitted root-image clear, and static-memory
-budgets with `strace` installed so the no-later-mappings check actually executes.
+## Local checks and continuation files
 
-The focused workflow includes task/scope/cancellation regressions and all four
-queued service-response cleanup cases. Its two Linux jobs are independent. Full
-production acceptance across all nine jobs, including static-memory and library-unload
-coverage, is still required before any later merge. The new test target is in the
-explicit macOS shard inventory, but its libc-only tests execute on Linux.
+All checks used `python3 scripts/local-guard.py COMMAND...`, serially. Rustfmt
+passed for both changed Rust tests; Python syntax passed for the measurement
+script and artifact/report helpers. The documentation audit checks 78 link sets,
+106 immutable preparation pairs/tags and seven roadmap areas; rerun it after
+staging the final report links. No native compilation or
+benchmark execution ran locally. Preserve the fixed 64 GiB disk, 2 GiB target,
+1 GiB workload RSS and 180-second limits.
 
-## Local work
-
-Keep checks serial through `python3 scripts/local-guard.py COMMAND...`, preserving
-64 GiB free disk, target below 2 GiB, sampled RSS below 1 GiB and the 180-second
-limit. No local builds, native C compilation or full test gates. Rustfmt, Python
-syntax, documentation checks and the 11 native-runner controls passed. Independent
-bounded LLVM disassembly corrected 11 AMD64 excerpts that had selected GCC's cold
-error block; the original complete CI disassembly hashes remain in the receipts.
-The accepted PR #184 macOS compiler interpreted the small source fixture as 528
-and emitted C to inspect teardown order; that does not test the changed runtime.
-All candidate native execution belongs on GitHub runners.
-
-Documentation cleanup replaces obsolete handoff links for accepted borrowing,
-sets, hashing, constants, recursion and queued-callback work with its actual
-delivery evidence. The guarded documentation audit passes before publication.
+Under `/private/tmp`: `fwp-task-context-final-audit.json`,
+`fwp-task-context-final-probe.json`, `fwp-task-context-source-tag.json` and
+`fwp-task-context-final-evidence/HOST/inspection.json` preserve the current audit.
+The source tag contains the earlier preparation revisions; superseded runs are
+not a backlog. `fwp-inspect-task-context-final.py` and
+`fwp-report-task-context-matched.py` already completed; do not overwrite their
+accepted reports. Documentation now links accepted ownership work to its actual
+delivery evidence instead of obsolete handoff instructions.
 
 ## Roadmap status
 

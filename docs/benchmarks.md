@@ -21,6 +21,7 @@ ratios on another machine or establish that the whole language is â€œzero-cost.â
 | How much slower/faster than C or Rust? | [Complete programs](#fwp-compared-with-c-and-rust), [arrays/matrices](#current-numerical-comparison-and-record-moves), [hashing](#repeating-the-allocation-and-borrowing-changes-together), [vector lanes](#fixed-size-lane-calculations-against-c-and-rust) | Ratio against the named C/Rust implementation for that input and timing boundary |
 | Did a compiler change help? | [Iteration](#list-iteration-compared-with-its-previous-definition), [derivatives](#paired-autodiff-metadata-allocations), [HTTP functions](#fixed-function-values-in-the-http-server), [maps](#larger-maps-exposed-a-storage-layout-problem) | New fwp / baseline fwp; not overhead against another language |
 | How much ownership work does a channel exchange need? | [Method and baseline](measurements/channel-transfer-protocol.md), [matched payloads](measurements/channel-variant-moves.md), [direct-call borrowing](measurements/channel-direct-borrows.md), [function channels](measurements/function-channel-borrows.md) | Allocations, retains and actual binary/frame sizes; no execution-time or C/Rust comparison |
+| Can task records use less heap storage? | [Saved CPU state in task stacks](measurements/task-contexts.md) | Matched fwp layouts: managed bytes, process memory, complete-process time and actual binary/static sizes |
 | How much does grouped integer counting cost? | [Controlled CPU comparisons](measurements/integer-counting.md) | Paired old/new fwp, matched C/Rust, explicit CPU placement and all samples |
 | Can checked multiplication preserve numeric bounds? | [Checked-product comparison](measurements/checked-products.md) | Actual compiler output, per-CPU C/Rust gaps, dynamic-input controls and O0/O1 costs |
 | What does integer-text elimination save? | [Direct character counting](measurements/integer-text.md) | Native results and allocation controls; time against C/Rust counting versus formatting |
@@ -65,8 +66,9 @@ RSS or external library memory. Each actual executable is disassembled and saved
 with generated C and compiler stack-use estimates. Those estimates are per
 function, not a measured aggregate peak. Whole-file sizes include debug data.
 Deep O0/interpreter execution checks separately verify that eligible recursive
-calls do not accumulate call frames. No speed or zero-allocation result is claimed
-until the current [handoff](development-state.md) records passing evidence.
+calls do not accumulate call frames. [Accepted recursion checks](roadmap-history.md#mixed-tail-recursion-pr-171)
+record the tested scope; these checks do not establish general speed or
+zero-allocation results.
 
 The mixed-recursion regression fixture is separate from this countdown benchmark.
 It checks results and cleanup with both tail and ordinary recursive calls, using
@@ -264,6 +266,19 @@ current implementation. It uses authenticated `gh`; it does not run downloaded
 executables. Local collection goes through the repository's resource guard.
 
 ## Measurement report index
+
+### Linux task storage
+
+The [task-context guide](measurements/task-contexts.md) compares two fwp layouts
+on named AMD64/ARM64 Linux hosts. A 32-task program still performs 227 allocations
+and 159 retains, while peak managed charge falls from 54,592 to 25,024 bytes on
+AMD64 and 206,656 to 29,248 on ARM64. Saved CPU state moves into existing child
+stacks and root static storage. It still occupies memory and reduces usable stack
+space. Process-memory reductions are smaller than these managed-byte reductions;
+short-process timings are mixed. The [raw report](measurements/task-contexts-2026-10-21.json)
+retains 144 samples, exact compiler settings, binary/code/static sizes and a
+separate 72-call service comparison. These measurements compare fwp layouts,
+not fwp overhead against C/Rust.
 
 ### Current numerical comparison and record moves
 

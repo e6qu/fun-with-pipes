@@ -2,18 +2,23 @@
 
 A task is work that can pause while other tasks run. Its **stack** holds active
 function calls. Its **task record** holds scheduling and ownership information.
+A task started by another task is its child; the original program task is the root.
 When a task pauses, the runtime also saves CPU registers so it can resume at the
 same instruction. That saved image is called a **context** here; it is separate
 from service settings and the language's `State` effect.
 
-On glibc Linux, the saved image was embedded in each heap-allocated task record.
+glibc is the C library used by the supported Linux runners. On these hosts, the
+saved image was embedded in each heap-allocated task record.
 The candidate places each child's image at an aligned address in that task's
 existing stack allocation, above its usable call frames. The task record holds
 a pointer. The root task uses the host's stack, so its image occupies runtime
-static storage instead. The runtime clears that image at teardown and clears
+static storage, which belongs to the program rather than a heap allocation.
+The runtime clears that image at teardown and clears
 completed child pointers before reusing their stacks.
-Programs that create no task do not initialize or clear a saved root image.
-The new task-free check and an unconditional-clear control verify this boundary.
+Programs that never use the task runtime do not initialize or clear a saved root
+image. Native task-free checks and an unconditional-clear control pass on both
+Linux architectures.
+The inspected task-free binaries still reserve the static image.
 
 The saved bytes still exist. This change reduces heap record size and allocator
 rounding; it does not eliminate CPU state or guarantee lower process memory.
@@ -50,14 +55,14 @@ and physical freeing is enabled.
 These are comparisons between two fwp representations. They do not compare
 fwp with C/Rust implementations, or establish zero-cost task abstraction.
 
-## Initial native results
+## Measured storage
 
-Both jobs in [run 39600508036](https://github.com/e6qu/fun-with-pipes/actions/runs/39600508036)
-passed at `c4a6fb0abb70704662f2736a5ee981e62f1b3f31`. All 62 ELF binaries,
-including the accompanying service-response checks, have the expected native
-architecture. Their C, symbols and disassembly were inspected. An initial excerpt
-selector picked a GCC cold error block on some AMD64 binaries; bounded independent
-LLVM disassembly corrected those excerpts to the actual task-creation bodies.
+Both jobs in [run 39606188022](https://github.com/e6qu/fun-with-pipes/actions/runs/39606188022)
+passed at `dec32109b52b8783c7234cd5c72e242583742a4c`, preserved by tag
+`roadmap/revision-task-contexts-dec32109b52b`. The
+[raw report](task-contexts-2026-10-21.json) retains source/binary hashes, hardware,
+compiler versions, all samples and ranges. Both runners use GCC 13.3.0 and expose
+four logical CPUs: an AMD EPYC 9V74 on AMD64 and Neoverse-N2 on ARM64.
 
 Each standalone sample makes 227 managed allocation requests and performs 159
 effective retains in both layouts. All four ARC/tracing O0/O2 configurations agree
@@ -78,26 +83,85 @@ child's stack. Stack mappings/pools, allocator metadata, code and shared librari
 are outside these managed-byte counts. Service task records also include extra
 service fields, so their sizes differ from this standalone program.
 
-## Lifetime checks and remaining measurement
+## Process memory and elapsed time
+
+Nine fresh processes run per layout, memory mode and C optimization level,
+alternating execution order. Both layouts have the same allocation-counting and
+reporting hooks. Candidate-only lifetime and bounds assertions run in separate
+verification binaries, excluded from timing.
+Collection is disabled in both measured modes; "tracing" means collector code
+is present, not that collection runs during the timed work.
+
+Linux `VmHWM` records peak resident memory through the post-task-teardown
+checkpoint, before final allocator/process exit. It includes startup, code,
+shared mappings and stacks; it is not private physical memory. Time includes
+process startup, output capture and complete exit. The two scopes differ.
+
+Each arrow below means preceding layout to candidate. A ratio divides the
+candidate median by the preceding median: below 1 means less, above 1 means more.
+
+| Host | Mode / C level | Median peak KiB | Median elapsed ms | Memory ratio | Time ratio |
+|---|---|---:|---:|---:|---:|
+| AMD64 | ARC / O0 | 2,608 → 2,588 | 1.631 → 1.614 | 0.992 | 0.989 |
+| AMD64 | ARC / O2 | 1,972 → 1,944 | 1.438 → 1.441 | 0.986 | 1.002 |
+| AMD64 | Tracing / O0 | 2,604 → 2,592 | 1.548 → 1.555 | 0.995 | 1.004 |
+| AMD64 | Tracing / O2 | 1,984 → 1,956 | 1.554 → 1.559 | 0.986 | 1.003 |
+| ARM64 | ARC / O0 | 2,076 → 1,940 | 1.617 → 1.660 | 0.934 | 1.027 |
+| ARM64 | ARC / O2 | 1,796 → 1,620 | 1.426 → 1.408 | 0.902 | 0.987 |
+| ARM64 | Tracing / O0 | 2,084 → 1,948 | 1.558 → 1.558 | 0.935 | 1.000 |
+| ARM64 | Tracing / O2 | 1,800 → 1,628 | 1.425 → 1.353 | 0.904 | 0.950 |
+
+These short runs have overlapping elapsed-time ranges and occasional outliers.
+They show lower median process memory for this workload and mixed timings;
+they do not isolate switching cost or establish a general speed improvement.
+The report retains an earlier run's identity but excludes its timings because
+candidate-only correctness assertions still ran in those binaries.
+
+## Actual code and service storage
+
+All 80 saved ELF binaries have the correct native architecture. Generated C,
+symbols and complete disassembly were inspected; ARC binaries exclude collector
+routines. The task setup still calls glibc `getcontext` and `makecontext` and
+passes an aligned address inside the existing stack. ARM64 uses a 16-byte
+alignment mask for its 4,560-byte image. No new context-switch implementation is
+introduced.
+
+The following ARC binaries include the common measurement hooks. `.text` is
+executable code; `.bss` is zero-initialized program storage, including the new root
+image and alignment padding. File size also includes headers, symbols and padding.
+Smaller heap records do not imply every code or file size shrinks.
+
+| Host / C level | Code bytes, preceding → candidate | Static `.bss` bytes | Executable file bytes |
+|---|---:|---:|---:|
+| AMD64 / O0 | 299,074 → 298,882 | 199,376 → 200,336 | 443,376 → 443,416 |
+| AMD64 / O2 | 44,610 → 42,530 | 66,888 → 67,856 | 90,400 → 86,392 |
+| ARM64 / O0 | 310,668 → 310,812 | 199,264 → 203,840 | 458,784 → 458,832 |
+| ARM64 / O2 | 41,532 → 40,012 | 66,792 → 71,352 | 87,016 → 87,104 |
+
+The existing [72-call service fixture](queued-grpc-responses.md) supplies a second
+workload. Service task records shrink from 1,584 to 624 bytes on AMD64 and 5,296
+to 736 on ARM64; they have extra fields beyond the standalone record. Managed
+requested bytes fall from 210,304 to 131,584 on AMD64 and 514,688 to 140,768 on
+ARM64. All configurations still make 902 allocation requests and 481 retains.
+The live listener accounts for the final 544 charged bytes; every response owner,
+stream, connection and child task finishes. This interval starts after listener
+readiness and excludes stack pools, root static storage, allocator metadata and
+OS buffers. It does not measure service speed or orderly listener shutdown.
+
+## Lifetime checks and reproduction
 
 A separate C probe excludes ordinary stack copies and checks that objects held
 only in saved root/child register images survive collection. Deliberately hiding
 those images must exit 191/192; omitting root-state cleanup must exit 193. All ten
-omission controls passed across the two hosts. The probe also checks rounding
+register/teardown omission controls passed across the two hosts. Two more controls
+detect unnecessary clearing in task-free programs. The probe also checks rounding
 and signal-mask restoration. Task, scope, cancellation and 72-call service cleanup
-regressions pass on both hosts.
-
-The expanded probe adds nine fresh-process samples per layout, memory mode and
-optimization level. It alternates execution order. Both layouts have the same
-allocation-counting and reporting hooks. Candidate-only lifetime and bounds
-assertions run in separate verification binaries, excluded from timing. Linux `VmHWM` records the peak
-resident memory observed at the post-task-teardown checkpoint, before final
-allocator/process exit. This includes startup and shared mappings, not just fwp
-values, and is not private physical memory. Elapsed time includes process startup,
-output capture and complete exit; these short runs do not isolate switching cost.
-Those samples are pending. Do not infer a process-memory or speed improvement
-from the smaller heap records alone.
+regressions pass on both hosts. Library unload checks include an intentionally
+omitted root-image clear. Static-memory checks run with `strace` installed, so
+the check for unexpected memory mappings actually executes.
 
 Reproduce with `.github/workflows/numerics.yml`, `suite=task-contexts` and
-`native_runner=all`. Full production acceptance remains required; see
+`native_runner=all` at the recorded source. Each host artifact contains 40 binaries
+and 72 process samples, with generated C, symbols, disassembly and toolchain data.
+Full production acceptance remains required; see
 [the handoff](../development-state.md).

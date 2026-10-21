@@ -119,11 +119,8 @@ the full REST target and its silent-server startup deadline regression. Sharing
 three immutable REST executables eliminates four duplicate compilations; tests
 still launch independent servers. No wall-time improvement is claimed.
 
-Early probes exposed two test errors, both corrected before this matrix:
-ARC cannot use reuse verification because that diagnostic retains freed storage;
-and the live listener's wait storage must be accounted for after request cleanup.
-Full production delivery remains separate; [the handoff](../development-state.md)
-records its status.
+[PR #186](../roadmap-history.md#queued-service-responses-and-bounded-server-startup-pr-186)
+also passed all nine final-head production jobs and documentation before merge.
 
 ## Measured costs
 
