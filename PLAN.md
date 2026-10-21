@@ -121,13 +121,14 @@ outside the benchmark suite.
    smaller scheduler heap records while counting saved CPU state, usable stack
    space and process memory separately. It passed [full acceptance in PR #187](docs/roadmap-history.md#smaller-linux-task-heap-records-pr-187);
    moving storage is not eliminating it.
-   The related [cancellation comparison](docs/measurements/task-cancellation.md)
-   has six-host focused evidence for stack-local return buffers; its added Windows
-   ARC snapshot removal and final production acceptance remain in progress.
-   [Cancellation-state storage](docs/measurements/task-cancellation.md) is the
-   next preparation: borrow the live entry frame instead of embedding its saved
-   return state in every heap task record. Native and WebAssembly acceptance
-   remain pending; measure stack costs as well as smaller records.
+   [Cancellation-state storage](docs/measurements/task-cancellation.md) and Windows
+   ARC snapshot removal merged in PR #188 before full validation. The next group
+   repairs its Windows output assertion, compacts task-state flags and removes ARC's
+   remaining tracing-only stack marker. Its six native focused jobs pass.
+   [Task-record measurements](docs/measurements/task-records.md) show 32 fewer bytes
+   per ARC task with unchanged allocation/retain counts and platform-dependent
+   peak savings. Full PR #189 acceptance remains in the handoff; smaller records
+   do not establish a timing gain.
 
 All seven work areas remain open. The syntax and native-platform foundations
 are implemented; the main remaining work is ownership, representation,

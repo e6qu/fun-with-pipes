@@ -69,7 +69,14 @@ prove that a fresh CI clone can resolve the recorded head.
 
 During a combined delivery, draft PRs use explicitly dispatched focused checks.
 Marking the PR ready runs the complete production matrix; every final-head
-production job must pass before merge. Draft skips are never acceptance gates. For an
+production job must pass before merge. Draft skips are never acceptance gates. Production jobs and the task-storage/WebAssembly focused suites cache Cargo's
+registry by lockfile and host, fetch the locked dependencies first, then build
+and test with Cargo offline. This prevents later compiler invocations from
+refreshing the registry. A failed initial fetch remains a failed job; no alternate
+registry or dependency version is selected. Network behavior inside fwp tests is
+unchanged.
+
+For an
 early native probe in `numerics.yml`, `native_runner` selects one runner instead
 of the suite's matrix. Use `all` for complete evidence; report collectors still
 require every expected native host. This does not change production acceptance.

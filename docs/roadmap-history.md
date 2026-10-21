@@ -12,6 +12,20 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Cancellation buffers and Windows ARC fibers (PR #188)
+
+[PR #188](https://github.com/e6qu/fun-with-pipes/pull/188) was merged by the user
+before full validation finished. Merge `ffcf04763990356fb3cb3913d6414082e00aa178`
+has the same tree as head `fc1386501955109b1f1271429a57b6ea42022aec`.
+The [cancellation-only comparison](measurements/task-cancellation.md) has earlier
+six-host evidence. The added Windows fiber probe passed its first execution but
+its assertion expected LF instead of the C runtime's CRLF output on both Windows
+architectures. That stopped the remaining variants and left incomplete artifacts.
+This merge is not full platform acceptance. [PR #189](https://github.com/e6qu/fun-with-pipes/pull/189)
+repairs the assertion and reruns every variant with the
+[compact-record measurements](measurements/task-records.md). Its final production
+acceptance is tracked in the handoff; do not treat this early merge as acceptance.
+
 ## Smaller Linux task heap records (PR #187)
 
 Saved CPU state moves from heap task records into existing child stacks and root

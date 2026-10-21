@@ -333,3 +333,146 @@ fn tasks_and_acyclic_channels_reclaim_after_join_and_cancellation() {
         }
     }
 }
+
+/// Restore the preceding task layout and ARC stack-marker writes in the same C.
+fn preceding_task_record(code: &str) -> String {
+    let mut code = code.to_owned();
+    for (before, after) in [
+        ("    _Bool done, cancelled, unwinding, has_result, ready, timed, timed_out, io_ready;\n    _Bool owns_thunk;\n    enum fwp_task_ownership ownership;",
+         "    int done, cancelled, unwinding, has_result, ready, timed, timed_out, io_ready;"),
+        ("    V thunk, result;\n", "    V thunk, result;\n    int owns_thunk;\n    enum fwp_task_ownership ownership;\n"),
+        ("#if FWP_GC && !defined(FWP_ARC_ONLY)\n    char *gc_sp; /* suspended stack bound used only by tracing */\n#endif",
+         "    char *gc_sp; /* preceding layout */"),
+        ("#if FWP_GC && !defined(FWP_ARC_ONLY)\n    from->gc_sp = fwp_gc_sp();",
+         "#if FWP_GC\n    from->gc_sp = fwp_gc_sp();"),
+    ] {
+        replace_once(&mut code, before, after);
+    }
+    code
+}
+
+#[test]
+fn compact_task_records_preserve_scheduling_and_remove_arc_stack_markers() {
+    let temporary = fwp::cgen::TempDir::new("task-record-storage").unwrap();
+    let path = std::env::var_os("FWP_TASK_RECORD_ARTIFACTS")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| temporary.path().to_path_buf());
+    std::fs::create_dir_all(&path).unwrap();
+    let source = path.join("tasks.fwp");
+    std::fs::write(&source, include_str!("fixtures/task_channel_ownership.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&source),
+    );
+    assert_eq!(
+        reference.stdout,
+        include_bytes!("fixtures/task_channel_ownership.out")
+    );
+    assert!(reference.stderr.is_empty());
+    for memory in ["arc", "tracing"] {
+        let cfile = path.join(format!("{memory}.c"));
+        checked(
+            Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .args(["build", "--gc", memory, "--emit-c", "-O1"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(cfile).unwrap();
+        let mut instrumented = allocations::instrument_client_allocations(&code);
+        replace_once(
+            &mut instrumented,
+            "typedef uint64_t V;",
+            "typedef uint64_t V;\nstatic size_t task_stack_markers;",
+        );
+        replace_once(
+            &mut instrumented,
+            "    from->gc_sp = fwp_gc_sp();",
+            "    from->gc_sp = fwp_gc_sp();\n    task_stack_markers++;",
+        );
+        replace_once(&mut instrumented, "    client_measure_end();\n",
+            "    client_measure_end();\n    fprintf(stderr, \"task-record\\t%zu\\t%zu\\t%zu\\t%zu\\t%zu\\n\", sizeof(fwp_task), _Alignof(fwp_task), sizeof(((fwp_task *)0)->done), sizeof(((fwp_task *)0)->owns_thunk), task_stack_markers);\n");
+        for opt in ["-O0", "-O2"] {
+            let mut rows = Vec::new();
+            for (layout, c) in [
+                ("preceding", preceding_task_record(&instrumented)),
+                ("compact", instrumented.clone()),
+            ] {
+                let label = format!("{memory}-{layout}{opt}");
+                let binary = path.join(format!("{label}.exe"));
+                std::fs::write(path.join(format!("{label}.c")), &c).unwrap();
+                fwp::cgen::compile_c(&c, &binary, opt).unwrap();
+                let output = run_probe(
+                    Command::new(&binary)
+                        .env("FWP_GC", "off")
+                        .env("FWP_FREE", "1")
+                        .env("FWP_GC_STRESS", "0")
+                        .env("FWP_GC_VERIFY", "0")
+                        .env("FWP_GC_STATS", "0")
+                        .env("FWP_REUSE_VERIFY", "0"),
+                    &path,
+                    &label,
+                    60,
+                );
+                assert!(output.status.success(), "{label}: {output:?}");
+                assert_eq!(output.stdout, reference.stdout, "{label}");
+                let stderr = String::from_utf8(output.stderr).unwrap();
+                let lines: Vec<_> = stderr.lines().collect();
+                assert_eq!(lines.len(), 2, "{label}: {stderr}");
+                let numbers = |line: &str, prefix: &str| -> Vec<u64> {
+                    line.strip_prefix(prefix)
+                        .unwrap()
+                        .split('\t')
+                        .map(|n| n.parse().unwrap())
+                        .collect()
+                };
+                let counts = numbers(lines[0], "client-memory\t");
+                let sizes = numbers(lines[1], "task-record\t");
+                assert_eq!(counts.len(), 6);
+                assert_eq!(sizes.len(), 5);
+                assert_eq!(counts[4..], [0, 0], "{label}: {stderr}");
+                rows.push((counts, sizes));
+            }
+            let (old_counts, old_sizes) = &rows[0];
+            let (counts, sizes) = &rows[1];
+            assert_eq!(counts[0], old_counts[0], "allocation requests changed");
+            assert_eq!(counts[2], old_counts[2], "retains changed");
+            assert!(counts[1] < old_counts[1], "requested bytes did not shrink");
+            assert!(counts[3] <= old_counts[3], "peak managed charge grew");
+            assert!(sizes[0] < old_sizes[0], "record did not shrink");
+            assert_eq!(sizes[1], old_sizes[1], "alignment changed");
+            assert_eq!(sizes[2..4], [1, 1]);
+            assert_eq!(old_sizes[2..4], [4, 4]);
+            assert!(old_sizes[4] > 0, "control never saved a stack marker");
+            if memory == "arc" {
+                assert_eq!(sizes[4], 0, "ARC still saves a tracing-only stack marker");
+            } else {
+                assert_eq!(sizes[4], old_sizes[4], "tracing switches changed");
+            }
+        }
+        let label = format!("{memory}-verified-O2");
+        let binary = path.join(format!("{label}.exe"));
+        std::fs::write(path.join(format!("{label}.c")), &code).unwrap();
+        fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+        let verify = if memory == "tracing" { "1" } else { "0" };
+        let output = run_probe(
+            Command::new(&binary)
+                .env_remove("FWP_GC")
+                .env("FWP_FREE", "1")
+                .env("FWP_GC_STRESS", verify)
+                .env("FWP_GC_VERIFY", verify)
+                .env("FWP_REUSE_VERIFY", verify)
+                .env("FWP_GC_STATS", "0"),
+            &path,
+            &label,
+            60,
+        );
+        assert!(output.status.success(), "{label}: {output:?}");
+        assert_eq!(output.stdout, reference.stdout, "{label}");
+        assert!(output.stderr.is_empty(), "{label}: {output:?}");
+    }
+}

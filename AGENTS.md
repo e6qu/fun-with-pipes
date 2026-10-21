@@ -57,7 +57,9 @@ implementation of currently supported external protocols.
 - Focused checks must use the production compilers and optimization settings.
   Passing Clang tests does not verify GCC, especially for binary inspection.
 - Standing authorization covers fixes, publication and squash merge after all
-  final-head gates pass. Do not ask for the same permission again.
+  final-head gates pass. Do not ask for the same permission again. Continue
+  through PLAN.md in substantial groups after each verified merge, keeping one
+  active PR and the handoff current until the roadmap acceptance criteria hold.
 - Require nine production jobs for the exact commit: Linux ARM64/AMD64, regular
   and GC-stress macOS ARM64/AMD64, native Windows ARM64/AMD64, and C/Rust benchmarks;
   also require the documentation audit. Preserve coverage as ownership evolves.

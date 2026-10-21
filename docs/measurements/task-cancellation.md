@@ -1,8 +1,8 @@
 # Cancellation state on task stacks
 
 The cancellation-storage comparison passed focused checks on all six native
-platforms and both WebAssembly runners. Full delivery acceptance is pending;
-the related Windows ARC change below still needs execution evidence. Follow
+platforms and both WebAssembly runners. The repaired Windows ARC checks also
+passed on both architectures in PR #189; full delivery acceptance is pending. Follow
 the [session handoff](../development-state.md) for current runs.
 
 A [task](../concurrency.md) is a computation scheduled alongside others. It can
@@ -110,7 +110,7 @@ section measurement. This experiment establishes no speed or process-memory gain
 
 Windows fibers already preserve the CPU state needed to resume a task. Tracing
 builds make an additional register copy so the collector can find pointers in
-suspended tasks. ARC does not scan those roots. The next change omits that extra
+suspended tasks. ARC does not scan those roots. ARC now omits that extra
 buffer, stack marker, capture and clearing from ARC builds, retaining them for
 tracing. This is separate from the cancellation buffer measured above.
 
@@ -121,8 +121,31 @@ An independent O0/O1/O2 fiber probe keeps pointer and floating-point values live
 in specified registers, checks stack contents and per-fiber rounding, and checks
 host-owned fiber teardown. Restoring the unwanted snapshot must exit with 211;
 normal execution must pass. Existing tracing-root and static-memory tests remain.
-Results are pending; the table above describes the earlier cancellation change,
-not this additional removal.
+Both Windows hosts passed every probe after its exact-byte stdout assertion was
+corrected to expect the native C runtime's CRLF line ending. All O0/O1/O2 probes
+pass normally and exit 211 when the unwanted snapshot is restored.
+
+The [task-record report](task-records-2026-10-21.json) measures snapshots separately
+using the compact layout from PR #189. These are snapshot-restored → ARC-only
+bytes, not whole-revision comparisons; do not add their savings to the earlier
+table without accounting for its different layout.
+
+| Host | Fiber context | Whole task record | Requested bytes | Peak managed charge |
+|---|---:|---:|---:|---:|
+| Windows ARM64 | 224 → 24 | 536 → 336 | 103,346 → 87,546 | 55,184 → 38,288 |
+| Windows AMD64 | 304 → 24 | 624 → 336 | 110,298 → 87,546 | 55,184 → 38,288 |
+
+Native O0/O2 counts agree: 101 switches remain, snapshot copies fall from 101 to
+zero, allocations remain 1,706 and retains remain 1,069. Final managed charge and
+collections are zero. AMD64 context alignment changes from 16 to eight bytes;
+ARM64 remains eight. The ordinary Windows fiber mechanism still preserves CPU
+state; this removes only the collector's extra copy.
+
+Inspected machine code confirms ARC calls `SwitchToFiber` without the additional
+`setjmp`, stack-marker capture or register-buffer clearing. The restored control
+contains those operations. On AMD64 at O2, the measured ARC switch is a counter
+increment, argument load and tail jump to `SwitchToFiber`. These instructions do
+not establish a timing improvement; no elapsed-time comparison was made.
 
 ## WebAssembly return-state repair
 
