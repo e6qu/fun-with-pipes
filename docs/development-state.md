@@ -2,14 +2,18 @@
 
 ## Next action
 
-Next: publish and audit the complete six-native/two-WebAssembly focused matrix
-for this group, then inspect its executed binaries and record source-specific
-allocation counts. Keep this preparation separate until PR #190 merges; there
-must be only one delivery PR. All seven areas of [PLAN.md](../PLAN.md) remain open.
+Next: publish the Windows observer repair and run the full focused matrix again.
+Keep auditing the preceding `39675022652` run at `82970103` to its end. The two
+Windows ownership batches fail on the same header-order error; ARM64's complete
+log confirms its inspector fails only because the four buffer probes were never
+built. Linux/macOS batches and both WASM jobs have no failure so far; Intel macOS
+is still running. Preserve the failed-source receipt. Keep this group separate
+until PR #190 merges; only one delivery PR. All seven plan areas remain open.
 
 Worktree `/private/tmp/fwp-task-await-fields`, branch `task-await-fields`.
-The next publication receipt is `/private/tmp/fwp-task-await-full-publication.json`;
-it records the exact source, immutable tag and run. Final production acceptance
+The publication receipt is `/private/tmp/fwp-task-await-full-publication.json`;
+it records the exact source, immutable tag and run. Auditor:
+`/private/tmp/fwp-audit-task-await-full.py`. Final production acceptance
 will still require nine jobs and documentation after the preceding PR merges.
 
 ## Changes in this group
@@ -117,3 +121,16 @@ trailers or attribution. Continue the plan after every accepted merge.
 | 5 | In progress | Validate numerical kernels and ahead-of-time GPU policy. |
 | 6 | In progress | Establish equivalent-work comparisons and budgets. |
 | 7 | In progress | Validate larger programs and bounded live memory. |
+
+## Current full-matrix repair
+
+The raw-buffer observer now follows the runtime's platform headers, with an
+assertion that its insertion point occurs exactly once. It no longer causes
+Windows headers to choose an older API before fwp selects Windows 10. Both
+Windows ownership logs were inspected, not just the first failure. Full job
+logs remain required. Guarded static checks and the macOS O0 probe pass; the
+missing-free control still exits 211. This repair needs native Windows CI.
+
+Separate worktree `/private/tmp/fwp-native-kernel-contracts` prepares removal of
+runtime OpenCL compilation and explicit CPU worker limits. It has no PR; its
+handoff records its own checks. Do not mix that work into this running source.

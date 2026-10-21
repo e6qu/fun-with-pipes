@@ -39,7 +39,6 @@ fn interop_example_releases_sorting_and_formatting_buffers() {
     // Observe only raw mem.alloc/mem.free buffers, independently of managed
     // runtime storage. Reentrant qsort comparators allocate their own buffers.
     let observer = r#"
-#include <stdlib.h>
 static void *interop_buffers[64];
 static unsigned interop_live, interop_created;
 static void *interop_alloc(size_t size) {
@@ -57,7 +56,11 @@ static void interop_free(void *p) {
     exit(213);
 }
 "#;
+    // Preserve the runtime's platform macros before any system header.
+    let types = "typedef uint64_t V;";
+    assert_eq!(original.matches(types).count(), 1);
     let code = original
+        .replacen(types, &format!("{observer}\n{types}"), 1)
         .replace(
             allocation,
             &allocation.replace("calloc(n, 1)", "interop_alloc(n)"),
@@ -84,7 +87,7 @@ static void interop_free(void *p) {
             ),
         ] {
             let binary = dir.join("interop.exe");
-            let measured = format!("{observer}\n{candidate}");
+            let measured = candidate;
             fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
             let actual = Command::new(&binary)
                 .env("FWP_SEED", "42")
