@@ -1,6 +1,7 @@
 //! Array storage owns typed elements across copies, aliases and callbacks.
+use std::io::Write;
 use std::path::PathBuf;
-use std::process::{Command, Output};
+use std::process::{Command, Output, Stdio};
 
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
@@ -347,5 +348,237 @@ int main(void) {
             checked(&mut Command::new(&exe)).stdout,
             b"scalar array ownership preserved\n"
         );
+    }
+}
+
+#[test]
+fn generated_numeric_arrays_borrow_captures_and_preserve_effect_cleanup() {
+    let dir = Scratch::new("capture-borrows");
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    for (name, text, expected) in [
+        (
+            "reads",
+            include_str!("fixtures/array_capture_reads.fwp"),
+            include_bytes!("fixtures/array_capture_reads.out").as_slice(),
+        ),
+        (
+            "effects",
+            include_str!("fixtures/array_capture_effects.fwp"),
+            include_bytes!("fixtures/array_capture_effects.out").as_slice(),
+        ),
+    ] {
+        let source = dir.0.join(format!("{name}.fwp"));
+        std::fs::write(&source, text).unwrap();
+        let reference = checked(
+            Command::new(compiler)
+                .args(["run", "--interp"])
+                .arg(&source)
+                .env("FWP_NO_OPT", "1"),
+        );
+        assert_eq!(reference.stdout, expected);
+        assert!(reference.stderr.is_empty());
+        for gc in ["arc", "tracing"] {
+            for stack in ["0", "1"] {
+                let cfile = dir.0.join(format!("{name}-{gc}-{stack}.c"));
+                checked(
+                    Command::new(compiler)
+                        .args(["build", "--gc", gc, "--emit-c", "-O2"])
+                        .arg(&source)
+                        .arg("-o")
+                        .arg(&cfile)
+                        .env("FWP_STACK", stack)
+                        .env_remove("FWP_NO_OPT"),
+                );
+                let emitted = std::fs::read_to_string(&cfile).unwrap();
+                let helpers: Vec<_> = emitted
+                    .lines()
+                    .filter_map(|line| {
+                        line.strip_prefix("static V fwp_borrowed_array")
+                            .filter(|line| line.ends_with('{'))
+                            .map(|line| line.split('(').next().unwrap())
+                    })
+                    .collect();
+                assert!(
+                    !helpers.is_empty(),
+                    "{name}/{gc}/{stack}: missing borrowed array callback"
+                );
+                let retain = "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {";
+                assert_eq!(emitted.matches(retain).count(), 1);
+                let start = "    fwp_init_consts();\n";
+                let finish = "    /* Ownership observation point: before runtime teardown. */\n";
+                assert_eq!(emitted.matches(start).count(), 1);
+                assert_eq!(emitted.matches(finish).count(), 1);
+                for (control, expected_status) in if name == "reads" {
+                    &[
+                        ("protected", 0),
+                        ("extra-retain", 221),
+                        ("leaked-owner", 222),
+                    ][..]
+                } else {
+                    &[("protected", 0), ("skipped-partial-release", 222)][..]
+                } {
+                    let mut code = emitted.replace(
+                        retain,
+                        &format!(
+                            "{retain}\n        if (array_probe_active) array_probe_retains++;"
+                        ),
+                    );
+                    for helper in &helpers {
+                        let call = format!("V value = fwp_borrowed_array{helper}(args);");
+                        assert_eq!(code.matches(&call).count(), 1);
+                        let extra = if *control == "extra-retain" {
+                            "fwp_rc_dup(args[0]); fwp_rc_drop(args[0]);"
+                        } else {
+                            ""
+                        };
+                        let leaked = if *control == "leaked-owner" {
+                            "fwp_rc_dup(args[0]);"
+                        } else {
+                            ""
+                        };
+                        let count_check = if name == "reads" {
+                            "if (array_probe_retains) _Exit(221);"
+                        } else {
+                            ""
+                        };
+                        code = code.replace(&call, &format!("array_probe_retains=0; array_probe_active=1; {extra} {call} array_probe_active=0; {count_check} array_probe_calls++; {leaked}"));
+                    }
+                    code = code.replace(start, &format!("{start}    array_probe_start=fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);\n"));
+                    let release = "static void fwp_array_builder_release(void *arg) {\n    fwp_array_builder *owner = arg;";
+                    assert_eq!(code.matches(release).count(), 1);
+                    let skip = if *control == "skipped-partial-release" {
+                        "return;"
+                    } else {
+                        ""
+                    };
+                    code = code.replace(release, &format!("{release}\n    if (owner->value && owner->filled == 2 && owner->element->kind == K_F64) {{ array_probe_partials++; {skip} }}"));
+                    let calls = if name == "reads" {
+                        "if (array_probe_calls != 3) _Exit(223);"
+                    } else {
+                        "if (array_probe_partials != 2) _Exit(224);"
+                    };
+                    code = code.replace(finish, &format!("{finish}    {calls}\n    const char *array_probe_stress=getenv(\"FWP_GC_STRESS\");\n    if ((!array_probe_stress || strcmp(array_probe_stress,\"1\")) && fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget)!=array_probe_start) _Exit(222);\n"));
+                    code = format!("static unsigned array_probe_active,array_probe_retains,array_probe_calls,array_probe_partials;\nstatic double array_probe_start;\n{code}");
+                    for opt in ["-O0", "-O2"] {
+                        let binary = dir
+                            .0
+                            .join(format!("{name}-{gc}-{stack}-{control}{opt}.exe"));
+                        fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                        for stress in if gc == "tracing" && *control == "protected" {
+                            &["0", "1"][..]
+                        } else {
+                            &["0"][..]
+                        } {
+                            let output = Command::new(&binary)
+                                .env_remove("FWP_GC")
+                                .env("FWP_GC_STRESS", stress)
+                                .env("FWP_GC_VERIFY", stress)
+                                .env("FWP_REUSE_VERIFY", stress)
+                                .output()
+                                .unwrap();
+                            assert_eq!(
+                                output.status.code(),
+                                Some(*expected_status),
+                                "{name}/{gc}/{stack}/{control}/{opt}/{stress}: {output:?}"
+                            );
+                            if *expected_status == 0 {
+                                assert_eq!(output.stdout, reference.stdout);
+                                assert_eq!(output.stderr, reference.stderr);
+                            }
+                            if let Some(destination) =
+                                std::env::var_os("FWP_ARRAY_CAPTURE_ARTIFACTS")
+                            {
+                                let destination = PathBuf::from(destination);
+                                std::fs::create_dir_all(&destination).unwrap();
+                                let stem = format!("{name}-{gc}-{stack}-{control}{opt}-{stress}");
+                                std::fs::write(destination.join(format!("{stem}.c")), &code)
+                                    .unwrap();
+                                std::fs::copy(&binary, destination.join(format!("{stem}.exe")))
+                                    .unwrap();
+                                std::fs::write(
+                                    destination.join(format!("{stem}.stdout")),
+                                    &output.stdout,
+                                )
+                                .unwrap();
+                                std::fs::write(
+                                    destination.join(format!("{stem}.stderr")),
+                                    &output.stderr,
+                                )
+                                .unwrap();
+                                std::fs::write(
+                                    destination.join(format!("{stem}.status")),
+                                    format!("{:?}\n", output.status.code()),
+                                )
+                                .unwrap();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn generated_array_captures_preserve_argument_and_callback_order() {
+    let dir = Scratch::new("capture-order");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let source = root.join("tests/fixtures/array_capture_order.fwp");
+    let expected = std::fs::read(root.join("tests/fixtures/array_capture_order.out")).unwrap();
+    let input = |command: &mut Command| {
+        let mut child = command
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        child.stdin.take().unwrap().write_all(b"seed").unwrap();
+        let result = child.wait_with_output().unwrap();
+        assert!(result.status.success(), "{result:?}");
+        assert_eq!(result.stdout, expected);
+        assert!(result.stderr.is_empty(), "{result:?}");
+    };
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    input(
+        Command::new(compiler)
+            .args(["run", "--interp"])
+            .arg(&source)
+            .env("FWP_NO_OPT", "1"),
+    );
+    for gc in ["arc", "tracing"] {
+        for stack in ["0", "1"] {
+            let cfile = dir.0.join(format!("order-{gc}-{stack}.c"));
+            checked(
+                Command::new(compiler)
+                    .args(["build", "--gc", gc, "--emit-c", "-O2"])
+                    .arg(&source)
+                    .arg("-o")
+                    .arg(&cfile)
+                    .env("FWP_STACK", stack)
+                    .env_remove("FWP_NO_OPT"),
+            );
+            let code = std::fs::read_to_string(&cfile).unwrap();
+            assert!(
+                code.contains("/* borrowed array callback"),
+                "{gc}/{stack}: missing capture borrowing"
+            );
+            for opt in ["-O0", "-O2"] {
+                let binary = dir.0.join(format!("order-{gc}-{stack}{opt}.exe"));
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                for stress in if gc == "tracing" {
+                    &["0", "1"][..]
+                } else {
+                    &["0"][..]
+                } {
+                    input(
+                        Command::new(&binary)
+                            .env_remove("FWP_GC")
+                            .env("FWP_GC_STRESS", stress)
+                            .env("FWP_GC_VERIFY", stress)
+                            .env("FWP_REUSE_VERIFY", stress),
+                    );
+                }
+            }
+        }
     }
 }

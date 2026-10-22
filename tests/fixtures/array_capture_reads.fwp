@@ -1,0 +1,15 @@
+require-coordinate : Option[F64] -> F64
+require-coordinate = match
+    Some -> id
+    None -> prim.trap "capture index is outside the array"
+
+read-index : Array[F64] -> I64 -> F64
+read-index = curry (fork array.get .1 .0 | require-coordinate)
+generate-count : I64 -> Array[F64] -> Array[F64]
+generate-count = curry (fork array.generate .0 (.1 | read-index))
+copy : Array[F64] -> Array[F64]
+copy = fork array.generate array.length read-index
+main = [read-all () | string.length | int.to-float, 1.25, -2.5]
+    | array.from-list
+    | make { copied = copy, original = id, empty = generate-count 0, negative = generate-count -1 }
+    | echo

@@ -36,6 +36,10 @@ The [array-owner move](measurements/array-owner-moves.md) halves those retains
 without increasing allocation requests or managed peak. Its revised protocol
 balances predecessor programs and includes byte-identical controls; timings remain
 inconclusive, and ARM64 uses a 16-byte larger callback frame.
+The [borrowed-capture comparison](measurements/array-capture-descent.md) removes
+all remaining retains in those packed descent cases, with unchanged allocation
+counts and managed peak. Its largest case takes 2.33–2.38× C time; the report
+preserves noisy controls, slower cases and slightly larger instruction sections.
 
 ## Choose the question first
 

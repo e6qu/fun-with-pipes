@@ -14,7 +14,7 @@ performance and platform requirements in the last column.
 | [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and a small tracing control | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | Preserve these observations as ownership changes; allocation-failure coverage remains |
 | [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV cleanup passes on six hosts; separate input/output costs and extend task-file coverage |
 | Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](benchmarks.md#current-numerical-comparison-and-record-moves) | Repeat current-revision comparisons; set per-size budgets; include a larger numerical application |
-| Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/1,999-update controls | [Managed/raw storage, process memory and timing](measurements/ad-application.md) on two Linux hosts | [C/Rust and explicit-fwp baseline](measurements/descent-peers.md) accepted; set repeated-host budgets and extend nested/platform evidence |
+| Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [AD storage](measurements/ad-application.md), [C/Rust peers](measurements/descent-peers.md), [packed arrays](measurements/packed-descent.md) and [array-owner moves](measurements/array-owner-moves.md) and [borrowed captures](measurements/array-capture-descent.md) on two Linux hosts | Stabilize identical-code timing controls and set per-input budgets; extend nested and platform evidence |
 | Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](benchmarks.md#server-memory-after-completed-remote-calls) | Consolidate one repeatable service scenario with bounded concurrency, disconnects and repeated live-memory samples |
 
 Before declaring this suite accepted, name the exact revisions, inputs and native
@@ -133,10 +133,29 @@ retirement must fail. This does not establish constant memory for arbitrary AD,
 or bounded long-running retention from a clean exit alone. The [first measured results](measurements/ad-application.md) show much lower
 managed peak storage with mixed, modest timing changes. The same report records
 accepted raw-storage and process-memory measurements. The
-[explicit-derivative comparison](measurements/descent-peers.md) now supplies
-C/Rust baselines; repeated-host timing budgets remain open. These bounded
-repeat counts stay below tape-generation exhaustion and do not prove a bound for
-arbitrary nesting or indefinitely long runs.
+[explicit-derivative comparison](measurements/descent-peers.md) supplies C/Rust
+baselines. The [packed-array version](measurements/packed-descent.md) reduces
+allocation requests, and [array-owner moves](measurements/array-owner-moves.md)
+halve its retains with unchanged managed peak. In that largest measured case,
+packed fwp still takes about 3.05× C time on AMD64 and 3.01× on ARM64. C and Rust
+reuse two output buffers; fwp allocates a new immutable array per update.
+
+The latest protocol balances positions and immediate predecessor pairs within
+rounds and includes a byte-identical control. Copies of the same executable still
+differ by several percent. Timing budgets remain open; fewer retains alone do
+not establish a speed gain. These bounded repeat counts also stay below
+tape-generation exhaustion and do not prove a memory bound for arbitrary nesting
+or indefinitely long runs. The [handoff](development-state.md) tracks the next
+capture-borrowing experiment.
+
+The descent runner saves every count/storage violation in `budget-failures.json`
+and in the final comparison report. It checks all requested input sizes before
+exiting with failure, so one remaining retain cannot hide another size's larger
+peak or changed allocation count. Output mismatches, cleanup violations, invalid raw-memory traces and tool
+failures still stop that run immediately. Measurements from a run with failed requirements are
+investigation evidence, not accepted performance results. The production benchmark
+job and numerical workflow check the requirement collector against retained data
+and deliberately corrupted profiles.
 
 ## Testing unchanged string ownership
 

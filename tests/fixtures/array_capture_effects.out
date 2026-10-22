@@ -1,0 +1,1 @@
+{cancelled = None, failed = Err "expected capture error", original = array[0.0, 1.25, -2.5], saved = (array[0.0, 1.25, -2.5], array[0.0, 1.25, -2.5]), yielded = array[0.0, 1.25, -2.5]}
