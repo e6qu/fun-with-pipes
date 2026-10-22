@@ -105,7 +105,14 @@ outside the benchmark suite.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
    [checked products](docs/measurements/checked-products.md) retain slower controls,
-   optimization-level differences and unexplained AMD64 variability. Resource-owning
+   optimization-level differences and unexplained AMD64 variability. The
+   [descent baseline](docs/measurements/descent-peers.md) now separates automatic
+   differentiation from explicit fwp/C/Rust formulas. Its larger explicit fwp
+   case still takes 6.38–6.91× C time and makes 206,891 managed requests. Inspect
+   intermediate containers and closures (F64 values already fit inline), then
+   compare packed-array iteration before selecting a compiler change. Set its
+   count/memory requirements and timing protocol before measuring a candidate.
+   Resource-owning
    tail frames and mutual recursion still need separate lifetime proofs.
 3. Complete the [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
    to choose the next costs to remove: dynamic calls, input copies, container

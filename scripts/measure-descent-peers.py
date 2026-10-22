@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure reverse AD and explicit derivatives in fwp against explicit C/Rust."""
+"""Measure reverse AD, list/packed explicit derivatives and explicit C/Rust."""
 import argparse
 import hashlib
 import importlib.util
@@ -23,9 +23,22 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def packed_program(points, updates):
+    point = ', '.join('-1.2' if i % 2 == 0 else '1.0' for i in range(points))
+    return (ROOT / 'tests/fixtures/descent_packed.fwp').read_text() + f"""
+solve : Array[F64] -> Array[F64]
+solve = both (const {updates}) id | loop (if
+    (.0 | eq 0)
+    (.1 | Stop)
+    (both (.0 | sub 1) (.1 | packed-descend) | Again))
+main = [{point}] | array.from-list | solve | array.to-list | echo
+"""
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
+    parser.add_argument('--baseline-report', required=True, type=Path)
     parser.add_argument('--cc', required=True)
     parser.add_argument('--rustc', required=True)
     parser.add_argument('--c-arch', required=True, choices=['x86-64', 'armv8-a'])
@@ -40,7 +53,7 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
-    assert args.samples > 0 and args.samples % 8 == 0 and args.warmups > 0 and args.timeout > 0
+    assert args.samples > 0 and args.samples % 10 == 0 and args.warmups > 0 and args.timeout > 0
     assert args.c_arch == {'x86_64': 'x86-64', 'aarch64': 'armv8-a'}[platform.machine()]
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
@@ -48,6 +61,11 @@ def main():
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
     environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1',
                        FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
+    baseline_bytes = args.baseline_report.read_bytes()
+    baseline = json.loads(baseline_bytes)
+    baseline_host, = [host for host in baseline['hosts'] if host['host'] == args.host]
+    assert baseline_host['source'] == baseline['source']
+    assert baseline_host['report']['machine'] == platform.machine()
     commands = []
     cflags = ['-O2', '-std=gnu11', '-fno-fast-math', '-ffp-contract=off', '-march=' + args.c_arch]
 
@@ -80,8 +98,8 @@ def main():
         directory.mkdir()
         expected = AD.analytic(points, updates + 1)
         binaries, outputs, metadata, profiles = {}, {}, {}, {}
-        for label in ['fwp-ad', 'fwp-explicit']:
-            source = AD.program(points, updates + 1, False)
+        for label in ['fwp-ad', 'fwp-explicit', 'fwp-packed']:
+            source = packed_program(points, updates) if label == 'fwp-packed' else AD.program(points, updates + 1, False)
             if label == 'fwp-explicit':
                 assert source.count('(.1 | descend)') == 1
                 source = source.replace('(.1 | descend)', '(.1 | explicit-descend)')
@@ -157,9 +175,19 @@ def main():
             source_path = binary.with_suffix('.rs' if binary.name == 'rust-explicit' else '.c')
             metadata[binary.name] = dict(bytes=len(raw), sha256=digest(raw), sourceSha256=digest(source_path.read_bytes()),
                                         disassemblySha256=digest(assembly))
-        assert len(metadata) == 6
+        assert len(metadata) == 8
         labels = list(binaries)
-        assert labels == ['fwp-ad', 'fwp-explicit', 'c-explicit', 'rust-explicit']
+        assert labels == ['fwp-ad', 'fwp-explicit', 'fwp-packed', 'c-explicit', 'rust-explicit']
+        baseline_case = baseline_host['report']['results'][name]
+        for label in ['fwp-ad', 'fwp-explicit']:
+            assert profiles[label] == baseline_case['fwpProfiles'][label], (name, label, profiles[label], baseline_case['fwpProfiles'][label])
+        # Requirements chosen before this comparison. Short controls retain all
+        # extra setup costs; the repeated workloads must reduce allocation work.
+        if updates >= 199:
+            packed = profiles['fwp-packed']['managed']
+            listed = profiles['fwp-explicit']['managed']
+            assert packed['requests'] < listed['requests'], (name, packed, listed)
+            assert packed['peakChargedBytes'] <= listed['peakChargedBytes'], (name, packed, listed)
         for _ in range(args.warmups):
             for label in labels:
                 actual = run([binaries[label]], environment)
@@ -167,8 +195,8 @@ def main():
         samples = {label: [] for label in labels}
         orders = []
         for round_number in range(args.samples):
-            order = labels[round_number % 4:] + labels[:round_number % 4]
-            if round_number % 8 >= 4:
+            order = labels[round_number % len(labels):] + labels[:round_number % len(labels)]
+            if round_number % (2 * len(labels)) >= len(labels):
                 order.reverse()
             orders.append(order)
             for label in order:
@@ -189,24 +217,28 @@ def main():
         results[name] = dict(dimensions=points, updates=updates, oracle=expected,
             outputSha256={label: digest(value) for label, value in outputs.items()},
             samplesNs=samples, medianNs=medians, orders=orders,
-            ratios={label: {peer: medians[label] / medians[peer] for peer in ['fwp-explicit', 'c-explicit', 'rust-explicit']}
-                    for label in ['fwp-ad', 'fwp-explicit']},
+            ratios={label: {peer: medians[label] / medians[peer] for peer in ['fwp-explicit', 'fwp-packed', 'c-explicit', 'rust-explicit']}
+                    for label in ['fwp-ad', 'fwp-explicit', 'fwp-packed']},
             peakProcessRssBytes=resident, fwpProfiles=profiles, binaries=metadata)
         (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
     paths = ['scripts/measure-descent-peers.py', 'scripts/measure-ad-application.py',
              'scripts/ad-storage-profile.py', 'scripts/measure-iteration.py',
              'tests/fixtures/ad_raw_storage_probe.c', 'tests/fixtures/descent_explicit.fwp',
              'tests/fixtures/descent_explicit.c', 'tests/fixtures/descent_explicit.rs',
+             'tests/fixtures/descent_packed.fwp',
              'docs/tutorials/20-autodiff-and-devices/main.fwp']
     report = dict(source=os.environ['GITHUB_SHA'], host=args.host, machine=platform.machine(),
         cpu=run(['lscpu'], environment).stdout.decode(), cCompiler=run([args.cc, '--version'], environment).stdout.decode(),
         rustCompiler=run([args.rustc, '-Vv'], environment).stdout.decode(), commands=commands,
-        configuration=vars(args) | {'compiler': str(args.compiler), 'output': str(args.output)},
+        configuration=vars(args) | {'compiler': str(args.compiler), 'output': str(args.output),
+                                   'baseline_report': str(args.baseline_report)},
+        baseline=dict(source=baseline['source'], run=baseline['run'], reportSha256=digest(baseline_bytes)),
         sourceHashes={name: digest((ROOT / name).read_bytes()) for name in paths}, results=results,
-        scope='Four implementations of the same Rosenbrock descent and complete final vector. '
-        'fwp-ad records and reverses derivatives; the other three use the explicit derivative. '
+        scope='Five implementations of the same Rosenbrock descent and complete final vector. '
+        'fwp-ad records and reverses derivatives; the other four use the explicit derivative. '
         'Comparing fwp-ad to a peer includes general AD work and representation costs, not pure compiler overhead. '
-        'fwp-explicit uses immutable lists and intermediate pairs/lists; C/Rust reuse two contiguous buffers. '
+        'fwp-explicit uses immutable lists and intermediate pairs/lists; fwp-packed generates a packed array per update, '
+        'reading the previous array at checked indices. C/Rust reuse two contiguous buffers. '
         'Explicit formulas preserve their multiplication order, but reverse AD may round differently. '
         'All outputs are checked against an independent Python derivative with absolute/relative tolerance 1e-10. '
         'Per-implementation timed outputs must repeat exactly. Inputs and update counts are compile-time constants. '
@@ -215,7 +247,11 @@ def main():
         'The zero-update case includes initialization and formatting, so it is not pure startup time. '
         'Raw derivative buffers and managed charge are observed separately for fwp only. '
         'Separate uninstrumented process RSS includes all process storage; do not add it to allocation peaks. '
-        'All samples and compile commands are retained. This establishes baselines, not accepted performance budgets.')
+        'The original two fwp forms must reproduce the recorded managed/raw profiles exactly; timing peers '
+        'are recompiled and remeasured together. All samples and compile commands are retained. '
+        'For at least 199 updates, packed fwp must make fewer '
+        'managed allocation requests with no higher managed peak than explicit-list fwp. Retains and timings '
+        'are reported without a speed threshold; this is a program-representation experiment, not a compiler change.')
     (out / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({name: row['ratios'] for name, row in results.items()}, indent=2))
 
