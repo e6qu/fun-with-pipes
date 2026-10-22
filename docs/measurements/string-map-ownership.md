@@ -29,8 +29,8 @@ separate lifetime reasoning; this change does not establish it.
 
 ## Application measurements
 
-Source `12ce47ad00f28bdc32235c31e04204a7526a0f8f` passes both Linux jobs in
-[run 39728410578](https://github.com/e6qu/fun-with-pipes/actions/runs/39728410578).
+Source `15ee3615d2df858f508ec459e6305fa163037917` passes both Linux jobs in
+[run 39731820120](https://github.com/e6qu/fun-with-pipes/actions/runs/39731820120).
 The [complete report](string-map-2026-10-22.json) retains samples, toolchains,
 inputs, build times, memory observations and independently inspected binaries.
 The baseline is `54b01db94079e692cddf8ec3fc56ee064c7bbbf1` from run `39699466703`;
@@ -51,16 +51,22 @@ opt-level 2 with overflow checks. Link-time optimization and stress checks are o
 
 | Host | Words / distinct words | C ms | Rust ms | Before ARC ms | New ARC ms | New tracing ms | ARC / C | ARC / Rust |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| AMD64 | 4,096 / 64 | 1.391 | 1.832 | 2.754 | 2.649 | 2.960 | 1.90× | 1.45× |
-| AMD64 | 65,536 / 1,024 | 10.671 | 15.319 | 34.825 | 32.378 | 32.403 | 3.03× | 2.11× |
-| ARM64 | 4,096 / 64 | 1.088 | 1.451 | 2.265 | 2.172 | 2.172 | 2.00× | 1.50× |
-| ARM64 | 65,536 / 1,024 | 9.521 | 12.319 | 26.632 | 24.831 | 24.749 | 2.61× | 2.02× |
+| AMD64 | 4,096 / 64 | 1.334 | 1.828 | 2.887 | 2.991 | 2.616 | 2.24× | 1.64× |
+| AMD64 | 65,536 / 1,024 | 10.644 | 15.330 | 34.651 | 32.488 | 32.328 | 3.05× | 2.12× |
+| ARM64 | 4,096 / 64 | 1.262 | 1.683 | 2.555 | 2.457 | 2.422 | 1.95× | 1.46× |
+| ARM64 | 65,536 / 1,024 | 9.917 | 12.888 | 27.567 | 25.457 | 25.459 | 2.57× | 1.98× |
 
-For the larger input, new ARC takes 6.8–7.0% less time than the recompiled ARC
-baseline in these sessions. It still takes **161–203% more time than C** and
-**102–111% more than Rust**. The smaller AMD64 tracing case is 3.0% slower than
-its tracing baseline. These observations retain that slower result and do not
-promise the same timing elsewhere or isolate the cost of one language feature.
+For the larger input, new ARC takes 6.2–7.7% less time than the recompiled ARC
+baseline in these sessions. It still takes **157–205% more time than C** and
+**98–112% more than Rust**. The smaller AMD64 ARC case is **3.6% slower** than
+its baseline, within the previously chosen 5% screen. Its observed samples span
+2.52–3.65 ms, versus 2.59–3.54 ms before; that overlap does not identify a cause.
+These measurements do not establish an improvement for every input.
+
+The earlier paired run at `12ce47ad00f2` is retained in the complete report. It
+also reduces larger-case ARC time and gives identical managed counts, but its
+smaller AMD64 tracing case is 3.0% slower. Keep both sessions and their slower
+results; do not average different revisions into a claimed compiler speedup.
 
 ## Storage
 
@@ -77,45 +83,43 @@ Both hosts and both fwp memory modes give these counts for 65,536 words:
 These meet the previously set limits of 230,000 requests, 80,000 retains and
 7,794,440 peak charged bytes. Both ARC time ratios also meet the 1.05× baseline
 screen. Counts exclude raw buffers, stacks and allocator metadata. Separate
-single-process peak resident-memory observations are 7.9–8.7 MB for new ARC,
-10.4–11.4 MB before, 4.4–4.6 MB for C and 6.1–6.3 MB for Rust. Resident memory
+single-process peak resident-memory observations are 7.7–8.9 MB for new ARC,
+10.3–11.3 MB before, 4.4–4.6 MB for C and 6.1–6.3 MB for Rust. Resident memory
 includes the whole process and must not be equated with managed charged bytes.
-ARC machine-code sections grow from 47,330 to 48,706 bytes on AMD64 and from
+ARC machine-code sections grow from 47,330 to 48,722 bytes on AMD64 and from
 46,956 to 48,204 bytes on ARM64. The allocation savings therefore have a code-size
 cost. Whole executable files are 102,288 and 152,760 bytes respectively; section
 sizes and file sizes measure different things. No stack-usage reduction is claimed.
 
-## Correctness and remaining validation
+## Correctness and delivery
 
-[Focused run 39727552658](https://github.com/e6qu/fun-with-pipes/actions/runs/39727552658)
-passes at the measured source on Linux, macOS and Windows, ARM64/AMD64. Inspection
-covers 192 native images and 180 interpreter/native output comparisons, including
-aliases, caught errors, failure/cancellation cleanup and deliberately broken
-cleanup controls at O0/O2. The paired comparison adds 48 native images and 24
-WASI modules. ARC images have no tracing scan/mark/sweep symbols.
+The [six-host native run](https://github.com/e6qu/fun-with-pipes/actions/runs/39730741666)
+passes at the measured source on Linux, macOS and Windows, ARM64/AMD64. There are
+19 test functions per host across seven targets; Linux AMD64 also passes 176
+compiler unit tests. Inspection covers 228 native images and 180 interpreter/native
+comparisons at O0/O2, including aliases, caught errors, failure/cancellation and
+deliberately broken cleanup controls. The paired comparison adds 48 native images
+and 24 WASI modules. ARC images omit tracing scan/mark/sweep symbols.
 
-The five older reuse tests silently skipped Windows at that source. Their results
-do not establish Windows reuse coverage. Source
-`15ee3615d2df858f508ec459e6305fa163037917` repairs them and passes all six hosts in
-[run 39730741666](https://github.com/e6qu/fun-with-pipes/actions/runs/39730741666),
-with 19 test functions per host, including six actual reuse tests. It
-makes native compilation failures fail the golden/reuse checks, and adds explicit
-missing-compiler controls. It also fixes both age checks for large immutable
-objects: those allocations have one age mark, while small allocations use a
-per-slot bitmap. Reusing an older immutable object could otherwise hide references
-to younger data from a minor collection. Mutable arrays retain their separate,
-rescanned reuse rule.
+Five older reuse tests had silently skipped Windows, and the reuse corpus ignored
+native compilation failures. Both are repaired: the six current reuse tests
+execute on Windows, intentional front-end errors match their diagnostics, and
+unexpected native build failures fail the test. Missing-compiler controls prove
+that the golden and reuse checks cannot report success without a C compiler.
 
-The regression collects real small/large immutable/mutable objects, checks
-shared owners and tests both normal and poison-copy reuse verification. Removing
-either large-object age check fails its control. Inspection covers 228 native
-images and 180 interpreter/native comparisons at the repaired revision. Its paired
-benchmark run `39731820120` is still pending; the timing table above belongs to
-the earlier measured revision.
+The same batch repairs both age checks for large immutable objects. Large
+allocations have one age mark; small objects use a per-slot bitmap. Reading the
+wrong representation could allow reuse after collection and hide new child
+references from a minor collection. The regression collects actual small/large,
+immutable/mutable objects and checks aliases and poison-copy reuse verification.
+Removing either large-object check makes its control fail. Mutable arrays keep
+their separate rule because minor collection rescans them.
 
-The map lowering also runs for WebAssembly. A new WASI fixture exercises the
-same five inputs, shared list/tail/string aliases, dynamic callbacks and caught
-errors, retaining O0/O2 modules and a missing-free control. Local interpreter
-output matches all five accepted native references, but WASI execution of this
-new fixture is still pending. Final production and documentation checks remain
-required before delivery.
+The [WASI run](https://github.com/e6qu/fun-with-pipes/actions/runs/39733027038)
+passes on both Linux hosts at `66f4a2f6dc9a02baba7154ec5c81923df8d0db29`.
+Only tests and documentation differ from the measured native source. It exercises
+the same five map inputs, shared list/tail/string aliases, dynamic callbacks and
+caught errors. Eight independently inspected O0/O2 modules cover correct physical
+cleanup and a deliberately omitted free, with exact interpreter output checks.
+Final production and documentation acceptance remains recorded in the
+[session handoff](../development-state.md), separately from focused evidence.

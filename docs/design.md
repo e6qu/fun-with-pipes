@@ -693,7 +693,7 @@ WSAPoll, using the next real deadline as the timeout; preemption checks without
 waiting. Stack-local wait records unlink before cancellation unwinds. A reusable
 leaf array holds only OS descriptors/events and is released when the last waiter
 leaves. Local close still wakes waiters explicitly, including before descriptor
-reuse. This repair needs the same native platform validation as the server owners.
+reuse. The server-ownership delivery includes this repair and its native platform checks.
 
 Accepted input ownership gives remote input iterators concrete destruction
 metadata. Its cursor keeps the current element alive while advancing to the
@@ -733,11 +733,13 @@ preserve aliasing and alignment rules while exposing loads/stores to the C
 compiler's vectorizer. Shape validation bounds each access; floating-point
 accumulation order and separate multiplication/addition remain unchanged.
 
-The [direct-await candidate](measurements/task-await-fields.md) also exposes an
+The [direct-await lowering](measurements/task-await-fields.md) exposes an
 immediately matched task result as tag/payload fields. It removes the temporary
 Option box while retaining the cached task result for other handles and later
-awaits. Its measured allocation comparison and platform validation are pending;
-options that escape the direct match retain their ordinary representation.
+awaits. The measured fixture removes 34 allocation requests on all six native
+platforms without reducing retains or peak storage.
+[PR #191](roadmap-history.md#task-results-and-explicit-cpu-execution-pr-191) records
+acceptance. Options that escape the direct match retain their ordinary representation.
 
 ## Compile-time values in static storage
 
@@ -966,9 +968,10 @@ Admitted programs include ordinary immutable values, scoped files and state,
 proved derivative scopes, selected retained tasks, channels with acyclic nested
 queue ownership, and scoped C calls. HTTP stream handles remain excluded from
 channel payloads because their hidden owners can lead back to the queue. The
-[task-message candidate](measurements/task-channels.md) replaces the blanket Task
+[task-message proof](measurements/task-channels.md) replaces the blanket Task
 ban with a proof of the task's computation and result owners. Unknown producers
-and captured task-bearing queues remain rejected; the handoff records validation.
+and captured task-bearing queues remain rejected.
+[PR #190](roadmap-history.md#queued-task-owners-and-callback-transfers-pr-190) records acceptance.
 The [queued-function extension](ownership.md#functions-stored-in-channels),
 accepted in PR #175, admits functions whose actual immutable captures are
 proved safe and checks their required scope when called after receiving.
@@ -1003,7 +1006,8 @@ The [channel proof](ownership.md#ownership-boundaries) follows each channel's
 payload types and rejects a path back to that channel type. Immutable recursive
 containers remain allowed. Mutable
 cycles and unproved external callbacks remain excluded. Raw pointers carry
-manual lifetime obligations, not managed ownership (validation is in the handoff).
+manual lifetime obligations, not managed ownership;
+[PR #193](roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193) records their accepted native delivery.
 Checked ARC supports native main and function executables,
 including CLI commands, and C libraries with copied inputs. The C-result
 extension accepted in PR #165 transfers owned strings and record string fields to the host, with

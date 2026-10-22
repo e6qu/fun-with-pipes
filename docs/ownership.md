@@ -836,7 +836,7 @@ cover ARC exclusion and an ordinary tracing control.
 | Entry or boundary | Implemented contract | Evidence and limits |
 |---|---|---|
 | Native main, function executable, CLI | Each entry proves its own state/derivative scopes and releases owned results | [Reference](reference.md#checked-reference-counting) |
-| Native C libraries | Copy supported inputs; return scalars or explicitly released strings/records | [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165); manual-pointer extension under validation; retained callbacks excluded |
+| Native C libraries | Copy supported inputs; return scalars or explicitly released strings/records | [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165); [manual pointers in PR #193](roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193); retained callbacks excluded |
 | gRPC clients/services | Typed input/result owners and checked iterator handler lifetimes | [Details below](#checked-grpc-clients-and-services) |
 | HTTP clients/servers | Own connections, requests, copied responses, handler captures and tasks | [PR #162](roadmap-history.md#http-client-owners-and-complete-connection-keys-pr-162), [#163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163) |
 | Generated REST/MCP | Same checked entries, including aliases, errors and normal shutdown | [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164) |
@@ -914,7 +914,7 @@ values. Synchronous callbacks run on the calling task before C returns; C must
 copy borrowed data before keeping it. Foreign strings copy into fwp-owned values.
 The manual-pointer extension admits `Ptr[T]` and `Option[Ptr[T]]` in native calls,
 callbacks and exports. Its [native checks](measurements/manual-pointers.md) and
-[handoff](development-state.md) track validation. A pointer copies an address, never an owner of
+[verified delivery](roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193) record support. A pointer copies an address, never an owner of
 `T`. ARC releases any surrounding option or record, but neither follows nor
 frees the address. This also applies when `T` names an opaque host type.
 Callbacks returning managed C strings remain rejected: their result needs a
