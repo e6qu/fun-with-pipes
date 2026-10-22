@@ -934,6 +934,13 @@ or retain that address as a raw pointer. If C returns an alias into its argument
 before freeing it. Returning a `String` instead copies the result before the
 borrow ends. See [C interop](tutorials/09-c-interop/README.md).
 
+The interpreter owns its temporary NUL-terminated string copies until the
+foreign call returns and its result has been copied. Nested calls have separate
+owners; callback result copies stay with the receiving outer call. These copies
+must also be freed when argument conversion or a callback fails. The current
+pointer batch repairs permanent retention of these copies; its allocator test
+counts actual allocations and releases, rather than counting only fwp values.
+
 ### Owned library values
 
 The [primitive contracts](primitive-ownership.md) are the detailed inventory.

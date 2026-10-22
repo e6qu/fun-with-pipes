@@ -506,6 +506,12 @@ pointer element widths use the same representation (2/2/16 bytes).
   should not reuse a standard name (`div` above would shadow fwp's own).
 - Raw memory: `mem.alloc`, `mem.free`, `mem.string`, `ptr.read`,
   `ptr.write`, `ptr.at` and `ptr.read-string`, under `Unsafe`.
+  `mem.alloc` takes a byte count, with a minimum allocation of one byte.
+  A count exceeding the target's address width traps before allocation.
+  Pointer reads, writes and offsets use the C element's width; `ISize` and
+  `USize` occupy four bytes on 32-bit targets and eight on maintained native
+  targets. Copying bytes permits unaligned addresses but still requires valid
+  accessible storage.
 - C borrows `String`/`Bytes` arguments and string fields only for the call;
   it must copy data it wants to retain. Returned C strings are copied into
   owned language values before the call boundary finishes.

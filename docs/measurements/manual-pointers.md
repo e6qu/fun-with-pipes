@@ -7,11 +7,12 @@ its programmer or host remains responsible for the storage at that address.
 The [C tutorial](../tutorials/09-c-interop/README.md#a-pointer-into-a-c-buffer)
 shows allocation, a borrowed pointer into that allocation, copying and release.
 
-**Validation is in progress.** Linux AMD64/ARM64 and Intel macOS pass the native suite and independent
-binary inspection. ARM macOS and the Windows setup repair are pending. See the
-[handoff](../development-state.md) for current jobs and the final delivery gate.
-These are correctness and cleanup checks, not benchmarks or claims of parity
-with C/Rust.
+**Validation is in progress.** The initial pointer-admission source passes both
+Linux hosts and Intel macOS, with 63 native images independently inspected.
+The expanded batch also repairs interpreter string retention and 32-bit pointer
+storage/allocation bounds; it requires fresh native and 32-bit evidence. See the
+[handoff](../development-state.md) for source IDs, jobs and final delivery gates.
+These are correctness and cleanup checks, not benchmarks or C/Rust speed claims.
 
 ## What changes at the boundary
 
@@ -30,7 +31,7 @@ C buffer is freed. C must not return or retain a raw address into a managed
 
 Callbacks remain synchronous on the calling task, including suspension and
 reentrant calls. C cannot keep a callback after the receiving call returns.
-Callbacks returning managed C string addresses remain rejected. See the full
+Checked ARC callbacks returning managed C string addresses remain rejected. See the full
 [ownership contract](../ownership.md#c-library-results-and-foreign-calls).
 
 ## Programs and observations
@@ -38,6 +39,8 @@ Callbacks returning managed C string addresses remain rejected. See the full
 | Check | Work | Required result |
 |---|---|---|
 | Execution corpus | 85 maintained top-level programs plus a bounded interpreter control | 82 execute with matching interpreter behavior; three intentional compile errors match diagnostics; the invalid cross-task derivative lifetime remains rejected. |
+| Interpreter string copies | Repeated returned aliases, nested string callbacks, callback errors and failed argument conversion | Real allocations and frees of the temporary NUL-terminated copies balance after each group; copied results remain valid. |
+| 32-bit pointers | Actual WebAssembly interpreter and generated WASI at O0/O2 | Pointer-sized reads/writes preserve adjacent bytes and signed values; offsets advance by four bytes; oversized allocation counts trap before narrowing. A deliberately omitted bound is detected. |
 | Raw buffers | The C sorting, formatting and suffix-search example at O0/O2, tracing and ARC | Exact golden output; all tracked manual allocations released; deliberately omitting `mem.free` exits with the observer's failure code. ARC also checks final managed charge and no collection. |
 | Callbacks | Nullable pointers, 65 repeated calls, nested calls, a caught error, suspension and cancellation; O1/O2 in both modes | Exact raw-interpreter output; no remaining callback frames or managed charge in ARC; omitted result release and task-context controls fail. |
 | Libraries | Pointer identity, nullable pointers, a record with an owned string and borrowed pointer, and manual allocation/copy/release | The host's buffer remains its own; copied strings survive buffer changes/freeing; releasing a returned record releases its strings only. |
@@ -59,17 +62,18 @@ existing corpus, raw-memory, callback, library, ARC execution, C interop and
 pointer-arithmetic targets without stopping after a failed target. Linux AMD64
 also runs all compiler unit tests and audits the primitive contracts.
 
-Program/compiler source is `0ca3fba4f718fb02afbcc385ac41e763a8320361`, run
-`39716002463`. Both Windows jobs completed all seven targets and found two
-artifact-path failures: execution found the `.exe`, while filesystem copying
-used an extensionless path. Repair `2eaccbc77c428ab37986d8130d70ff1c2e9ca1cf`
-adds explicit `.exe` paths in those two tests; compiler, runtime and program
-fixtures are identical. Windows reruns are `39717062123` (AMD64) and
-`39717065021` (ARM64). Those reruns pass the pointer checks but expose missing OpenSSL headers at the
-corpus HTTP example. The focused workflow now uses production TLS setup, and
-the corpus records native compilation failures without abandoning later cases.
-Final repair sources/runs remain in the handoff until acceptance is complete.
-Passing Unix jobs are not repeated for these setup/reporting changes.
+The initial admission source is `0ca3fba4f718fb02afbcc385ac41e763a8320361`, run
+`39716002463`. Windows preparation exposed missing `.exe` artifact suffixes,
+then missing OpenSSL headers in the focused workflow. Both are repaired; the
+corpus now records native compilation errors and continues through later cases.
+These setup repairs preserve the earlier program source. The later interpreter
+and width repairs change program/compiler code and require a new complete run;
+earlier results do not establish their correctness.
+
+Selecting `native_runner=all` also runs the `pointer_width` job. It compiles the
+Rust interpreter tests for `wasm32-wasip1` and executes them in Node, then runs
+generated WASI pointer checks at O0/O2. Native pointer tests alone cannot verify
+32-bit behavior. No emulated run establishes support for a native platform.
 
 Each passing host retains 21 native images for independent inspection: 17
 executables and four static/shared libraries, with their generated C. Inspection

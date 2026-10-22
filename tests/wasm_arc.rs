@@ -1119,3 +1119,115 @@ fn browser_loader_preserves_host_errors_and_engine_stack_traps() {
     );
     assert!(result.stderr.is_empty(), "{result:?}");
 }
+
+#[test]
+fn synchronous_wasi_raw_pointer_width_and_allocation_bounds() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-raw-pointers").unwrap();
+    let success = r#"
+write-signed : Ptr[U8] -> () ! {Unsafe}
+write-signed = ptr.cast | ptr.write -7isize
+read-signed : Ptr[U8] -> ISize ! {Unsafe}
+read-signed = ptr.cast | ptr.read
+write-unsigned : Ptr[U8] -> () ! {Unsafe}
+write-unsigned = ptr.cast | ptr.write 4294967295usize
+read-unsigned : Ptr[U8] -> USize ! {Unsafe}
+read-unsigned = ptr.cast | ptr.read
+step-signed : Ptr[ISize] -> Bool
+step-signed = fork eq (ptr.at 1 | ptr.address) (ptr.address | add 4u64)
+step-unsigned : Ptr[USize] -> Bool
+step-unsigned = fork eq (ptr.at 1 | ptr.address) (ptr.address | add 4u64)
+check : Ptr[U8] -> () ! {IO, Unsafe}
+check = tap (ptr.at 4 | ptr.write 165u8)
+    | tap write-signed
+    | tap (read-signed | echo)
+    | tap (ptr.at 4 | ptr.read | echo)
+    | tap write-unsigned
+    | tap (read-unsigned | echo)
+    | tap (ptr.at 4 | ptr.read | echo)
+    | tap (ptr.cast | step-signed | echo)
+    | tap (ptr.cast | step-unsigned | echo)
+    | mem.free
+small : Ptr[U8] -> () ! {IO, Unsafe}
+small = tap (ptr.write 37u8) | tap (ptr.read | echo) | mem.free
+main = [16 | mem.alloc | check, [0, -1, -9223372036854775808] | each (mem.alloc | small)] | ignore
+"#;
+    for (name, program, expected) in [
+        (
+            "storage",
+            success.to_owned(),
+            "-7\n165\n4294967295\n165\nTrue\nTrue\n37\n37\n37\n",
+        ),
+        (
+            "overflow-zero",
+            "main = 4294967296 | mem.alloc | mem.free\n".to_owned(),
+            "",
+        ),
+        (
+            "overflow-one",
+            "main = 4294967297 | mem.alloc | mem.free\n".to_owned(),
+            "",
+        ),
+        (
+            "overflow-max",
+            "main = 9223372036854775807 | mem.alloc | mem.free\n".to_owned(),
+            "",
+        ),
+    ] {
+        let source = dir.join("program.fwp");
+        std::fs::write(&source, program).unwrap();
+        let code = emit(&source, &dir.join("program.c"), &[], "wasm32-wasi");
+        let measured = measured_program(&code);
+        for opt in ["-O0", "-O2"] {
+            let binary = dir.join("program.wasm");
+            let candidate = format!(
+                "{}\n{measured}",
+                include_str!("fixtures/wasm_arc_allocations.c")
+            );
+            fwp::cgen::compile_for(&candidate, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+            let output = wasi(&binary, dir.path()).output().unwrap();
+            assert_eq!(
+                output.stdout,
+                expected.as_bytes(),
+                "{name}/{opt}: {output:?}"
+            );
+            if name == "storage" {
+                assert!(output.status.success(), "{name}/{opt}: {output:?}");
+            } else {
+                assert_eq!(output.status.code(), Some(101), "{name}/{opt}: {output:?}");
+                assert!(
+                    String::from_utf8_lossy(&output.stderr).contains("raw allocation too large"),
+                    "{name}/{opt}: {output:?}"
+                );
+            }
+            if let Some(root) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                let path = std::path::PathBuf::from(root);
+                std::fs::create_dir_all(&path).unwrap();
+                let stem = format!("raw-{name}{opt}");
+                std::fs::write(path.join(format!("{stem}.c")), &candidate).unwrap();
+                std::fs::copy(&binary, path.join(format!("{stem}.wasm"))).unwrap();
+                std::fs::write(path.join(format!("{stem}.stdout")), output.stdout).unwrap();
+                std::fs::write(path.join(format!("{stem}.stderr")), output.stderr).unwrap();
+            }
+            if name == "overflow-one" {
+                let guard = "if (count > SIZE_MAX) fwp_trap(\"raw allocation too large\");";
+                assert_eq!(candidate.matches(guard).count(), 1);
+                let broken = candidate.replace(guard, "/* omitted allocation bound */");
+                fwp::cgen::compile_for(&broken, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+                let output = wasi(&binary, dir.path()).output().unwrap();
+                assert!(output.status.success(), "missing-bound/{opt}: {output:?}");
+                assert!(output.stdout.is_empty());
+                if let Some(root) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(root);
+                    let stem = format!("raw-missing-bound{opt}");
+                    std::fs::write(path.join(format!("{stem}.c")), &broken).unwrap();
+                    std::fs::copy(&binary, path.join(format!("{stem}.wasm"))).unwrap();
+                    std::fs::write(path.join(format!("{stem}.stdout")), output.stdout).unwrap();
+                    std::fs::write(path.join(format!("{stem}.stderr")), output.stderr).unwrap();
+                }
+            }
+        }
+    }
+}

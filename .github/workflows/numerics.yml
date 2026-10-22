@@ -142,6 +142,48 @@ jobs:
           name: pointer-ownership-${{ matrix.runner }}
           path: pointer-evidence/
           if-no-files-found: error
+  pointer_width:
+    if: inputs.suite == 'pointer-ownership' && inputs.native_runner == 'all'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: 1
+      CARGO_PROFILE_TEST_OPT_LEVEL: 1
+      FWP_LTO: '0'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Install explicit 32-bit toolchains
+        run: |
+          sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+          rustup target add wasm32-wasip1
+      - name: Actual 32-bit interpreter reads, writes and allocation bounds
+        env:
+          CC_wasm32_wasip1: clang
+          CXX_wasm32_wasip1: clang++
+          CARGO_TARGET_WASM32_WASIP1_RUNNER: node tests/wasm/wasi-run.mjs
+        run: >-
+          cargo test --locked --lib --target wasm32-wasip1 ffi_interp::pointer_tests:: -- --test-threads=1
+      - name: Generated 32-bit pointer storage and allocation traps
+        if: ${{ !cancelled() }}
+        env:
+          FWP_REQUIRE_WASI_ARC: '1'
+          FWP_WASI_ARC_ARTIFACTS: pointer-width-evidence
+          FWP_WASM_CC: clang
+        run: cargo test --locked --test wasm_arc synchronous_wasi_raw_pointer_width_and_allocation_bounds -- --nocapture
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pointer-width
+          path: pointer-width-evidence/
+          if-no-files-found: error
   file_inspection:
     if: inputs.suite == 'file-inspection'
     permissions:
