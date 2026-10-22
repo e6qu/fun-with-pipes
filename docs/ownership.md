@@ -821,6 +821,9 @@ full acceptance separately from the focused memory checks.
 
 ## Checked ARC delivery
 
+[Copied callback-input evidence](measurements/callback-inputs.md) records native
+and 32-bit checks, partial-conversion cleanup and the remaining C lifetime limits.
+
 `fwp build --gc arc` checks the supported ownership contracts and excludes
 tracing code. It rejects unproved ownership instead of silently retaining it.
 Ordinary counted freeing must remain enabled; tracing stress and reuse poisoning

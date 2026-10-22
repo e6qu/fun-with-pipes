@@ -28,7 +28,10 @@ versus current weights and separates managed storage, raw tape buffers and
 process memory. The [four-way derivative baseline](measurements/descent-peers.md)
 compares fwp AD, explicit fwp derivatives and explicit C/Rust implementations.
 It identifies substantial remaining AD and representation costs without calling
-the whole difference compiler overhead.
+the whole difference compiler overhead. The subsequent
+[packed-array comparison](measurements/packed-descent.md) removes most allocation
+requests but leaves counted ownership work and a 3.34–3.40× C-time gap in its
+largest case; its small zero-update AMD64 control is slower.
 
 ## Choose the question first
 

@@ -285,8 +285,7 @@ The [first baseline](measurements/descent-peers.md) passes both Linux hosts with
 acceptance remain open. Preserve these samples and slower results before
 choosing the next optimization; the session handoff records ongoing work.
 
-
-The next experiment adds a fifth implementation: explicit fwp derivatives with
+The [packed comparison](measurements/packed-descent.md) adds a fifth implementation: explicit fwp derivatives with
 packed `Array[F64]` storage. Each update reads the previous immutable array at
 checked indices and generates one result array. It uses existing language/library
 features; this is a program-representation comparison, not a compiler change.
@@ -299,4 +298,7 @@ The five-way run uses 40 samples after two warmups, rotating and reversing all
 five positions equally. It recompiles and measures every peer on the same runner;
 it does not compare times from different CPU models. The two original fwp forms
 must reproduce their recorded managed/raw profiles exactly. The original four-way data
-remains unchanged. This packed-array experiment is under validation.
+remains unchanged. Both Linux jobs and 96 image inspections pass; the report
+records the allocation savings, unchanged retains, slower zero-update control
+and remaining C/Rust gaps. Its final section sets the next callback-borrowing
+requirements before a compiler change is measured.

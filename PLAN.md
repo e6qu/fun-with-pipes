@@ -107,11 +107,14 @@ outside the benchmark suite.
    [checked products](docs/measurements/checked-products.md) retain slower controls,
    optimization-level differences and unexplained AMD64 variability. The
    [descent baseline](docs/measurements/descent-peers.md) now separates automatic
-   differentiation from explicit fwp/C/Rust formulas. Its larger explicit fwp
-   case still takes 6.38–6.91× C time and makes 206,891 managed requests. Inspect
-   intermediate containers and closures (F64 values already fit inline), then
-   compare packed-array iteration before selecting a compiler change. Set its
-   count/memory requirements and timing protocol before measuring a candidate.
+   differentiation from explicit fwp/C/Rust formulas. The subsequent
+   [packed-array comparison](docs/measurements/packed-descent.md) reduces the
+   largest explicit case from 206,891 to 459 requests, but retains remain at
+   51,342 and time at 3.34–3.40× C. Next, prove borrowing of captured arrays for
+   eligible callbacks instead of repeatedly transferring counted owners. Require
+   fewer retains with no additional requests or higher managed peak in the four
+   repeated packed cases; preserve failure/cancellation and all output. Compare
+   recompiled baselines and report timing, code size and stack costs.
    Resource-owning
    tail frames and mutual recursion still need separate lifetime proofs.
 3. Complete the [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
