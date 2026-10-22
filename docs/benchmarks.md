@@ -40,6 +40,14 @@ The [borrowed-capture comparison](measurements/array-capture-descent.md) removes
 all remaining retains in those packed descent cases, with unchanged allocation
 counts and managed peak. Its largest case takes 2.33–2.38× C time; the report
 preserves noisy controls, slower cases and slightly larger instruction sections.
+The [helper-call diagnostic](measurements/descent-call-costs.md) compares unchanged
+generated C with hinted and forced inlining. Neither reaches its predeclared 5%
+speed target on both hosts; it does not justify a compiler inlining rule.
+The [direct-call comparison](measurements/direct-call-entries.md) removes unused
+generic adapters, shrinking largest-case instructions by 18–19% without changing
+allocation/count profiles. Timing remains inconclusive, including slower cases.
+The [repeated-work protocol](measurements/descent-batch-protocol.md) diagnoses
+startup noise with complete repeated solves and two identical-code controls.
 
 ## Choose the question first
 

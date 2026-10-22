@@ -28,6 +28,84 @@ impl Drop for Scratch {
 }
 
 #[test]
+fn generic_entries_follow_function_values_not_direct_calls() {
+    let dir = Scratch::new("entries");
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    for (name, body, dynamic, expected) in [
+        (
+            "direct",
+            "main = read-all () | string.length | direct | echo",
+            false,
+            "7\n",
+        ),
+        (
+            "dynamic",
+            "choose : Bool -> I64 -> I64\nchoose = if id (const direct) (const (mul 3))\nvalues : (I64 -> I64) -> (I64, I64)\nvalues = both (apply 2) (apply 4)\nmain = values (choose (read-all () | string.length | eq 0)) | echo",
+            true,
+            "(9, 11)\n",
+        ),
+    ] {
+        let source = dir.0.join(format!("{name}.fwp"));
+        std::fs::write(
+            &source,
+            format!("direct : I64 -> I64\ndirect = add 7\n{body}\n"),
+        )
+        .unwrap();
+        let reference = checked(
+            Command::new(compiler)
+                .args(["run", "--interp"])
+                .arg(&source)
+                .env("FWP_NO_OPT", "1")
+                .stdin(Stdio::null()),
+        );
+        assert_eq!(reference.stdout, expected.as_bytes());
+        for (gc, reuse) in [("arc", "1"), ("tracing", "1"), ("tracing", "0")] {
+            let cfile = dir.0.join(format!("{name}-{gc}-{reuse}.c"));
+            checked(
+                Command::new(compiler)
+                    .args(["build", "--gc", gc, "--emit-c", "-O2"])
+                    .arg(&source)
+                    .arg("-o")
+                    .arg(&cfile)
+                    .env("FWP_NO_OPT", "1")
+                    .env("FWP_REUSE", reuse),
+            );
+            let code = std::fs::read_to_string(&cfile).unwrap();
+            let table = code
+                .split_once("static const fwp_fninfo fwp_fn_table[] = {\n")
+                .unwrap()
+                .1
+                .split_once("};")
+                .unwrap()
+                .0;
+            let entries: Vec<_> = table.lines().filter(|line| line.contains("\"direct\"")).collect();
+            assert_eq!(entries.len(), 1, "{name}/{gc}/{reuse}: {table}");
+            assert_eq!(
+                entries[0].contains(", 0, \"direct\", 0}"),
+                !dynamic,
+                "{name}/{gc}/{reuse}: {}",
+                entries[0]
+            );
+            for opt in ["-O0", "-O2"] {
+                let exe = dir.0.join(format!("{name}-{gc}-{reuse}{opt}"));
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                let stress = if gc == "tracing" { "1" } else { "0" };
+                let result = checked(
+                    Command::new(&exe)
+                        .stdin(Stdio::null())
+                        .env_remove("FWP_GC")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", "1"),
+                );
+                assert_eq!(result.stdout, reference.stdout, "{name}/{gc}/{reuse}/{opt}");
+                assert!(result.stderr.is_empty(), "{result:?}");
+            }
+        }
+    }
+}
+
+#[test]
 fn array_elements_aliases_and_callbacks_under_collection() {
     let dir = Scratch::new("aliases");
     let src = dir.0.join("aliases.fwp");

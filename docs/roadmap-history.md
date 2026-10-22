@@ -12,6 +12,27 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Borrowed array captures (PR #197)
+
+Known numeric array-generation callbacks borrow caller-owned captures. Temporary
+parameter records and last-read aliases no longer add owners; escaped values,
+recursive callbacks and resource scopes keep their required ownership. Tests
+preserve effect order, aliases, errors, cancellation and partial-array cleanup.
+
+The [ownership report](measurements/array-capture-borrows.md) retains 558 inspected
+native images and twelve executed WASI modules. The
+[numerical comparison](measurements/array-capture-descent.md) reduces largest-case
+retains from 25,671 to zero with unchanged 459 allocation requests and 7,200-byte
+managed peak. Noisy controls and remaining C/Rust timing gaps are retained.
+
+[PR #197](https://github.com/e6qu/fun-with-pipes/pull/197) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39793823991)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39793823875)
+at `0367e81941a213b96de14dbe175143ff0a121f77`. All completed logs were audited.
+The user's squash merge `b94710c9212cbbfc3e39409835e539b371069b36` has identical
+files, #196 as its sole parent and a one-line message under 80 characters without
+trailers. This is the accepted baseline for the next direct-call work.
+
 ## Array-owner moves and copied callback strings (PR #196)
 
 Synchronous C callbacks copy incoming strings into fwp-owned storage, including
