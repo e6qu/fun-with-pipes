@@ -155,7 +155,7 @@ jobs:
           exit $LASTEXITCODE
       - name: Native cache tracks C header search paths
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
-        run: cargo test --test aot integer_cache_tracks_header_search_paths -- --exact
+        run: cargo test --test aot -- --nocapture
       - name: Publish failed native tls and executable ownership log
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() && steps.tls_tests.outcome == 'failure' }}

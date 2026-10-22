@@ -33,3 +33,18 @@ fn std_tests_pass_natively() {
         String::from_utf8_lossy(&out.stderr)
     );
 }
+
+#[test]
+fn std_tests_pass_with_checked_ownership() {
+    let out = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .args(["test", "--std", "--native", "--gc", "arc"])
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        out.status.success() && stdout.contains("passed, 0 failed"),
+        "checked native std tests failed:\n{}\n{}",
+        stdout,
+        String::from_utf8_lossy(&out.stderr)
+    );
+}

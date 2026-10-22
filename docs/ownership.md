@@ -835,7 +835,7 @@ cover ARC exclusion and an ordinary tracing control.
 
 | Entry or boundary | Implemented contract | Evidence and limits |
 |---|---|---|
-| Native main, function executable, CLI | Each entry proves its own state/derivative scopes and releases owned results | [Reference](reference.md#checked-reference-counting) |
+| Native main, function executable, CLI, test entries | Each entry proves its own state/derivative scopes and releases owned results; native test errors also release their formatted diagnostics | [Reference](reference.md#checked-reference-counting) |
 | Native C libraries | Copy supported inputs; return scalars or explicitly released strings/records | [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165); [manual pointers in PR #193](roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193); retained callbacks excluded |
 | gRPC clients/services | Typed input/result owners and checked iterator handler lifetimes | [Details below](#checked-grpc-clients-and-services) |
 | HTTP clients/servers | Own connections, requests, copied responses, handler captures and tasks | [PR #162](roadmap-history.md#http-client-owners-and-complete-connection-keys-pr-162), [#163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163) |

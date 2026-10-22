@@ -105,7 +105,9 @@ def main():
     results = {}
     for case in args.case:
         points, count = map(int, case.split(':'))
-        assert points >= 2 and 1 <= count <= 8192
+        # Missing-free controls keep one parent block per update. Leave room
+        # for the live registry, partials and adjoints in the 4096-block ledger.
+        assert points >= 2 and 1 <= count <= 4092
         name = f'{points}-{count}'
         assert name not in results
         directory = out / name

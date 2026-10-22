@@ -110,7 +110,9 @@ run, exec, test, serve and pipe compile programs to native executables
 through C, cached by content in `fwp cache dir` (FWP_CACHE_DIR; at most
 FWP_CACHE_MAX, default 256); -O0..-O3 before the file sets the C
 optimization level (default -O2, -O1 for tests). --interp (or
-FWP_RUN=interp) runs the interpreter instead, as does a missing C compiler.
+FWP_RUN=interp) runs the interpreter instead. A missing C compiler is an error.
+--gc arc|tracing before the file selects native ownership for run, exec,
+test and serve; pipe accepts it before its stages. Tracing remains the default.
   fwp cache dir | clean          print or empty the cache of executables
 ";
 
@@ -138,7 +140,7 @@ fn host_unsupported(cmd: &str, prog: &fwp::ir::Program) -> Option<i32> {
     Some(1)
 }
 
-/// Take `--interp`, `--native` and `-O<n>` before the program file.
+/// Take execution, ownership and optimization options before the program file.
 fn take_run_options(
     cmd: &str,
     args: &mut Vec<String>,
@@ -156,7 +158,25 @@ fn take_run_options(
                     cmd
                 )));
             }
-            Ok((fwp::aot::wants_native(m), fwp::aot::take_opt(args, opt)))
+            let native = fwp::aot::wants_native(m);
+            match fwp::aot::take_gc(args) {
+                Ok(Some(arc)) => {
+                    if !native {
+                        eprintln!("fwp {cmd}: --gc selects native ownership; it requires native execution");
+                        return Err(ExitCode::from(2));
+                    }
+                    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+                        arc,
+                        ..Default::default()
+                    });
+                }
+                Ok(None) => {}
+                Err(error) => {
+                    eprintln!("fwp {cmd}: {error}");
+                    return Err(ExitCode::from(2));
+                }
+            }
+            Ok((native, fwp::aot::take_opt(args, opt)))
         }
         Err(e) => {
             eprintln!("fwp {}: {}", cmd, e);
@@ -392,11 +412,7 @@ fn run(args: &[String]) -> ExitCode {
                 if native {
                     let generated = fwp::cgen::generate(&prog);
                     let name = program_name(&path);
-                    if let Some(code) =
-                        fwp::aot::run_native("run", generated, &opt, &name, &prog_args)
-                    {
-                        return code;
-                    }
+                    return fwp::aot::run_native("run", generated, &opt, &name, &prog_args);
                 }
                 fwp::interp::run_main(&prog, prog_args).exit_code
             }
@@ -417,6 +433,14 @@ fn test(args: &[String]) -> ExitCode {
         Err(c) => return c,
     };
     let std_tests = args.iter().any(|a| a == "--std");
+    if args
+        .iter()
+        .any(|a| a.starts_with('-') && a != "--std" && a != "-")
+        || args.iter().filter(|a| *a != "--std").count() > 1
+    {
+        eprintln!("fwp test: put --gc and optimization options before the single test file");
+        return ExitCode::from(2);
+    }
     let path = args.iter().find(|a| !a.starts_with("--")).cloned();
     if path.is_none() && !std_tests {
         eprintln!("fwp test: missing file (or --std)");
@@ -444,9 +468,7 @@ fn test(args: &[String]) -> ExitCode {
                         .as_deref()
                         .map(program_name)
                         .unwrap_or_else(|| "std".into());
-                    if let Some(code) = fwp::aot::run_native("test", generated, &opt, &name, &[]) {
-                        return code;
-                    }
+                    return fwp::aot::run_native("test", generated, &opt, &name, &[]);
                 }
                 let mut out = std::io::stdout();
                 let (pass, fail) = fwp::driver::run_tests(&prog, &mut out);
@@ -1134,11 +1156,7 @@ fn serve(args: &[String]) -> ExitCode {
                     }
                     sargs.extend(fwp::aot::tls_args(&tls));
                     let name = module.replace('.', "-");
-                    if let Some(code) =
-                        fwp::aot::run_native("serve", generated, &opt, &name, &sargs)
-                    {
-                        return code;
-                    }
+                    return fwp::aot::run_native("serve", generated, &opt, &name, &sargs);
                 }
                 fwp::services::serve(&prog, listen, tls)
             }
@@ -1180,11 +1198,7 @@ fn serve_generated(
             if native {
                 let generated = fwp::cgen::generate(&prog);
                 let name = program_name(&path);
-                if let Some(code) =
-                    fwp::aot::run_native("serve", generated, &opt, &name, &server_args)
-                {
-                    return code;
-                }
+                return fwp::aot::run_native("serve", generated, &opt, &name, &server_args);
             }
             fwp::interp::run_main(&prog, server_args).exit_code
         }
@@ -1403,11 +1417,7 @@ fn exec(args: &[String]) -> ExitCode {
                 if cli {
                     if native {
                         let generated = fwp::cgen::generate_cli(&prog, &pname);
-                        if let Some(code) =
-                            fwp::aot::run_native("exec", generated, &opt, &pname, &fargs)
-                        {
-                            return code;
-                        }
+                        return fwp::aot::run_native("exec", generated, &opt, &pname, &fargs);
                     }
                     return fwp::exec::exec_program(&prog, &pname, &fargs);
                 }
@@ -1415,11 +1425,7 @@ fn exec(args: &[String]) -> ExitCode {
                     Some((_, fid)) => {
                         if native {
                             let generated = fwp::cgen::generate_exec(&prog, *fid, &name);
-                            if let Some(code) =
-                                fwp::aot::run_native("exec", generated, &opt, &name, &fargs)
-                            {
-                                return code;
-                            }
+                            return fwp::aot::run_native("exec", generated, &opt, &name, &fargs);
                         }
                         fwp::exec::exec(&prog, *fid, &name, &fargs)
                     }
@@ -1462,10 +1468,16 @@ fn program_name(path: &str) -> String {
 fn pipe(args: &[String]) -> ExitCode {
     // the mode's options come before the stages, whose own arguments may
     // look like them
-    let lead = args
-        .iter()
-        .take_while(|a| *a == "--interp" || *a == "--native")
-        .count();
+    let mut lead = 0;
+    while let Some(option) = args.get(lead) {
+        if option == "--interp" || option == "--native" || option.starts_with("--gc=") {
+            lead += 1;
+        } else if option == "--gc" {
+            lead = (lead + 2).min(args.len());
+        } else {
+            break;
+        }
+    }
     let mut mode_args = args[..lead].to_vec();
     let args = &args[lead..];
     let interp = match fwp::aot::take_mode(&mut mode_args) {
@@ -1475,9 +1487,20 @@ fn pipe(args: &[String]) -> ExitCode {
             return ExitCode::from(2);
         }
     };
+    let arc = match fwp::aot::take_gc(&mut mode_args) {
+        Ok(Some(_)) if interp => {
+            eprintln!("fwp pipe: --gc selects native ownership; it requires native execution");
+            return ExitCode::from(2);
+        }
+        Ok(mode) => mode,
+        Err(error) => {
+            eprintln!("fwp pipe: {error}");
+            return ExitCode::from(2);
+        }
+    };
     let spec = args.join(" ");
     let exe = std::env::current_exe().unwrap_or_else(|_| "fwp".into());
-    match fwp::exec::run_pipeline(&exe, &spec, interp) {
+    match fwp::exec::run_pipeline(&exe, &spec, interp, arc) {
         Ok(code) => ExitCode::from((code & 0xff) as u8),
         Err(e) => {
             eprintln!("fwp pipe: {}", e);

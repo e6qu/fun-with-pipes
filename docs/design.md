@@ -34,6 +34,10 @@ Each stage produces input for the next:
 
 `fwp run`, `exec`, `test`, `serve` and `pipe` compile native code by default and
 cache it by content. The front end still runs to produce current diagnostics.
+Native commands accept explicit `--gc arc` or `--gc tracing` settings; interpreted
+commands reject those native-only settings. Native test execution checks every
+test entry before running and releases caught error values and formatting buffers.
+A missing C compiler is an error; choose `--interp` explicitly to use the evaluator.
 The executable cache includes the selected C compiler's version, target and
 header-search environment for integer-only programs as well as floating-point
 programs. Exact floating-point programs also include their C++ compiler identity;
