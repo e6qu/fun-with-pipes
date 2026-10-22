@@ -76,8 +76,11 @@ controls. Broader ownership boundaries and all seven roadmap areas remain open.
 Branch `borrow-array-captures`, worktree `/private/tmp/fwp-array-capture-borrows`,
 has published source `80d8f27e1bf57e4665503d6d1ed1af261f7dc672`, tag
 `roadmap/revision-array-captures-80d8f27e1bf5`. Ownership run `39783028890`
-and measurement run `39783034906` are queued; no new-source job has started
-in the latest audit. Receipt:
+passes Linux ARM64, both Windows hosts, ARM macOS and pointer-width checks.
+Intel macOS is running. Linux AMD64 failed the new alias unit test; the full log
+shows 178 passed and one failed. Native ownership checks passed in that job. Its queued
+measurement run `39783034906` was cancelled after the reporting-only replacement
+was published. Compiler-focused receipt:
 `/private/tmp/fwp-array-captures-publication.json`. Keep #196's final head unchanged.
 The branch starts at #196's initial `d98abe29139c`, but includes its later tutorial
 repair; preserve that repair when integrating onto #196's eventual merge tree.
@@ -125,26 +128,36 @@ identical-code variation without inventing a speed claim. The prepared
 `fwp-inspect-capture-workers.py` records actual numerical-function instructions
 and static frames after the two numerical host inspections complete.
 `fwp-record-capture-ownership.py` is prepared but has not run; it requires the full
-focused acceptance and inspection. Both publication helpers have already run;
-do not repeat their mutations. The compiler source remains unchanged while its runs finish. The preparation
-worktree now has an uncommitted runner repair: `scripts/measure-descent-peers.py`
-collects every count/storage violation across inputs and exits nonzero after
-saving the report, rather than stopping on the first count failure. Acceptance
-limits are unchanged; incorrect outputs, cleanup violations, invalid raw-memory traces and tool failures still stop immediately.
-`scripts/test-descent-budgets.py` checks both hosts' recorded cases, seven
-simultaneous violations and a changed frozen baseline. All three focused tests
-pass in 0.13s under the guard. `.github/workflows/ci.yml` (benchmark job) and
-`numerics.yml` invoke these controls; `docs/application-acceptance.md` explains
-the reporting. The workflow audit also found a pre-existing macOS shell assignment that could
-mask `xcrun` failure; assigning `FWP_OBJDUMP` before exporting it preserves the
-command's exit status. Include that repair in this batch. Automatic review rejected
-moving the early managed-cleanup assertion; it remains unchanged. Later budget
-comparisons are collected; cleanup and raw-trace violations still stop immediately.
-Guarded workflow validation passes in 3.33s; requirement controls pass again
-in 0.14s. Publish the reporting-only change and replace the queued measurement
-run using `fwp-publish-capture-reporting.py`. Keep the source-80d8 focused matrix;
-no compiler, runtime or native-test files change in this follow-up. The reporting
-publication will record both source IDs. Preserve source-specific receipts.
+focused acceptance and inspection. All publication helpers have already run; do not repeat their mutations.
+
+Reporting-only source `d1467854766fd93fa6e6c768d42f35e83fec3c1a`, tag
+`roadmap/revision-capture-reporting-d1467854766f`, runs numerical comparison
+`39786472473`. Receipt `fwp-capture-reporting-publication.json` proves the compiler,
+runtime and native tests are unchanged from source `80d8f27e`; its focused matrix
+continues. Both source IDs must remain in the final evidence. The preparation
+worktree is clean at `d1467854`.
+
+The measurement runner now records all count/storage violations across inputs,
+saves its report and fails at the end. Incorrect output, invalid raw-memory traces,
+cleanup violations and tool failures still stop immediately. Acceptance limits are
+unchanged. Three focused controls cover recorded cases from both hosts, seven
+simultaneous budget violations and a changed frozen baseline; they pass in 0.14s.
+Both CI workflows run these controls. Workflow validation passes in 3.33s and the
+publication precheck in 8.20s, all guarded. The batch also fixes a macOS shell
+assignment that could mask an `xcrun` failure. Automatic review rejected moving
+the early managed-cleanup assertion; it remains unchanged. No approval is pending.
+The numerical auditor and image/worker inspectors use the reporting publication;
+the native ownership auditor and inspector use the compiler publication.
+
+The failed unit fixture used an algebraic list, which `parameter_type` deliberately
+excludes from direct borrowing, yet expected its alias to disappear. The pending
+repair tests an eligible numeric array and also checks that the excluded list
+keeps its owner, for direct/record aliases and escaping results. Production code
+is unchanged. The ownership-audit shell block now runs all three independent
+checks even if one fails, retaining a failing exit status. Publish this test/workflow
+repair and rerun Linux AMD64 only; keep passing platform checks and the ongoing
+numerical run tied to their original sources. The final delivery still requires
+all nine production jobs and docs at one exact head. No failure is waived.
 
 ## Resume files
 

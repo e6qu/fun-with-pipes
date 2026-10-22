@@ -1959,43 +1959,66 @@ mod tests {
 
     #[test]
     fn caller_borrowed_aliases_borrow_on_last_read_and_own_escapes() {
-        let mut p = hash_record_program(Expr::Local(0), list());
-        let record = p.funcs[1].locals[0].clone();
-        p.funcs[0].locals.extend([list(), record]);
-        p.funcs[1].locals = vec![list()];
-        p.funcs[1].ty = MT::Fun(Box::new(list()), Box::new(MT::con("std::U64")));
-        for through_record in [false, true] {
-            for escapes in [false, true] {
-                p.funcs[0].ty = MT::Fun(
-                    Box::new(list()),
-                    Box::new(if escapes { list() } else { MT::con("std::U64") }),
-                );
-                let value = if through_record {
-                    Expr::Field(Box::new(Expr::Local(2)), 0)
-                } else {
-                    Expr::Local(0)
-                };
-                let alias = Expr::Let(
-                    1,
-                    Box::new(value),
-                    Box::new(if escapes {
-                        Expr::Local(1)
+        for (ty, eligible) in [
+            (
+                MT::Con("std::Array".into(), vec![MT::con("std::F64")]),
+                true,
+            ),
+            (list(), false),
+        ] {
+            let record = MT::Record(vec![("0".into(), ty.clone()), ("1".into(), ty.clone())]);
+            let mut p = prog(vec![ty.clone()], vec![ty.clone(), record], Expr::Local(0));
+            p.funcs.push(Func {
+                name: "hash".into(),
+                arity: 1,
+                locals: vec![ty.clone()],
+                ty: MT::Fun(Box::new(ty.clone()), Box::new(MT::con("std::U64"))),
+                body: Body::Prim("hash".into()),
+            });
+            // Algebraic list aliases deliberately keep their existing owners;
+            // the direct-borrow representation proof currently excludes them.
+            assert_eq!(borrows::parameter_type(&p, &ty), eligible);
+            for through_record in [false, true] {
+                for escapes in [false, true] {
+                    p.funcs[0].ty = MT::Fun(
+                        Box::new(ty.clone()),
+                        Box::new(if escapes {
+                            ty.clone()
+                        } else {
+                            MT::con("std::U64")
+                        }),
+                    );
+                    let value = if through_record {
+                        Expr::Field(Box::new(Expr::Local(2)), 0)
                     } else {
-                        Expr::Call(1, vec![Expr::Local(1)])
-                    }),
-                );
-                p.funcs[0].body = Body::Expr(if through_record {
-                    Expr::Let(
-                        2,
-                        Box::new(Expr::Record(vec![Expr::Local(0), Expr::Local(0)])),
-                        Box::new(alias),
-                    )
-                } else {
-                    alias
-                });
-                let (body, locals) = insert_function(&p, &p.funcs[0], &[0]).unwrap();
-                ownership_liveness(&p, &p.funcs[0], &body, &locals, &[0]).unwrap();
-                assert_eq!(format!("{body:?}").contains("Dup("), escapes);
+                        Expr::Local(0)
+                    };
+                    let alias = Expr::Let(
+                        1,
+                        Box::new(value),
+                        Box::new(if escapes {
+                            Expr::Local(1)
+                        } else {
+                            Expr::Call(1, vec![Expr::Local(1)])
+                        }),
+                    );
+                    p.funcs[0].body = Body::Expr(if through_record {
+                        Expr::Let(
+                            2,
+                            Box::new(Expr::Record(vec![Expr::Local(0), Expr::Local(0)])),
+                            Box::new(alias),
+                        )
+                    } else {
+                        alias
+                    });
+                    let (body, locals) = insert_function(&p, &p.funcs[0], &[0]).unwrap();
+                    ownership_liveness(&p, &p.funcs[0], &body, &locals, &[0]).unwrap();
+                    assert_eq!(
+                        format!("{body:?}").contains("Dup("),
+                        escapes || !eligible,
+                        "type={ty:?}, through_record={through_record}, escapes={escapes}: {body:?}"
+                    );
+                }
             }
         }
     }

@@ -408,9 +408,11 @@ jobs:
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
         shell: bash
         run: |
-          cargo test --lib -- --nocapture
-          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output pointer-evidence/contracts.json
-          python3 scripts/test-native-test-runner.py
+          status=0
+          cargo test --lib -- --nocapture || status=1
+          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output pointer-evidence/contracts.json || status=1
+          python3 scripts/test-native-test-runner.py || status=1
+          exit "$status"
       - name: Missing C compilers fail every C interop entry
         if: ${{ !cancelled() }}
         shell: bash
