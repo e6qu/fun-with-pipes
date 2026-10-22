@@ -13,7 +13,11 @@ The merge's tree, parent and one-line message were verified. Redundant same-tree
 production run `39792888252` was cancelled; documentation was preserved.
 
 Branch `array-capture-ownership`, worktree `/private/tmp/fwp-capture-delivery`,
-contains the next combined delivery. Preparation `a23cbe6c95d63969f5df285718af64f56eb480fd`
+contains [PR #197](https://github.com/e6qu/fun-with-pipes/pull/197), published at
+`0367e81941a213b96de14dbe175143ff0a121f77`. Production run `39793823991` and
+documentation run `39793823875` are active; inspect the audit receipt for exact
+job states (running versus queued). Do not republish or change this head
+while gates run. Publication receipt: `/private/tmp/fwp-capture-delivery-publication.json`. Preparation `a23cbe6c95d63969f5df285718af64f56eb480fd`
 was applied onto #196's merge and verified as an identical tree before updating
 this handoff and history. Compiler/runtime/native-test files remain unchanged.
 The integration receipt is `/private/tmp/fwp-capture-delivery-integration.json`.
@@ -32,13 +36,14 @@ invalid raw traces and tool failures still stop immediately. An earlier proposal
 to move the early cleanup assertion was rejected by automatic review; that
 assertion remains unchanged, with no approval pending.
 
-**Next:** publish or resume the PR for `array-capture-ownership`, then inspect every
-final-head gate. Fix all failures together. Publication and merge are authorized;
+**Next:** run `/private/tmp/fwp-audit-197-final.py` and inspect every final-head
+gate. Fix all failures together. Publication and merge are authorized;
 require all nine production jobs and documentation for the exact commit, verified
 against the PR's completed successful checks. GitHub's workflow summary can lag;
 retain its actual state separately. Squash-merge with an explicit one-line subject
 of at most 80 characters and empty body, then verify tree, parent and message.
-Focused preparation alone never authorizes merge. Do not open another PR while
+Focused preparation alone never authorizes merge. Ready helpers
+`/private/tmp/fwp-merge-197.py` and `fwp-after-merge-197.py` have not run. Do not open another PR while
 this delivery is active; independent preparation may continue.
 
 ## Accepted focused evidence
@@ -80,6 +85,32 @@ before selecting another numerical optimization. Establish stable repeated timin
 controls and a per-input budget. Continue the ownership boundaries and finite
 application suite in the plan; zero retains here do not finish GC removal.
 
+## Independent preparation: scalar helper call costs
+
+Branch `measure-descent-call-costs`, worktree `/private/tmp/fwp-descent-call-costs`,
+starts at #197 head `0367e819`. It does not change the compiler. A new
+`scripts/measure-descent-call-costs.py` compares saved packed-descent C with an
+explicit inline hint and forced-inline edit to helper `w36`, plus two byte-identical
+controls and the existing C/Rust peers. The `descent-call-costs` workflow suite
+runs on native Linux AMD64/ARM64 without a Rust compiler build of fwp.
+
+`docs/measurements/descent-call-protocol.md` records the experiment before timing:
+all six prior inputs, 56 samples/two warmups, balanced ordering seed 20261022.
+The 129×199 decision case needs both identical-code controls within 2%, candidate
+median at most 0.95 of unchanged fwp, and instruction bytes at most 1.02, with
+identical outputs and managed/raw profiles for every case. Require two independent
+runs on matching CPU models for both architectures before selecting any compiler
+rule. A failed timing screen is diagnostic evidence, not a waived correctness test.
+
+A bounded local Clang counterfactual preserves output/count/storage and removes
+four static helper call sites while adding 144 instruction bytes. It is not a
+timing or GCC claim. The first diagnostic script misread the raw-profile JSON path;
+the corrected check passes in 2.43s. Evidence:
+`/private/tmp/fwp-descent-inline-diagnosis-checked/report.json`.
+Guarded `fwp-check-descent-call-probe.py` passes 72 saved-source edits, Python syntax,
+workflow and docs in 6.74s. Full diagnostic timing stays on GitHub. Preparation
+publication is next; do not open another PR while #197 is active.
+
 ## Resume files and validation
 
 Paths below are under `/private/tmp/`. Publication helpers already ran for the
@@ -96,7 +127,7 @@ integration/publication records. Query its branch/PR before publishing again.
 | Artifacts | `fwp-array-captures-evidence/80d8f27e1bf5/`, `fwp-capture-descent-evidence/d1467854766f/` |
 
 Guarded preparation checks pass: format/workflow/docs/baseline reconstruction
-7.71s; new report links/counts/provenance 0.13s; budget controls 0.14s. Native and
+8.24s on the delivery checkout; new report links/counts/provenance 0.25s; budget controls 0.14s. Native and
 numerical artifact inspection is complete; do not repeat downloads without a
 new reason. Saved-interpreter checks do not verify new C generation.
 

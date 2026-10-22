@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -2964,6 +2964,61 @@ jobs:
         with:
           name: wordfreq-repeat-${{ matrix.runner }}
           path: wordfreq-repeat/
+          if-no-files-found: error
+  descent_call_costs:
+    if: inputs.suite == 'descent-call-costs'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            c_arch: x86-64
+          - runner: ubuntu-24.04-arm
+            c_arch: armv8-a
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Download the inspected borrowed-capture source artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASELINE_HOST: ${{ matrix.runner }}
+        run: |
+          python3 - <<'PYBASELINE'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          report = json.loads(Path('docs/measurements/array-capture-descent-2026-10-22.json').read_text())
+          host, = [row for row in report['hosts'] if row['host'] == os.environ['BASELINE_HOST']]
+          path = Path('capture-baseline.zip')
+          with path.open('wb') as stream:
+              subprocess.run(['gh', 'api', f"repos/e6qu/fun-with-pipes/actions/artifacts/{host['artifact']}/zip"], stdout=stream, check=True)
+          assert hashlib.sha256(path.read_bytes()).hexdigest() == host['archiveSha256']
+          PYBASELINE
+      - name: Compare scalar helper call costs without changing the compiler
+        run: >-
+          python3 scripts/measure-descent-call-costs.py
+          --baseline-report docs/measurements/array-capture-descent-2026-10-22.json
+          --baseline-archive capture-baseline.zip --helper w36
+          --cc gcc --rustc rustc --c-arch "${{ matrix.c_arch }}"
+          --objdump objdump --nm nm --time /usr/bin/time
+          --case 3:0 --case 3:1 --case 3:199 --case 3:1999 --case 33:199 --case 129:199
+          --decision-case 129:199 --control-max-difference 0.02
+          --candidate-max-ratio 0.95 --text-max-growth 1.02
+          --warmups 2 --samples 56 --order-seed 20261022 --timeout 60
+          --host "${{ matrix.runner }}" --output descent-call-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: descent-call-costs-${{ matrix.runner }}
+          path: descent-call-evidence/
           if-no-files-found: error
   descent_peers:
     if: inputs.suite == 'descent-peers'
