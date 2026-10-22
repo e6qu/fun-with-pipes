@@ -70,7 +70,7 @@ fn callback_captures_survive_reuse_storage_and_ordinary_application() {
                         .env_remove("FWP_GC")
                         .env("FWP_GC_STRESS", stress)
                         .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", "1"),
+                        .env("FWP_REUSE_VERIFY", stress),
                 );
                 assert_eq!(output.stdout, reference.stdout, "{gc}/{stack}/{opt}");
                 assert!(output.stderr.is_empty(), "{gc}/{stack}/{opt}: {output:?}");
@@ -166,7 +166,7 @@ fn generic_entries_follow_function_values_not_direct_calls() {
                         .env_remove("FWP_GC")
                         .env("FWP_GC_STRESS", stress)
                         .env("FWP_GC_VERIFY", stress)
-                        .env("FWP_REUSE_VERIFY", "1"),
+                        .env("FWP_REUSE_VERIFY", stress),
                 );
                 assert_eq!(result.stdout, reference.stdout, "{name}/{gc}/{reuse}/{opt}");
                 assert!(result.stderr.is_empty(), "{result:?}");

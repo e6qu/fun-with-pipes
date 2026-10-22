@@ -15,6 +15,12 @@ call, this may let the C compiler share loads and simplify bounds checks using
 facts from the surrounding loop. It can also enlarge code and make instruction
 caches less effective. We need both measurements before adopting a rule.
 
+The mathematical formula is shared, but its evaluation differs: packed fwp
+computes each coordinate independently and can recompute an edge residual for
+both adjacent coordinates. C/Rust compute that residual once per edge and add
+its contributions to both coordinates. This work difference is included in the
+ratios alongside allocation, checked indexing and formatting.
+
 ## Inputs and exact edits
 
 The workflow uses the saved C and Rust sources from numerical run `39786472473`,

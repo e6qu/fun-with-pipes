@@ -3,157 +3,126 @@
 All seven areas of [PLAN.md](../PLAN.md) remain open. Continue grouped deliveries;
 JIT is excluded. Ownership, borrowing and removal of tracing remain the priority.
 
-## Merged baseline
+## Accepted baseline
 
-The user merged [PR #197](https://github.com/e6qu/fun-with-pipes/pull/197).
-Main is `b94710c9212cbbfc3e39409835e539b371069b36`; all nine production jobs
-in run `39793823991` and documentation `39793823875` passed for head
-`0367e81941a213b96de14dbe175143ff0a121f77`. The merge tree matches that head,
-its sole parent is #196, and its message is one line under 80 characters without
-trailers. Receipt: `/private/tmp/fwp-197-user-merge.json`. Do not merge it again.
-All completed logs have now been audited without unexpected errors or panics:
-`/private/tmp/fwp-197-final-acceptance.json`. Earlier HTTP 503 download failures
-were resolved; the auditor now checkpoints each downloaded job.
+The user merged [PR #197](https://github.com/e6qu/fun-with-pipes/pull/197) as
+`b94710c9212cbbfc3e39409835e539b371069b36`. All nine production jobs
+(`39793823991`) and documentation (`39793823875`) passed for exact head
+`0367e81941a213b96de14dbe175143ff0a121f77`. Complete logs were audited; the
+merge has the same tree, expected sole parent and one-line message under 80
+characters without trailers. Do not merge it again. Receipts:
+`/private/tmp/fwp-197-final-acceptance.json`, `/private/tmp/fwp-197-user-merge.json`.
 No duplicate main production run was present at the merge check.
 
-Borrowed numeric array captures now avoid temporary parameter-record owners and
-last-read alias retains. [The measurement](measurements/array-capture-descent.md)
-shows 25,671 → zero retains for 129 coordinates and 199 updates, with unchanged
-459 allocation requests and 7,200-byte managed peak. Cleanup, effects and order
-remain checked. This does not remove all GC or demonstrate general C/Rust parity.
-[The ownership report](measurements/array-capture-borrows.md) retains 558 native
-images and twelve WASI modules; history preserves preparation evidence.
+[Borrowed array captures](measurements/array-capture-descent.md) remove the
+largest numerical case's remaining 25,671 retains, with unchanged 459 requests
+and 7,200-byte managed peak. This does not complete GC removal or C/Rust parity.
+[History](roadmap-history.md#borrowed-array-captures-pr-197) preserves acceptance.
 
-## Current delivery: direct calls and reliable comparisons
+## Current combined delivery
 
-Delivery branch `direct-call-entries`, worktree
-`/private/tmp/fwp-direct-entry-delivery`, is based on #197's verified merge.
-Preparation remains in `/private/tmp/fwp-descent-call-costs`; its complete tree
-was reproduced on the merge before updating this delivery handoff. Published source
-`e681dc447039cd1ce5fbf4a27add9e96f9238275` emits generic call adapters only
-for function values and external dispatch. Direct calls keep concrete bodies;
-services and transport-created iterators explicitly keep their table entries.
-In the measured adapter-only source, stack function values still retain adapters
-and ownership metadata. Those measurements do not establish the newer capture
-representation described below.
+Branch `direct-call-entries`, worktree `/private/tmp/fwp-direct-entry-delivery`,
+is based on #197's verified merge. The numerical preparation head is
+`927c6b1852a69748ae613291d89774bb8ae31121`; this delivery includes the grouped
+repairs and completed reports below. Publication records the final head and PR
+in `/private/tmp/fwp-direct-callback-delivery-publication.json`. Preparation was integrated as `105bda29`;
+`/private/tmp/fwp-direct-entry-integration.json` verifies its complete tree.
+The old `/private/tmp/fwp-descent-call-costs` preparation is inactive.
 
-Native run `39806320364` exposed a test configuration error: the new direct/dynamic
-call test requested tracing stress in ARC-only mode. The local repair enables
-collector stress/verification only for tracing and retains reuse verification in
-both modes. Production compiler code is unchanged. All six completed native jobs have been audited: this is their only failure.
-All 714 saved native images from individually passing tests are inspected;
-`docs/measurements/direct-call-native-2026-10-22.json` preserves the failed jobs
-separately from their successful artifact checks.
-No failed native job counts as acceptance. The intentional
-gRPC startup-timeout panic is a caught, passing negative control, recorded
-separately from unexpected diagnostics. Auditor/receipt:
-`/private/tmp/fwp-audit-entry-preparation.py` and
-`/private/tmp/fwp-entry-preparation-acceptance.json`.
+This delivery combines the explicitly approved tasks:
 
-Both Linux numerical jobs in `39806328073` pass; all 132 executable images are
-inspected. Instruction bytes in the largest case fall 41,778 → 34,418 on AMD64
-and 40,172 → 32,508 on ARM64. All packed cases preserve zero retains and their
-allocation/storage budgets. Generic adapters fall from eighteen to two. Timing
-is inconclusive: identical AMD64 copies differ by up to 22%; ARM64's 33-coordinate
-case is 5.3% slower. Preserve these results; claim smaller code only. The report
-and raw evidence are prepared in this worktree, with artifact inspections under
-`/private/tmp/fwp-entry-descent-evidence/e681dc447039/`.
+- Emit generic call adapters only for function values and external dispatch;
+  preserve service and transport-created iterator entries.
+- Keep eligible `array.generate`, `fold` and `fold-right` captures in local
+  values. Preserve evaluation order, typed cleanup and lifetime barriers.
+- Test repeated/stored callbacks, ordinary application, empty inputs, errors,
+  cancellation and ordering, including deliberately broken ownership controls.
+- Observe managed/raw live storage after every repeated solve. Demonstrate that
+  final-only checks miss a deliberately delayed release.
+- Report complete C/Rust work and remaining costs clearly, preserving all slower
+  cases, timing-control failures and actual machine-code evidence.
 
-The width job passes: twelve executed 32-bit WASI modules and their instructions
-have been inspected, including allocation bounds and broken controls. Evidence:
-`/private/tmp/fwp-entry-native-evidence/e681dc447039/pointer-width.json`.
-This does not substitute for native platform checks.
+The [design](design.md) explains capture eligibility. Escapes, aliases, ordinary
+calls, resource scopes and recursive tail frames keep their representation.
+Stack-disabled compilation keeps it too. These are preparation changes until
+final production gates pass.
 
-An earlier inline experiment at `55de3ce53f0924c9cd688a0d680058b3f47d076d`
-passed both Linux jobs in `39798044726`; all 120 images were inspected. Neither
-candidate met the predeclared 5% improvement. No inlining rule was selected.
-The worktree retains the complete report and slower/noisy cases.
+## Completed evidence and failures
 
-## Expanded work requested for this PR
+The [adapter-only comparison](measurements/direct-call-entries.md), source
+`e681dc447039cd1ce5fbf4a27add9e96f9238275`, passed numerical run `39806328073`:
+132 inspected executables, smaller code, no demonstrated timing improvement.
+All six native jobs in `39806320364` failed one new test's invalid ARC stress
+setting. Their other tests produced 714 inspected native images; twelve executed
+WASI modules also passed inspection. Failed jobs are not accepted deliveries.
+The first repair, `b9ff767c`, still enabled prohibited ARC reuse verification;
+run `39812255716` failed that test. Both failure histories are retained.
 
-The user explicitly added three related tasks: extend capture simplification to
-`fold`/`fold-right`, test callback lifetime boundaries, and check live memory between
-complete solves. Work is in `/private/tmp/fwp-direct-entry-delivery`, branch
-`direct-call-entries`, starting at integrated commit
-`105bda29b849059098a5b95da3363a0c81d306d1`. No PR has been opened yet.
+Expanded source `927c6b18` passed both numerical jobs in `39816519529`.
+[All 132 images](measurements/callback-locals.md) are inspected. Largest-case
+instructions fall to 33,570 bytes on AMD64 and 31,612 on ARM64, with one generic
+entry left. Allocation/count/storage budgets remain unchanged. AMD64's largest
+new/old time is 1.3209 with a 17.5% identical-copy difference: no speed claim.
 
-Uncommitted compiler edits flatten eligible local callback captures into local
-values, preserve capture evaluation at the original binding, and reuse typed
-child-owner/unwind cleanup. Every value use must be a known array generator or
-fold callback. Escapes, aliases, ordinary calls and resource frames retain their
-representation. Fold entry marking now follows actual borrowed/owned dispatch.
-Existing zero-retain, error/cancellation/order and stress tests remain required;
-new representation assertions and a mixed/reused/stored callback fixture extend them.
-Focused CI saves 24 additional fold/boundary executables under `direct-captures/`,
-including forced extra-retain controls, for independent machine-code inspection.
-The saved interpreter validates the fixture; it does not verify new C generation.
-Expanded transformation, documentation, workflow and budget checks passed in
-6.78 seconds before adding artifact capture; repeat affected formatting/workflow
-checks for the final published source.
+Expanded native run `39816514377` completed with three failures across two
+out of seventeen integration targets. Both new array tests request prohibited
+ARC reuse verification. The right-fold unwind test instruments an owned adapter
+that the new compiler removes. Other integration targets, clippy, 179 unit tests,
+contract/coverage audits and missing-compiler controls passed. The caught gRPC
+startup-timeout panic is a passing negative control, recorded separately.
+Auditor/receipt: `/private/tmp/fwp-audit-expanded-captures.py`,
+`/private/tmp/fwp-expanded-captures-acceptance.json`. All failures were audited.
 
-The repeated-work observer records managed/raw live storage after each solve.
-Its delayed-release control must fail 225 even though the final-only control
-releases everything before exit. Six bounded local C controls passed in 3.06s:
-`/private/tmp/fwp-two-solve-observers-verified/report.json`. Checks caught and fixed
-loop scoping and the control's typed leaf-release call before publication.
-The fixture's function-value applications and concatenation oracle were corrected;
-its interpreter/format check passes in 0.37s. Full compiler checks belong on CI.
+The grouped repair disables tracing/reuse verification in ARC-only tests while
+retaining them in tracing tests. It instruments the actual borrowed right-fold
+body and preserves all cleanup/cancellation/injected-failure assertions. Production
+CI now saves array/callback/fold-unwind binaries for inspection on every native
+host, avoiding another six-host preparation run. The repaired tests have not yet
+run with the new compiler; do not count the earlier failed jobs as acceptance.
 
-Both initial batched jobs in `39812251121` now pass; inspect their artifacts with
-`/private/tmp/fwp-inspect-descent-batches.py --host HOST`. Their 48 images/host
-predate the new between-solve observer and do not validate it. The earlier repaired
-native run `39812255716` is running its test targets. Audit every failure together.
+[Initial repeated-work measurements](measurements/descent-batches.md), run
+`39812251121`, pass with 96 inspected images. The largest complete solve takes
+9.81–12.00× C time and 12.30–17.13× Rust time. Formula evaluation, buffers,
+checked indexing and formatting differ; these are not isolated compiler costs.
+[The observer run](measurements/descent-observers.md), `39816523757`, passes
+with 104 inspected images. All 512 per-solve observations are zero; delayed
+release fails 225 while the final-only control succeeds. C/Rust/fwp machine loops
+retain full repeated computation. This run rebuilds saved adapter-only sources,
+not the new capture-local compiler. Both runs retain failed timing controls.
+
+The earlier [inline experiment](measurements/descent-call-costs.md) passed both
+hosts in `39798044726`, with 120 inspected images. Neither candidate met the
+predeclared 5% speed screen. No inlining rule was selected.
 
 ## Next action
 
-**Next:** publish the expanded preparation after final formatting and run
-focused compiler/native checks plus numerical comparisons on GitHub. Inspect the
-earlier completed timing artifacts while those run; then publish one combined PR.
+**Next:** publish the checked combined delivery, then audit all nine exact-head
+production jobs plus documentation. Consult the publication receipt before
+creating a PR or dispatching work again. Inspect its saved capture/unwind binaries; fix every failure
+together. Squash merge is authorized after acceptance: explicit subject at most
+80 characters, empty body, no trailers. Verify tree/parent/message and continue
+PLAN.md in substantial groups. No permission question is pending.
 
-All failed native jobs have been audited, and the test repair and comparison
-tools are published. Publish this integrated branch as one PR and require its full production gates.
-Numerical checks can continue while those gates run. Publication receipt:
-`/private/tmp/fwp-direct-entry-publication.json`; integration receipt:
-`/private/tmp/fwp-direct-entry-integration.json`.
-The new batched protocol runs 512 complete solves per process, each with fresh
-input and full output/cleanup. It compares old/new packed fwp, identical copies
-of both, and C/Rust using 48 balanced samples after four warmups. It is a separate
-experiment to diagnose startup noise; it does not replace the single-solve report.
-Both copy controls must stay within 2%; timing claims need two independent runs
-on matching CPU models. The workflow choice is `descent-batches`.
-
-Preparation `b9ff767c5ab3642ac4bc26ae2ae6153f20560d3b` is published.
-Repeated-work run `39812251121` has both Linux hosts; native repair run
-`39812255716` selects Linux AMD64. Other hosts will verify the repaired test
-in final production CI, avoiding another full six-host preparation. Publication
-receipt: `/private/tmp/fwp-batch-preparation-publication.json`.
-
-Prepared files include `scripts/measure-descent-batches.py`, the workflow,
-`docs/measurements/descent-batch-protocol.md`, `direct-call-entries.md` and its
-raw JSON. They are committed with the ARC test-environment repair.
-Bounded checks passed: 72 saved-source edits, schedule checks, Python syntax,
-workflow lint, Rust formatting and budget fault controls (3.95 seconds).
-Six small C/Rust binaries also executed two complete 33×199 solves each and
-matched output and cleanup profiles (3.01 seconds); no local timing claim.
-Receipts are `/private/tmp/fwp-check-batch-probe.py` and
-`/private/tmp/fwp-batch-two-solve-check/report.json`.
-
-Integrate the completed batch onto #197's merge, keep one active PR, and require
-all nine production gates plus documentation on its final head. Squash merge is
-authorized after acceptance, with an explicit single-line subject of at most
-80 characters and an empty body. Verify the merge, update this handoff and
-continue the plan. Full builds, test suites and timing run on GitHub.
+Bounded checks use `python3 scripts/local-guard.py COMMAND...` in the delivery
+worktree. `/private/tmp/fwp-check-expanded-preparation.py` passed source edits,
+observer transforms, formatting, docs, workflow and budget controls (7.44s).
+The grouped repair also passed Rust formatting, production workflow lint,
+new-report links and native shard/failure controls (15.57s); see
+`/private/tmp/fwp-check-combined-repair.py`. Earlier six two-solve C controls
+passed (3.06s); the fixture's saved-interpreter check passed (0.37s). A saved ARC
+binary accepted the corrected environment and rejected each forbidden option
+(0.25s). These focused checks do not replace new-compiler CI.
 
 ## Local resources
 
-Use `python3 scripts/local-guard.py COMMAND...` serially for bounded checks.
-Preserve 64 GiB free disk, targets below 2 GiB, sampled workload RSS below 1 GiB
-and the 180-second deadline. The guard stopped an artifact download below the
-disk threshold. Removing two verified clean, inactive worktrees restored about
-67 GiB; modified worktrees, branches, commits and evidence were preserved.
-Cleanup receipts: `/private/tmp/fwp-clean-worktrees-20261022-second.json` and
-`/private/tmp/fwp-clean-worktrees-20261022-third.json`. Do not repeat old mutation
-helpers or remove other worktrees without checking their current contents.
+Keep checks serial/low priority; full builds, suites and timing run on GitHub.
+Preserve 64 GiB free disk, targets below 2 GiB and sampled aggregate RSS below
+1 GiB per workload; never raise the guard's 180-second deadline. Latest free space
+is about 66 GiB. The earlier guard refusal was resolved by removing two verified
+clean, inactive worktrees; modified worktrees and evidence were preserved.
+Receipts: `/private/tmp/fwp-clean-worktrees-20261022-second.json` and
+`/private/tmp/fwp-clean-worktrees-20261022-third.json`. Do not rerun publication,
+integration or cleanup helpers with existing receipts.
 
 ## Roadmap status
 

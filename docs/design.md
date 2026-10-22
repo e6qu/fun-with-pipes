@@ -657,7 +657,8 @@ explicit lifetime barriers keep captures alive through allocating calls. Escapes
 aliases, ordinary function application, resource frames and recursive tail frames
 keep their existing representation. Disabling stack representations disables this
 change too. Borrowing-eligible folds also avoid otherwise unused generic entries.
-[The handoff](development-state.md) distinguishes preparation from verified support.
+[The numerical comparison](measurements/callback-locals.md) records smaller code;
+[the handoff](development-state.md) distinguishes preparation from verified support.
 
 A partial application supplies some arguments now and returns a function waiting
 for the rest. Some such functions contain only fixed references to other

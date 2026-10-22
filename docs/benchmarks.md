@@ -48,6 +48,14 @@ generic adapters, shrinking largest-case instructions by 18–19% without changi
 allocation/count profiles. Timing remains inconclusive, including slower cases.
 The [repeated-work protocol](measurements/descent-batch-protocol.md) diagnoses
 startup noise with complete repeated solves and two identical-code controls.
+Its [initial result](measurements/descent-batches.md) exposes a larger full-solve
+gap: the largest case takes 9.81–12.00× C time and 12.30–17.13× Rust time.
+Different formula evaluation, buffers and formatting remain part of that ratio.
+
+The [callback-local comparison](measurements/callback-locals.md) removes another
+function record and generic entry while preserving the allocation/count budgets.
+The [between-solve checks](measurements/descent-observers.md) verify zero live
+storage at every checkpoint and demonstrate why final-only checks are insufficient.
 
 ## Choose the question first
 

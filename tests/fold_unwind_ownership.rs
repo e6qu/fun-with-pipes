@@ -74,6 +74,7 @@ fn right_fold_releases_accumulator_and_scratch_on_failure() {
     );
     checked(
         Command::new(fwp)
+            .env("FWP_STACK", "1")
             .arg("build")
             .arg(&src)
             .args(["--emit-c", "-o"])
@@ -145,17 +146,23 @@ int main(void) {
             "int main(int argc, char **argv)",
             "int original_main(int argc, char **argv)",
         );
-    for (name, element, accumulator) in [("step", 0, 1), ("fold-right-fn", 1, 2)] {
+    for (name, element, accumulator, borrowed) in
+        [("step", 0, 1, false), ("fold-right-fn", 1, 2, true)]
+    {
         let id = function_id(&emitted, name);
         let entry = format!("static V fwp_owned_entry{id}(V *a) {{");
-        assert_eq!(runtime.matches(&entry).count(), 1);
-        runtime = runtime.replace(&entry,&format!("{entry}\n    if (STR(a[{element}])->len == 4) observed_accumulator = a[{accumulator}];"));
-        let marker = format!("/* borrowed fold callback for f{id}:");
-        if let Some((_, helper)) = emitted.split_once(&marker) {
+        assert_eq!(runtime.matches(&entry).count(), usize::from(!borrowed));
+        if borrowed {
+            // This callback has only direct borrowed uses: no owned adapter
+            // remains. Observe the body that the captured fold actually calls.
+            let marker = format!("/* borrowed fold callback for f{id}:");
+            let (_, helper) = emitted.split_once(&marker).unwrap();
             let entry = helper.lines().nth(1).unwrap();
             assert!(entry.starts_with("static V fwp_borrowed_fold"));
             assert_eq!(runtime.matches(entry).count(), 1);
             runtime = runtime.replace(entry, &format!("{entry}\n    if (STR(args[{element}])->len == 4) observed_accumulator = args[{accumulator}];"));
+        } else {
+            runtime = runtime.replace(&entry,&format!("{entry}\n    if (STR(a[{element}])->len == 4) observed_accumulator = a[{accumulator}];"));
         }
     }
     let allocation = "    V *a = (V *)fwp_mem_alloc((*n + 1) * sizeof(V));";
@@ -192,13 +199,22 @@ int main(void) {
             "if (observed_accumulator)",
         );
     for opt in ["-O1", "-O2"] {
-        for (code, probe) in [
-            (&runtime, &probe),
-            (&allocating, &allocation_probe),
-            (&cancelled, &cancelled_probe),
-            (&preparing, &preparation_probe),
+        for (name, code, probe) in [
+            ("callback-error", &runtime, &probe),
+            ("scratch-error", &allocating, &allocation_probe),
+            ("cancellation", &cancelled, &cancelled_probe),
+            ("argument-error", &preparing, &preparation_probe),
         ] {
-            fwp::cgen::compile_c(&format!("{code}\n{probe}"), &exe, opt).unwrap();
+            let code = format!("{code}\n{probe}");
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            let artifacts = std::env::var_os("FWP_CALLBACK_CAPTURE_ARTIFACTS")
+                .map(|path| PathBuf::from(path).join("unwind"));
+            let stem = format!("{name}{opt}");
+            if let Some(path) = &artifacts {
+                std::fs::create_dir_all(path).unwrap();
+                std::fs::write(path.join(format!("{stem}.c")), &code).unwrap();
+                std::fs::copy(&exe, path.join(format!("{stem}.exe"))).unwrap();
+            }
             for poison in ["0", "1"] {
                 let out = checked(
                     Command::new(&exe)
@@ -210,10 +226,24 @@ int main(void) {
                     out.stdout,
                     b"fold accumulator and scratch release on failure\n"
                 );
+                assert!(out.stderr.is_empty(), "{name}/{opt}/{poison}: {out:?}");
+                if let Some(path) = &artifacts {
+                    let observation = format!("{stem}-{poison}");
+                    std::fs::write(path.join(format!("{observation}.stdout")), &out.stdout)
+                        .unwrap();
+                    std::fs::write(path.join(format!("{observation}.stderr")), &out.stderr)
+                        .unwrap();
+                    std::fs::write(
+                        path.join(format!("{observation}.status")),
+                        format!("{:?}\n", out.status.code()),
+                    )
+                    .unwrap();
+                }
             }
         }
         checked(
             Command::new(fwp)
+                .env("FWP_STACK", "1")
                 .arg("build")
                 .arg(&src)
                 .args([opt, "-o"])

@@ -12,6 +12,12 @@ needs an adapter. The preparation removes direct-only adapters and explicitly
 keeps service dispatch and transport-created iterator entries. Function IDs,
 names, source syntax and arithmetic rules are unchanged.
 
+The mathematical formula is shared, but its evaluation differs: packed fwp
+computes each coordinate independently and can recompute an edge residual for
+both adjacent coordinates. C/Rust compute that residual once per edge and add
+its contributions to both coordinates. This work difference is included in the
+ratios alongside allocation, checked indexing and formatting.
+
 ## Numerical evidence
 
 [Run 39806328073](https://github.com/e6qu/fun-with-pipes/actions/runs/39806328073)
@@ -79,9 +85,10 @@ startup noise and the apparent slowdowns separately, preserving this report.
 ## Native validation status
 
 All six hosts in the initial focused native run failed the same new test:
-it mistakenly enabled tracing stress in an ARC-only binary. The repaired test
-enables collector stress only for tracing and retains reuse verification in both
-modes. The initial failure remains recorded and is not a compiler pass. Existing
+it mistakenly enabled tracing stress in an ARC-only binary. The first repair
+still enabled reuse verification, which retains released storage and is also
+prohibited in ARC mode. The complete repair enables stress and reuse verification
+only for tracing. Both failures remain recorded and are not compiler passes. Existing
 callback, ownership, gRPC and queued-function checks passed independently; the [handoff](../development-state.md) records every host and the
 repair. Full delivery gates are still required for the final PR head.
 

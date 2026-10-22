@@ -123,7 +123,12 @@ outside the benchmark suite.
    unused generic adapters and reduces largest-case instruction bytes by 18–19%,
    preserving zero retains and allocation/storage limits. Timing is inconclusive;
    the [repeated-work protocol](docs/measurements/descent-batch-protocol.md)
-   investigates startup noise and apparent slowdowns separately.
+   investigates startup noise and apparent slowdowns separately. The
+   [initial repeated-work result](docs/measurements/descent-batches.md) exposes
+   a larger C/Rust gap: 9.81–12.00× C time in the largest case. Separate
+   arithmetic arrangement, bounds checks, allocation and output before choosing
+   the next optimization; these are complete implementations, not isolated
+   compiler overhead.
    The same batch extends capture-only representation to known generators and
    both fold directions, checks escaped/reused callback behavior, and observes
    live storage between complete solves. These additions need their own native

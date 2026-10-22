@@ -29,6 +29,8 @@ jobs:
       RUST_TEST_THREADS: 2
       FWP_UDP_ARTIFACTS: ownership-evidence/udp
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
+      FWP_CALLBACK_CAPTURE_ARTIFACTS: ownership-evidence/direct-captures
+      FWP_ARRAY_CAPTURE_ARTIFACTS: ownership-evidence/array-captures
     steps:
       - uses: actions/checkout@v7
         with:
@@ -241,3 +243,5 @@ jobs:
             windows-unit-tests.log
             windows-command-tests/
             ownership-evidence/tail/
+            ownership-evidence/direct-captures/
+            ownership-evidence/array-captures/

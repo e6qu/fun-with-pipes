@@ -9,6 +9,12 @@ requests instead of 206,891**, with unchanged retain counts. It takes about
 [All samples, profiles and inspected images](packed-descent-2026-10-22.json)
 are retained, including the slower zero-update AMD64 result.
 
+The mathematical formula is shared, but its evaluation differs: packed fwp
+computes each coordinate independently and can recompute an edge residual for
+both adjacent coordinates. C/Rust compute that residual once per edge and add
+its contributions to both coordinates. This work difference is included in the
+ratios alongside allocation, checked indexing and formatting.
+
 ## What each program computes
 
 All five programs start from alternating −1.2/1.0 coordinates, compute the
