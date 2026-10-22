@@ -1,37 +1,29 @@
 # Session handoff
 
-## Delivery now
+## Current combined delivery
 
-Main is `f74c9d2998d595b4a3c15ee4a225a49963c1a6ea`, the verified squash of
-[PR #194](https://github.com/e6qu/fun-with-pipes/pull/194).
-[PR #195](https://github.com/e6qu/fun-with-pipes/pull/195) remains the sole open
-PR at `a284eb0a338cae4efdd9534fd2d67c60a4f04e82`, branch
-`native-command-ownership`, worktree `/private/tmp/fwp-native-command-delivery`.
-Production run `39753716407` passes eight of nine jobs; Linux AMD64 is still
-running without failed steps. Documentation run `39753716342` passes.
-Do not change this head while its last gate runs.
+Main is `40dda0795fd150feb3dc0543052c3bf041e865c8`, the verified squash of
+[PR #195](https://github.com/e6qu/fun-with-pipes/pull/195). All nine production
+jobs and documentation passed; tree, parent and one-line message were verified.
+Redundant same-tree production CI was cancelled; documentation was preserved.
+[History](roadmap-history.md#native-commands-and-test-recovery-pr-195) records
+its native command, test-recovery and derivative-storage work.
 
-#195 adds explicit native ARC selection, recovery/cleanup after root test failures,
-concurrent executable-cache publication and Windows process cleanup, plus physical
-derivative-storage measurements. Tracing remains the default; child traps/exits
-remain process-fatal. Its six-host focused checks and all 84 actual image
-inspections pass, as do both derivative jobs and all 104 image inspections.
+Branch `array-moves-and-callback-inputs`, worktree
+`/private/tmp/fwp-array-callback-delivery`, combines copied synchronous C callback
+strings, array-owner moves, C/Rust application comparisons and the measurement
+repair. The preparation at `ea4ce3f1f496513e5edddec6ff4483418ba50875` was replayed
+onto #195's identical merge tree; files were verified before these delivery-doc
+updates. This is the sole delivery PR. Its final production and documentation
+gates are pending; focused checks alone do not authorize merge.
 
-**Next:** audit #195's last gate with `/private/tmp/fwp-audit-195-final.py`.
-Once all nine production jobs and documentation pass, run the prepared
-`fwp-merge-195.py` and `fwp-after-merge-195.py` helpers. They verify exact-head
-acceptance, squash with one subject of at most 80 characters and an empty body,
-verify tree/parent/message, and cancel only redundant same-tree production CI.
-Publication and merge are already authorized. Fix any failed jobs together.
+**Next:** publish the combined delivery, audit all final-head jobs and fix any
+failures together. Require all nine production jobs and documentation for the
+exact commit. Then squash-merge with an explicit one-line subject of at most 80
+characters and empty body; verify tree, parent and message. Publication and merge
+are already authorized. Continue the next ownership task afterwards.
 
-## Next combined PR: prepared and focused checks complete
-
-Branch `compare-derivative-descent`, worktree `/private/tmp/fwp-ad-comparison`,
-starts from #195's tested tree. It combines copied synchronous C callback strings,
-array-owner moves, C/Rust application comparisons and the measurement repair.
-No second PR is open. After #195 merges, replay these commits onto its identical
-merge tree, verify the files, update delivery docs and publish one combined PR.
-Require all nine production jobs and documentation at that final commit.
+## Focused checks and measurements
 
 | Work | Focused evidence |
 |---|---|
@@ -70,13 +62,13 @@ Paths below are under `/private/tmp/`; keep accepted sources and receipts intact
 
 | Purpose | Files |
 |---|---|
-| #195 final checks and merge | `fwp-native-command-delivery-publication.json`, `fwp-195-final-acceptance.json`, `fwp-audit-195-final.py`, `fwp-merge-195.py`, `fwp-after-merge-195.py` |
+| Accepted #195 delivery | `fwp-195-final-acceptance.json`, `fwp-195-merge-runs.json` |
 | Compiler-focused evidence | `fwp-stack-array-publication.json`, `fwp-stack-array-acceptance.json`, `fwp-stack-array-evidence/026db07bacbe/` |
 | Numerical measurement and controls | `fwp-balanced-descent-publication.json`, `fwp-balanced-descent-acceptance.json`, `fwp-balanced-descent-evidence/96967e9ba199/` |
 | Earlier numerical runs | `fwp-stack-descent-evidence/026db07bacbe/`, `fwp-stack-descent-repeat-evidence/026db07bacbe/` |
-| Final preparation and integration | `fwp-stack-array-final-preparation.json` (created after report commit), `fwp-integrate-array-callback-delivery.py` (requires #195 verified merge) |
+| Final preparation and integration | `fwp-stack-array-final-preparation.json`, `fwp-array-callback-delivery-integration.json` |
 
-The primary checkout is detached at #194 with this handoff as its only edit.
+The primary checkout is detached at #195 with the live handoff as its only edit.
 Run focused checks there, serially, through `python3 scripts/local-guard.py`.
 Full builds, full suites and benchmarks stay on GitHub. Preserve 64 GiB free disk,
 target data below 2 GiB, sampled workload RSS below 1 GiB and the 180-second limit.
@@ -84,7 +76,8 @@ Do not raise limits. Earlier disk cleanup removed only completed downloaded
 archives, preserving reports and hashes; receipt:
 `fwp-completed-archive-cleanup-20261022.json`.
 
-Recent guarded checks: `fwp-check-balanced-descent.py` passes in 6.28s (order
+Report validation `fwp-check-array-callback-reports.py` passes in 7.43s, including
+the repaired required roadmap-status table. Recent guarded checks: `fwp-check-balanced-descent.py` passes in 6.28s (order
 balance, seed reproducibility, workflow/docs); AMD64/ARM64 recorded-sample analysis
 passes in 2.32s/2.20s; actual callback disassembly/frame inspection passes in 0.37s.
 Native artifact inspection is complete; do not repeat downloads or measurements

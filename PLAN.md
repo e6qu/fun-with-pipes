@@ -123,8 +123,9 @@ outside the benchmark suite.
    to choose the next costs to remove: dynamic calls, input copies, container
    layout, numerical workspace and derivative recording. Establish workload-specific
    time/memory budgets before claiming improvement. Native command ownership,
-   test-failure cleanup and raw derivative workspace have focused evidence;
-   [the handoff](docs/development-state.md) records delivery acceptance.
+   test-failure cleanup and raw derivative workspace passed #195 delivery. The
+   current batch combines copied callback inputs and array-owner moves;
+   [the handoff](docs/development-state.md) records final gates.
    The [benchmark index](docs/benchmarks.md)
    records current comparisons and their limits. For example,
    [direct await fields](docs/measurements/task-await-fields.md) remove 34 allocation
