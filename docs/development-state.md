@@ -15,8 +15,8 @@ pointer-sized storage and complete I128/U128 raw access. Its
 [report](measurements/manual-pointers.md) records the lifetime obligations and
 accepted six-host/32-bit preparation evidence.
 
-Production run `39725180238`: benchmark and both Apple ARM64 jobs pass; six native
-jobs remain in progress without a reported failed step. Documentation run
+Production run `39725180238`: benchmark, both Apple ARM64 jobs and regular Intel
+macOS pass; five native jobs remain in progress without a reported failed step. Documentation run
 `39725180233` passes. Keep this tested head unchanged. Next: audit all remaining
 jobs with `/private/tmp/fwp-audit-193-final.py`; only after its receipt accepts all
 nine production jobs plus docs, run `/private/tmp/fwp-merge-193.py`. That helper
@@ -46,7 +46,7 @@ against previous fwp C output recompiled in the same session, but remain 2.61–
 2.02–2.11× Rust. The small AMD64 tracing case is 3.0% slower than its baseline.
 The report preserves that result and distinguishes observed timings from promises.
 
-The next repair fixes two real gaps discovered during review:
+The accepted repair fixes two real gaps discovered during review:
 
 - Both large-object age checks used the small-object bitmap. Large immutable
   allocations have a separate age mark; treating old storage as young could hide
@@ -58,11 +58,26 @@ The next repair fixes two real gaps discovered during review:
   golden tests also fail on missing compilers. Focused CI includes negative
   compiler controls; production Windows includes reuse and string-map checks.
 
-The 12ce measurements do not validate these later repairs. Publish the combined
-repair, audit every focused job and inspect its new age-control binaries. Then
+The 12ce measurements do not validate these later repairs. The combined repair is published at `15ee3615d2df858f508ec459e6305fa163037917`,
+run `39730741666`. All six jobs pass and complete logs are audited: 19 test
+functions per host across seven targets, plus 176 Linux AMD64 unit tests. All six
+reuse tests execute on Windows; both missing-compiler controls fail as required.
+Inspection covers 228 native images and 180 interpreter/native comparisons.
+Paired benchmark run `39731820120` is in progress at the repaired source; its
+results still require full-log and artifact inspection. Then
 integrate the accepted batch onto #193's verified merge, refresh the handoff and
 run the full production/documentation gates in one substantial PR. Keep one
 active delivery PR. All failures are tasks to fix, not reasons to stop the plan.
+
+The new WASI test extends the same five map inputs to the WebAssembly backend,
+including aliases, dynamic callbacks, caught errors and a physical-free negative
+control at O0/O2. This is test/documentation-only work: compiler and runtime files
+remain identical to accepted native source 15ee. Its source, run and gate receipt
+will be recorded separately at `/private/tmp/fwp-string-map-wasi-publication.json`
+and `/private/tmp/fwp-string-map-wasi-acceptance.json`. Require executed WASI
+modules and inspection before integrating the delivery. The local fixture check
+matches all five accepted reference outputs (`fwp-check-string-map-wasi-preparation.py`,
+3.00s); it does not establish WASI execution.
 
 ## Evidence and local checks
 
@@ -88,15 +103,24 @@ GitHub. Do not raise limits or use the separate fun-refactor guard.
   logs were audited, declaration order was repaired and 12ce passed. Archived
   receipts carry suffix `972d0fda9a25`; this failure is resolved.
 
-A private non-expanding replacement prototype saves additional copies, but it
-has no retained-capacity proof. Do not ship it unchanged: shrinking a large string
-must not keep an oversized allocation for a tiny result. It is not repository
-code or accepted roadmap evidence.
+A private non-expanding replacement prototype now requires the result to fit
+the same allocator size class; large allocations require equal byte size. The
+64-word diagnostic keeps its allocation savings (274 → 248 requests versus map
+plus case reuse) without extra charge. O0/O2 controls cover shared aliases, UTF-8,
+overlapping matches and large-to-small results; removing the size restriction
+fails. It is still private saved-C work, not repository code or native-platform
+acceptance. Scripts: `/private/tmp/fwp-probe-bounded-replacement.py` (2.47s) and
+`/private/tmp/fwp-check-bounded-replacement.py` (1.83s).
 
 The primary checkout is detached at #192 with this live handoff as its only edit.
-The current preparation includes the repairs above; the delivery workspace stays
+The preparation is clean at `15ee3615d2df858f508ec459e6305fa163037917`; the delivery workspace stays
 clean at its tested head. Old pointer preparation documents were preserved at
-`/private/tmp/fwp-pointer-preparation-local-docs/` before reusing that worktree.
+`/private/tmp/fwp-pointer-preparation-local-docs/` before reusing that worktree. After #193 merges,
+`/private/tmp/fwp-after-merge-193.py` preserves this handoff and cancels only
+redundant same-tree push CI. `/private/tmp/fwp-prepare-string-map-delivery.py`
+requires the verified merge, accepted repaired measurements and all inspection
+receipts before replaying the three map/reuse commits onto the merge. These
+helpers are prepared, not yet executed.
 Completed large evidence archives remain byte-verified under the task-record
 `c10934f5dadf` and task-await `f2b5d400feda` evidence directories in `/private/tmp`.
 
