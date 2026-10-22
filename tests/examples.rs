@@ -7,6 +7,10 @@
 //! `FWP_BLESS=1` regenerates the outputs (and the sessions' outputs in
 //! the READMEs).
 
+#[cfg(unix)]
+use std::os::unix::process::CommandExt;
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -205,10 +209,6 @@ fn shell(dir: &Path, path: &str, command: &str) -> Command {
 /// Run the sessions of a README in a copy of its directory: the outputs
 /// they print, by block and step.
 fn run_sessions(dir: &Path, blocks: &[Vec<Step>]) -> Vec<Vec<String>> {
-    #[cfg(unix)]
-    use std::os::unix::process::CommandExt;
-    #[cfg(windows)]
-    use std::os::windows::process::CommandExt;
     let work = std::env::temp_dir().join(format!(
         "fwp-session-{}-{}",
         std::process::id(),

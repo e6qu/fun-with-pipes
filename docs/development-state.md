@@ -23,6 +23,17 @@ exact commit. Then squash-merge with an explicit one-line subject of at most 80
 characters and empty body; verify tree, parent and message. Publication and merge
 are already authorized. Continue the next ownership task afterwards.
 
+## Tutorial repair
+
+The first delivery head `d98abe29139c5abb5093ac61a52d3e77ce19910c` failed the
+README/program consistency check: the callback snippet had no supplied program.
+The lesson now includes `visit.c`, `visit.fwp` and `visit.out`, and its console
+session executes both the interpreter and explicit native ARC mode. The actual
+standalone Rust consistency test and saved-interpreter example pass locally under
+the guard (5.59s), along with formatting and documentation checks. Native tutorial
+execution and all final gates must pass at the repaired head. Imports in the
+session runner are now at the top of the file. Failed evidence remains retained.
+
 ## Focused checks and measurements
 
 | Work | Focused evidence |
