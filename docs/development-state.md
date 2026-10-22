@@ -99,11 +99,30 @@ final production gates. Preparation `0ca3fba4f718fb02afbcc385ac41e763a8320361` i
 `39716002463`: both Linux hosts pass (including 173 compiler unit tests on AMD64).
 Both Windows hosts finish all seven targets; only artifact saving fails in
 arc_corpus and foreign_callback_ownership because filesystem copies omit .exe.
-The paths are corrected locally. Intel macOS is running; ARM macOS is queued. Receipt: `/private/tmp/fwp-pointer-publication.json`.
+The paths are repaired at `2eaccbc77c428ab37986d8130d70ff1c2e9ca1cf`.
+Windows AMD64 run `39717062123` and ARM64 run `39717065021` both finish all
+seven targets. The six non-corpus targets pass; corpus now reaches http and
+fails because this focused job omitted production OpenSSL setup. Both logs
+are fully audited. Add production TLS setup and aggregate corpus native-build
+errors so one compile failure cannot hide later programs. Those repairs are
+local and need publication plus Windows reruns.
+Repair publication/audit: `/private/tmp/fwp-pointer-repair-publication.json`,
+`/private/tmp/fwp-audit-pointer-repair.py`. Compiler/runtime/fixtures are
+identical to 0ca3fba4; only two explicit .exe paths and docs differ. Intel macOS passes; ARM macOS has started its native tests. Receipt: `/private/tmp/fwp-pointer-publication.json`.
 Audit with `/private/tmp/fwp-audit-pointer.py`. No additional PR is open; audit
-every native result and inspect retained binaries before delivery. Rerun the two
-Windows hosts for the artifact repair; preserve the ongoing macOS jobs and the
+every native result and inspect retained binaries before delivery. Audit the two
+Windows repair runs; preserve the ongoing macOS jobs and the
 passing Linux evidence because compiler/runtime/program code is unchanged.
+Independent Linux AMD64/ARM64 inspections each verify 21 actual native images,
+the 86-case corpus (82 executed, three compile errors, one deliberate ARC
+rejection), callback outputs, raw-buffer negative controls and library unload
+ledgers. Artifacts/receipts: `/private/tmp/fwp-pointer-evidence/0ca3fba4f718/`.
+Do not repeat those inspections. `/private/tmp/fwp-inspect-pointer.py --host HOST`
+requires a successful full-log audit and checks binary/C hashes and machine code.
+Local guard commands passed in 5.50s (AMD64) and 4.97s (ARM64);
+add remaining hosts only after their passing native runs. A concise report is
+prepared in `docs/measurements/manual-pointers.md`; replace its pending status
+with actual evidence before delivery.
 
 A separate 64-word/eight-word-vocabulary generated-C probe identifies the next
 list optimization candidate. Moving unique list elements into `map` removes

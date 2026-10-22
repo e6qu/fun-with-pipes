@@ -29,6 +29,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
     let mut executed = 0;
     let mut rejected = 0;
     let mut compile_errors = 0;
+    let mut native_build_errors = 0;
     let mut failures = Vec::new();
     let mut report =
         String::from("ARC golden corpus: rejected programs are not execution support\n");
@@ -38,6 +39,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
     }
     for path in paths {
         let name = path.file_stem().unwrap().to_str().unwrap();
+        eprintln!("ARC corpus: {name}");
         let cfile = scratch.join(format!("{name}.c"));
         let source_path = if path.parent() == Some(root.as_path()) {
             std::path::Path::new(path.file_name().unwrap())
@@ -100,7 +102,17 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
                 .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if (fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < arc_budget) { fprintf(stderr, \"ARC unreclaimed bytes: %ld\\n\", (long)(arc_budget-fwp_gc.budget)); exit(193); }\n");
             let measured = format!("{runtime}{main}");
             let binary = scratch.join(format!("{name}.exe"));
-            fwp::cgen::compile_c(&measured, &binary, "-O1").unwrap();
+            if let Err(error) = fwp::cgen::compile_c(&measured, &binary, "-O1") {
+                failures.push(format!("native ARC build of {name}: {error}"));
+                report.push_str(&format!("native-build-error\t{name}\t{error:?}\n"));
+                native_build_errors += 1;
+                if let Some(path) = &artifacts {
+                    std::fs::write(path.join(format!("corpus-failed-{name}.c")), &measured)
+                        .unwrap();
+                    std::fs::write(path.join("corpus.txt"), &report).unwrap();
+                }
+                continue;
+            }
             let input = match std::fs::read(path.with_extension("in")) {
                 Ok(input) => input,
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound => Vec::new(),
@@ -183,9 +195,12 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
         }
     }
     assert!(executed > 0);
-    assert_eq!(executed + rejected + compile_errors, total);
+    assert_eq!(
+        executed + rejected + compile_errors + native_build_errors,
+        total
+    );
     report.push_str(&format!(
-        "total={total} executed={executed} rejected={rejected} compile-errors={compile_errors}\n"
+        "total={total} executed={executed} rejected={rejected} compile-errors={compile_errors} native-build-errors={native_build_errors}\n"
     ));
     if let Some(path) = &artifacts {
         std::fs::write(path.join("corpus.txt"), &report).unwrap();
