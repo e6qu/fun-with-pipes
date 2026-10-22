@@ -13,8 +13,8 @@ Independent inspection covers **150 native images and 12 WASI modules** at sourc
 [run 39721437783](https://github.com/e6qu/fun-with-pipes/actions/runs/39721437783).
 The [machine-readable report](manual-pointers-2026-10-22.json) records C/binary
 hashes, architecture and code inspection, outputs, source IDs and complete-log
-hashes. Exact-head production and documentation gates still precede delivery;
-see the [handoff](../development-state.md).
+hashes. All final-head production and documentation gates passed for
+[PR #193](../roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193).
 
 These are correctness and cleanup checks, not benchmarks or C/Rust speed claims.
 

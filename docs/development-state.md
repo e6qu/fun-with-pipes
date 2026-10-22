@@ -11,8 +11,8 @@ verified; redundant same-tree push CI was cancelled. Evidence:
 [PR #195](https://github.com/e6qu/fun-with-pipes/pull/195) is the sole active PR,
 at `a284eb0a338cae4efdd9534fd2d67c60a4f04e82`, branch `native-command-ownership`,
 worktree `/private/tmp/fwp-native-command-delivery`. Final production run
-`39753716407` has passed benchmarks and regular/GC-stress ARM macOS; both Linux,
-both Intel macOS and both Windows jobs are still running without failed steps.
+`39753716407` has passed benchmarks, Linux ARM64 and all four Mac jobs; Linux
+AMD64 and both Windows jobs are still running without failed steps.
 Documentation run `39753716342` passes. Preserve this head while gates finish.
 
 This delivery adds explicit native ARC selection across commands, recovers native
@@ -58,11 +58,13 @@ delivery docs. Preparation contains:
   and struct-valued callback arguments remain unsupported. Cases retain copies
   after C mutates buffers, nest callbacks, suspend, cancel and fail partway
   through input conversion. A deliberately omitted input owner must fail cleanup.
-  Four C interop tests now fail explicitly on missing compilers. Four native
-  hosts and the 32-bit interpreter/WASI job pass; Intel Mac and AMD64 Linux remain
-  pending. Audit full logs and inspect every native host's artifacts before acceptance.
+  Four C interop tests now fail explicitly on missing compilers. All six native hosts and the 32-bit interpreter/WASI job pass; every complete
+  log has been audited. All 186 native images and 12 executed WASI modules are independently inspected.
+  The prepared `docs/measurements/callback-inputs.md` and its data retain results,
+  limits and exact log/source/binary hashes. Callback focused acceptance is complete.
   The audit's command-echo false positive was fixed without excluding actual failures.
-- **Packed-array comparison**, being prepared locally: explicit derivatives read
+- **Packed-array comparison**, published at `1827c3bdc427edc84e14e22efce01465799f92c6`,
+  run `39763694417`: explicit derivatives read
   checked indices from immutable `Array[F64]` and generate a new packed output
   array each update. This uses existing language features, not a compiler change.
   Compare all five forms together at the same six sizes; 40 samples rotate/reverse
@@ -70,10 +72,22 @@ delivery docs. Preparation contains:
   allocation requests and no higher managed peak than the explicit-list form.
   Require the original fwp forms to reproduce accepted memory profiles exactly.
   Report retains, all timings and remaining gaps; no speed threshold is claimed.
-  Local oracle checks pass; native measurements remain required on both Linux hosts.
+  Local oracle checks pass. ARM64 native measurements and 48 image inspections
+  pass: the 129-coordinate/199-update packed form makes 459 requests versus
+  206,891 for lists, with 7,200 versus 21,824 peak managed bytes. Retains stay
+  at 51,342. Packed takes 43.45% of list time, but still 3.34× C and 2.76× Rust.
+  The original fwp profiles reproduce exactly.
+  Both Linux jobs and all 96 image inspections now pass. AMD64 largest-case
+  packed/list time is 0.4719, packed/C 3.4016 and packed/Rust 2.4888; its
+  zero-update packed case is 9.57% slower. Counts match ARM64. Reports are
+  `docs/measurements/packed-descent.md` and its exact data.
+  Generated C shows typed capture duplication and another duplicate/drop around
+  the last array read per coordinate. Investigate a proved caller-owned callback
+  convention; do not delete counts without protecting the capture throughout calls.
 
 The accepted comparison report, plan/application updates, packed fixture and
-measurement workflow are local edits awaiting the next preparation commit.
+measurement workflow are committed in the preparation. Both Linux measurements and all 96 image inspections are accepted. Receipt/auditor: `/private/tmp/fwp-packed-descent-publication.json`,
+`/private/tmp/fwp-audit-packed-descent.py`.
 Keep the frozen four-way measurements intact when recording the new experiment.
 
 ## Checks and resource limits
