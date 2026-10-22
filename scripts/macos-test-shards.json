@@ -252,6 +252,7 @@
     "compiler_options",
     "static_memory",
     "builds",
-    "bench"
+    "bench",
+    "string_map_ownership"
   ]
 }
