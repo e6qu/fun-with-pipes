@@ -11,8 +11,9 @@ records the manual-pointer and foreign-storage changes.
 
 [PR #194](https://github.com/e6qu/fun-with-pipes/pull/194) is open at
 `489d8414e68678e30829df525982ce8790a4aadc`. Production run `39737931809` and
-documentation run `39737931776` are its exact-head gates. Documentation and the benchmark job pass; eight platform jobs are
-running with no failed step in the last audit. Receipt: `/private/tmp/fwp-194-final-acceptance.json`.
+documentation run `39737931776` are its exact-head gates. Documentation, benchmarks and all four Mac jobs pass;
+both Linux and both Windows jobs remain running, with no failed step in the last audit.
+Receipt: `/private/tmp/fwp-194-final-acceptance.json`.
 The delivery is branch `move-strings-and-repair-reuse`, worktree
 `/private/tmp/fwp-string-map-delivery`. It groups:
 
@@ -73,36 +74,74 @@ The primary checkout is detached at #193 with this live handoff as its only edit
 ## Independent preparation: command ownership and derivative storage
 
 Branch `measure-derivative-storage`, worktree `/private/tmp/fwp-ad-memory`, is
-based on #194 and will be a separate substantial delivery after #194 merges.
-The measurement source `be8d87f0e56cb6bb496716d102b0b89bff6d9000` is in Linux
-run `39739049666`. It counts raw numeric tape storage independently of managed
-charge, records each backward pass and verifies real shutdown release. Separate
-uninstrumented runs observe process peak RSS. Zero-update and 1,999-update cases
-extend the original selected dimensions; extra untimed profiles disable workspace
-reuse. These are pending measurements, not a runtime speedup.
+based on #194. Keep it as preparation until #194 merges; then deliver this related
+batch as one PR. Published source is `47359a129a246bb4e508e92dd2cd09ff9bc75ba5`;
+the working tree adds test recovery, CI repairs and accepted measurement reports.
 
-Review also found a missing-compiler interpreter fallback and unreleased native
-test errors/formatting buffers. The combined preparation removes the fallback,
-propagates explicit ARC/tracing settings through run/exec/test/serve/pipe, proves
-every native test entry, and releases caught errors. Pipeline `--native` now
-reaches child stages even with `FWP_RUN=interp`. Native command checks no longer
-silently skip missing compilers. Tracing remains the default pending migration.
-The six-host `native-commands` suite and ARC standard-library test are prepared;
-they still need runner validation. Primitive traps/process exits still terminate
-native test execution; per-test recovery needs investigation in this batch.
+The derivative experiment at `be8d87f0e56cb6bb496716d102b0b89bff6d9000` passes
+both Linux jobs in run `39739049666`. All 104 executed images, their disassembly,
+hashes and deliberately broken cleanup controls were inspected. Its report
+separates managed charge, raw tape buffers and process RSS. The three-coordinate
+case keeps 1,792 raw bytes between updates at both 199 and 1,999 updates, and frees
+them at shutdown. Timings are mixed, including a 5.3% slower ARM loop. This adds
+measurement evidence, not a runtime optimization or C/Rust parity claim.
+See [results](measurements/ad-application.md); acceptance and inspection are in
+`/private/tmp/fwp-ad-memory-acceptance.json` and
+`/private/tmp/fwp-ad-memory-evidence/be8d87f0e56c/inspection.json`.
 
-Local checks (all guarded):
+Command changes remove the missing-compiler interpreter fallback, pass explicit
+ARC/tracing settings through run/exec/test/serve/pipe, prove every native test
+entry and free caught errors/formatting buffers. Explicit pipeline `--native`
+overrides `FWP_RUN=interp`. Tracing remains the default pending migration.
 
-- `/private/tmp/fwp-check-ad-raw-observer.py`, 1.43s: saved C, workspace on/off;
-  missing-parent and missing-registry frees both fail the physical observer.
-- `/private/tmp/fwp-check-native-command-preparation.py`, 6.96s: formatting,
-  workflow syntax, docs and all 68 new error-test fixtures in the saved interpreter.
-  This is not validation of the new native compiler code.
+Run `39741271730` tests this on six hosts. Both Linux and both Mac jobs finish
+with the same two failures: an unnecessary Rust borrow and a malformed ownership
+fixture (`get` lacked its unit argument). Both are repaired locally. Both Windows
+jobs timed out after their test targets had already finished: surviving server
+children kept the workflow step open. AMD64 also exposed concurrent cache
+publication replacing an executing image (`Access is denied`). The full logs of
+all six jobs are audited; the other targets, including ARC standard-library
+tests, pass. Receipt: `/private/tmp/fwp-native-commands-acceptance.json`.
 
-Next independent action: publish the combined command repairs and run all six
-native jobs; audit the derivative run too. Fix all failures together. Preserve
-#194's final head and keep one active delivery PR. Preparation receipts are
-`/private/tmp/fwp-ad-memory-{preparation,publication}.json`.
+Review also reproduced a real interpreter/native mismatch: native root traps and
+exits stopped the entire test suite. The working tree adds per-test recovery,
+unwinds owners, cancels/joins pending children and releases state scratch storage.
+Interpreter test output is now visible, matching native execution. Child traps
+and exits stay process-fatal in both engines. New coverage includes long owned
+messages, negative exit codes, state scopes, pending children, injected root
+cancellation and missing-free controls. Generated compiler behavior still needs
+six-host validation; local runtime probes alone do not establish it.
+
+Server tests now own their process lifetime and stop the Windows launcher and
+native child together, including during assertion unwinding; they check that the
+listening socket closes. Imports in the changed Rust command modules are at file
+scope. The existing test monitor accepts explicit target lists and Windows
+process-tree termination. The focused suite and Windows command gate use a
+600-second completed-test deadline, preserve per-target logs and still run other
+targets after a failure. Full Linux/Mac selection and limits remain intact.
+Cache publication now holds a short OS file lock and preserves the first image;
+another compiler discards its private duplicate. Windows cache hits request
+attribute-write access for eviction timestamps without writable executable data.
+New tests hold the publication lock while two compilers prepare their images and
+require timestamp refresh on a cache hit. These need native runner validation.
+
+Focused checks use `python3 scripts/local-guard.py python3 SCRIPT`:
+
+- `/private/tmp/fwp-check-test-recovery-fixtures.py`, 0.98s: eight new root
+  examples and two child failures in the saved interpreter; formatting passes.
+- `/private/tmp/fwp-check-native-test-runtime.py`, 1.34s: direct current runtime
+  at O0/O2, ARC/tracing, trap/exit/cancellation and owner/state cleanup pass.
+- `/private/tmp/fwp-record-ad-memory.py`, 0.14s: accepted measurements recorded;
+  identical per-update checkpoints compressed losslessly to count/value pairs.
+- `scripts/test-native-test-runner.py` from the prepared worktree, 7.70s:
+  all 13 checks pass, including real stuck-child termination, noisy hangs,
+  continued targets and rejection of invalid focused selections. Windows
+  executes these same controls in the next six-host run.
+
+Next independent action: publish all audited repairs together and rerun the
+six-host suite, then inspect every result and its actual binaries. Preserve
+#194's final head. Do not repeat accepted
+derivative downloads or regenerate its timings with a different source.
 
 ## Roadmap status
 

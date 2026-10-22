@@ -2,12 +2,14 @@
 //! root file and its imports) and runs the front end.
 
 use std::collections::{HashMap, HashSet};
+use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use crate::ast::{Decl, Module, NodeId};
 use crate::diag::{render_all, Diagnostic, SourceMap, Span};
 use crate::env::Env;
 use crate::infer::{check_program, Typed};
+use crate::interp::{Ctl, Interp};
 use crate::parser::parse_module_recover;
 
 /// Embedded standard library sources, all forming the `std` module.
@@ -392,7 +394,6 @@ pub const STDIN_NAME: &str = "<stdin>";
 
 /// Read a program from standard input.
 pub fn read_stdin() -> std::io::Result<String> {
-    use std::io::Read;
     let mut buf = Vec::new();
     std::io::stdin().lock().read_to_end(&mut buf)?;
     Ok(String::from_utf8_lossy(&buf).into_owned())
@@ -504,11 +505,9 @@ pub fn with_big_stack<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static)
 
 /// Run the tests of a program; returns (passed, failed).
 pub fn run_tests(prog: &crate::ir::Program, out: &mut dyn std::io::Write) -> (usize, usize) {
-    use crate::interp::{Ctl, Interp};
     let (mut pass, mut fail) = (0, 0);
     for (name, id) in &prog.tests {
-        let mut sink = Vec::new();
-        let r = Interp::new(prog, Box::new(&mut sink)).and_then(|mut it| it.call_root(*id));
+        let r = Interp::new(prog, Box::new(&mut *out)).and_then(|mut it| it.call_root(*id));
         let status = match r {
             Ok(v) if v.as_bool() => {
                 pass += 1;

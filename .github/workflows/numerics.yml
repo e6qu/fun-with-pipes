@@ -88,6 +88,8 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
+      - name: Test monitoring and process-tree timeout controls
+        run: python scripts/test-native-test-runner.py
       - name: Compiler checks for native command ownership
         id: file_compiler
         if: runner.os != 'Windows'
@@ -114,13 +116,13 @@ jobs:
         if: ${{ !cancelled() && runner.os != 'Windows' }}
         shell: bash
         run: |
-          cargo test --no-fail-fast --test aot --test std_tests --test arc_execution --test cli_ownership -- --nocapture 2>&1 | tee native-commands-evidence/tests.log
+          python3 scripts/run-native-tests.py --targets aot std_tests arc_execution cli_ownership --idle-timeout 600 --logs native-commands-evidence/targets 2>&1 | tee native-commands-evidence/tests.log
       - name: Windows native execution modes, test cleanup and ownership
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           whoami /priv | Out-File native-commands-evidence/privileges.txt
-          cargo test --no-fail-fast --test aot --test std_tests --test arc_execution --test cli_ownership -- --nocapture 2>&1 | Tee-Object native-commands-evidence/tests.log
+          python scripts/run-native-tests.py --targets aot std_tests arc_execution cli_ownership --idle-timeout 600 --logs native-commands-evidence/targets 2>&1 | Tee-Object native-commands-evidence/tests.log
           exit $LASTEXITCODE
       - name: Ownership contract and native coverage audits
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
