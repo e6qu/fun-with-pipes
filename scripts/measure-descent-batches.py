@@ -35,7 +35,7 @@ def edit_source(code, language, repetitions):
         assert re.findall(r'^static V caf[0-9]+\(void\)', code, re.M) == ['static V caf0(void)']
         assert 'static void fwp_init_consts(void) {\n}' in code
         old = '    V r = caf0();'
-        new = f'    V r = FWP_UNIT; for (size_t batch = 0; batch < {repetitions}; ++batch) r = f0();'
+        new = f'    V r = FWP_UNIT; for (size_t batch = 0; batch < {repetitions}; ++batch) {{ r = f0(); }}'
     elif language == 'c':
         old = 'int main(void) {'
         new = 'static int workload(void) {'
@@ -50,6 +50,29 @@ def edit_source(code, language, repetitions):
         changed += f'\nint main(void) {{ for (size_t batch = 0; batch < {repetitions}; ++batch) {{ int status = workload(); if (status) return status; }} return 0; }}\n'
     elif language == 'rust':
         changed += f'\nfn main() -> io::Result<()> {{ for _ in 0..{repetitions} {{ workload()?; }} Ok(()) }}\n'
+    return changed
+
+
+def observe_solves(code, mode):
+    """Observe managed/raw live storage before each next solve can begin."""
+    assert mode in {'checked', 'retained', 'retained-without-observer'}
+    call = 'r = f0();'
+    assert code.count(call) == 1
+    assert 'iteration_start_charge=iteration_charge();iteration_active=1;' in code
+    observation = r'''r = f0();
+        double solve_managed = iteration_charge() - iteration_start_charge;
+        size_t solve_raw = ad_raw_total();
+        fprintf(stderr, "{\"solve\":%zu,\"managedLiveBytes\":%.0f,\"rawLiveBytes\":%zu}\n", batch + 1, solve_managed, solve_raw);
+        if (solve_managed != 0 || solve_raw != 0) _Exit(225);'''
+    if mode == 'retained-without-observer':
+        observation = call
+    changed = code.replace(call, observation)
+    if mode != 'checked':
+        start = '    V r = FWP_UNIT;'
+        finish = '    /* Ownership observation point: before runtime teardown. */'
+        assert changed.count(start) == changed.count(finish) == 1
+        changed = changed.replace(start, '    V retained_until_end = fwp_rc_fresh(fwp_str_new("held", 4));\n' + start)
+        changed = changed.replace(finish, '    FWP_KEEP_ALIVE(retained_until_end); fwp_rc_free_obj(retained_until_end);\n' + finish)
     return changed
 
 
@@ -81,7 +104,7 @@ def main():
     args = parser.parse_args()
     assert platform.system() == 'Linux' and args.samples > 0 and args.warmups > 0 and args.timeout > 0
     assert 0 < args.control_max_difference < 1 and args.repetitions > 0
-    assert len(args.case) == len(set(args.case))
+    assert len(args.case) == len(set(args.case)) and '33:199' in args.case
     baseline_bytes = args.baseline_report.read_bytes()
     baseline = json.loads(baseline_bytes)
     host, = [row for row in baseline['hosts'] if row['host'] == args.host]
@@ -131,7 +154,8 @@ def main():
                 for profiled, original in [(False, code), (True, profile_code)]:
                     label = mode + ('-profile' if profiled else '')
                     source = directory / (label + '.c')
-                    source.write_text(edit_source(original, 'fwp', args.repetitions))
+                    edited = edit_source(original, 'fwp', args.repetitions)
+                    source.write_text(observe_solves(edited, 'checked') if profiled else edited)
                     binary = directory / label
                     build([args.cc, *flags, '-w', source, '-o', binary, '-lm', '-lpthread', '-ldl'])
                     actual = run([binary])
@@ -139,7 +163,11 @@ def main():
                     (directory / (label + '.stderr')).write_bytes(actual.stderr)
                     assert actual.stdout == expected
                     if profiled:
-                        managed, raw = [json.loads(line) for line in actual.stderr.splitlines()]
+                        records = [json.loads(line) for line in actual.stderr.splitlines()]
+                        observations = [row for row in records if 'solve' in row]
+                        managed, raw = [row for row in records if 'solve' not in row]
+                        assert observations == [dict(solve=i + 1, managedLiveBytes=0, rawLiveBytes=0)
+                                                for i in range(args.repetitions)]
                         assert managed['retains'] == managed['finalChargedBytes'] == managed['collections'] == 0
                         single = previous['fwpProfiles'][saved]['managed']
                         assert managed['peakChargedBytes'] <= single['peakChargedBytes']
@@ -148,12 +176,36 @@ def main():
                         raw = raw['rawDerivativeStorage']
                         PEERS.AD.RAW.check_profile(raw, 0, True)
                         assert digest(json.dumps(raw, sort_keys=True).encode()) == previous['fwpProfiles'][saved]['expandedRawSha256']
-                        profiles[mode] = dict(managed=managed, rawDerivativeStorage=raw)
+                        profiles[mode] = dict(managed=managed, rawDerivativeStorage=raw, completedSolves=observations)
                     else:
                         assert not actual.stderr
                         binaries[label] = binary
                         outputs[label] = expected
             assert profiles['baseline'] == profiles['candidate']
+            controls = {}
+            if (points, updates) == (33, 199):
+                for mode, saved in [('baseline', 'fwp-packed-baseline'), ('candidate', 'fwp-packed')]:
+                    original = archive.read(name + '/' + saved + '-profile.c').decode()
+                    for control in ['retained', 'retained-without-observer']:
+                        label = mode + '-' + control
+                        source = directory / (label + '.c')
+                        source.write_text(observe_solves(edit_source(original, 'fwp', args.repetitions), control))
+                        binary = directory / label
+                        build([args.cc, *flags, '-w', source, '-o', binary, '-lm', '-lpthread', '-ldl'])
+                        actual = subprocess.run([str(binary)], env=environment, capture_output=True, timeout=args.timeout)
+                        (directory / (label + '.stdout')).write_bytes(actual.stdout)
+                        (directory / (label + '.stderr')).write_bytes(actual.stderr)
+                        (directory / (label + '.status')).write_text(str(actual.returncode) + '\n')
+                        records = [json.loads(line) for line in actual.stderr.splitlines()]
+                        if control == 'retained':
+                            assert actual.returncode == 225 and len(records) == 1
+                            assert records[0]['solve'] == 1 and records[0]['managedLiveBytes'] > 0 and records[0]['rawLiveBytes'] == 0
+                        else:
+                            assert actual.returncode == 0 and actual.stdout == outputs[mode]
+                            managed, raw = records
+                            assert managed['finalChargedBytes'] == raw['rawDerivativeStorage']['finalBytes'] == 0
+                        controls[label] = dict(status=actual.returncode, observations=records)
+
             for label, extension in [('c-explicit', '.c'), ('rust-explicit', '.rs')]:
                 source = directory / (label + extension)
                 original = archive.read(name + '/' + label + extension)
@@ -199,7 +251,7 @@ def main():
                 source = binary.with_suffix('.rs' if binary.name == 'rust-explicit' else '.c')
                 metadata[binary.name] = dict(sha256=digest(raw), bytes=len(raw), sourceSha256=digest(source.read_bytes()),
                     disassemblySha256=digest(assembly), instructionBytes=sum(int(size, 16) for size in sizes))
-            assert len(metadata) == 8
+            assert len(metadata) == (12 if controls else 8)
             orders = batch_orders(labels, args.samples, args.order_seed)
             for _ in range(args.warmups):
                 for label in labels:
@@ -230,13 +282,15 @@ def main():
                     entries.append(dict(location=location, bytes=int(size), qualifier=qualifier))
                 assert entries
                 frames[path.name] = dict(sha256=digest(path.read_bytes()), entries=entries)
-            assert len(frames) == 5
+            assert len(frames) == (9 if controls else 5)
+            lifetime_controls = controls
             controls = {label: medians[label] / medians[label + '-identical'] for label in ['baseline', 'candidate']}
             ratios = {peer: medians['candidate'] / medians[peer] for peer in ['baseline', 'c-explicit', 'rust-explicit']}
             stable_controls = all(abs(value - 1) <= args.control_max_difference for value in controls.values())
             results[name] = dict(dimensions=points, updates=updates, profiles=profiles, binaries=metadata,
                 outputSha256={label: digest(raw) for label, raw in outputs.items()}, samplesNs=samples, medianNs=medians,
                 orders=orders, controlRatios=controls, ratios=ratios, controlsWithinBound=stable_controls,
+                lifetimeControls=lifetime_controls,
                 peakProcessRssBytes=resident, cCompilerStackUsage=frames)
             (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
             print(name, 'ratios', ratios, 'controls', controls, 'controls within bound', stable_controls, flush=True)

@@ -33,8 +33,9 @@ was reproduced on the merge before updating this delivery handoff. Published sou
 `e681dc447039cd1ce5fbf4a27add9e96f9238275` emits generic call adapters only
 for function values and external dispatch. Direct calls keep concrete bodies;
 services and transport-created iterators explicitly keep their table entries.
-Stack function values still retain adapters and ownership metadata. Do not claim
-the numeric array callback has lost its entry: its stack closure still needs it.
+In the measured adapter-only source, stack function values still retain adapters
+and ownership metadata. Those measurements do not establish the newer capture
+representation described below.
 
 Native run `39806320364` exposed a test configuration error: the new direct/dynamic
 call test requested tracing stress in ARC-only mode. The local repair enables
@@ -68,10 +69,46 @@ passed both Linux jobs in `39798044726`; all 120 images were inspected. Neither
 candidate met the predeclared 5% improvement. No inlining rule was selected.
 The worktree retains the complete report and slower/noisy cases.
 
+## Expanded work requested for this PR
+
+The user explicitly added three related tasks: extend capture simplification to
+`fold`/`fold-right`, test callback lifetime boundaries, and check live memory between
+complete solves. Work is in `/private/tmp/fwp-direct-entry-delivery`, branch
+`direct-call-entries`, starting at integrated commit
+`105bda29b849059098a5b95da3363a0c81d306d1`. No PR has been opened yet.
+
+Uncommitted compiler edits flatten eligible local callback captures into local
+values, preserve capture evaluation at the original binding, and reuse typed
+child-owner/unwind cleanup. Every value use must be a known array generator or
+fold callback. Escapes, aliases, ordinary calls and resource frames retain their
+representation. Fold entry marking now follows actual borrowed/owned dispatch.
+Existing zero-retain, error/cancellation/order and stress tests remain required;
+new representation assertions and a mixed/reused/stored callback fixture extend them.
+Focused CI saves 24 additional fold/boundary executables under `direct-captures/`,
+including forced extra-retain controls, for independent machine-code inspection.
+The saved interpreter validates the fixture; it does not verify new C generation.
+Expanded transformation, documentation, workflow and budget checks passed in
+6.78 seconds before adding artifact capture; repeat affected formatting/workflow
+checks for the final published source.
+
+The repeated-work observer records managed/raw live storage after each solve.
+Its delayed-release control must fail 225 even though the final-only control
+releases everything before exit. Six bounded local C controls passed in 3.06s:
+`/private/tmp/fwp-two-solve-observers-verified/report.json`. Checks caught and fixed
+loop scoping and the control's typed leaf-release call before publication.
+The fixture's function-value applications and concatenation oracle were corrected;
+its interpreter/format check passes in 0.37s. Full compiler checks belong on CI.
+
+Both initial batched jobs in `39812251121` now pass; inspect their artifacts with
+`/private/tmp/fwp-inspect-descent-batches.py --host HOST`. Their 48 images/host
+predate the new between-solve observer and do not validate it. The earlier repaired
+native run `39812255716` is running its test targets. Audit every failure together.
+
 ## Next action
 
-**Next:** inspect every final-head production gate, the repaired native run and
-both repeated-work comparisons. Fix all encountered failures together.
+**Next:** publish the expanded preparation after final formatting and run
+focused compiler/native checks plus numerical comparisons on GitHub. Inspect the
+earlier completed timing artifacts while those run; then publish one combined PR.
 
 All failed native jobs have been audited, and the test repair and comparison
 tools are published. Publish this integrated branch as one PR and require its full production gates.

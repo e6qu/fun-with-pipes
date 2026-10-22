@@ -54,3 +54,24 @@ exceed 512 times that single-solve profile. Verify repeated output and raw stora
 before timing. Fail immediately on incorrect output, broken cleanup or tool errors.
 Save all binaries, instructions, GCC static/dynamic frames, process RSS and commands.
 These are repeated-process-work measurements, not a claim of pure arithmetic time.
+
+## Storage between solves
+
+Profiled runs now record managed live bytes and raw derivative bytes immediately
+after every complete solve, before the next solve starts. Both must be zero for
+this pure explicit-derivative program. These observations are excluded from timing;
+the timed executable keeps the original workload and repeated output.
+
+The 33-coordinate, 199-update case has two additional controls for each compiler.
+One allocates a small owned string before the loop and deliberately retains it
+until final cleanup. The between-solve observer must detect its live storage on
+the first solve and exit with status 225. The other makes the same delayed release
+but omits the between-solve observer: it must complete with zero final storage.
+Together they show why a clean exit alone cannot establish bounded idle storage.
+The observer checks every solve, not selected samples. The raw-storage check here
+covers this explicit numerical program; it is not evidence for arbitrary AD tapes.
+
+These controls add four untimed images in that case: 52 images per host across
+all six inputs. The initial run at `b9ff767c5ab3642ac4bc26ae2ae6153f20560d3b`
+predates these observations and has 48 images per host. Preserve that distinction
+in reports; its final-only profiles do not verify the new observer.

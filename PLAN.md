@@ -124,7 +124,11 @@ outside the benchmark suite.
    preserving zero retains and allocation/storage limits. Timing is inconclusive;
    the [repeated-work protocol](docs/measurements/descent-batch-protocol.md)
    investigates startup noise and apparent slowdowns separately.
-   Resource-owning tail frames and mutual recursion need separate lifetime proofs.
+   The same batch extends capture-only representation to known generators and
+   both fold directions, checks escaped/reused callback behavior, and observes
+   live storage between complete solves. These additions need their own native
+   acceptance; earlier adapter measurements do not verify them. Resource-owning
+   tail frames and mutual recursion need separate lifetime proofs.
 3. Complete the [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
    to choose the next costs to remove: dynamic calls, input copies, container
    layout, numerical workspace and derivative recording. Establish workload-specific

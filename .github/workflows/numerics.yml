@@ -321,6 +321,7 @@ jobs:
       FWP_POINTER_ARTIFACTS: pointer-evidence/callbacks
       FWP_STACK_ARRAY_ARTIFACTS: pointer-evidence/stack-arrays
       FWP_ARRAY_CAPTURE_ARTIFACTS: pointer-evidence/array-captures
+      FWP_CALLBACK_CAPTURE_ARTIFACTS: pointer-evidence/direct-captures
     steps:
       - uses: actions/checkout@v7
       - name: Prepare foreign ownership evidence
