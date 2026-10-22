@@ -244,3 +244,41 @@ identified the raw-pointer gap and distinguished it from an intentionally invali
 inter-task derivative lifetime. [PR #193](roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193)
 records the accepted manual-pointer extension. Existing `arc_corpus` tests execute admitted programs
 and check their final managed storage; extend that coverage as admissions change.
+
+## Separating derivative and representation costs
+
+The `descent-peers` workflow compares four implementations of the same Rosenbrock
+descent: fwp with reverse automatic differentiation (AD), fwp with an explicit
+derivative, and explicit derivatives in C and Rust. An explicit derivative is a
+formula written by the programmer; reverse AD computes it by recording arithmetic
+and walking that record backwards. Comparing the two fwp forms helps expose that
+extra work. Comparing the explicit forms measures complete implementations with
+different storage: fwp uses immutable lists and intermediate pairs/lists, while
+C and Rust reuse two contiguous buffers. This is not identical instruction-level
+work or a promise that all of the difference is compiler overhead.
+
+Each starts from alternating −1.2/1.0 coordinates, subtracts 0.001 times the
+gradient per update, and prints the complete final vector. Selected cases have
+3 coordinates with 0, 1, 199 or 1,999 updates, and 33/129 coordinates with 199
+updates. For example, the zero-update case prints the initial vector. A separate
+Python formula checks every component with absolute and relative tolerance
+1e-10; reverse AD can round differently. Each fwp native form must exactly match
+its own unoptimized interpreter output.
+
+On each Linux architecture, GCC and Rust compile at O2 without link-time
+optimization; C disables fused multiply-add and fast-math, and Rust enables
+overflow checks. Explicit formulas preserve multiplication order. Inputs and
+update counts are compile-time constants in all variants. Formatting algorithms,
+allocation strategies and intermediate representations still differ.
+
+Two warmups precede 24 fresh-process samples per variant, rotating and reversing
+execution order. Timing includes startup, initialization, computation, complete
+output and teardown. The zero-update control includes initialization and output,
+so it does not isolate startup alone. Compilation times, machine code and binary
+hashes are recorded separately. Untimed fwp profiles measure managed storage
+and raw derivative buffers; separate runs measure resident process memory for
+all four variants. Those peaks must not be added.
+
+This comparison is under preparation. Results and workload budgets are not yet
+accepted; the session handoff records actual runs and inspections. Preserve all
+samples and slower results before choosing the next optimization.

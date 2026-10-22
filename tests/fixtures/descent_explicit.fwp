@@ -1,0 +1,23 @@
+# Explicit derivative of sum (100*(next-current*current)^2 + (1-current)^2).
+# zip below gives (next, current). Each edge contributes to two coordinates;
+# padding shifts those contributions into place before adding them.
+edge-residual : (F64, F64) -> F64
+edge-residual = fork sub (.1 | fork mul id id) .0
+
+edge-gradient : (F64, F64) -> (F64, F64)
+edge-gradient =
+    both
+        (fork
+            sub
+            (.1 | flip sub 1.0 | mul 2.0)
+            (fork mul (.1 | mul -400.0) edge-residual))
+        (edge-residual | mul 200.0)
+
+explicit-gradient : List[F64] -> List[F64]
+explicit-gradient =
+    fork zip id (drop 1)
+    | map edge-gradient
+    | fork (zip-with add) (map .0 | append [0.0]) (map .1 | Cons 0.0)
+
+explicit-descend : List[F64] -> List[F64]
+explicit-descend = fork (zip-with sub) (explicit-gradient | map (mul 0.001)) id

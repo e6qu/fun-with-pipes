@@ -6,17 +6,22 @@ Main is `f74c9d2998d595b4a3c15ee4a225a49963c1a6ea`, the verified squash merge of
 [PR #194](https://github.com/e6qu/fun-with-pipes/pull/194). All nine production
 jobs and documentation passed at `489d8414e68678e30829df525982ce8790a4aadc`;
 complete logs, merge files, parent and single-line message were checked.
-[History](roadmap-history.md#string-map-ownership-and-native-reuse-checks-pr-194)
+[History](roadmap-history.md)
 records the result. Redundant same-tree push CI `39753088259` was cancelled;
 the documentation run was preserved. Receipt: `/private/tmp/fwp-194-final-acceptance.json`.
 
-The next combined delivery is branch `native-command-ownership`, worktree
+[PR #195](https://github.com/e6qu/fun-with-pipes/pull/195) is open at `a284eb0a338cae4efdd9534fd2d67c60a4f04e82`.
+Production run `39753716407` and documentation run `39753716342`
+are its final-head gates. The combined delivery is branch `native-command-ownership`, worktree
 `/private/tmp/fwp-native-command-delivery`. Its four prepared commits replay onto
 #194's merge with identical files before documentation updates. Preparation
 source: `3a56acd7bf9003df61293bd71abd01bc1c0d4c60`;
 six-host run: [39752987389](https://github.com/e6qu/fun-with-pipes/actions/runs/39752987389).
-This run is in progress. Full final-head production and documentation gates are
-also required before merge. The batch contains:
+Both Linux hosts, both Windows hosts and Intel Mac pass all 23 integration
+tests; AMD64 Linux also passes 176 unit tests. ARM Mac remains queued. Seventy
+actual binaries across the five passing hosts were inspected, including generated
+C, native instructions, cleanup controls and tracing-code exclusion in ARC.
+Full final-head production and documentation gates are also required before merge. The batch contains:
 
 - Explicit `--gc arc`/`--gc tracing` for native run, exec, test, serve and pipe.
   Every test entry is checked. Missing C compilers report an error; interpretation
@@ -24,7 +29,7 @@ also required before merge. The batch contains:
 - Native test recovery after root traps, exits and cancellation. Owners, pending
   children, state scratch storage and failure messages release before later tests
   run. Child traps/exits remain process-fatal in both engines. See the
-  [test examples](reference.md#native-tests-with-checked-ownership).
+  test examples in the prepared reference.
 - Concurrent executable publication under a short file lock, Windows cache
   timestamp access, server-process cleanup and bounded cross-platform test
   monitoring with preserved diagnostics.
@@ -34,7 +39,7 @@ also required before merge. The batch contains:
   optimization or a C/Rust parity claim.
 
 Next: audit every completed job in the six-host run, inspect its generated C and
-executed binaries, and publish this batch as one PR. Fix all encountered failures
+executed binaries, and audit PR #195’s final-head gates. Fix all encountered failures
 together. Require all nine final-head production jobs and documentation before
 squash merge, with an explicit subject of at most 80 characters and empty body.
 Verify the merge files, parent and message, then continue the plan. Publication
@@ -59,7 +64,7 @@ The derivative experiment at `be8d87f0e56cb6bb496716d102b0b89bff6d9000` passes
 both Linux jobs in run `39739049666`. Its three-coordinate loop keeps 1,792 raw
 bytes between updates at both 199 and 1,999 updates, then frees them at shutdown.
 Timings include a 5.3% slower ARM loop. Complete samples and binary hashes are in
-[the report data](measurements/ad-storage-2026-10-22.json). Repeated identical
+the prepared report data. Repeated identical
 checkpoints are losslessly encoded; reconstructing the original inspection hash
 passes. Do not rerun these accepted measurements with a different source.
 
@@ -80,7 +85,28 @@ from completed deliveries were removed, preserving tracked reports, hashes,
 receipts and all current evidence. Publication then passed within the guard.
 Cleanup receipt: `/private/tmp/fwp-completed-archive-cleanup-20261022.json`.
 
+## Independent numerical comparison
+
+Branch `compare-derivative-descent`, worktree `/private/tmp/fwp-ad-comparison`,
+is based on PR #195's head. It adds four-way Rosenbrock descent comparisons:
+fwp reverse AD, fwp explicit derivatives, and C/Rust explicit derivatives.
+The latter two reuse flat buffers; fwp uses lists. Results must distinguish
+extra AD work and representation costs instead of calling the whole gap compiler
+overhead. Six cases include zero/one update, 1,999 updates and 129 coordinates.
+
+The independent Python derivative agrees with small C/Rust/fwp fixtures through
+guarded `/private/tmp/fwp-check-descent-peers.py` (4.51s). Workflow syntax,
+formatting and docs pass through `/private/tmp/fwp-ready-descent-peers.py` (6.87s).
+These are correctness checks, not local benchmarks or GCC validation. Next
+independent action: publish preparation, run `descent-peers` on both Linux hosts,
+audit all failures and inspect actual binaries/samples. Keep one active PR;
+this batch follows #195. Preparation receipt:
+`/private/tmp/fwp-ad-comparison-preparation.json`.
+
 ## Resume files
+
+PR source/run receipt: `/private/tmp/fwp-native-command-delivery-publication.json`.
+Final-gate auditor: `/private/tmp/fwp-audit-195-final.py`.
 
 | Purpose | Local path |
 |---|---|
