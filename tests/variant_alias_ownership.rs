@@ -104,6 +104,7 @@ fn returned_variant_aliases_transfer_fields_once() {
     p.main = Some(3);
     fwp::ir::check_locals(&p).unwrap();
     let result = fwp::interp::Interp::new(&p, Box::new(Vec::new()))
+        .unwrap()
         .call(
             1,
             vec![
@@ -368,7 +369,7 @@ fn matching_one_variant_payload_moves_its_owner_in_all_result_forms() {
     });
     program.main = Some(4);
     fwp::ir::check_locals(&program).unwrap();
-    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(Vec::new()));
+    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(Vec::new())).unwrap();
     assert_eq!(
         interpreter.call(1, vec![Value::str("value")]).unwrap(),
         Value::str("value")

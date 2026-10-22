@@ -71,7 +71,7 @@ empty-report = const ()
                 .unwrap();
             let (runtime, main) = code.split_at(start);
             let measured = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t report_budget = fwp_gc.budget;\n")
-                .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < report_budget) exit(229);\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < report_budget) exit(229);\n");
             code = format!("{runtime}{measured}");
         }
         let binary = dir.join("report.exe");

@@ -273,10 +273,14 @@ fn tasks_and_acyclic_channels_reclaim_after_join_and_cancellation() {
                 .unwrap();
             let (runtime, main) = code.split_at(main_start);
             assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-            assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
+            assert_eq!(
+                main.matches("    /* Ownership observation point: before runtime teardown. */\n")
+                    .count(),
+                1
+            );
             format!("{runtime}{}", main
                 .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t task_budget=fwp_gc.budget_given;\n")
-                .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < task_budget) { fprintf(stderr,\"task bytes left: %ld\\n\",(long)(task_budget-fwp_gc.budget)); exit(193); }\n"))
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < task_budget) { fprintf(stderr,\"task bytes left: %ld\\n\",(long)(task_budget-fwp_gc.budget)); exit(193); }\n"))
         } else {
             code
         };

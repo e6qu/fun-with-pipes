@@ -132,8 +132,8 @@ fn direct_range_array_has_no_per_element_heap_allocations() {
             let finish = start + code[start..].find("\n}\n").unwrap() + 3;
             let body = code[start..finish].replace("    fwp_init_consts();\n",
                 "    fwp_init_consts();\n    range_requests = 0; intptr_t range_budget = fwp_gc.budget;\n")
-                .replace("    fwp_cl_finish();\n",
-                "    fwp_cl_finish();\n    if(range_requests > 6 || fwp_gc.budget != range_budget) exit(246);\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n",
+                "    /* Ownership observation point: before runtime teardown. */\n    if(range_requests > 6 || fwp_gc.budget != range_budget) exit(246);\n");
             code.replace_range(start..finish, &body);
             for opt in ["-O1", "-O2"] {
                 let binary = dir.join("main.exe");

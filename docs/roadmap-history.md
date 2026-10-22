@@ -12,6 +12,21 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Queued task owners and callback transfers (PR #190)
+
+Queued callbacks and messages can retain proved task handles without tracing.
+The compiler rejects unproved result cycles and unknown task producers. Task
+creation transfers callback ownership directly: the five-task comparison uses
+10 → 5 retains with unchanged allocations. [Task-message checks](measurements/task-channels.md)
+and [callback measurements](measurements/queued-task-handles.md) record the limits,
+all eight focused jobs, and independent native/WebAssembly binary inspection.
+
+[PR #190](https://github.com/e6qu/fun-with-pipes/pull/190) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39673092514)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39673088884)
+at `4cdf8afa8647cfdaecbc338429bf8a1c1a158210`. Every complete log was audited. Squash merge `a2b9130fa1811c32e8807ba8cf61a8647fbcba60`
+has the identical tree and verified one-line message without body or trailers.
+
 ## Compact task records and repaired native validation (PR #189)
 
 ARC task records are 32 bytes smaller on each measured native host. Allocation

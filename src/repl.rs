@@ -239,7 +239,8 @@ impl Session {
         let preparation = started.elapsed();
         let evaluating = Instant::now();
         let value = {
-            let mut interpreter = Interp::new(&self.program, Box::new(output));
+            let mut interpreter = Interp::new(&self.program, Box::new(output))
+                .map_err(|error| format!("interpreter preparation failed: {error:?}"))?;
             interpreter.set_error_writer(Box::new(errors));
             interpreter.cafs = self.caches.clone();
             interpreter.world = self.world.clone();

@@ -146,7 +146,7 @@ int main(void){
  // Direct fields move exactly one owner, allocate no Option and distinguish Some 0.
  ch=fMAKE(1);value=fwp_rc_fresh(fwp_str_new("fields",6));fSEND(ch,value);
  fail_option=1;intptr_t before_fields=fwp_gc.budget;
- fwp_channel_result fields=fwp_chan_recv_owned(ch,fwp_after(duration),fwp_rc_dup,FWP_CHANNEL_RESULT_FIELDS);
+ fwp_option_result fields=fwp_chan_recv_owned(ch,fwp_after(duration),fwp_rc_dup,FWP_CHANNEL_RESULT_FIELDS);
  V field=fields.value;
  if(!fields.tag||field!=value||*fwp_rc_slot(value)!=1)return 43;
  if(!fail_option||before_fields!=fwp_gc.budget||((fwp_chan *)(uintptr_t)ch)->len)return 44;

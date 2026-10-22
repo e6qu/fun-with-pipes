@@ -313,12 +313,10 @@ input, so it is not included in that no-intermediate-array claim.
 |---|---|
 | `realize e` | Evaluate using `Cpu` |
 | `realize-on d e` | Evaluate on explicit device `d`; trap with a reason if unavailable |
-| `tensor.try-realize-on d e` | Return failure as a `Result` instead |
 | `tensor.sum-on d e`, `tensor.sum e` | Evaluate and sum elements |
 | `tensor.grad-on d e`, `tensor.grad e` | Derivatives of the sum with respect to each leaf, in left-to-right order |
 | `tensor.kernel e` | Build the kernel description |
 | `kernel.run d k`, `kernel.sum d k` | Execute a built kernel |
-| `tensor.opencl e` | Produce OpenCL C source without requiring device execution |
 
 Tensor gradients differentiate the expression graph into another expression per
 leaf. Repeating a leaf in the tree, such as through `fork`, counts as separate
@@ -330,20 +328,22 @@ its derivative at zero. A NaN is a floating-point non-number result.
 `Device` selects where a tensor kernel runs:
 
 - `Cpu` uses the calling thread.
-- `CpuParallel n` divides blocks among CPU threads, at most 256 and no more than
-  one per block. The calling thread handles the first range. Workers access
-  borrowed inputs and distinct ranges of an owned output; they do not allocate
-  language objects. These WebAssembly targets run
-  this selection like `Cpu`; they do not launch those native worker threads.
-  Availability requires `n >= 1`.
-- `Gpu` uses a discovered OpenCL device with double-precision support, preferring
-  a GPU. OpenCL is the host interface for compiling and executing device kernels.
-  It is loaded when used; `FWP_OPENCL_LIB` can name the library. macOS uses its
-  OpenCL framework. Discovery is not proof that a kernel executed successfully.
+- `CpuParallel n` allows at most n workers, including the calling thread.
+  The accepted range is 1–256. Smaller workloads use fewer workers, with at most
+  one per block. WebAssembly runs this policy serially; it launches no native
+  worker threads. Static-memory builds also respect their configured worker pool.
 
-`device.available` reports availability. An unavailable device returns an error
-through `tensor.try-realize-on` and traps through `realize-on`. GPU sums evaluate
-elements on the device and add them on the CPU in the defined order.
+`device.available` checks the worker setting. For example, `CpuParallel 256` is
+valid and `CpuParallel 257` is not. Both `kernel.run` and `kernel.sum` trap on an
+invalid count, including for an empty kernel; they no longer silently clamp it.
+They return an array and an F64 respectively. `realize-on` wraps the resulting
+array as a vector. These CPU operations have no always-successful `Result` wrapper.
+A valid setting does not guarantee that the operating system can start workers.
+
+Workers borrow inputs and write distinct parts of the owned output; they allocate
+no language objects. The CPU-only implementation removes the OpenCL compiler,
+GPU selection and source-generation API. Its validation status is in the
+[handoff](development-state.md); no GPU execution is supported by this design.
 
 CPU elementwise workers write directly
 into one result array, avoiding a second full-size native output and copy. Input
@@ -357,34 +357,27 @@ startup. If a requested native worker cannot start, it joins every worker alread
 started, frees pending storage and reports a trap. It does not silently execute
 missing workers on the caller. Counts are validated before conversion to WASI's
 32-bit address size; final reduction blocks use remaining lengths to avoid index
-overflow. Focused native, WASI, allocation-failure and worker-failure checks pass;
-full delivery acceptance is recorded in
-[PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
+overflow. The output-storage and failure-cleanup checks passed native and WASI
+validation in [PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
+The new worker-range rules require the current validation recorded in the handoff.
 [Measured storage costs](benchmarks.md#cpu-tensor-output-storage) distinguish the
 removed buffer from remaining allocations. No timing improvement is claimed here.
 
 CPU reductions add each block of 4096 elements left to right from zero, then
 add block sums left to right. Changing the worker count preserves that order.
 Interpreter/native tests check the expected outputs at their supported settings.
-OpenCL transcendental functions can differ in their last bits from the host C
-math library; matching operation order does not establish identical CPU/GPU bits.
-Contraction is disabled. The current GPU evidence covers unavailable-device
-behavior, host API lifetime controls and generated source, not verified execution
-on real double-precision GPU hardware.
+Floating-point results can still differ between host math libraries; fixed
+reduction order does not promise cross-platform bit equality for every operation.
+Contraction is disabled.
 
 ## Not implemented
 
-Just-in-time compilation (JIT) is explicitly excluded from fwp; it is not a
-planned way to optimize numerical programs. Distributed tensor execution and
-device kernels for general matrix products and arbitrary-axis reductions are
-not implemented. Native matrix multiplication has a separate optimized CPU path;
-it is not an OpenCL kernel.
-
-The existing GPU implementation calls `clCreateProgramWithSource` and
-`clBuildProgram` while running a program, in both the interpreter and native
-runtime. This runtime device compilation must be resolved under the
-[no-JIT direction](../PLAN.md#excluded-direction); GPU execution does not yet
-meet an ahead-of-time-only compilation policy.
+Just-in-time compilation (JIT) is excluded. The CPU runtime evaluates the kernel's
+instruction array using already compiled arithmetic routines; it generates no
+machine code during execution. GPU execution and distributed tensors are outside
+the CPU roadmap. A future GPU proposal would require device-specific ahead-of-time
+artifacts and actual hardware evidence. Native matrix multiplication has its own
+CPU implementation.
 
 ## Scoped-gradient allocation validation
 

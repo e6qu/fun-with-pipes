@@ -90,9 +90,13 @@ main = range 0 32 | each exercise
                 .unwrap();
             let (runtime, main) = code.split_at(start);
             assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-            assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
+            assert_eq!(
+                main.matches("    /* Ownership observation point: before runtime teardown. */\n")
+                    .count(),
+                1
+            );
             let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t process_budget = fwp_gc.budget;\n")
-                .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < process_budget) exit(232);\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < process_budget) exit(232);\n");
             code = format!("{runtime}{main}");
         }
         retain_code(&format!("repeated-{mode}.c"), &code);
@@ -328,9 +332,13 @@ main = range 0 64 | map normalize
                 .unwrap();
             let (runtime, main) = code.split_at(start);
             assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-            assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
+            assert_eq!(
+                main.matches("    /* Ownership observation point: before runtime teardown. */\n")
+                    .count(),
+                1
+            );
             let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    intptr_t process_budget = fwp_gc.budget;\n")
-                .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < process_budget) exit(232);\n");
+                .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < process_budget) exit(232);\n");
             code = format!("{runtime}{main}");
         }
         retain_code(&format!("shell-parent-{mode}.c"), &code);

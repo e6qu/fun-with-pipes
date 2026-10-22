@@ -62,7 +62,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                 let create = "    task->identity = ++fwp_task_identity;";
                 let release = "    if (!t->done || t->stack) abort();";
                 let root_release = "        fwp_mem_free(fwp_root);";
-                let finish = "\n    fwp_cl_finish();\n";
+                let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
                 // Library/WASI and executable shutdown each have a root release.
                 for (needle, count) in [(create, 1), (release, 1), (root_release, 2), (finish, 1)] {
                     assert_eq!(code.matches(needle).count(), count, "{needle}");
@@ -77,7 +77,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
             if name == "data-queues" {
                 let create = "    fwp_chan *c = (fwp_chan *)fwp_mem_alloc(sizeof(fwp_chan));";
                 let release = "    if (c->sendq.head || c->recvq.head) abort();";
-                let finish = "\n    fwp_cl_finish();\n";
+                let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
                 for needle in [create, release, finish] {
                     assert_eq!(code.matches(needle).count(), 1, "{needle}");
                 }
@@ -107,7 +107,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                 // within a round, but detects retention accumulating across them.
                 let create = "    s->refs = 1;";
                 let release = "    fwp_sock_final(s);";
-                let finish = "\n    fwp_cl_finish();\n";
+                let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
                 for needle in [create, release, finish] {
                     assert_eq!(code.matches(needle).count(), 1, "{needle}");
                 }
@@ -124,7 +124,7 @@ fn queued_functions_preserve_results_and_release_undrained_captures() {
                 );
             }
             if memory == "arc" {
-                let finish = "\n    fwp_cl_finish();\n";
+                let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
                 assert_eq!(code.matches(finish).count(), 1);
                 code = code.replace(finish, &format!("{finish}    if(fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget_given != fwp_gc.budget) exit(193);\n"));
             }
@@ -685,7 +685,7 @@ main = texts 1 | tap (flip channel.send (give "capture")) | channel.recv | optio
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
     );
-    let receive = "static fwp_channel_result fwp_chan_recv_owned(";
+    let receive = "static fwp_option_result fwp_chan_recv_owned(";
     assert_eq!(runtime.matches(receive).count(), 1);
     runtime = runtime.replace(receive, &format!("static int fail_option;\nstatic V queue_option(V x) {{ if(fail_option) {{ fail_option=0; fwp_trap(\"queue allocation probe\"); }} return fwp_some(x); }}\n{receive}"));
     let option = "fwp_rc_fresh(fwp_some(x))";

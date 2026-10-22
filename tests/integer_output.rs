@@ -219,7 +219,11 @@ main = range 0 4096 | map line | sum | echo
             .unwrap();
         let (runtime, main) = code.split_at(main_start);
         assert_eq!(main.matches("    fwp_init_consts();\n").count(), 1);
-        assert_eq!(main.matches("    fwp_cl_finish();\n").count(), 1);
+        assert_eq!(
+            main.matches("    /* Ownership observation point: before runtime teardown. */\n")
+                .count(),
+            1
+        );
         let code = format!(
             "{runtime}{}",
             main.replace(
@@ -227,8 +231,8 @@ main = range 0 4096 | map line | sum | echo
                 "    fwp_init_consts();\n    length_tracking = 1;\n"
             )
             .replace(
-                "    fwp_cl_finish();\n",
-                "    fwp_cl_finish();\n    if(length_allocations) exit(247);\n"
+                "    /* Ownership observation point: before runtime teardown. */\n",
+                "    /* Ownership observation point: before runtime teardown. */\n    if(length_allocations) exit(247);\n"
             )
         );
         let marker = "return (V)fwp_i64_chars((int64_t)l0);";
@@ -373,7 +377,7 @@ fn immediate_integer_output_does_not_allocate_a_string() {
             let expected = if direct == "1" { 0 } else { 1 };
             let code = format!("{}{}", runtime.replace(marker, &format!("static int output_tracking, output_strings;\n{marker}\nif(output_tracking) output_strings++;")),
                 main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    output_tracking = 1;\n")
-                    .replace("    fwp_cl_finish();\n", &format!("    fwp_cl_finish();\n    if(output_strings != {expected}) exit(247);\n")));
+                    .replace("    /* Ownership observation point: before runtime teardown. */\n", &format!("    /* Ownership observation point: before runtime teardown. */\n    if(output_strings != {expected}) exit(247);\n")));
             assert!(code.contains("output_tracking = 1;") && code.contains("exit(247)"));
             for opt in ["-O0", "-O2"] {
                 let binary = dir.join("count.exe");

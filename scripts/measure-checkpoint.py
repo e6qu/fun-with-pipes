@@ -51,7 +51,7 @@ def instrument(code):
     code = iteration.instrument(code)
     main = code.index('static void *fwp_main_thread(void *arg) {')
     prefix, body = code[:main], code[main:]
-    marker = '    fwp_cl_finish();\n'
+    marker = '    /* Ownership observation point: before runtime teardown. */\n'
     assert body.count(marker) == 1
     return prefix + body.replace(marker, marker + r'''
     fwp_tape_finish();

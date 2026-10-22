@@ -175,7 +175,6 @@
     "filter_ownership",
     "service_value_ownership",
     "ad_tape_ownership",
-    "opencl_lifetime",
     "grpc_environment_cache",
     "ternary_ownership",
     "grpc_canonical_encoding",

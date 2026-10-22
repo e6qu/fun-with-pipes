@@ -93,7 +93,7 @@ fn result_type(prog: &Program, name: &str) -> MT {
 fn value_of(prog: &Program, name: &str, arg: Value) -> Value {
     let (_, id) = prog.exports.iter().find(|(n, _)| n == name).unwrap();
     let mut sink = Vec::new();
-    let mut it = fwp::interp::Interp::new(prog, Box::new(&mut sink));
+    let mut it = fwp::interp::Interp::new(prog, Box::new(&mut sink)).unwrap();
     let f = Value::Closure(std::rc::Rc::new(fwp::value::Closure {
         func: *id,
         args: vec![],

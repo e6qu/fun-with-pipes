@@ -395,7 +395,8 @@ rev._vjp = curry (both (.0 | second | compose rev._seed) (.1 | rev._vjp-finish)
     | uncurry compose)
 
 # The Jacobian in reverse mode, one backward pass per output (rows are
-# outputs, columns are inputs, as for `jacobian`).
+# outputs, columns are inputs, as for `jacobian`). It first evaluates f once
+# to count its outputs, then once per row. Each evaluation has its own tape scope.
 rev.jacobian : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[List[t]] where ReverseScalar[t], Zero[t], One[t], Dup[t]
 rev.jacobian = curry (make { 0 = uncurry rev._outputs, 1 = .0, 2 = .1 }
     | both rev._row (.0 | range 0)
@@ -403,7 +404,8 @@ rev.jacobian = curry (make { 0 = uncurry rev._outputs, 1 = .0, 2 = .1 }
 
 # the number of outputs of f at xs
 rev._outputs : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> I64
-rev._outputs = curry (both .0 (.1 | map rev.const) | uncurry id | length)
+rev._outputs =
+    ad.scope2 (curry (both .0 (.1 | map rev.const) | uncurry id | length))
 
 # row i of the Jacobian, of (number of outputs, f, xs)
 rev._row : (I64, List[Rev[t]] -> List[Rev[t]], List[t]) -> I64 -> List[t] where ReverseScalar[t], Zero[t], One[t], Dup[t]

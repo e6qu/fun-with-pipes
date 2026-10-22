@@ -1,9 +1,7 @@
 # Sending task handles through channels
 
-This extension is part of [PR #190](https://github.com/e6qu/fun-with-pipes/pull/190),
-together with the [queued callback work](queued-task-handles.md). All six native
-and both WebAssembly focused jobs pass. Full production acceptance is still
-pending; [the handoff](../development-state.md) records the final-head gates.
+This extension and the [queued callback work](queued-task-handles.md) passed
+full production acceptance in [PR #190](../roadmap-history.md#queued-task-owners-and-callback-transfers-pr-190).
 
 A task handle keeps a computation and its eventual result alive. A channel owns
 each message until a receiver takes it or the channel is released. Sending a task
@@ -11,7 +9,7 @@ handle therefore transfers an owner into the queue; independent aliases can stil
 await that task repeatedly. The existing runtime already has typed task cleanup.
 This change extends the compiler's acceptance proof, with no new runtime operation.
 
-The candidate accepts a known task producer only when its computation and result
+The compiler accepts a known task producer only when its computation and result
 cannot own a queue containing callbacks or tasks. Otherwise the queue could own
 a task that owns the queue. Records containing tasks use the same check. Unknown
 task producers and external task-bearing queues remain rejected. Sending nested task-bearing queues, or retaining them inside queued task
@@ -68,5 +66,4 @@ by hashes. ARC binaries omit the tracing collector entry points.
 These are correctness and ownership checks. Expanding acceptance claims no
 allocation-count reduction, speedup or C/Rust parity. The earlier callback retain
 comparison remains separately identified in [its report](queued-task-handles.md).
-Final delivery still requires nine production jobs and documentation for the
-exact commit being merged.
+[PR #190](../roadmap-history.md#queued-task-owners-and-callback-transfers-pr-190) records the accepted final commit and merge.

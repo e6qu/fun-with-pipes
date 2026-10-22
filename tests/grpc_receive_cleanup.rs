@@ -145,7 +145,7 @@ static void *watched_connection;
         ("static void fwp_native_tasks_finish(void) {".to_string(), "static void fwp_native_tasks_finish(void) { int64_t test_deadline=fwp_now_ns()+1000000000LL;".to_string()),
         ("        while (fwp_gc_tasks) {".to_string(), "        while (fwp_gc_tasks) { if(fwp_now_ns()>=test_deadline)_Exit(209);".to_string()),
         ("    fwp_init_consts();".to_string(), format!("    fwp_init_consts();\n{prepare}")),
-        ("\n    fwp_cl_finish();\n".to_string(), "\n    fwp_cl_finish(); FWP_KEEP_ALIVE(listener); if(connection_finalized!=1||g_pool||fwp_cur||fwp_gc_tasks)exit(205);\n".to_string()),
+        ("\n    /* Ownership observation point: before runtime teardown. */\n".to_string(), "\n    /* Ownership observation point: before runtime teardown. */ FWP_KEEP_ALIVE(listener); if(connection_finalized!=1||g_pool||fwp_cur||fwp_gc_tasks)exit(205);\n".to_string()),
         ("int main(int argc, char **argv)".to_string(), "int original_main(int argc, char **argv)".to_string()),
     ] {
         // The library drain is present in the runtime source, but disabled in

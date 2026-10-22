@@ -410,16 +410,17 @@ impl Expander<'_> {
         for a in args {
             vals.push(crate::syntax::to_value(a)?);
         }
-        let mut it = Interp::new(self.prog, Box::new(std::io::stderr()));
-        let r = if arity == 0 {
-            it.call(fid, vec![])
-        } else {
-            let f = Value::Closure(std::rc::Rc::new(Closure {
-                func: fid,
-                args: vec![],
-            }));
-            it.apply(f, vals)
-        };
+        let r = Interp::new(self.prog, Box::new(std::io::stderr())).and_then(|mut it| {
+            if arity == 0 {
+                it.call(fid, vec![])
+            } else {
+                let f = Value::Closure(std::rc::Rc::new(Closure {
+                    func: fid,
+                    args: vec![],
+                }));
+                it.apply(f, vals)
+            }
+        });
         let v = r.map_err(|c| {
             let msg = match c {
                 Ctl::Fail(v, t) => display(&v, &t, self.prog, true),

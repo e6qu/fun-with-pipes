@@ -1,7 +1,8 @@
 //! Finite closure-flow proof for queued captures, raw AD and typed State lifetimes.
 //!
-//! Origins identify functions with their supplied arguments and known data-queue
-//! and task producers. Unknown sources stay explicit, including task computations
+//! Origins identify functions with their supplied arguments and creation scopes,
+//! plus known data-queue and task producers. Unknown sources stay explicit,
+//! including task computations
 //! and results that can hide a callback owner. Captures and
 //! call summaries join monotonically. Aggregate fields conservatively share a
 //! set: this can reject ambiguous flows, but cannot hide a callable in a tuple,
@@ -13,7 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum Origin {
-    Function(FuncId, usize),
+    Function(FuncId, usize, u8),
     UnknownFunction,
     Queue(FuncId),
     GrpcSender(FuncId),
@@ -300,7 +301,7 @@ impl Proof<'_> {
 
     fn queued_targets(&self, targets: &Targets, seen: &mut BTreeSet<Origin>) -> Result<(), String> {
         for &closure in targets.iter().filter(|origin| origin.callable()) {
-            let Origin::Function(id, supplied) = closure else {
+            let Origin::Function(id, supplied, _) = closure else {
                 return Err("--gc arc: cannot prove the source of a queued function".into());
             };
             if !seen.insert(closure) || supplied == 0 {
@@ -421,7 +422,7 @@ impl Proof<'_> {
                 continue;
             }
             match origin {
-                Origin::Function(_, supplied) if supplied > 0 => {
+                Origin::Function(_, supplied, _) if supplied > 0 => {
                     let captures = self
                         .captures
                         .get(&origin)
@@ -475,7 +476,7 @@ impl Proof<'_> {
                 .copied(),
         );
         for &closure in steps.iter().filter(|origin| origin.callable()) {
-            let Origin::Function(target, supplied) = closure else {
+            let Origin::Function(target, supplied, _) = closure else {
                 if self.validate {
                     return Err(
                         "--gc arc: cannot prove a received iterator's function target".into(),
@@ -514,7 +515,7 @@ impl Proof<'_> {
                     )
                 })?;
                 let input = self.apply(
-                    &BTreeSet::from([Origin::Function(iterator, 0)]),
+                    &BTreeSet::from([Origin::Function(iterator, 0, 0)]),
                     &[Targets::new()],
                     0,
                 )?;
@@ -548,8 +549,11 @@ impl Proof<'_> {
         self.outputs.get(&key).cloned().unwrap_or_default()
     }
 
-    fn partial(&mut self, id: FuncId, args: Vec<Targets>) -> Targets {
-        let key = Origin::Function(id, args.len());
+    fn partial(&mut self, id: FuncId, args: Vec<Targets>, scoped: u8) -> Targets {
+        // Separate captures formed inside different dynamic handlers. This is
+        // an analysis identity, not a retained handler: apply still checks the
+        // invocation's scope, including when a partial escapes its creator.
+        let key = Origin::Function(id, args.len(), if args.is_empty() { 0 } else { scoped });
         let captured = self
             .captures
             .entry(key)
@@ -572,7 +576,7 @@ impl Proof<'_> {
         // rejected below, even when joined with known targets.
         let mut result = Targets::new();
         for &closure in functions.iter().filter(|origin| origin.callable()) {
-            let Origin::Function(id, _) = closure else {
+            let Origin::Function(id, _, _) = closure else {
                 if self.validate {
                     return Err(
                         "--gc arc: cannot prove the target of a call in an ownership program"
@@ -586,7 +590,7 @@ impl Proof<'_> {
             all.extend_from_slice(args);
             let arity = self.program.funcs[id].arity as usize;
             let value = if all.len() < arity {
-                self.partial(id, all)
+                self.partial(id, all, scoped)
             } else {
                 let returned = self.request(id, scoped, &all[..arity]);
                 if all.len() == arity {
@@ -604,7 +608,7 @@ impl Proof<'_> {
         match value {
             Value::Closure(closure) => {
                 let args = closure.args.iter().map(|arg| self.constant(arg)).collect();
-                self.partial(closure.func, args)
+                self.partial(closure.func, args, 0)
             }
             Value::Record(fields) | Value::Data(_, fields) => fields
                 .iter()
@@ -698,7 +702,7 @@ impl Proof<'_> {
             | Origin::Task(_)
             | Origin::UnknownTask => false,
             Origin::UnknownFunction => true,
-            Origin::Function(id, supplied) => crate::ir::same_type(
+            Origin::Function(id, supplied, _) => crate::ir::same_type(
                 &self.program.shapes,
                 self.program.funcs[*id].ty.params(*supplied).1,
                 ty,
@@ -717,7 +721,7 @@ impl Proof<'_> {
             Expr::Local(local) => locals[*local as usize].clone(),
             Expr::Const(value) => self.constant(value),
             Expr::Func(id) if self.program.funcs[*id].arity == 0 => self.request(*id, scoped, &[]),
-            Expr::Func(id) => BTreeSet::from([Origin::Function(*id, 0)]),
+            Expr::Func(id) => BTreeSet::from([Origin::Function(*id, 0, 0)]),
             Expr::Call(id, args) => {
                 let values = args
                     .iter()
@@ -934,7 +938,7 @@ impl Proof<'_> {
                         return Err("--gc arc: cannot prove managed tape callbacks".into());
                     }
                     for &closure in args[0].iter().filter(|origin| origin.callable()) {
-                        let Origin::Function(target, supplied) = closure else {
+                        let Origin::Function(target, supplied, _) = closure else {
                             if self.validate {
                                 return Err("--gc arc: cannot prove managed tape callbacks".into());
                             }
@@ -1043,7 +1047,7 @@ impl Proof<'_> {
                         return Ok(result);
                     }
                     for &closure in result.clone().iter().filter(|origin| origin.callable()) {
-                        let Origin::Function(target, supplied) = closure else {
+                        let Origin::Function(target, supplied, _) = closure else {
                             if self.validate {
                                 return Err(
                                     "--gc arc: cannot prove a runtime callback target".into()
@@ -1075,7 +1079,7 @@ impl Proof<'_> {
                         .copied(),
                 );
                 for &closure in functions.iter().filter(|origin| origin.callable()) {
-                    let Origin::Function(target, supplied) = closure else {
+                    let Origin::Function(target, supplied, _) = closure else {
                         if self.validate {
                             return Err("--gc arc: cannot prove a primitive callback target".into());
                         }
@@ -1137,7 +1141,7 @@ impl Proof<'_> {
                     // The received iterator's constructor runs in the caller;
                     // its returned continuations are data until consumed.
                     self.apply(
-                        &BTreeSet::from([Origin::Function(iterator, 0)]),
+                        &BTreeSet::from([Origin::Function(iterator, 0, 0)]),
                         &[Targets::new()],
                         scoped,
                     )
@@ -1344,6 +1348,79 @@ mod tests {
     }
 
     #[test]
+    fn partial_captures_distinguish_creation_scopes_without_preserving_handlers() {
+        for escape in [false, true] {
+            let mut p = state_program(true);
+            let unit = MT::unit();
+            let string = MT::con("std::String");
+            let getter = p.funcs[1].ty.clone();
+            let partial = |target| Expr::Apply(Box::new(Expr::Func(3)), vec![Expr::Func(target)]);
+            let invoke =
+                |function| Expr::Apply(Box::new(function), vec![Expr::Const(Value::unit())]);
+            let result = if escape {
+                getter.clone()
+            } else {
+                string.clone()
+            };
+            let callback = arrow(unit.clone(), result.clone());
+            let pair = MT::Record(vec![("0".into(), result), ("1".into(), string.clone())]);
+            p.funcs.extend([
+                Func {
+                    name: "invoke".into(),
+                    arity: 2,
+                    locals: vec![getter.clone(), unit.clone()],
+                    ty: arrow(getter.clone(), getter),
+                    body: Body::Expr(Expr::Apply(Box::new(Expr::Local(0)), vec![Expr::Local(1)])),
+                },
+                Func {
+                    name: "plain".into(),
+                    arity: 1,
+                    locals: vec![unit.clone()],
+                    ty: arrow(unit.clone(), string.clone()),
+                    body: Body::Expr(Expr::Const(Value::str("plain"))),
+                },
+                Func {
+                    name: "inside-handler".into(),
+                    arity: 1,
+                    locals: vec![unit.clone()],
+                    ty: callback.clone(),
+                    body: Body::Expr(if escape {
+                        partial(1)
+                    } else {
+                        invoke(partial(1))
+                    }),
+                },
+            ]);
+            p.funcs[2].locals[1] = callback.clone();
+            p.funcs[2].ty = arrow(string.clone(), arrow(callback, arrow(unit, pair)));
+            let handled = Expr::Field(
+                Box::new(Expr::Call(
+                    2,
+                    vec![
+                        Expr::Const(Value::str("state")),
+                        Expr::Func(5),
+                        Expr::Const(Value::unit()),
+                    ],
+                )),
+                0,
+            );
+            p.funcs[0].ty = MT::Record(vec![("0".into(), string.clone()), ("1".into(), string)]);
+            // Both calls specialize the same two-argument helper. Its captures
+            // must not mix the state getter into the independent plain call.
+            p.funcs[0].body = Body::Expr(Expr::Record(vec![
+                invoke(partial(4)),
+                if escape { invoke(handled) } else { handled },
+            ]));
+            let checked = check(&p, &[0], EntryChannels::Unknown);
+            if escape {
+                assert!(checked.unwrap_err().contains("outside a State scope"));
+            } else {
+                checked.unwrap();
+            }
+        }
+    }
+
+    #[test]
     fn queued_functions_use_the_receivers_scope() {
         // Sending get does not call it or retain a scope. The receiver must
         // establish its own State handler before invoking the queued function.
@@ -1447,7 +1524,7 @@ mod tests {
             state_values: Targets::new(),
             error_values: Targets::new(),
         };
-        let mut functions = Targets::from([Origin::Function(1, 0)]);
+        let mut functions = Targets::from([Origin::Function(1, 0, 0)]);
         assert!(proof
             .apply(&Targets::new(), &[Targets::new()], STATE)
             .unwrap()
@@ -1456,11 +1533,11 @@ mod tests {
             &mut functions,
             &Targets::from([Origin::UnknownFunction])
         ));
-        functions.insert(Origin::Function(2, 0));
+        functions.insert(Origin::Function(2, 0, 0));
         proof.refine_origins(&mut functions, &program.funcs[1].ty);
         assert_eq!(
             functions,
-            Targets::from([Origin::Function(1, 0), Origin::UnknownFunction])
+            Targets::from([Origin::Function(1, 0, 0), Origin::UnknownFunction])
         );
         assert!(proof
             .apply(&functions, &[Targets::new()], STATE)
@@ -1552,8 +1629,8 @@ mod tests {
                 state_values: Targets::new(),
                 error_values: Targets::new(),
             };
-            let captured = proof.partial(3, vec![Targets::new()]);
-            let nested = proof.partial(4, vec![captured.clone()]);
+            let captured = proof.partial(3, vec![Targets::new()], 0);
+            let nested = proof.partial(4, vec![captured.clone()], 0);
             for value in [captured, nested] {
                 let checked = proof.queued_targets(&value, &mut BTreeSet::new());
                 if matches!(&captured_type, MT::Con(name, _) if matches!(name.as_str(),
@@ -2019,27 +2096,27 @@ mod tests {
         };
         let queue = proof.function(0, 0, &[Targets::new()]).unwrap();
         assert_eq!(queue, Targets::from([Origin::Queue(0)]));
-        let captured = proof.partial(3, vec![queue.clone()]);
+        let captured = proof.partial(3, vec![queue.clone()], 0);
         proof
             .queued_targets(&captured, &mut BTreeSet::new())
             .unwrap();
         let outer = proof.function(1, 0, &[Targets::new()]).unwrap();
         proof.channel_values.insert(nested.clone(), queue.clone());
-        let captured_outer = proof.partial(4, vec![outer.clone()]);
+        let captured_outer = proof.partial(4, vec![outer.clone()], 0);
         proof
             .queued_targets(&captured_outer, &mut BTreeSet::new())
             .unwrap();
 
         // Empty immutable containers contain no channel owner to invent.
-        let empty = proof.partial(6, vec![Targets::new()]);
+        let empty = proof.partial(6, vec![Targets::new()], 0);
         proof.queued_targets(&empty, &mut BTreeSet::new()).unwrap();
-        let contained = proof.partial(6, vec![queue.clone()]);
+        let contained = proof.partial(6, vec![queue.clone()], 0);
         proof
             .queued_targets(&contained, &mut BTreeSet::new())
             .unwrap();
 
         let function_queue = proof.function(2, 0, &[Targets::new()]).unwrap();
-        let captured_functions = proof.partial(5, vec![function_queue]);
+        let captured_functions = proof.partial(5, vec![function_queue], 0);
         assert!(proof
             .queued_targets(&captured_functions, &mut BTreeSet::new())
             .unwrap_err()
@@ -2054,7 +2131,7 @@ mod tests {
             .queued_targets(&captured_outer, &mut BTreeSet::new())
             .unwrap_err()
             .contains("cannot prove the producer"));
-        let captured_unknown = proof.partial(3, vec![mixed]);
+        let captured_unknown = proof.partial(3, vec![mixed], 0);
         assert!(proof
             .queued_targets(&captured_unknown, &mut BTreeSet::new())
             .unwrap_err()

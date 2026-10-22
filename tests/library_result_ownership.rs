@@ -121,7 +121,7 @@ fn program() -> Program {
 #[test]
 fn exported_boxes_are_reclaimed_and_host_strings_survive() {
     let program = program();
-    let mut interp = fwp::interp::Interp::new(&program, Box::new(Vec::new()));
+    let mut interp = fwp::interp::Interp::new(&program, Box::new(Vec::new())).unwrap();
     assert_eq!(
         interp.call(0, vec![Value::I64(17)]).unwrap(),
         Value::Record(vec![Value::I64(17), Value::I64(17)].into())

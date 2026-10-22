@@ -90,6 +90,8 @@ int main(void){
  V scalar=fwp_rc_fresh(fwp_str_new("scalar",6));V fn=fwp_rc_fresh(fwp_pap(WORD,1,&scalar));
  fwp_task *t=(fwp_task *)(uintptr_t)fSPAWN(fn);V result=fwp_await(t);
  if(result==FWP_NONE||OBJ(result)->f[0]!=scalar||*fwp_rc_slot(scalar)!=1)return 7;
+ fwp_option_result fields=fwp_task_await_fields(PTR(t),NULL);
+ if(fields.tag!=1||fields.value!=scalar||*fwp_rc_slot(scalar)!=1)return 10;
  fwp_rc_free_obj(fwp_rc_fresh(result));fwp_task_drop(PTR(t));fwp_rc_free_obj(scalar);
  // Unknown callback metadata retains the conservative shared fallback.
  fwp_fninfo table[sizeof(fwp_fn_table)/sizeof(fwp_fn_table[0])];
@@ -387,6 +389,157 @@ fn transferred_callbacks_remove_a_retain_release_pair() {
                 retained[2] - moved[2],
                 *pairs,
                 "one retain per counted callback"
+            );
+        }
+    }
+}
+
+#[test]
+fn immediate_await_matches_remove_only_the_temporary_option_box() {
+    let dir = fwp::cgen::TempDir::new("task-await-fields").unwrap();
+    let source = dir.join("await.fwp");
+    let cfile = dir.join("await.c");
+    let binary = dir.join("await.exe");
+    std::fs::write(&source, include_str!("fixtures/task_await_fields.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = Command::new(compiler)
+        .env("FWP_NO_OPT", "1")
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(
+        reference.status.success() && reference.stderr.is_empty(),
+        "{reference:?}"
+    );
+    assert_eq!(
+        reference.stdout,
+        b"44\n0\n17\n2.0\n[Some \"escapeescape\"]\n"
+    );
+    for memory in ["arc", "tracing"] {
+        let build = Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "-O1", "--gc", memory, "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile)
+            .output()
+            .unwrap();
+        assert!(build.status.success(), "{build:?}");
+        let generated = std::fs::read_to_string(&cfile).unwrap();
+        assert!(
+            generated.contains("= fwp_task_await_fields("),
+            "no direct await calls"
+        );
+        let measured = allocations::instrument_client_allocations(&generated);
+        let start = measured
+            .find("static fwp_option_result fwp_task_await_fields(")
+            .unwrap();
+        let end = measured[start..]
+            .find("\nstatic V fwp_p_task_spawn(")
+            .unwrap()
+            + start;
+        // Restore the former temporary box in identical generated C. The task,
+        // result retain, output and escaping Option all do the same work.
+        let mut boxed = measured.clone();
+        boxed.replace_range(
+            start..end,
+            r#"static V fwp_await_owned(fwp_task *t, void (*dup)(V));
+static fwp_option_result fwp_task_await_fields(V handle, void (*dup)(V)) {
+    fwp_tasks_init();
+    V option = fwp_await_owned((fwp_task *)(uintptr_t)handle, dup);
+    if (option == FWP_NONE) return (fwp_option_result){0, FWP_NONE};
+    if (client_active) await_boxes++;
+    V value = OBJ(option)->f[0];
+    fwp_rc_free_obj(option);
+    return (fwp_option_result){1, value};
+}
+"#,
+        );
+        for opt in ["-O0", "-O2"] {
+            let mut results = Vec::new();
+            for (label, code) in [("fields", &measured), ("boxed-control", &boxed)] {
+                let code = code.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic uint64_t await_boxes;")
+                    .replace("    client_measure_end();", "    client_measure_end();\n    fprintf(stderr, \"await-boxes\\t%llu\\n\", (unsigned long long)await_boxes);");
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let output = Command::new(&binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0")
+                    .output()
+                    .unwrap();
+                assert!(
+                    output.status.success(),
+                    "{memory}/{opt}/{label}: {output:?}"
+                );
+                assert_eq!(output.stdout, reference.stdout);
+                let stderr = String::from_utf8(output.stderr.clone()).unwrap();
+                let lines: Vec<_> = stderr.lines().collect();
+                assert_eq!(lines.len(), 2, "{stderr}");
+                let counts: Vec<u64> = lines[0]
+                    .strip_prefix("client-memory\t")
+                    .unwrap()
+                    .split('\t')
+                    .map(|v| v.parse().unwrap())
+                    .collect();
+                assert_eq!(counts.len(), 6);
+                let boxes: u64 = lines[1]
+                    .strip_prefix("await-boxes\t")
+                    .unwrap()
+                    .parse()
+                    .unwrap();
+                if memory == "arc" {
+                    assert_eq!(counts[4..], [0, 0]);
+                }
+                if let Some(path) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(path).join("await-fields");
+                    std::fs::create_dir_all(&path).unwrap();
+                    let label = format!("{memory}{opt}-{label}");
+                    std::fs::write(path.join(format!("{label}.c")), &code).unwrap();
+                    std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                    std::fs::write(path.join(format!("{label}.stdout")), &output.stdout).unwrap();
+                    std::fs::write(path.join(format!("{label}.stderr")), &output.stderr).unwrap();
+                    std::fs::write(
+                        path.join(format!("{label}.status")),
+                        format!("{:?}\n", output.status.code()),
+                    )
+                    .unwrap();
+                }
+                results.push((counts, boxes));
+                // Verify the same program under collection/reuse stress separately
+                // from the count comparison, whose collector is inactive.
+                if memory == "tracing" {
+                    let stressed = Command::new(&binary)
+                        .env_remove("FWP_GC")
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", "1")
+                        .output()
+                        .unwrap();
+                    assert!(
+                        stressed.status.success(),
+                        "{memory}/{opt}/{label}: {stressed:?}"
+                    );
+                    assert_eq!(stressed.stdout, reference.stdout);
+                }
+            }
+            let (fields, removed) = &results[0];
+            let (boxed, restored) = &results[1];
+            assert_eq!(*removed, 0);
+            assert_eq!(
+                *restored, 34,
+                "32 repeated text awaits, one integer and one wide result"
+            );
+            assert_eq!(boxed[0] - fields[0], *restored);
+            assert!(boxed[1] > fields[1], "restored boxes require storage");
+            assert_eq!(
+                boxed[2], fields[2],
+                "shared results keep their required retains"
+            );
+            assert_eq!(
+                boxed[5], fields[5],
+                "same collections during count comparison"
             );
         }
     }

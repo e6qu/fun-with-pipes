@@ -729,6 +729,12 @@ preserve aliasing and alignment rules while exposing loads/stores to the C
 compiler's vectorizer. Shape validation bounds each access; floating-point
 accumulation order and separate multiplication/addition remain unchanged.
 
+The [direct-await candidate](measurements/task-await-fields.md) also exposes an
+immediately matched task result as tag/payload fields. It removes the temporary
+Option box while retaining the cached task result for other handles and later
+awaits. Its measured allocation comparison and platform validation are pending;
+options that escape the direct match retain their ordinary representation.
+
 ## Compile-time values in static storage
 
 A value produced by `comptime` is already known when C is generated. For example,
@@ -1066,12 +1072,13 @@ startup; it is not a macOS universal-binary requirement.
 Removing tracing GC and reducing ARC overhead are active goals in the
 [project plan](../PLAN.md). General collector-free execution is not implemented.
 A just-in-time compiler (JIT) is explicitly excluded from the project direction;
-native fwp functions compile ahead of execution. The existing OpenCL device
-path builds kernels at runtime; resolving that conflict is part of the numerical
-work in the plan, not authorization to add a language JIT. A replacement backend
-and distributed tensor execution remain deferred. Existing device kernels handle
-elementwise expressions and sums, not arbitrary matrix operations. OpenCL
-discovery/source tests do not establish execution on real GPU hardware.
+native fwp functions compile ahead of execution. The interpreter prepares its C
+foreign-call bridge before evaluating language code, including failure reporting
+before program effects. Its calls do not compile code. The CPU-only numerical design
+removes runtime OpenCL compilation; validation of that change is recorded in the
+[handoff](development-state.md). CPU kernels interpret their arithmetic instruction
+arrays without generating machine code. GPU execution, a replacement backend and
+distributed tensor execution are outside this roadmap.
 
 Darwin cross-compilation and Clang profile-guided optimization are not supported.
 WebAssembly target effects and host capabilities are limited as described in the

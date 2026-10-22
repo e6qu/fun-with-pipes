@@ -1010,7 +1010,7 @@ mod tests {
             (-1, 0, true, true, true),
         ];
         let empty = Program::default();
-        let mut interpreter = Interp::new(&empty, Box::new(Vec::<u8>::new()));
+        let mut interpreter = Interp::new(&empty, Box::new(Vec::<u8>::new())).unwrap();
         let mut expected = String::new();
         for (max, len, end, reset, dead) in cases {
             {

@@ -18,8 +18,13 @@ pub fn instrument(code: &str, definition: &str) -> String {
         .find("static void *fwp_main_thread(void *arg) {")
         .unwrap();
     let entry = &counted[main..];
-    assert_eq!(entry.matches("    fwp_cl_finish();").count(), 1);
-    let tail = entry.replacen("    fwp_cl_finish();", "    fwp_cl_finish();\n    fprintf(stderr, \"entry-checks\\t%llu\\n\", (unsigned long long)measured_entry_checks);", 1);
+    assert_eq!(
+        entry
+            .matches("    /* Ownership observation point: before runtime teardown. */")
+            .count(),
+        1
+    );
+    let tail = entry.replacen("    /* Ownership observation point: before runtime teardown. */", "    /* Ownership observation point: before runtime teardown. */\n    fprintf(stderr, \"entry-checks\\t%llu\\n\", (unsigned long long)measured_entry_checks);", 1);
     counted.replace_range(main.., &tail);
     counted
 }

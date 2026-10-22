@@ -1,6 +1,6 @@
 //! Reverse-mode autodiff and devices beyond the golden programs: large
 //! parallel kernels give the same bits on every device and thread count in
-//! both backends, the GPU device without OpenCL fails cleanly, and (with
+//! both backends, and (with
 //! `--ignored`) timings of reverse against forward mode and of parallel
 //! kernels, natively and in the interpreter.
 
@@ -118,69 +118,72 @@ fn parallel_kernels_are_deterministic() {
 }
 
 #[test]
-fn gpu_without_opencl() {
-    let path = root().join("tests/numerics/gpu.fwp");
-    let missing = "/nonexistent/libOpenCL.so.1";
-    let msg = format!(
-        "no OpenCL device: the OpenCL library ({}) could not be loaded",
-        missing
-    );
-    let want = format!(
-        "False\nErr \"{m}\"\nOk (Vector {{data = array[1.0, 2.0]}})\n--- stderr\nfwp: trap: device: {m}\n--- exit 101\n",
-        m = msg
-    );
-    let env = [("FWP_OPENCL_LIB", missing)];
-    assert_eq!(interp(&path, &env), want);
-    if !have_cc() {
-        return;
-    }
-    let dir = TempDir::new("gpu");
-    let exe = dir.0.join("gpu");
-    build(&path, &exe);
-    assert_eq!(native(&exe, &env), want);
-    // a library without platforms
-    let stub = dir.0.join("libstubcl.so");
-    let src = dir.0.join("stub.c");
-    let mut c = String::from("#include <stdint.h>\nint32_t clGetPlatformIDs(uint32_t n, void **p, uint32_t *num) { (void)n; (void)p; if (num) *num = 0; return 0; }\n");
-    for f in [
-        "clGetDeviceIDs",
-        "clGetDeviceInfo",
-        "clCreateContext",
-        "clCreateCommandQueue",
-        "clCreateProgramWithSource",
-        "clBuildProgram",
-        "clGetProgramBuildInfo",
-        "clCreateKernel",
-        "clCreateBuffer",
-        "clSetKernelArg",
-        "clEnqueueNDRangeKernel",
-        "clEnqueueReadBuffer",
-        "clFinish",
-        "clReleaseMemObject",
-        "clReleaseKernel",
-        "clReleaseProgram",
-        "clReleaseCommandQueue",
-        "clReleaseContext",
-    ] {
-        c.push_str(&format!("int32_t {}(void) {{ return -1; }}\n", f));
-    }
-    std::fs::write(&src, c).unwrap();
-    let ok = Command::new(cc())
-        .args(["-shared", "-fPIC", "-o"])
-        .arg(&stub)
-        .arg(&src)
-        .status()
+fn cpu_worker_limits_match_availability_and_both_backends() {
+    let dir = TempDir::new("worker-limits");
+    for (operation, expected) in [("kernel.run", "array[1.0, 2.0]\n"), ("kernel.sum", "3.0\n")] {
+        let path = dir.0.join("workers.fwp");
+        std::fs::write(
+            &path,
+            format!(
+                r#"
+count : () -> I64 ! {{IO}}
+count = const "FWP_TEST_WORKERS" | env.get | option.and-then parse-int | (match
+    Some _ -> id
+    None -> "test requires FWP_TEST_WORKERS" | prim.trap)
+kernel : Kernel
+kernel = vector [1.0, 2.0] | tensor.lazy | tensor.kernel
+main = () | count | CpuParallel | tap (device.available | echo) | flip {operation} kernel | echo
+"#
+            ),
+        )
         .unwrap();
-    assert!(ok.success());
-    let stub = stub.to_string_lossy().to_string();
-    let env = [("FWP_OPENCL_LIB", stub.as_str())];
-    let msg = "no OpenCL device: there is no OpenCL platform";
-    let want = format!(
-        "False\nErr \"{m}\"\nOk (Vector {{data = array[1.0, 2.0]}})\n--- stderr\nfwp: trap: device: {m}\n--- exit 101\n",
-        m = msg
-    );
-    assert_eq!(interp(&path, &env), want);
-    assert_eq!(native(&exe, &env), want);
+        let mut references = Vec::new();
+        for count in [i64::MIN, -1, 0, 1, 256, 257, i64::MAX] {
+            let setting = count.to_string();
+            let got = interp(&path, &[("FWP_TEST_WORKERS", &setting)]);
+            let want = if (1..=256).contains(&count) {
+                format!("True\n{expected}")
+            } else {
+                "False\n--- stderr\nfwp: trap: device: thread count must be between 1 and 256\n--- exit 101\n".into()
+            };
+            assert_eq!(got, want, "{operation}: {count}");
+            references.push((setting, got));
+        }
+        if !have_cc() {
+            continue;
+        }
+        for memory in ["arc", "tracing"] {
+            // ARC must free storage immediately; tracing-only stress and
+            // retained poisoned objects are deliberately forbidden in that mode.
+            let verification = if memory == "arc" { "0" } else { "1" };
+            let collector = if memory == "arc" { "off" } else { "on" };
+            for opt in ["-O0", "-O2"] {
+                let binary = dir.0.join("workers.exe");
+                let mut command = Command::new(fwp());
+                command
+                    .env_remove("FWP_NO_OPT")
+                    .args(["build", opt, "--gc", memory]);
+                let output = command.arg(&path).arg("-o").arg(&binary).output().unwrap();
+                assert!(output.status.success(), "{memory}/{opt}: {output:?}");
+                for (setting, expected) in &references {
+                    assert_eq!(
+                        native(
+                            &binary,
+                            &[
+                                ("FWP_TEST_WORKERS", setting),
+                                ("FWP_GC", collector),
+                                ("FWP_GC_STRESS", verification),
+                                ("FWP_GC_VERIFY", verification),
+                                ("FWP_REUSE_VERIFY", verification)
+                            ]
+                        ),
+                        *expected,
+                        "{operation}/{memory}/{opt}/{setting}"
+                    );
+                }
+            }
+        }
+    }
 }
 
 /// A program computing the gradient of a function of n inputs, in

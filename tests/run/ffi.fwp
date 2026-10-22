@@ -14,7 +14,7 @@ foreign "C" getenv : String -> Option[Ptr[U8]] ! {IO}
 foreign "C" strchr : String -> I32 -> Option[Ptr[U8]]
 
 foreign "C" qsort : Ptr[I32] -> USize -> USize -> (Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}) -> () ! {Unsafe}
-foreign "C" snprintf : Ptr[U8] -> USize -> String -> I64 -> String -> I32 ! {Unsafe} = "snprintf" variadic 3
+foreign "C" snprintf : Ptr[U8] -> USize -> String -> I64 -> String -> I32 ! {Unsafe} variadic 3
 
 compare : Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}
 compare = curry (both (.0 | ptr.read) (.1 | ptr.read) | uncurry (flip sub))
@@ -30,27 +30,46 @@ write-at : Ptr[I32] -> (I64, I32) -> () ! {Unsafe}
 write-at = curry (fork ptr.write (.1 | .1) (fork ptr.at (.1 | .0) .0))
 
 read-ints : I64 -> Ptr[I32] -> List[I32] ! {Unsafe}
-read-ints = curry (fork map (.1 | flip ptr.at | flip compose ptr.read) (.0 | range 0))
+read-ints =
+    curry (fork map (.1 | flip ptr.at | flip compose ptr.read) (.0 | range 0))
 
 sorted : List[I32] -> List[I32] ! {Unsafe}
 sorted = fork sort-at (length | int.convert | option.unwrap-or 0usize) fill
 
 sort-at : USize -> Ptr[I32] -> List[I32] ! {Unsafe}
-sort-at = curry (tap (both .1 .0 | uncurry qsort | apply 4usize | apply compare) | fork read-ints (.0 | int.convert | option.unwrap-or 0) .1)
+sort-at = curry (tap (both .1 .0 | uncurry qsort | apply 4usize | apply compare)
+    | both
+        (fork read-ints (.0 | int.convert | option.unwrap-or 0) .1)
+        (.1 | mem.free)
+    | .0)
 
+# Each sort copies its result before releasing the temporary C buffer.
 # a comparator that itself sorts with C: C calls fwp, which calls C, which
 # calls fwp again; the outer sort must keep its own comparator
 descending : Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}
-descending = curry (tap (const [3, 1, 2] | sorted | ignore) | both (.0 | ptr.read) (.1 | ptr.read) | uncurry sub)
+descending = curry (tap (const [3, 1, 2] | sorted | ignore)
+    | both (.0 | ptr.read) (.1 | ptr.read)
+    | uncurry sub)
 
 sorted-desc : List[I32] -> List[I32] ! {Unsafe}
-sorted-desc = fork sort-desc-at (length | int.convert | option.unwrap-or 0usize) fill
+sorted-desc =
+    fork sort-desc-at (length | int.convert | option.unwrap-or 0usize) fill
 
 sort-desc-at : USize -> Ptr[I32] -> List[I32] ! {Unsafe}
-sort-desc-at = curry (tap (both .1 .0 | uncurry qsort | apply 4usize | apply descending) | fork read-ints (.0 | int.convert | option.unwrap-or 0) .1)
+sort-desc-at = curry (tap
+        (both .1 .0 | uncurry qsort | apply 4usize | apply descending)
+    | both
+        (fork read-ints (.0 | int.convert | option.unwrap-or 0) .1)
+        (.1 | mem.free)
+    | .0)
 
 formatted : () -> String ! {Unsafe}
-formatted = const 64 | mem.alloc | tap (snprintf | apply 64usize | apply "%lld-%s" | apply 42 | apply "x") | ptr.read-string
+formatted =
+    const 64
+    | mem.alloc
+    | tap (snprintf | apply 64usize | apply "%lld-%s" | apply 42 | apply "x")
+    | both ptr.read-string mem.free
+    | .0
 
 main = [
     -5 | c-abs | echo,

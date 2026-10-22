@@ -223,7 +223,7 @@ fn transferred_record_fields_preserve_aliases_and_trap_cleanup() {
     ];
     p.main = Some(7);
     fwp::ir::check_locals(&p).unwrap();
-    let mut interp = fwp::interp::Interp::new(&p, Box::new(Vec::new()));
+    let mut interp = fwp::interp::Interp::new(&p, Box::new(Vec::new())).unwrap();
     assert_eq!(
         interp
             .call(2, vec![Value::Str("hello".into()), Value::I64(17)])
@@ -380,7 +380,7 @@ fn forwarded_callback_records_keep_their_box_and_release_aliases_on_failure() {
         ("discard_pair".into(), 5),
     ];
     fwp::ir::check_locals(&program).unwrap();
-    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(Vec::new()));
+    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(Vec::new())).unwrap();
     let args = |id| {
         vec![
             Value::Closure(Rc::new(Closure {

@@ -104,7 +104,7 @@ fn vector_results_preserve_lanes_aliases_and_checked_failures() {
                         .unwrap();
                     let end = start + code[start..].find("\n}\n").unwrap() + 3;
                     let body=code[start..end].replace("    fwp_init_consts();\n","    fwp_init_consts();\n    intptr_t vector_budget=fwp_gc.budget;\n")
-                        .replace("    fwp_cl_finish();\n","    fwp_cl_finish();\n    if(fwp_gc.budget!=vector_budget) exit(248);\n");
+                        .replace("    /* Ownership observation point: before runtime teardown. */\n","    /* Ownership observation point: before runtime teardown. */\n    if(fwp_gc.budget!=vector_budget) exit(248);\n");
                     let mut measured = code.clone();
                     measured.replace_range(start..end, &body);
                     fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
@@ -232,7 +232,7 @@ fn f64_lane_pipelines_fuse_without_reordering_effects_or_traps() {
                 let end = main + code[main..].find("\n}\n").unwrap() + 3;
                 let body = code[main..end]
                     .replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    lane_count_active=1;\n")
-                    .replace("    fwp_cl_finish();\n", "    fwp_cl_finish();\n    lane_count_active=0; if(lane_requests>4) exit(247);\n");
+                    .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    lane_count_active=0; if(lane_requests>4) exit(247);\n");
                 code.replace_range(main..end, &body);
             }
             assert_eq!(code.contains("/* fused :"), fused, "{name}");

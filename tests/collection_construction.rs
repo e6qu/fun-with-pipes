@@ -189,7 +189,7 @@ fn failed_numeric_collection_callbacks_release_storage() {
             );
             let mut code = std::fs::read_to_string(&cfile).unwrap();
             if memory == "arc" {
-                let finish = "\n    fwp_cl_finish();\n";
+                let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
                 assert_eq!(code.matches(finish).count(), 1);
                 code = code.replace(finish, &format!("{finish}\n    if (fwp_gc.budget_given != fwp_gc.budget) {{ fprintf(stderr, \"collection storage leaked: %lld bytes\\n\", (long long)(fwp_gc.budget_given - fwp_gc.budget)); exit(231); }}\n"));
             }

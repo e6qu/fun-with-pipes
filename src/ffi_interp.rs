@@ -1,11 +1,11 @@
 //! Calling C from the interpreter: the program's foreign C functions are
 //! wrapped by a generated shim library (see `ffi::shim_source`), compiled
-//! with the system C compiler and loaded with `dlopen`; arguments and
-//! results travel as 64-bit words. Callbacks re-enter the interpreter.
+//! with the system C compiler before interpreter construction finishes.
+//! Evaluation starts only after loading succeeds; calls never start a compiler.
+//! Arguments/results travel as 64-bit words. Callbacks re-enter the interpreter.
 
 use std::collections::HashMap;
 use std::ffi::{c_char, c_void, CStr, CString};
-use std::rc::Rc;
 
 use crate::ffi::{self, CType};
 use crate::interp::{Ctl, Interp, R};
@@ -32,7 +32,7 @@ fn trap<T>(msg: impl Into<String>) -> R<T> {
 
 /// Build and load the shim for every foreign C function of a program.
 #[cfg(not(target_family = "wasm"))]
-fn load(prog: &Program) -> Result<FfiLib, String> {
+pub(crate) fn prepare(prog: &Program) -> Result<FfiLib, String> {
     let src = ffi::shim_source(prog)?;
     // The interpreter owns both the loaded image and its temporary files.
     let dir = crate::cgen::TempDir::new("fwp-ffi")?;
@@ -85,7 +85,7 @@ fn load(prog: &Program) -> Result<FfiLib, String> {
 }
 
 #[cfg(target_family = "wasm")]
-fn load(_prog: &Program) -> Result<FfiLib, String> {
+pub(crate) fn prepare(_prog: &Program) -> Result<FfiLib, String> {
     Err("foreign C calls are not supported by the WebAssembly interpreter".into())
 }
 
@@ -285,11 +285,11 @@ unsafe extern "C" fn host_call(ctx: *mut c_void, slot: u32, args: *const u64, re
 impl<'p> Interp<'p> {
     pub(crate) fn call_foreign(&mut self, id: FuncId, args: Vec<Value>) -> R<Value> {
         let prog = self.prog;
-        if self.ffi.borrow().is_none() {
-            let lib = load(prog).map_err(Ctl::Trap)?;
-            *self.ffi.borrow_mut() = Some(Rc::new(lib));
-        }
-        let lib = self.ffi.borrow().clone().unwrap();
+        let lib = self
+            .ffi
+            .as_ref()
+            .expect("foreign bridge prepared before evaluation")
+            .clone();
         let f = &prog.funcs[id];
         let (params, ret) = ffi::signature(prog, f).map_err(Ctl::Trap)?;
         let pmts: Vec<MT> =

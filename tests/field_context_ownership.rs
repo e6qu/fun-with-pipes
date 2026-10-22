@@ -66,6 +66,7 @@ fn inlined_projection_releases_discarded_nested_children() {
     p.main = Some(3);
     fwp::ir::check_locals(&p).unwrap();
     let reference = fwp::interp::Interp::new(&p, Box::new(Vec::new()))
+        .unwrap()
         .call(0, vec![Value::Str("input".into())])
         .unwrap();
     assert_eq!(reference, Value::I64(17));
@@ -82,6 +83,7 @@ fn inlined_projection_releases_discarded_nested_children() {
         "record projection context must not become unknown: {locals:?}"
     );
     let result = fwp::interp::Interp::new(&p, Box::new(Vec::new()))
+        .unwrap()
         .call(0, vec![Value::Str("input".into())])
         .unwrap();
     assert_eq!(result, reference);

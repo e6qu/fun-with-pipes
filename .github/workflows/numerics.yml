@@ -522,8 +522,9 @@ jobs:
       - name: Task-capture example formatting and types
         if: ${{ !cancelled() }}
         run: |
-          cargo run -- fmt --check tests/fixtures/queued_task_handles.fwp
+          cargo run -- fmt --check tests/fixtures/queued_task_handles.fwp tests/fixtures/task_await_fields.fwp
           cargo run -- check tests/fixtures/queued_task_handles.fwp
+          cargo run -- check tests/fixtures/task_await_fields.fwp
       - name: Compiler proof unit tests
         if: ${{ !cancelled() }}
         run: cargo test --lib
@@ -535,7 +536,7 @@ jobs:
           mkdir -p queued-function-evidence
           git rev-parse HEAD > queued-function-evidence/ownership-source.txt
           set -o pipefail
-          cargo test --no-fail-fast --test queued_functions --test arc_execution --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test task_handle_ownership --test retained_thunk_ownership --test within_thunk_ownership --test typed_state_ownership --test scope_thunk_ownership --test ad_tape_scopes --test grpc_client_receive --test grpc_response_encoding --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested --test loop_ownership --test loop_preparation_ownership --test loop_unwind_ownership --test nested_loop_boxing --test inline_caf_ownership --test caf_ownership --test call_effects --test variant_alias_ownership --test variant_conversion_ownership --test compiler_call_liveness --test worker_preparation_ownership --test borrowed_callbacks --test record_conversion_ownership 2>&1 | tee queued-function-evidence/ownership-tests.log
+          cargo test --no-fail-fast --test queued_functions --test arc_execution --test channel_queue_ownership --test channel_cycle_ownership --test task_ownership --test task_handle_ownership --test retained_thunk_ownership --test within_thunk_ownership --test typed_state_ownership --test scope_thunk_ownership --test ad_tape_scopes --test grpc_client_receive --test grpc_response_encoding --test autodiff_checkpoint --test autodiff_precision --test autodiff_nested --test loop_ownership --test loop_preparation_ownership --test loop_unwind_ownership --test nested_loop_boxing --test inline_caf_ownership --test caf_ownership --test call_effects --test variant_alias_ownership --test variant_conversion_ownership --test compiler_call_liveness --test worker_preparation_ownership --test borrowed_callbacks --test record_conversion_ownership --test raw_memory_ownership 2>&1 | tee queued-function-evidence/ownership-tests.log
       - name: Publish completed ownership batch log before longer transport tests
         if: ${{ !cancelled() && inputs.suite == 'channel-proof' && steps.ownership_batch.outcome != 'skipped' }}
         uses: actions/upload-artifact@v7
@@ -548,6 +549,11 @@ jobs:
       - name: Retained socket callbacks and resource cleanup
         if: ${{ !cancelled() && inputs.suite == 'queued-sockets' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --no-fail-fast --test call_effects --test queued_functions --test native_sockets --test channel_cycle_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context
+      - name: ARC examples and explicit remaining rejection reasons
+        if: ${{ !cancelled() && inputs.suite == 'channel-proof' && runner.os != 'Windows' }}
+        env:
+          FWP_ARC_ARTIFACTS: queued-function-evidence/corpus
+        run: cargo test --test arc_corpus -- --nocapture
       - name: Queued gRPC response callbacks and transport cleanup
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         shell: bash
@@ -665,7 +671,7 @@ jobs:
                      'cached_map_borrows', 'arc_corpus', 'arc_execution', 'udp_ownership',
                      'autodiff_nested', 'foreign_callback_ownership', 'autodiff_precision',
                      'native_sockets', 'autodiff_checkpoint', 'library_unload',
-                     'opencl_lifetime', 'softfloat_core']
+                     'softfloat_core']
           metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--no-deps', '--format-version', '1']))
           command = ['cargo', 'test', '--no-run', '--message-format=json']
           for target in targets:
@@ -1435,7 +1441,7 @@ jobs:
           CC: gcc
         run: cargo test --test closure_ownership fixed_function_values_preserve_aliases_and_effect_order -- --exact --nocapture
   fixed_functions_wasi:
-    if: inputs.suite == 'fixed-functions' || inputs.suite == 'channel-proof' || (inputs.suite == 'queued-sockets' && inputs.native_runner == 'all')
+    if: inputs.suite == 'fixed-functions' || inputs.suite == 'channel-proof' || ((inputs.suite == 'kernels' || inputs.suite == 'queued-sockets') && inputs.native_runner == 'all')
     strategy:
       fail-fast: false
       matrix:
@@ -1592,9 +1598,9 @@ jobs:
         part: ${{ fromJSON(inputs.suite == 'http-clients' && '["ownership","comparisons"]' || (inputs.suite == 'server-repeat' || inputs.suite == 'server-arc') && '["server","client","calls"]' || '["all"]') }}
         runner: ${{ fromJSON(inputs.native_runner != 'all' && format('["{0}"]', inputs.native_runner) || (inputs.suite == 'stream-storage' || inputs.suite == 'context-storage' || inputs.suite == 'service-values-linux') && '["ubuntu-latest"]' || (inputs.suite == 'zip-windows' || inputs.suite == 'hash-windows' || inputs.suite == 'tcp-windows') && '["windows-2025","windows-11-arm"]' || '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]') }}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 25
+    timeout-minutes: ${{ inputs.suite == 'kernels' && 45 || 25 }}
     env:
-      CC: ${{ inputs.suite == 'fields' && startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
+      CC: ${{ startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
     steps:
@@ -1704,7 +1710,7 @@ jobs:
         if: inputs.suite == 'paths' || inputs.suite == 'filesystem'
         run: cargo test --no-fail-fast --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test stdlib_doc --test file_construction_ownership --test file_inline_path --test file_storage_disposal
       - name: Retrieve immutable CPU kernel baseline
-        if: inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders'
+        if: ${{ !cancelled() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: |
           git fetch --no-tags --depth=1 origin 21a621c699d11a84c05f955935dc95dcfb8adbf2
           git show 21a621c699d11a84c05f955935dc95dcfb8adbf2:runtime/fwp_rt_kernel.c > kernel-baseline.c
@@ -1956,19 +1962,51 @@ jobs:
           path: decoder-evidence/
           if-no-files-found: ignore
       - name: CPU kernel ownership
-        if: inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders'
+        if: ${{ !cancelled() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         env:
           FWP_KERNEL_ARTIFACTS: kernel-evidence
           FWP_KERNEL_BASELINE: kernel-baseline.c
-        run: cargo test --no-fail-fast --test cpu_kernel_ownership --test stdlib_doc
+        shell: bash
+        run: |
+          mkdir -p kernel-evidence
+          git rev-parse HEAD > kernel-evidence/source.txt
+          set -o pipefail
+          cargo test --no-fail-fast --test cpu_kernel_ownership --test stdlib_doc 2>&1 | tee kernel-evidence/ownership.log
+      - name: CPU worker limits and interpreter agreement
+        if: ${{ !cancelled() && inputs.suite == 'kernels' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
+        shell: bash
+        run: |
+          mkdir -p kernel-evidence
+          set -o pipefail
+          cargo test --no-fail-fast --test numerics --test stdlib_doc 2>&1 | tee kernel-evidence/api.log
+      - name: Publish CPU diagnostics before longer corpus checks
+        if: ${{ !cancelled() && inputs.suite == 'kernels' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: kernel-logs-${{ matrix.runner }}
+          path: |
+            kernel-evidence/source.txt
+            kernel-evidence/ownership.log
+            kernel-evidence/api.log
+          if-no-files-found: error
+      - name: Foreign bridges before evaluation and interactive tooling
+        if: ${{ !cancelled() && inputs.suite == 'kernels' && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
+        run: cargo test --no-fail-fast --test ffi --test foreign_callback_ownership --test repl --test debugger
+      - name: Maintained programs after removal of runtime GPU compilation
+        if: ${{ !cancelled() && inputs.suite == 'kernels' && runner.os != 'Windows' }}
+        env:
+          FWP_ARC_ARTIFACTS: kernel-evidence/corpus
+        run: |
+          cargo test --test arc_corpus -- --nocapture
+          test -s kernel-evidence/corpus/corpus.txt
       - name: CPU kernel size validation order
-        if: inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders'
+        if: ${{ !cancelled() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test device_bounds device_output_limits_preserve_kernel_validation_order -- --exact
       - name: Interpreter final reduction block
-        if: inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders'
+        if: ${{ !cancelled() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --lib numerics::kernel_boundary_tests::final_reduction_block_does_not_wrap_at_the_address_limit -- --exact
       - name: CPU kernel sanitized size and cleanup controls
-        if: (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && runner.os != 'Windows'
+        if: ${{ !cancelled() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders') && runner.os != 'Windows' }}
         run: cargo test --test device_bounds device_allocations_are_bounded_and_cleanup_controls_detect_omissions -- --exact
       - uses: actions/upload-artifact@v7
         if: always() && (inputs.suite == 'kernels' || inputs.suite == 'byte-decoders' || inputs.suite == 'decoders')

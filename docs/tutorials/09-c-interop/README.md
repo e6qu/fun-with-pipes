@@ -168,8 +168,10 @@ True
 
 `fwp run` compiles the program to native code, so foreign calls are
 ordinary C calls. With `--interp`, the interpreter reaches C through a
-small shim library that it compiles with the system C compiler, so it
-needs `cc` too.
+small bridge library that converts arguments and results. It builds and loads
+that library before evaluating the program, so it needs `cc` too. If preparation
+fails, none of the program runs. A foreign call during evaluation does no
+compilation.
 
 ---
 

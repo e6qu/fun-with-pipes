@@ -1008,11 +1008,12 @@ impl Command {
 
 /// Evaluate an exported constant with the interpreter.
 fn eval_const(prog: &Program, fid: FuncId) -> Result<Value, String> {
-    let mut it = crate::interp::Interp::new(prog, Box::new(std::io::sink()));
-    it.call(fid, vec![]).map_err(|e| match e {
-        crate::interp::Ctl::Trap(m) => format!("trap: {}", m),
-        _ => "it fails".to_string(),
-    })
+    crate::interp::Interp::new(prog, Box::new(std::io::sink()))
+        .and_then(|mut it| it.call(fid, vec![]))
+        .map_err(|e| match e {
+            crate::interp::Ctl::Trap(m) => format!("trap: {}", m),
+            _ => "it fails".to_string(),
+        })
 }
 
 /// The exported `version : String`, if there is one.

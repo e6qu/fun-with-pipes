@@ -66,7 +66,7 @@ prove every external deployment works.
 | 17 | [REST APIs and OpenAPI](17-rest-and-openapi/README.md) | `# expose: rest`, `fwp build --rest`, calls with `curl`, OpenAPI documents, a generated fwp client |
 | 18 | [TLS](18-tls/README.md) | HTTPS and services over TLS: certificates, `--tls-cert`, verifying clients, `lib/tls.fwp` |
 | 19 | [WebSockets and HTTP/2](19-websockets-and-http2/README.md) | HTTP/2 servers and clients (h2c, ALPN), compressed responses, WebSocket sessions with `http.websocket` and `ws.connect` |
-| 20 | [Reverse-mode autodiff and devices](20-autodiff-and-devices/README.md) | `grad` and `vjp` on tapes, tensor expressions as fused kernels, `Cpu`, `CpuParallel` and `Gpu` devices |
+| 20 | [Reverse-mode autodiff and devices](20-autodiff-and-devices/README.md) | `grad` and `vjp` on tapes, tensor expressions as fused kernels, `Cpu` and `CpuParallel` execution |
 | 21 | [MCP tools](21-mcp/README.md) | `# expose: mcp`, `fwp build --mcp`, a stateless MCP server over stdio and HTTP, schemas from types |
 | 22 | [Recursion, loops and shared values](22-recursion-and-sharing/README.md) | Tail calls, bounded iteration and immutable sharing |
 | 23 | [Ownership scopes](23-ownership-scopes/README.md) | Scoped callbacks, workers, cancellation and graph IDs/deletion |
