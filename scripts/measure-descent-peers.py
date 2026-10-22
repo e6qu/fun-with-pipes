@@ -282,7 +282,7 @@ def main():
              'scripts/ad-storage-profile.py', 'scripts/measure-iteration.py',
              'tests/fixtures/ad_raw_storage_probe.c', 'tests/fixtures/descent_explicit.fwp',
              'tests/fixtures/descent_explicit.c', 'tests/fixtures/descent_explicit.rs',
-             'tests/fixtures/descent_packed.fwp', 'src/cgen.rs', 'tests/boxed_projection_ownership.rs',
+             'tests/fixtures/descent_packed.fwp', 'src/cgen.rs', 'src/rc.rs', 'tests/boxed_projection_ownership.rs',
              'tests/fixtures/stack_array_projection.c', 'tests/array_element_ownership.rs',
              'tests/fixtures/array_capture_reads.fwp', 'tests/fixtures/array_capture_effects.fwp',
              'docs/tutorials/20-autodiff-and-devices/main.fwp']

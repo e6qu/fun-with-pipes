@@ -59,9 +59,20 @@ foreign "C" visit : (String -> I64) -> I64
 main = visit string.length | echo
 ```
 
-Save these snippets as `visit.c` and `visit.fwp`, then run
-`fwp run --gc arc --link visit.c visit.fwp`. It prints `5`. The callback-input
-extension is implemented and under native [validation](../../development-state.md).
+The files [visit.c](visit.c) and [visit.fwp](visit.fwp) are supplied with this
+lesson. From this directory, run both execution modes:
+
+```console
+$ fwp run --interp --link visit.c visit.fwp
+5
+$ fwp run --native --gc arc --link visit.c visit.fwp
+5
+```
+
+Both print `5`, the number of characters in `"hello"`; [visit.out](visit.out)
+records that result. The callback-input extension has passed focused native
+[checks](../../measurements/callback-inputs.md); delivery gates are tracked in
+[the handoff](../../development-state.md).
 C's text is copied into an owned fwp string. Keeping that string in checked
 state is safe after C returns; the copy survives changes to C's original buffer.
 C must not retain the callback itself. Returning a managed string from the

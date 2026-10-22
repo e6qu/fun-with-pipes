@@ -551,8 +551,13 @@ a separately lowered callback body borrows them, acquiring an owner only if a
 use escapes (for example, storing the array in state). The existing partial-array
 builder handles errors and cancellation. Numeric scalar results avoid new result
 representation rules. Recursive callbacks and resource scopes keep their ordinary
-ownership path. This preparation is not yet verified; see the
-[handoff](development-state.md) for checks and the explicit count/storage budget.
+ownership path. The first measurement still retained each array once per
+coordinate: borrowing at callback entry had moved ownership into a temporary
+`(array, index)` record. The ownership pass now forwards fields from a record of
+caller-borrowed parameters when every use is a projection or a proved borrowed
+call. Whole-record escapes and resource boundaries preserve ordinary owners;
+returning a projected field still acquires ownership. This repair is not yet
+verified; see the [handoff](development-state.md) for checks and count/storage budgets.
 
 A dying stack record can also transfer its sole counted numeric-array field.
 The compiler requires one tracked child owner, a matching `Array` of inline

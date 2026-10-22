@@ -703,6 +703,61 @@ impl Pass<'_> {
             || matches!(e, Expr::Field(base, _) if matches!(&**base, Expr::Local(_)))
     }
 
+    /// A record assembled from caller-borrowed parameters need not acquire
+    /// owners merely to project fields or pass a temporary to a proved borrow.
+    /// Whole-record escapes, unknown calls and resource boundaries keep owners.
+    fn forward_parameter_record(&self, e: &Expr, local: Local, fields: &[Expr]) -> Option<Expr> {
+        let rewrite = |e: &Expr| self.forward_parameter_record(e, local, fields);
+        let many = |xs: &[Expr]| xs.iter().map(rewrite).collect::<Option<Vec<_>>>();
+        Some(match e {
+            Expr::Local(l) if *l == local => return None,
+            Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => e.clone(),
+            Expr::Field(base, index) if matches!(&**base, Expr::Local(l) if *l == local) => {
+                fields.get(*index as usize)?.clone()
+            }
+            Expr::Field(base, index) => Expr::Field(Box::new(rewrite(base)?), *index),
+            Expr::Call(id, args) => {
+                let mut values = Vec::with_capacity(args.len());
+                for (index, value) in args.iter().enumerate() {
+                    if matches!(value, Expr::Local(l) if *l == local) {
+                        let record = Expr::Record(fields.to_vec());
+                        if !borrows_record_argument(self.prog, *id, index, &record) {
+                            return None;
+                        }
+                        values.push(record);
+                    } else {
+                        values.push(rewrite(value)?);
+                    }
+                }
+                Expr::Call(*id, values)
+            }
+            Expr::Apply(function, args) => Expr::Apply(Box::new(rewrite(function)?), many(args)?),
+            Expr::Record(values) => Expr::Record(many(values)?),
+            Expr::Construct(tag, values) => Expr::Construct(*tag, many(values)?),
+            Expr::SetFields(base, values) => Expr::SetFields(
+                Box::new(rewrite(base)?),
+                values
+                    .iter()
+                    .map(|(index, value)| Some((*index, rewrite(value)?)))
+                    .collect::<Option<Vec<_>>>()?,
+            ),
+            Expr::Let(l, value, body) => {
+                Expr::Let(*l, Box::new(rewrite(value)?), Box::new(rewrite(body)?))
+            }
+            Expr::Match(value, arms) => Expr::Match(
+                Box::new(rewrite(value)?),
+                arms.iter()
+                    .map(|(pattern, body)| Some((pattern.clone(), rewrite(body)?)))
+                    .collect::<Option<Vec<_>>>()?,
+            ),
+            Expr::Trace(..)
+            | Expr::ResourceRegion { .. }
+            | Expr::Dup(..)
+            | Expr::Drop(..)
+            | Expr::BorrowGlobal(..) => return None,
+        })
+    }
+
     /// Carry enclosing continuations before ownership lowering makes field
     /// reads into temporary owners. A nested match scrutinee may borrow storage
     /// that its enclosing arm still needs even when the alias's own binding
@@ -715,6 +770,17 @@ impl Pass<'_> {
                 let mut continuation = after.clone();
                 borrows::reads(&body, &mut continuation);
                 let value = self.forward_aliases(value, &continuation);
+                if let Expr::Record(fields) = &value {
+                    if !fields.is_empty()
+                        && fields.iter().all(|field| matches!(field, Expr::Local(l)
+                            if self.borrowed_parameters.contains(l)
+                                && !crate::resource::contains_resource(&self.prog.shapes, &self.locals[*l as usize])))
+                    {
+                        if let Some(forwarded) = self.forward_parameter_record(&body, *local, fields) {
+                            return forwarded;
+                        }
+                    }
+                }
                 if Self::plain_read(&value)
                     && record_fields(&self.prog.shapes, &self.locals[*local as usize]).is_none()
                     && borrows::parameter_type(self.prog, &self.locals[*local as usize])
@@ -1883,6 +1949,52 @@ mod tests {
             body: Body::Expr(Expr::Const(Value::I64(0))),
         });
         p
+    }
+
+    #[test]
+    fn caller_borrowed_record_fields_do_not_gain_temporary_owners() {
+        let mut p = hash_record_program(Expr::Local(0), list());
+        let record = p.funcs[1].locals[0].clone();
+        p.funcs[0].locals.extend([record, MT::con("std::U64")]);
+        p.funcs[0].body = Body::Expr(Expr::Let(
+            1,
+            Box::new(Expr::Record(vec![Expr::Local(0), Expr::Local(0)])),
+            Box::new(Expr::Let(
+                2,
+                Box::new(Expr::Call(1, vec![Expr::Local(1)])),
+                Box::new(Expr::Call(1, vec![Expr::Local(1)])),
+            )),
+        ));
+        let (body, locals) = insert_function(&p, &p.funcs[0], &[0]).unwrap();
+        ownership_liveness(&p, &p.funcs[0], &body, &locals, &[0]).unwrap();
+        assert_eq!(
+            format!("{body:?}").contains("Dup("),
+            !crate::escape::stack_enabled()
+        );
+    }
+
+    #[test]
+    fn escaping_borrowed_parameter_fields_still_acquire_owners() {
+        let mut p = hash_record_program(Expr::Local(0), list());
+        let record = p.funcs[1].locals[0].clone();
+        p.funcs[0].locals.push(record.clone());
+        for whole in [false, true] {
+            let result = if whole { record.clone() } else { list() };
+            p.funcs[0].ty = MT::Fun(Box::new(list()), Box::new(result));
+            p.funcs[0].body = Body::Expr(Expr::Let(
+                1,
+                Box::new(Expr::Record(vec![Expr::Local(0), Expr::Local(0)])),
+                Box::new(if whole {
+                    Expr::Local(1)
+                } else {
+                    Expr::Field(Box::new(Expr::Local(1)), 0)
+                }),
+            ));
+            let (body, locals) = insert_function(&p, &p.funcs[0], &[0]).unwrap();
+            ownership_liveness(&p, &p.funcs[0], &body, &locals, &[0]).unwrap();
+            assert!(format!("{body:?}").contains("Dup("));
+            assert_eq!(format!("{body:?}").contains("Record("), whole);
+        }
     }
 
     #[test]

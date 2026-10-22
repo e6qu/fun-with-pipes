@@ -15,8 +15,15 @@ strings, array-owner moves, C/Rust application comparisons and the measurement
 repair. The preparation at `ea4ce3f1f496513e5edddec6ff4483418ba50875` was replayed
 onto #195's identical merge tree; files were verified before these delivery-doc
 updates. [PR #196](https://github.com/e6qu/fun-with-pipes/pull/196) is the sole open PR,
-at `d98abe29139c5abb5093ac61a52d3e77ce19910c`. Production run `39772506582`
-and documentation run `39772506815` have started; no failed steps at first audit.
+at `7bb4b5d49341fc67f9b76840feeeb8e479c3392e`. Production run `39775586712`
+and documentation run `39775586540` have started. Documentation and benchmarks
+pass; the other eight production jobs remain running with no failed steps in
+the latest complete-job audit. The earlier head failed
+the tutorial copy check; its retained receipt is
+`/private/tmp/fwp-196-d98abe29139c-acceptance.json`. The supplied visit.c/fwp/output
+and console session repair pass the actual Rust consistency check and saved
+interpreter example locally (5.59s). Superseded production `39772506582` was
+cancelled; all final gates must pass at the repaired head.
 Focused checks alone do not authorize merge.
 
 **Next:** audit all final-head jobs with `/private/tmp/fwp-audit-196-final.py`; fix any
@@ -67,7 +74,13 @@ controls. Broader ownership boundaries and all seven roadmap areas remain open.
 ## Following preparation: borrow array-generation captures
 
 Branch `borrow-array-captures`, worktree `/private/tmp/fwp-array-capture-borrows`,
-starts at #196's tested head. Its unverified compiler change gives known numeric
+starts at #196's initial `d98abe29139c` head, before the tutorial repair. Preserve
+that repair when integrating the next preparation onto #196's merged tree.
+Source `90d54aaeeab8d3c6a41b75b21a668ffe5ed1ecc4`
+is published; ownership run `39774612966` and measurement run `39774616765`
+have initial results. Receipt: `/private/tmp/fwp-array-captures-publication.json`.
+Auditors: `fwp-audit-array-captures.py` and `fwp-audit-capture-descent.py`
+under `/private/tmp/`. Its unverified compiler change gives known numeric
 `array.generate` callbacks direct calls and borrows captures while the caller
 keeps them alive. It reuses the existing ownership insertion/liveness checks and
 partial-array cleanup. Escaping uses acquire owners where needed; recursive or
@@ -79,14 +92,29 @@ failure after partial output, yields and task cancellation. The saved interprete
 matches both expected outputs (0.38s guarded); this does not verify new C generation.
 Native checks require zero retain traffic for pure coordinate reads, final cleanup
 and failure of deliberately added retain/leaked-owner controls, at O0/O2 with
-stack placement on/off and ARC/tracing stress. These are not yet run.
+stack placement on/off and ARC/tracing stress. All six native hosts and 32-bit/WASI pass; every completed log was audited. Guarded `fwp-ready-array-captures.py` passes
+in 10.48s: formatting, workflow, docs and exact accepted baseline reconstruction.
 
 Before measurement, require zero retains in all four repeated packed-descent cases,
 unchanged allocation requests/bytes/raw storage and no higher managed peak. Use
 #196's accepted generated C as the paired baseline, retain C/Rust and identical-code
-controls, and report code/stack costs without a speed claim. Next: finish focused
-preflight, publish this preparation and run native checks/measurements on GitHub;
+controls, and report code/stack costs without a speed claim. Next: audit all native checks/measurements on GitHub;
 fix all failures together. Keep #196's final CI head unchanged.
+
+Both initial measurements failed the zero-retain requirement: the 3-coordinate,
+199-update case still retained 597 times. Generated C shows a temporary record
+acquiring an owner inside the borrowed callback. The uncommitted repair in
+`src/rc.rs` forwards caller-borrowed record fields only through projections and
+proved borrowed calls; two new unit tests cover repeated borrowing and escaping
+owners. The count requirement stays unchanged. Native cleanup checks now also
+require both failure and cancellation to release a partially filled array, and
+include deliberately omitted cleanup. Guarded
+`fwp-check-capture-partial-observer.py` passes in 2.71s against the initial C:
+O0/O2, four repetitions each for correct and broken cleanup. This verifies the
+observer, not the new Rust lowering. The #196 tutorial repair has been copied
+into this preparation. Guarded `fwp-ready-array-captures.py` passes in 7.95s: formatting, workflow,
+docs and exact accepted baseline reconstruction. Next: archive the initial
+results, publish one repaired source and rerun both focused suites.
 
 ## Resume files
 

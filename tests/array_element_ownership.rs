@@ -414,7 +414,7 @@ fn generated_numeric_arrays_borrow_captures_and_preserve_effect_cleanup() {
                         ("leaked-owner", 222),
                     ][..]
                 } else {
-                    &[("protected", 0)][..]
+                    &[("protected", 0), ("skipped-partial-release", 222)][..]
                 } {
                     let mut code = emitted.replace(
                         retain,
@@ -443,13 +443,21 @@ fn generated_numeric_arrays_borrow_captures_and_preserve_effect_cleanup() {
                         code = code.replace(&call, &format!("array_probe_retains=0; array_probe_active=1; {extra} {call} array_probe_active=0; {count_check} array_probe_calls++; {leaked}"));
                     }
                     code = code.replace(start, &format!("{start}    array_probe_start=fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget);\n"));
-                    let calls = if name == "reads" {
-                        "if (array_probe_calls != 3) _Exit(223);"
+                    let release = "static void fwp_array_builder_release(void *arg) {\n    fwp_array_builder *owner = arg;";
+                    assert_eq!(code.matches(release).count(), 1);
+                    let skip = if *control == "skipped-partial-release" {
+                        "return;"
                     } else {
                         ""
                     };
+                    code = code.replace(release, &format!("{release}\n    if (owner->value && owner->filled == 2 && owner->element->kind == K_F64) {{ array_probe_partials++; {skip} }}"));
+                    let calls = if name == "reads" {
+                        "if (array_probe_calls != 3) _Exit(223);"
+                    } else {
+                        "if (array_probe_partials != 2) _Exit(224);"
+                    };
                     code = code.replace(finish, &format!("{finish}    {calls}\n    const char *array_probe_stress=getenv(\"FWP_GC_STRESS\");\n    if ((!array_probe_stress || strcmp(array_probe_stress,\"1\")) && fwp_gc.total_alloc+(double)(fwp_gc.budget_given-fwp_gc.budget)!=array_probe_start) _Exit(222);\n"));
-                    code = format!("static unsigned array_probe_active,array_probe_retains,array_probe_calls;\nstatic double array_probe_start;\n{code}");
+                    code = format!("static unsigned array_probe_active,array_probe_retains,array_probe_calls,array_probe_partials;\nstatic double array_probe_start;\n{code}");
                     for opt in ["-O0", "-O2"] {
                         let binary = dir
                             .0
