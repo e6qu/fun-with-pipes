@@ -1203,13 +1203,18 @@ static V fwp_p_trim_impl(V s, int start, int end) {
     size_t a = 0, b = STR(s)->len;
     if (start) while (a < b && fwp_is_space(d[a])) a++;
     if (end) while (b > a && fwp_is_space(d[b - 1])) b--;
+    if (!a && b == STR(s)->len) return s;
     return fwp_str_new(d + a, b - a);
 }
 
 static V fwp_p_case(V s, int upper) {
+    size_t first = 0, length = STR(s)->len;
+    char low = upper ? 'a' : 'A', high = upper ? 'z' : 'Z';
+    while (first < length && (STR(s)->d[first] < low || STR(s)->d[first] > high)) first++;
+    if (first == length) return s;
     V r = fwp_str_new(STR(s)->d, STR(s)->len);
     char *d = STR(r)->d;
-    for (uint64_t i = 0; i < STR(r)->len; i++) {
+    for (size_t i = first; i < length; i++) {
         if (upper && d[i] >= 'a' && d[i] <= 'z') d[i] -= 32;
         if (!upper && d[i] >= 'A' && d[i] <= 'Z') d[i] += 32;
     }
@@ -1217,6 +1222,8 @@ static V fwp_p_case(V s, int upper) {
 }
 
 static V fwp_p_concat(V t, V s) {
+    const size_t limit = SIZE_MAX - sizeof(fwp_str) - 1;
+    if (STR(s)->len > limit || STR(t)->len > limit - STR(s)->len) fwp_trap("string too large");
     fwp_str *r = (fwp_str *)fwp_alloc_leaf(sizeof(fwp_str) + STR(s)->len + STR(t)->len + 1);
     r->len = STR(s)->len + STR(t)->len;
     memcpy(r->d, STR(s)->d, STR(s)->len);
@@ -1355,21 +1362,26 @@ static V fwp_p_ends_with(V p, V s) {
 
 static V fwp_p_replace(V from, V to, V s) {
     if (STR(from)->len == 0) return s;
-    fwp_buf b = {0};
+    if (STR(from)->len == STR(to)->len &&
+        !memcmp(STR(from)->d, STR(to)->d, STR(from)->len)) return s;
     const char *d = STR(s)->d, *end = d + STR(s)->len;
-    for (;;) {
-        const char *p = fwp_memmem(d, (size_t)(end - d), STR(from)->d, STR(from)->len);
-        if (!p) { buf_put(&b, d, (size_t)(end - d)); break; }
+    const char *p = fwp_memmem(d, (size_t)(end - d), STR(from)->d, STR(from)->len);
+    if (!p) return s;
+    fwp_buf b = {0};
+    do {
         buf_put(&b, d, (size_t)(p - d));
         buf_put(&b, STR(to)->d, STR(to)->len);
         d = p + STR(from)->len;
-    }
+        p = fwp_memmem(d, (size_t)(end - d), STR(from)->d, STR(from)->len);
+    } while (p);
+    buf_put(&b, d, (size_t)(end - d));
     return buf_to_str(&b);
 }
 
 static V fwp_p_str_repeat(V n, V s) {
-    fwp_buf b = {0};
     size_t k = fwp_count_arg(n);
+    if (!k || !STR(s)->len) return fwp_str_new("", 0);
+    fwp_buf b = {0};
     for (size_t i = 0; i < k; i++) buf_put(&b, STR(s)->d, STR(s)->len);
     return buf_to_str(&b);
 }
@@ -1396,8 +1408,9 @@ static V fwp_p_str_slice(V start, V len, V s) {
     size_t cnt = fwp_utf8_count(d, n);
     size_t st = fwp_count_arg(start);
     if (st > cnt) st = cnt;
-    size_t e = st + fwp_count_arg(len);
-    if (e > cnt) e = cnt;
+    size_t count = fwp_count_arg(len);
+    if (count > cnt - st) count = cnt - st;
+    size_t e = st + count;
     size_t a = fwp_utf8_offset(d, n, st), b = fwp_utf8_offset(d, n, e);
     return fwp_str_new(d + a, b - a);
 }
@@ -1757,8 +1770,9 @@ static V fwp_p_array_fold(V f, V z, V a) {
 static V fwp_p_array_slice(V start, V len, V a) {
     size_t n = ARR(a)->len, s = fwp_count_arg(start);
     if (s > n) s = n;
-    size_t e = s + fwp_count_arg(len);
-    if (e > n) e = n;
+    size_t count = fwp_count_arg(len);
+    if (count > n - s) count = n - s;
+    size_t e = s + count;
     V r = fwp_arr_new(e - s);
     memcpy(ARR(r)->d, ARR(a)->d + s, (e - s) * sizeof(V));
     return r;
@@ -1917,7 +1931,9 @@ static V fwp_simd_finish(fwp_array_builder *owner, fwp_cleanup *cleanup) {
 }
 #define LANES(v) ARR(OBJ(v)->f[0])
 
-static V fwp_p_simd_splat(V x, size_t n, const fwp_desc *elem) {
+static V fwp_p_simd_splat(V x, uint64_t n, const fwp_desc *elem) {
+    if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V) ||
+        n > (SIZE_MAX - sizeof(fwp_arr)) / fwp_array_stride(elem)) fwp_trap("array too large");
     fwp_array_builder result = {fwp_array_typed_new(n, elem), 0, elem};
     fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);
     if (elem->kind == K_F64) {
@@ -1933,7 +1949,7 @@ static V fwp_p_simd_splat(V x, size_t n, const fwp_desc *elem) {
     return fwp_simd_finish(&result, &cleanup);
 }
 
-static V fwp_p_simd_from_array(V a, size_t n, void (*drop_array)(V), void (*drop_vector)(V)) {
+static V fwp_p_simd_from_array(V a, uint64_t n, void (*drop_array)(V), void (*drop_vector)(V)) {
     if (fwp_array_len(a) != n) return FWP_NONE;
     fwp_rc_dup(a);
     fwp_value_owner owner = {a, drop_array};
@@ -2958,8 +2974,9 @@ static V fwp_p_bytes_get(V i, V b) {
 static V fwp_p_bytes_slice(V start, V len, V b) {
     size_t n = STR(b)->len, s = fwp_count_arg(start);
     if (s > n) s = n;
-    size_t e = s + fwp_count_arg(len);
-    if (e > n) e = n;
+    size_t count = fwp_count_arg(len);
+    if (count > n - s) count = n - s;
+    size_t e = s + count;
     return fwp_str_new(STR(b)->d + s, e - s);
 }
 

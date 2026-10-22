@@ -26,6 +26,11 @@ fn int(v: &Value) -> i64 {
     v.as_i128().unwrap_or(0) as i64
 }
 
+// Counts clamp to the host index range before conversion, matching fwp_count_arg.
+fn count_arg(v: &Value) -> usize {
+    (int(v).max(0) as u64).min(usize::MAX as u64) as usize
+}
+
 // Match the native length/header/V-slot overflow limit before allocating or
 // invoking a generator callback. Negative counts retain their empty result.
 fn array_count(v: &Value) -> R<usize> {
@@ -189,11 +194,11 @@ impl<'p> Interp<'p> {
                         .collect(),
                 ),
                 "take" => {
-                    let n = int(&a[0]).max(0) as usize;
+                    let n = count_arg(&a[0]);
                     Value::list(a[1].list_items().into_iter().take(n).collect())
                 }
                 "drop" => {
-                    let n = int(&a[0]).max(0) as usize;
+                    let n = count_arg(&a[0]);
                     Value::list(a[1].list_items().into_iter().skip(n).collect())
                 }
                 "take-while" | "drop-while" => {
@@ -284,14 +289,12 @@ impl<'p> Interp<'p> {
                         Value::list(out)
                     }
                 }
-                "repeat" => Value::list(vec![a[1].clone(); int(&a[0]).max(0) as usize]),
+                "repeat" => Value::list(vec![a[1].clone(); count_arg(&a[0])]),
                 "nth" => {
                     let n = int(&a[0]);
-                    opt(if n < 0 {
-                        None
-                    } else {
-                        a[1].list_items().into_iter().nth(n as usize)
-                    })
+                    opt(usize::try_from(n)
+                        .ok()
+                        .and_then(|index| a[1].list_items().into_iter().nth(index)))
                 }
                 "find" => {
                     let f = a[0].clone();
@@ -336,7 +339,7 @@ impl<'p> Interp<'p> {
                     }
                     Value::list(
                         a[1].list_items()
-                            .chunks(n as usize)
+                            .chunks(count_arg(&a[0]))
                             .map(|c| Value::list(c.to_vec()))
                             .collect(),
                     )
@@ -407,13 +410,13 @@ impl<'p> Interp<'p> {
                         Value::str(&s.replace(from, to))
                     }
                 }
-                "string.repeat" => Value::str(&a[1].as_str().repeat(int(&a[0]).max(0) as usize)),
+                "string.repeat" => Value::str(&a[1].as_str().repeat(count_arg(&a[0]))),
                 "string.reverse" => Value::str(&a[0].as_str().chars().rev().collect::<String>()),
                 "string.slice" => {
                     let cs = chars(a[2].as_str());
-                    let start = (int(&a[0]).max(0) as usize).min(cs.len());
-                    let len = int(&a[1]).max(0) as usize;
-                    let end = (start + len).min(cs.len());
+                    let start = count_arg(&a[0]).min(cs.len());
+                    let len = count_arg(&a[1]).min(cs.len() - start);
+                    let end = start + len;
                     Value::str(&cs[start..end].iter().collect::<String>())
                 }
                 "string.find" => {
@@ -423,7 +426,7 @@ impl<'p> Interp<'p> {
                         .map(|byte| Value::I64(s[..byte].chars().count() as i64)))
                 }
                 "pad-left" | "pad-right" => {
-                    let n = int(&a[0]).max(0) as usize;
+                    let n = count_arg(&a[0]);
                     let fill = a[1].as_str().chars().next();
                     let s = a[2].as_str();
                     let len = s.chars().count();
@@ -586,10 +589,15 @@ impl<'p> Interp<'p> {
                 "trits.unpack" => {
                     let bs = bytes(&a[1]);
                     // only trits the bytes hold: none past the end
-                    let n = (int(&a[0]).max(0) as usize).min(bs.len() * 5);
+                    let requested = int(&a[0]).max(0) as u64;
+                    let n = if bs.len() as u64 <= requested / 5 {
+                        bs.len() as u64 * 5
+                    } else {
+                        requested
+                    };
                     let mut out = Vec::new();
                     for i in 0..n {
-                        let byte = bs[i / 5] as u32;
+                        let byte = bs[(i / 5) as usize] as u32;
                         let d = (byte / 3u32.pow((i % 5) as u32)) % 3;
                         out.push(Value::Trit(d as i8 - 1));
                     }
@@ -597,13 +605,23 @@ impl<'p> Interp<'p> {
                 }
                 // ----- portable SIMD (lanes in a one-field record)
                 "simd.splat" => {
-                    let n = nat_arg(result) as usize;
+                    let n = nat_arg(result);
+                    let stride = if matches!(a[0], Value::F128(_)) {
+                        16
+                    } else {
+                        8
+                    };
+                    let limit = (usize::MAX - std::mem::size_of::<u64>()) / stride;
+                    if n > limit as u64 {
+                        return trap("array too large");
+                    }
+                    let n = n as usize;
                     Value::tuple(vec![Value::Array(Rc::new(vec![a[0].clone(); n]))])
                 }
                 "simd.from-array" => {
-                    let n = nat_arg(&inner(result)) as usize;
+                    let n = nat_arg(&inner(result));
                     let v = arr(&a[0]);
-                    opt((v.len() == n).then(|| Value::tuple(vec![Value::Array(v)])))
+                    opt((v.len() as u64 == n).then(|| Value::tuple(vec![Value::Array(v)])))
                 }
                 "simd.add" | "simd.sub" | "simd.mul" | "simd.div" | "simd.min" | "simd.max" => {
                     let (ys, xs) = (lanes(&a[0]), lanes(&a[1]));
@@ -723,16 +741,14 @@ impl<'p> Interp<'p> {
                 "array.get" => {
                     let i = int(&a[0]);
                     let v = arr(&a[1]);
-                    opt(if i < 0 {
-                        None
-                    } else {
-                        v.get(i as usize).cloned()
-                    })
+                    opt(usize::try_from(i)
+                        .ok()
+                        .and_then(|index| v.get(index).cloned()))
                 }
                 "array.set" => {
                     let i = int(&a[0]);
                     let v = arr(&a[2]);
-                    if i < 0 || i as usize >= v.len() {
+                    if i < 0 || i as u64 >= v.len() as u64 {
                         none()
                     } else {
                         let mut v = v.to_vec();
@@ -780,8 +796,8 @@ impl<'p> Interp<'p> {
                 }
                 "array.slice" => {
                     let v = arr(&a[2]);
-                    let start = (int(&a[0]).max(0) as usize).min(v.len());
-                    let end = (start + int(&a[1]).max(0) as usize).min(v.len());
+                    let start = count_arg(&a[0]).min(v.len());
+                    let end = start + count_arg(&a[1]).min(v.len() - start);
                     Value::Array(Rc::new(v[start..end].to_vec()))
                 }
                 "array.append" => {
@@ -909,16 +925,14 @@ impl<'p> Interp<'p> {
                 "bytes.get" => {
                     let i = int(&a[0]);
                     let b = bytes(&a[1]);
-                    opt(if i < 0 {
-                        None
-                    } else {
-                        b.get(i as usize).map(|x| Value::U8(*x))
-                    })
+                    opt(usize::try_from(i)
+                        .ok()
+                        .and_then(|index| b.get(index).map(|x| Value::U8(*x))))
                 }
                 "bytes.slice" => {
                     let b = bytes(&a[2]);
-                    let start = (int(&a[0]).max(0) as usize).min(b.len());
-                    let end = (start + int(&a[1]).max(0) as usize).min(b.len());
+                    let start = count_arg(&a[0]).min(b.len());
+                    let end = start + count_arg(&a[1]).min(b.len() - start);
                     Value::Bytes(Rc::from(&b[start..end]))
                 }
                 "bytes.append" => {
@@ -1161,6 +1175,139 @@ mod clock_tests {
         ] {
             assert!(matches!(unix_nanoseconds(time), Err(Ctl::Trap(message))
                 if message == "system time exceeds Duration range"));
+        }
+    }
+}
+
+#[cfg(test)]
+mod count_tests {
+    use super::*;
+    use crate::ir::Program;
+    use crate::softfloat::Binary128;
+
+    #[test]
+    fn wide_counts_and_indices_preserve_bounds_before_narrowing() {
+        let program = Program::default();
+        let mut interpreter = Interp::new(&program, Box::new(Vec::<u8>::new())).unwrap();
+        let list = Value::list(vec![Value::I64(1), Value::I64(2), Value::I64(3)]);
+        let array = Value::Array(Rc::new(vec![Value::I64(1), Value::I64(2), Value::I64(3)]));
+        let bytes = Value::Bytes(Rc::from(&b"abc"[..]));
+        for n in [
+            u32::MAX as i64,
+            u32::MAX as i64 + 1,
+            u32::MAX as i64 + 2,
+            i64::MAX,
+        ] {
+            for (symbol, mut arguments, expected) in [
+                ("take", vec![Value::I64(n), list.clone()], list.clone()),
+                (
+                    "drop",
+                    vec![Value::I64(n), list.clone()],
+                    Value::list(vec![]),
+                ),
+                ("nth", vec![Value::I64(n), list.clone()], none()),
+                (
+                    "chunks",
+                    vec![Value::I64(n), list.clone()],
+                    Value::list(vec![list.clone()]),
+                ),
+                ("array.get", vec![Value::I64(n), array.clone()], none()),
+                (
+                    "array.set",
+                    vec![Value::I64(n), Value::I64(9), array.clone()],
+                    none(),
+                ),
+                ("bytes.get", vec![Value::I64(n), bytes.clone()], none()),
+                (
+                    "string.slice",
+                    vec![Value::I64(1), Value::I64(n), Value::str("héllo")],
+                    Value::str("éllo"),
+                ),
+                (
+                    "string.slice",
+                    vec![Value::I64(n), Value::I64(3), Value::str("héllo")],
+                    Value::str(""),
+                ),
+                (
+                    "bytes.slice",
+                    vec![Value::I64(1), Value::I64(n), bytes.clone()],
+                    Value::Bytes(Rc::from(&b"bc"[..])),
+                ),
+                (
+                    "bytes.slice",
+                    vec![Value::I64(n), Value::I64(3), bytes.clone()],
+                    Value::Bytes(Rc::from(&b""[..])),
+                ),
+                (
+                    "array.slice",
+                    vec![Value::I64(1), Value::I64(n), array.clone()],
+                    Value::Array(Rc::new(vec![Value::I64(2), Value::I64(3)])),
+                ),
+                (
+                    "array.slice",
+                    vec![Value::I64(n), Value::I64(3), array.clone()],
+                    Value::Array(Rc::new(vec![])),
+                ),
+                (
+                    "string.repeat",
+                    vec![Value::I64(n), Value::str("")],
+                    Value::str(""),
+                ),
+                (
+                    "pad-left",
+                    vec![Value::I64(n), Value::str(""), Value::str("keep")],
+                    Value::str("keep"),
+                ),
+                (
+                    "trits.unpack",
+                    vec![Value::I64(n), Value::Bytes(Rc::from(&b"\0"[..]))],
+                    Value::list(vec![Value::Trit(-1); 5]),
+                ),
+            ] {
+                let actual = interpreter
+                    .prim_std(symbol, &mut arguments, &[], &MT::unit())
+                    .unwrap()
+                    .unwrap();
+                assert_eq!(actual, expected, "{symbol} {n}");
+            }
+        }
+        let vector = MT::Con(
+            "std::Vec".into(),
+            vec![MT::Nat(1u64 << 32), MT::con("std::I64")],
+        );
+        let result = MT::Con("std::Option".into(), vec![vector.clone()]);
+        let actual = interpreter
+            .prim_std(
+                "simd.from-array",
+                &mut [Value::Array(Rc::new(vec![]))],
+                &[],
+                &result,
+            )
+            .unwrap()
+            .unwrap();
+        assert_eq!(actual, none());
+        // F128 lanes occupy sixteen bytes even when narrow-array packing is off.
+        let oversized = MT::Con(
+            "std::Vec".into(),
+            vec![
+                MT::Nat(((usize::MAX - 8) / 16 + 1) as u64),
+                MT::con("std::F128"),
+            ],
+        );
+        let actual = interpreter
+            .prim_std(
+                "simd.splat",
+                &mut [Value::F128(Binary128::from_f64(0.0))],
+                &[],
+                &oversized,
+            )
+            .unwrap();
+        assert!(matches!(actual, Err(Ctl::Trap(message)) if message == "array too large"));
+        if usize::BITS == 32 {
+            let actual = interpreter
+                .prim_std("simd.splat", &mut [Value::I64(0)], &[], &vector)
+                .unwrap();
+            assert!(matches!(actual, Err(Ctl::Trap(message)) if message == "array too large"));
         }
     }
 }

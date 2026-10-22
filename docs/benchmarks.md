@@ -14,6 +14,15 @@ machine. This page separates two different questions:
 The measurements below are dated observations. They do not promise the same
 ratios on another machine or establish that the whole language is “zero-cost.”
 
+The [application acceptance suite](application-acceptance.md) names the larger
+programs, current checks and remaining measurement gaps. The first
+[word-frequency baseline](measurements/wordfreq.md) records a 3.29–3.52× ARC/C
+time ratio for its larger input on two Linux hosts, with the implementation
+differences stated explicitly. The [unchanged-text candidate](measurements/unchanged-text.md)
+removes copies and reports paired old/new costs without hiding the remaining gap.
+The [descent comparison](measurements/ad-application.md) measures saved history
+versus current weights and separates managed storage from unmeasured tape buffers.
+
 ## Choose the question first
 
 | Question | Read | What the number means |

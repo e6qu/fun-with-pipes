@@ -2,101 +2,143 @@
 
 ## Next action
 
-Next: publish the combined `task-results-cpu` delivery as one PR. CPU preflight
-`39687243271` at `2cefc6482618eefc2eda6a4fdab2602373abb66b` passes;
-every complete log is audited in `/private/tmp/fwp-cpu-modes-acceptance.json`.
-That focused Linux job used Clang. The combined workflow now selects GCC on Linux
-to match production; run `suite=kernels,native_runner=ubuntu-latest` on the new
-head as well as all nine production jobs and documentation before squash merge.
-Continue all seven open plan areas afterward.
+Next: complete publication and final validation of branch `application-ownership`.
+It is the next single substantial PR after accepted #191; do not open another
+active delivery alongside it. Use `gh pr view application-ownership` and the
+publication receipt for its PR number and final head. Audit all nine production
+jobs and documentation for that exact head, fix every failure, then squash-merge
+with one line ≤80 characters and an explicitly empty body. Continue the seven
+plan areas afterward; none is complete.
 
-## Delivery preparation
+The integrated code is byte-identical to preparation
+`54b01db94079e692cddf8ec3fc56ee064c7bbbf1` outside documentation/PLAN.md. Its
+combined run `39699466703` passes both Linux hosts: native ownership/count checks,
+actual 32-bit Rust interpreter tests, generated WASI and paired C/Rust measurements.
+All full logs are audited in `/private/tmp/fwp-count-verification-acceptance.json`.
+Independent inspection covers twelve comparison binaries, 36 native ownership/
+size controls and 24 WASI modules. The committed report is
+`docs/measurements/unchanged-text-bounds-2026-10-22.json`. Do not rerun inspections.
 
-Branch `task-results-cpu`, worktree `/private/tmp/fwp-task-results-cpu`, has the
-combined changes staged on #190's verified squash merge
-`a2b9130fa1811c32e8807ba8cf61a8647fbcba60`. No next PR is open yet.
-Preparation receipt: `/private/tmp/fwp-combined-delivery-preparation.json`.
-It combines await fields, State/Jacobian repairs, C-buffer cleanup, CPU contracts,
-removal of runtime OpenCL compilation and preparation of C bridges before effects.
-The only merge conflict was this handoff. Guarded integration checks pass:
-compiler/runtime/library/tests equal `2cefc648` exactly; formatting, workflow lint,
-primitive inventory and documentation links pass. Preserve all immutable tags.
+The delivery includes unchanged-string owner transfer, large-count/index/size
+repairs, explicit application acceptance, C/Rust and descent measurements, the
+current-weights tutorial, and documentation recording #191 acceptance. Local
+preflight/publication remain; `/private/tmp/fwp-application-pr-body.md` is the
+reviewable PR description. Final platform acceptance is still required.
 
-The completed CPU preparation remains on `native-kernel-contracts`, worktree
-`/private/tmp/fwp-native-kernel-contracts`. Its current source is `2cefc648`, tag
-`roadmap/revision-cpu-modes-2cefc6482618`; publication
-`/private/tmp/fwp-cpu-modes-publication.json`. Keep any further code repairs in
-sync with the combined delivery; do not overwrite the original measured sources.
+## Worktrees and accepted delivery
 
-[PR #190](https://github.com/e6qu/fun-with-pipes/pull/190) passed all nine
-production jobs in `39673092514` and documentation `39673088884` at
-`4cdf8afa8647cfdaecbc338429bf8a1c1a158210`. Every full log is audited.
-Squash merge `a2b9130fa1811c32e8807ba8cf61a8647fbcba60` has the identical tree,
-expected parent and one-line message without body or trailers. Receipt:
-`/private/tmp/fwp-190-final-acceptance.json`. Redundant same-tree post-merge
-production `39688181299` was cancelled. Post-merge documentation
-`39688181354` also passes; retain its full-log audit with the publication receipt.
-The primary checkout is detached at that merge, with only its handoff dirty.
+- Primary `/Users/zardoz/projects/fun-with-pipes` is detached at verified #191 merge
+  `19f3afbcbed22802a96f092d9d0ee3d7913335e3`; only this handoff is dirty.
+- Delivery: `application-ownership`, `/private/tmp/fwp-application-ownership`,
+  based on #191 merge. `/private/tmp/fwp-application-integration.json` records
+  the accepted source and patch. Publication receipt will be
+  `/private/tmp/fwp-application-delivery-publication.json`.
+- Preparation: `application-baselines`, `/private/tmp/fwp-application-baselines`,
+  published at `54b01db94079e692cddf8ec3fc56ee064c7bbbf1` with immutable tag
+  `roadmap/revision-count-verification-54b01db94079`. Its staged documentation
+  was copied into the delivery. Preserve this source and the older evidence tags.
+- `/private/tmp/fwp-task-results-cpu` and the older await/CPU worktrees preserve
+  preparation evidence. Do not repeat their work or push handoff-only changes.
 
+#191 passed all nine production jobs (`39688998592`), docs (`39688998567`) and
+focused GCC (`39688997806`) at `12be5afcee7c81f1b98ffed2081d698e1124b000`.
+Every full log was audited. `/private/tmp/fwp-191-final-acceptance.json` verifies
+merge `19f3afbcbed22802a96f092d9d0ee3d7913335e3`, its identical tree and one-line
+message. Duplicate same-tree production run `39700306060` was cancelled;
+post-merge docs `39700305849` still need a final audit.
 
-## Evidence and resolved failures
+The accepted change transfers direct task-result fields, repairs State/Jacobian
+and raw C-buffer cleanup, enforces explicit CPU worker contracts, removes runtime
+OpenCL compilation and prepares foreign bridges before effects. Await preparation
+`f2b5d400` passed six native and two WASM jobs in `39678830873`; independent
+inspection covers 204 native binaries and 64 await modules. It removes 34 requests/
+544 requested bytes from one fixture with unchanged retains/peak storage.
 
-Await source `f2b5d400fedaca3a24208cd3bcdf08f2ebe51c61`, tag
-`roadmap/revision-await-fields-f2b5d400feda`, passes all six native and both WASM
-jobs in `39678830873`. Every full log is audited. Independent inspection covers
-204 native binaries and 64 await modules. The [report](measurements/task-await-fields.md)
-records 134 → 100 allocation requests and 544 fewer requested bytes, with
-unchanged retains and peak storage. It makes no timing or C/Rust parity claim.
-Raw evidence and inspection receipts: `/private/tmp/fwp-task-await-evidence/f2b5d400feda`.
-Duplicate download archives were removed only after their hashes were checked;
-extracted binaries, C, symbols and results remain. Do not rerun completed inspectors.
+#190 is already accepted and merged at `a2b9130f`; its receipt is
+`/private/tmp/fwp-190-final-acceptance.json`. Do not repeat that delivery.
 
-Earlier await failures were an ineffective WASM missing-State control and a
-Windows observer inserted before platform headers. Both are repaired at the
-accepted source without relaxing ownership checks. Their full logs are audited.
-State partial captures keep creation scopes; Jacobian output counting releases
-its own tape scope; all 27 tape observations must execute. C-interop copies results
-before freeing raw buffers, including nested callbacks; missing frees must fail.
+## Application preparation and evidence
 
-CPU source `4ce0f3aa`, run `39678998800`, failed on obsolete private helper calls
-and an effectful constant. Follow-up `245fefda`, run `39682721876`, passes both WASM
-jobs and all executed Linux targets, but failed on an unused import and Rust
-format-string escaping. Both runs are fully audited. Source `4d482aa6`, run
-`39685395310`, fixes those; its complete Linux log fails only because the worker
-test enabled forbidden GC/reuse verification on ARC. Both WASM jobs pass and their full logs are audited. The passing `2cefc648` repair selects all settings explicitly by
-memory mode and removes a redundant internal thread clamp. Clamping to fewer
-work blocks remains normal worker allocation.
+The next group defines a finite six-family application suite and measures
+word frequencies, gradient descent and unchanged-string ownership. Its reports
+are in `/private/tmp/fwp-application-baselines/docs/measurements/`; the acceptance
+suite is `docs/application-acceptance.md`. No work area is complete.
 
-The strict Linux corpus executes 81/86 programs, with two explicit rejections
-and three compile-error checks. Its artifact variable is fixed and a nonempty
-report is now required. These counts alone are not complete platform acceptance.
-Windows production now runs `numerics`. A named-host `kernels` probe omits WASM;
-`native_runner=all` and production retain complete coverage. No test skip is a pass.
+| Preparation | Source / run | Actual result |
+|---|---|---|
+| Word-frequency C/Rust baseline | `74263bccf8e2` / `39690307737` | Both Linux jobs pass; eight binaries inspected. Larger ARC case takes 3.29–3.52× C and 2.45–2.54× Rust time. |
+| Descent history versus current weights | `4815e3d16c34` / `39692176065` | Both Linux jobs pass; 24 binaries inspected. At 129 coordinates, managed peak falls 845,424 → 26,288 bytes, with modest/mixed timings. Raw tape buffers are outside the counters. |
+| Unchanged string owners | `67b684506bb4` / native `39694262883`, WASI `39694266236` | Both native jobs pass; twelve comparison binaries and 24 cleanup controls inspected. Both full WASI jobs also pass; latest expanded-alias artifacts inspected separately. |
+| Additional source aliases | `a9a6ba203ec1` / `39696094960` | Both focused native/WASI jobs pass with audited logs; four WASM modules and 24 native controls independently inspected. |
+| Repeat identical word-frequency binaries | runner `4ce989e5ffb9` / `39695137827` | Both jobs pass; repeated ARC improvements and eight independently checked stack-estimate binaries with identical code bytes. |
 
-## Checks and resource limits
+Full logs for completed jobs are audited. Each source has an immutable
+`roadmap/revision-*` tag, recorded in its publication receipt. Auditors and receipts:
 
-Use the primary `python3 scripts/local-guard.py python3 SCRIPT` for serial local
-checks. Full Rust builds, suites and benchmarks stay on GitHub runners.
+- `/private/tmp/fwp-application-acceptance.json` and `fwp-ad-application-acceptance.json`.
+- `/private/tmp/fwp-owned-text-publication.json`, `fwp-audit-owned-text.py` and
+  `fwp-owned-text-acceptance.json`.
+- `/private/tmp/fwp-wordfreq-repeat-publication.json`, `fwp-audit-wordfreq-repeat.py`
+  and `fwp-wordfreq-repeat-acceptance.json`.
 
-- `fwp-check-combined-delivery.py`: code equality with `2cefc648`, formatting,
-  both workflow files, primitive inventory and docs pass on the staged delivery.
-- `fwp-check-cpu-contracts.py`: formatting, generated library docs, workflow lint,
-  frozen primitive inventory and documentation checks pass on the preparation.
-- `fwp-check-kernel-schedule.py`: eleven runner tests pass; every native integration
-  target has exactly one macOS shard assignment.
-- `fwp-check-cpu-worker-example.py`: current-library examples pass raw interpretation;
-  the complete numerics Rust test harness compiles without building fwp.
-- `fwp-probe-cpu-worker-limits.py`: 56 current-C cases pass on macOS ARM64, using
-  prior-compiler private-helper metadata: both operations, seven counts, ARC/tracing,
-  O0/O2. This does not establish the new public API/compiler or other platforms.
-- `fwp-probe-foreign-preparation.py`: reproduces the old interpreter compiling
-  after a file effect; its launcher control exits 88. The new regression, FFI,
-  callbacks, REPL and debugger tests pass in the audited Linux preflight.
+Raw artifacts and independent inspections are in `/private/tmp/fwp-application-evidence/74263bccf8e2`,
+`fwp-ad-application-evidence/4815e3d16c34`, `fwp-owned-text-evidence/67b684506bb4`
+and `fwp-wordfreq-repeat-evidence/4ce989e5ffb9`. Do not rerun completed inspectors.
 
-Preserve 64 GiB free disk, generated target below 2 GiB, sampled aggregate RSS
-below 1 GiB and the guard's 180-second deadline. Never raise or bypass limits.
-Fix every encountered failure. Every commit has one line ≤80 characters, no body,
-trailers or attribution. Final-head gates are required before the authorized squash.
+The text candidate consumes the source owner for lower/upper/trim/replace. An
+unchanged result receives that owner; a changed result copies before releasing
+it. Aliases keep their bytes; trap and cancellation controls require cleanup.
+No in-place mutation or new syntax is introduced. Six primitive contracts have
+explicit frozen-inventory migrations. Native schedules and WASI cover the cases.
+
+The large word-frequency input removes 148,546 of 397,353 requests, with unchanged
+138,250 retains and lower managed peak. Paired ARC medians improve about 17–18%
+on both Linux hosts and repeat similarly, but still take roughly 2.6–2.8× C time.
+The peers combine normalization in one pass, so this is not an isolated compiler
+overhead. Code sections shrink. Main-worker stack frames grow 16 bytes and
+lowercasing gains a 48/64-byte separate frame; do not claim every cost decreases.
+
+The extra fixture covers pattern/source, replacement/source and all-three
+aliases. Both Linux jobs pass native ownership and synchronous WASI checks.
+Receipts: `/private/tmp/fwp-text-alias-acceptance.json` and
+`/private/tmp/fwp-owned-text-acceptance.json` are accepted. Inspection is saved in `/private/tmp/fwp-text-alias-evidence/a9a6ba203ec1/inspection.json`;
+do not repeat completed alias, native baseline, AD or stack inspections. Final delivery requires all nine production jobs and docs.
+
+Bounds preparation `32c09d46ad3e` exposed three harness/setup failures in
+`39698466155` and `39698469582`: a size probe used an unrelated C struct (strict
+aliasing UB), the Rust WASM build selected GCC, and a trap test expected 1 instead
+of 101. All complete logs are in `/private/tmp/fwp-count-repair-acceptance.json`.
+Source `54b01db94079` fixes all three, saves size-probe binaries, and combines the
+checks in one `wordfreq` job per host. Independent checks continue after failures.
+Publication and acceptance receipts use `/private/tmp/fwp-count-verification-*`.
+
+The tutorial now performs 199 descent updates while keeping only current weights;
+its first three outputs match raw/optimized prior interpretation. Bounds changes
+preserve full-width indices/counts, bound slice and string-size arithmetic, avoid
+empty repetition loops and validate SIMD lane storage before narrowing. F128
+lanes require sixteen bytes. Earlier string timings describe `67b684506bb4`;
+fresh runtime measurements at `54b01db94079` now pass and reproduce the same
+allocation/retain counts. The large ARC case improves about 10–17% against the
+paired original baseline, while still taking 2.78–3.37× C and 2.14–2.34× Rust time.
+The small AMD64 RSS sample grows 131,072 bytes; whole ARC files grow 40/32 bytes
+on AMD64/ARM64 even though code sections shrink. Retain those tradeoffs.
+
+## Local checks and limits
+
+All checks use the primary `python3 scripts/local-guard.py python3 SCRIPT`.
+Completed: formatting, workflows, primitive inventory, eleven runner tests,
+documentation links; nine C/Rust/interpreter word-frequency controls; four small
+paired descent controls; binary/code-section inspections; four added alias cases.
+`fwp-probe-owned-text.py` also passes twelve small macOS ARM64 C controls. It
+combines saved generated C with current helpers and an explicit owner boundary,
+so it does not verify the new Rust compiler. Its missing cancellation declaration
+and scheduler-baseline harness errors were fixed before publication.
+
+Full builds, suites and benchmarks stay on runners. Preserve 64 GiB free disk,
+generated target below 2 GiB, sampled aggregate RSS below 1 GiB and the guard's
+180-second deadline. Latest disk observation was about 65 GiB free. Stop on limits;
+do not raise or bypass them. Every commit is one line ≤80 characters, no body,
+trailers or attribution. Never merge a skipped or partially passing gate.
 
 ## Roadmap status
 
@@ -106,6 +148,6 @@ trailers or attribution. Final-head gates are required before the authorized squ
 | 2 | In progress | Eliminate avoidable functional allocations and count traffic. |
 | 3 | In progress | Resolve measured machine-code and performance gaps. |
 | 4 | In progress | Improve differentiation time, memory and precision. |
-| 5 | In progress | Validate CPU numerical kernels and remove runtime compilation. |
+| 5 | In progress | Validate CPU numerical kernels; #191 removes runtime compilation. |
 | 6 | In progress | Establish equivalent-work comparisons and budgets. |
 | 7 | In progress | Validate larger programs and bounded live memory. |

@@ -3,7 +3,8 @@
 #   fwp run examples/wordfreq.fwp < some-text.txt
 
 # Read lessons 1-5 first. .1 selects the count in each (word, count) pair;
-# neg sorts larger counts first. This normalization removes only commas and periods.
+# neg sorts larger counts first; .0 breaks equal-count ties by the word.
+# This normalization removes only commas and periods.
 
 normalize = lower | replace "," "" | replace "." ""
 
@@ -14,6 +15,6 @@ main =
     | map normalize
     | frequencies
     | map.to-list
-    | sort-by (.1 | neg)
+    | sort-by (both (.1 | neg) .0)
     | take 5
     | each (format "{}: {}" | print)

@@ -1,0 +1,6138 @@
+{
+  "source": "54b01db94079e692cddf8ec3fc56ee064c7bbbf1",
+  "run": 39699466703,
+  "reports": [
+    {
+      "source": "54b01db94079e692cddf8ec3fc56ee064c7bbbf1",
+      "host": "ubuntu-latest",
+      "machine": "x86_64",
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cCompiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "rustCompiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "environment": {
+        "FWP_LTO": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "arguments": {
+        "compiler": "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+        "cc": "gcc",
+        "rustc": "rustc",
+        "objdump": "objdump",
+        "nm": "nm",
+        "time": "/usr/bin/time",
+        "case": [
+          "4096:64",
+          "65536:1024"
+        ],
+        "warmups": 2,
+        "samples": 24,
+        "timeout": 180,
+        "host": "ubuntu-latest",
+        "output": "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence",
+        "baseline": "wordfreq-before",
+        "baseline_source": "74263bccf8e2e67865e1863e2c04a296a97877bb"
+      },
+      "baselineSource": "74263bccf8e2e67865e1863e2c04a296a97877bb",
+      "baselineGeneratedCHashes": {
+        "before-arc": "9cd977f86ff4b3fdc49bea676a3991f58722630bc2731d42523167444929de76",
+        "before-tracing": "6f48be934a71820c715b5b4c16d71afa1014aa8915d4557a82aea019547bbe8a"
+      },
+      "commands": [
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/wordfreq_bench.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/c"
+        ],
+        [
+          "rustc",
+          "--edition=2021",
+          "-C",
+          "opt-level=2",
+          "-C",
+          "overflow-checks=yes",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/wordfreq_bench.rs",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/rust"
+        ],
+        [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--gc",
+          "arc",
+          "-O2",
+          "--emit-c",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/examples/wordfreq.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc.c"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--gc",
+          "tracing",
+          "-O2",
+          "--emit-c",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/examples/wordfreq.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing.c"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ]
+      ],
+      "buildNs": {
+        "c": 85602943,
+        "rust": 358050351,
+        "fwp-arc-frontend": 379016922,
+        "fwp-arc": 1379086247,
+        "fwp-arc-profile": 1370954491,
+        "fwp-tracing-frontend": 377261928,
+        "fwp-tracing": 1581244293,
+        "fwp-tracing-profile": 1551702155,
+        "before-arc": 1417548213,
+        "before-arc-profile": 1383395486,
+        "before-tracing": 1612058486,
+        "before-tracing-profile": 1579725327
+      },
+      "binaries": {
+        "c": {
+          "sha256": "af35d7ed0936ec33f30f53158f66a4d6285bcd59dfc6a11b12c8a3aab74d626d",
+          "bytes": 16552,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/c:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000001650\n\n",
+          "buildNs": 85602943
+        },
+        "rust": {
+          "sha256": "bca13b57547fb709e86aa28c4d48bd49a5d0691234a0febb0c4a85493bff1165",
+          "bytes": 4567768,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/rust:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000015d90\n\n",
+          "buildNs": 358050351
+        },
+        "fwp-arc": {
+          "sha256": "7cb773fb5dcc78d1de994229f118b4ae978a8869f568ae5a854726dd059896b8",
+          "bytes": 102280,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x00000000000039c0\n\n",
+          "buildNs": 1379086247
+        },
+        "fwp-tracing": {
+          "sha256": "5176c05a2cb95819dc9ded85d693b789fed9b59e3b2e5ac349ba121a07a2c396",
+          "bytes": 106912,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000003a30\n\n",
+          "buildNs": 1581244293
+        },
+        "before-arc": {
+          "sha256": "ac38c3acbd7dfb7ba55edd1f0482b6074df73a55f4c277d9cbef057254fd9ad1",
+          "bytes": 102240,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x00000000000039c0\n\n",
+          "buildNs": 1417548213
+        },
+        "before-tracing": {
+          "sha256": "b72ac0f47a8544061d1845af224cdd6b71ceba43f11bef86b816baaa7ce6a684",
+          "bytes": 110968,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000003a30\n\n",
+          "buildNs": 1612058486
+        }
+      },
+      "results": {
+        "4096-64": {
+          "tokens": 4096,
+          "vocabulary": 64,
+          "inputBytes": 46696,
+          "inputSha256": "a0aaf42271d64f12020436b3483630e2afcfe58d63c927fd8f264a2defe15274",
+          "samplesNs": {
+            "c": [
+              1772581,
+              1862200,
+              1413361,
+              1367396,
+              1422679,
+              1556227,
+              1329515,
+              1368598,
+              1383736,
+              1365182,
+              1448366,
+              1576483,
+              1551969,
+              1792608,
+              1425054,
+              1970686,
+              1820651,
+              1498651,
+              1343120,
+              1466593,
+              1302706,
+              1492399,
+              1423160,
+              1465008
+            ],
+            "rust": [
+              1808177,
+              1907782,
+              1973685,
+              1986098,
+              1972423,
+              1785665,
+              1910655,
+              1927078,
+              1822534,
+              2007576,
+              1910067,
+              2563954,
+              1790664,
+              2009331,
+              1890651,
+              2081215,
+              1857378,
+              1896981,
+              1943418,
+              2722669,
+              1820329,
+              2370090,
+              1987992,
+              1877325
+            ],
+            "fwp-arc": [
+              2959292,
+              2671337,
+              2996520,
+              3373701,
+              3432865,
+              3464879,
+              4226523,
+              3010455,
+              2868571,
+              3014275,
+              2880806,
+              2909147,
+              2796357,
+              2917412,
+              2864023,
+              2847361,
+              3477644,
+              2987052,
+              3422380,
+              2857621,
+              3300295,
+              3386104,
+              2874753,
+              3681906
+            ],
+            "fwp-tracing": [
+              4021034,
+              2891931,
+              2934140,
+              3519272,
+              2881695,
+              3044157,
+              2782932,
+              2858943,
+              3955161,
+              3093267,
+              4014415,
+              2797589,
+              2719083,
+              2942766,
+              3245975,
+              2864574,
+              3085155,
+              2901061,
+              3105412,
+              2952577,
+              3023510,
+              4347598,
+              3462046,
+              2962907
+            ],
+            "before-arc": [
+              3587069,
+              3176006,
+              3919318,
+              3067522,
+              2992405,
+              3705209,
+              3046002,
+              3340389,
+              3154012,
+              3335020,
+              3078194,
+              4097519,
+              3037436,
+              3666680,
+              3136728,
+              3421471,
+              2956966,
+              3919808,
+              4128169,
+              3106093,
+              3030543,
+              3540272,
+              4133806,
+              3539838
+            ],
+            "before-tracing": [
+              3346801,
+              3383016,
+              3255211,
+              3126972,
+              3078589,
+              3580617,
+              3061680,
+              4156832,
+              3631361,
+              3092791,
+              3952137,
+              3936640,
+              3825295,
+              5513333,
+              3373391,
+              4056205,
+              3484308,
+              3655266,
+              3032536,
+              3912334,
+              3240133,
+              3083692,
+              3582000,
+              3266434
+            ]
+          },
+          "medianNs": {
+            "c": 1456687.0,
+            "rust": 1918866.5,
+            "fwp-arc": 2991786.0,
+            "fwp-tracing": 2993208.5,
+            "before-arc": 3337704.5,
+            "before-tracing": 3433662.0
+          },
+          "ratios": {
+            "fwp-arc": {
+              "c": 2.053828996895009,
+              "rust": 1.5591423374163862
+            },
+            "fwp-tracing": {
+              "c": 2.054805527886224,
+              "rust": 1.5598836604839368
+            }
+          },
+          "orders": [
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ],
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ]
+          ],
+          "candidateOverBaseline": {
+            "arc": 0.8963603578447403,
+            "tracing": 0.8717248523587936
+          },
+          "peakProcessRssBytes": {
+            "c": 1810432,
+            "rust": 2478080,
+            "fwp-arc": 2727936,
+            "fwp-tracing": 2600960,
+            "before-arc": 2596864,
+            "before-tracing": 2605056
+          },
+          "managedProfiles": {
+            "fwp-arc": {
+              "requests": 15583,
+              "requestedBytes": 490854,
+              "retains": 8650,
+              "peakChargedBytes": 487176,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "fwp-tracing": {
+              "requests": 15583,
+              "requestedBytes": 490854,
+              "retains": 8650,
+              "peakChargedBytes": 487176,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-arc": {
+              "requests": 24865,
+              "requestedBytes": 668304,
+              "retains": 8650,
+              "peakChargedBytes": 557064,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-tracing": {
+              "requests": 24865,
+              "requestedBytes": 668304,
+              "retains": 8650,
+              "peakChargedBytes": 557064,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          }
+        },
+        "65536-1024": {
+          "tokens": 65536,
+          "vocabulary": 1024,
+          "inputBytes": 747112,
+          "inputSha256": "76bbb0dd75f6c1944bdb76dffcdca62251bcfc98851dc648ae983d7da8592160",
+          "samplesNs": {
+            "c": [
+              10735428,
+              10849311,
+              10900927,
+              10901318,
+              10690335,
+              10797564,
+              10594536,
+              11181659,
+              10560413,
+              10696646,
+              10641734,
+              10689292,
+              11124533,
+              10908020,
+              10847457,
+              10753242,
+              10843089,
+              10878314,
+              11024888,
+              11062948,
+              11171400,
+              11333332,
+              10733285,
+              10878384
+            ],
+            "rust": [
+              15565102,
+              15590458,
+              15323872,
+              15320466,
+              15352164,
+              15746729,
+              15546837,
+              16139682,
+              16400868,
+              15500049,
+              15409602,
+              15720140,
+              15289518,
+              15672240,
+              15425051,
+              15488889,
+              15295169,
+              15765885,
+              16122960,
+              16223157,
+              15769492,
+              15858618,
+              16088976,
+              15885538
+            ],
+            "fwp-arc": [
+              44856199,
+              35895044,
+              35416023,
+              41744956,
+              36340653,
+              37462774,
+              44806386,
+              44765150,
+              37871134,
+              35938775,
+              36026479,
+              36366522,
+              35429157,
+              36366672,
+              35450476,
+              37234969,
+              37384077,
+              36174685,
+              44030595,
+              36727782,
+              36992648,
+              35643559,
+              36461529,
+              44564667
+            ],
+            "fwp-tracing": [
+              36330205,
+              36819315,
+              36724198,
+              43856168,
+              41053960,
+              36295460,
+              36258692,
+              36056095,
+              35596879,
+              36894125,
+              43003820,
+              36856575,
+              36391689,
+              36666681,
+              36660189,
+              35325644,
+              44919194,
+              36815098,
+              36063605,
+              43824939,
+              35293474,
+              36679047,
+              42430040,
+              44997583
+            ],
+            "before-arc": [
+              40363163,
+              39031755,
+              39069114,
+              39845880,
+              44698516,
+              48040258,
+              44380624,
+              44849817,
+              39810865,
+              39599902,
+              40995160,
+              48301244,
+              39512940,
+              40255213,
+              39181243,
+              39697587,
+              49245324,
+              41034653,
+              48418442,
+              48262772,
+              44780849,
+              39466080,
+              40703334,
+              46348598
+            ],
+            "before-tracing": [
+              42410746,
+              42527683,
+              50070668,
+              41684193,
+              46755155,
+              44176042,
+              49892807,
+              47275393,
+              50083261,
+              42983612,
+              46691206,
+              42472561,
+              42140542,
+              44290082,
+              42830658,
+              46771472,
+              42779733,
+              42414917,
+              41891369,
+              50596989,
+              41397209,
+              41730940,
+              40566004,
+              42841237
+            ]
+          },
+          "medianNs": {
+            "c": 10848384.0,
+            "rust": 15631349.0,
+            "fwp-arc": 36594655.5,
+            "fwp-tracing": 36701622.5,
+            "before-arc": 40849247.0,
+            "before-tracing": 42835947.5
+          },
+          "ratios": {
+            "fwp-arc": {
+              "c": 3.37328172564688,
+              "rust": 2.3411066760776693
+            },
+            "fwp-tracing": {
+              "c": 3.383141903900157,
+              "rust": 2.347949783476781
+            }
+          },
+          "orders": [
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ],
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ]
+          ],
+          "candidateOverBaseline": {
+            "arc": 0.8958465134008468,
+            "tracing": 0.8567949267376425
+          },
+          "peakProcessRssBytes": {
+            "c": 4558848,
+            "rust": 6250496,
+            "fwp-arc": 10874880,
+            "fwp-tracing": 10883072,
+            "before-arc": 11804672,
+            "before-tracing": 11812864
+          },
+          "managedProfiles": {
+            "fwp-arc": {
+              "requests": 248807,
+              "requestedBytes": 7852294,
+              "retains": 138250,
+              "peakChargedBytes": 7794440,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "fwp-tracing": {
+              "requests": 248807,
+              "requestedBytes": 7852294,
+              "retains": 138250,
+              "peakChargedBytes": 7794440,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-arc": {
+              "requests": 397353,
+              "requestedBytes": 10692144,
+              "retains": 138250,
+              "peakChargedBytes": 8912904,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-tracing": {
+              "requests": 397353,
+              "requestedBytes": 10692144,
+              "retains": 138250,
+              "peakChargedBytes": 8912904,
+              "finalChargedBytes": 0,
+              "collections": 1
+            }
+          }
+        }
+      },
+      "acceptanceFailures": [],
+      "sourceHashes": {
+        "examples/wordfreq.fwp": "520eedac90a0360dc4de954bd3ab5cc939118a17c058746d37448bafd66493bd",
+        "tests/fixtures/wordfreq_bench.c": "45206b29b3e17c0784a2ed605e195def227d346609ecfe1e131c11f9054f4ccc",
+        "tests/fixtures/wordfreq_bench.rs": "47c11b0e732926220192555716e2ceafacda9ae4a2f5495c00b0d58ca081d530",
+        "scripts/measure-wordfreq.py": "d7eaefcf9f99d62e2a48cf672a223758859a847aa504918599ca9d886e3eac0b",
+        "scripts/measure-iteration.py": "fe7cc4d2931eccf157012ade4a37235910f701e39d3ffa96f1874d0a6f96137b"
+      },
+      "scope": "Whole process including input read, normalization, sorted-map counting, ranking, printing and teardown. Input generation and compilation excluded. Timings use uninstrumented binaries; fresh-process RSS and fwp managed counters are separate. C/Rust implement only ASCII; input fixtures are ASCII. fwp also accepts UTF-8 text, with ASCII-only lowercasing. All materialize normalized words and use sorted contiguous key/count pairs. String/list layout, allocation growth, sorting and buffering implementations differ. C/Rust combine the three normalization passes; fwp may allocate intermediate strings. Managed counters exclude raw buffers, allocator metadata, stacks and process startup; they are not comparable to whole-process RSS. No C/Rust allocation counts are claimed. Ratios are per-host fwp median / peer median; all samples retained. Before variants recompile saved baseline C with this run's toolchain and flags. All six variants run in balanced order on this host; baseline counts must reproduce exactly. Candidate allocation requests/bytes must fall with no higher retains or managed peak. Timing is reported even when slower; no timing budget or language-wide speed claim is established."
+    },
+    {
+      "source": "54b01db94079e692cddf8ec3fc56ee064c7bbbf1",
+      "host": "ubuntu-24.04-arm",
+      "machine": "aarch64",
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "cCompiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "rustCompiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "environment": {
+        "FWP_LTO": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "arguments": {
+        "compiler": "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+        "cc": "gcc",
+        "rustc": "rustc",
+        "objdump": "objdump",
+        "nm": "nm",
+        "time": "/usr/bin/time",
+        "case": [
+          "4096:64",
+          "65536:1024"
+        ],
+        "warmups": 2,
+        "samples": 24,
+        "timeout": 180,
+        "host": "ubuntu-24.04-arm",
+        "output": "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence",
+        "baseline": "wordfreq-before",
+        "baseline_source": "74263bccf8e2e67865e1863e2c04a296a97877bb"
+      },
+      "baselineSource": "74263bccf8e2e67865e1863e2c04a296a97877bb",
+      "baselineGeneratedCHashes": {
+        "before-arc": "9cd977f86ff4b3fdc49bea676a3991f58722630bc2731d42523167444929de76",
+        "before-tracing": "6f48be934a71820c715b5b4c16d71afa1014aa8915d4557a82aea019547bbe8a"
+      },
+      "commands": [
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/wordfreq_bench.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/c"
+        ],
+        [
+          "rustc",
+          "--edition=2021",
+          "-C",
+          "opt-level=2",
+          "-C",
+          "overflow-checks=yes",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/tests/fixtures/wordfreq_bench.rs",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/rust"
+        ],
+        [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--gc",
+          "arc",
+          "-O2",
+          "--emit-c",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/examples/wordfreq.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc.c"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--gc",
+          "tracing",
+          "-O2",
+          "--emit-c",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/examples/wordfreq.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing.c"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing-profile.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing-profile",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ]
+      ],
+      "buildNs": {
+        "c": 76855113,
+        "rust": 344519160,
+        "fwp-arc-frontend": 313560336,
+        "fwp-arc": 1295685198,
+        "fwp-arc-profile": 1256769347,
+        "fwp-tracing-frontend": 314847215,
+        "fwp-tracing": 1415184168,
+        "fwp-tracing-profile": 1452955398,
+        "before-arc": 1292989361,
+        "before-arc-profile": 1266089454,
+        "before-tracing": 1449776422,
+        "before-tracing-profile": 1429518203
+      },
+      "binaries": {
+        "c": {
+          "sha256": "25d62737682b3b24d07fce56b3f3797d77c472b6b06f39d262442eb54004b0c5",
+          "bytes": 70912,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/c:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000000e00\n\n",
+          "buildNs": 76855113
+        },
+        "rust": {
+          "sha256": "651f2ba189a33a8c4d9219cd914e525948bbf3d7697ba9610bb093a3052572e9",
+          "bytes": 4697984,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/rust:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000008ec0\n\n",
+          "buildNs": 344519160
+        },
+        "fwp-arc": {
+          "sha256": "ab00001b9fb37cbba858354783896c6a8097a8d3498a823ee3334dd4cb2e10db",
+          "bytes": 152752,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000002640\n\n",
+          "buildNs": 1295685198
+        },
+        "fwp-tracing": {
+          "sha256": "88702fde83e75845e01fffaef3e9aaa36713099c05b1904566ccaed436425bc9",
+          "bytes": 153232,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000002700\n\n",
+          "buildNs": 1415184168
+        },
+        "before-arc": {
+          "sha256": "7c8d82a22fa5cfbb45b25d8a3ee8244e57f834c32530572552e4a5c62cc828c7",
+          "bytes": 152720,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000002640\n\n",
+          "buildNs": 1292989361
+        },
+        "before-tracing": {
+          "sha256": "162ffe14a0bafd572c40fdd36a7bdc7aee8647f22d651c0f24868471ae07b270",
+          "bytes": 153192,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000002700\n\n",
+          "buildNs": 1449776422
+        }
+      },
+      "results": {
+        "4096-64": {
+          "tokens": 4096,
+          "vocabulary": 64,
+          "inputBytes": 46696,
+          "inputSha256": "a0aaf42271d64f12020436b3483630e2afcfe58d63c927fd8f264a2defe15274",
+          "samplesNs": {
+            "c": [
+              1139002,
+              1151115,
+              1215125,
+              1092417,
+              1145747,
+              1228357,
+              1153852,
+              1354681,
+              1191772,
+              1222278,
+              1193325,
+              1140371,
+              1159756,
+              1135187,
+              1169948,
+              1170587,
+              1212725,
+              1236966,
+              1153763,
+              1049552,
+              1187388,
+              1155227,
+              1106754,
+              1180692
+            ],
+            "rust": [
+              1510806,
+              1559359,
+              1492245,
+              1470301,
+              1441036,
+              2712283,
+              1527518,
+              1663387,
+              1592697,
+              1647138,
+              1566840,
+              1613097,
+              1441196,
+              1592009,
+              1567272,
+              1534775,
+              1501934,
+              1631066,
+              1657499,
+              1612689,
+              1573040,
+              2611743,
+              1581944,
+              1588681
+            ],
+            "fwp-arc": [
+              2305998,
+              2438363,
+              2370776,
+              3425872,
+              2301950,
+              2554782,
+              2330847,
+              2904936,
+              2369472,
+              3369638,
+              3460977,
+              2776117,
+              2469531,
+              2407433,
+              2293646,
+              3075902,
+              3450177,
+              2468331,
+              2639600,
+              2577279,
+              2430450,
+              2303079,
+              2451419,
+              3492114
+            ],
+            "fwp-tracing": [
+              2251220,
+              2334495,
+              2360920,
+              2384273,
+              3355655,
+              2385600,
+              2241525,
+              2342248,
+              2364592,
+              2399881,
+              2473587,
+              2462579,
+              3454289,
+              3466890,
+              2324606,
+              2356144,
+              2526125,
+              2443363,
+              2526149,
+              3508083,
+              2395593,
+              2485116,
+              2426322,
+              3487275
+            ],
+            "before-arc": [
+              2768124,
+              3442057,
+              2770404,
+              2729947,
+              2637409,
+              3197866,
+              2650360,
+              2642288,
+              2748324,
+              2731115,
+              2708923,
+              2693578,
+              2867440,
+              2752531,
+              2766173,
+              3726121,
+              2840055,
+              2732235,
+              2486652,
+              2790141,
+              2708698,
+              2799789,
+              2765668,
+              2596903
+            ],
+            "before-tracing": [
+              2785013,
+              2644008,
+              2700963,
+              3325301,
+              2714066,
+              2753356,
+              2803510,
+              2809358,
+              2768204,
+              2792261,
+              2708410,
+              2746731,
+              2793205,
+              2770908,
+              2941713,
+              3748403,
+              2776220,
+              2694410,
+              2778325,
+              2637936,
+              2921913,
+              2663930,
+              2725707,
+              2739691
+            ]
+          },
+          "medianNs": {
+            "c": 1164852.0,
+            "rust": 1577492.0,
+            "fwp-arc": 2468931.0,
+            "fwp-tracing": 2413101.5,
+            "before-arc": 2750427.5,
+            "before-tracing": 2769556.0
+          },
+          "ratios": {
+            "fwp-arc": {
+              "c": 2.1195233385872196,
+              "rust": 1.5650989038296232
+            },
+            "fwp-tracing": {
+              "c": 2.071594932231734,
+              "rust": 1.5297075991510576
+            }
+          },
+          "orders": [
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ],
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ]
+          ],
+          "candidateOverBaseline": {
+            "arc": 0.8976535465850308,
+            "tracing": 0.8712954350805688
+          },
+          "peakProcessRssBytes": {
+            "c": 1683456,
+            "rust": 2060288,
+            "fwp-arc": 2199552,
+            "fwp-tracing": 2203648,
+            "before-arc": 2265088,
+            "before-tracing": 2265088
+          },
+          "managedProfiles": {
+            "fwp-arc": {
+              "requests": 15583,
+              "requestedBytes": 490854,
+              "retains": 8650,
+              "peakChargedBytes": 487176,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "fwp-tracing": {
+              "requests": 15583,
+              "requestedBytes": 490854,
+              "retains": 8650,
+              "peakChargedBytes": 487176,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-arc": {
+              "requests": 24865,
+              "requestedBytes": 668304,
+              "retains": 8650,
+              "peakChargedBytes": 557064,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-tracing": {
+              "requests": 24865,
+              "requestedBytes": 668304,
+              "retains": 8650,
+              "peakChargedBytes": 557064,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          }
+        },
+        "65536-1024": {
+          "tokens": 65536,
+          "vocabulary": 1024,
+          "inputBytes": 747112,
+          "inputSha256": "76bbb0dd75f6c1944bdb76dffcdca62251bcfc98851dc648ae983d7da8592160",
+          "samplesNs": {
+            "c": [
+              9846508,
+              10016065,
+              10048987,
+              9920118,
+              9907054,
+              9948935,
+              9614085,
+              9554316,
+              9601653,
+              9634030,
+              9709519,
+              9699447,
+              9943111,
+              9912494,
+              9897973,
+              9840051,
+              9905974,
+              9899678,
+              9585828,
+              9458488,
+              9785699,
+              9535834,
+              9565179,
+              9713992
+            ],
+            "rust": [
+              12501373,
+              12762877,
+              12616696,
+              12311143,
+              12658697,
+              12759525,
+              12813430,
+              13002156,
+              12954434,
+              12813118,
+              12809326,
+              12937034,
+              12537270,
+              12827295,
+              12766493,
+              12555863,
+              12491380,
+              12413090,
+              12672098,
+              12994844,
+              12686314,
+              12742173,
+              12667042,
+              12860808
+            ],
+            "fwp-arc": [
+              27641098,
+              26817633,
+              27403747,
+              27326801,
+              27109978,
+              26994223,
+              27325817,
+              27221965,
+              26923956,
+              27231197,
+              27238774,
+              27878369,
+              27706405,
+              27103682,
+              27268055,
+              27144923,
+              26912356,
+              26792705,
+              27352833,
+              27646139,
+              27046432,
+              26975350,
+              27252719,
+              27582761
+            ],
+            "fwp-tracing": [
+              27296624,
+              28764948,
+              27313937,
+              27022208,
+              27713276,
+              27349849,
+              27447028,
+              27379075,
+              27459197,
+              28048238,
+              27021463,
+              27383194,
+              27785662,
+              27426228,
+              27964316,
+              27617473,
+              28045975,
+              26808969,
+              27434987,
+              27632946,
+              27754758,
+              27383779,
+              27282023,
+              27399931
+            ],
+            "before-arc": [
+              32734949,
+              33206364,
+              33216532,
+              32928203,
+              33006014,
+              32568105,
+              33014990,
+              32545671,
+              33320775,
+              32697949,
+              32738262,
+              33155179,
+              33533886,
+              33154914,
+              32693908,
+              32669612,
+              32834617,
+              32747597,
+              33116034,
+              32760390,
+              32780207,
+              32544528,
+              33587967,
+              33131137
+            ],
+            "before-tracing": [
+              34533828,
+              34814853,
+              34534508,
+              34842846,
+              34654128,
+              34490779,
+              34517844,
+              34260052,
+              34817845,
+              33960650,
+              34753651,
+              34253300,
+              35272291,
+              34833213,
+              34547821,
+              34519211,
+              35372990,
+              34824957,
+              34810364,
+              34195898,
+              34451153,
+              34628903,
+              33991836,
+              34553261
+            ]
+          },
+          "medianNs": {
+            "c": 9812875.0,
+            "rust": 12750849.0,
+            "fwp-arc": 27234985.5,
+            "fwp-tracing": 27430607.5,
+            "before-arc": 32881410.0,
+            "before-tracing": 34550541.0
+          },
+          "ratios": {
+            "fwp-arc": {
+              "c": 2.77543385603098,
+              "rust": 2.135935065970901
+            },
+            "fwp-tracing": {
+              "c": 2.795369094174745,
+              "rust": 2.1512769463429455
+            }
+          },
+          "orders": [
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ],
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ]
+          ],
+          "candidateOverBaseline": {
+            "arc": 0.8282791248915421,
+            "tracing": 0.7939270039215883
+          },
+          "peakProcessRssBytes": {
+            "c": 4435968,
+            "rust": 6123520,
+            "fwp-arc": 10354688,
+            "fwp-tracing": 10301440,
+            "before-arc": 11620352,
+            "before-tracing": 11714560
+          },
+          "managedProfiles": {
+            "fwp-arc": {
+              "requests": 248807,
+              "requestedBytes": 7852294,
+              "retains": 138250,
+              "peakChargedBytes": 7794440,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "fwp-tracing": {
+              "requests": 248807,
+              "requestedBytes": 7852294,
+              "retains": 138250,
+              "peakChargedBytes": 7794440,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-arc": {
+              "requests": 397353,
+              "requestedBytes": 10692144,
+              "retains": 138250,
+              "peakChargedBytes": 8912904,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "before-tracing": {
+              "requests": 397353,
+              "requestedBytes": 10692144,
+              "retains": 138250,
+              "peakChargedBytes": 8912904,
+              "finalChargedBytes": 0,
+              "collections": 1
+            }
+          }
+        }
+      },
+      "acceptanceFailures": [],
+      "sourceHashes": {
+        "examples/wordfreq.fwp": "520eedac90a0360dc4de954bd3ab5cc939118a17c058746d37448bafd66493bd",
+        "tests/fixtures/wordfreq_bench.c": "45206b29b3e17c0784a2ed605e195def227d346609ecfe1e131c11f9054f4ccc",
+        "tests/fixtures/wordfreq_bench.rs": "47c11b0e732926220192555716e2ceafacda9ae4a2f5495c00b0d58ca081d530",
+        "scripts/measure-wordfreq.py": "d7eaefcf9f99d62e2a48cf672a223758859a847aa504918599ca9d886e3eac0b",
+        "scripts/measure-iteration.py": "fe7cc4d2931eccf157012ade4a37235910f701e39d3ffa96f1874d0a6f96137b"
+      },
+      "scope": "Whole process including input read, normalization, sorted-map counting, ranking, printing and teardown. Input generation and compilation excluded. Timings use uninstrumented binaries; fresh-process RSS and fwp managed counters are separate. C/Rust implement only ASCII; input fixtures are ASCII. fwp also accepts UTF-8 text, with ASCII-only lowercasing. All materialize normalized words and use sorted contiguous key/count pairs. String/list layout, allocation growth, sorting and buffering implementations differ. C/Rust combine the three normalization passes; fwp may allocate intermediate strings. Managed counters exclude raw buffers, allocator metadata, stacks and process startup; they are not comparable to whole-process RSS. No C/Rust allocation counts are claimed. Ratios are per-host fwp median / peer median; all samples retained. Before variants recompile saved baseline C with this run's toolchain and flags. All six variants run in balanced order on this host; baseline counts must reproduce exactly. Candidate allocation requests/bytes must fall with no higher retains or managed peak. Timing is reported even when slower; no timing budget or language-wide speed claim is established."
+    }
+  ],
+  "inspection": [
+    {
+      "host": "ubuntu-latest",
+      "artifact": 12392223875,
+      "archiveSha256": "4f9849409becab2112c7d88d092aa4cca8232dabb3b520b1b0a272cff8d804ee",
+      "files": [
+        {
+          "file": "c",
+          "sha256": "af35d7ed0936ec33f30f53158f66a4d6285bcd59dfc6a11b12c8a3aab74d626d",
+          "bytes": 16552,
+          "machine": 62,
+          "textBytes": 1578,
+          "textSha256": "24e837f565460d451d8e756673c5df09570dbe991fddb956acc37a5432f6adb5",
+          "disassemblySha256": "84487981bdb00d824d54cf2ca5a852707b8382bb8d5d7d7bd5b794e9da18c6d2"
+        },
+        {
+          "file": "rust",
+          "sha256": "bca13b57547fb709e86aa28c4d48bd49a5d0691234a0febb0c4a85493bff1165",
+          "bytes": 4567768,
+          "machine": 62,
+          "textBytes": 257075,
+          "textSha256": "177800050cd917688a4d33b888b3b76c432661eb77f682355d2cf75de0c53ea4",
+          "disassemblySha256": "76a3368c75dfb8621462c178bcf5cc62136137e9ca202cfd4df83d7535035f8f"
+        },
+        {
+          "file": "fwp-arc",
+          "sha256": "7cb773fb5dcc78d1de994229f118b4ae978a8869f568ae5a854726dd059896b8",
+          "bytes": 102280,
+          "machine": 62,
+          "textBytes": 47330,
+          "textSha256": "cc6da6922a40dcccf6bc854665e8a4cf0605151a8393ec84339ccc029317dc9e",
+          "disassemblySha256": "48970e471d0a3dccca1eda86d08682e701ee34807762b3b89befa25e005c5f19",
+          "cSha256": "a88b077e894f1ec9f2dd66af15266a6d82b5fc2d30e107758048c7a52dce9789"
+        },
+        {
+          "file": "fwp-tracing",
+          "sha256": "5176c05a2cb95819dc9ded85d693b789fed9b59e3b2e5ac349ba121a07a2c396",
+          "bytes": 106912,
+          "machine": 62,
+          "textBytes": 55074,
+          "textSha256": "745dc9056676a2eedd3f560c2774243e89292a636d7c9a873619ecf4bec04657",
+          "disassemblySha256": "cfa924344e333841604b4772c311b10845438e2440252fa9ac9db2861ccb2ade",
+          "cSha256": "22ff24a6ed7dc154d0fed16919bb5eee79ab8780a6a7642f886a8f388663734d"
+        },
+        {
+          "file": "before-arc",
+          "sha256": "ac38c3acbd7dfb7ba55edd1f0482b6074df73a55f4c277d9cbef057254fd9ad1",
+          "bytes": 102240,
+          "machine": 62,
+          "textBytes": 48978,
+          "textSha256": "f080629f6b9a9c90fc859dfaf49fd0d92486283c89ecc37d9f28f94d47d6d4df",
+          "disassemblySha256": "c320090caa444c5b748b30bd66e8155a54462732c9e78d42511a544842a12ec9",
+          "cSha256": "9cd977f86ff4b3fdc49bea676a3991f58722630bc2731d42523167444929de76"
+        },
+        {
+          "file": "before-tracing",
+          "sha256": "b72ac0f47a8544061d1845af224cdd6b71ceba43f11bef86b816baaa7ce6a684",
+          "bytes": 110968,
+          "machine": 62,
+          "textBytes": 56610,
+          "textSha256": "6841f62405e40170b48d1a82a3c9612181d06cdfa9e95726152ef773e6bfb467",
+          "disassemblySha256": "6943f7a9694730f0c5bf354de662d63ae559f74a301b79833749a356a113dd28",
+          "cSha256": "6f48be934a71820c715b5b4c16d71afa1014aa8915d4557a82aea019547bbe8a"
+        }
+      ]
+    },
+    {
+      "host": "ubuntu-latest",
+      "artifact": 12392376888,
+      "archiveSha256": "20ef525ded7a62c6cd9aafe8415b56ce5b06bb225c48ccc2f80cdb67640f870a",
+      "files": [
+        {
+          "file": "arc-O0-missing-cancel-owner.bin",
+          "sha256": "8a25a5a5ee9c5c15d7d39443dc68ead4eec58c2b21792b5a5f32b0e014b6b165",
+          "bytes": 448312,
+          "machine": 62,
+          "textBytes": 299346,
+          "textSha256": "dc10665daacfc71f96c0f16c6cff32ca1d0037280fcd03fd40c44168c0cc222a",
+          "cSha256": "ae9ccee8b7e7a5b66ddb0e29ef06a7d66b07ccfb4cbbee4cfdb5f33b47371120"
+        },
+        {
+          "file": "arc-O0-missing-owner.bin",
+          "sha256": "e2eec2c7b13c210058fa6056c74444b374c04cdb561689b4895f67eb4dc5ddd6",
+          "bytes": 448312,
+          "machine": 62,
+          "textBytes": 299346,
+          "textSha256": "0099a79ab0dc22f807525d6cc979c4547fafd7aae800205d5b920df584391ed7",
+          "cSha256": "b690beaf75ba48a9a7cb1069c7e923335c801257d7f2a196956fade829700d19"
+        },
+        {
+          "file": "arc-O0-protected.bin",
+          "sha256": "56064e1543efe45df9a2eb40ba8d5007dac27ce7bca07a31393326431d0dd1df",
+          "bytes": 448312,
+          "machine": 62,
+          "textBytes": 299330,
+          "textSha256": "6849b8df522404a4df0322d14088840263cee12db0d863d2c6824dcad7e79998",
+          "cSha256": "41b2823deed342215d42f794297fe1887ee49f7bc3cdff45e71e83a1e1bbacd1"
+        },
+        {
+          "file": "arc-O2-missing-cancel-owner.bin",
+          "sha256": "0b0221b1245278d5be4db650dc0a865d1ca61677b6dda3ea9e29d42ee735c6bc",
+          "bytes": 104248,
+          "machine": 62,
+          "textBytes": 48914,
+          "textSha256": "88e282e42329bb95134c803230eed8e49839e639a62abbc4a65048903603f426",
+          "cSha256": "ae9ccee8b7e7a5b66ddb0e29ef06a7d66b07ccfb4cbbee4cfdb5f33b47371120"
+        },
+        {
+          "file": "arc-O2-missing-owner.bin",
+          "sha256": "a43c3619a4f0e57ed41de5ab8bf5eb9ace45fc4b9c50764a5f354ff4af2ae35a",
+          "bytes": 104248,
+          "machine": 62,
+          "textBytes": 48914,
+          "textSha256": "d7a67e9809122d5701b819d241b98aa053af4c1e97cdf5172d55241bd20b4cf2",
+          "cSha256": "b690beaf75ba48a9a7cb1069c7e923335c801257d7f2a196956fade829700d19"
+        },
+        {
+          "file": "arc-O2-protected.bin",
+          "sha256": "ebc3a94147fe72b8f90414f7b7d1c865a0cc8e57528004e9d76aa9e4e1349a8e",
+          "bytes": 104248,
+          "machine": 62,
+          "textBytes": 48898,
+          "textSha256": "95382f3014fe1ac0d818efb3f0f216699fc4698bdd8f8b9b06dbd81f7fd7a730",
+          "cSha256": "41b2823deed342215d42f794297fe1887ee49f7bc3cdff45e71e83a1e1bbacd1"
+        },
+        {
+          "file": "string-size-checked-O0.bin",
+          "sha256": "a4e195c10cec1f18384e5dc45743eea4c5b142f8c6ec4c9ef61f084389b13dac",
+          "bytes": 16432,
+          "machine": 62,
+          "textBytes": 1329,
+          "textSha256": "751cd6e71809f49e773b62497d48a519eda3f3bab7c09cb955612c790d60b48a",
+          "cSha256": "313cafde208f7e4eb82c856eb2834d6859e7b0984ca32d984e0f44d0350609d9"
+        },
+        {
+          "file": "string-size-checked-O2.bin",
+          "sha256": "9f479d7d2a2f98bfd04ae7ea60b2d4b648186ad43ba2149025a506b5886e98a7",
+          "bytes": 16144,
+          "machine": 62,
+          "textBytes": 541,
+          "textSha256": "5564a1be97febbbc8f6d7e592ae2b2f667e1550d6c7224b17ceb17b238e234dd",
+          "cSha256": "313cafde208f7e4eb82c856eb2834d6859e7b0984ca32d984e0f44d0350609d9"
+        },
+        {
+          "file": "string-size-missing-empty-O0.bin",
+          "sha256": "ddfe44b0d6716970f3d1e6ada4d0303921fb22969bbb9b018d364e2c4b9692f4",
+          "bytes": 16432,
+          "machine": 62,
+          "textBytes": 1288,
+          "textSha256": "291d778f9e0d7814289d1ee524cb6a31bb78e7ffb15a3c58779870e925b74f82",
+          "cSha256": "493e359ab29d3f40ffc73c4c64887e32243cea32444afa5ad3b13159935bc8cf"
+        },
+        {
+          "file": "string-size-missing-empty-O2.bin",
+          "sha256": "19458d2b4f22903bacf4528e9d2c09bbb612ae82fc17f641e0fa0b239770930f",
+          "bytes": 16144,
+          "machine": 62,
+          "textBytes": 541,
+          "textSha256": "6d8b611a464f872a54749f0c64b003d43db003aeb4ea38b6a532dda3cc6b5ce0",
+          "cSha256": "493e359ab29d3f40ffc73c4c64887e32243cea32444afa5ad3b13159935bc8cf"
+        },
+        {
+          "file": "string-size-missing-size-O0.bin",
+          "sha256": "848ca7e28a33a5c1ffa6556462deaeddab4939802d4077e16218a55b0342cff8",
+          "bytes": 16432,
+          "machine": 62,
+          "textBytes": 1253,
+          "textSha256": "1cc5b25abece51938deeba12f3753f27ae9fd18ba71eea890cc4313c1bd83807",
+          "cSha256": "970237d021c2e0f038aa1c26f3a3c0222844b0cbb58756679521737687e49023"
+        },
+        {
+          "file": "string-size-missing-size-O2.bin",
+          "sha256": "e360eed35c605eb92e9439759df63d74c5dc1a5b10aa06316b5507bf9a9b2215",
+          "bytes": 16000,
+          "machine": 62,
+          "textBytes": 297,
+          "textSha256": "e62501f848dcd5b385280bfaf021c96bceac15cf21a00b7b0c7ddedb708b7409",
+          "cSha256": "970237d021c2e0f038aa1c26f3a3c0222844b0cbb58756679521737687e49023"
+        },
+        {
+          "file": "tracing-O0-missing-cancel-owner.bin",
+          "sha256": "821f64bfef23affa2d94e2a6b3ad65ad835a85ac5a2831ec1ae83dc2cf85b8c9",
+          "bytes": 457192,
+          "machine": 62,
+          "textBytes": 306850,
+          "textSha256": "02cb22557bac3c330b02cbb7dd211cf65c03269f18c58fccce897f4949964b16",
+          "cSha256": "d1e0f3f157c037816a1b49c82ef5e126a0957d680a62cfd54573b46b06315a09"
+        },
+        {
+          "file": "tracing-O0-missing-owner.bin",
+          "sha256": "adc10eb7660769773238db5b2d633a2ac33f1ed1656d72e450768e9f6976c2a0",
+          "bytes": 457192,
+          "machine": 62,
+          "textBytes": 306850,
+          "textSha256": "67725304f7513cee3be760d1c4ed0086d3decbf5bc98d36428a296e06951e570",
+          "cSha256": "1d34bcd43d9a31dac56adfa91fc36cfdbc56a1e567f78d7af956ba3d9e1694e5"
+        },
+        {
+          "file": "tracing-O0-protected.bin",
+          "sha256": "0a7b62a1a105dcf558deee20c0b7b06dcdaca0968307c3557b8e1aeaf12ea37d",
+          "bytes": 457192,
+          "machine": 62,
+          "textBytes": 306834,
+          "textSha256": "c6e48c21071d9e17fafb84427165ec21ab41819e90c44c3d63c72c42fb69461c",
+          "cSha256": "8f3870f1c6685685bc2774b49d51cb9c09b873490813ed83d51758625aa30484"
+        },
+        {
+          "file": "tracing-O2-missing-cancel-owner.bin",
+          "sha256": "b1d1b9402cb3f790c53bc633749f05399acd76d9d55acab78c029bceb623ea24",
+          "bytes": 112928,
+          "machine": 62,
+          "textBytes": 56402,
+          "textSha256": "86837a247c2e6401e447fabfd8d40f0951ef64eafbc8531d436c6535595c2fc1",
+          "cSha256": "d1e0f3f157c037816a1b49c82ef5e126a0957d680a62cfd54573b46b06315a09"
+        },
+        {
+          "file": "tracing-O2-missing-owner.bin",
+          "sha256": "e3a027513a7ce5c682f777d94e0f208ca99eb21a3522fe4e372ae4bd6b0319f5",
+          "bytes": 112928,
+          "machine": 62,
+          "textBytes": 56402,
+          "textSha256": "65ed4f4763371d6585848672705d8997de47f59d2615e81787cf644fb68d5d70",
+          "cSha256": "1d34bcd43d9a31dac56adfa91fc36cfdbc56a1e567f78d7af956ba3d9e1694e5"
+        },
+        {
+          "file": "tracing-O2-protected.bin",
+          "sha256": "c1421112d5aedd225c128646408827ef7947676450c8e5e9fd8a476bcfd952de",
+          "bytes": 112928,
+          "machine": 62,
+          "textBytes": 56386,
+          "textSha256": "b18bf18106d0aab53b7ff6284927a9509b79b660de4b1358824f50cd2d4e9f63",
+          "cSha256": "8f3870f1c6685685bc2774b49d51cb9c09b873490813ed83d51758625aa30484"
+        }
+      ]
+    },
+    {
+      "host": "ubuntu-latest",
+      "artifact": 12392741659,
+      "archiveSha256": "b54ccc1103b8b45f96d2311f1eb0ed1ecc5c22b22affb3e70ada5bbbec9e2c67",
+      "files": [
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 364437,
+          "sha256": "f24a5836d4b72aab75fbb1b27391b5b4f08112e88846cdc7fd9cca632c34b92a",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 274,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 440,
+              "offset": 285
+            },
+            {
+              "id": 3,
+              "payload_bytes": 344,
+              "offset": 728
+            },
+            {
+              "id": 4,
+              "payload_bytes": 7,
+              "offset": 1075
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 1084
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 1090
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 1101
+            },
+            {
+              "id": 9,
+              "payload_bytes": 322,
+              "offset": 1122
+            },
+            {
+              "id": 10,
+              "payload_bytes": 166399,
+              "offset": 1447
+            },
+            {
+              "id": 11,
+              "payload_bytes": 7605,
+              "offset": 167850
+            },
+            {
+              "id": 0,
+              "payload_bytes": 39406,
+              "offset": 175458,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 17517,
+              "offset": 214868,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 61948,
+              "offset": 232389,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13305,
+              "offset": 294341,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 48488,
+              "offset": 307649,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3222,
+              "offset": 356141,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 4916,
+              "offset": 359366,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 364285,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 364358,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 166399,
+          "memories": [
+            {
+              "minimum_pages": 517,
+              "maximum_pages": null,
+              "minimum_bytes": 33882112,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 354,
+          "named_tracing_functions": [],
+          "file": "count-boundaries-O1.wasm",
+          "cSha256": "555d68bab21aaa8601b9ebc63cef8590eabaf29350a308f06f4d53917be437f6"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 363120,
+          "sha256": "69494c0df8d00be791bebcdd18d1925d7d37ba6f4a0fe8b40692dd7410fc9a4a",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 280,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 476,
+              "offset": 291
+            },
+            {
+              "id": 3,
+              "payload_bytes": 348,
+              "offset": 770
+            },
+            {
+              "id": 4,
+              "payload_bytes": 7,
+              "offset": 1121
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 1130
+            },
+            {
+              "id": 6,
+              "payload_bytes": 16,
+              "offset": 1136
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 1154
+            },
+            {
+              "id": 9,
+              "payload_bytes": 323,
+              "offset": 1175
+            },
+            {
+              "id": 10,
+              "payload_bytes": 163167,
+              "offset": 1501
+            },
+            {
+              "id": 11,
+              "payload_bytes": 7605,
+              "offset": 164672
+            },
+            {
+              "id": 0,
+              "payload_bytes": 39517,
+              "offset": 172280,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 17846,
+              "offset": 211801,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 62353,
+              "offset": 229651,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13536,
+              "offset": 292008,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 49063,
+              "offset": 305547,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3278,
+              "offset": 354614,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 5070,
+              "offset": 357895,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 362968,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 363041,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 163167,
+          "memories": [
+            {
+              "minimum_pages": 517,
+              "maximum_pages": null,
+              "minimum_bytes": 33882112,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 14
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 359,
+          "named_tracing_functions": [],
+          "file": "count-boundaries-O2.wasm",
+          "cSha256": "555d68bab21aaa8601b9ebc63cef8590eabaf29350a308f06f4d53917be437f6"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 262600,
+          "sha256": "6d8e415b5290836dfeaa4f3a5b507b2754c32aeef6617ea5e55a052b041d0b92",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 238,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 440,
+              "offset": 249
+            },
+            {
+              "id": 3,
+              "payload_bytes": 155,
+              "offset": 692
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 850
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 857
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 863
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 874
+            },
+            {
+              "id": 9,
+              "payload_bytes": 26,
+              "offset": 895
+            },
+            {
+              "id": 10,
+              "payload_bytes": 72624,
+              "offset": 923
+            },
+            {
+              "id": 11,
+              "payload_bytes": 4645,
+              "offset": 73551
+            },
+            {
+              "id": 0,
+              "payload_bytes": 39146,
+              "offset": 78199,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 17116,
+              "offset": 117349,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 61341,
+              "offset": 134469,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13177,
+              "offset": 195814,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 47910,
+              "offset": 208994,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3102,
+              "offset": 256908,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2432,
+              "offset": 260013,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 262448,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 262521,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 72624,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 165,
+          "named_tracing_functions": [],
+          "file": "lane-count-from-array-checked-O1.wasm",
+          "cSha256": "a0f42fc7c24fb2a77913c34a6105f47e0d54482b367ffd19da1f016f7fa394ec"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 269274,
+          "sha256": "796793b5aec9a9e2ffe033e466246b811cb94b07e2722d523fc7edcc66f4784e",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 238,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 476,
+              "offset": 249
+            },
+            {
+              "id": 3,
+              "payload_bytes": 158,
+              "offset": 728
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 889
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 896
+            },
+            {
+              "id": 6,
+              "payload_bytes": 16,
+              "offset": 902
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 920
+            },
+            {
+              "id": 9,
+              "payload_bytes": 26,
+              "offset": 941
+            },
+            {
+              "id": 10,
+              "payload_bytes": 77404,
+              "offset": 969
+            },
+            {
+              "id": 11,
+              "payload_bytes": 4645,
+              "offset": 78377
+            },
+            {
+              "id": 0,
+              "payload_bytes": 39257,
+              "offset": 83025,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 17445,
+              "offset": 122286,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 61746,
+              "offset": 139735,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13408,
+              "offset": 201485,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 48485,
+              "offset": 214896,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3158,
+              "offset": 263385,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2573,
+              "offset": 266546,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 269122,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 269195,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 77404,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 14
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 169,
+          "named_tracing_functions": [],
+          "file": "lane-count-from-array-checked-O2.wasm",
+          "cSha256": "a0f42fc7c24fb2a77913c34a6105f47e0d54482b367ffd19da1f016f7fa394ec"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 263461,
+          "sha256": "a9757da38e7b9998abcd828988fc1a0505371ab65960a77f29943096bbf3bbdc",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 238,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 440,
+              "offset": 249
+            },
+            {
+              "id": 3,
+              "payload_bytes": 158,
+              "offset": 692
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 853
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 860
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 866
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 877
+            },
+            {
+              "id": 9,
+              "payload_bytes": 26,
+              "offset": 898
+            },
+            {
+              "id": 10,
+              "payload_bytes": 73437,
+              "offset": 926
+            },
+            {
+              "id": 11,
+              "payload_bytes": 4661,
+              "offset": 74367
+            },
+            {
+              "id": 0,
+              "payload_bytes": 39146,
+              "offset": 79031,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 17116,
+              "offset": 118181,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 61341,
+              "offset": 135301,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13177,
+              "offset": 196646,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 47910,
+              "offset": 209826,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3102,
+              "offset": 257740,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2461,
+              "offset": 260845,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 263309,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 263382,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 73437,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 168,
+          "named_tracing_functions": [],
+          "file": "lane-count-from-array-narrowed-O1.wasm",
+          "cSha256": "6481bb347d43e276be5a1a9164b4c15108406febc1ec3f3d1ab75bb70da5a4be"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 270363,
+          "sha256": "f05f5a09424faca47a90ba57f342ccd1bec7eab99be60543f4335f98c36ab081",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 238,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 476,
+              "offset": 249
+            },
+            {
+              "id": 3,
+              "payload_bytes": 160,
+              "offset": 728
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 891
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 898
+            },
+            {
+              "id": 6,
+              "payload_bytes": 16,
+              "offset": 904
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 922
+            },
+            {
+              "id": 9,
+              "payload_bytes": 26,
+              "offset": 943
+            },
+            {
+              "id": 10,
+              "payload_bytes": 78458,
+              "offset": 971
+            },
+            {
+              "id": 11,
+              "payload_bytes": 4661,
+              "offset": 79433
+            },
+            {
+              "id": 0,
+              "payload_bytes": 39257,
+              "offset": 84097,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 17445,
+              "offset": 123358,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 61746,
+              "offset": 140807,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13408,
+              "offset": 202557,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 48485,
+              "offset": 215968,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3158,
+              "offset": 264457,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2590,
+              "offset": 267618,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 270211,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 270284,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 78458,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 14
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 171,
+          "named_tracing_functions": [],
+          "file": "lane-count-from-array-narrowed-O2.wasm",
+          "cSha256": "6481bb347d43e276be5a1a9164b4c15108406febc1ec3f3d1ab75bb70da5a4be"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 196095,
+          "sha256": "2cd0402a056cbb12519b92fd93d3fc19a2deb08dd7cc9ea908f613f6b152acd0",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 141,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 403,
+              "offset": 152
+            },
+            {
+              "id": 3,
+              "payload_bytes": 99,
+              "offset": 558
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 659
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 666
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 672
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 683
+            },
+            {
+              "id": 9,
+              "payload_bytes": 17,
+              "offset": 704
+            },
+            {
+              "id": 10,
+              "payload_bytes": 37206,
+              "offset": 723
+            },
+            {
+              "id": 11,
+              "payload_bytes": 3813,
+              "offset": 37933
+            },
+            {
+              "id": 0,
+              "payload_bytes": 32010,
+              "offset": 41749,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13936,
+              "offset": 73763,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 53587,
+              "offset": 87702,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 12103,
+              "offset": 141293,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38045,
+              "offset": 153399,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2822,
+              "offset": 191448,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 1667,
+              "offset": 194273,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 195943,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 196016,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 37206,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 12
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 109,
+          "named_tracing_functions": [],
+          "file": "lane-count-splat-checked-O1.wasm",
+          "cSha256": "086f5df04db497ebadd05e01e563ee9e6ffc136e515800ab0854636c97868cdb"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 196840,
+          "sha256": "9661a6a5448270678d2c995a2857509eb2719dd5e12f94f1882a3c0af2547ef5",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 141,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 403,
+              "offset": 152
+            },
+            {
+              "id": 3,
+              "payload_bytes": 98,
+              "offset": 558
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 658
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 665
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 671
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 682
+            },
+            {
+              "id": 9,
+              "payload_bytes": 17,
+              "offset": 703
+            },
+            {
+              "id": 10,
+              "payload_bytes": 37966,
+              "offset": 722
+            },
+            {
+              "id": 11,
+              "payload_bytes": 3813,
+              "offset": 38692
+            },
+            {
+              "id": 0,
+              "payload_bytes": 32010,
+              "offset": 42508,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13936,
+              "offset": 74522,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 53587,
+              "offset": 88461,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 12103,
+              "offset": 142052,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38045,
+              "offset": 154158,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2822,
+              "offset": 192207,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 1653,
+              "offset": 195032,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 196688,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 196761,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 37966,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 12
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 108,
+          "named_tracing_functions": [],
+          "file": "lane-count-splat-checked-O2.wasm",
+          "cSha256": "086f5df04db497ebadd05e01e563ee9e6ffc136e515800ab0854636c97868cdb"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 203809,
+          "sha256": "ef3c693e87dc25841c36beaa6df9eecb24d314c9a237aa3555e94dcb16163f7c",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 162,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 440,
+              "offset": 173
+            },
+            {
+              "id": 3,
+              "payload_bytes": 111,
+              "offset": 616
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 729
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 736
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 742
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 753
+            },
+            {
+              "id": 9,
+              "payload_bytes": 17,
+              "offset": 774
+            },
+            {
+              "id": 10,
+              "payload_bytes": 44551,
+              "offset": 793
+            },
+            {
+              "id": 11,
+              "payload_bytes": 3877,
+              "offset": 45348
+            },
+            {
+              "id": 0,
+              "payload_bytes": 32010,
+              "offset": 49228,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13936,
+              "offset": 81242,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 53587,
+              "offset": 95181,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 12103,
+              "offset": 148772,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38045,
+              "offset": 160878,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2822,
+              "offset": 198927,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 1902,
+              "offset": 201752,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 203657,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 203730,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 44551,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 122,
+          "named_tracing_functions": [],
+          "file": "lane-count-splat-narrowed-O1.wasm",
+          "cSha256": "dfa7bb441274d2048c19114f90082ed937d7ccbba1f8fbbb3153424e834c1c03"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 204170,
+          "sha256": "313cdb6660b46477694b2c6dd709404c97b08b2294e10a6a5ee7ee7cccebb4b1",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 162,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 440,
+              "offset": 173
+            },
+            {
+              "id": 3,
+              "payload_bytes": 110,
+              "offset": 616
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 728
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 735
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 741
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 752
+            },
+            {
+              "id": 9,
+              "payload_bytes": 17,
+              "offset": 773
+            },
+            {
+              "id": 10,
+              "payload_bytes": 44927,
+              "offset": 792
+            },
+            {
+              "id": 11,
+              "payload_bytes": 3877,
+              "offset": 45723
+            },
+            {
+              "id": 0,
+              "payload_bytes": 32010,
+              "offset": 49603,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13936,
+              "offset": 81617,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 53587,
+              "offset": 95556,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 12103,
+              "offset": 149147,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38045,
+              "offset": 161253,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2822,
+              "offset": 199302,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 1888,
+              "offset": 202127,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 204018,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 204091,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 44927,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 121,
+          "named_tracing_functions": [],
+          "file": "lane-count-splat-narrowed-O2.wasm",
+          "cSha256": "dfa7bb441274d2048c19114f90082ed937d7ccbba1f8fbbb3153424e834c1c03"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 316684,
+          "sha256": "8c2fc14d8ac389ed48d1c9d8acb8d2df816909bc4e6c51e0ee9c8e9ea9d432d9",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 279,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 407,
+              "offset": 290
+            },
+            {
+              "id": 3,
+              "payload_bytes": 238,
+              "offset": 700
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 941
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 948
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 954
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 965
+            },
+            {
+              "id": 9,
+              "payload_bytes": 119,
+              "offset": 986
+            },
+            {
+              "id": 10,
+              "payload_bytes": 129171,
+              "offset": 1107
+            },
+            {
+              "id": 11,
+              "payload_bytes": 5461,
+              "offset": 130282
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38876,
+              "offset": 135746,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 16352,
+              "offset": 174626,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 58992,
+              "offset": 190981,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13011,
+              "offset": 249977,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 46845,
+              "offset": 262991,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3222,
+              "offset": 309840,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3464,
+              "offset": 313065,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 316532,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 316605,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 129171,
+          "memories": [
+            {
+              "minimum_pages": 517,
+              "maximum_pages": null,
+              "minimum_bytes": 33882112,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 12
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 247,
+          "named_tracing_functions": [],
+          "file": "text-transforms-O1.wasm",
+          "cSha256": "2b05bda2be446b23e7ead531e2e34959975d668787a388d2c87ddf4d2f24e95e"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 310800,
+          "sha256": "d34e767d9ebc7ec31dd038eb44a4653b846d8c13dbeea13237e2fb20566911e0",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 279,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 443,
+              "offset": 290
+            },
+            {
+              "id": 3,
+              "payload_bytes": 235,
+              "offset": 736
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 974
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 981
+            },
+            {
+              "id": 6,
+              "payload_bytes": 16,
+              "offset": 987
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 1005
+            },
+            {
+              "id": 9,
+              "payload_bytes": 113,
+              "offset": 1026
+            },
+            {
+              "id": 10,
+              "payload_bytes": 121442,
+              "offset": 1141
+            },
+            {
+              "id": 11,
+              "payload_bytes": 5461,
+              "offset": 122587
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38987,
+              "offset": 128051,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 16681,
+              "offset": 167042,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 59397,
+              "offset": 183727,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13242,
+              "offset": 243128,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 47420,
+              "offset": 256373,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3278,
+              "offset": 303797,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3567,
+              "offset": 307078,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 310648,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 310721,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 121442,
+          "memories": [
+            {
+              "minimum_pages": 517,
+              "maximum_pages": null,
+              "minimum_bytes": 33882112,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 245,
+          "named_tracing_functions": [],
+          "file": "text-transforms-O2.wasm",
+          "cSha256": "2b05bda2be446b23e7ead531e2e34959975d668787a388d2c87ddf4d2f24e95e"
+        }
+      ]
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "artifact": 12392263584,
+      "archiveSha256": "698623f65a5e13c9a65a85b2c9715285a73d52023569f993f8d680f7d38c1dcd",
+      "files": [
+        {
+          "file": "c",
+          "sha256": "25d62737682b3b24d07fce56b3f3797d77c472b6b06f39d262442eb54004b0c5",
+          "bytes": 70912,
+          "machine": 183,
+          "textBytes": 1552,
+          "textSha256": "7bfdb08c829694701b6d20e6c06445d951349421edc322780b9eba7a79ed1f85",
+          "disassemblySha256": "91bf568ef58aa985bd656c76421e388bd93fc3543db1952983df47f4a1b5d312"
+        },
+        {
+          "file": "rust",
+          "sha256": "651f2ba189a33a8c4d9219cd914e525948bbf3d7697ba9610bb093a3052572e9",
+          "bytes": 4697984,
+          "machine": 183,
+          "textBytes": 231660,
+          "textSha256": "860a1962a06f2b7fb155f66e661f18f4a2b6d3e97203b7ed94c87916c0adbc1e",
+          "disassemblySha256": "d58a206994dec9510a97d865852f73859efb07a1389be020edae57f7f0f80de5"
+        },
+        {
+          "file": "fwp-arc",
+          "sha256": "ab00001b9fb37cbba858354783896c6a8097a8d3498a823ee3334dd4cb2e10db",
+          "bytes": 152752,
+          "machine": 183,
+          "textBytes": 46956,
+          "textSha256": "701d3545f920880d2cfacb8fdef774169a7ffdf32b057d8095f96577ca120150",
+          "disassemblySha256": "e6f42f8c321d504d6737e5b8847fd737b2f82ed2cd2c8a2d418c0aced6a8930b",
+          "cSha256": "a88b077e894f1ec9f2dd66af15266a6d82b5fc2d30e107758048c7a52dce9789"
+        },
+        {
+          "file": "fwp-tracing",
+          "sha256": "88702fde83e75845e01fffaef3e9aaa36713099c05b1904566ccaed436425bc9",
+          "bytes": 153232,
+          "machine": 183,
+          "textBytes": 57436,
+          "textSha256": "80639fbff0e1d29d765b31e756acb47792997d8cdf9cab579a6e4dfc806f296f",
+          "disassemblySha256": "92e3bcd602eaa080c9d5fa265d29d9ae5b3f12546b70205f362fdd520754da09",
+          "cSha256": "22ff24a6ed7dc154d0fed16919bb5eee79ab8780a6a7642f886a8f388663734d"
+        },
+        {
+          "file": "before-arc",
+          "sha256": "7c8d82a22fa5cfbb45b25d8a3ee8244e57f834c32530572552e4a5c62cc828c7",
+          "bytes": 152720,
+          "machine": 183,
+          "textBytes": 48492,
+          "textSha256": "fad2d8d6921874fa67ccb8ff5da12ab019f7cba1d3df900e6df150a63af728ac",
+          "disassemblySha256": "faadb962c71396015583142a925fc3e48393ff7edb810ddbd1cff58bfb647bad",
+          "cSha256": "9cd977f86ff4b3fdc49bea676a3991f58722630bc2731d42523167444929de76"
+        },
+        {
+          "file": "before-tracing",
+          "sha256": "162ffe14a0bafd572c40fdd36a7bdc7aee8647f22d651c0f24868471ae07b270",
+          "bytes": 153192,
+          "machine": 183,
+          "textBytes": 58844,
+          "textSha256": "36d262f06a5bc753812f0c9dba2543cb62b400a4ba651c9cd952ae7f8c9357a5",
+          "disassemblySha256": "6b94919f20b6c374dee0c5d631d15ea1389b8e95900d1ade3c9b4d5dbdf83a45",
+          "cSha256": "6f48be934a71820c715b5b4c16d71afa1014aa8915d4557a82aea019547bbe8a"
+        }
+      ]
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "artifact": 12392706277,
+      "archiveSha256": "79a7342e829e60fd94c6674d16db2b9131579750400a3de8b08eb9ce7e1e7351",
+      "files": [
+        {
+          "file": "arc-O0-missing-cancel-owner.bin",
+          "sha256": "12688ee1a721c139391ce07b5f88a522619d22c00fda3c9085e70a86d2f05857",
+          "bytes": 459856,
+          "machine": 183,
+          "textBytes": 308620,
+          "textSha256": "6e9950ec81bcaa022a11cc2b4882415980e69ab3afcf30c0863fe59ab0744e1d",
+          "cSha256": "ae9ccee8b7e7a5b66ddb0e29ef06a7d66b07ccfb4cbbee4cfdb5f33b47371120"
+        },
+        {
+          "file": "arc-O0-missing-owner.bin",
+          "sha256": "9e60b982b89240337f33ce159f6e85678453fa31530af1c2a231186c2e701a5e",
+          "bytes": 459856,
+          "machine": 183,
+          "textBytes": 308620,
+          "textSha256": "f24f00e2132d99e1495eeb5bd503a2dc8be39d6931218fb1944062b1ef897ebb",
+          "cSha256": "b690beaf75ba48a9a7cb1069c7e923335c801257d7f2a196956fade829700d19"
+        },
+        {
+          "file": "arc-O0-protected.bin",
+          "sha256": "65158c82374be93221ea255da87db256d6b8c80df45625c369307bb008477ddf",
+          "bytes": 459856,
+          "machine": 183,
+          "textBytes": 308588,
+          "textSha256": "259adb509bafe4d3e4cfc993ec21929d796b13e827fdd89df310b1cd72cc1dc4",
+          "cSha256": "41b2823deed342215d42f794297fe1887ee49f7bc3cdff45e71e83a1e1bbacd1"
+        },
+        {
+          "file": "arc-O2-missing-cancel-owner.bin",
+          "sha256": "53b6d7cfa7f4daff5419baabe7d344f99dfe46cbdbb1724e7651e63d434fe1e0",
+          "bytes": 154800,
+          "machine": 183,
+          "textBytes": 48828,
+          "textSha256": "243cd122d9683e43e4e60967aa062a10307839f7e8a1f8edf0a85e1cf9236e6f",
+          "cSha256": "ae9ccee8b7e7a5b66ddb0e29ef06a7d66b07ccfb4cbbee4cfdb5f33b47371120"
+        },
+        {
+          "file": "arc-O2-missing-owner.bin",
+          "sha256": "cb59aa599f26666d97bc7883e16e20abe71f6f28b2491613b4064cd2008eefc4",
+          "bytes": 154800,
+          "machine": 183,
+          "textBytes": 48828,
+          "textSha256": "2ec2d6f7a6b5ab1bd69f1849d871623495aad8e7c1b55f9b8c9a40952a24dace",
+          "cSha256": "b690beaf75ba48a9a7cb1069c7e923335c801257d7f2a196956fade829700d19"
+        },
+        {
+          "file": "arc-O2-protected.bin",
+          "sha256": "b4b01b2a40a02c2e75b2ea1a4c72adb509d084b90a2dc6f3933a81676cecd82f",
+          "bytes": 154800,
+          "machine": 183,
+          "textBytes": 48812,
+          "textSha256": "d051b14432f674d7c07124d43d536f68955be46a3a7dbb06439639aab9057608",
+          "cSha256": "41b2823deed342215d42f794297fe1887ee49f7bc3cdff45e71e83a1e1bbacd1"
+        },
+        {
+          "file": "string-size-checked-O0.bin",
+          "sha256": "b9a4f44c2112b71fb1d44df0647b9604f09fd5c00111818d95900dbb58b33667",
+          "bytes": 70832,
+          "machine": 183,
+          "textBytes": 1436,
+          "textSha256": "43f45b7dca9a82cfc7bf6b1a9948020ed4151d25d244bc4ae8bb83b6753ce24b",
+          "cSha256": "313cafde208f7e4eb82c856eb2834d6859e7b0984ca32d984e0f44d0350609d9"
+        },
+        {
+          "file": "string-size-checked-O2.bin",
+          "sha256": "a65963d9abe9ce0d2c2d11f387bed520aa0cc85f6a8104479c29d0190da000f5",
+          "bytes": 70552,
+          "machine": 183,
+          "textBytes": 612,
+          "textSha256": "578ccb491d7ee6c8bbdd8af2e5459e1893355cc60d9c58c2a901593ee19c80b5",
+          "cSha256": "313cafde208f7e4eb82c856eb2834d6859e7b0984ca32d984e0f44d0350609d9"
+        },
+        {
+          "file": "string-size-missing-empty-O0.bin",
+          "sha256": "df0c3e2e7add98bf20e6a2e0f09fcf7805bf12ea19eb9b393e90715faec73aeb",
+          "bytes": 70832,
+          "machine": 183,
+          "textBytes": 1388,
+          "textSha256": "2e9d8d15cd174ae88ce498c3fce4c82a28ecb3e6e81ab86f58c7729fa68e242c",
+          "cSha256": "493e359ab29d3f40ffc73c4c64887e32243cea32444afa5ad3b13159935bc8cf"
+        },
+        {
+          "file": "string-size-missing-empty-O2.bin",
+          "sha256": "6c0ced1edd9b966ab03e28300d27e2c8a8f3945d267cfed4635e4335c70e0948",
+          "bytes": 70552,
+          "machine": 183,
+          "textBytes": 612,
+          "textSha256": "def6ec1331e05daf7310f17a683d7e40a47850777e94b5a266a3468ad678aa6b",
+          "cSha256": "493e359ab29d3f40ffc73c4c64887e32243cea32444afa5ad3b13159935bc8cf"
+        },
+        {
+          "file": "string-size-missing-size-O0.bin",
+          "sha256": "5ea0f1fd1a61d75fef8bc47b531b7dde712dbbdcfa52da2584b23efc0795b7b6",
+          "bytes": 70832,
+          "machine": 183,
+          "textBytes": 1348,
+          "textSha256": "57f24f34fe1bbe6bb82e73d48290564ae939988d00f6dc35f0fcf57ccac215ea",
+          "cSha256": "970237d021c2e0f038aa1c26f3a3c0222844b0cbb58756679521737687e49023"
+        },
+        {
+          "file": "string-size-missing-size-O2.bin",
+          "sha256": "a59a83cb21f98b98e56b348c11bfe3fae794f4abc690851f741f62a173c6b218",
+          "bytes": 70336,
+          "machine": 183,
+          "textBytes": 408,
+          "textSha256": "b35612e71077834f31b949450150656428be16a81c2a170d619077c0d8ff9cca",
+          "cSha256": "970237d021c2e0f038aa1c26f3a3c0222844b0cbb58756679521737687e49023"
+        },
+        {
+          "file": "tracing-O0-missing-cancel-owner.bin",
+          "sha256": "debe9d9c2eb2acfebb6b109ba1fba254b96ad0426df3536b22dc341221a5d7c1",
+          "bytes": 526040,
+          "machine": 183,
+          "textBytes": 317068,
+          "textSha256": "3d60ca63649003f8e3b26caba9192f98427e2fa0de462b3f6487b12b1e02e260",
+          "cSha256": "d1e0f3f157c037816a1b49c82ef5e126a0957d680a62cfd54573b46b06315a09"
+        },
+        {
+          "file": "tracing-O0-missing-owner.bin",
+          "sha256": "64c73ee723a1c6e6b3773c40035e47141073752ad92a0c95aad1406c68c808d4",
+          "bytes": 526040,
+          "machine": 183,
+          "textBytes": 317068,
+          "textSha256": "38e9d8bc39e18272579f9ec03beb855dbb00e56a8bf62c626055af857128495c",
+          "cSha256": "1d34bcd43d9a31dac56adfa91fc36cfdbc56a1e567f78d7af956ba3d9e1694e5"
+        },
+        {
+          "file": "tracing-O0-protected.bin",
+          "sha256": "7ceff7b6f82a0b6fc79705a67ef70a9142403ff9aec11e15813ca3ca389c54e0",
+          "bytes": 526040,
+          "machine": 183,
+          "textBytes": 317052,
+          "textSha256": "2abbcc9e8fb5821cde1bd902f6cb004b464db95cc283d0408891519e6005af3e",
+          "cSha256": "8f3870f1c6685685bc2774b49d51cb9c09b873490813ed83d51758625aa30484"
+        },
+        {
+          "file": "tracing-O2-missing-cancel-owner.bin",
+          "sha256": "b761ef1ad0bf975a7b1463527f4a9c89f64b81c4a2f7842654def83b2e6be242",
+          "bytes": 155200,
+          "machine": 183,
+          "textBytes": 54860,
+          "textSha256": "31e5d1799c83b9bcb48b4f51572e2509d66542ff4b935024f0229d03c7b3b9ae",
+          "cSha256": "d1e0f3f157c037816a1b49c82ef5e126a0957d680a62cfd54573b46b06315a09"
+        },
+        {
+          "file": "tracing-O2-missing-owner.bin",
+          "sha256": "e1281cc46c6d81d2d667f8807c5badd033a7a016e2e7a31ce7dc6da509158f3a",
+          "bytes": 155200,
+          "machine": 183,
+          "textBytes": 54860,
+          "textSha256": "183adc9fe3f7b1f797eb7a2711c5fbf1bdf7dc8b7e9a6b36d9f7df72924caa68",
+          "cSha256": "1d34bcd43d9a31dac56adfa91fc36cfdbc56a1e567f78d7af956ba3d9e1694e5"
+        },
+        {
+          "file": "tracing-O2-protected.bin",
+          "sha256": "87fa8d8334f18667d3600065ff4af5d9f2a15ec9665bcbefc1995917eda8c2a7",
+          "bytes": 155200,
+          "machine": 183,
+          "textBytes": 54844,
+          "textSha256": "a0eb3dbcb87836a1bd8ccb4fad07ab08c6306c1fdd2c48b06e161f41b4671a28",
+          "cSha256": "8f3870f1c6685685bc2774b49d51cb9c09b873490813ed83d51758625aa30484"
+        }
+      ]
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "artifact": 12393061812,
+      "archiveSha256": "53f3a1d04a85ceaf52afadabd071e57815b88d33da83a28062c2eaadef33851a",
+      "files": [
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 364437,
+          "sha256": "f24a5836d4b72aab75fbb1b27391b5b4f08112e88846cdc7fd9cca632c34b92a",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 274,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 440,
+              "offset": 285
+            },
+            {
+              "id": 3,
+              "payload_bytes": 344,
+              "offset": 728
+            },
+            {
+              "id": 4,
+              "payload_bytes": 7,
+              "offset": 1075
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 1084
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 1090
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 1101
+            },
+            {
+              "id": 9,
+              "payload_bytes": 322,
+              "offset": 1122
+            },
+            {
+              "id": 10,
+              "payload_bytes": 166399,
+              "offset": 1447
+            },
+            {
+              "id": 11,
+              "payload_bytes": 7605,
+              "offset": 167850
+            },
+            {
+              "id": 0,
+              "payload_bytes": 39406,
+              "offset": 175458,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 17517,
+              "offset": 214868,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 61948,
+              "offset": 232389,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13305,
+              "offset": 294341,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 48488,
+              "offset": 307649,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3222,
+              "offset": 356141,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 4916,
+              "offset": 359366,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 364285,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 364358,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 166399,
+          "memories": [
+            {
+              "minimum_pages": 517,
+              "maximum_pages": null,
+              "minimum_bytes": 33882112,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 354,
+          "named_tracing_functions": [],
+          "file": "count-boundaries-O1.wasm",
+          "cSha256": "555d68bab21aaa8601b9ebc63cef8590eabaf29350a308f06f4d53917be437f6"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 363120,
+          "sha256": "69494c0df8d00be791bebcdd18d1925d7d37ba6f4a0fe8b40692dd7410fc9a4a",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 280,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 476,
+              "offset": 291
+            },
+            {
+              "id": 3,
+              "payload_bytes": 348,
+              "offset": 770
+            },
+            {
+              "id": 4,
+              "payload_bytes": 7,
+              "offset": 1121
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 1130
+            },
+            {
+              "id": 6,
+              "payload_bytes": 16,
+              "offset": 1136
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 1154
+            },
+            {
+              "id": 9,
+              "payload_bytes": 323,
+              "offset": 1175
+            },
+            {
+              "id": 10,
+              "payload_bytes": 163167,
+              "offset": 1501
+            },
+            {
+              "id": 11,
+              "payload_bytes": 7605,
+              "offset": 164672
+            },
+            {
+              "id": 0,
+              "payload_bytes": 39517,
+              "offset": 172280,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 17846,
+              "offset": 211801,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 62353,
+              "offset": 229651,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13536,
+              "offset": 292008,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 49063,
+              "offset": 305547,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3278,
+              "offset": 354614,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 5070,
+              "offset": 357895,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 362968,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 363041,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 163167,
+          "memories": [
+            {
+              "minimum_pages": 517,
+              "maximum_pages": null,
+              "minimum_bytes": 33882112,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 14
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 359,
+          "named_tracing_functions": [],
+          "file": "count-boundaries-O2.wasm",
+          "cSha256": "555d68bab21aaa8601b9ebc63cef8590eabaf29350a308f06f4d53917be437f6"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 262600,
+          "sha256": "6d8e415b5290836dfeaa4f3a5b507b2754c32aeef6617ea5e55a052b041d0b92",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 238,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 440,
+              "offset": 249
+            },
+            {
+              "id": 3,
+              "payload_bytes": 155,
+              "offset": 692
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 850
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 857
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 863
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 874
+            },
+            {
+              "id": 9,
+              "payload_bytes": 26,
+              "offset": 895
+            },
+            {
+              "id": 10,
+              "payload_bytes": 72624,
+              "offset": 923
+            },
+            {
+              "id": 11,
+              "payload_bytes": 4645,
+              "offset": 73551
+            },
+            {
+              "id": 0,
+              "payload_bytes": 39146,
+              "offset": 78199,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 17116,
+              "offset": 117349,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 61341,
+              "offset": 134469,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13177,
+              "offset": 195814,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 47910,
+              "offset": 208994,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3102,
+              "offset": 256908,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2432,
+              "offset": 260013,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 262448,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 262521,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 72624,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 165,
+          "named_tracing_functions": [],
+          "file": "lane-count-from-array-checked-O1.wasm",
+          "cSha256": "a0f42fc7c24fb2a77913c34a6105f47e0d54482b367ffd19da1f016f7fa394ec"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 269274,
+          "sha256": "796793b5aec9a9e2ffe033e466246b811cb94b07e2722d523fc7edcc66f4784e",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 238,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 476,
+              "offset": 249
+            },
+            {
+              "id": 3,
+              "payload_bytes": 158,
+              "offset": 728
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 889
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 896
+            },
+            {
+              "id": 6,
+              "payload_bytes": 16,
+              "offset": 902
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 920
+            },
+            {
+              "id": 9,
+              "payload_bytes": 26,
+              "offset": 941
+            },
+            {
+              "id": 10,
+              "payload_bytes": 77404,
+              "offset": 969
+            },
+            {
+              "id": 11,
+              "payload_bytes": 4645,
+              "offset": 78377
+            },
+            {
+              "id": 0,
+              "payload_bytes": 39257,
+              "offset": 83025,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 17445,
+              "offset": 122286,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 61746,
+              "offset": 139735,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13408,
+              "offset": 201485,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 48485,
+              "offset": 214896,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3158,
+              "offset": 263385,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2573,
+              "offset": 266546,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 269122,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 269195,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 77404,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 14
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 169,
+          "named_tracing_functions": [],
+          "file": "lane-count-from-array-checked-O2.wasm",
+          "cSha256": "a0f42fc7c24fb2a77913c34a6105f47e0d54482b367ffd19da1f016f7fa394ec"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 263461,
+          "sha256": "a9757da38e7b9998abcd828988fc1a0505371ab65960a77f29943096bbf3bbdc",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 238,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 440,
+              "offset": 249
+            },
+            {
+              "id": 3,
+              "payload_bytes": 158,
+              "offset": 692
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 853
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 860
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 866
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 877
+            },
+            {
+              "id": 9,
+              "payload_bytes": 26,
+              "offset": 898
+            },
+            {
+              "id": 10,
+              "payload_bytes": 73437,
+              "offset": 926
+            },
+            {
+              "id": 11,
+              "payload_bytes": 4661,
+              "offset": 74367
+            },
+            {
+              "id": 0,
+              "payload_bytes": 39146,
+              "offset": 79031,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 17116,
+              "offset": 118181,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 61341,
+              "offset": 135301,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13177,
+              "offset": 196646,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 47910,
+              "offset": 209826,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3102,
+              "offset": 257740,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2461,
+              "offset": 260845,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 263309,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 263382,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 73437,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 168,
+          "named_tracing_functions": [],
+          "file": "lane-count-from-array-narrowed-O1.wasm",
+          "cSha256": "6481bb347d43e276be5a1a9164b4c15108406febc1ec3f3d1ab75bb70da5a4be"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 270363,
+          "sha256": "f05f5a09424faca47a90ba57f342ccd1bec7eab99be60543f4335f98c36ab081",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 238,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 476,
+              "offset": 249
+            },
+            {
+              "id": 3,
+              "payload_bytes": 160,
+              "offset": 728
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 891
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 898
+            },
+            {
+              "id": 6,
+              "payload_bytes": 16,
+              "offset": 904
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 922
+            },
+            {
+              "id": 9,
+              "payload_bytes": 26,
+              "offset": 943
+            },
+            {
+              "id": 10,
+              "payload_bytes": 78458,
+              "offset": 971
+            },
+            {
+              "id": 11,
+              "payload_bytes": 4661,
+              "offset": 79433
+            },
+            {
+              "id": 0,
+              "payload_bytes": 39257,
+              "offset": 84097,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 17445,
+              "offset": 123358,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 61746,
+              "offset": 140807,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13408,
+              "offset": 202557,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 48485,
+              "offset": 215968,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3158,
+              "offset": 264457,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2590,
+              "offset": 267618,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 270211,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 270284,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 78458,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 14
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 171,
+          "named_tracing_functions": [],
+          "file": "lane-count-from-array-narrowed-O2.wasm",
+          "cSha256": "6481bb347d43e276be5a1a9164b4c15108406febc1ec3f3d1ab75bb70da5a4be"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 196095,
+          "sha256": "2cd0402a056cbb12519b92fd93d3fc19a2deb08dd7cc9ea908f613f6b152acd0",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 141,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 403,
+              "offset": 152
+            },
+            {
+              "id": 3,
+              "payload_bytes": 99,
+              "offset": 558
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 659
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 666
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 672
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 683
+            },
+            {
+              "id": 9,
+              "payload_bytes": 17,
+              "offset": 704
+            },
+            {
+              "id": 10,
+              "payload_bytes": 37206,
+              "offset": 723
+            },
+            {
+              "id": 11,
+              "payload_bytes": 3813,
+              "offset": 37933
+            },
+            {
+              "id": 0,
+              "payload_bytes": 32010,
+              "offset": 41749,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13936,
+              "offset": 73763,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 53587,
+              "offset": 87702,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 12103,
+              "offset": 141293,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38045,
+              "offset": 153399,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2822,
+              "offset": 191448,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 1667,
+              "offset": 194273,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 195943,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 196016,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 37206,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 12
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 109,
+          "named_tracing_functions": [],
+          "file": "lane-count-splat-checked-O1.wasm",
+          "cSha256": "086f5df04db497ebadd05e01e563ee9e6ffc136e515800ab0854636c97868cdb"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 196840,
+          "sha256": "9661a6a5448270678d2c995a2857509eb2719dd5e12f94f1882a3c0af2547ef5",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 141,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 403,
+              "offset": 152
+            },
+            {
+              "id": 3,
+              "payload_bytes": 98,
+              "offset": 558
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 658
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 665
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 671
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 682
+            },
+            {
+              "id": 9,
+              "payload_bytes": 17,
+              "offset": 703
+            },
+            {
+              "id": 10,
+              "payload_bytes": 37966,
+              "offset": 722
+            },
+            {
+              "id": 11,
+              "payload_bytes": 3813,
+              "offset": 38692
+            },
+            {
+              "id": 0,
+              "payload_bytes": 32010,
+              "offset": 42508,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13936,
+              "offset": 74522,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 53587,
+              "offset": 88461,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 12103,
+              "offset": 142052,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38045,
+              "offset": 154158,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2822,
+              "offset": 192207,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 1653,
+              "offset": 195032,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 196688,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 196761,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 37966,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 12
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 108,
+          "named_tracing_functions": [],
+          "file": "lane-count-splat-checked-O2.wasm",
+          "cSha256": "086f5df04db497ebadd05e01e563ee9e6ffc136e515800ab0854636c97868cdb"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 203809,
+          "sha256": "ef3c693e87dc25841c36beaa6df9eecb24d314c9a237aa3555e94dcb16163f7c",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 162,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 440,
+              "offset": 173
+            },
+            {
+              "id": 3,
+              "payload_bytes": 111,
+              "offset": 616
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 729
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 736
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 742
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 753
+            },
+            {
+              "id": 9,
+              "payload_bytes": 17,
+              "offset": 774
+            },
+            {
+              "id": 10,
+              "payload_bytes": 44551,
+              "offset": 793
+            },
+            {
+              "id": 11,
+              "payload_bytes": 3877,
+              "offset": 45348
+            },
+            {
+              "id": 0,
+              "payload_bytes": 32010,
+              "offset": 49228,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13936,
+              "offset": 81242,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 53587,
+              "offset": 95181,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 12103,
+              "offset": 148772,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38045,
+              "offset": 160878,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2822,
+              "offset": 198927,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 1902,
+              "offset": 201752,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 203657,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 203730,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 44551,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 122,
+          "named_tracing_functions": [],
+          "file": "lane-count-splat-narrowed-O1.wasm",
+          "cSha256": "dfa7bb441274d2048c19114f90082ed937d7ccbba1f8fbbb3153424e834c1c03"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 204170,
+          "sha256": "313cdb6660b46477694b2c6dd709404c97b08b2294e10a6a5ee7ee7cccebb4b1",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 162,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 440,
+              "offset": 173
+            },
+            {
+              "id": 3,
+              "payload_bytes": 110,
+              "offset": 616
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 728
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 735
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 741
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 752
+            },
+            {
+              "id": 9,
+              "payload_bytes": 17,
+              "offset": 773
+            },
+            {
+              "id": 10,
+              "payload_bytes": 44927,
+              "offset": 792
+            },
+            {
+              "id": 11,
+              "payload_bytes": 3877,
+              "offset": 45723
+            },
+            {
+              "id": 0,
+              "payload_bytes": 32010,
+              "offset": 49603,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13936,
+              "offset": 81617,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 53587,
+              "offset": 95556,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 12103,
+              "offset": 149147,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38045,
+              "offset": 161253,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 2822,
+              "offset": 199302,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 1888,
+              "offset": 202127,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 204018,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 204091,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 44927,
+          "memories": [
+            {
+              "minimum_pages": 513,
+              "maximum_pages": null,
+              "minimum_bytes": 33619968,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 121,
+          "named_tracing_functions": [],
+          "file": "lane-count-splat-narrowed-O2.wasm",
+          "cSha256": "dfa7bb441274d2048c19114f90082ed937d7ccbba1f8fbbb3153424e834c1c03"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 316684,
+          "sha256": "8c2fc14d8ac389ed48d1c9d8acb8d2df816909bc4e6c51e0ee9c8e9ea9d432d9",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 279,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 407,
+              "offset": 290
+            },
+            {
+              "id": 3,
+              "payload_bytes": 238,
+              "offset": 700
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 941
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 948
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 954
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 965
+            },
+            {
+              "id": 9,
+              "payload_bytes": 119,
+              "offset": 986
+            },
+            {
+              "id": 10,
+              "payload_bytes": 129171,
+              "offset": 1107
+            },
+            {
+              "id": 11,
+              "payload_bytes": 5461,
+              "offset": 130282
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38876,
+              "offset": 135746,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 16352,
+              "offset": 174626,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 58992,
+              "offset": 190981,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13011,
+              "offset": 249977,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 46845,
+              "offset": 262991,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3222,
+              "offset": 309840,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3464,
+              "offset": 313065,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 316532,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 316605,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 129171,
+          "memories": [
+            {
+              "minimum_pages": 517,
+              "maximum_pages": null,
+              "minimum_bytes": 33882112,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 12
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 247,
+          "named_tracing_functions": [],
+          "file": "text-transforms-O1.wasm",
+          "cSha256": "2b05bda2be446b23e7ead531e2e34959975d668787a388d2c87ddf4d2f24e95e"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 310800,
+          "sha256": "d34e767d9ebc7ec31dd038eb44a4653b846d8c13dbeea13237e2fb20566911e0",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 279,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 443,
+              "offset": 290
+            },
+            {
+              "id": 3,
+              "payload_bytes": 235,
+              "offset": 736
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 974
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 981
+            },
+            {
+              "id": 6,
+              "payload_bytes": 16,
+              "offset": 987
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 1005
+            },
+            {
+              "id": 9,
+              "payload_bytes": 113,
+              "offset": 1026
+            },
+            {
+              "id": 10,
+              "payload_bytes": 121442,
+              "offset": 1141
+            },
+            {
+              "id": 11,
+              "payload_bytes": 5461,
+              "offset": 122587
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38987,
+              "offset": 128051,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 16681,
+              "offset": 167042,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 59397,
+              "offset": 183727,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13242,
+              "offset": 243128,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 47420,
+              "offset": 256373,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3278,
+              "offset": 303797,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3567,
+              "offset": 307078,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 310648,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 310721,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 121442,
+          "memories": [
+            {
+              "minimum_pages": 517,
+              "maximum_pages": null,
+              "minimum_bytes": 33882112,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 245,
+          "named_tracing_functions": [],
+          "file": "text-transforms-O2.wasm",
+          "cSha256": "2b05bda2be446b23e7ead531e2e34959975d668787a388d2c87ddf4d2f24e95e"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,778 @@
+{
+  "source": "a9a6ba203ec15228f9a99f3e4fae2dd5ca74025d",
+  "run": 39696094960,
+  "records": [
+    {
+      "host": "ubuntu-latest",
+      "artifact": 12391322173,
+      "archiveSha256": "f01c7a7e0a8272e0f6a437cba44c06a28730b75db209e464872b21b5b35331d1",
+      "files": [
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 316956,
+          "sha256": "f5f73d83d84f31f6b452e2e9bbaf9b67633032304e612c06761a3072c5e6657a",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 267,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 407,
+              "offset": 278
+            },
+            {
+              "id": 3,
+              "payload_bytes": 234,
+              "offset": 688
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 925
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 932
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 938
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 949
+            },
+            {
+              "id": 9,
+              "payload_bytes": 115,
+              "offset": 970
+            },
+            {
+              "id": 10,
+              "payload_bytes": 129528,
+              "offset": 1087
+            },
+            {
+              "id": 11,
+              "payload_bytes": 5437,
+              "offset": 130619
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38876,
+              "offset": 136059,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 16352,
+              "offset": 174939,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 58992,
+              "offset": 191294,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13011,
+              "offset": 250290,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 46845,
+              "offset": 263304,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3222,
+              "offset": 310153,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3423,
+              "offset": 313378,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 316804,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 316877,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 129528,
+          "memories": [
+            {
+              "minimum_pages": 517,
+              "maximum_pages": null,
+              "minimum_bytes": 33882112,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 12
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 243,
+          "named_tracing_functions": [],
+          "file": "text-transforms-O1.wasm",
+          "cSha256": "ab74440c19105f08ec31331165a2f128858cb40e9beeb510a537fdf63769ef93"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 311634,
+          "sha256": "da31ed06e87c0e122d1ac982083e8057d55cd61caad489abde726322406c07b8",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 267,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 443,
+              "offset": 278
+            },
+            {
+              "id": 3,
+              "payload_bytes": 235,
+              "offset": 724
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 962
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 969
+            },
+            {
+              "id": 6,
+              "payload_bytes": 16,
+              "offset": 975
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 993
+            },
+            {
+              "id": 9,
+              "payload_bytes": 113,
+              "offset": 1014
+            },
+            {
+              "id": 10,
+              "payload_bytes": 122337,
+              "offset": 1129
+            },
+            {
+              "id": 11,
+              "payload_bytes": 5437,
+              "offset": 123470
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38987,
+              "offset": 128910,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 16681,
+              "offset": 167901,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 59397,
+              "offset": 184586,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13242,
+              "offset": 243987,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 47420,
+              "offset": 257232,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3278,
+              "offset": 304656,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3542,
+              "offset": 307937,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 311482,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 311555,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 122337,
+          "memories": [
+            {
+              "minimum_pages": 517,
+              "maximum_pages": null,
+              "minimum_bytes": 33882112,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 245,
+          "named_tracing_functions": [],
+          "file": "text-transforms-O2.wasm",
+          "cSha256": "ab74440c19105f08ec31331165a2f128858cb40e9beeb510a537fdf63769ef93"
+        }
+      ]
+    },
+    {
+      "host": "ubuntu-latest",
+      "artifact": 12391102160,
+      "archiveSha256": "5623991d577a7aa418b320eb07bd646b8369ae9a210a80fecf2585eabdc37896",
+      "files": [
+        {
+          "file": "arc-O0-missing-cancel-owner.bin",
+          "sha256": "6a1a14f7910dda5fc76209282ea484663ddaf8d6b603b3d3337111baeaf01971",
+          "cSha256": "2c3b9141edc0d7cf1311775a3a66e379ba0ad7d298a6425cebe9dc7e4d32f89f",
+          "machine": 62,
+          "bytes": 448312
+        },
+        {
+          "file": "arc-O0-missing-owner.bin",
+          "sha256": "0ea2b1c29edc53db45ae7b2178331f1b669090cf592150da4d7842c28db1d3af",
+          "cSha256": "c042c820147bd0465e8297176203792a273ff942b36b455bc78085456c59a135",
+          "machine": 62,
+          "bytes": 448312
+        },
+        {
+          "file": "arc-O0-protected.bin",
+          "sha256": "e7a756ddf9515f1543e410798441309efbd329bfac299b2c6955c05b32c3a246",
+          "cSha256": "c3019c1c473abac3712373d3ffa87c03f4911e4d0a40fc295cf03db6c67b68b8",
+          "machine": 62,
+          "bytes": 448312
+        },
+        {
+          "file": "arc-O2-missing-cancel-owner.bin",
+          "sha256": "3bd6f884291f3b1f4933902dc35e1e62d9f2cfc861819e9491b0115ae47b5c95",
+          "cSha256": "2c3b9141edc0d7cf1311775a3a66e379ba0ad7d298a6425cebe9dc7e4d32f89f",
+          "machine": 62,
+          "bytes": 104208
+        },
+        {
+          "file": "arc-O2-missing-owner.bin",
+          "sha256": "aa00ca9b877714cf5cb1b063e4e91a6a698336c29b63f2513d85631b9ae7117d",
+          "cSha256": "c042c820147bd0465e8297176203792a273ff942b36b455bc78085456c59a135",
+          "machine": 62,
+          "bytes": 104208
+        },
+        {
+          "file": "arc-O2-protected.bin",
+          "sha256": "5b83f214ee90ad47a922f26b8726fbd832e98ecd8cedf28e7881635cf56a44df",
+          "cSha256": "c3019c1c473abac3712373d3ffa87c03f4911e4d0a40fc295cf03db6c67b68b8",
+          "machine": 62,
+          "bytes": 104208
+        },
+        {
+          "file": "tracing-O0-missing-cancel-owner.bin",
+          "sha256": "2e20208a6d52ad2566a805e00f7b851e01465e8de7385afd0902657104f185c3",
+          "cSha256": "aece7ada4a9b0f372728132c3bf8879e829ba9c38ef88d9df5984566c3705789",
+          "machine": 62,
+          "bytes": 457192
+        },
+        {
+          "file": "tracing-O0-missing-owner.bin",
+          "sha256": "2a03915bdcbee97fef7c4ecea16a1a3c2885ec818980221798a5a463281e6ade",
+          "cSha256": "e34f9b470b91275b554e1ed10d6cffccdeb1a39ab18d26bf5da5367fcd42b46a",
+          "machine": 62,
+          "bytes": 457192
+        },
+        {
+          "file": "tracing-O0-protected.bin",
+          "sha256": "dd2eedcf4803537c8f5572d91ad1aaeed22c7b770279615d5bd750801c131fd8",
+          "cSha256": "82e284cbd36f5972b6983c24f45d3a2d03fc665443303fc5db03f75535e09dd5",
+          "machine": 62,
+          "bytes": 457192
+        },
+        {
+          "file": "tracing-O2-missing-cancel-owner.bin",
+          "sha256": "bc4eadee1eb5f9b65da7efed6dabcb582cd6da7dc42088583dd4a037725b2364",
+          "cSha256": "aece7ada4a9b0f372728132c3bf8879e829ba9c38ef88d9df5984566c3705789",
+          "machine": 62,
+          "bytes": 112888
+        },
+        {
+          "file": "tracing-O2-missing-owner.bin",
+          "sha256": "1acc617c1f7b56353e30346dfa909d3097c9fb0c89a005de9a60753d24ee01fc",
+          "cSha256": "e34f9b470b91275b554e1ed10d6cffccdeb1a39ab18d26bf5da5367fcd42b46a",
+          "machine": 62,
+          "bytes": 112888
+        },
+        {
+          "file": "tracing-O2-protected.bin",
+          "sha256": "00f5dcb570b42c47dd2a2f37fe39a510eb7def8678b33a75c5bc820fe90e7714",
+          "cSha256": "82e284cbd36f5972b6983c24f45d3a2d03fc665443303fc5db03f75535e09dd5",
+          "machine": 62,
+          "bytes": 112888
+        }
+      ]
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "artifact": 12390992799,
+      "archiveSha256": "fbf8d521c940cc1681c42157a38498c8482305653d4997429e26374b348220b9",
+      "files": [
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 316956,
+          "sha256": "f5f73d83d84f31f6b452e2e9bbaf9b67633032304e612c06761a3072c5e6657a",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 267,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 407,
+              "offset": 278
+            },
+            {
+              "id": 3,
+              "payload_bytes": 234,
+              "offset": 688
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 925
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 932
+            },
+            {
+              "id": 6,
+              "payload_bytes": 9,
+              "offset": 938
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 949
+            },
+            {
+              "id": 9,
+              "payload_bytes": 115,
+              "offset": 970
+            },
+            {
+              "id": 10,
+              "payload_bytes": 129528,
+              "offset": 1087
+            },
+            {
+              "id": 11,
+              "payload_bytes": 5437,
+              "offset": 130619
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38876,
+              "offset": 136059,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 16352,
+              "offset": 174939,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 58992,
+              "offset": 191294,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13011,
+              "offset": 250290,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 46845,
+              "offset": 263304,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3222,
+              "offset": 310153,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3423,
+              "offset": 313378,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 316804,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 316877,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 129528,
+          "memories": [
+            {
+              "minimum_pages": 517,
+              "maximum_pages": null,
+              "minimum_bytes": 33882112,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 12
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 243,
+          "named_tracing_functions": [],
+          "file": "text-transforms-O1.wasm",
+          "cSha256": "ab74440c19105f08ec31331165a2f128858cb40e9beeb510a537fdf63769ef93"
+        },
+        {
+          "format": "WebAssembly 1, 32-bit memory",
+          "bytes": 311634,
+          "sha256": "da31ed06e87c0e122d1ac982083e8057d55cd61caad489abde726322406c07b8",
+          "sections": [
+            {
+              "id": 1,
+              "payload_bytes": 267,
+              "offset": 8
+            },
+            {
+              "id": 2,
+              "payload_bytes": 443,
+              "offset": 278
+            },
+            {
+              "id": 3,
+              "payload_bytes": 235,
+              "offset": 724
+            },
+            {
+              "id": 4,
+              "payload_bytes": 5,
+              "offset": 962
+            },
+            {
+              "id": 5,
+              "payload_bytes": 4,
+              "offset": 969
+            },
+            {
+              "id": 6,
+              "payload_bytes": 16,
+              "offset": 975
+            },
+            {
+              "id": 7,
+              "payload_bytes": 19,
+              "offset": 993
+            },
+            {
+              "id": 9,
+              "payload_bytes": 113,
+              "offset": 1014
+            },
+            {
+              "id": 10,
+              "payload_bytes": 122337,
+              "offset": 1129
+            },
+            {
+              "id": 11,
+              "payload_bytes": 5437,
+              "offset": 123470
+            },
+            {
+              "id": 0,
+              "payload_bytes": 38987,
+              "offset": 128910,
+              "name": ".debug_loc"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 16681,
+              "offset": 167901,
+              "name": ".debug_abbrev"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 59397,
+              "offset": 184586,
+              "name": ".debug_info"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 13242,
+              "offset": 243987,
+              "name": ".debug_str"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 47420,
+              "offset": 257232,
+              "name": ".debug_line"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3278,
+              "offset": 304656,
+              "name": ".debug_ranges"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 3542,
+              "offset": 307937,
+              "name": "name"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 71,
+              "offset": 311482,
+              "name": "producers"
+            },
+            {
+              "id": 0,
+              "payload_bytes": 77,
+              "offset": 311555,
+              "name": "target_features"
+            }
+          ],
+          "code_bytes": 122337,
+          "memories": [
+            {
+              "minimum_pages": 517,
+              "maximum_pages": null,
+              "minimum_bytes": 33882112,
+              "shared": false
+            }
+          ],
+          "exports": [
+            {
+              "name": "memory",
+              "kind": 2,
+              "index": 0
+            },
+            {
+              "name": "_start",
+              "kind": 0,
+              "index": 13
+            }
+          ],
+          "producers": {
+            "language": {
+              "C11": ""
+            },
+            "processed-by": {
+              "Ubuntu clang": "16.0.6 (19build1)"
+            }
+          },
+          "named_functions": 245,
+          "named_tracing_functions": [],
+          "file": "text-transforms-O2.wasm",
+          "cSha256": "ab74440c19105f08ec31331165a2f128858cb40e9beeb510a537fdf63769ef93"
+        }
+      ]
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "artifact": 12390982171,
+      "archiveSha256": "fff76b16528687d727053fb44a18aa2a902a4a9cab5f2c9796e7270e03374cc3",
+      "files": [
+        {
+          "file": "arc-O0-missing-cancel-owner.bin",
+          "sha256": "108da09d42e4285a8b5d550ef80e93716972f2f9750277657914321b99d5e1b7",
+          "cSha256": "2c3b9141edc0d7cf1311775a3a66e379ba0ad7d298a6425cebe9dc7e4d32f89f",
+          "machine": 183,
+          "bytes": 459880
+        },
+        {
+          "file": "arc-O0-missing-owner.bin",
+          "sha256": "368416aee9d2c123de18fc96bdf3491383fdd4a8bd65207e97834b69d9761a2a",
+          "cSha256": "c042c820147bd0465e8297176203792a273ff942b36b455bc78085456c59a135",
+          "machine": 183,
+          "bytes": 459880
+        },
+        {
+          "file": "arc-O0-protected.bin",
+          "sha256": "32ea9d481740e295ea8e78b8b1e94f1dea0a0b6ce2396bef244456a223b408ba",
+          "cSha256": "c3019c1c473abac3712373d3ffa87c03f4911e4d0a40fc295cf03db6c67b68b8",
+          "machine": 183,
+          "bytes": 459880
+        },
+        {
+          "file": "arc-O2-missing-cancel-owner.bin",
+          "sha256": "8343413056e2421598a5a5649dd6350600b42da60daad0e777e39cd00b6a3d30",
+          "cSha256": "2c3b9141edc0d7cf1311775a3a66e379ba0ad7d298a6425cebe9dc7e4d32f89f",
+          "machine": 183,
+          "bytes": 154760
+        },
+        {
+          "file": "arc-O2-missing-owner.bin",
+          "sha256": "d4f583051f5916de746a09990f7abef699583b6e40835d9b28e47123bb88a82a",
+          "cSha256": "c042c820147bd0465e8297176203792a273ff942b36b455bc78085456c59a135",
+          "machine": 183,
+          "bytes": 154760
+        },
+        {
+          "file": "arc-O2-protected.bin",
+          "sha256": "c08901f5c934752a776b64044e1d2004b7014c2002859e61d6dee78f698d6d65",
+          "cSha256": "c3019c1c473abac3712373d3ffa87c03f4911e4d0a40fc295cf03db6c67b68b8",
+          "machine": 183,
+          "bytes": 154760
+        },
+        {
+          "file": "tracing-O0-missing-cancel-owner.bin",
+          "sha256": "4b027de026e1a7119ba4c180bcc6ce1689f45245c8f0dc57b1b2608f19b58480",
+          "cSha256": "aece7ada4a9b0f372728132c3bf8879e829ba9c38ef88d9df5984566c3705789",
+          "machine": 183,
+          "bytes": 526064
+        },
+        {
+          "file": "tracing-O0-missing-owner.bin",
+          "sha256": "deaa73261f30fd8cdcd258ef85ba9238e51a8ec83b2600bddc1e622f63ef5498",
+          "cSha256": "e34f9b470b91275b554e1ed10d6cffccdeb1a39ab18d26bf5da5367fcd42b46a",
+          "machine": 183,
+          "bytes": 526064
+        },
+        {
+          "file": "tracing-O0-protected.bin",
+          "sha256": "6aa5864bb5e0aa616ca4359d5384dde21213ff10ccee147af951c124fedcd38e",
+          "cSha256": "82e284cbd36f5972b6983c24f45d3a2d03fc665443303fc5db03f75535e09dd5",
+          "machine": 183,
+          "bytes": 526064
+        },
+        {
+          "file": "tracing-O2-missing-cancel-owner.bin",
+          "sha256": "e5a8fb04571c2b2800822220b35aff0d1071b56f7aaaab936124dfc1b71e1b6a",
+          "cSha256": "aece7ada4a9b0f372728132c3bf8879e829ba9c38ef88d9df5984566c3705789",
+          "machine": 183,
+          "bytes": 155168
+        },
+        {
+          "file": "tracing-O2-missing-owner.bin",
+          "sha256": "721da73d1dc8dfb50fadcf33bc7571a100b13750edcf2d02c48b7acc807bc515",
+          "cSha256": "e34f9b470b91275b554e1ed10d6cffccdeb1a39ab18d26bf5da5367fcd42b46a",
+          "machine": 183,
+          "bytes": 155168
+        },
+        {
+          "file": "tracing-O2-protected.bin",
+          "sha256": "cd73b6d8aa120d14ed0dcc4d4e5cc4510d09e6f149bf0a793ba2b940d5c3fa79",
+          "cSha256": "82e284cbd36f5972b6983c24f45d3a2d03fc665443303fc5db03f75535e09dd5",
+          "machine": 183,
+          "bytes": 155168
+        }
+      ]
+    }
+  ]
+}

@@ -103,6 +103,12 @@ double-four = simd.mul (simd.splat 2.0)
 `simd.splat 2.0` fills all four lanes with 2.0. `simd.mul` multiplies matching
 lanes. `array.from-list` constructs the input array; `simd.from-array` checks its
 length and returns `Some vector` on success or `None` for the wrong length.
+The declared lane count is checked before conversion to the target's pointer
+width. For example, an empty array cannot satisfy `Vec[4294967296, I64]` on a
+32-bit WebAssembly target. Constructing that vector with `simd.splat` traps with
+`array too large` before allocation. F128 lanes require sixteen bytes each;
+representable lengths do not guarantee that sufficient memory is available.
+
 `option.map` applies a function inside `Some` and leaves `None` unchanged:
 
 ```fwp
@@ -342,8 +348,8 @@ A valid setting does not guarantee that the operating system can start workers.
 
 Workers borrow inputs and write distinct parts of the owned output; they allocate
 no language objects. The CPU-only implementation removes the OpenCL compiler,
-GPU selection and source-generation API. Its validation status is in the
-[handoff](development-state.md); no GPU execution is supported by this design.
+GPU selection and source-generation API, with full production acceptance in
+[PR #191](roadmap-history.md#task-results-and-explicit-cpu-execution-pr-191). GPU execution is not supported.
 
 CPU elementwise workers write directly
 into one result array, avoiding a second full-size native output and copy. Input
@@ -359,7 +365,7 @@ missing workers on the caller. Counts are validated before conversion to WASI's
 32-bit address size; final reduction blocks use remaining lengths to avoid index
 overflow. The output-storage and failure-cleanup checks passed native and WASI
 validation in [PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
-The new worker-range rules require the current validation recorded in the handoff.
+The worker-range rules also passed the full PR #191 acceptance above.
 [Measured storage costs](benchmarks.md#cpu-tensor-output-storage) distinguish the
 removed buffer from remaining allocations. No timing improvement is claimed here.
 

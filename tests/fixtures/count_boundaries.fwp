@@ -1,0 +1,36 @@
+# Oversized counts clamp to the available data; oversized indices are absent.
+# This uses counts wider than a WebAssembly index without allocating huge values.
+checks : I64 -> () ! {IO}
+checks = make {
+    take = flip take [1, 2, 3],
+    drop = flip drop [1, 2, 3],
+    nth = flip nth [1, 2, 3],
+    chunks = flip chunks [1, 2, 3],
+    text = flip (string.slice 1) "héllo",
+    text-start = flip (flip string.slice 3) "héllo",
+    bytes = flip (bytes.slice 1) ("abc" | string.to-bytes),
+    bytes-start = flip (flip bytes.slice 3) ("abc" | string.to-bytes),
+    byte-at = flip bytes.get ("abc" | string.to-bytes),
+    array = flip (array.slice 1) ([1, 2, 3] | array.from-list) | array.to-list,
+    array-start =
+        flip (flip array.slice 3) ([1, 2, 3] | array.from-list) | array.to-list,
+    array-at = flip array.get ([1, 2, 3] | array.from-list),
+    array-set = flip (flip array.set 9) ([1, 2, 3] | array.from-list),
+    empty-repeat = flip string.repeat "",
+    empty-padding = flip (flip pad-left "") "keep",
+    trits = flip trits.unpack ("\0" | string.to-bytes),
+} | echo
+
+as-wide : Array[I64] -> Option[Vec[4294967296, I64]]
+as-wide = simd.from-array
+
+main = [
+    [4294967295, 4294967296, 4294967297, 9223372036854775807] | each checks,
+    read-all ()
+    | words
+    | map string.length
+    | array.from-list
+    | as-wide
+    | option.is-none
+    | echo,
+] | ignore

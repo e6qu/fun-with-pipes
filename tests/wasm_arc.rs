@@ -288,6 +288,13 @@ fn synchronous_wasi_programs_match_interpretation_and_free_physical_storage() {
     }
     let dir = fwp::cgen::TempDir::new("wasi-arc-programs").unwrap();
     std::fs::write(dir.join("input.txt"), "owned UTF-8: λ\n").unwrap();
+    let text_transforms = format!(
+        "{}\nmain = range 0 8 | each (show | concat \" AbC, λ. \" | check-text)\n",
+        include_str!("fixtures/text_transform_ownership.fwp")
+            .split_once("main =")
+            .unwrap()
+            .0,
+    );
     let programs = [
         ("lists", "main = range 0 64 | map (const [1, 2, 3] | scan add 0 | repeat 4 | flatten | chunks 3 | flatten | sum) | sum | echo\n"),
         ("closures", r#"
@@ -324,6 +331,8 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
         ("vectors", include_str!("fixtures/vector_ownership.fwp")),
         ("ternary", include_str!("fixtures/ternary_ownership.fwp")),
         ("text-decoders", include_str!("fixtures/text_decoder_ownership.fwp")),
+        ("text-transforms", text_transforms.as_str()),
+        ("count-boundaries", include_str!("fixtures/count_boundaries.fwp")),
         ("metrics", include_str!("fixtures/metrics_ownership.fwp")),
         ("cpu-kernels", include_str!("fixtures/cpu_kernel_ownership.fwp")),
         ("mixed-tail-recursion", include_str!("fixtures/mixed_tail_recursion.fwp")),
@@ -418,6 +427,48 @@ main = [
                 );
                 if expected == 0 {
                     assert_eq!(output.stdout, reference.stdout, "{name}, {opt}");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn synchronous_wasi_vector_lane_counts_do_not_narrow_before_validation() {
+    if !available() {
+        return;
+    }
+    let dir = fwp::cgen::TempDir::new("wasi-vector-counts").unwrap();
+    for (name, program, signature) in [
+        ("splat", "wide : I64 -> Vec[4294967296, I64]\nwide = simd.splat\nmain = read-all () | string.length | wide | simd.to-array | array.length | echo\n", "static V fwp_p_simd_splat(V x, uint64_t n,"),
+        ("from-array", "wide : Array[I64] -> Option[Vec[4294967296, I64]]\nwide = simd.from-array\nmain = read-all () | words | map string.length | array.from-list | wide | option.is-none | echo\n", "static V fwp_p_simd_from_array(V a, uint64_t n,"),
+    ] {
+        let source = dir.join("lanes.fwp");
+        std::fs::write(&source, program).unwrap();
+        let code = emit(&source, &dir.join("lanes.c"), &[], "wasm32-wasi");
+        assert_eq!(code.matches(signature).count(), 1);
+        let narrowed = code.replace(signature, &signature.replace("uint64_t n", "size_t n"));
+        for opt in ["-O1", "-O2"] {
+            for (label, candidate) in [("checked", &code), ("narrowed", &narrowed)] {
+                let binary = dir.join("lanes.wasm");
+                fwp::cgen::compile_for(candidate, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+                let output = wasi(&binary, dir.path()).output().unwrap();
+                let (status, stdout, stderr) = match (name, label) {
+                    ("splat", "checked") => (101, "", "fwp: trap: array too large\n"),
+                    ("splat", "narrowed") => (0, "0\n", ""),
+                    ("from-array", "checked") => (0, "True\n", ""),
+                    ("from-array", "narrowed") => (0, "False\n", ""),
+                    _ => unreachable!(),
+                };
+                assert_eq!(output.status.code(), Some(status), "{name} {label} {opt}: {output:?}");
+                assert_eq!(output.stdout, stdout.as_bytes());
+                assert_eq!(output.stderr, stderr.as_bytes());
+                if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                    let path = std::path::PathBuf::from(path);
+                    std::fs::create_dir_all(&path).unwrap();
+                    let stem = format!("lane-count-{name}-{label}{opt}");
+                    std::fs::write(path.join(format!("{stem}.c")), candidate).unwrap();
+                    std::fs::copy(&binary, path.join(format!("{stem}.wasm"))).unwrap();
                 }
             }
         }
