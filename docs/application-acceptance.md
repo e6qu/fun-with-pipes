@@ -11,8 +11,8 @@ performance and platform requirements in the last column.
 | Program family | Work and current input | Existing evidence | Still required for this suite |
 |---|---|---|---|
 | [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [C/Rust baseline](measurements/wordfreq.md) and [paired/repeated text comparison](measurements/unchanged-text.md) on two Linux hosts | Set time/memory budgets; validate the current runtime and preserve six-platform cleanup evidence |
-| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; current test repeats a six-file tree 64 times | `tests/directory_report.rs`: interpreter/native agreement and final managed storage | Add a larger tree, permission/error controls and repeated live-memory measurements |
-| [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scale file sizes; measure input/output storage separately; record failure cleanup |
+| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and a small tracing control | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | Preserve these observations as ownership changes; allocation-failure coverage remains |
+| [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV cleanup passes on six hosts; separate input/output costs and extend task-file coverage |
 | Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](benchmarks.md#current-numerical-comparison-and-record-moves) | Repeat current-revision comparisons; set per-size budgets; include a larger numerical application |
 | Derivative application | Rosenbrock descent from alternating −1.2/1.0 inputs: 3, 33 and 129 dimensions, 199 gradient updates | [Measured descent comparison](measurements/ad-application.md) on two Linux hosts; nested/workspace checks remain | Measure raw tapes, workspace and process memory separately; set time/memory budgets and extend native evidence |
 | Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](benchmarks.md#server-memory-after-completed-remote-calls) | Consolidate one repeatable service scenario with bounded concurrency, disconnects and repeated live-memory samples |
@@ -142,3 +142,87 @@ managed counts must reproduce exactly. Downloaded baseline binaries are checked
 against their original report; the newly executed binaries have their own hashes,
 disassembly and size records. The explicit baseline source is
 `74263bccf8e2e67865e1863e2c04a296a97877bb`, run `39690307737`.
+
+
+## Repeated directory and file work
+
+The `file-applications` workflow suite checks larger inputs with the current
+compiler on all six native hosts. It is a cleanup experiment, **not a timing
+comparison or evidence of C/Rust parity**. The [six-host report](measurements/file-applications.md) records focused acceptance,
+actual memory observations and binary inspection. Full delivery status stays in
+the [handoff](development-state.md).
+
+The directory case creates 64 and 1,024 files spread among sixteen visible
+folders and a hidden folder. Names include Unicode, hidden files and five
+extension categories. A separate Rust calculation supplies expected file/byte
+totals and sort order. Three reports cover hidden-file filtering, largest counts
+and the first two names. Each process then repeats successful reports, missing
+paths, a file used as a directory, and a permission-denied subtree 64 times.
+The denied subtree sorts after a readable subtree, exercising partial traversal.
+Tests verify that the operating system denies access and restore permissions.
+
+The word-count case reads two UTF-8 files, each with 128 or 4,096 lines. It checks
+line, word and byte counts against independent Rust counts, including blank lines,
+tabs and multibyte characters, then checks the two-file total. It repeats three
+cases 64 times each: both reads succeed; the second file is missing; the second
+contains invalid UTF-8. Both failures follow a completed first read, so partially
+built results must also be released.
+
+The grep case uses the same two text files. It checks case-insensitive matches,
+file/line prefixes, inverted counts and the no-match exit status against an
+independent Rust calculation. Repeated matching and second-file errors exercise
+both retained input lines and selected output strings.
+
+The CSV case has 128 or 4,096 data records plus a header. Quoted fields contain
+commas, escaped quotes and Unicode. It selects `name` and `id`, writes every
+record as tab-separated text, and compares the complete output with independent
+expected rows. Repeated failures cover a missing second file, invalid UTF-8 and
+a requested column absent from a successfully parsed table. Output is drained
+while observing memory, so a large report cannot fill a pipe and stall the test.
+
+All four programs must match raw interpretation. Native checks compile fwp at O1
+and generated C at O1 and O2 with LTO disabled. Existing small tracing/stress
+checks remain; the larger observations use checked ARC. Each checkpoint records:
+
+- Managed allocator charge after the preceding operation. It must stay constant
+  within each phase and return to its initial value before runtime teardown.
+- Successfully opened directory/file-read handles minus actual closes: zero.
+- C scratch bytes belonging to `file.read`: zero. This excludes other C buffers.
+- Process resident memory at rounds 0, 32 and 63 of each phase, while the child
+  waits at the checkpoint. RSS includes allocator pages, libraries, stacks and
+  observer overhead. It is recorded separately, with no invented zero-growth
+  threshold or claim that managed charge represents the whole process.
+
+Controls deliberately omit managed releases, handle closes and file-read scratch
+frees. Each must fail the observer before shutdown. The tests retain generated C,
+30 native binaries, disassembly, output and sixteen memory series per host. Machine headers verify
+that artifacts target the runner's actual architecture. These cases do not yet
+cover forced allocation failure or every file operation and do not complete the
+application suite.
+
+The observer reads Linux `/proc`, macOS `ps`, and Windows
+`K32GetProcessMemoryInfo` working-set counters. Windows sampling opens and closes
+one query handle per sample; it does not start a shell. These are process-wide
+resident-memory observations, separate from the managed and file-buffer ledgers.
+
+## Which examples pass ARC's ownership checks
+
+`scripts/inventory-arc-programs.py` compares C emission for every `tests/run/*.fwp`
+program in explicit tracing and ARC modes, with dynamic storage and stack
+optimization enabled. The focused file-application workflow runs this inventory
+on Linux AMD64 at fwp O1 and saves `arc-admission.json` with source/compiler hashes,
+commands' diagnostics, and these categories:
+
+- **Both accepted:** both modes emit C. This alone does not verify execution or cleanup.
+- **ARC rejected:** tracing emits C, but ARC rejects the ownership contract. Investigate
+  each diagnostic before changing the default memory mode.
+- **Tracing rejected:** the program fails ordinary compilation too, including
+  intentional diagnostic fixtures. This is not an ARC migration failure.
+
+Timeouts, compiler crashes and mismatched emitted memory modes fail the inventory.
+Recorded ARC rejections are discovery results, not accepted language coverage.
+The ordinary execution snapshots and the runtime ownership tests remain necessary.
+
+The [current inventory](measurements/file-applications.md#which-maintained-examples-pass-arcs-checks)
+identifies the raw-pointer gap and distinguishes it from an intentionally invalid
+inter-task derivative lifetime.

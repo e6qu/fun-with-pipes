@@ -1,0 +1,35 @@
+# Appended to the maintained wc example. Each error follows a successful first
+# file, so a failed second read must release the partially constructed result.
+foreign "C" checkpoint : I64 -> I64 -> () ! {IO} = "file_app_checkpoint"
+
+require-error : Result[List[String], IoError] -> ()
+require-error =
+    result.is-ok | if id (const "expected a file error" | prim.trap) (const ())
+
+read-cycle =
+    tap (checkpoint 0)
+    | tap (const ["first.txt", "second.txt"]
+        | wc { lines = True, words = True, bytes = True }
+        | ignore)
+    | sub 1
+missing-cycle =
+    tap (checkpoint 1)
+    | tap (const ["first.txt", "missing.txt"]
+        | attempt (wc { lines = True, words = True, bytes = True })
+        | require-error)
+    | sub 1
+invalid-cycle =
+    tap (checkpoint 2)
+    | tap (const ["first.txt", "invalid.txt"]
+        | attempt (wc { lines = True, words = True, bytes = True })
+        | require-error)
+    | sub 1
+
+main = [
+    ["first.txt", "second.txt"]
+    | wc { lines = True, words = True, bytes = True }
+    | each echo,
+    64 | loop (if (eq 0) Stop (read-cycle | Again)) | ignore,
+    64 | loop (if (eq 0) Stop (missing-cycle | Again)) | ignore,
+    64 | loop (if (eq 0) Stop (invalid-cycle | Again)) | ignore,
+] | ignore
