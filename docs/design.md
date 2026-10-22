@@ -545,21 +545,22 @@ its existing child-owner rules. The accepted tests include aliases, pointer-like
 scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
 count operations; they do not prove every record or call allocation-free.
 
-The current preparation extends known-callback lowering to numeric
-`array.generate` calls. The caller keeps captures alive throughout generation;
-a separately lowered callback body borrows them, acquiring an owner only if a
-use escapes (for example, storing the array in state). The existing partial-array
-builder handles errors and cancellation. Numeric scalar results avoid new result
-representation rules. Recursive callbacks and resource scopes keep their ordinary
-ownership path. The first measurement still retained each array once per
-coordinate: borrowing at callback entry had moved ownership into a temporary
-`(array, index)` record. The ownership pass now forwards fields from a record of
-caller-borrowed parameters when every use is a projection or a proved borrowed
-call. Forwarding runs again on exposed aliases: a caller-borrowed parameter
-stays alive through the call's last read, even with no later local use. Without
-that fact, the final alias would acquire the retain again. Whole-record escapes
-and resource boundaries preserve ordinary owners; returning a projected field
-still acquires ownership. This repair is not yet verified; see the [handoff](development-state.md) for checks and count/storage budgets.
+Known numeric `array.generate` callbacks can borrow their captures while the
+caller keeps them alive throughout generation. The compiler lowers the callback
+body with that ownership contract; escaping uses acquire their own owners.
+The existing partial-array builder handles errors and cancellation. Recursive
+callbacks and resource scopes keep their ordinary calling convention.
+
+A temporary record of caller-borrowed parameters can disappear when every use
+projects a field or passes it to a proved nonescaping call. Alias normalization
+then uses the caller's whole-call lifetime, including the last local read.
+Whole-record escapes and resource boundaries preserve ordinary owners; returning
+a projected field acquires ownership. Eligible numeric-array aliases qualify;
+algebraic list aliases retain their existing representation. The
+[application measurement](measurements/array-capture-descent.md) verifies zero
+retains in repeated packed descent on both Linux architectures. The
+[six-host ownership checks](measurements/array-capture-borrows.md) cover effects,
+shared inputs and cleanup; the [handoff](development-state.md) tracks final gates.
 
 A dying stack record can also transfer its sole counted numeric-array field.
 The compiler requires one tracked child owner, a matching `Array` of inline
