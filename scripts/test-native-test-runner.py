@@ -230,12 +230,13 @@ class Coverage(unittest.TestCase):
             self.assertIn("target timed out", (root / "logs/test-noisy.log").read_text())
 
     def test_timeout_kills_children_preserves_logs_and_runs_remaining_targets(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory(prefix="fwp path ' ") as directory:
             root = Path(directory)
             marker = root / "survived"
             hung = root / "hung"
+            child_code = f"import pathlib,time; time.sleep(2); pathlib.Path({str(marker)!r}).touch()"
             hung.write_text("#!/usr/bin/env python3\nimport subprocess,sys,time\n" +
-                f"subprocess.Popen([sys.executable, '-c', \"import pathlib,time; time.sleep(2); pathlib.Path({str(marker)!r}).touch()\"])\n" +
+                f"subprocess.Popen([sys.executable, '-c', {child_code!r}])\n" +
                 "print('before hang', flush=True)\ntime.sleep(30)\n")
             hung.chmod(0o755)
             passed = root / "passed"

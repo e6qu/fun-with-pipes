@@ -48,6 +48,9 @@ jobs:
       FWP_NATIVE_COMMAND_ARTIFACTS: native-commands-evidence/tests
     steps:
       - uses: actions/checkout@v7
+      - name: Prepare native command evidence
+        shell: bash
+        run: mkdir -p native-commands-evidence
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -92,14 +95,14 @@ jobs:
         run: python scripts/test-native-test-runner.py
       - name: Compiler checks for native command ownership
         id: file_compiler
-        if: runner.os != 'Windows'
+        if: ${{ !cancelled() && runner.os != 'Windows' }}
         shell: bash
         run: |
           mkdir -p native-commands-evidence
           cargo clippy --lib --bin fwp --test aot --test std_tests --test arc_execution --test cli_ownership -- -D warnings 2>&1 | tee native-commands-evidence/compiler.log
       - name: Windows compiler checks for native command ownership
         id: file_compiler_windows
-        if: runner.os == 'Windows'
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force native-commands-evidence | Out-Null
