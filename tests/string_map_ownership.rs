@@ -13,7 +13,13 @@ fn string_maps_preserve_values_and_release_each_exit() {
     let source = dir.join("strings.fwp");
     std::fs::write(&source, include_str!("fixtures/string_map_ownership.fwp")).unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
-    let inputs = ["", "One TWO ,Three. λ", "AbC abc AbC", "A\tB\nC"];
+    let inputs = [
+        "",
+        "One TWO ,Three. λ",
+        "AbC abc AbC",
+        "A\tB\nC",
+        "One TWO STOP Four",
+    ];
     let references: Vec<_> = inputs
         .iter()
         .map(|input| {
@@ -50,6 +56,21 @@ fn string_maps_preserve_values_and_release_each_exit() {
                 .arg(&cfile),
         );
         let code = std::fs::read_to_string(&cfile).unwrap();
+        let code = if mode == "arc" {
+            let start = code
+                .find("static void *fwp_main_thread(void *arg) {")
+                .unwrap();
+            let (runtime, main) = code.split_at(start);
+            let init = "    fwp_init_consts();\n";
+            let observation = "    /* Ownership observation point: before runtime teardown. */\n";
+            assert_eq!(main.matches(init).count(), 1);
+            assert_eq!(main.matches(observation).count(), 1);
+            let main = main.replace(init, &format!("{init}    intptr_t map_budget = fwp_gc.budget;\n"))
+                .replace(observation, &format!("{observation}    if(fwp_gc.budget != map_budget || fwp_gc.enabled || fwp_gc.ncollect) {{ fprintf(stderr, \"string-map owners remain after language execution\\n\"); exit(246); }}\n"));
+            format!("{runtime}{main}")
+        } else {
+            code
+        };
         assert!(
             code.contains("fwp_k_map_strings_owned(fwp_owned_entry"),
             "known callback was not selected"
@@ -73,7 +94,12 @@ fn string_maps_preserve_values_and_release_each_exit() {
                 finish,
                 &format!("if(map_force==4)fwp_trap(\"map allocation control\");\n    {finish}"),
             );
+        let build_step = "\n        V fields[] = {owner->items[owner->count - 1], owner->built};";
+        assert_eq!(code.matches(build_step).count(), 1);
+        let build_guard =
+            "if(map_force==5 && owner->count==1)fwp_trap(\"map allocation control\");";
         let probe = code
+            .replace(build_step, &format!("\n        {build_guard}{build_step}"))
             .replace(helper, &observed)
             .replace("#define FWP_UNWIND 0", "#define FWP_UNWIND 1")
             .replace(
@@ -99,10 +125,14 @@ fn string_maps_preserve_values_and_release_each_exit() {
                 "if(map_force==4)owner.count=0;\n    if(map_force==4)fwp_trap",
             ),
         );
+        let missing_built = probe.replace(
+            build_guard,
+            &format!("if(map_force==5 && owner->count==1)owner->built=0; {build_guard}"),
+        );
         for opt in ["-O0", "-O2"] {
             let binary = dir.join("strings.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-            for (input, reference) in inputs.iter().zip(&references) {
+            for (input_index, (input, reference)) in inputs.iter().zip(&references).enumerate() {
                 for verify in if mode == "arc" {
                     &["0"][..]
                 } else {
@@ -121,12 +151,33 @@ fn string_maps_preserve_values_and_release_each_exit() {
                         (&reference.stdout, &reference.stderr),
                         "{mode} {opt} {verify}"
                     );
+                    if let Some(destination) = std::env::var_os("FWP_STRING_MAP_ARTIFACTS") {
+                        let destination = std::path::PathBuf::from(destination);
+                        std::fs::create_dir_all(&destination).unwrap();
+                        let stem = format!("language-{mode}-{}-{input_index}-{verify}", &opt[1..]);
+                        std::fs::write(destination.join(format!("{stem}.stdout")), actual.stdout)
+                            .unwrap();
+                        std::fs::write(destination.join(format!("{stem}.input")), input).unwrap();
+                        std::fs::write(
+                            destination.join(format!("{stem}.reference")),
+                            &reference.stdout,
+                        )
+                        .unwrap();
+                    }
                 }
+            }
+            if let Some(destination) = std::env::var_os("FWP_STRING_MAP_ARTIFACTS") {
+                let destination = std::path::PathBuf::from(destination);
+                std::fs::create_dir_all(&destination).unwrap();
+                let stem = format!("language-{mode}-{}", &opt[1..]);
+                std::fs::write(destination.join(format!("{stem}.c")), &code).unwrap();
+                std::fs::copy(&binary, destination.join(format!("{stem}.exe"))).unwrap();
             }
             for (label, measured, status) in [
                 ("protected", &probe, 0),
                 ("missing-source", &missing_source, 245),
                 ("missing-results", &missing_results, 245),
+                ("missing-built", &missing_built, 245),
             ] {
                 fwp::cgen::compile_c(measured, &binary, opt).unwrap();
                 let actual = Command::new(&binary)
@@ -152,6 +203,11 @@ fn string_maps_preserve_values_and_release_each_exit() {
                     let destination = std::path::PathBuf::from(destination);
                     std::fs::create_dir_all(&destination).unwrap();
                     let stem = format!("{mode}-{}-{label}", &opt[1..]);
+                    std::fs::write(
+                        destination.join(format!("{stem}.status")),
+                        format!("{status}\n"),
+                    )
+                    .unwrap();
                     std::fs::write(destination.join(format!("{stem}.c")), measured).unwrap();
                     std::fs::copy(&binary, destination.join(format!("{stem}.exe"))).unwrap();
                     std::fs::write(destination.join(format!("{stem}.stdout")), actual.stdout)

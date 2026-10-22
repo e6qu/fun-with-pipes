@@ -18,7 +18,7 @@ on:
         options: [all, checks, queued, api, stdio, http-rest, http-mcp]
         default: all
       source_revision:
-        description: Full source commit for profiling, evidence audits or server rechecks
+        description: Full source commit for audits, server rechecks or the wordfreq baseline
         type: string
       evidence_run:
         description: Completed test or measurement run consumed by the selected suite
@@ -2713,18 +2713,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           BASELINE_RUN: ${{ inputs.baseline_run }}
+          BASELINE_SOURCE: ${{ inputs.source_revision }}
         run: |
-          test -n "$BASELINE_RUN"
+          test -n "$BASELINE_RUN" && test -n "$BASELINE_SOURCE"
           gh run view "$BASELINE_RUN" --json headSha,conclusion > baseline-run.json
-          python3 -c 'import json; r=json.load(open("baseline-run.json")); assert r["conclusion"] == "success" and r["headSha"] == "74263bccf8e2e67865e1863e2c04a296a97877bb"'
+          python3 -c 'import json, os, re; source=os.environ["BASELINE_SOURCE"]; assert re.fullmatch("[0-9a-f]{40}", source); r=json.load(open("baseline-run.json")); assert r["conclusion"] == "success" and r["headSha"] == source'
           gh run download "$BASELINE_RUN" --name "wordfreq-${{ matrix.runner }}" --dir wordfreq-before
       - name: Compare the maintained word-frequency application
+        env:
+          BASELINE_SOURCE: ${{ inputs.source_revision }}
         if: ${{ !cancelled() && steps.baseline.conclusion == 'success' }}
         run: >-
           python3 scripts/measure-wordfreq.py --compiler target/release/fwp
           --cc gcc --rustc rustc --objdump objdump --nm nm --time /usr/bin/time
           --case 4096:64 --case 65536:1024 --warmups 2 --samples 24
-          --baseline wordfreq-before --baseline-source 74263bccf8e2e67865e1863e2c04a296a97877bb
+          --baseline wordfreq-before --baseline-source "$BASELINE_SOURCE"
           --timeout 180 --host "${{ matrix.runner }}" --output wordfreq-evidence
       - uses: actions/upload-artifact@v7
         if: always()

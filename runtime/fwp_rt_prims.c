@@ -252,36 +252,6 @@ static V fwp_p_map_strings_owned(V f, V xs, void (*element_drop)(V), void (*list
     FWP_KEEP_ALIVE(f);
     return result;
 }
-FWP_K V fwp_k_map_strings_owned(V (*f)(V *), V xs, void (*element_drop)(V), void (*list_drop)(V)) {
-    fwp_value_owner source = {xs, list_drop}; fwp_cleanup source_cleanup;
-    fwp_value_protect(&source, &source_cleanup);
-    size_t n;
-    V *a = fwp_map_items(xs, &n);
-    fwp_map_owner owner = {a, 0, 0, element_drop, list_drop};
-    fwp_cleanup cleanup;
-    fwp_map_protect(&owner, &cleanup);
-    V cursor = xs;
-    int borrowed_tail = 0;
-    for (size_t i = 0; i < n; i++) {
-        V node = cursor, tail = OBJ(node)->f[1];
-        if (!borrowed_tail && fwp_rc_unique(node) == 1) {
-            source.value = tail;
-            fwp_rc_free_obj(node);
-        } else {
-            /* Keep the first shared tail owned through all remaining calls.
-             * Only callback arguments need additional references. */
-            borrowed_tail = 1;
-            fwp_rc_dup(a[i]);
-        }
-        cursor = tail;
-        a[i] = f(&a[i]);
-        owner.count++;
-    }
-    V result = fwp_map_finish_protected(&owner, &cleanup);
-    fwp_value_release(&source);
-    fwp_value_finish(&source, &source_cleanup);
-    return result;
-}
 
 /* Ternary conversion traverses borrowed input directly. List results own their
  * completed prefix, so allocation failure releases it without tracing scratch. */
@@ -676,6 +646,37 @@ FWP_K V fwp_k_map_owned(fwp_fn1 f, V xs, void (*element_drop)(V), void (*list_dr
     FWP_KEEP_ALIVE(xs);
     return result;
 }
+FWP_K V fwp_k_map_strings_owned(V (*f)(V *), V xs, void (*element_drop)(V), void (*list_drop)(V)) {
+    fwp_value_owner source = {xs, list_drop}; fwp_cleanup source_cleanup;
+    fwp_value_protect(&source, &source_cleanup);
+    size_t n;
+    V *a = fwp_map_items(xs, &n);
+    fwp_map_owner owner = {a, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup;
+    fwp_map_protect(&owner, &cleanup);
+    V cursor = xs;
+    int borrowed_tail = 0;
+    for (size_t i = 0; i < n; i++) {
+        V node = cursor, tail = OBJ(node)->f[1];
+        if (!borrowed_tail && fwp_rc_unique(node) == 1) {
+            source.value = tail;
+            fwp_rc_free_obj(node);
+        } else {
+            /* Keep the first shared tail owned through all remaining calls.
+             * Only callback arguments need additional references. */
+            borrowed_tail = 1;
+            fwp_rc_dup(a[i]);
+        }
+        cursor = tail;
+        a[i] = f(&a[i]);
+        owner.count++;
+    }
+    V result = fwp_map_finish_protected(&owner, &cleanup);
+    fwp_value_release(&source);
+    fwp_value_finish(&source, &source_cleanup);
+    return result;
+}
+
 
 FWP_K V fwp_k_filter(fwp_fn1 f, V xs) {
     size_t n, k = 0;

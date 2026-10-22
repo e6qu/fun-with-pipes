@@ -80,8 +80,13 @@ int main(void) {
         if (fwp_cleanups || fwp_gc.budget != initial) return 245;
     }
     if (fwp_k_map_strings_owned(map_step, 0, map_leaf_drop, map_list_drop)) return 241;
-    for (int kind = 1; kind <= 4; kind++) for (int position = 1; position <= 3; position++) {
-        V source = map_source();
+    for (int kind = 1; kind <= 5; kind++) for (int position = 1; position <= 3; position++) for (int alias_kind = 0; alias_kind < 4; alias_kind++) {
+        V source = map_source(), alias = 0;
+        if (alias_kind == 1) alias = source;
+        if (alias_kind == 2) alias = OBJ(source)->f[1];
+        if (alias_kind == 3) alias = OBJ(source)->f[0];
+        if (alias) fwp_rc_dup(alias);
+        uint64_t before = alias_kind == 1 || alias_kind == 2 ? map_hash(alias) : 0;
         map_force = kind; map_fail_at = position; map_calls = 0;
         fwp_trap_recover = map_recover; fwp_trap_jb = &map_jump; fwp_trap_cleanup = NULL;
         fwp_task *previous = fwp_cur;
@@ -101,7 +106,15 @@ int main(void) {
         fwp_trap_recover = NULL; fwp_trap_jb = NULL; map_force = 0;
         if (kind == 1 && strcmp(fwp_trap_msg, "map callback control")) return 244;
         if (kind == 2 && !map_cancelled.unwinding) return 244;
-        if ((kind == 3 || kind == 4) && strcmp(fwp_trap_msg, "map allocation control")) return 244;
+        if (kind >= 3 && strcmp(fwp_trap_msg, "map allocation control")) return 244;
+        if (alias_kind == 1 || alias_kind == 2) {
+            if (map_hash(alias) != before) return 243;
+            map_list_drop(alias);
+        }
+        if (alias_kind == 3) {
+            if (STR(alias)->len != 3 || memcmp(STR(alias)->d, "AbC", 3)) return 243;
+            map_leaf_drop(alias);
+        }
         if (fwp_cleanups || fwp_gc.budget != initial) return 245;
     }
     fwp_tasks_finish();
