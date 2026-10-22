@@ -33,8 +33,11 @@ operation must copy; it cannot change the other owner's value. An owning wrapper
 is the runtime entry that implements that transfer policy.
 
 A synchronous C callback runs before the foreign call returns. Its temporary
-values and context have scoped cleanup. Raw pointers, retained unknown callbacks
-and managed C addresses do not establish complete lifetime proofs.
+values and context have scoped cleanup. A raw pointer has a manual pointee
+lifetime: copying its address never acquires an ARC owner. The programmer still
+ensures validity and cleanup. This extension is under [validation](development-state.md).
+Retained unknown callbacks and callbacks returning managed C addresses remain
+outside the checked contract.
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|

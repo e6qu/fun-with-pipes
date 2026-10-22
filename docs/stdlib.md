@@ -2865,7 +2865,8 @@ Tutorial 9 follows a buffer from allocation through sorting to release.
 ```fwp
 Ptr[T] = builtin
 
-# zero-initialized memory
+# Zero-initialized bytes. Nonpositive counts allocate one byte; counts that
+# exceed the target's address width trap before allocation.
 mem.alloc : I64 -> Ptr[a] ! {Unsafe}
 mem.free : Ptr[a] -> () ! {Unsafe}
 
@@ -2873,7 +2874,9 @@ mem.free : Ptr[a] -> () ! {Unsafe}
 mem.string : String -> Ptr[U8] ! {Unsafe}
 ptr.cast : Ptr[a] -> Ptr[b]
 
-# the address of the n-th element; offsets wrap at the native pointer width
+# The address of the n-th element; offsets wrap at the native pointer width.
+# ISize/USize elements use ptrdiff_t/size_t storage: 4 bytes on a 32-bit target,
+# 8 bytes on the maintained 64-bit targets.
 ptr.at : I64 -> Ptr[a] -> Ptr[a] where Numeric[a]
 ptr.read : Ptr[a] -> a ! {Unsafe} where Numeric[a]
 ptr.write : a -> Ptr[a] -> () ! {Unsafe} where Numeric[a]

@@ -1,0 +1,31 @@
+# Two adjacent, deliberately unaligned 128-bit cells. Guard bytes stay zero.
+wide-signed : Ptr[I128] -> () ! {IO, Unsafe}
+wide-signed =
+    tap (ptr.write -170141183460469231731687303715884105728i128)
+    | tap (ptr.at 1 | ptr.write 170141183460469231731687303715884105727i128)
+    | tap (ptr.read | echo)
+    | ptr.at 1
+    | ptr.read
+    | echo
+wide-unsigned : Ptr[U128] -> () ! {IO, Unsafe}
+wide-unsigned =
+    tap (ptr.write 340282366920938463463374607431768211455u128)
+    | tap (ptr.at 1 | ptr.write 18446744073709551617u128)
+    | tap (ptr.read | echo)
+    | ptr.at 1
+    | ptr.read
+    | echo
+signed-buffer : Ptr[U8] -> () ! {IO, Unsafe}
+signed-buffer =
+    tap (ptr.at 1 | ptr.cast | wide-signed)
+    | tap (ptr.read | echo)
+    | tap (ptr.at 33 | ptr.read | echo)
+    | mem.free
+unsigned-buffer : Ptr[U8] -> () ! {IO, Unsafe}
+unsigned-buffer =
+    tap (ptr.at 1 | ptr.cast | wide-unsigned)
+    | tap (ptr.read | echo)
+    | tap (ptr.at 33 | ptr.read | echo)
+    | mem.free
+main =
+    [34 | mem.alloc | signed-buffer, 34 | mem.alloc | unsigned-buffer] | ignore

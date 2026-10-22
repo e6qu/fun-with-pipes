@@ -100,10 +100,11 @@ struct CallCtx<'a, 'p> {
 #[derive(Default)]
 struct Keep {
     structs: Vec<Vec<u64>>,
+    strings: Vec<CString>,
 }
 
 fn int_value(mt: &MT, w: u64, bits: u32, signed: bool) -> R<Value> {
-    let bits = if bits == 0 { 64 } else { bits };
+    let bits = if bits == 0 { usize::BITS } else { bits };
     let x: i128 = if signed {
         let shift = 64 - bits;
         (((w << shift) as i64) >> shift) as i128
@@ -196,9 +197,11 @@ fn word_of(t: &CType, v: &Value, keep: &mut Keep) -> R<u64> {
             let Ok(c) = CString::new(v.as_str()) else {
                 return trap("a string passed to C contains a NUL character");
             };
-            // C may keep pointers into its arguments (`strchr`), and the
-            // native backend never frees strings either: the copy lives on.
-            c.into_raw() as usize as u64
+            // Keep argument and callback-result copies through the outer call,
+            // including copying any returned String that aliases these bytes.
+            let address = c.as_ptr() as usize as u64;
+            keep.strings.push(c);
+            address
         }
         CType::Bytes => match v {
             Value::Bytes(b) => b.as_ptr() as usize as u64,
@@ -339,8 +342,9 @@ fn elem_size(mt: &MT) -> usize {
         MT::Con(n, _) => match n.as_str() {
             "std::I8" | "std::U8" => 1,
             "std::I16" | "std::U16" | "std::F16" | "std::BF16" => 2,
-            "std::F128" => 16,
+            "std::I128" | "std::U128" | "std::F128" => 16,
             "std::I32" | "std::U32" | "std::F32" => 4,
+            "std::ISize" | "std::USize" => std::mem::size_of::<usize>(),
             _ => 8,
         },
         _ => 8,
@@ -360,7 +364,8 @@ pub fn pointer_prim(sym: &str, a: &[Value], params: &[MT], result: &MT) -> R<Val
     unsafe {
         Ok(match sym {
             "mem.alloc" => {
-                let n = a[0].as_i128().unwrap_or(0).max(1) as usize;
+                let n = usize::try_from(a[0].as_i128().unwrap_or(0).max(1))
+                    .map_err(|_| Ctl::Trap("raw allocation too large".into()))?;
                 let p = calloc(n, 1);
                 if p.is_null() {
                     return trap("out of memory");
@@ -373,7 +378,11 @@ pub fn pointer_prim(sym: &str, a: &[Value], params: &[MT], result: &MT) -> R<Val
             }
             "mem.string" => {
                 let s = a[0].as_str().as_bytes();
-                let p = calloc(s.len() + 1, 1) as *mut u8;
+                let n = s
+                    .len()
+                    .checked_add(1)
+                    .ok_or_else(|| Ctl::Trap("raw allocation too large".into()))?;
+                let p = calloc(n, 1) as *mut u8;
                 if p.is_null() {
                     return trap("out of memory");
                 }
@@ -389,6 +398,17 @@ pub fn pointer_prim(sym: &str, a: &[Value], params: &[MT], result: &MT) -> R<Val
             }
             "ptr.read" => {
                 let p = addr(&a[0]) as *const u8;
+                if let MT::Con(name, _) = result {
+                    if matches!(name.as_str(), "std::I128" | "std::U128") {
+                        let mut bits = [0u8; 16];
+                        std::ptr::copy_nonoverlapping(p, bits.as_mut_ptr(), 16);
+                        return Ok(if name == "std::I128" {
+                            Value::I128(i128::from_le_bytes(bits))
+                        } else {
+                            Value::U128(u128::from_le_bytes(bits))
+                        });
+                    }
+                }
                 if ffi::classify_scalar(result) == CType::F128 {
                     let mut bits = [0u8; 16];
                     std::ptr::copy_nonoverlapping(p, bits.as_mut_ptr(), 16);
@@ -406,6 +426,15 @@ pub fn pointer_prim(sym: &str, a: &[Value], params: &[MT], result: &MT) -> R<Val
             "ptr.write" => {
                 let mt = &params[0];
                 let t = ffi::classify_scalar(mt);
+                let integer_bits = match &a[0] {
+                    Value::I128(x) => Some(x.to_le_bytes()),
+                    Value::U128(x) => Some(x.to_le_bytes()),
+                    _ => None,
+                };
+                if let Some(bits) = integer_bits {
+                    std::ptr::copy_nonoverlapping(bits.as_ptr(), addr(&a[1]) as *mut u8, 16);
+                    return Ok(Value::unit());
+                }
                 if let (CType::F128, Value::F128(x)) = (&t, &a[0]) {
                     let bits = x.to_bits().to_le_bytes();
                     std::ptr::copy_nonoverlapping(bits.as_ptr(), addr(&a[1]) as *mut u8, 16);
@@ -447,4 +476,147 @@ fn value_of_scalar(t: &CType, mt: &MT, w: u64) -> R<Value> {
 extern "C" {
     fn calloc(n: usize, size: usize) -> *mut c_void;
     fn free(p: *mut c_void);
+}
+
+#[cfg(test)]
+mod pointer_tests {
+    use super::*;
+
+    #[test]
+    fn wide_integer_storage_preserves_bits_and_adjacent_bytes() {
+        for (name, value) in [
+            ("I128", Value::I128(i128::MIN + 17)),
+            ("U128", Value::U128(u128::MAX)),
+        ] {
+            let scalar = MT::con(&format!("std::{name}"));
+            let pointer = MT::Con("std::Ptr".into(), vec![scalar.clone()]);
+            let mut storage = [0xa5u8; 34];
+            let address = Value::U64(unsafe { storage.as_mut_ptr().add(1) } as usize as u64);
+            pointer_prim(
+                "ptr.write",
+                &[value.clone(), address.clone()],
+                &[scalar.clone(), pointer.clone()],
+                &MT::unit(),
+            )
+            .unwrap();
+            assert_eq!(storage[0], 0xa5);
+            assert!(storage[17..].iter().all(|&b| b == 0xa5));
+            assert_eq!(
+                pointer_prim(
+                    "ptr.read",
+                    std::slice::from_ref(&address),
+                    std::slice::from_ref(&pointer),
+                    &scalar
+                )
+                .unwrap(),
+                value
+            );
+            assert_eq!(
+                pointer_prim(
+                    "ptr.at",
+                    &[Value::I64(1), address.clone()],
+                    &[MT::con("std::I64"), pointer.clone()],
+                    &pointer
+                )
+                .unwrap(),
+                Value::U64(address.as_i128().unwrap() as u64 + 16)
+            );
+        }
+    }
+
+    #[test]
+    fn pointer_sized_storage_preserves_sign_and_adjacent_bytes() {
+        for (name, value) in [
+            ("ISize", Value::I64(-7)),
+            ("USize", Value::U64(usize::MAX as u64)),
+        ] {
+            let scalar = MT::con(&format!("std::{name}"));
+            let pointer = MT::Con("std::Ptr".into(), vec![scalar.clone()]);
+            // Unaligned storage is allowed: reads/writes copy bytes.
+            let mut storage = [0xa5u8; 18];
+            let address = Value::U64(unsafe { storage.as_mut_ptr().add(1) } as usize as u64);
+            pointer_prim(
+                "ptr.write",
+                &[value.clone(), address.clone()],
+                &[scalar.clone(), pointer.clone()],
+                &MT::unit(),
+            )
+            .unwrap();
+            let width = std::mem::size_of::<usize>();
+            assert_eq!(storage[0], 0xa5);
+            assert!(storage[width + 1..].iter().all(|&b| b == 0xa5));
+            assert_eq!(
+                pointer_prim(
+                    "ptr.read",
+                    std::slice::from_ref(&address),
+                    std::slice::from_ref(&pointer),
+                    &scalar
+                )
+                .unwrap(),
+                value
+            );
+            assert_eq!(
+                pointer_prim(
+                    "ptr.at",
+                    &[Value::I64(1), address.clone()],
+                    &[MT::con("std::I64"), pointer.clone()],
+                    &pointer
+                )
+                .unwrap(),
+                Value::U64(address.as_i128().unwrap() as u64 + width as u64)
+            );
+        }
+    }
+
+    #[test]
+    fn raw_allocations_keep_minimum_size_and_reject_unrepresentable_counts() {
+        let pointer = MT::Con("std::Ptr".into(), vec![MT::con("std::U8")]);
+        for count in [i64::MIN, -1, 0, 1, 16] {
+            let address = pointer_prim(
+                "mem.alloc",
+                &[Value::I64(count)],
+                &[MT::con("std::I64")],
+                &pointer,
+            )
+            .unwrap();
+            pointer_prim(
+                "ptr.write",
+                &[Value::U8(37), address.clone()],
+                &[MT::con("std::U8"), pointer.clone()],
+                &MT::unit(),
+            )
+            .unwrap();
+            assert_eq!(
+                pointer_prim(
+                    "ptr.read",
+                    std::slice::from_ref(&address),
+                    std::slice::from_ref(&pointer),
+                    &MT::con("std::U8")
+                )
+                .unwrap(),
+                Value::U8(37)
+            );
+            pointer_prim(
+                "mem.free",
+                &[address],
+                std::slice::from_ref(&pointer),
+                &MT::unit(),
+            )
+            .unwrap();
+        }
+        if usize::BITS == 32 {
+            for count in [4294967296, 4294967297, i64::MAX] {
+                let result = pointer_prim(
+                    "mem.alloc",
+                    &[Value::I64(count)],
+                    &[MT::con("std::I64")],
+                    &pointer,
+                );
+                assert!(
+                    matches!(result, Err(Ctl::Trap(ref message)) if message == "raw allocation too large"),
+                    "{result:?}"
+                );
+            }
+        }
+    }
 }

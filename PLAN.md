@@ -90,13 +90,15 @@ outside the benchmark suite.
 
 1. Extend [ownership contracts](docs/ownership.md#proposed-cycle-policy) at the
    remaining boundaries: persistent subscriptions, externally retained callbacks,
-   raw pointers and cyclic data graphs. Known queued task/data/response captures
+   host-owned values and cyclic data graphs. Manual raw-pointer support is under
+   validation; it makes caller obligations explicit rather than proving arbitrary
+   foreign lifetimes. Known queued task/data/response captures
    have delivery evidence in [ownership](docs/ownership.md); those completed
    extensions are baselines, not new tasks. Prefer borrowing and scoped cleanup.
    Weak handles remain a proposal. Distinguish missing proofs from definite cycles,
    and reject unproved retention instead of silently enabling tracing.
    The [execution-example inventory](docs/measurements/file-applications.md#which-maintained-examples-pass-arcs-checks)
-   identifies raw-pointer C interop as a concrete remaining boundary. Keep its
+   identified raw-pointer C interop for the current extension. Keep its
    programmer-managed `Unsafe` obligations explicit; do not admit invalid
    inter-task derivative lifetimes merely to increase the accepted count.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.

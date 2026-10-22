@@ -485,7 +485,7 @@ A C name other than the fwp one comes after `=`: `c-div 7 2` calls
 
 | fwp | C |
 |---|---|
-| integers | `intN_t`, `uintN_t`; `ISize`/`USize` are `ptrdiff_t`/`size_t` |
+| `I8`–`I64`, `U8`–`U64`, `ISize`, `USize` | `intN_t`, `uintN_t`; `ISize`/`USize` are `ptrdiff_t`/`size_t` |
 | `F32`, `F64`, `Bool` | `float`, `double`, `_Bool` |
 | `F16`, `BF16` | `uint16_t` containing the raw format bits |
 | `F128` | `struct fwp_binary128 { uint64_t low, high; }` containing raw bits |
@@ -506,15 +506,28 @@ pointer element widths use the same representation (2/2/16 bytes).
   should not reuse a standard name (`div` above would shadow fwp's own).
 - Raw memory: `mem.alloc`, `mem.free`, `mem.string`, `ptr.read`,
   `ptr.write`, `ptr.at` and `ptr.read-string`, under `Unsafe`.
+  `mem.alloc` takes a byte count, with a minimum allocation of one byte.
+  A count exceeding the target's address width traps before allocation.
+  Pointer reads, writes and offsets use the C element's width; `ISize` and
+  `USize` occupy four bytes on 32-bit targets and eight on maintained native
+  targets. Copying bytes permits unaligned addresses but still requires valid
+  accessible storage. `I128`/`U128` raw elements occupy 16 bytes and preserve
+  all bits; this does not add them to the foreign C by-value ABI.
 - C borrows `String`/`Bytes` arguments and string fields only for the call;
   it must copy data it wants to retain. Returned C strings are copied into
   owned language values before the call boundary finishes.
 - A callback may only be used on the calling task while the foreign call that
   received it is running. Native callback frames follow that task across
   suspension and are restored after nested calls, failure and cancellation.
-  Checked ARC admits callbacks with copied numeric/Boolean/unit C arguments and
-  results; raw pointers and callbacks returning managed C addresses remain
-  outside that ownership contract.
+  Checked ARC admits copied numeric/Boolean/unit values and manually managed
+  pointers, including nullable pointers. The pointer extension is under
+  [validation](development-state.md). Callback results containing managed C
+  string addresses remain excluded.
+- Raw pointers never acquire ownership of their pointees. The caller controls
+  validity, synchronization and deallocation, including failure/cancellation.
+  C must not return or retain a raw alias into borrowed managed string/byte
+  storage. Use `mem.string` for a manually owned C copy, then `mem.free` after
+  all uses; `ptr.read-string` makes an independent fwp copy.
 - Before evaluation, the interpreter builds and loads a small C bridge using
   the system C compiler. The bridge converts fwp values to C arguments and back.
   Preparation failure prevents the program from starting; foreign calls during
@@ -697,8 +710,10 @@ are described in the [ownership guide](ownership.md#checked-arc-delivery).
 `String -> I64` function: it copies the input for the call and returns the count
 by value. A `String -> String` export returns an owned string with a matching
 `fwp_release_NAME` function. Records may contain scalars and owned strings;
-release the complete unchanged record once. Raw pointers remain outside checked
-ownership. Serialize host calls, including releases, and release every result
+release the complete unchanged record once. Raw pointer fields carry manual
+pointee lifetimes; releasing a record frees its owned strings, never those
+pointees. The pointer extension is under [validation](development-state.md).
+Serialize host calls, including releases, and release every owned result
 before library unload. [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
 records passing six-platform and production checks for these library results.
 The mode rejects unproved ownership or cycles. Browser-loader and WASI task

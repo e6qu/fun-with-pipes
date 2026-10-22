@@ -6605,33 +6605,46 @@ impl<'p> Gen<'p> {
                 rw
             ),
             "prim.from-float" => format!("return fwp_float_of({}, fwp_f64(l0));", rk),
-            "mem.alloc" => "size_t n = (int64_t)l0 > 0 ? (size_t)(int64_t)l0 : 1;\n    void *p = calloc(n, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    return (V)(uintptr_t)p;".into(),
+            "mem.alloc" => "uint64_t count = (int64_t)l0 > 0 ? (uint64_t)l0 : 1;\n    if (count > SIZE_MAX) fwp_trap(\"raw allocation too large\");\n    size_t n = (size_t)count;\n    void *p = calloc(n, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    return (V)(uintptr_t)p;".into(),
             "mem.free" => "free((void *)(uintptr_t)l0);\n    return FWP_UNIT;".into(),
-            "mem.string" => "size_t n = STR(l0)->len;\n    char *p = (char *)calloc(n + 1, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    memcpy(p, STR(l0)->d, n);\n    return (V)(uintptr_t)p;".into(),
+            "mem.string" => "size_t n = STR(l0)->len;\n    if (n == SIZE_MAX) fwp_trap(\"raw allocation too large\");\n    char *p = (char *)calloc(n + 1, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    memcpy(p, STR(l0)->d, n);\n    return (V)(uintptr_t)p;".into(),
             "ptr.cast" | "ptr.address" => "return l0;".into(),
             "ptr.at" => {
-                let t = crate::ffi::classify_scalar(&elem(&p(1), 0));
+                let element = elem(&p(1), 0);
+                let storage = match num_kind(&element).map(|(kind, _, _)| kind) {
+                    Some("K_I128") => "i128".into(),
+                    Some("K_U128") => "u128".into(),
+                    _ => crate::ffi::c_name(&crate::ffi::classify_scalar(&element)),
+                };
                 format!(
                     "return (V)((uintptr_t)l1 + (uintptr_t)l0 * sizeof({}));",
-                    crate::ffi::c_name(&t)
+                    storage
                 )
             }
-            "ptr.read" => {
+            "ptr.read" => match num_kind(&result).map(|(kind, _, _)| kind) {
+                Some("K_I128") => "i128 x;\n    memcpy(&x, (void *)(uintptr_t)l0, sizeof x);\n    return fwp_box_i128(x);".into(),
+                Some("K_U128") => "u128 x;\n    memcpy(&x, (void *)(uintptr_t)l0, sizeof x);\n    return fwp_box_u128(x);".into(),
+                _ => {
                 let t = crate::ffi::classify_scalar(&result);
                 format!(
                     "{} x;\n    memcpy(&x, (void *)(uintptr_t)l0, sizeof x);\n    return {};",
                     crate::ffi::c_name(&t),
                     ffi_from_c(&t, "x")
                 )
-            }
-            "ptr.write" => {
+                }
+            },
+            "ptr.write" => match num_kind(&p(0)).map(|(kind, _, _)| kind) {
+                Some("K_I128") => "i128 x = fwp_i128(l0);\n    memcpy((void *)(uintptr_t)l1, &x, sizeof x);\n    return FWP_UNIT;".into(),
+                Some("K_U128") => "u128 x = fwp_u128(l0);\n    memcpy((void *)(uintptr_t)l1, &x, sizeof x);\n    return FWP_UNIT;".into(),
+                _ => {
                 let t = crate::ffi::classify_scalar(&p(0));
                 format!(
                     "{} x = {};\n    memcpy((void *)(uintptr_t)l1, &x, sizeof x);\n    return FWP_UNIT;",
                     crate::ffi::c_name(&t),
                     ffi_to_c(&t, "l0")
                 )
-            }
+                }
+            },
             "ptr.read-string" => "if (!l0) fwp_trap(\"reading a string at a null pointer\");\n    return fwp_c_string((const char *)(uintptr_t)l0);".into(),
             "trit.from-sign" => {
                 "return (V)(int64_t)(((int64_t)l0 > 0) - ((int64_t)l0 < 0));".into()
@@ -9352,7 +9365,7 @@ pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, Strin
     if native_options().arc {
         h.push_str("/* Checked ARC: owned results require no tracing collector. */\n\n");
     }
-    h.push_str("/* Inputs are copied for each call; keep input strings valid until return.\n * Each result containing strings owns those strings. Release the complete,\n * unchanged result exactly once with its matching fwp_release_FUNCTION.\n * Do not use free(), modify string bytes, or release copied result aliases.\n * No result may be used after release. Serialize calls (including releases),\n * release all owned results and finish all calls before unloading the library. */\n\n");
+    h.push_str("/* Inputs are copied for each call; keep input strings valid until return.\n * Raw pointer bits are copied without owning or freeing their pointees.\n * Their validity, synchronization and cleanup remain the caller's responsibility.\n * Each result containing strings owns those strings. Release the complete,\n * unchanged result exactly once with its matching fwp_release_FUNCTION.\n * Do not use free(), modify string bytes, or release copied result aliases.\n * No result may be used after release. Serialize calls (including releases),\n * release all owned results and finish all calls before unloading the library. */\n\n");
     let mut all = Vec::new();
     for (_, _, ps, r) in &sigs {
         all.extend(ps.iter().map(|(_, c)| c.clone()));
@@ -9631,7 +9644,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                         || !crate::ffi::copied_result(result)
                     {
                         return Err(format!(
-                            "--gc arc: exported function `{name}` requires copied C inputs and scalar or owned-string results; raw pointers have no checked host lifetime"
+                            "--gc arc: exported function `{name}` requires copied C inputs and scalar, manual-pointer or owned-string results; callbacks have no retained host lifetime"
                         ));
                     }
                 }

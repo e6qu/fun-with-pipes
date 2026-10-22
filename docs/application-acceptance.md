@@ -223,6 +223,8 @@ Timeouts, compiler crashes and mismatched emitted memory modes fail the inventor
 Recorded ARC rejections are discovery results, not accepted language coverage.
 The ordinary execution snapshots and the runtime ownership tests remain necessary.
 
-The [current inventory](measurements/file-applications.md#which-maintained-examples-pass-arcs-checks)
-identifies the raw-pointer gap and distinguishes it from an intentionally invalid
-inter-task derivative lifetime.
+The [pre-extension inventory](measurements/file-applications.md#which-maintained-examples-pass-arcs-checks)
+identified the raw-pointer gap and distinguished it from an intentionally invalid
+inter-task derivative lifetime. The [handoff](development-state.md) tracks the
+manual-pointer extension. Existing `arc_corpus` tests execute admitted programs
+and check their final managed storage; extend that coverage as admissions change.

@@ -836,7 +836,7 @@ cover ARC exclusion and an ordinary tracing control.
 | Entry or boundary | Implemented contract | Evidence and limits |
 |---|---|---|
 | Native main, function executable, CLI | Each entry proves its own state/derivative scopes and releases owned results | [Reference](reference.md#checked-reference-counting) |
-| Native C libraries | Copy supported inputs; return scalars or explicitly released strings/records | [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165); no raw-pointer/retained-callback proof |
+| Native C libraries | Copy supported inputs; return scalars or explicitly released strings/records | [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165); manual-pointer extension under validation; retained callbacks excluded |
 | gRPC clients/services | Typed input/result owners and checked iterator handler lifetimes | [Details below](#checked-grpc-clients-and-services) |
 | HTTP clients/servers | Own connections, requests, copied responses, handler captures and tasks | [PR #162](roadmap-history.md#http-client-owners-and-complete-connection-keys-pr-162), [#163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163) |
 | Generated REST/MCP | Same checked entries, including aliases, errors and normal shutdown | [PR #164](roadmap-history.md#server-entries-exact-json-and-webassembly-task-owners-pr-164) |
@@ -912,8 +912,34 @@ a proof that no result/capture can outlive the call.
 Scoped foreign calls can borrow strings/bytes and copy supported scalar/record
 values. Synchronous callbacks run on the calling task before C returns; C must
 copy borrowed data before keeping it. Foreign strings copy into fwp-owned values.
-Raw pointers and callbacks returning managed C addresses lack an adequate lifetime
-contract and are rejected by checked ARC. See [C interop](tutorials/09-c-interop/README.md).
+The manual-pointer extension admits `Ptr[T]` and `Option[Ptr[T]]` in native calls,
+callbacks and exports. Its [native checks](measurements/manual-pointers.md) and
+[handoff](development-state.md) track validation. A pointer copies an address, never an owner of
+`T`. ARC releases any surrounding option or record, but neither follows nor
+frees the address. This also applies when `T` names an opaque host type.
+Callbacks returning managed C strings remain rejected: their result needs a
+separate host-retention contract.
+
+The programmer must keep raw storage valid, synchronize concurrent access and
+release it with its matching allocator. `mem.alloc` and `mem.string` require
+`mem.free`; borrowed host pointers must not be freed. `ptr.read-string` copies
+bytes into an owned fwp string. `Unsafe` records these obligations without
+proving them. A caught failure needs an explicit cleanup path; a raw allocation
+is not automatically reclaimed on failure or cancellation. Do not use raw
+addresses to smuggle managed fwp owners past the cycle or callback checks.
+
+C receives managed `String`/`Bytes` storage only for the call. It must not return
+or retain that address as a raw pointer. If C returns an alias into its argument
+(as `strchr` does), pass an explicitly owned raw buffer and copy the result
+before freeing it. Returning a `String` instead copies the result before the
+borrow ends. See [C interop](tutorials/09-c-interop/README.md).
+
+The interpreter owns its temporary NUL-terminated string copies until the
+foreign call returns and its result has been copied. Nested calls have separate
+owners; callback result copies stay with the receiving outer call. These copies
+must also be freed when argument conversion or a callback fails. The current
+pointer batch repairs permanent retention of these copies; its allocator test
+counts actual allocations and releases, rather than counting only fwp values.
 
 ### Owned library values
 

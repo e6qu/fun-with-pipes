@@ -4,6 +4,18 @@ static int arc_recover(void) { return 1; }
 
 static int arc_library_call(void) {
     char text[] = "abcd";
+    if (pointer_id(text) != text || optional_pointer(text) != text || optional_pointer(NULL)) return 206;
+    struct fwp_c_PointerText pointers = pointer_text((struct fwp_c_PointerText){text, text});
+    if (pointers.pointer != text || strcmp(pointers.text, "abcd")) return 207;
+    text[0] = 'Z';
+    if (strcmp(pointers.text, "abcd") || ((char *)pointers.pointer)[0] != 'Z') return 208;
+    fwp_release_pointer_text(pointers);
+    text[0] = 'a';
+    void *manual = allocate_text(text);
+    const char *copied = copy_pointer(manual);
+    release_text(manual);
+    if (strcmp(copied, "abcd")) return 209;
+    fwp_release_copy_pointer(copied);
     struct fwp_c_Summary result = summarize((struct fwp_c_Input){7, text});
     if (result.count != 4 || result.value != 7.0) return 181;
     if (text_length("h\xc3\xa9llo") != 5 || slope(3.0) != 6.0 || pipeline(10) != 55)

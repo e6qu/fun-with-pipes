@@ -3,7 +3,8 @@ repr(C) Summary = { count: I64, value: F64 }
 export text-length : String -> I64
 text-length = string.length
 export summarize : Input -> Summary
-summarize = make { count = .text | string.length, value = .number | int.to-float }
+summarize =
+    make { count = .text | string.length, value = .number | int.to-float }
 loss : List[Rev[F64]] -> Rev[F64]
 loss = nth 0 | option.unwrap-or (rev.const 0.0) | fork mul id id
 export slope : F64 -> F64
@@ -25,6 +26,21 @@ export return-nul : String -> String
 return-nul = const "bad\0text"
 export pair-nul : String -> Words
 pair-nul = make { count = string.length, left = id, right = const "bad\0text" }
+# Raw pointers do not transfer pointee ownership. These exports deliberately
+# distinguish the host's buffer from the copied, owned String field.
+repr(C) PointerText = { pointer: Option[Ptr[U8]], text: String }
+export pointer-id : Ptr[U8] -> Ptr[U8]
+pointer-id = id
+export optional-pointer : Option[Ptr[U8]] -> Option[Ptr[U8]]
+optional-pointer = id
+export pointer-text : PointerText -> PointerText
+pointer-text = id
+export copy-pointer : Ptr[U8] -> String ! {Unsafe}
+copy-pointer = ptr.read-string
+export allocate-text : String -> Ptr[U8] ! {Unsafe}
+allocate-text = mem.string
+export release-text : Ptr[U8] -> () ! {Unsafe}
+release-text = mem.free
 main = [
     "héllo" | text-length | echo,
     { number = 7, text = "abcd" } | summarize | .count | echo,
