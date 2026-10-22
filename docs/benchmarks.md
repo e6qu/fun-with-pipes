@@ -40,6 +40,27 @@ The [borrowed-capture comparison](measurements/array-capture-descent.md) removes
 all remaining retains in those packed descent cases, with unchanged allocation
 counts and managed peak. Its largest case takes 2.33–2.38× C time; the report
 preserves noisy controls, slower cases and slightly larger instruction sections.
+The [helper-call diagnostic](measurements/descent-call-costs.md) compares unchanged
+generated C with hinted and forced inlining. Neither reaches its predeclared 5%
+speed target on both hosts; it does not justify a compiler inlining rule.
+The [direct-call comparison](measurements/direct-call-entries.md) removes unused
+generic adapters, shrinking largest-case instructions by 18–19% without changing
+allocation/count profiles. Timing remains inconclusive, including slower cases.
+The [repeated-work protocol](measurements/descent-batch-protocol.md) diagnoses
+startup noise with complete repeated solves and two identical-code controls.
+Its [initial result](measurements/descent-batches.md) exposes a larger full-solve
+gap: the largest case takes 9.81–12.00× C time and 12.30–17.13× Rust time.
+Different formula evaluation, buffers and formatting remain part of that ratio.
+
+The [callback-local comparison](measurements/callback-locals.md) removes another
+function record and generic entry while preserving the allocation/count budgets.
+The [between-solve checks](measurements/descent-observers.md) verify zero live
+storage at every checkpoint and demonstrate why final-only checks are insufficient.
+The [matched-formula comparison](measurements/coordinate-work.md) adds coordinate-based
+C/Rust peers while retaining the original edge-based programs. Its largest case
+takes 10.40–13.69× C time and 11.86–14.07× Rust time; formula arrangement does not
+close the gap. Per-solve probes also check actual C/Rust buffer releases. The
+report preserves one failed timing control and explains the different memory scopes.
 
 ## Choose the question first
 

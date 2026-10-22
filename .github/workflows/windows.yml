@@ -29,6 +29,8 @@ jobs:
       RUST_TEST_THREADS: 2
       FWP_UDP_ARTIFACTS: ownership-evidence/udp
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
+      FWP_CALLBACK_CAPTURE_ARTIFACTS: ownership-evidence/direct-captures
+      FWP_ARRAY_CAPTURE_ARTIFACTS: ownership-evidence/array-captures
     steps:
       - uses: actions/checkout@v7
         with:
@@ -101,8 +103,21 @@ jobs:
       - name: Generated programs with native resources and ownership stress
         shell: pwsh
         run: |
-          cargo test --no-fail-fast --test cpu_kernel_ownership --test numerics --test metrics_ownership --test ternary_ownership --test udp_ownership --test dns_ownership --test vector_ownership --test range_array --test range_set --test hash_ownership --test mapped_array_construction --test zip_map_fusion --test unzip_cleanup --test list_construction_cleanup --test list_generation_ownership --test list_structure_ownership --test state_sequence_ownership --test map_unwind_ownership --test map_set_ownership --test collection_construction --test cached_map_borrows --test caf_ownership --test inline_caf_ownership --test selection_unwind_ownership --test zip_unwind_ownership --test fold_unwind_ownership --test windows_runtime --test windows_static_memory --test loop_unwind_ownership --test path_validation --test io_error_ownership --test system_snapshots --test file_values --test text_file_tools --test text_transform_ownership --test file_construction_ownership --test file_inline_path --test file_storage_disposal -- --nocapture 2>&1 | Tee-Object -Append windows-native.log
+          $testTargets = @(
+            'cpu_kernel_ownership', 'numerics', 'metrics_ownership', 'ternary_ownership', 'udp_ownership',
+            'dns_ownership', 'vector_ownership', 'range_array', 'range_set', 'hash_ownership',
+            'mapped_array_construction', 'zip_map_fusion', 'unzip_cleanup', 'list_construction_cleanup', 'list_generation_ownership',
+            'list_structure_ownership', 'state_sequence_ownership', 'map_unwind_ownership', 'map_set_ownership', 'collection_construction',
+            'cached_map_borrows', 'caf_ownership', 'inline_caf_ownership', 'selection_unwind_ownership', 'zip_unwind_ownership',
+            'windows_runtime', 'windows_static_memory', 'loop_unwind_ownership', 'path_validation', 'io_error_ownership',
+            'system_snapshots', 'file_values', 'text_file_tools', 'text_transform_ownership', 'file_construction_ownership',
+            'file_inline_path', 'file_storage_disposal'
+          )
+          python scripts/run-native-tests.py --targets $testTargets --idle-timeout 600 --logs windows-resource-tests 2>&1 | Tee-Object -Append windows-native.log
           exit $LASTEXITCODE
+      - name: Array and fold callbacks, capture storage and unwind cleanup
+        if: ${{ !cancelled() && steps.native_compiler.outcome == 'success' }}
+        run: python scripts/run-native-tests.py --targets array_element_ownership array_unwind_ownership fold_ownership right_fold_ownership fold_unwind_ownership --idle-timeout 600 --logs windows-callback-tests
       - name: CPU kernel size validation order
         shell: pwsh
         run: |
@@ -124,6 +139,8 @@ jobs:
             windows-host.txt
             windows-probe.log
             windows-native.log
+            windows-resource-tests/
+            windows-callback-tests/
       - uses: actions/cache/restore@v6
         id: windows_tls_cache
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
@@ -151,7 +168,27 @@ jobs:
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
         shell: pwsh
         run: |
-          cargo test --no-fail-fast --test list_applicative_ownership --test typed_state_ownership --test serializer_leaf_ownership --test argument_preparation_ownership --test closure_ownership --test retain_unwind_ownership --test runtime_call_ownership --test constructor_type_ownership --test scope_thunk_ownership --test retained_thunk_ownership --test service_value_ownership --test process_exit_ownership --test grpc_canonical_encoding --test grpc_response_encoding --test grpc_force_cleanup --test grpc_render_cleanup --test grpc_receive_cleanup --test grpc_status_cleanup --test grpc_send_cleanup --test grpc_request_encoding --test grpc_client_receive --test grpc_client_requests --test grpc_client_failure_text --test grpc_server_ownership --test grpc_server_connections --test grpc_server_requests --test grpc_connect_startup --test grpc_connect_cleanup --test library_resources --test service_scope_ownership --test service_context_storage --test grpc_context_restore --test grpc_context_resources --test grpc_packed_options --test grpc_environment_cache --test grpc_peer_completion --test grpc_connection_addresses --test grpc_tls_pool_identity --test http2_peer_cleanup --test http2_client_ownership --test http2_server_ownership --test grpc_capture_resources --test byte_decoder_ownership --test text_decoder_ownership --test web --test std_tests --test tls --test cli_ownership --test console_ownership --test process_ownership --test terminal_ownership --test cli --test clock_ownership --test directory_report --test working_directory --test exec_protocol_ownership --test exec_invocation_ownership --test arc_tasks --test arc_execution --test server_entry_ownership --test arc_library --test transpose_ownership --test linalg_ownership --test array_loop_borrows --test loop_ownership --test loop_preparation_ownership --test nested_loop_boxing --test field_moves --test boxed_projection_ownership --test boxed_field_moves --test field_context_ownership --test unboxed_worker_locals --test compiler_call_liveness --test worker_preparation_ownership --test worker_boxing_ownership --test ffi --test raw_memory_ownership --test library_input_ownership --test library_result_ownership --test record_conversion_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test foreign_callback_ownership --test float_formats --test float_linking --test protocol --test blocked_matrix --test wide_workers 2>&1 | Tee-Object windows-tls_tests.log
+          $testTargets = @(
+            'list_applicative_ownership', 'typed_state_ownership', 'serializer_leaf_ownership', 'argument_preparation_ownership', 'closure_ownership',
+            'retain_unwind_ownership', 'runtime_call_ownership', 'constructor_type_ownership', 'scope_thunk_ownership', 'retained_thunk_ownership',
+            'service_value_ownership', 'process_exit_ownership', 'grpc_canonical_encoding', 'grpc_response_encoding', 'grpc_force_cleanup',
+            'grpc_render_cleanup', 'grpc_receive_cleanup', 'grpc_status_cleanup', 'grpc_send_cleanup', 'grpc_request_encoding',
+            'grpc_client_receive', 'grpc_client_requests', 'grpc_client_failure_text', 'grpc_server_ownership', 'grpc_server_connections',
+            'grpc_server_requests', 'grpc_connect_startup', 'grpc_connect_cleanup', 'library_resources', 'service_scope_ownership',
+            'service_context_storage', 'grpc_context_restore', 'grpc_context_resources', 'grpc_packed_options', 'grpc_environment_cache',
+            'grpc_peer_completion', 'grpc_connection_addresses', 'grpc_tls_pool_identity', 'http2_peer_cleanup', 'http2_client_ownership',
+            'http2_server_ownership', 'grpc_capture_resources', 'byte_decoder_ownership', 'text_decoder_ownership', 'web',
+            'std_tests', 'tls', 'cli_ownership', 'console_ownership', 'process_ownership',
+            'terminal_ownership', 'cli', 'clock_ownership', 'directory_report', 'working_directory',
+            'exec_protocol_ownership', 'exec_invocation_ownership', 'arc_tasks', 'arc_execution', 'server_entry_ownership',
+            'arc_library', 'transpose_ownership', 'linalg_ownership', 'array_loop_borrows', 'loop_ownership',
+            'loop_preparation_ownership', 'nested_loop_boxing', 'field_moves', 'boxed_projection_ownership', 'boxed_field_moves',
+            'field_context_ownership', 'unboxed_worker_locals', 'compiler_call_liveness', 'worker_preparation_ownership', 'worker_boxing_ownership',
+            'ffi', 'raw_memory_ownership', 'library_input_ownership', 'library_result_ownership', 'record_conversion_ownership',
+            'resource_frames', 'resource_frame_fields', 'resource_frame_variants', 'resource_match_context', 'foreign_callback_ownership',
+            'float_formats', 'float_linking', 'protocol', 'blocked_matrix', 'wide_workers'
+          )
+          python scripts/run-native-tests.py --targets $testTargets --idle-timeout 600 --logs windows-tls-tests 2>&1 | Tee-Object windows-tls_tests.log
           exit $LASTEXITCODE
       - name: Native commands, test recovery and executable cache
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
@@ -161,7 +198,9 @@ jobs:
         if: ${{ !cancelled() && steps.tls_tests.outcome == 'failure' }}
         with:
           name: windows-tls_tests-${{ matrix.runner }}
-          path: windows-tls_tests.log
+          path: |
+            windows-tls_tests.log
+            windows-tls-tests/
           if-no-files-found: error
       - name: Remote stream and queued response lifetimes
         if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
@@ -240,4 +279,9 @@ jobs:
             ownership-evidence/udp/
             windows-unit-tests.log
             windows-command-tests/
+            windows-resource-tests/
+            windows-tls-tests/
+            windows-callback-tests/
             ownership-evidence/tail/
+            ownership-evidence/direct-captures/
+            ownership-evidence/array-captures/

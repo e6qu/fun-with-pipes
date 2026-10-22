@@ -231,6 +231,11 @@ main = (read-all () | concat "needle!", ["needle", "skip"] | map (concat "!")) |
                     .env("FWP_STACK", stack),
             );
             let emitted = std::fs::read_to_string(cfile).unwrap();
+            assert_eq!(
+                emitted.contains("/* direct callback captures without a closure */"),
+                stack == "1",
+                "{fold}/{stack}: callback representation"
+            );
             let helpers: Vec<_> = emitted
                 .lines()
                 .filter_map(|line| {
@@ -268,8 +273,18 @@ main = (read-all () | concat "needle!", ["needle", "skip"] | map (concat "!")) |
                 }
                 let code = format!("static unsigned probe_active,probe_retains,probe_calls;\n{runtime}\nint main(int argc,char **argv){{int status=original_main(argc,argv);if(!status && probe_calls!=2)return 89;return status;}}\n");
                 for opt in ["-O1", "-O2"] {
-                    let exe = dir.0.join(format!("borrowed-{fold}-{stack}-{broken}{opt}"));
+                    let exe = dir
+                        .0
+                        .join(format!("borrowed-{fold}-{stack}-{broken}{opt}.exe"));
                     fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                    let artifacts =
+                        std::env::var_os("FWP_CALLBACK_CAPTURE_ARTIFACTS").map(PathBuf::from);
+                    let stem = format!("{fold}-{stack}-{broken}{opt}");
+                    if let Some(path) = &artifacts {
+                        std::fs::create_dir_all(path).unwrap();
+                        std::fs::write(path.join(format!("{stem}.c")), &code).unwrap();
+                        std::fs::copy(&exe, path.join(format!("{stem}.exe"))).unwrap();
+                    }
                     for gc in ["off", "on"] {
                         for poison in ["0", "1"] {
                             let output = Command::new(&exe)
@@ -286,6 +301,24 @@ main = (read-all () | concat "needle!", ["needle", "skip"] | map (concat "!")) |
                             );
                             if !broken {
                                 assert_eq!(output.stdout, reference.stdout);
+                            }
+                            if let Some(path) = &artifacts {
+                                let observation = format!("{stem}-{gc}-{poison}");
+                                std::fs::write(
+                                    path.join(format!("{observation}.stdout")),
+                                    &output.stdout,
+                                )
+                                .unwrap();
+                                std::fs::write(
+                                    path.join(format!("{observation}.stderr")),
+                                    &output.stderr,
+                                )
+                                .unwrap();
+                                std::fs::write(
+                                    path.join(format!("{observation}.status")),
+                                    format!("{:?}\n", output.status.code()),
+                                )
+                                .unwrap();
                             }
                         }
                     }

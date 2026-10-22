@@ -28,6 +28,154 @@ impl Drop for Scratch {
 }
 
 #[test]
+fn callback_captures_survive_reuse_storage_and_ordinary_application() {
+    let dir = Scratch::new("callback-boundaries");
+    let source = dir.0.join("boundaries.fwp");
+    std::fs::write(
+        &source,
+        include_str!("fixtures/callback_capture_boundaries.fwp"),
+    )
+    .unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(compiler)
+            .args(["run", "--interp"])
+            .arg(&source)
+            .env("FWP_NO_OPT", "1"),
+    );
+    assert_eq!(
+        reference.stdout,
+        include_bytes!("fixtures/callback_capture_boundaries.out")
+    );
+    assert!(reference.stderr.is_empty());
+    for gc in ["arc", "tracing"] {
+        for stack in ["0", "1"] {
+            let cfile = dir.0.join(format!("boundaries-{gc}-{stack}.c"));
+            checked(
+                Command::new(compiler)
+                    .args(["build", "--gc", gc, "--emit-c", "-O2"])
+                    .arg(&source)
+                    .arg("-o")
+                    .arg(&cfile)
+                    .env("FWP_STACK", stack)
+                    .env_remove("FWP_NO_OPT"),
+            );
+            let code = std::fs::read_to_string(cfile).unwrap();
+            for opt in ["-O0", "-O2"] {
+                let binary = dir.0.join(format!("boundaries-{gc}-{stack}{opt}.exe"));
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let stress = if gc == "tracing" { "1" } else { "0" };
+                let output = checked(
+                    Command::new(binary)
+                        .env_remove("FWP_GC")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", stress),
+                );
+                assert_eq!(output.stdout, reference.stdout, "{gc}/{stack}/{opt}");
+                assert!(output.stderr.is_empty(), "{gc}/{stack}/{opt}: {output:?}");
+                if let Some(path) = std::env::var_os("FWP_CALLBACK_CAPTURE_ARTIFACTS") {
+                    let path = PathBuf::from(path);
+                    std::fs::create_dir_all(&path).unwrap();
+                    let stem = format!("boundaries-{gc}-{stack}{opt}");
+                    std::fs::write(path.join(format!("{stem}.c")), &code).unwrap();
+                    std::fs::copy(
+                        dir.0.join(format!("boundaries-{gc}-{stack}{opt}.exe")),
+                        path.join(format!("{stem}.exe")),
+                    )
+                    .unwrap();
+                    std::fs::write(path.join(format!("{stem}.stdout")), &output.stdout).unwrap();
+                    std::fs::write(path.join(format!("{stem}.stderr")), &output.stderr).unwrap();
+                    std::fs::write(
+                        path.join(format!("{stem}.status")),
+                        format!("{:?}\n", output.status.code()),
+                    )
+                    .unwrap();
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn generic_entries_follow_function_values_not_direct_calls() {
+    let dir = Scratch::new("entries");
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    for (name, body, dynamic, expected) in [
+        (
+            "direct",
+            "main = read-all () | string.length | direct | echo",
+            false,
+            "7\n",
+        ),
+        (
+            "dynamic",
+            "choose : Bool -> I64 -> I64\nchoose = if id (const direct) (const (mul 3))\nvalues : (I64 -> I64) -> (I64, I64)\nvalues = both (apply 2) (apply 4)\nmain = values (choose (read-all () | string.length | eq 0)) | echo",
+            true,
+            "(9, 11)\n",
+        ),
+    ] {
+        let source = dir.0.join(format!("{name}.fwp"));
+        std::fs::write(
+            &source,
+            format!("direct : I64 -> I64\ndirect = add 7\n{body}\n"),
+        )
+        .unwrap();
+        let reference = checked(
+            Command::new(compiler)
+                .args(["run", "--interp"])
+                .arg(&source)
+                .env("FWP_NO_OPT", "1")
+                .stdin(Stdio::null()),
+        );
+        assert_eq!(reference.stdout, expected.as_bytes());
+        for (gc, reuse) in [("arc", "1"), ("tracing", "1"), ("tracing", "0")] {
+            let cfile = dir.0.join(format!("{name}-{gc}-{reuse}.c"));
+            checked(
+                Command::new(compiler)
+                    .args(["build", "--gc", gc, "--emit-c", "-O2"])
+                    .arg(&source)
+                    .arg("-o")
+                    .arg(&cfile)
+                    .env("FWP_NO_OPT", "1")
+                    .env("FWP_REUSE", reuse),
+            );
+            let code = std::fs::read_to_string(&cfile).unwrap();
+            let table = code
+                .split_once("static const fwp_fninfo fwp_fn_table[] = {\n")
+                .unwrap()
+                .1
+                .split_once("};")
+                .unwrap()
+                .0;
+            let entries: Vec<_> = table.lines().filter(|line| line.contains("\"direct\"")).collect();
+            assert_eq!(entries.len(), 1, "{name}/{gc}/{reuse}: {table}");
+            assert_eq!(
+                entries[0].contains(", 0, \"direct\", 0}"),
+                !dynamic,
+                "{name}/{gc}/{reuse}: {}",
+                entries[0]
+            );
+            for opt in ["-O0", "-O2"] {
+                let exe = dir.0.join(format!("{name}-{gc}-{reuse}{opt}"));
+                fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                let stress = if gc == "tracing" { "1" } else { "0" };
+                let result = checked(
+                    Command::new(&exe)
+                        .stdin(Stdio::null())
+                        .env_remove("FWP_GC")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
+                        .env("FWP_REUSE_VERIFY", stress),
+                );
+                assert_eq!(result.stdout, reference.stdout, "{name}/{gc}/{reuse}/{opt}");
+                assert!(result.stderr.is_empty(), "{result:?}");
+            }
+        }
+    }
+}
+
+#[test]
 fn array_elements_aliases_and_callbacks_under_collection() {
     let dir = Scratch::new("aliases");
     let src = dir.0.join("aliases.fwp");
@@ -402,6 +550,13 @@ fn generated_numeric_arrays_borrow_captures_and_preserve_effect_cleanup() {
                     !helpers.is_empty(),
                     "{name}/{gc}/{stack}: missing borrowed array callback"
                 );
+                if name == "reads" {
+                    assert_eq!(
+                        emitted.contains("/* direct callback captures without a closure */"),
+                        stack == "1",
+                        "{name}/{gc}/{stack}: callback representation"
+                    );
+                }
                 let retain = "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {";
                 assert_eq!(emitted.matches(retain).count(), 1);
                 let start = "    fwp_init_consts();\n";

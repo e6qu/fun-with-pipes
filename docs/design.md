@@ -637,6 +637,29 @@ failure after entry. This adds no language syntax or fields to the closure layou
 [PR #156](roadmap-history.md#released-stream-caches-and-moved-closure-captures-pr-156)
 records full platform acceptance.
 
+In current preparation, generic call adapters are emitted only for function
+values and external dispatch. An adapter accepts the runtime argument array and
+calls a concrete function. A direct call already knows that function and does
+not need this extra entry. For example, `read-all () | string.length | add 7`
+needs direct operations; a function selected at runtime and later applied still
+needs an entry. Service methods and transport-created iterators explicitly keep
+their entries. Numeric array callbacks whose captures are borrowed use their
+specialized body directly. The [initial comparison](measurements/direct-call-entries.md)
+measures smaller code and preserves inconclusive timing.
+
+The expanded preparation also keeps eligible `array.generate`, `fold` and
+`fold-right` captures in separate local variables. A capture is an argument
+already supplied to a partially applied function. If every use of that local
+function is a known generator/fold callback, no function record is needed.
+Capture expressions still run at their original binding, before later count or
+input expressions. Existing typed child-owner cleanup handles drops and unwind;
+explicit lifetime barriers keep captures alive through allocating calls. Escapes,
+aliases, ordinary function application, resource frames and recursive tail frames
+keep their existing representation. Disabling stack representations disables this
+change too. Borrowing-eligible folds also avoid otherwise unused generic entries.
+[The numerical comparison](measurements/callback-locals.md) records smaller code;
+[the handoff](development-state.md) distinguishes preparation from verified support.
+
 A partial application supplies some arguments now and returns a function waiting
 for the rest. Some such functions contain only fixed references to other
 functions. For example, `neg | abs` composes integer negation with absolute value;

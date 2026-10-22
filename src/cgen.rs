@@ -2487,6 +2487,9 @@ struct FnGen<'g, 'p> {
     /// Off-heap local owners count their children directly.
     stack_children: HashMap<Local, Vec<(String, MT)>>,
     known_callbacks: HashMap<Local, (FuncId, usize)>,
+    /// Known callbacks used only by specialized generators/folds need captures,
+    /// not a closure object. Their owners use the existing stack-child ledger.
+    callback_captures: HashMap<Local, Vec<String>>,
     resource_slots: HashMap<Local, ResourceSlot>,
     /// The function being generated.
     me: FuncId,
@@ -4445,6 +4448,23 @@ impl<'g, 'p> FnGen<'g, 'p> {
             && !crate::escape::escapes(body, l, &self.g.noesc, Some(self.me))
         {
             let types = self.stack_types(v, &self.locals[l as usize]);
+            if let Expr::Apply(function, captures) = v {
+                if let Expr::Func(id) = **function {
+                    if self.g.reuse && self.only_direct_callback_uses(body, l, id, captures.len()) {
+                        // Evaluate and save captures at the original binding,
+                        // before any later count expression or side effect.
+                        let outer = std::mem::take(&mut self.stack_args);
+                        let values = self.args(captures);
+                        let values: Vec<_> = values.into_iter().map(|v| self.bind(v)).collect();
+                        self.stack_arg_children(&values, types.as_ref().unwrap());
+                        let children = std::mem::replace(&mut self.stack_args, outer);
+                        self.stack_children.insert(l, children);
+                        self.callback_captures.insert(l, values);
+                        self.line("/* direct callback captures without a closure */");
+                        return body;
+                    }
+                }
+            }
             let outer = std::mem::take(&mut self.stack_args);
             let x = self.stack_object(v, types.clone());
             let children = std::mem::replace(&mut self.stack_args, outer);
@@ -5378,6 +5398,66 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
+    /// Match the exact callback convention implemented by owned_hof below.
+    fn array_callback(&self, id: FuncId, captures: usize) -> bool {
+        let function = &self.g.prog.funcs[id];
+        self.g.reuse
+            && captures > 0
+            && function.arity as usize == captures + 1
+            && scalar(function.ty.params(captures + 1).1).is_some()
+            && function.locals[..captures]
+                .iter()
+                .any(|ty| crate::rc::needs_rc(&self.g.prog.shapes, ty))
+    }
+
+    /// Every value read must be a generator/fold's known callback argument.
+    /// Escapes, aliases, dynamic calls and resource frames retain closure storage.
+    fn only_direct_callback_uses(
+        &self,
+        e: &Expr,
+        local: Local,
+        function: FuncId,
+        captures: usize,
+    ) -> bool {
+        let allowed = |e| self.only_direct_callback_uses(e, local, function, captures);
+        match e {
+            Expr::Local(l) => *l != local,
+            Expr::Const(_) | Expr::Func(_) => true,
+            Expr::Call(id, args) => {
+                if let [count, Expr::Local(callback)] = args.as_slice() {
+                    if *callback == local
+                        && self.array_callback(function, captures)
+                        && matches!(&self.g.prog.funcs[*id].body, Body::Prim(s) if s == "array.generate")
+                    {
+                        return allowed(count);
+                    }
+                }
+                if let [Expr::Local(callback), initial, input] = args.as_slice() {
+                    if *callback == local
+                        && self.g.prog.funcs[function].arity as usize == captures + 2
+                        && matches!(&self.g.prog.funcs[*id].body, Body::Prim(s) if matches!(s.as_str(), "fold" | "fold-right"))
+                    {
+                        return allowed(initial) && allowed(input);
+                    }
+                }
+                args.iter().all(allowed)
+            }
+            Expr::Apply(f, args) => allowed(f) && args.iter().all(allowed),
+            Expr::Record(args) | Expr::Construct(_, args) => args.iter().all(allowed),
+            Expr::Field(value, _) => allowed(value),
+            Expr::SetFields(value, fields) => {
+                allowed(value) && fields.iter().all(|(_, e)| allowed(e))
+            }
+            Expr::Let(_, value, body) => allowed(value) && allowed(body),
+            Expr::Match(value, arms) => allowed(value) && arms.iter().all(|(_, e)| allowed(e)),
+            Expr::Trace(_, body)
+            | Expr::Dup(_, body)
+            | Expr::Drop(_, body)
+            | Expr::BorrowGlobal(_, _, body) => allowed(body),
+            Expr::ResourceRegion { .. } => false,
+        }
+    }
+
     fn owned_hof(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
         if !self.g.reuse {
             return None;
@@ -5385,15 +5465,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "array.generate") {
             let [count, callback] = args else { return None };
             let (g, captures) = self.callback_origin(callback)?;
-            let function = &self.g.prog.funcs[g];
-            if captures == 0 || function.arity as usize != captures + 1 {
-                return None;
-            }
-            scalar(function.ty.params(captures + 1).1)?;
-            if !function.locals[..captures]
-                .iter()
-                .any(|ty| crate::rc::needs_rc(&self.g.prog.shapes, ty))
-            {
+            if !self.array_callback(g, captures) {
                 return None;
             }
             if !matches!(callback, Expr::Local(_) | Expr::Apply(_, _)) {
@@ -5404,13 +5476,15 @@ impl<'g, 'p> FnGen<'g, 'p> {
             let count_value = self.expr(count);
             let count_value = self.bind(count_value);
             let mut values = match callback {
-                Expr::Local(l) => (0..captures)
-                    .map(|j| format!("CLO(l{l})->a[{j}]"))
-                    .collect::<Vec<_>>(),
+                Expr::Local(l) => match self.callback_captures.get(l) {
+                    Some(values) => values.clone(),
+                    None => (0..captures)
+                        .map(|j| format!("CLO(l{l})->a[{j}]"))
+                        .collect(),
+                },
                 Expr::Apply(_, values) => self.args(values),
                 _ => unreachable!(),
             };
-            self.g.used_closures[g] = true;
             let key = ("array.generate".to_string(), g, captures);
             let i = match self.g.hofs.iter().position(|h| *h == key) {
                 Some(i) => i,
@@ -5475,7 +5549,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
         {
             return None;
         }
-        self.g.used_closures[g] = true;
+        if n == 0 || !matches!(sym.as_str(), "fold" | "fold-right") {
+            self.g.used_closures[g] = true;
+        }
         if matches!(
             sym.as_str(),
             "map._map-list" | "map._map-range" | "set._map-list" | "set._map-range"
@@ -5726,9 +5802,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
             });
         }
         let mut caps = match &args[0] {
-            Expr::Local(l) => (0..n)
-                .map(|j| format!("CLO(l{l})->a[{j}]"))
-                .collect::<Vec<_>>(),
+            Expr::Local(l) => match self.callback_captures.get(l) {
+                Some(values) => values.clone(),
+                None => (0..n).map(|j| format!("CLO(l{l})->a[{j}]")).collect(),
+            },
             Expr::Apply(_, caps) => self.args(caps),
             _ => return None,
         };
@@ -5839,7 +5916,13 @@ impl<'g, 'p> FnGen<'g, 'p> {
             // borrowed closure/list addresses until allocating calls return.
             for arg in args {
                 if let Expr::Local(l) = arg {
-                    self.line(&format!("FWP_KEEP_ALIVE(l{l});"));
+                    if let Some(values) = self.callback_captures.get(l).cloned() {
+                        for value in values {
+                            self.line(&format!("FWP_KEEP_ALIVE({value});"));
+                        }
+                    } else {
+                        self.line(&format!("FWP_KEEP_ALIVE(l{l});"));
+                    }
                 }
             }
             return result;
@@ -7419,6 +7502,11 @@ impl<'p> Gen<'p> {
         method: &str,
         iter_fn: Option<FuncId>,
     ) -> Result<RpcSpec, String> {
+        // The transport constructs this iterator by function id, outside the
+        // expression emitter that ordinarily records function-value uses.
+        if let Some(iterator) = iter_fn {
+            self.used_closures[iterator] = true;
+        }
         let f = &self.prog.funcs[of];
         let (ty, arity) = (f.ty.clone(), f.arity as usize);
         let shape = crate::rpc::shape(&ty, arity, error);
@@ -7544,6 +7632,7 @@ impl<'p> Gen<'p> {
             stack_args: Vec::new(),
             stack_children: HashMap::new(),
             known_callbacks: HashMap::new(),
+            callback_captures: HashMap::new(),
             resource_slots: HashMap::new(),
             me: *id,
             tail_calls: tail_calls(&body),
@@ -7675,6 +7764,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             stack_args: Vec::new(),
             stack_children: HashMap::new(),
             known_callbacks: HashMap::new(),
+            callback_captures: HashMap::new(),
             resource_slots: HashMap::new(),
             me: step,
             tail_calls: tail_calls(e),
@@ -8752,6 +8842,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
                     stack_args: Vec::new(),
                     stack_children: HashMap::new(),
                     known_callbacks: HashMap::new(),
+                    callback_captures: HashMap::new(),
                     resource_slots: HashMap::new(),
                     me: id,
                     tail_calls: tail_calls(&e),
@@ -8835,6 +8926,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out{data_
             stack_args: Vec::new(),
             stack_children: HashMap::new(),
             known_callbacks: HashMap::new(),
+            callback_captures: HashMap::new(),
             resource_slots: HashMap::new(),
             me: id,
             tail_calls: tail_calls(e),
@@ -9836,6 +9928,13 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     while i < g.hofs.len() {
         let hof = g.hofs[i].clone();
         let borrowed_step = g.borrowed_hof_step(i, &hof);
+        if matches!(hof.0.as_str(), "array.generate" | "fold" | "fold-right")
+            && borrowed_step.is_none()
+        {
+            // The ordinary loop calls the owned entry. A borrowed loop calls
+            // its specialized body directly and needs no generic adapter.
+            g.used_closures[hof.1] = true;
+        }
         if let Some(body) = &borrowed_step {
             bodies.push_str(body);
         }
@@ -10299,13 +10398,14 @@ static const fwp_exec_spec exec_spec{i} = {{
                 m.iter_fn,
             )?;
             spec.fingerprint = svc.fingerprint(prog, m);
+            // Service dispatch uses the table in both ownership modes.
+            if prog.funcs[m.func].arity > 0 {
+                g.used_closures[m.func] = true;
+            }
             if g.reuse {
                 let function = &prog.funcs[m.func];
                 let result = function.ty.params(function.arity as usize).1.clone();
                 spec.result_drop = g.value_drop(&result);
-                if function.arity > 0 {
-                    g.used_closures[m.func] = true;
-                }
             }
             served.push(spec);
         }
@@ -10795,10 +10895,11 @@ static const fwp_exec_spec exec_spec{i} = {{
     }
     // Constant applicative forms retain their typed cached owners.
     out.push_str(&caf_defs);
-    // entries and the function table (whose entries for functions nothing
-    // reaches stay, without code, so function ids keep their positions)
+    // Only runtime function values and external dispatch need generic entries.
+    // Keep table positions and names for every id, without retaining adapters
+    // (and their otherwise unused bodies) for exclusively direct calls.
     for (id, f) in prog.funcs.iter().enumerate().filter(|(id, _)| live[*id]) {
-        if f.arity > 0 {
+        if f.arity > 0 && g.used_closures[id] {
             let args: Vec<String> = (0..f.arity).map(|i| format!("a[{}]", i)).collect();
             let mut share_args = String::new();
             if g.reuse {
@@ -10820,7 +10921,7 @@ static const fwp_exec_spec exec_spec{i} = {{
     out.push_str(&owned_defs);
     out.push_str("static const fwp_fninfo fwp_fn_table[] = {\n");
     for (id, f) in prog.funcs.iter().enumerate() {
-        let entry = if f.arity > 0 && live[id] {
+        let entry = if f.arity > 0 && live[id] && g.used_closures[id] {
             format!("e{}", id)
         } else {
             "0".into()

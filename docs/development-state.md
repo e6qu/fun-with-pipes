@@ -1,119 +1,131 @@
 # Session handoff
 
-The [plan](../PLAN.md) remains open in all seven areas. Current work removes
-avoidable ownership operations while preserving simple pipes, immutable values,
-checked arithmetic and failure/cancellation cleanup. JIT is excluded.
+All seven areas of [PLAN.md](../PLAN.md) remain open. Ownership, borrowing and
+removal of tracing remain the priority. JIT is excluded. Continue grouped PRs;
+a completed delivery does not finish the language's memory/performance goals.
 
-## Current delivery: borrow array-generation captures
+## Accepted baseline
 
-Main is verified #196 squash `abc2636d164632ea25ab5709455ab193a3df9479`.
-[History](roadmap-history.md#array-owner-moves-and-copied-callback-strings-pr-196)
-records its nine passing production jobs, documentation and inspected evidence.
-The merge's tree, parent and one-line message were verified. Redundant same-tree
-production run `39792888252` was cancelled; documentation was preserved.
+The user merged [PR #197](https://github.com/e6qu/fun-with-pipes/pull/197) as
+`b94710c9212cbbfc3e39409835e539b371069b36`. All nine production jobs
+(`39793823991`) and docs (`39793823875`) passed exact head `0367e81941a213b96de14dbe175143ff0a121f77`.
+The merge tree, sole parent and one-line message were verified. Receipts:
+`/private/tmp/fwp-197-final-acceptance.json`, `/private/tmp/fwp-197-user-merge.json`.
+Duplicate main production run `39809854139` was cancelled; passing docs were kept.
+[History](roadmap-history.md#borrowed-array-captures-pr-197) preserves the result.
 
-Branch `array-capture-ownership`, worktree `/private/tmp/fwp-capture-delivery`,
-contains the next combined delivery. Preparation `a23cbe6c95d63969f5df285718af64f56eb480fd`
-was applied onto #196's merge and verified as an identical tree before updating
-this handoff and history. Compiler/runtime/native-test files remain unchanged.
-The integration receipt is `/private/tmp/fwp-capture-delivery-integration.json`.
+## Current PR and next action
 
-The compiler lets eligible known numeric `array.generate` callbacks borrow values
-kept alive by their caller. It also removes temporary parameter-record and
-last-read alias owners. Escaping values still acquire owners; recursive callbacks
-and resource scopes keep their ordinary convention. Tests preserve count/capture
-preparation order, shared inputs, state, errors, yields and partial-array cleanup.
-No new syntax, wrapper or ownership-IR convention was added.
+[PR #198](https://github.com/e6qu/fun-with-pipes/pull/198) is the sole active delivery.
+Branch `direct-call-entries` lives in `/private/tmp/fwp-direct-entry-delivery`.
+The primary checkout remains detached at #197; use the delivery worktree.
 
-The batch also reports all count/storage budget failures across benchmark inputs,
-keeps independent audits running after a failed check, and repairs a macOS shell
-assignment that could hide `xcrun` failure. Incorrect output, broken cleanup,
-invalid raw traces and tool failures still stop immediately. An earlier proposal
-to move the early cleanup assertion was rejected by automatic review; that
-assertion remains unchanged, with no approval pending.
+**Next:** publish the checked grouped repair, then audit all nine production jobs
+and docs for its final head. The publication receipt identifies the current head:
+`/private/tmp/fwp-direct-callback-delivery-publication.json`. Consult it before
+pushing or dispatching again; never rerun a completed publication helper.
+Use `/private/tmp/fwp-audit-198-final.py` and inspect final-head capture binaries
+with `/private/tmp/fwp-inspect-198-captures.py --host HOST --part PART`.
+For Linux/Windows use `all`; for macOS inspect both `regular` and `gc`.
+Fix every failure together. Squash merge is authorized only after exact-head
+acceptance: one-line subject at most 80 characters, explicitly empty body,
+no trailers or attribution. Verify tree/parent/message and continue PLAN.md.
+No permission question is pending.
 
-**Next:** publish or resume the PR for `array-capture-ownership`, then inspect every
-final-head gate. Fix all failures together. Publication and merge are authorized;
-require all nine production jobs and documentation for the exact commit, verified
-against the PR's completed successful checks. GitHub's workflow summary can lag;
-retain its actual state separately. Squash-merge with an explicit one-line subject
-of at most 80 characters and empty body, then verify tree, parent and message.
-Focused preparation alone never authorizes merge. Do not open another PR while
-this delivery is active; independent preparation may continue.
+The PR combines:
 
-## Accepted focused evidence
+- Local captures for known array generators and both fold directions; unused
+  generic call adapters are removed while function values/external dispatch
+  retain theirs. [Design](design.md) records eligibility and lifetime rules.
+- Interpreter/native checks for reused/stored callbacks, ordinary calls, empty
+  inputs, ordering, errors and cancellation, with broken-ownership controls.
+- Per-solve memory observations and C/Rust comparisons that distinguish formula
+  arrangement, buffers, checked access and output costs.
+- Windows callback coverage, explicit executable paths for saved fold evidence,
+  and parallel target execution with progress limits and retained build logs.
+- Clearer benchmark/application guidance and a shorter current plan.
 
-| Check | Source/run | Result |
-|---|---|---|
-| Native ownership and width | Compiler `80d8f27e1bf57e4665503d6d1ed1af261f7dc672`, run `39783028890` | Five native hosts and width job pass; original AMD64 native checks pass but a new unit fixture fails |
-| Corrected AMD64 fixture/audits | `3e5763b69ed075516bcbadf5d18dcb2a12f98078`, run `39789349262` | Passes, including all 179 compiler unit tests; production code is unchanged |
-| Numerical comparison | `d1467854766fd93fa6e6c768d42f35e83fec3c1a`, run `39786472473` | Both numerical jobs pass; 132 images inspected; workflow summary still reports running in the last audit |
+## Complete audit of the first production head
 
-The [ownership report](measurements/array-capture-borrows.md) retains all 558
-inspected native images, twelve WASI modules and complete-log audits. Deliberately
-broken controls add retains, leak owners or omit partial releases. The extra
-O0/O2 effect-order tests execute in logs, outside the saved-image count.
+Head `41a6c570aac248f2a4488993ec98225a07574313` finished production run
+`39820054190` and docs `39820054279`. All six Linux/macOS jobs, benchmarks and
+docs passed. Both Windows jobs failed only
+`right_fold_releases_accumulator_and_scratch_on_failure`: the artifact copy at
+`tests/fold_unwind_ownership.rs:216` used an extensionless filename, while the
+Windows linker produced `.exe`. Later Windows checks reported no other failures.
+Complete logs and every completed target were audited. Receipt:
+`/private/tmp/fwp-198-final-acceptance.json` (archive it by source before updating
+that path for the repair). Early logs are also in `/private/tmp/fwp-198-windows-early/`.
 
-The failed unit fixture used a list type deliberately excluded from direct
-borrowing but expected alias removal. Its correction checks eligible numeric
-arrays and verifies excluded list aliases still acquire owners, including escapes.
-The original failure and corrected job remain separate in the evidence; nothing
-was waived. The combined preparation verifies unchanged production code.
+Both fold artifact paths now use explicit `.exe` names. Windows adds four missing
+array/fold targets and moves the already-covered fold-unwind target once.
+The resource/TLS groups retain all 128 existing target occurrences through the
+existing two-target runner, with 600-second progress limits and separate logs.
+Combined logs still capture build failures. Final CI must verify these changes.
+A speculative callback-path change was disproved by the accepted compiler and
+removed; do not restore it or weaken cleanup assertions.
 
-## Numerical result and remaining gaps
+The first head's macOS ARM64 artifacts contain 80 independently inspected
+callback/capture/unwind images and 136 verified observations, under
+`/private/tmp/fwp-198-capture-evidence/41a6c570aac2/`. This is preparation evidence;
+inspect the final-head artifacts too. Earlier invalid ARC stress settings and
+an obsolete fold adapter probe were repaired before this head; their failed
+runs remain recorded in the measurement reports, not counted as acceptance.
 
-The [comparison](measurements/array-capture-descent.md) measures packed fwp against
-its rebuilt previous compiler, AD/list fwp and C/Rust implementations. For 129
-coordinates and 199 updates, retains fall 25,671 → zero on both Linux hosts.
-Allocation requests stay at 459, requested bytes at 216,925 and managed peak at
-7,200 bytes. Managed/raw storage ends at zero, with no tracing collections.
+## Numerical evidence included in this PR
 
-Largest new/old median ratios are 0.7216 AMD64 and 0.7983 ARM64; new/C is
-2.3300/2.3754 and new/Rust 2.0138/1.9761. AMD64's one-update identical-code control
-differs by 10%; ARM64's one-update candidate is 0.8% slower. No general speed claim
-or timing budget. The update frame shrinks 112 → 96 bytes while instruction
-sections grow 144/112 bytes. Actual instructions and dynamic-frame qualifiers
-remain in the data. Earlier failed count requirements are preserved in the report.
+- [Callback locals](measurements/callback-locals.md): source `927c6b1852a69748ae613291d89774bb8ae31121`,
+  run `39816519529`, both hosts pass; 132 inspected images. Largest instructions
+  fall to 33,570 bytes on AMD64 and 31,612 on ARM64. Generator frames fall from
+  96 to 48 bytes. Requests/retains/managed peak stay 459/0/7,200 bytes. No speed claim.
+- [Per-solve observers](measurements/descent-observers.md): run `39816523757`,
+  both hosts pass; 104 inspected images. All 512 checkpoints have zero live
+  managed/raw storage. Delayed release fails 225; final-only observation misses it.
+  This run uses saved adapter-only sources, not the expanded capture-local compiler.
+- [Matched formulas](measurements/coordinate-work.md): preparation
+  `b9d598629ab38cfdd29d7863ec9cdbfd9bd893b6`, run `39827232824`, both hosts pass;
+  144 inspected images plus sixteen small controls per host. Largest fwp time
+  is 10.40–13.69× coordinate C and 11.86–14.07× Rust. Eleven timing controls pass;
+  AMD64 3:1999 exceeds 2% and remains inconclusive. Peer buffer-release faults
+  and fwp delayed-release controls behave as required. Actual outer loops and
+  AMD64 indirect allocation targets are inspected. One run per host is not a
+  compiler speedup claim. Numerical preparation is fully integrated; receipts:
+  `/private/tmp/fwp-coordinate-acceptance.json`, `/private/tmp/fwp-coordinate-integration.json`.
 
-After delivery, separate remaining dynamic calls, bounds checks and output costs
-before selecting another numerical optimization. Establish stable repeated timing
-controls and a per-input budget. Continue the ownership boundaries and finite
-application suite in the plan; zero retains here do not finish GC removal.
+The earlier [inline experiment](measurements/descent-call-costs.md) failed its
+predeclared 5% speed screen. Do not select an inlining rule from it. Preserve
+historical timings, failed controls and implementation differences.
 
-## Resume files and validation
+## Checks and local resources
 
-Paths below are under `/private/tmp/`. Publication helpers already ran for the
-preparation sources; do not repeat those mutations. The delivery has its own
-integration/publication records. Query its branch/PR before publishing again.
+Focused checks pass: grouped formatting/workflow/docs/budget/runner controls
+(14.77s), integrated source hashes/new report links/formatting (3.42s), and exact
+Windows target preservation plus workflow lint (0.26s). Helpers:
+`/private/tmp/fwp-check-combined-repair.py`,
+`/private/tmp/fwp-check-coordinate-integration.py`,
+`/private/tmp/fwp-check-windows-group-coverage.py`.
+These do not replace final native CI. No full build or benchmark ran locally.
 
-| Purpose | Files |
-|---|---|
-| #196 acceptance/merge | `fwp-196-final-acceptance.json`, `fwp-196-merge-runs.json` |
-| Prepared batch | `fwp-array-capture-final-preparation.json`, `fwp-capture-preparation-acceptance.json` |
-| Original compiler checks | `fwp-array-captures-publication.json`, `fwp-array-captures-acceptance.json` |
-| Corrected fixture | `fwp-capture-test-repair-publication.json`, `fwp-capture-test-repair-acceptance.json` |
-| Numerical checks | `fwp-capture-reporting-publication.json`, `fwp-capture-descent-acceptance.json` |
-| Artifacts | `fwp-array-captures-evidence/80d8f27e1bf5/`, `fwp-capture-descent-evidence/d1467854766f/` |
+Use `python3 scripts/local-guard.py COMMAND...` serially. Keep 64 GiB free disk,
+target data below 2 GiB, aggregate sampled RSS below 1 GiB and the 180-second
+limit; never raise limits. Free space was about 66 GiB before the new evidence
+downloads. Preserve modified worktrees and receipts. Do not repeat old cleanup,
+publication or integration helpers with existing receipts.
 
-Guarded preparation checks pass: format/workflow/docs/baseline reconstruction
-7.71s; new report links/counts/provenance 0.13s; budget controls 0.14s. Native and
-numerical artifact inspection is complete; do not repeat downloads without a
-new reason. Saved-interpreter checks do not verify new C generation.
-
-Keep local checks serial under `python3 scripts/local-guard.py`; full builds,
-suites and benchmarks stay on GitHub. Preserve 64 GiB free disk, targets below
-2 GiB, sampled workload RSS below 1 GiB and the 180-second deadline. Never raise
-limits automatically. Earlier cleanup removed only completed archives and clean
-inactive worktrees; preserve remaining receipts, branches and modified worktrees.
+Preparation `/private/tmp/fwp-coordinate-costs`, branch `measure-coordinate-costs`,
+is clean at `b9d59862`; its files/results are already integrated into #198's worktree.
+Preserve its tag; do not create another PR for it. `/private/tmp/fwp-descent-call-costs`
+is inactive. After this PR, separate remaining output, callback, bounds-check and
+buffer costs before choosing the next optimization; ownership boundaries remain open.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | In progress | Remove tracing and limit ARC at remaining boundaries |
-| 2 | In progress | Extend proved borrowing and remove functional overhead |
+| 2 | In progress | Extend borrowing and remove functional overhead |
 | 3 | In progress | Meet measured machine-level time and memory budgets |
 | 4 | In progress | Improve differentiation speed, memory and precision |
 | 5 | In progress | Validate CPU numerical kernels |
 | 6 | In progress | Stabilize comparisons and set workload budgets |
-| 7 | In progress | Complete the finite application acceptance suite |
+| 7 | In progress | Complete the application acceptance suite |

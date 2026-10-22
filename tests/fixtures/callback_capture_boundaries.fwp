@@ -1,0 +1,27 @@
+# A callback is a function supplied to another function. These callbacks retain
+# their input arrays/strings while callers reuse, store and invoke them.
+read-index : Array[F64] -> I64 -> F64
+read-index = curry (fork array.get .1 .0 | option.unwrap-or -99.0)
+repeated : (I64 -> F64) -> (Array[F64], Array[F64])
+repeated = both (array.generate 3) (array.generate 0)
+mixed : (I64 -> F64) -> (Array[F64], F64)
+mixed = both (array.generate 3) (apply 1)
+stored : (I64 -> F64) -> {callback: I64 -> F64, values: Array[F64]}
+stored = make { callback = id, values = array.generate 3 }
+use-stored : {callback: I64 -> F64, values: Array[F64]} -> (F64, Array[F64])
+use-stored = both (.callback | apply 2) .values
+# concat suffix input appends suffix to input. The left fold below therefore
+# prepends each new element; the right fold accumulates them in reverse order.
+left-step : String -> String -> String -> String
+left-step = curry3 (fork concat .1 (fork concat .0 .2))
+right-step : String -> String -> String -> String
+right-step = curry3 (fork concat (fork concat .0 .1) .2)
+main = [
+    repeated (read-index ([0.0, 1.25, -2.5] | array.from-list)) | echo,
+    mixed (read-index ([0.0, 1.25, -2.5] | array.from-list)) | echo,
+    stored (read-index ([0.0, 1.25, -2.5] | array.from-list)) | use-stored | echo,
+    ["a", "b"] | fold (left-step "!") "seed" | echo,
+    [] | fold (left-step "!") "seed" | echo,
+    ["a", "b"] | fold-right (right-step "!") "seed" | echo,
+    [] | fold-right (right-step "!") "seed" | echo,
+] | ignore

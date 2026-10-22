@@ -104,28 +104,30 @@ outside the benchmark suite.
    inter-task derivative lifetimes merely to increase the accepted count.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
-   [checked products](docs/measurements/checked-products.md) retain slower controls,
-   optimization-level differences and unexplained AMD64 variability. The
-   [descent baseline](docs/measurements/descent-peers.md) now separates automatic
-   differentiation from explicit fwp/C/Rust formulas. The subsequent
-   [packed-array comparison](docs/measurements/packed-descent.md) reduces the
-   largest explicit case from 206,891 to 459 allocation requests. The subsequent
-   [array-owner move](docs/measurements/array-owner-moves.md) halves retains to
-   25,671. [Borrowed captures](docs/measurements/array-capture-descent.md) remove
-   the remainder without increasing requests or managed peak on both Linux hosts.
-   The largest case still takes 2.33–2.38× C time; small identical-code controls
-   remain noisy. Next separate remaining dynamic calls, bounds checks and output
-   costs before selecting another optimization. Establish a repeatable timing
-   budget first; preserve checked arithmetic, trap order and code/stack evidence.
-   Resource-owning tail frames and mutual recursion need separate lifetime proofs.
+   [checked products](docs/measurements/checked-products.md) preserve slower
+   controls and optimization-level differences. For numerical descent,
+   [packed arrays](docs/measurements/packed-descent.md) reduce the largest case to
+   459 allocation requests; [borrowing](docs/measurements/array-capture-descent.md)
+   removes its retains without increasing the 7,200-byte managed peak.
+   [Callback locals](docs/measurements/callback-locals.md) reduce instructions and
+   generator frames further; final native acceptance is tracked in the handoff.
+   The [matched-formula comparison](docs/measurements/coordinate-work.md) still
+   measures 10.40–13.69× C time and 11.86–14.07× Rust time for the largest case.
+   Eleven of twelve identical-copy controls pass; one remains inconclusive.
+   These are complete implementations, not isolated compiler overhead.
+   Next separate callback calls, checked indexing, output construction and buffer
+   storage, then set repeatable per-workload budgets before choosing an optimization.
+   Preserve arithmetic/trap order and inspect real code, stack frames and cleanup.
+   The [inline experiment](docs/measurements/descent-call-costs.md) failed its
+   predeclared speed screen; it does not justify an inlining rule. Resource-owning
+   tail frames and mutual recursion need separate lifetime proofs.
 3. Complete the [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
    to choose the next costs to remove: dynamic calls, input copies, container
    layout, numerical workspace and derivative recording. Establish workload-specific
    time/memory budgets before claiming improvement. Native command ownership,
-   test-failure cleanup and raw derivative workspace passed #195 delivery. The
-   current batch proves borrowed array captures, including temporary records,
-   last-read aliases and exceptional cleanup;
-   [the handoff](docs/development-state.md) records final gates.
+   test-failure cleanup and raw derivative workspace passed #195 delivery. Borrowed array captures, temporary records, last-read aliases and exceptional
+   cleanup passed #197 delivery. [The handoff](docs/development-state.md) records
+   the current direct-call work and final gates.
    The [benchmark index](docs/benchmarks.md)
    records current comparisons and their limits. For example,
    [direct await fields](docs/measurements/task-await-fields.md) remove 34 allocation

@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [coordinate-work, descent-batches, descent-call-costs, descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -30,6 +30,64 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  coordinate_work:
+    if: inputs.suite == 'coordinate-work'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            c_arch: x86-64
+          - runner: ubuntu-24.04-arm
+            c_arch: armv8-a
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify output checks and peer memory observers
+        run: python3 scripts/test-coordinate-work.py --cc gcc --rustc rustc --c-arch "${{ matrix.c_arch }}" --output coordinate-controls.json
+      - name: Download inspected compiler output
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MEASUREMENT_HOST: ${{ matrix.runner }}
+        run: |
+          python3 - <<'PYINPUT'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          report = json.loads(Path('docs/measurements/callback-locals-2026-10-22.json').read_text())
+          host, = [row for row in report['hosts'] if row['host'] == os.environ['MEASUREMENT_HOST']]
+          path = Path('coordinate-input.zip')
+          with path.open('wb') as stream:
+              subprocess.run(['gh', 'api', f"repos/e6qu/fun-with-pipes/actions/artifacts/{host['artifact']}/zip"], stdout=stream, check=True)
+          assert hashlib.sha256(path.read_bytes()).hexdigest() == host['archiveSha256']
+          PYINPUT
+      - name: Measure coordinate and edge formulas with complete repeated solves
+        run: >-
+          python3 scripts/measure-coordinate-work.py
+          --source-report docs/measurements/callback-locals-2026-10-22.json
+          --source-archive coordinate-input.zip
+          --cc gcc --rustc rustc --c-arch "${{ matrix.c_arch }}"
+          --objdump objdump --nm nm --time /usr/bin/time
+          --case 3:0 --case 3:1 --case 3:199 --case 3:1999 --case 33:199 --case 129:199
+          --repetitions 512 --control-max-difference 0.02
+          --warmups 4 --samples 48 --order-seed 20261022 --timeout 60
+          --host "${{ matrix.runner }}" --output coordinate-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: coordinate-work-${{ matrix.runner }}
+          path: |
+            coordinate-evidence/
+            coordinate-controls.json
+          if-no-files-found: error
   native_commands:
     if: inputs.suite == 'native-commands'
     strategy:
@@ -321,6 +379,7 @@ jobs:
       FWP_POINTER_ARTIFACTS: pointer-evidence/callbacks
       FWP_STACK_ARRAY_ARTIFACTS: pointer-evidence/stack-arrays
       FWP_ARRAY_CAPTURE_ARTIFACTS: pointer-evidence/array-captures
+      FWP_CALLBACK_CAPTURE_ARTIFACTS: pointer-evidence/direct-captures
     steps:
       - uses: actions/checkout@v7
       - name: Prepare foreign ownership evidence
@@ -372,14 +431,14 @@ jobs:
         shell: bash
         run: |
           mkdir -p pointer-evidence
-          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership --test array_element_ownership --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership -- -D warnings 2>&1 | tee pointer-evidence/compiler.log
+          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership --test array_element_ownership --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership --test grpc --test queued_functions -- -D warnings 2>&1 | tee pointer-evidence/compiler.log
       - name: Windows compiler checks for manual pointer ownership
         id: file_compiler_windows
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force pointer-evidence | Out-Null
-          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership --test array_element_ownership --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership -- -D warnings 2>&1 | Tee-Object pointer-evidence/compiler.log
+          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership --test array_element_ownership --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership --test grpc --test queued_functions -- -D warnings 2>&1 | Tee-Object pointer-evidence/compiler.log
           exit $LASTEXITCODE
       - name: Publish compiler failures while independent tests continue
         if: ${{ !cancelled() && (steps.file_compiler.outcome == 'failure' || steps.file_compiler_windows.outcome == 'failure') }}
@@ -392,13 +451,13 @@ jobs:
         if: ${{ !cancelled() && runner.os != 'Windows' }}
         shell: bash
         run: |
-          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership --test array_element_ownership --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership -- --nocapture 2>&1 | tee pointer-evidence/tests.log
+          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership --test array_element_ownership --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership --test grpc --test queued_functions -- --nocapture 2>&1 | tee pointer-evidence/tests.log
       - name: Windows raw pointers, callbacks, libraries and the ARC corpus
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           whoami /priv | Out-File pointer-evidence/privileges.txt
-          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership --test array_element_ownership --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership -- --nocapture 2>&1 | Tee-Object pointer-evidence/tests.log
+          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership --test array_element_ownership --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership --test grpc --test queued_functions -- --nocapture 2>&1 | Tee-Object pointer-evidence/tests.log
           exit $LASTEXITCODE
       - name: Inventory execution examples admitted without tracing
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
@@ -2965,6 +3024,115 @@ jobs:
           name: wordfreq-repeat-${{ matrix.runner }}
           path: wordfreq-repeat/
           if-no-files-found: error
+  descent_batches:
+    if: inputs.suite == 'descent-batches'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            c_arch: x86-64
+          - runner: ubuntu-24.04-arm
+            c_arch: armv8-a
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Download both inspected compiler variants and peer sources
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASELINE_HOST: ${{ matrix.runner }}
+        run: |
+          python3 - <<'PYBASELINE'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          report = json.loads(Path('docs/measurements/direct-call-entries-2026-10-22.json').read_text())
+          host, = [row for row in report['hosts'] if row['host'] == os.environ['BASELINE_HOST']]
+          path = Path('entry-baseline.zip')
+          with path.open('wb') as stream:
+              subprocess.run(['gh', 'api', f"repos/e6qu/fun-with-pipes/actions/artifacts/{host['artifact']}/zip"], stdout=stream, check=True)
+          assert hashlib.sha256(path.read_bytes()).hexdigest() == host['archiveSha256']
+          PYBASELINE
+      - name: Compare repeated complete solves with two identical-code controls
+        run: >-
+          python3 scripts/measure-descent-batches.py
+          --baseline-report docs/measurements/direct-call-entries-2026-10-22.json
+          --baseline-archive entry-baseline.zip
+          --cc gcc --rustc rustc --c-arch "${{ matrix.c_arch }}"
+          --objdump objdump --nm nm --time /usr/bin/time
+          --case 3:0 --case 3:1 --case 3:199 --case 3:1999 --case 33:199 --case 129:199
+          --repetitions 512 --control-max-difference 0.02
+          --warmups 4 --samples 48 --order-seed 20261022 --timeout 60
+          --host "${{ matrix.runner }}" --output descent-batch-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: descent-batches-${{ matrix.runner }}
+          path: descent-batch-evidence/
+          if-no-files-found: error
+  descent_call_costs:
+    if: inputs.suite == 'descent-call-costs'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            c_arch: x86-64
+          - runner: ubuntu-24.04-arm
+            c_arch: armv8-a
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Download the inspected borrowed-capture source artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASELINE_HOST: ${{ matrix.runner }}
+        run: |
+          python3 - <<'PYBASELINE'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          report = json.loads(Path('docs/measurements/array-capture-descent-2026-10-22.json').read_text())
+          host, = [row for row in report['hosts'] if row['host'] == os.environ['BASELINE_HOST']]
+          path = Path('capture-baseline.zip')
+          with path.open('wb') as stream:
+              subprocess.run(['gh', 'api', f"repos/e6qu/fun-with-pipes/actions/artifacts/{host['artifact']}/zip"], stdout=stream, check=True)
+          assert hashlib.sha256(path.read_bytes()).hexdigest() == host['archiveSha256']
+          PYBASELINE
+      - name: Compare scalar helper call costs without changing the compiler
+        run: >-
+          python3 scripts/measure-descent-call-costs.py
+          --baseline-report docs/measurements/array-capture-descent-2026-10-22.json
+          --baseline-archive capture-baseline.zip --helper w36
+          --cc gcc --rustc rustc --c-arch "${{ matrix.c_arch }}"
+          --objdump objdump --nm nm --time /usr/bin/time
+          --case 3:0 --case 3:1 --case 3:199 --case 3:1999 --case 33:199 --case 129:199
+          --decision-case 129:199 --control-max-difference 0.02
+          --candidate-max-ratio 0.95 --text-max-growth 1.02
+          --warmups 2 --samples 56 --order-seed 20261022 --timeout 60
+          --host "${{ matrix.runner }}" --output descent-call-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: descent-call-costs-${{ matrix.runner }}
+          path: descent-call-evidence/
+          if-no-files-found: error
   descent_peers:
     if: inputs.suite == 'descent-peers'
     strategy:
@@ -3008,7 +3176,7 @@ jobs:
           from pathlib import Path
           import subprocess
 
-          report = json.loads(Path('docs/measurements/array-owner-moves-2026-10-22.json').read_text())
+          report = json.loads(Path('docs/measurements/array-capture-descent-2026-10-22.json').read_text())
           host, = [row for row in report['hosts'] if row['host'] == os.environ['BASELINE_HOST']]
           path = Path('packed-baseline.zip')
           with path.open('wb') as stream:
@@ -3017,10 +3185,10 @@ jobs:
           PYBASELINE
       - name: Numerical measurement requirement controls
         run: python3 scripts/test-descent-budgets.py
-      - name: Compare borrowed captures with the accepted array-move baseline and C/Rust
+      - name: Compare direct-call entries with borrowed-capture baseline and C/Rust
         run: >-
           python3 scripts/measure-descent-peers.py --compiler target/release/fwp
-          --baseline-report docs/measurements/array-owner-moves-2026-10-22.json
+          --baseline-report docs/measurements/array-capture-descent-2026-10-22.json
           --baseline-archive packed-baseline.zip
           --cc gcc --rustc rustc --c-arch "${{ matrix.c_arch }}"
           --objdump objdump --nm nm --time /usr/bin/time

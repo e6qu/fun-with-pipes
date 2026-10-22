@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('descent', ROOT / 'scripts/measure-descent-peers.py')
 DESCENT = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(DESCENT)
-BASELINE = json.loads((ROOT / 'docs/measurements/array-owner-moves-2026-10-22.json').read_text())
+BASELINE = json.loads((ROOT / 'docs/measurements/array-capture-descent-2026-10-22.json').read_text())
 
 
 class DescentBudgets(unittest.TestCase):
@@ -21,14 +21,9 @@ class DescentBudgets(unittest.TestCase):
                     old = row['fwpProfiles']
                     current = copy.deepcopy(old)
                     current['fwp-packed-baseline'] = copy.deepcopy(old['fwp-packed'])
-                    failures = DESCENT.ownership_budget_failures(current, old, row['updates'])
-                    expected = []
-                    if row['updates'] >= 199:
-                        expected = [dict(program='fwp-packed', metric='retains', requirement='equal',
-                                         actual=old['fwp-packed']['managed']['retains'], expected=0)]
-                    self.assertEqual(failures, expected)
-                    current['fwp-packed']['managed']['retains'] = 0
-                    self.assertEqual(DESCENT.ownership_budget_failures(current, old, row['updates']), [])
+                    failures = DESCENT.ownership_budget_failures(current, old)
+                    self.assertEqual(old['fwp-packed']['managed']['retains'], 0)
+                    self.assertEqual(failures, [])
 
     def test_reports_independent_failures_together_without_changing_inputs(self):
         old = BASELINE['hosts'][0]['report']['results']['129-199']['fwpProfiles']
@@ -38,10 +33,11 @@ class DescentBudgets(unittest.TestCase):
         current['fwp-ad']['managed']['peakChargedBytes'] += 8
         current['fwp-explicit']['managed']['requests'] += 1
         current['fwp-explicit']['managed']['requestedBytes'] += 8
+        current['fwp-packed']['managed']['retains'] += 1
         current['fwp-packed']['managed']['requestedBytes'] += 8
         current['fwp-packed']['managed']['peakChargedBytes'] += 8
         snapshot = copy.deepcopy(current)
-        failures = DESCENT.ownership_budget_failures(current, old, 199)
+        failures = DESCENT.ownership_budget_failures(current, old)
         self.assertEqual({(row['program'], row['metric']) for row in failures}, {
             ('fwp-ad', 'retains'), ('fwp-ad', 'peakChargedBytes'),
             ('fwp-explicit', 'requests'), ('fwp-explicit', 'requestedBytes'),
@@ -57,10 +53,10 @@ class DescentBudgets(unittest.TestCase):
         current = copy.deepcopy(old)
         current['fwp-packed-baseline'] = copy.deepcopy(old['fwp-packed'])
         current['fwp-packed']['managed']['retains'] = 0
-        current['fwp-packed-baseline']['managed']['retains'] = 0
-        failures = DESCENT.ownership_budget_failures(current, old, 199)
+        current['fwp-packed-baseline']['managed']['retains'] = 1
+        failures = DESCENT.ownership_budget_failures(current, old)
         self.assertEqual([(row['program'], row['metric']) for row in failures], [
-            ('fwp-packed-baseline', 'accepted profile'), ('fwp-packed-baseline', 'retains')])
+            ('fwp-packed-baseline', 'accepted profile')])
 
 
 if __name__ == '__main__':
