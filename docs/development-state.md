@@ -95,8 +95,15 @@ docs, native coverage/failure propagation, all 392 primitive declarations agains
 the frozen inventory, tutorial source copies, diff checks). Initial edit syntax
 and callback application errors were corrected before these passes. Compiler
 changes still require the new six-host `pointer-ownership` evidence suite and
-final production gates. No additional PR is open; next publish this preparation,
-audit every native result, and inspect retained binaries before delivery.
+final production gates. Preparation `0ca3fba4f718fb02afbcc385ac41e763a8320361` is published; six-host run
+`39716002463`: both Linux hosts pass (including 173 compiler unit tests on AMD64).
+Both Windows hosts finish all seven targets; only artifact saving fails in
+arc_corpus and foreign_callback_ownership because filesystem copies omit .exe.
+The paths are corrected locally. Intel macOS is running; ARM macOS is queued. Receipt: `/private/tmp/fwp-pointer-publication.json`.
+Audit with `/private/tmp/fwp-audit-pointer.py`. No additional PR is open; audit
+every native result and inspect retained binaries before delivery. Rerun the two
+Windows hosts for the artifact repair; preserve the ongoing macOS jobs and the
+passing Linux evidence because compiler/runtime/program code is unchanged.
 
 A separate 64-word/eight-word-vocabulary generated-C probe identifies the next
 list optimization candidate. Moving unique list elements into `map` removes
@@ -106,7 +113,11 @@ All variants match the independent word oracle and end with zero charged storage
 This is **not implemented compiler code** and is not a timing claim. It assumes
 unique nodes; a real change must preserve aliases, failure/cancellation cleanup
 and observable resource lifetimes. Start with eligible string lists, not resource
-payloads. Reproduction: `/private/tmp/fwp-probe-map-moves.py`; receipt:
+payloads. A tracing collector can age a node during its callback; checking uniqueness
+before that callback does not permit a later old-to-young field write. Start
+with element moves and freshly allocated mutable result nodes, or prove every
+mutation separately. No map compiler implementation has been added.
+Reproduction: `/private/tmp/fwp-probe-map-moves.py`; receipt:
 `/private/tmp/fwp-map-moves-small-probe.json`. Case reuse alone saved nothing
 because borrowed map inputs kept a second owner.
 
@@ -140,3 +151,9 @@ counter type/layout checks; UTF-8 corruption reproduction; workflow/format/docs
 checks; and independent artifact inspection. Native Win32 calls are verified by
 both Windows CI jobs, not by the local type check. Temporary helper scripts and
 receipts above preserve exact commands and results.
+
+Completed task-record evidence was losslessly archived to protect disk space:
+`/private/tmp/fwp-task-record-evidence/c10934f5dadf/completed-native-evidence.zip`.
+Its adjacent receipt verifies all 1,348 files byte-for-byte; extracted duplicates
+were removed, saving 245,634,872 bytes. No source or current evidence was removed.
+Guarded archival passed in 4.63s; free disk afterward was 64.98 GiB.

@@ -703,8 +703,10 @@ are described in the [ownership guide](ownership.md#checked-arc-delivery).
 `String -> I64` function: it copies the input for the call and returns the count
 by value. A `String -> String` export returns an owned string with a matching
 `fwp_release_NAME` function. Records may contain scalars and owned strings;
-release the complete unchanged record once. Raw pointers remain outside checked
-ownership. Serialize host calls, including releases, and release every result
+release the complete unchanged record once. Raw pointer fields carry manual
+pointee lifetimes; releasing a record frees its owned strings, never those
+pointees. The pointer extension is under [validation](development-state.md).
+Serialize host calls, including releases, and release every owned result
 before library unload. [PR #165](roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165)
 records passing six-platform and production checks for these library results.
 The mode rejects unproved ownership or cycles. Browser-loader and WASI task
