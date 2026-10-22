@@ -8,7 +8,7 @@ jobs and documentation passed at `36998a99f689b254edfc127bbbc8e8aac054c509`;
 complete logs and identical merge files were verified. Its subject is one line,
 with no body or trailers. [History](roadmap-history.md#string-ownership-and-repeated-file-cleanup-pr-192)
 records the result. Redundant same-tree push CI `39724206828` was cancelled;
-the post-merge documentation check is preserved.
+the post-merge documentation check passed.
 
 The next substantial delivery is `manual-pointer-ownership` in
 `/private/tmp/fwp-manual-pointer-delivery`, based on that merge. It groups manual
@@ -26,12 +26,15 @@ verify the resulting message, parent and identical files. Publication and merge
 are already authorized. Keep one active PR; continue through the seven plan areas
 after this delivery. No additional permission is needed.
 
-Find the current PR with `gh pr view manual-pointer-ownership`. Publication and
-final acceptance receipts belong at `/private/tmp/fwp-pointer-delivery-*.json`.
-The integration receipt is `/private/tmp/fwp-pointer-delivery-integration.json`;
-the PR description is `/private/tmp/fwp-pointer-pr-body.md`. If publication has
-not yet been recorded, finish the prepared documentation check and publish this
-branch once; do not create a duplicate PR.
+[PR #193](https://github.com/e6qu/fun-with-pipes/pull/193) is open at
+`91502f538d2265f3f7afd8606760dfcc4a088005`. Production run `39725180238` and
+documentation run `39725180233` are in progress. Publication passed the guarded
+documentation, source-identity and commit checks in 9.25s. Audit with
+`/private/tmp/fwp-audit-193-final.py`; its receipt is
+`/private/tmp/fwp-193-final-acceptance.json`. Publication and integration receipts
+are `/private/tmp/fwp-pointer-delivery-{publication,integration}.json`.
+Keep the tested PR head unchanged while gates run; the primary checkout holds
+this live handoff update. Do not create a duplicate PR.
 
 ## Accepted pointer preparation
 
@@ -63,30 +66,45 @@ job/target was audited. Earlier receipts retain their source suffixes; their
 failures are resolved evidence, not next tasks. Native-build errors now aggregate
 through the corpus instead of hiding later cases.
 
-## Next measured optimization candidate
+## Next batch: move strings through map
 
-Investigate consuming eligible String-list inputs through `map`, moving unique
-elements instead of retaining them. The existing 64-word/eight-word-vocabulary
-baseline uses 296 allocation requests, 194 retains and 7,744 peak managed bytes.
-A saved-C probe with element moves and unique changed-case string reuse uses
-274 requests, 130 retains and 5,376 peak bytes. This is **not implemented compiler
-code and not a timing claim**.
+Preparation branch `string-map-ownership` reuses the completed pointer worktree
+`/private/tmp/fwp-pointer-ownership`, based on PR #193's tested head. Its old
+uncommitted preparation reports were byte-verified and preserved at
+`/private/tmp/fwp-pointer-preparation-local-docs/` before switching branches.
+Do not mistake that workspace for the immutable pointer preparation source.
 
-A shared-tail probe preserves aliases to the whole list, its tail and its first
-string. It keeps a shared tail owned, borrows its cursor and duplicates only the
-callback's string. Those cases use 195/194/131 retains. All four cases match the
-word oracle, preserve alias hashes, and finish with zero managed charge and
-collections. Four actual ARM64 images are inspected per probe. Guarded scripts
-`fwp-probe-map-sharing.py` and `fwp-probe-map-shared-tail.py` pass in 2.55s/2.34s.
-Retained C, images and reports are under `/private/tmp/fwp-map-sharing-evidence/`
-and `/private/tmp/fwp-map-shared-tail-evidence/`.
+The new compiler pass selects fully applied `map` calls whose known, uncaptured
+callback takes and returns String. It consumes unique input nodes and strings,
+keeps shared tails owned, and builds fresh output nodes. Changed ASCII case
+conversion can reuse unique young string storage. Captured/unknown callbacks and
+resource-bearing inputs keep their existing contracts. Runner validation is
+pending; do not claim verified compiler support or a timing gain.
 
-Before implementation, prove captured/dynamic callback preparation and
-failure/cancellation cleanup, compare interpreter semantics, and test GC stress
-and reuse poisoning. Restrict initial eligibility to resource-free strings.
-Do not mutate immutable list-node fields after a callback: collection may age a
-node, making a later old-to-young field write unsafe. Build a fresh result spine.
-Private investigation notes: `/private/tmp/fwp-map-consumption-design.md`.
+The exact new runtime helper, inserted into previously generated word-frequency
+C, passes the 64-word/eight-base-word oracle and whole-list/tail/string aliases:
+274 requests, 130 retains and 5,376 peak charged bytes versus 296/194/7,744 before.
+All four cases end at zero charged storage and collections; retained C/images/
+count reports are `/private/tmp/fwp-map-runtime-evidence/`. Guarded check
+`fwp-prepare-string-map-check.py` passed in 3.39s. The failure/cancellation probe
+passes; omitted source/result cleanup each fails with expected status 245
+(`fwp-check-string-map-unwind.py`, 2.19s). These are local runtime diagnostics,
+not all-host compiler evidence. Raw interpreter fixture checks passed in 0.73s.
+
+Preparation formatting, workflow syntax, primitive contracts (392 declarations),
+all 11 native-runner tests and explicit coverage of all 252 native targets pass
+(`fwp-check-string-map-preparation.py`, 15.37s). Negative timeout/exit cases in
+that runner test are intentional and passed. New `string_map_ownership` tests
+compare interpreter/native output and retain cleanup controls at O0/O2 in both
+memory modes. The six-host `string-map` suite is ready for publication. Next:
+run it, audit every completed job, fix all failures together, inspect binaries,
+then repeat equivalent-work word-frequency C/Rust comparisons before selecting
+budgets or claiming improvement. Keep PR #193's final head stable during CI.
+
+The preparation report is `docs/measurements/string-map-ownership.md`. Private
+notes remain `/private/tmp/fwp-map-consumption-design.md`. Do not mutate old
+immutable list-node fields after a callback: collection can make later writes
+of younger references unsafe. The implementation builds fresh output nodes.
 
 ## Roadmap status
 
@@ -107,8 +125,9 @@ and [application suite](application-acceptance.md) define the remaining work.
 ## Workspace and local checks
 
 The primary checkout is detached at the verified #192 merge, with this live
-handoff as its only local edit. The pointer preparation remains in
-`/private/tmp/fwp-pointer-ownership`; the delivery worktree above is current.
+handoff as its only local edit. The pointer delivery remains in
+`/private/tmp/fwp-manual-pointer-delivery`; independent map preparation uses
+`/private/tmp/fwp-pointer-ownership`.
 Use `python3 scripts/local-guard.py python3 SCRIPT` from the primary checkout.
 Keep checks serial; preserve 64 GiB free disk, target below 2 GiB, sampled
 workload RSS below 1 GiB and the 180-second deadline. Full builds, suites and

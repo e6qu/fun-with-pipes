@@ -25,6 +25,13 @@ int main(void) {
         V result=unary[i](original);
         if(result!=original || text_count(result)!=1 || text_allocations!=before)return 232;
         TEXT_DROP(result);
+        if(i<2) {
+            original=text_new(input[i]);
+            before=text_allocations;
+            result=unary[i](original);
+            if(result!=original || !text_equal(result,expected[i]) || text_count(result)!=1 || text_allocations!=before)return 237;
+            TEXT_DROP(result);
+        }
         original=text_new(input[i]);fwp_rc_dup(original);
         result=unary[i](original);
         if(result==original || !text_equal(result,expected[i]) || !text_equal(original,input[i]))return 233;
