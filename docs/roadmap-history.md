@@ -12,6 +12,27 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## String map ownership and native reuse checks (PR #194)
+
+Known string-map callbacks now move unique input strings, and ASCII case changes
+reuse private young storage. Shared aliases retain their original values. Large
+allocation age checks are repaired; Windows reuse tests execute instead of
+silently skipping when native compilation fails. WASI tests verify physical
+cleanup as well as output.
+
+For 65,536 words, allocation requests fall from 248,807 to 226,961 and retains
+from 138,250 to 72,714. Larger ARC cases take 6.2–7.7% less time than previous
+fwp, but still 2.57–3.05× C time and 1.98–2.12× Rust time. Smaller AMD64 ARC is
+3.6% slower, and generated code grows. The [report](measurements/string-map-ownership.md)
+retains complete samples, inspected binaries and deliberately broken controls.
+
+[PR #194](https://github.com/e6qu/fun-with-pipes/pull/194) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39737931809)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39737931776)
+at `489d8414e68678e30829df525982ce8790a4aadc`. All complete logs were audited.
+Squash merge `f74c9d2998d595b4a3c15ee4a225a49963c1a6ea` has identical files,
+the expected parent and one subject under 80 characters with no body or trailers.
+
 ## Manual C pointers and foreign storage cleanup (PR #193)
 
 Checked ARC accepts manually managed C pointers in scoped calls, synchronous

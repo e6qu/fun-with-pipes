@@ -110,7 +110,10 @@ outside the benchmark suite.
 3. Complete the [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
    to choose the next costs to remove: dynamic calls, input copies, container
    layout, numerical workspace and derivative recording. Establish workload-specific
-   time/memory budgets before claiming improvement. The [benchmark index](docs/benchmarks.md)
+   time/memory budgets before claiming improvement. The current batch validates
+   explicit native command ownership, test-failure cleanup and measured raw
+   derivative workspace; [the handoff](docs/development-state.md) records its gates.
+   The [benchmark index](docs/benchmarks.md)
    records current comparisons and their limits. For example,
    [direct await fields](docs/measurements/task-await-fields.md) remove 34 allocation
    requests from one fixture, without changing its retains or peak storage; that
