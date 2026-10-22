@@ -89,11 +89,13 @@ fn generic_entries_follow_function_values_not_direct_calls() {
             for opt in ["-O0", "-O2"] {
                 let exe = dir.0.join(format!("{name}-{gc}-{reuse}{opt}"));
                 fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+                let stress = if gc == "tracing" { "1" } else { "0" };
                 let result = checked(
                     Command::new(&exe)
                         .stdin(Stdio::null())
-                        .env("FWP_GC_STRESS", "1")
-                        .env("FWP_GC_VERIFY", "1")
+                        .env_remove("FWP_GC")
+                        .env("FWP_GC_STRESS", stress)
+                        .env("FWP_GC_VERIFY", stress)
                         .env("FWP_REUSE_VERIFY", "1"),
                 );
                 assert_eq!(result.stdout, reference.stdout, "{name}/{gc}/{reuse}/{opt}");

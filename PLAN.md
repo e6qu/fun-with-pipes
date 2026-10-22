@@ -119,18 +119,19 @@ outside the benchmark suite.
    budget first; preserve checked arithmetic, trap order and code/stack evidence.
    The [helper-call result](docs/measurements/descent-call-costs.md) failed its
    predeclared speed screen; do not add an inlining rule from it. Current
-   preparation removes generic call adapters for direct-only functions and
-   measures code size against the borrowed-capture baseline. Preserve zero
-   retains and the existing allocation/storage limits; establish timing separately.
+   [direct-call preparation](docs/measurements/direct-call-entries.md) removes
+   unused generic adapters and reduces largest-case instruction bytes by 18–19%,
+   preserving zero retains and allocation/storage limits. Timing is inconclusive;
+   the [repeated-work protocol](docs/measurements/descent-batch-protocol.md)
+   investigates startup noise and apparent slowdowns separately.
    Resource-owning tail frames and mutual recursion need separate lifetime proofs.
 3. Complete the [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
    to choose the next costs to remove: dynamic calls, input copies, container
    layout, numerical workspace and derivative recording. Establish workload-specific
    time/memory budgets before claiming improvement. Native command ownership,
-   test-failure cleanup and raw derivative workspace passed #195 delivery. The
-   current batch proves borrowed array captures, including temporary records,
-   last-read aliases and exceptional cleanup;
-   [the handoff](docs/development-state.md) records final gates.
+   test-failure cleanup and raw derivative workspace passed #195 delivery. Borrowed array captures, temporary records, last-read aliases and exceptional
+   cleanup passed #197 delivery. [The handoff](docs/development-state.md) records
+   the current direct-call work and final gates.
    The [benchmark index](docs/benchmarks.md)
    records current comparisons and their limits. For example,
    [direct await fields](docs/measurements/task-await-fields.md) remove 34 allocation
