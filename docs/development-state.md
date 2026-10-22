@@ -38,6 +38,9 @@ Native run `39806320364` exposed a test configuration error: the new direct/dyna
 call test requested tracing stress in ARC-only mode. The local repair enables
 collector stress/verification only for tracing and retains reuse verification in
 both modes. Production compiler code is unchanged. All six completed native jobs have been audited: this is their only failure.
+All 714 saved native images from individually passing tests are inspected;
+`docs/measurements/direct-call-native-2026-10-22.json` preserves the failed jobs
+separately from their successful artifact checks.
 No failed native job counts as acceptance. The intentional
 gRPC startup-timeout panic is a caught, passing negative control, recorded
 separately from unexpected diagnostics. Auditor/receipt:
@@ -65,8 +68,11 @@ The worktree retains the complete report and slower/noisy cases.
 
 ## Next action
 
-Finish auditing all failed native jobs together, then publish the test repair
-with the prepared comparison tools and reports. No next PR is open yet.
+**Next:** inspect the repaired native run and both repeated-work comparisons.
+
+All failed native jobs have been audited, and the test repair and comparison
+tools are published. Finish integrating this batch onto #197 and publish one
+PR; numerical checks can continue while its full production gates run.
 The new batched protocol runs 512 complete solves per process, each with fresh
 input and full output/cleanup. It compares old/new packed fwp, identical copies
 of both, and C/Rust using 48 balanced samples after four warmups. It is a separate
@@ -74,9 +80,15 @@ experiment to diagnose startup noise; it does not replace the single-solve repor
 Both copy controls must stay within 2%; timing claims need two independent runs
 on matching CPU models. The workflow choice is `descent-batches`.
 
+Preparation `b9ff767c5ab3642ac4bc26ae2ae6153f20560d3b` is published.
+Repeated-work run `39812251121` has both Linux hosts; native repair run
+`39812255716` selects Linux AMD64. Other hosts will verify the repaired test
+in final production CI, avoiding another full six-host preparation. Publication
+receipt: `/private/tmp/fwp-batch-preparation-publication.json`.
+
 Prepared files include `scripts/measure-descent-batches.py`, the workflow,
 `docs/measurements/descent-batch-protocol.md`, `direct-call-entries.md` and its
-raw JSON. They are uncommitted, along with the ARC test-environment repair.
+raw JSON. They are committed with the ARC test-environment repair.
 Bounded checks passed: 72 saved-source edits, schedule checks, Python syntax,
 workflow lint, Rust formatting and budget fault controls (3.95 seconds).
 Six small C/Rust binaries also executed two complete 33×199 solves each and
@@ -100,3 +112,15 @@ disk threshold. Removing two verified clean, inactive worktrees restored about
 Cleanup receipts: `/private/tmp/fwp-clean-worktrees-20261022-second.json` and
 `/private/tmp/fwp-clean-worktrees-20261022-third.json`. Do not repeat old mutation
 helpers or remove other worktrees without checking their current contents.
+
+## Roadmap status
+
+| Step | Status | Remaining work |
+|---|---|---|
+| 1 | In progress | Remove tracing and limit ARC at remaining boundaries |
+| 2 | In progress | Extend borrowing and remove functional overhead |
+| 3 | In progress | Meet measured machine-level time and memory budgets |
+| 4 | In progress | Improve differentiation speed, memory and precision |
+| 5 | In progress | Validate CPU numerical kernels |
+| 6 | In progress | Stabilize comparisons and set workload budgets |
+| 7 | In progress | Complete the application acceptance suite |

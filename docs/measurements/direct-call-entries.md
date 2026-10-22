@@ -84,3 +84,11 @@ enables collector stress only for tracing and retains reuse verification in both
 modes. The initial failure remains recorded and is not a compiler pass. Existing
 callback, ownership, gRPC and queued-function checks passed independently; the [handoff](../development-state.md) records every host and the
 repair. Full delivery gates are still required for the final PR head.
+
+The [native artifact record](direct-call-native-2026-10-22.json) preserves all
+714 inspected executables/libraries from the individually passing tests, plus
+twelve executed WASI modules. It retains the six failed-job statuses and their
+only failed test. Native images cover Linux, macOS and Windows on both architectures;
+WASI checks 32-bit storage and allocation bounds separately. Inspection verifies
+machine types, instructions, output, ownership counters and broken cleanup controls.
+A repaired Linux AMD64 run and final delivery CI must pass before merge.

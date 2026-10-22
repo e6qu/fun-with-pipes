@@ -644,7 +644,9 @@ not need this extra entry. For example, `read-all () | string.length | add 7`
 needs direct operations; a function selected at runtime and later applied still
 needs an entry. Service methods and transport-created iterators explicitly keep
 their entries. Numeric array callbacks whose captures are borrowed use their
-specialized body directly. The [handoff](development-state.md) records checks;
+specialized body directly, but a remaining stack function value still keeps an
+adapter. The [comparison](measurements/direct-call-entries.md) measures smaller
+code and preserves inconclusive timing; [the handoff](development-state.md) records checks;
 this preparation is not yet verified platform support or a timing claim.
 
 A partial application supplies some arguments now and returns a function waiting
