@@ -12,6 +12,7 @@ import re
 import statistics
 import subprocess
 import time
+import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('ad_application', ROOT / 'scripts/measure-ad-application.py')
@@ -39,6 +40,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--baseline-report', required=True, type=Path)
+    parser.add_argument('--baseline-archive', required=True, type=Path)
     parser.add_argument('--cc', required=True)
     parser.add_argument('--rustc', required=True)
     parser.add_argument('--c-arch', required=True, choices=['x86-64', 'armv8-a'])
@@ -53,21 +55,25 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
-    assert args.samples > 0 and args.samples % 10 == 0 and args.warmups > 0 and args.timeout > 0
+    assert args.samples > 0 and args.samples % 12 == 0 and args.warmups > 0 and args.timeout > 0
     assert args.c_arch == {'x86_64': 'x86-64', 'aarch64': 'armv8-a'}[platform.machine()]
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
     environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1',
+                       FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_FREE='1', FWP_ARRAY_FUSION='1',
                        FWP_GC_STRESS='0', FWP_GC_VERIFY='0', FWP_REUSE_VERIFY='0')
     baseline_bytes = args.baseline_report.read_bytes()
     baseline = json.loads(baseline_bytes)
     baseline_host, = [host for host in baseline['hosts'] if host['host'] == args.host]
     assert baseline_host['source'] == baseline['source']
     assert baseline_host['report']['machine'] == platform.machine()
+    archive_bytes = args.baseline_archive.read_bytes()
+    assert digest(archive_bytes) == baseline_host['archiveSha256']
+    archive = zipfile.ZipFile(args.baseline_archive)
     commands = []
-    cflags = ['-O2', '-std=gnu11', '-fno-fast-math', '-ffp-contract=off', '-march=' + args.c_arch]
+    cflags = ['-O2', '-std=gnu11', '-fno-fast-math', '-ffp-contract=off', '-fstack-usage', '-march=' + args.c_arch]
 
     def run(command, env):
         result = subprocess.run(list(map(str, command)), cwd=ROOT, env=env,
@@ -98,8 +104,8 @@ def main():
         directory.mkdir()
         expected = AD.analytic(points, updates + 1)
         binaries, outputs, metadata, profiles = {}, {}, {}, {}
-        for label in ['fwp-ad', 'fwp-explicit', 'fwp-packed']:
-            source = packed_program(points, updates) if label == 'fwp-packed' else AD.program(points, updates + 1, False)
+        for label in ['fwp-ad', 'fwp-explicit', 'fwp-packed', 'fwp-packed-baseline']:
+            source = packed_program(points, updates) if label.startswith('fwp-packed') else AD.program(points, updates + 1, False)
             if label == 'fwp-explicit':
                 assert source.count('(.1 | descend)') == 1
                 source = source.replace('(.1 | descend)', '(.1 | explicit-descend)')
@@ -111,7 +117,16 @@ def main():
             verify(reference.stdout, expected)
             assert not reference.stderr
             code = directory / (label + '.c')
-            build([args.compiler.resolve(), 'build', '--gc', 'arc', '--emit-c', '-O2', fwp_source, '-o', code])
+            if label == 'fwp-packed-baseline':
+                assert source.encode() == archive.read(name + '/fwp-packed.fwp')
+                raw_code = archive.read(name + '/fwp-packed.c')
+                recorded = baseline_host['report']['results'][name]['binaries']
+                assert digest(raw_code) == recorded['fwp-packed']['sourceSha256']
+                for old_label in ['fwp-packed', 'fwp-packed-profile']:
+                    assert digest(archive.read(name + '/' + old_label)) == recorded[old_label]['sha256']
+                code.write_bytes(raw_code)
+            else:
+                build([args.compiler.resolve(), 'build', '--gc', 'arc', '--emit-c', '-O2', fwp_source, '-o', code])
             text = code.read_text()
             assert '#define FWP_ARC_ONLY 1' in text
             binary = directory / label
@@ -119,6 +134,8 @@ def main():
             actual = run([binary], environment)
             assert actual.stdout == reference.stdout and not actual.stderr
             profiles_code = AD.RAW.instrument(AD.PROFILE.instrument(text))
+            if label == 'fwp-packed-baseline':
+                assert profiles_code.encode() == archive.read(name + '/fwp-packed-profile.c')
             profiled_source = directory / (label + '-profile.c')
             profiled_source.write_text(profiles_code)
             profiled_binary = directory / (label + '-profile')
@@ -175,19 +192,22 @@ def main():
             source_path = binary.with_suffix('.rs' if binary.name == 'rust-explicit' else '.c')
             metadata[binary.name] = dict(bytes=len(raw), sha256=digest(raw), sourceSha256=digest(source_path.read_bytes()),
                                         disassemblySha256=digest(assembly))
-        assert len(metadata) == 8
+        assert len(metadata) == 10
         labels = list(binaries)
-        assert labels == ['fwp-ad', 'fwp-explicit', 'fwp-packed', 'c-explicit', 'rust-explicit']
+        assert labels == ['fwp-ad', 'fwp-explicit', 'fwp-packed', 'fwp-packed-baseline', 'c-explicit', 'rust-explicit']
         baseline_case = baseline_host['report']['results'][name]
-        for label in ['fwp-ad', 'fwp-explicit']:
-            assert profiles[label] == baseline_case['fwpProfiles'][label], (name, label, profiles[label], baseline_case['fwpProfiles'][label])
-        # Requirements chosen before this comparison. Short controls retain all
-        # extra setup costs; the repeated workloads must reduce allocation work.
+        assert profiles['fwp-packed-baseline'] == baseline_case['fwpProfiles']['fwp-packed']
+        for label in ['fwp-ad', 'fwp-explicit', 'fwp-packed']:
+            current, old = profiles[label], baseline_case['fwpProfiles'][label]
+            assert current['rawDerivativeStorage'] == old['rawDerivativeStorage']
+            assert current['expandedRawSha256'] == old['expandedRawSha256']
+            for key in ['requests', 'requestedBytes', 'finalChargedBytes', 'collections']:
+                assert current['managed'][key] == old['managed'][key], (name, label, key, current, old)
+            for key in ['retains', 'peakChargedBytes']:
+                assert current['managed'][key] <= old['managed'][key], (name, label, key, current, old)
+        # The accepted packed baseline defines the budget before changing C generation.
         if updates >= 199:
-            packed = profiles['fwp-packed']['managed']
-            listed = profiles['fwp-explicit']['managed']
-            assert packed['requests'] < listed['requests'], (name, packed, listed)
-            assert packed['peakChargedBytes'] <= listed['peakChargedBytes'], (name, packed, listed)
+            assert profiles['fwp-packed']['managed']['retains'] < profiles['fwp-packed-baseline']['managed']['retains']
         for _ in range(args.warmups):
             for label in labels:
                 actual = run([binaries[label]], environment)
@@ -214,31 +234,43 @@ def main():
             assert match
             resident[label] = int(match[1]) * 1024
             (directory / (label + '-rss.txt')).write_bytes(observed.stderr)
+        stack = {}
+        for stack_file in sorted(directory.glob('*.su')):
+            entries = []
+            for line in stack_file.read_text().splitlines():
+                location, size, qualifier = line.split('\t')
+                entries.append(dict(location=location, bytes=int(size), qualifier=qualifier))
+            assert entries
+            stack[stack_file.name] = dict(sha256=digest(stack_file.read_bytes()), entries=entries)
+        assert len(stack) == 9, stack.keys()  # Four fwp forms/profiles and the C peer.
         results[name] = dict(dimensions=points, updates=updates, oracle=expected,
             outputSha256={label: digest(value) for label, value in outputs.items()},
             samplesNs=samples, medianNs=medians, orders=orders,
-            ratios={label: {peer: medians[label] / medians[peer] for peer in ['fwp-explicit', 'fwp-packed', 'c-explicit', 'rust-explicit']}
+            ratios={label: {peer: medians[label] / medians[peer] for peer in ['fwp-explicit', 'fwp-packed-baseline', 'c-explicit', 'rust-explicit']}
                     for label in ['fwp-ad', 'fwp-explicit', 'fwp-packed']},
-            peakProcessRssBytes=resident, fwpProfiles=profiles, binaries=metadata)
+            peakProcessRssBytes=resident, fwpProfiles=profiles, binaries=metadata, cCompilerStackUsage=stack)
         (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
     paths = ['scripts/measure-descent-peers.py', 'scripts/measure-ad-application.py',
              'scripts/ad-storage-profile.py', 'scripts/measure-iteration.py',
              'tests/fixtures/ad_raw_storage_probe.c', 'tests/fixtures/descent_explicit.fwp',
              'tests/fixtures/descent_explicit.c', 'tests/fixtures/descent_explicit.rs',
-             'tests/fixtures/descent_packed.fwp',
+             'tests/fixtures/descent_packed.fwp', 'src/cgen.rs', 'tests/boxed_projection_ownership.rs',
+             'tests/fixtures/stack_array_projection.c',
              'docs/tutorials/20-autodiff-and-devices/main.fwp']
     report = dict(source=os.environ['GITHUB_SHA'], host=args.host, machine=platform.machine(),
+        settings={key: value for key, value in environment.items() if key.startswith('FWP_') or key == 'CC'},
         cpu=run(['lscpu'], environment).stdout.decode(), cCompiler=run([args.cc, '--version'], environment).stdout.decode(),
         rustCompiler=run([args.rustc, '-Vv'], environment).stdout.decode(), commands=commands,
         configuration=vars(args) | {'compiler': str(args.compiler), 'output': str(args.output),
-                                   'baseline_report': str(args.baseline_report)},
-        baseline=dict(source=baseline['source'], run=baseline['run'], reportSha256=digest(baseline_bytes)),
+                                   'baseline_report': str(args.baseline_report), 'baseline_archive': str(args.baseline_archive)},
+        baseline=dict(source=baseline['source'], run=baseline['run'], reportSha256=digest(baseline_bytes), archiveSha256=digest(archive_bytes)),
         sourceHashes={name: digest((ROOT / name).read_bytes()) for name in paths}, results=results,
-        scope='Five implementations of the same Rosenbrock descent and complete final vector. '
-        'fwp-ad records and reverses derivatives; the other four use the explicit derivative. '
+        scope='Six implementations of the same Rosenbrock descent and complete final vector. '
+        'fwp-ad records and reverses derivatives; the other five use the explicit derivative. '
         'Comparing fwp-ad to a peer includes general AD work and representation costs, not pure compiler overhead. '
         'fwp-explicit uses immutable lists and intermediate pairs/lists; fwp-packed generates a packed array per update, '
-        'reading the previous array at checked indices. C/Rust reuse two contiguous buffers. '
+        'reading the previous array at checked indices. fwp-packed-baseline recompiles the accepted generated C '
+        'without the stack-array field move. C/Rust reuse two contiguous buffers. '
         'Explicit formulas preserve their multiplication order, but reverse AD may round differently. '
         'All outputs are checked against an independent Python derivative with absolute/relative tolerance 1e-10. '
         'Per-implementation timed outputs must repeat exactly. Inputs and update counts are compile-time constants. '
@@ -247,11 +279,12 @@ def main():
         'The zero-update case includes initialization and formatting, so it is not pure startup time. '
         'Raw derivative buffers and managed charge are observed separately for fwp only. '
         'Separate uninstrumented process RSS includes all process storage; do not add it to allocation peaks. '
-        'The original two fwp forms must reproduce the recorded managed/raw profiles exactly; timing peers '
-        'are recompiled and remeasured together. All samples and compile commands are retained. '
-        'For at least 199 updates, packed fwp must make fewer '
-        'managed allocation requests with no higher managed peak than explicit-list fwp. Retains and timings '
-        'are reported without a speed threshold; this is a program-representation experiment, not a compiler change.')
+        'The recompiled packed baseline must reproduce its recorded managed/raw profile exactly. Current fwp forms '
+        'must preserve allocation requests/bytes and raw storage, without increasing retains or managed peak. '
+        'At least 199 updates must reduce packed retains. All timing peers are rebuilt and measured together. '
+        'All samples, compile commands and GCC static frame estimates are retained. Frame estimates are not '
+        'peak stack use and do not cover Rust. No speed threshold is claimed.')
+    archive.close()
     (out / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({name: row['ratios'] for name, row in results.items()}, indent=2))
 
