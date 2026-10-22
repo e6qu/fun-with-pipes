@@ -4271,6 +4271,32 @@ impl<'g, 'p> FnGen<'g, 'p> {
                             }
                             return rest;
                         }
+                        // A stack record with one numeric-array owner can move
+                        // that owner as well. Arrays have heap handles; unlike
+                        // nested stack aggregates, their child list contains
+                        // exactly the reference being projected. Scalar siblings
+                        // have no cleanup, and the RC pattern consumes the record.
+                        if let Some(children) = self.stack_children.get(parent).cloned() {
+                            let fields =
+                                record_fields(&self.g.prog.shapes, &self.locals[*parent as usize]);
+                            if let (Some(fields), [(value, ty)]) = (fields, children.as_slice()) {
+                                let numeric_array = matches!(ty, MT::Con(name, elements)
+                                    if name == "std::Array" && elements.len() == 1
+                                        && scalar(&elements[0]).is_some());
+                                if numeric_array
+                                    && fields[*index as usize].1 == *ty
+                                    && fields.iter().enumerate().all(|(i, (_, field))| {
+                                        crate::rc::needs_rc(&self.g.prog.shapes, field)
+                                            == (i == *index as usize)
+                                    })
+                                {
+                                    self.line(&format!(
+                                        "/* move stack array owner */ l{l} = {value};"
+                                    ));
+                                    return rest;
+                                }
+                            }
+                        }
                         // A boxed record with just one counted field can give
                         // that field to its last owner without a temporary
                         // retain/drop pair. Scalar siblings have no destructor.

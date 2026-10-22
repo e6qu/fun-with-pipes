@@ -24,13 +24,24 @@ The [string-map comparison](measurements/string-map-ownership.md) then moves
 unique string owners through normalization: larger-case ARC is 6.2–7.7% faster
 than its paired fwp baseline, while still taking 2.57–3.05× the C time.
 The [descent comparison](measurements/ad-application.md) measures saved history
-versus current weights and separates managed storage from unmeasured tape buffers.
+versus current weights and separates managed storage, raw tape buffers and
+process memory. The [four-way derivative baseline](measurements/descent-peers.md)
+compares fwp AD, explicit fwp derivatives and explicit C/Rust implementations.
+It identifies substantial remaining AD and representation costs without calling
+the whole difference compiler overhead. The subsequent
+[packed-array comparison](measurements/packed-descent.md) removes most allocation
+requests but leaves counted ownership work and a 3.34–3.40× C-time gap in its
+largest case; its small zero-update AMD64 control is slower.
+The [array-owner move](measurements/array-owner-moves.md) halves those retains
+without increasing allocation requests or managed peak. Its revised protocol
+balances predecessor programs and includes byte-identical controls; timings remain
+inconclusive, and ARM64 uses a 16-byte larger callback frame.
 
 ## Choose the question first
 
 | Question | Read | What the number means |
 |---|---|---|
-| How much slower/faster than C or Rust? | [Complete programs](#fwp-compared-with-c-and-rust), [arrays/matrices](#current-numerical-comparison-and-record-moves), [hashing](#repeating-the-allocation-and-borrowing-changes-together), [vector lanes](#fixed-size-lane-calculations-against-c-and-rust) | Ratio against the named C/Rust implementation for that input and timing boundary |
+| How much slower/faster than C or Rust? | [Complete programs](#fwp-compared-with-c-and-rust), [arrays/matrices](#current-numerical-comparison-and-record-moves), [derivative descent](measurements/descent-peers.md), [hashing](#repeating-the-allocation-and-borrowing-changes-together), [vector lanes](#fixed-size-lane-calculations-against-c-and-rust) | Ratio against the named C/Rust implementation for that input and timing boundary |
 | Did a compiler change help? | [Iteration](#list-iteration-compared-with-its-previous-definition), [derivatives](#paired-autodiff-metadata-allocations), [HTTP functions](#fixed-function-values-in-the-http-server), [maps](#larger-maps-exposed-a-storage-layout-problem) | New fwp / baseline fwp; not overhead against another language |
 | How much ownership work does a channel exchange need? | [Method and baseline](measurements/channel-transfer-protocol.md), [matched payloads](measurements/channel-variant-moves.md), [direct-call borrowing](measurements/channel-direct-borrows.md), [function channels](measurements/function-channel-borrows.md) | Allocations, retains and actual binary/frame sizes; no execution-time or C/Rust comparison |
 | Can task records use less heap storage? | [Saved CPU state in task stacks](measurements/task-contexts.md) | Matched fwp layouts: managed bytes, process memory, complete-process time and actual binary/static sizes |

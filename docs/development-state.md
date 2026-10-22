@@ -1,115 +1,110 @@
 # Session handoff
 
-## Current delivery
+## Current combined delivery
 
-Main is `f74c9d2998d595b4a3c15ee4a225a49963c1a6ea`, the verified squash merge of
-[PR #194](https://github.com/e6qu/fun-with-pipes/pull/194). All nine production
-jobs and documentation passed at `489d8414e68678e30829df525982ce8790a4aadc`;
-complete logs, merge files, parent and single-line message were checked.
-[History](roadmap-history.md#string-map-ownership-and-native-reuse-checks-pr-194)
-records the result. Redundant same-tree push CI `39753088259` was cancelled;
-the documentation run was preserved. Receipt: `/private/tmp/fwp-194-final-acceptance.json`.
+Main is `40dda0795fd150feb3dc0543052c3bf041e865c8`, the verified squash of
+[PR #195](https://github.com/e6qu/fun-with-pipes/pull/195). All nine production
+jobs and documentation passed; tree, parent and one-line message were verified.
+Redundant same-tree production CI was cancelled; documentation was preserved.
+[History](roadmap-history.md#native-commands-and-test-recovery-pr-195) records
+its native command, test-recovery and derivative-storage work.
 
-The next combined delivery is branch `native-command-ownership`, worktree
-`/private/tmp/fwp-native-command-delivery`. Its four prepared commits replay onto
-#194's merge with identical files before documentation updates. Preparation
-source: `3a56acd7bf9003df61293bd71abd01bc1c0d4c60`;
-six-host run: [39752987389](https://github.com/e6qu/fun-with-pipes/actions/runs/39752987389).
-This run is in progress. Full final-head production and documentation gates are
-also required before merge. The batch contains:
+Branch `array-moves-and-callback-inputs`, worktree
+`/private/tmp/fwp-array-callback-delivery`, combines copied synchronous C callback
+strings, array-owner moves, C/Rust application comparisons and the measurement
+repair. The preparation at `ea4ce3f1f496513e5edddec6ff4483418ba50875` was replayed
+onto #195's identical merge tree; files were verified before these delivery-doc
+updates. This is the sole delivery PR. Its final production and documentation
+gates are pending; focused checks alone do not authorize merge.
 
-- Explicit `--gc arc`/`--gc tracing` for native run, exec, test, serve and pipe.
-  Every test entry is checked. Missing C compilers report an error; interpretation
-  must be selected explicitly. Tracing remains the default pending migration.
-- Native test recovery after root traps, exits and cancellation. Owners, pending
-  children, state scratch storage and failure messages release before later tests
-  run. Child traps/exits remain process-fatal in both engines. See the
-  [test examples](reference.md#native-tests-with-checked-ownership).
-- Concurrent executable publication under a short file lock, Windows cache
-  timestamp access, server-process cleanup and bounded cross-platform test
-  monitoring with preserved diagnostics.
-- [Derivative measurements](measurements/ad-application.md) separating managed
-  storage, raw tape buffers and process memory. All 104 measured Linux images
-  and cleanup controls were inspected. This is measurement, not a new runtime
-  optimization or a C/Rust parity claim.
+**Next:** publish the combined delivery, audit all final-head jobs and fix any
+failures together. Require all nine production jobs and documentation for the
+exact commit. Then squash-merge with an explicit one-line subject of at most 80
+characters and empty body; verify tree, parent and message. Publication and merge
+are already authorized. Continue the next ownership task afterwards.
 
-Next: audit every completed job in the six-host run, inspect its generated C and
-executed binaries, and publish this batch as one PR. Fix all encountered failures
-together. Require all nine final-head production jobs and documentation before
-squash merge, with an explicit subject of at most 80 characters and empty body.
-Verify the merge files, parent and message, then continue the plan. Publication
-and merge are already authorized.
+## Tutorial repair
 
-## Checks and unresolved validation
+The first delivery head `d98abe29139c5abb5093ac61a52d3e77ce19910c` failed the
+README/program consistency check: the callback snippet had no supplied program.
+The lesson now includes `visit.c`, `visit.fwp` and `visit.out`, and its console
+session executes both the interpreter and explicit native ARC mode. The actual
+standalone Rust consistency test and saved-interpreter example pass locally under
+the guard (5.59s), along with formatting and documentation checks. Native tutorial
+execution and all final gates must pass at the repaired head. Imports in the
+session runner are now at the top of the file. Failed evidence remains retained.
 
-At `03e1e6942419565b67b83249ca787a9740e1680a`, run `39749922003` passes both
-Linux and both Mac jobs: 23 integration tests per host and 176 Linux AMD64 unit
-tests. Both Windows jobs failed a synthetic monitor command whose nested quoting
-misread path backslashes; this then skipped evidence-directory creation. The
-repair covers a real quoted/spaced path, creates evidence before checks and lets
-independent compiler checks continue. All six logs were audited. Windows native
-tests did not execute in that run; the current rerun must establish their result.
+## Focused checks and measurements
 
-Earlier run `39741271730` exposed an unnecessary Rust borrow, a malformed state
-fixture, Windows cache replacement of an executing image and surviving server
-children after test completion. All are repaired in this batch; earlier failures
-remain in archived receipts instead of being counted as passing coverage.
+| Work | Focused evidence |
+|---|---|
+| [Copied callback strings](measurements/callback-inputs.md) | Source `6d8ef30bb428`, run `39758960569`; all six native hosts and 32-bit/WASI pass, with 186 native images and 12 WASI modules inspected |
+| [Four-way derivative baseline](measurements/descent-peers.md) | Source `018581d6c071`, run `39755925964`; both Linux jobs and 72 images pass |
+| [Packed-array baseline](measurements/packed-descent.md) | Source `1827c3bdc427`, run `39763694417`; both Linux jobs and 96 images pass |
+| [Stack-array ownership](measurements/stack-array-ownership.md) | Compiler source `026db07bacbe`, run `39767702114`; all six native hosts and 32-bit/WASI pass, with 270 native images and 12 modules inspected |
+| [Array-move measurements](measurements/array-owner-moves.md) | First/repeat runs `39767706345`/`39769019993`; revised protocol source `96967e9ba199`, run `39770344180`; all six Linux jobs and 372 images pass |
 
-The derivative experiment at `be8d87f0e56cb6bb496716d102b0b89bff6d9000` passes
-both Linux jobs in run `39739049666`. Its three-coordinate loop keeps 1,792 raw
-bytes between updates at both 199 and 1,999 updates, then frees them at shutdown.
-Timings include a 5.3% slower ARM loop. Complete samples and binary hashes are in
-[the report data](measurements/ad-storage-2026-10-22.json). Repeated identical
-checkpoints are losslessly encoded; reconstructing the original inspection hash
-passes. Do not rerun these accepted measurements with a different source.
+All complete logs are audited. The new ownership checks cover shared aliases,
+failure/cancellation, tracing stress/verification and deliberately broken cleanup
+controls at O0/O2. Missing C compilers fail explicitly. Callback return pointers,
+retained callbacks and struct-valued C callback arguments remain outside the new
+copied-input contract. No JIT, compatibility adapter or runtime wrapper was added.
 
-Focused local checks, serially through `python3 scripts/local-guard.py python3 SCRIPT`:
+The largest packed descent case now makes 25,671 retains instead of 51,342,
+with unchanged 459 allocation requests and 7,200-byte managed peak. All repeated
+cases halve retains, and managed/raw ledgers finish at zero. Timings do not
+establish a general speedup. Earlier small-case slowdowns are preserved; revised
+order balances positions and immediate predecessor pairs within rounds and adds
+a byte-identical control. Identical bytes still vary by several percent. The
+revised AMD64 runner is Intel, unlike the earlier AMD hosts; cross-run differences
+cannot be attributed solely to ordering. ARM64's callback frame grows 48→64 bytes;
+AMD64 stays at 48. Reports retain code/stack costs and all samples.
 
-- `/private/tmp/fwp-check-test-recovery-fixtures.py`, 0.98s: eight root examples
-  and two child failures in the saved interpreter; formatting passes.
-- `/private/tmp/fwp-check-native-test-runtime.py`, 1.34s: O0/O2 ARC/tracing
-  runtime trap/exit/cancellation and owner/state cleanup pass.
-- `/private/tmp/fwp-ready-native-recovery.py`, 5.93s: Rust formatting, workflow
-  syntax, docs, diff checks and lossless measurement reconstruction pass.
-- Prepared `scripts/test-native-test-runner.py`, 7.67s: all 13 controls pass,
-  including stuck-child termination, noisy hangs and continued target execution.
-
-These focused checks do not replace native runner or final production acceptance.
-The disk guard refused publication below 64 GiB; 411 MiB of downloaded archives
-from completed deliveries were removed, preserving tracked reports, hashes,
-receipts and all current evidence. Publication then passed within the guard.
-Cleanup receipt: `/private/tmp/fwp-completed-archive-cleanup-20261022.json`.
+Count/storage requirements and focused correctness pass. Timing remains
+inconclusive, with no speed threshold or parity claim. One retain per coordinate
+still comes from the callback capture. The next compiler task is to prove
+caller-owned borrowing through eligible known callbacks, preserving exceptional
+cleanup. Before claiming speed, establish a timing budget and stable identical-code
+controls. Broader ownership boundaries and all seven roadmap areas remain open.
 
 ## Resume files
 
-| Purpose | Local path |
-|---|---|
-| Current focused source/run and audit | `/private/tmp/fwp-native-commands-publication.json`, `/private/tmp/fwp-audit-native-commands.py` |
-| Focused acceptance and all failed-run receipts | `/private/tmp/fwp-native-commands-acceptance*.json` |
-| Replay and exact-file check | `/private/tmp/fwp-native-command-delivery-integration.json` |
-| Accepted derivative check | `/private/tmp/fwp-ad-memory-acceptance.json` |
-| Inspected derivative images | `/private/tmp/fwp-ad-memory-evidence/be8d87f0e56c/inspection.json` |
+Paths below are under `/private/tmp/`; keep accepted sources and receipts intact.
 
-The primary checkout is detached at #194 with this handoff as its only edit.
-Use it for guarded checks; full builds, suites and benchmarks run on GitHub.
-Preserve 64 GiB free disk, target data below 2 GiB, sampled RSS below 1 GiB and
-the 180-second deadline. Never raise limits. The preparation worktree
-`/private/tmp/fwp-ad-memory` is clean and remains the focused run's source.
+| Purpose | Files |
+|---|---|
+| Accepted #195 delivery | `fwp-195-final-acceptance.json`, `fwp-195-merge-runs.json` |
+| Compiler-focused evidence | `fwp-stack-array-publication.json`, `fwp-stack-array-acceptance.json`, `fwp-stack-array-evidence/026db07bacbe/` |
+| Numerical measurement and controls | `fwp-balanced-descent-publication.json`, `fwp-balanced-descent-acceptance.json`, `fwp-balanced-descent-evidence/96967e9ba199/` |
+| Earlier numerical runs | `fwp-stack-descent-evidence/026db07bacbe/`, `fwp-stack-descent-repeat-evidence/026db07bacbe/` |
+| Final preparation and integration | `fwp-stack-array-final-preparation.json`, `fwp-array-callback-delivery-integration.json` |
+
+The primary checkout is detached at #195 with the live handoff as its only edit.
+Run focused checks there, serially, through `python3 scripts/local-guard.py`.
+Full builds, full suites and benchmarks stay on GitHub. Preserve 64 GiB free disk,
+target data below 2 GiB, sampled workload RSS below 1 GiB and the 180-second limit.
+Do not raise limits. Earlier disk cleanup removed only completed downloaded
+archives, preserving reports and hashes; receipt:
+`fwp-completed-archive-cleanup-20261022.json`.
+
+Report validation `fwp-check-array-callback-reports.py` passes in 7.43s, including
+the repaired required roadmap-status table. Recent guarded checks: `fwp-check-balanced-descent.py` passes in 6.28s (order
+balance, seed reproducibility, workflow/docs); AMD64/ARM64 recorded-sample analysis
+passes in 2.32s/2.20s; actual callback disassembly/frame inspection passes in 0.37s.
+Native artifact inspection is complete; do not repeat downloads or measurements
+without a new reason. Interpreter-only checks are not evidence for new C generation.
+
+[PLAN.md](../PLAN.md) remains the project roadmap; [history](roadmap-history.md)
+records completed delivery. All seven areas remain open. JIT is excluded.
 
 ## Roadmap status
 
-| Step | Status | Area |
+| Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | Remove tracing; limit ARC. |
-| 2 | In progress | Remove avoidable functional costs. |
-| 3 | In progress | Meet measured machine-level budgets. |
-| 4 | In progress | Improve autodiff time, memory and precision. |
-| 5 | In progress | Validate CPU numerical kernels. |
-| 6 | In progress | Establish comparable measurements and budgets. |
-| 7 | In progress | Complete the finite application suite. |
-
-All seven [plan](../PLAN.md) areas remain open. Default native execution still
-uses tracing. Retained foreign callbacks, host owners and cyclic data remain
-ownership work; performance and application acceptance also remain incomplete.
-Continue substantial related batches, guided by the
-[application suite](application-acceptance.md). JIT is excluded.
+| 1 | In progress | Remove tracing and limit ARC at remaining boundaries |
+| 2 | In progress | Prove callback borrowing and remove functional overhead |
+| 3 | In progress | Meet measured machine-level time and memory budgets |
+| 4 | In progress | Improve differentiation speed, memory and precision |
+| 5 | In progress | Validate CPU numerical kernels |
+| 6 | In progress | Stabilize comparisons and set workload budgets |
+| 7 | In progress | Complete the finite application acceptance suite |

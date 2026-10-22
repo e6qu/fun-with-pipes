@@ -74,9 +74,11 @@ pub fn by_value(ty: &CType) -> bool {
 }
 
 /// A callback is synchronous on the calling task. Its C arguments and result
-/// carry copied bits; its managed closure stays borrowed for the foreign call.
+/// carry copied bits, with owned copies of incoming strings. Its managed
+/// closure stays borrowed for the foreign call; returned managed addresses are
+/// excluded until their post-callback lifetime has a separate contract.
 pub fn scoped_callback(ty: &CType) -> bool {
-    matches!(ty, CType::Callback { params, ret } if params.iter().all(by_value) && by_value(ret))
+    matches!(ty, CType::Callback { params, ret } if params.iter().all(copied_result) && by_value(ret))
 }
 
 /// C borrows text/byte storage until return. Raw pointers carry the programmer's
@@ -575,6 +577,17 @@ mod tests {
                 ret: Box::new(ty),
             }));
         }
+        assert!(scoped_callback(&CType::Callback {
+            params: vec![CType::Str, CType::Str],
+            ret: Box::new(CType::Int {
+                bits: 64,
+                signed: true
+            }),
+        }));
+        assert!(!scoped_callback(&CType::Callback {
+            params: vec![CType::Bytes],
+            ret: Box::new(CType::Void),
+        }));
         assert!(!by_value(&CType::Str));
         assert!(!scoped_callback(&CType::Callback {
             params: vec![CType::Ptr],

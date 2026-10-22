@@ -1,0 +1,48 @@
+# The same explicit derivative, reading immutable packed arrays by index.
+# A context is (weights, index). Bounds branches omit absent neighbours;
+# coordinate reports invalid indices instead of substituting a value.
+coordinate : I64 -> Array[F64] -> F64
+coordinate =
+    array.get
+    | flip compose (match
+        Some -> id
+        None -> prim.trap "descent coordinate is outside the input")
+
+current-coordinate : (Array[F64], I64) -> F64
+current-coordinate = fork coordinate .1 .0
+
+previous-coordinate : (Array[F64], I64) -> F64
+previous-coordinate = fork coordinate (.1 | sub 1) .0
+
+next-coordinate : (Array[F64], I64) -> F64
+next-coordinate = fork coordinate (.1 | add 1) .0
+
+previous-contribution : (Array[F64], I64) -> F64
+previous-contribution =
+    if
+        (.1 | eq 0)
+        (const 0.0)
+        (fork sub (previous-coordinate | fork mul id id) current-coordinate
+            | mul 200.0)
+
+next-contribution : (Array[F64], I64) -> F64
+next-contribution =
+    if
+        (fork eq (.1 | add 1) (.0 | array.length))
+        (const 0.0)
+        (fork
+            sub
+            (current-coordinate | flip sub 1.0 | mul 2.0)
+            (fork
+                mul
+                (current-coordinate | mul -400.0)
+                (fork sub (current-coordinate | fork mul id id) next-coordinate)))
+
+packed-update-at : Array[F64] -> I64 -> F64
+packed-update-at = curry (fork
+    sub
+    (fork add previous-contribution next-contribution | mul 0.001)
+    current-coordinate)
+
+packed-descend : Array[F64] -> Array[F64]
+packed-descend = fork array.generate array.length packed-update-at

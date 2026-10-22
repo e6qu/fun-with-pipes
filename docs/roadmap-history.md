@@ -12,6 +12,27 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Native commands and test recovery (PR #195)
+
+Native run/exec/test/serve/pipe commands accept explicit ARC or tracing selection.
+Root test failures release error messages, state and pending task owners before
+continuing to the next test. Child traps/exits remain process-fatal, and tracing
+remains the default. Concurrent executable publication and Windows server/cache
+cleanup are repaired. Missing C compilers fail explicitly.
+
+[Command checks](https://github.com/e6qu/fun-with-pipes/actions/runs/39752987389)
+pass on all six native hosts, with
+84 inspected images. [Derivative-storage measurements](measurements/ad-application.md)
+separate managed storage, raw workspace and process memory; 104 images were
+inspected. They do not establish a runtime speedup or complete GC removal.
+
+[PR #195](https://github.com/e6qu/fun-with-pipes/pull/195) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39753716407)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39753716342)
+at `a284eb0a338cae4efdd9534fd2d67c60a4f04e82`. All complete logs were audited.
+Squash merge `40dda0795fd150feb3dc0543052c3bf041e865c8` has the same files,
+the expected parent and one subject under 80 characters with no body or trailers.
+
 ## String map ownership and native reuse checks (PR #194)
 
 Known string-map callbacks now move unique input strings, and ASCII case changes

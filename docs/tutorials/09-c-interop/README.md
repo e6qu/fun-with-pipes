@@ -39,6 +39,47 @@ fwp run --link mylib.c program.fwp
 fwp build program.fwp --link mylib.c --link -lm -o program
 ```
 
+## A callback receiving text
+
+A synchronous callback runs while its enclosing C call is active. In this
+example, `visit` calls the supplied function with `"hello"` and returns its result:
+
+```c
+#include <stdint.h>
+int64_t visit(int64_t (*callback)(const char *)) {
+    return callback("hello");
+}
+```
+
+The corresponding fwp program passes `string.length`, a function that counts
+characters, as the callback:
+
+```fwp
+foreign "C" visit : (String -> I64) -> I64
+main = visit string.length | echo
+```
+
+The files [visit.c](visit.c) and [visit.fwp](visit.fwp) are supplied with this
+lesson. From this directory, run both execution modes:
+
+```console
+$ fwp run --interp --link visit.c visit.fwp
+5
+$ fwp run --native --gc arc --link visit.c visit.fwp
+5
+```
+
+Both print `5`, the number of characters in `"hello"`; [visit.out](visit.out)
+records that result. The callback-input extension has passed focused native
+[checks](../../measurements/callback-inputs.md); delivery gates are tracked in
+[the handoff](../../development-state.md).
+C's text is copied into an owned fwp string. Keeping that string in checked
+state is safe after C returns; the copy survives changes to C's original buffer.
+C must not retain the callback itself. Returning a managed string from the
+callback remains outside ARC's contract because its C-side lifetime needs a
+separate rule. Passing text into a callback and returning text from one are
+different ownership boundaries.
+
 ## fwp as a C library
 
 The other direction works too. `--staticlib` and `--cdylib` build the

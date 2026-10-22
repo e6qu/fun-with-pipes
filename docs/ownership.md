@@ -821,6 +821,12 @@ full acceptance separately from the focused memory checks.
 
 ## Checked ARC delivery
 
+[Stack-array moves](measurements/stack-array-ownership.md) transfer an existing
+owner from an eligible dying record, preserving aliases and exceptional cleanup.
+
+[Copied callback-input evidence](measurements/callback-inputs.md) records native
+and 32-bit checks, partial-conversion cleanup and the remaining C lifetime limits.
+
 `fwp build --gc arc` checks the supported ownership contracts and excludes
 tracing code. It rejects unproved ownership instead of silently retaining it.
 Ordinary counted freeing must remain enabled; tracing stress and reuse poisoning
@@ -917,6 +923,14 @@ callbacks and exports. Its [native checks](measurements/manual-pointers.md) and
 [verified delivery](roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193) record support. A pointer copies an address, never an owner of
 `T`. ARC releases any surrounding option or record, but neither follows nor
 frees the address. This also applies when `T` names an opaque host type.
+The callback-input extension, under [validation](development-state.md), copies
+incoming C strings into owned fwp strings before invoking the callback. A callback
+may retain that copy in ordinary checked state or suspend while using it; C may
+change its original buffer after the callback returns. Scalar and manually owned
+pointer inputs still copy their bits. The generated conversion protects earlier
+inputs if preparing a later input fails (for example, a null or invalid UTF-8
+second string). Each string copy has an allocation cost;
+this extension does not claim borrowing or zero-cost C-string conversion.
 Callbacks returning managed C strings remain rejected: their result needs a
 separate host-retention contract.
 
@@ -937,8 +951,8 @@ borrow ends. See [C interop](tutorials/09-c-interop/README.md).
 The interpreter owns its temporary NUL-terminated string copies until the
 foreign call returns and its result has been copied. Nested calls have separate
 owners; callback result copies stay with the receiving outer call. These copies
-must also be freed when argument conversion or a callback fails. The current
-pointer batch repairs permanent retention of these copies; its allocator test
+must also be freed when argument conversion or a callback fails. PR #193
+repaired permanent retention of these copies; its allocator test
 counts actual allocations and releases, rather than counting only fwp values.
 
 ### Owned library values

@@ -105,14 +105,27 @@ outside the benchmark suite.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
    [checked products](docs/measurements/checked-products.md) retain slower controls,
-   optimization-level differences and unexplained AMD64 variability. Resource-owning
+   optimization-level differences and unexplained AMD64 variability. The
+   [descent baseline](docs/measurements/descent-peers.md) now separates automatic
+   differentiation from explicit fwp/C/Rust formulas. The subsequent
+   [packed-array comparison](docs/measurements/packed-descent.md) reduces the
+   largest explicit case from 206,891 to 459 allocation requests. The subsequent
+   [array-owner move](docs/measurements/array-owner-moves.md) halves retains to
+   25,671 without raising requests or managed peak; its timing remains inconclusive
+   and its ARM64 callback frame grows by 16 bytes. Next prove borrowing of captures
+   throughout eligible callbacks, preserving aliases, failure/cancellation and all
+   output. Keep the current count/storage budget and byte-identical timing control;
+   do not treat fewer retains as proof of a speedup. Record the time budget before
+   claiming one, with recompiled baselines and code/stack costs.
+   Resource-owning
    tail frames and mutual recursion still need separate lifetime proofs.
 3. Complete the [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
    to choose the next costs to remove: dynamic calls, input copies, container
    layout, numerical workspace and derivative recording. Establish workload-specific
-   time/memory budgets before claiming improvement. The current batch validates
-   explicit native command ownership, test-failure cleanup and measured raw
-   derivative workspace; [the handoff](docs/development-state.md) records its gates.
+   time/memory budgets before claiming improvement. Native command ownership,
+   test-failure cleanup and raw derivative workspace passed #195 delivery. The
+   current batch combines copied callback inputs and array-owner moves;
+   [the handoff](docs/development-state.md) records final gates.
    The [benchmark index](docs/benchmarks.md)
    records current comparisons and their limits. For example,
    [direct await fields](docs/measurements/task-await-fields.md) remove 34 allocation

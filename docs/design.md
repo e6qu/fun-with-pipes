@@ -545,6 +545,17 @@ its existing child-owner rules. The accepted tests include aliases, pointer-like
 scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
 count operations; they do not prove every record or call allocation-free.
 
+A dying stack record can also transfer its sole counted numeric-array field.
+The compiler requires one tracked child owner, a matching `Array` of inline
+machine numbers, scalar siblings and no protected resource slot. The underlying
+array may have other owners: moving this record's reference does not alter them.
+This removes a duplicate/release pair around projections such as `(weights, i) | .0`.
+The ownership pass must still show that the record is consumed at that point;
+nested stack aggregates and resource lifetimes keep their separate rules.
+[Focused checks](measurements/stack-array-ownership.md) pass on all six native
+platforms, including aliases, failure and cancellation. Timing and delivery
+acceptance are recorded separately in the [handoff](development-state.md).
+
 The variant-matching change applies the same move principle to a
 constructor with one payload already held in local fields. If a match arm begins
 by retaining that payload and immediately releasing the variant, the payload can

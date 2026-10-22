@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [descent-peers, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -319,8 +319,12 @@ jobs:
       FWP_LIBRARY_RESULT_ARTIFACTS: pointer-evidence/libraries
       FWP_QUEUED_FUNCTION_ARTIFACTS: pointer-evidence/raw
       FWP_POINTER_ARTIFACTS: pointer-evidence/callbacks
+      FWP_STACK_ARRAY_ARTIFACTS: pointer-evidence/stack-arrays
     steps:
       - uses: actions/checkout@v7
+      - name: Prepare foreign ownership evidence
+        shell: bash
+        run: mkdir -p pointer-evidence
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -363,18 +367,18 @@ jobs:
       - run: cargo fmt --all -- --check
       - name: Compiler checks for manual pointer ownership
         id: file_compiler
-        if: runner.os != 'Windows'
+        if: ${{ !cancelled() && runner.os != 'Windows' }}
         shell: bash
         run: |
           mkdir -p pointer-evidence
-          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic -- -D warnings 2>&1 | tee pointer-evidence/compiler.log
+          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership -- -D warnings 2>&1 | tee pointer-evidence/compiler.log
       - name: Windows compiler checks for manual pointer ownership
         id: file_compiler_windows
-        if: runner.os == 'Windows'
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force pointer-evidence | Out-Null
-          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic -- -D warnings 2>&1 | Tee-Object pointer-evidence/compiler.log
+          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership -- -D warnings 2>&1 | Tee-Object pointer-evidence/compiler.log
           exit $LASTEXITCODE
       - name: Publish compiler failures while independent tests continue
         if: ${{ !cancelled() && (steps.file_compiler.outcome == 'failure' || steps.file_compiler_windows.outcome == 'failure') }}
@@ -387,13 +391,13 @@ jobs:
         if: ${{ !cancelled() && runner.os != 'Windows' }}
         shell: bash
         run: |
-          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic -- --nocapture 2>&1 | tee pointer-evidence/tests.log
+          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership -- --nocapture 2>&1 | tee pointer-evidence/tests.log
       - name: Windows raw pointers, callbacks, libraries and the ARC corpus
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           whoami /priv | Out-File pointer-evidence/privileges.txt
-          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic -- --nocapture 2>&1 | Tee-Object pointer-evidence/tests.log
+          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership -- --nocapture 2>&1 | Tee-Object pointer-evidence/tests.log
           exit $LASTEXITCODE
       - name: Inventory execution examples admitted without tracing
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
@@ -406,6 +410,32 @@ jobs:
           cargo test --lib -- --nocapture
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output pointer-evidence/contracts.json
           python3 scripts/test-native-test-runner.py
+      - name: Missing C compilers fail every C interop entry
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          python3 - <<'PYCONTROL'
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          build = subprocess.check_output(['cargo', 'test', '--test', 'ffi',
+              '--no-run', '--message-format=json'], text=True)
+          binary, = [row['executable'] for row in map(json.loads, build.splitlines())
+              if row.get('reason') == 'compiler-artifact' and row.get('executable')
+              and row['target']['name'] == 'ffi']
+          environment = dict(os.environ, CC=str(Path.cwd() / 'no-such-c-compiler'))
+          for test in ['foreign_functions_interpreted', 'foreign_functions_native',
+                       'static_library_from_rust', 'shared_library_from_c']:
+              result = subprocess.run([binary, '--exact', test], env=environment,
+                  capture_output=True, text=True, timeout=180)
+              output = result.stdout + result.stderr
+              Path('pointer-evidence', test + '-missing-compiler.txt').write_text(output)
+              assert result.returncode != 0 and 'test result: FAILED' in output, output
+              assert 'interop checks require' in output, output
+              print(test + ': missing compiler fails instead of skipping execution')
+          PYCONTROL
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -2931,6 +2961,72 @@ jobs:
         with:
           name: wordfreq-repeat-${{ matrix.runner }}
           path: wordfreq-repeat/
+          if-no-files-found: error
+  descent_peers:
+    if: inputs.suite == 'descent-peers'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            c_arch: x86-64
+          - runner: ubuntu-24.04-arm
+            c_arch: armv8-a
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
+      - run: cargo build --locked --release --bin fwp
+      - name: Check explicit derivative source formatting
+        run: |
+          target/release/fwp fmt --check tests/fixtures/descent_explicit.fwp tests/fixtures/descent_packed.fwp
+          rustfmt --edition 2021 --check tests/fixtures/descent_explicit.rs
+      - name: Download the accepted packed-array baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASELINE_HOST: ${{ matrix.runner }}
+        run: |
+          python3 - <<'PYBASELINE'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          report = json.loads(Path('docs/measurements/packed-descent-2026-10-22.json').read_text())
+          host, = [row for row in report['hosts'] if row['host'] == os.environ['BASELINE_HOST']]
+          path = Path('packed-baseline.zip')
+          with path.open('wb') as stream:
+              subprocess.run(['gh', 'api', f"repos/e6qu/fun-with-pipes/actions/artifacts/{host['artifact']}/zip"], stdout=stream, check=True)
+          assert hashlib.sha256(path.read_bytes()).hexdigest() == host['archiveSha256']
+          PYBASELINE
+      - name: Compare moved array owners with the packed baseline and C/Rust
+        run: >-
+          python3 scripts/measure-descent-peers.py --compiler target/release/fwp
+          --baseline-report docs/measurements/packed-descent-2026-10-22.json
+          --baseline-archive packed-baseline.zip
+          --cc gcc --rustc rustc --c-arch "${{ matrix.c_arch }}"
+          --objdump objdump --nm nm --time /usr/bin/time
+          --case 3:0 --case 3:1 --case 3:199 --case 3:1999 --case 33:199 --case 129:199
+          --warmups 2 --samples 56 --order-seed 20261022 --timeout 180
+          --host "${{ matrix.runner }}" --output descent-peers-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: descent-peers-${{ matrix.runner }}
+          path: descent-peers-evidence/
           if-no-files-found: error
   ad_application:
     if: inputs.suite == 'ad-application'
