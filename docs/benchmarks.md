@@ -32,6 +32,10 @@ the whole difference compiler overhead. The subsequent
 [packed-array comparison](measurements/packed-descent.md) removes most allocation
 requests but leaves counted ownership work and a 3.34–3.40× C-time gap in its
 largest case; its small zero-update AMD64 control is slower.
+The [array-owner move](measurements/array-owner-moves.md) halves those retains
+without increasing allocation requests or managed peak. Its revised protocol
+balances predecessor programs and includes byte-identical controls; timings remain
+inconclusive, and ARM64 uses a 16-byte larger callback frame.
 
 ## Choose the question first
 

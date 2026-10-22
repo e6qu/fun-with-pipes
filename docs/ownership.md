@@ -821,6 +821,9 @@ full acceptance separately from the focused memory checks.
 
 ## Checked ARC delivery
 
+[Stack-array moves](measurements/stack-array-ownership.md) transfer an existing
+owner from an eligible dying record, preserving aliases and exceptional cleanup.
+
 [Copied callback-input evidence](measurements/callback-inputs.md) records native
 and 32-bit checks, partial-conversion cleanup and the remaining C lifetime limits.
 

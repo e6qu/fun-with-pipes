@@ -300,5 +300,7 @@ it does not compare times from different CPU models. The two original fwp forms
 must reproduce their recorded managed/raw profiles exactly. The original four-way data
 remains unchanged. Both Linux jobs and 96 image inspections pass; the report
 records the allocation savings, unchanged retains, slower zero-update control
-and remaining C/Rust gaps. Its final section sets the next callback-borrowing
-requirements before a compiler change is measured.
+and remaining C/Rust gaps. The [array-owner move](measurements/array-owner-moves.md)
+then halves retains without increasing allocation requests or managed peak. Its
+timing controls expose variation and preserve slower results. Capture borrowing
+remains separate work, with its own lifetime proof and measurements.
