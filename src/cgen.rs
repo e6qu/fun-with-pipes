@@ -2549,6 +2549,7 @@ fn hof_sig(i: usize, sym: &str, k: usize) -> String {
         "fold" | "fold-right" => "V z, V xs",
         "zip-with" => "V ys, V xs",
         "loop" => "V s",
+        "array.generate" => "V count",
         _ => "V xs",
     };
     format!("static V fwp_hof{}({}, {})", i, caps.join(", "), rest)
@@ -2561,13 +2562,33 @@ fn hof_def(
     (sym, g, k): &(String, FuncId, usize),
     reuse: bool,
     loop_ops: Option<&str>,
-    map_ops: Option<&str>,
+    result_ops: Option<&str>,
     fold_drop: Option<&str>,
     borrowed_step: bool,
 ) -> String {
     let caps: String = (0..*k).map(|j| format!("c{}, ", j)).collect();
     // with counted references, what the runtime keeps is shared
     let call = |x: &str| shared(reuse, format!("f{}({}{})", g, caps, x));
+    if reuse && sym == "array.generate" {
+        let element = result_ops.expect("typed generated array element");
+        let args = (0..*k)
+            .map(|j| format!("c{j}"))
+            .chain(std::iter::once("(V)index".to_string()))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let fences = (0..*k)
+            .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
+            .collect::<String>();
+        let (prepare, entry) = if borrowed_step {
+            (String::new(), format!("fwp_borrowed_array{i}(args)"))
+        } else {
+            (
+                format!("        fwp_args{g}(args, 0, {k});\n"),
+                format!("fwp_owned_entry{g}(args)"),
+            )
+        };
+        return format!("{} {{\n    size_t n = fwp_count_arg(count);\n    fwp_array_builder result = {{fwp_array_typed_new(n, {element}), 0, {element}}};\n    fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);\n    for (size_t index = 0; index < n; index++) {{\n        V args[] = {{{args}}};\n{prepare}        V value = {entry};\n        fwp_array_store_owned(result.value, index, value, {element});\n        result.filled++;\n    }}\n{fences}    return fwp_array_builder_finish(&result, &cleanup);\n}}\n", hof_sig(i, sym, *k));
+    }
     if reuse && sym == "loop" {
         let drop = fold_drop.expect("typed loop state");
         let ops = loop_ops.expect("owned loop operations");
@@ -2582,7 +2603,7 @@ fn hof_def(
         return format!("{} {{\n    fwp_value_owner owner = {{s, {drop}}}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    for (;;) {{\n        FWP_TICK();\n        s = owner.value;\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {k});\n        owner.value = 0;\n        V step = fwp_owned_entry{g}(args);\n        int stop = fwp_tag(step) != 0;\n        s = fwp_loop_payload(step, stop, {ops});\n        if (stop) {{{fences} fwp_value_finish(&owner, &cleanup); return s; }}\n        owner.value = s;\n    }}\n}}\n", hof_sig(i, sym, *k));
     }
     if reuse && sym == "map" {
-        let ops = map_ops.expect("typed map result operations");
+        let ops = result_ops.expect("typed map result operations");
         let args = (0..*k)
             .map(|j| format!("c{j}"))
             .chain(std::iter::once("a[i]".to_string()))
@@ -2594,7 +2615,7 @@ fn hof_def(
         return format!("{} {{\n    size_t n;\n    V *a = fwp_map_items(xs, &n);\n    fwp_map_owner owner = {{a, 0, 0, {ops}}}; fwp_cleanup cleanup;\n    fwp_map_protect(&owner, &cleanup);\n    for (size_t i = 0; i < n; i++) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        a[i] = fwp_owned_entry{g}(args);\n        owner.count++;\n    }}\n    V result = fwp_map_finish_protected(&owner, &cleanup);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 1);
     }
     if reuse && sym == "filter" {
-        let ops = map_ops.expect("typed filter result operations");
+        let ops = result_ops.expect("typed filter result operations");
         let args = (0..*k)
             .map(|j| format!("c{j}"))
             .chain(std::iter::once("a[i]".to_string()))
@@ -2620,7 +2641,7 @@ fn hof_def(
             .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
             .collect::<String>();
         let body = if sym == "take-while" {
-            let ops = map_ops.expect("typed take-while result operations");
+            let ops = result_ops.expect("typed take-while result operations");
             format!("size_t n, kept = 0;\n    V *a = fwp_map_items(xs, &n);\n    fwp_map_owner owner = {{a, 0, 0, {ops}}}; fwp_cleanup cleanup;\n    fwp_map_protect(&owner, &cleanup);\n    while (kept < n) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        if (fwp_owned_entry{g}(args) != FWP_TRUE) break;\n        fwp_args{g}(&a[kept], {k}, 1);\n        kept++;\n        owner.count = kept;\n    }}\n    V result = fwp_map_finish_protected(&owner, &cleanup);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return result;", k + 1)
         } else {
             format!("V source = xs;\n    while (xs) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        if (fwp_owned_entry{g}(args) != FWP_TRUE) break;\n        xs = OBJ(xs)->f[1];\n    }}\n    fwp_rc_dup(xs);\n{fences}    FWP_KEEP_ALIVE(source);\n    return xs;", k + 1)
@@ -2663,7 +2684,7 @@ fn hof_def(
         return format!("{} {{\n    V source = xs;\n    fwp_value_owner owner = {{z, {drop}}}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    while (xs != 0) {{\n        V args[] = {{{args}}};\n{prepare}        owner.value = 0;\n        z = {entry};\n        owner.value = z;\n        xs = OBJ(xs)->f[1];\n    }}\n{fences}    FWP_KEEP_ALIVE(source);\n    return fwp_value_finish(&owner, &cleanup);\n}}\n", hof_sig(i, sym, *k));
     }
     if reuse && sym == "zip-with" {
-        let ops = map_ops.expect("typed zip-with result operations");
+        let ops = result_ops.expect("typed zip-with result operations");
         let args = (0..*k)
             .map(|j| format!("c{j}"))
             .chain(["b[i]".to_string(), "a[i]".to_string()])
@@ -5361,6 +5382,46 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if !self.g.reuse {
             return None;
         }
+        if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "array.generate") {
+            let [count, callback] = args else { return None };
+            let (g, captures) = self.callback_origin(callback)?;
+            let function = &self.g.prog.funcs[g];
+            if captures == 0 || function.arity as usize != captures + 1 {
+                return None;
+            }
+            scalar(function.ty.params(captures + 1).1)?;
+            if !function.locals[..captures]
+                .iter()
+                .any(|ty| crate::rc::needs_rc(&self.g.prog.shapes, ty))
+            {
+                return None;
+            }
+            if !matches!(callback, Expr::Local(_) | Expr::Apply(_, _)) {
+                return None;
+            }
+            // array.generate evaluates its count before the callback. Bind it
+            // before evaluating capture expressions, preserving effects/traps.
+            let count_value = self.expr(count);
+            let count_value = self.bind(count_value);
+            let mut values = match callback {
+                Expr::Local(l) => (0..captures)
+                    .map(|j| format!("CLO(l{l})->a[{j}]"))
+                    .collect::<Vec<_>>(),
+                Expr::Apply(_, values) => self.args(values),
+                _ => unreachable!(),
+            };
+            self.g.used_closures[g] = true;
+            let key = ("array.generate".to_string(), g, captures);
+            let i = match self.g.hofs.iter().position(|h| *h == key) {
+                Some(i) => i,
+                None => {
+                    self.g.hofs.push(key);
+                    self.g.hofs.len() - 1
+                }
+            };
+            values.push(count_value);
+            return Some(format!("fwp_hof{i}({})", values.join(", ")));
+        }
         if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "list._map-strings") {
             let [Expr::Func(callback), source] = args else {
                 return None;
@@ -7393,13 +7454,13 @@ impl<'p> Gen<'p> {
         })
     }
 
-    /// A known fold callback can borrow captures and the source element for
-    /// one invocation. Its accumulator still transfers ownership. Lower its
-    /// actual body with those parameter lifetimes: an escaping value acquires
-    /// an owner at the use that needs it, rather than at every callback entry.
-    fn borrowed_fold_step(&mut self, i: usize, hof: &(String, FuncId, usize)) -> Option<String> {
+    /// Known callbacks borrow captures for one invocation. Folds also borrow
+    /// the source element while consuming their accumulator; array generation
+    /// supplies a scalar index. Lower the actual body with these lifetimes so
+    /// escaping values acquire owners at their uses, not at every entry.
+    fn borrowed_hof_step(&mut self, i: usize, hof: &(String, FuncId, usize)) -> Option<String> {
         let (sym, id, captures) = hof;
-        if !self.reuse || !matches!(sym.as_str(), "fold" | "fold-right") {
+        if !self.reuse || !matches!(sym.as_str(), "fold" | "fold-right" | "array.generate") {
             return None;
         }
         let f = self.uncounted.funcs[*id].clone();
@@ -7430,12 +7491,17 @@ impl<'p> Gen<'p> {
                 }
             }
         }
-        if !eligible(body, *id) || f.arity as usize != captures + 2 {
+        let array = sym == "array.generate";
+        if !eligible(body, *id) || f.arity as usize != captures + if array { 1 } else { 2 } {
             return None;
         }
-        let accumulator = captures + usize::from(sym == "fold-right");
+        let accumulator = if array {
+            None
+        } else {
+            Some(captures + usize::from(sym == "fold-right"))
+        };
         let borrowed: Vec<Local> = (0..f.arity)
-            .filter(|l| *l as usize != accumulator)
+            .filter(|l| Some(*l as usize) != accumulator)
             .collect();
         if !borrowed
             .iter()
@@ -7449,8 +7515,13 @@ impl<'p> Gen<'p> {
         let (body, locals) = crate::rc::insert_function(self.uncounted, &f, &borrowed)?;
         // This also validates the ownership proof when unwind code is disabled.
         let live_calls = crate::rc::ownership_liveness(self.prog, &f, &body, &locals, &borrowed)
-            .expect("invalid borrowed fold ownership");
-        let mut out = format!("/* borrowed fold callback for f{id}: borrowed captures/elements, owned accumulator */\nstatic V fwp_borrowed_fold{i}(V *args) {{\n");
+            .expect("invalid borrowed callback ownership");
+        let (kind, contract) = if array {
+            ("array", "borrowed captures, scalar index")
+        } else {
+            ("fold", "borrowed captures/elements, owned accumulator")
+        };
+        let mut out = format!("/* borrowed {kind} callback for f{id}: {contract} */\nstatic V fwp_borrowed_{kind}{i}(V *args) {{\n");
         for l in 0..f.arity {
             let _ = writeln!(out, "    V l{l} = args[{l}];");
         }
@@ -9764,7 +9835,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let mut i = 0;
     while i < g.hofs.len() {
         let hof = g.hofs[i].clone();
-        let borrowed_step = g.borrowed_fold_step(i, &hof);
+        let borrowed_step = g.borrowed_hof_step(i, &hof);
         if let Some(body) = &borrowed_step {
             bodies.push_str(body);
         }
@@ -9778,20 +9849,23 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         } else {
             None
         };
-        let map_ops =
-            if g.reuse && matches!(hof.0.as_str(), "map" | "filter" | "take-while" | "zip-with") {
-                let (params, result) = prog.funcs[hof.1]
-                    .ty
-                    .params(prog.funcs[hof.1].arity as usize);
-                let element = if matches!(hof.0.as_str(), "map" | "zip-with") {
-                    result.clone()
-                } else {
-                    params[hof.2].clone()
-                };
-                Some(g.map_ops(&element))
+        let result_ops = if hof.0 == "array.generate" {
+            let ty = prog.funcs[hof.1].ty.params(hof.2 + 1).1.clone();
+            Some(g.desc(&ty))
+        } else if g.reuse && matches!(hof.0.as_str(), "map" | "filter" | "take-while" | "zip-with")
+        {
+            let (params, result) = prog.funcs[hof.1]
+                .ty
+                .params(prog.funcs[hof.1].arity as usize);
+            let element = if matches!(hof.0.as_str(), "map" | "zip-with") {
+                result.clone()
             } else {
-                None
+                params[hof.2].clone()
             };
+            Some(g.map_ops(&element))
+        } else {
+            None
+        };
         let fold_drop = if g.reuse && matches!(hof.0.as_str(), "fold" | "fold-right" | "loop") {
             let ty = prog.funcs[hof.1]
                 .ty
@@ -9816,7 +9890,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             &hof,
             g.reuse,
             loop_ops.as_deref(),
-            map_ops.as_deref(),
+            result_ops.as_deref(),
             fold_drop.as_deref(),
             borrowed_step.is_some(),
         ));

@@ -14,14 +14,22 @@ Branch `array-moves-and-callback-inputs`, worktree
 strings, array-owner moves, C/Rust application comparisons and the measurement
 repair. The preparation at `ea4ce3f1f496513e5edddec6ff4483418ba50875` was replayed
 onto #195's identical merge tree; files were verified before these delivery-doc
-updates. This is the sole delivery PR. Its final production and documentation
-gates are pending; focused checks alone do not authorize merge.
+updates. [PR #196](https://github.com/e6qu/fun-with-pipes/pull/196) is the sole open PR,
+at `d98abe29139c5abb5093ac61a52d3e77ce19910c`. Production run `39772506582`
+and documentation run `39772506815` have started; no failed steps at first audit.
+Focused checks alone do not authorize merge.
 
-**Next:** publish the combined delivery, audit all final-head jobs and fix any
+**Next:** audit all final-head jobs with `/private/tmp/fwp-audit-196-final.py`; fix any
 failures together. Require all nine production jobs and documentation for the
 exact commit. Then squash-merge with an explicit one-line subject of at most 80
 characters and empty body; verify tree, parent and message. Publication and merge
-are already authorized. Continue the next ownership task afterwards.
+are already authorized. Ready merge/postmerge helpers: `/private/tmp/fwp-merge-196.py`
+and `/private/tmp/fwp-after-merge-196.py` (not yet run). Publication receipt:
+`/private/tmp/fwp-array-callback-delivery-publication.json`.
+The publication helper opened the PR correctly but looked for a wrong docs
+workflow name; `fwp-locate-array-callback-runs.py` repaired its local receipt.
+The actual production and documentation jobs are running.
+Continue the next ownership task independently while these gates run.
 
 ## Focused checks and measurements
 
@@ -55,6 +63,30 @@ still comes from the callback capture. The next compiler task is to prove
 caller-owned borrowing through eligible known callbacks, preserving exceptional
 cleanup. Before claiming speed, establish a timing budget and stable identical-code
 controls. Broader ownership boundaries and all seven roadmap areas remain open.
+
+## Following preparation: borrow array-generation captures
+
+Branch `borrow-array-captures`, worktree `/private/tmp/fwp-array-capture-borrows`,
+starts at #196's tested head. Its unverified compiler change gives known numeric
+`array.generate` callbacks direct calls and borrows captures while the caller
+keeps them alive. It reuses the existing ownership insertion/liveness checks and
+partial-array cleanup. Escaping uses acquire owners where needed; recursive or
+resource-scoped callbacks keep ordinary ownership. The earlier fold convention
+is preserved and its tests join the focused matrix.
+
+New fixtures cover shared input aliases, zero/negative lengths, retained state,
+failure after partial output, yields and task cancellation. The saved interpreter
+matches both expected outputs (0.38s guarded); this does not verify new C generation.
+Native checks require zero retain traffic for pure coordinate reads, final cleanup
+and failure of deliberately added retain/leaked-owner controls, at O0/O2 with
+stack placement on/off and ARC/tracing stress. These are not yet run.
+
+Before measurement, require zero retains in all four repeated packed-descent cases,
+unchanged allocation requests/bytes/raw storage and no higher managed peak. Use
+#196's accepted generated C as the paired baseline, retain C/Rust and identical-code
+controls, and report code/stack costs without a speed claim. Next: finish focused
+preflight, publish this preparation and run native checks/measurements on GitHub;
+fix all failures together. Keep #196's final CI head unchanged.
 
 ## Resume files
 

@@ -238,7 +238,8 @@ def main():
                 assert current['managed'][key] <= old['managed'][key], (name, label, key, current, old)
         # The accepted packed baseline defines the budget before changing C generation.
         if updates >= 199:
-            assert profiles['fwp-packed']['managed']['retains'] < profiles['fwp-packed-baseline']['managed']['retains']
+            assert profiles['fwp-packed']['managed']['retains'] == 0
+            assert profiles['fwp-packed-baseline']['managed']['retains'] > 0
         for _ in range(args.warmups):
             for label in labels:
                 actual = run([binaries[label]], environment)
@@ -282,7 +283,8 @@ def main():
              'tests/fixtures/ad_raw_storage_probe.c', 'tests/fixtures/descent_explicit.fwp',
              'tests/fixtures/descent_explicit.c', 'tests/fixtures/descent_explicit.rs',
              'tests/fixtures/descent_packed.fwp', 'src/cgen.rs', 'tests/boxed_projection_ownership.rs',
-             'tests/fixtures/stack_array_projection.c',
+             'tests/fixtures/stack_array_projection.c', 'tests/array_element_ownership.rs',
+             'tests/fixtures/array_capture_reads.fwp', 'tests/fixtures/array_capture_effects.fwp',
              'docs/tutorials/20-autodiff-and-devices/main.fwp']
     report = dict(source=os.environ['GITHUB_SHA'], host=args.host, machine=platform.machine(),
         settings={key: value for key, value in environment.items() if key.startswith('FWP_') or key == 'CC'},
@@ -301,7 +303,7 @@ def main():
         'Comparing fwp-ad to a peer includes general AD work and representation costs, not pure compiler overhead. '
         'fwp-explicit uses immutable lists and intermediate pairs/lists; fwp-packed generates a packed array per update, '
         'reading the previous array at checked indices. fwp-packed-baseline recompiles the accepted generated C '
-        'without the stack-array field move. C/Rust reuse two contiguous buffers. '
+        'with stack-array moves but without borrowed array-generation captures. C/Rust reuse two contiguous buffers. '
         'Explicit formulas preserve their multiplication order, but reverse AD may round differently. '
         'All outputs are checked against an independent Python derivative with absolute/relative tolerance 1e-10. '
         'Per-implementation timed outputs must repeat exactly. Inputs and update counts are compile-time constants. '
@@ -312,7 +314,7 @@ def main():
         'Separate uninstrumented process RSS includes all process storage; do not add it to allocation peaks. '
         'The recompiled packed baseline must reproduce its recorded managed/raw profile exactly. Current fwp forms '
         'must preserve allocation requests/bytes and raw storage, without increasing retains or managed peak. '
-        'At least 199 updates must reduce packed retains. All timing peers are rebuilt and measured together. '
+        'At least 199 updates must remove packed retains. All timing peers are rebuilt and measured together. '
         'All samples, compile commands and GCC static frame estimates are retained. Frame estimates are not '
         'peak stack use and do not cover Rust. No speed threshold is claimed.')
     archive.close()

@@ -1,0 +1,26 @@
+require-coordinate : Option[F64] -> F64
+require-coordinate = match
+    Some -> id
+    None -> prim.trap "capture index is outside the array"
+
+read-index : Array[F64] -> I64 -> F64
+read-index = curry (fork array.get .1 .0 | require-coordinate)
+read-or-fail : String -> Array[F64] -> I64 -> F64 ! {Error[String]}
+read-or-fail = curry3 (if (.2 | eq 2) (.0 | fail) (fork array.get .2 .1 | require-coordinate))
+failed-copy : Array[F64] -> Array[F64] ! {Error[String]}
+failed-copy = fork array.generate array.length (read-or-fail "expected capture error")
+save-read : Array[F64] -> I64 -> F64 ! {State[Array[F64]]}
+save-read = curry (fork const (fork array.get .1 .0 | require-coordinate) (.0 | put))
+saved-copy : Array[F64] -> (Array[F64], Array[F64])
+saved-copy = run-state ([] | array.from-list) (fork array.generate array.length save-read)
+yield-read : Array[F64] -> I64 -> F64 ! {Async}
+yield-read = curry (fork const (fork array.get .1 .0 | require-coordinate) (if (.1 | eq 2) (const () | task.yield) (const ())))
+yielded-copy : Array[F64] -> Array[F64] ! {Async}
+yielded-copy = fork array.generate array.length yield-read
+copy-task : Array[F64] -> () -> Array[F64] ! {Async}
+copy-task = curry (.0 | yielded-copy)
+cancelled-copy : Array[F64] -> Option[Array[F64]] ! {Async}
+cancelled-copy = copy-task | task.spawn | tap (const () | task.yield) | tap task.cancel | task.await
+main = [read-all () | string.length | int.to-float, 1.25, -2.5] | array.from-list
+    | make { failed = attempt failed-copy, saved = saved-copy, yielded = yielded-copy, cancelled = cancelled-copy, original = id }
+    | echo

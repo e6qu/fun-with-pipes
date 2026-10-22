@@ -545,6 +545,15 @@ its existing child-owner rules. The accepted tests include aliases, pointer-like
 scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
 count operations; they do not prove every record or call allocation-free.
 
+The current preparation extends known-callback lowering to numeric
+`array.generate` calls. The caller keeps captures alive throughout generation;
+a separately lowered callback body borrows them, acquiring an owner only if a
+use escapes (for example, storing the array in state). The existing partial-array
+builder handles errors and cancellation. Numeric scalar results avoid new result
+representation rules. Recursive callbacks and resource scopes keep their ordinary
+ownership path. This preparation is not yet verified; see the
+[handoff](development-state.md) for checks and the explicit count/storage budget.
+
 A dying stack record can also transfer its sole counted numeric-array field.
 The compiler requires one tracked child owner, a matching `Array` of inline
 machine numbers, scalar siblings and no protected resource slot. The underlying
