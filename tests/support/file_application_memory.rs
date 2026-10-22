@@ -1,12 +1,12 @@
 //! Observe managed storage, file-read scratch, handles and resident memory.
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::process::{Command, Output, Stdio};
 
 #[path = "process_memory.rs"]
 mod process_memory;
 
-// Programs print bounded reports (three word-count rows or three small extension
-// tables). stderr drives the sampling handshake; stdout cannot fill its pipe.
+// Drain report output while stderr drives the sampling handshake. Large CSV
+// and grep results must not block the child before it reaches a checkpoint.
 pub fn run_observed(command: &mut Command) -> (Output, String) {
     let mut child = command
         .env("FWP_FILE_APP_RSS", "1")
@@ -15,6 +15,12 @@ pub fn run_observed(command: &mut Command) -> (Output, String) {
         .stderr(Stdio::piped())
         .spawn()
         .unwrap();
+    let mut stdout = child.stdout.take().unwrap();
+    let report = std::thread::spawn(move || {
+        let mut bytes = Vec::new();
+        stdout.read_to_end(&mut bytes).unwrap();
+        bytes
+    });
     let mut input = child.stdin.take().unwrap();
     let mut errors = BufReader::new(child.stderr.take().unwrap());
     let mut stderr = Vec::new();
@@ -38,8 +44,11 @@ pub fn run_observed(command: &mut Command) -> (Output, String) {
         stderr.extend_from_slice(line.as_bytes());
     }
     drop(input);
-    let mut output = child.wait_with_output().unwrap();
-    output.stderr = stderr;
+    let output = Output {
+        status: child.wait().unwrap(),
+        stdout: report.join().unwrap(),
+        stderr,
+    };
     assert_eq!(resident.lines().count(), 10, "{command:?}: {output:?}");
     (output, resident)
 }

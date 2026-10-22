@@ -4,8 +4,8 @@
 
 Next: finish auditing [PR #192](https://github.com/e6qu/fun-with-pipes/pull/192)
 at `71bde4502267a033221446a52b7bc0b5d08d4753`. Production `39701165415` has
-reported a Windows ARM64 native-resource failure; Windows AMD64 now reports the
-same step failed and its log still needs inspection. ARM64's complete uploaded
+reported a Windows ARM64 native-resource failure; Windows AMD64 reports the
+same step failed; both complete uploaded logs confirm the same sole failing target. ARM64's complete uploaded
 native log identifies one test: the standalone text probe prints Windows CRLF
 but its assertion requires LF. A line-based diagnostic assertion is prepared in
 `application-ownership/tests/text_transform_ownership.rs`. Runtime/interpreter
@@ -33,7 +33,8 @@ All seven plan areas remain open.
   `/private/tmp/fwp-application-integration.json`.
 - Next preparation: `file-application-lifetimes`,
   `/private/tmp/fwp-file-application-lifetimes`, based on #192's head. Its directory
-  test/fixtures are uncommitted and current-compiler validation is pending.
+  preparation `8773b7adde025fd89ba91bb9a1d8fb221a9d5ed7` is running focused
+  six-host CI `39705831190`; current-compiler acceptance is pending.
   `/private/tmp/fwp-file-application-preparation.json` records the starting scope.
 - `application-baselines` at `/private/tmp/fwp-application-baselines` preserves
   immutable application preparation `54b01db94079`; staged documentation was
@@ -89,36 +90,45 @@ stack estimates apply to `67b684506bb4`, not the bounds-repair revision.
 
 ## Current file-application preparation
 
-Uncommitted preparation adds scaled directory/word-count tests, shared observation
-helpers and a focused six-host `file-applications` workflow. It also carries the
-prepared text-probe newline assertion fix. Current-compiler acceptance is pending.
-[Application acceptance](application-acceptance.md#repeated-directory-and-file-work)
-specifies the exact inputs, memory counters and limits.
+Preparation `8773b7adde025fd89ba91bb9a1d8fb221a9d5ed7`, focused run
+`39705831190`, completed on all six hosts. All nine actual tests and the
+14-binary/eight-series inspection passed on each host. Windows jobs passed in
+full, including the #192 text diagnostic newline fix. Four Unix jobs failed
+only Clippy's requirement to spell permission modes in octal. Full logs are
+audited in `/private/tmp/fwp-file-application-acceptance.json`; overall acceptance
+is false. The corrected `0o000` permission helper passes local Clippy and an
+actual deny/restore check (`/private/tmp/fwp-check-permission-guard.py`).
 
-Directory inputs have 64/1,024 files; word-count inputs have two files of
-128/4,096 lines each. Independent Rust oracles check output alongside raw
-interpretation. ARC O1/O2 checks observe 64 rounds per success/error phase,
-including missing/not-directory paths, denied traversal after a readable subtree,
-and a failed/invalid-UTF-8 second file after a successful first read.
+Uncommitted expansion groups grep and CSV column selection with the directory
+and word-count checks, so the next preparation covers four maintained programs.
+The output reader now drains large reports while sampling memory, avoiding a
+full stdout pipe. Compiler failures will upload their own log before independent
+tests continue. A stale OpenCL-removal sentence in design-limits is corrected.
+[Application acceptance](application-acceptance.md#repeated-directory-and-file-work)
+specifies inputs, counters and limits; full current-compiler acceptance is pending.
+
+Directory inputs have 64/1,024 files. Word-count and grep use two 128/4,096-line
+files; CSV uses 128/4,096 data records, quoted commas/quotes and Unicode.
+Independent Rust oracles check complete output alongside raw interpretation.
+ARC O1/O2 observes 64 rounds per success/error phase, including missing/not-directory
+paths, denied traversal after a readable subtree, failed/invalid-UTF-8 second
+reads and missing CSV columns after successful parsing.
 
 Counters separately require stable managed charge, zero open directory/read
 handles and zero `file.read` C scratch bytes. Deliberate missing-release,
 missing-close and missing-buffer-free controls fail. A parent/child handshake
-samples process RSS at rounds 0/32/63 without confusing allocator pages with live
-values. Generated C, binaries, disassembly and eight memory series per host are
-retained by `scripts/inspect-file-applications.py`; native machine headers are
-checked. No timing or C/Rust-parity claim is made.
+samples RSS at rounds 0/32/63, separately from managed charge. The expanded
+inspection expects 30 native binaries and sixteen memory series per host.
+No timing or C/Rust-parity claim is made.
 
 `python3 scripts/local-guard.py python3 /private/tmp/fwp-check-file-observers.py`
-passes on small fixtures using the saved prior compiler: raw interpretation,
-Clang O1, permission failures, all deliberate leaks, the shared Rust observer
-and RSS handshake. It runs in about ten seconds below local limits. The saved
-compiler predates the named teardown marker; this local probe uses its known
-observation location, while committed tests require the current marker.
-These checks do not establish current Rust test compilation, larger inputs or
-six-platform support. Next: format/audit, publish an immutable preparation and
-run focused CI; fix all failures before integrating the next substantial group.
-Extend scaled filtering/CSV and resource/tape measurements as the suite develops.
+passes for all four small fixtures with the saved prior compiler: raw
+interpretation, Clang O1, permission failures, deliberate leaks, shared Rust
+observer and RSS handshake. It takes about seventeen seconds below local limits.
+The old compiler predates the named teardown marker; this local probe uses its
+known observation location, while committed tests require the current marker.
+Next: run final formatting/docs/workflow checks and publish the complete repair
+plus grep/CSV group; audit all six hosts before the next substantial delivery.
 
 ## Local limits
 

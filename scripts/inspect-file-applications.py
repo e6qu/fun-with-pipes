@@ -32,7 +32,7 @@ report = dict(source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=
     binaries={}, observations={})
 expected = {f'{program}-{variant}-O{opt}' for program, variants in [
     ('directory', ['measured', 'missing-release', 'missing-close']),
-    ('wc', ['measured', 'missing-release', 'missing-close', 'missing-buffer-free'])]
+    *[(name, ['measured', 'missing-release', 'missing-close', 'missing-buffer-free']) for name in ['wc', 'grep', 'csv']]]
     for variant in variants for opt in [1, 2]}
 for binary in sorted(root.glob('*.bin')):
     label = binary.stem
@@ -62,7 +62,7 @@ for binary in sorted(root.glob('*.bin')):
         c_sha256=hashlib.sha256(binary.with_suffix('.c').read_bytes()).hexdigest(),
         inspection=inspection)
 assert set(report['binaries']) == expected, sorted(expected - set(report['binaries']))
-for program, sizes in [('directory', [64, 1024]), ('wc', [128, 4096])]:
+for program, sizes in [('directory', [64, 1024]), *[(name, [128, 4096]) for name in ['wc', 'grep', 'csv']]]:
     for size in sizes:
         for opt in [1, 2]:
             label = f'{program}-{size}-O{opt}'
@@ -84,4 +84,4 @@ for program, sizes in [('directory', [64, 1024]), ('wc', [128, 4096])]:
                 open_directory_and_read_handles=0, file_read_scratch_bytes=0, rss_samples=samples,
                 stdout=root.joinpath(label + '.stdout').read_text())
 root.joinpath('inspection.json').write_text(json.dumps(report, indent=2) + '\n')
-print(f'Inspected {len(expected)} native binaries and eight memory series on {system} {architecture}')
+print(f'Inspected {len(expected)} native binaries and sixteen memory series on {system} {architecture}')

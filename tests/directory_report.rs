@@ -115,7 +115,7 @@ impl DeniedDirectory {
         #[cfg(unix)]
         let original = std::fs::metadata(&path).unwrap().permissions();
         #[cfg(unix)]
-        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0)).unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o000)).unwrap();
         #[cfg(windows)]
         checked(
             Command::new("icacls")

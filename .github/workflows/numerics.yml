@@ -67,10 +67,24 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --test directory_report --test text_file_tools --test text_transform_ownership -- -D warnings
+      - name: Compiler checks for the file applications
+        id: file_compiler
+        shell: bash
+        run: |
+          mkdir -p file-application-evidence
+          cargo clippy --test directory_report --test text_file_tools --test text_transform_ownership -- -D warnings 2>&1 | tee file-application-evidence/compiler.log
+      - name: Publish compiler failures while independent tests continue
+        if: ${{ !cancelled() && steps.file_compiler.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: file-compiler-${{ matrix.runner }}
+          path: file-application-evidence/compiler.log
+          if-no-files-found: error
       - name: File applications, repeated failures and deliberate leaks
         if: ${{ !cancelled() }}
-        run: cargo test --no-fail-fast --test directory_report --test text_file_tools --test text_transform_ownership -- --nocapture
+        shell: bash
+        run: |
+          cargo test --no-fail-fast --test directory_report --test text_file_tools --test text_transform_ownership -- --nocapture 2>&1 | tee file-application-evidence/tests.log
       - name: Inspect native binaries and save memory observations
         if: ${{ !cancelled() }}
         shell: bash

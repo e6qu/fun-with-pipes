@@ -12,7 +12,7 @@ performance and platform requirements in the last column.
 |---|---|---|---|
 | [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [C/Rust baseline](measurements/wordfreq.md) and [paired/repeated text comparison](measurements/unchanged-text.md) on two Linux hosts | Set time/memory budgets; validate the current runtime and preserve six-platform cleanup evidence |
 | [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; current test repeats a six-file tree 64 times | `tests/directory_report.rs`: interpreter/native agreement and final managed storage | Accept the scaled/error checks below on six native hosts; retain repeated memory observations |
-| [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Accept scaled word-count cleanup below; extend scaled filtering and CSV coverage; separate input/output costs |
+| [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Accept scaled counting/filtering/CSV cleanup below; separate input/output costs |
 | Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](benchmarks.md#current-numerical-comparison-and-record-moves) | Repeat current-revision comparisons; set per-size budgets; include a larger numerical application |
 | Derivative application | Rosenbrock descent from alternating −1.2/1.0 inputs: 3, 33 and 129 dimensions, 199 gradient updates | [Measured descent comparison](measurements/ad-application.md) on two Linux hosts; nested/workspace checks remain | Measure raw tapes, workspace and process memory separately; set time/memory budgets and extend native evidence |
 | Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](benchmarks.md#server-memory-after-completed-remote-calls) | Consolidate one repeatable service scenario with bounded concurrency, disconnects and repeated live-memory samples |
@@ -167,7 +167,19 @@ cases 64 times each: both reads succeed; the second file is missing; the second
 contains invalid UTF-8. Both failures follow a completed first read, so partially
 built results must also be released.
 
-Both programs must match raw interpretation. Native checks compile fwp at O1
+The grep case uses the same two text files. It checks case-insensitive matches,
+file/line prefixes, inverted counts and the no-match exit status against an
+independent Rust calculation. Repeated matching and second-file errors exercise
+both retained input lines and selected output strings.
+
+The CSV case has 128 or 4,096 data records plus a header. Quoted fields contain
+commas, escaped quotes and Unicode. It selects `name` and `id`, writes every
+record as tab-separated text, and compares the complete output with independent
+expected rows. Repeated failures cover a missing second file, invalid UTF-8 and
+a requested column absent from a successfully parsed table. Output is drained
+while observing memory, so a large report cannot fill a pipe and stall the test.
+
+All four programs must match raw interpretation. Native checks compile fwp at O1
 and generated C at O1 and O2 with LTO disabled. Existing small tracing/stress
 checks remain; the larger observations use checked ARC. Each checkpoint records:
 
@@ -182,7 +194,7 @@ checks remain; the larger observations use checked ARC. Each checkpoint records:
 
 Controls deliberately omit managed releases, handle closes and file-read scratch
 frees. Each must fail the observer before shutdown. The tests retain generated C,
-native binaries, disassembly, output and memory series. Machine headers verify
+30 native binaries, disassembly, output and sixteen memory series per host. Machine headers verify
 that artifacts target the runner's actual architecture. These cases do not yet
 cover forced allocation failure or every file operation and do not complete the
 application suite.
