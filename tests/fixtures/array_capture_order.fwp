@@ -1,0 +1,12 @@
+# tap runs an effect and keeps its input. Each generation prints the count,
+# then the captured input text, then the index before each callback returns.
+# Zero and negative counts still prepare the capture, but run no callbacks.
+index-value : String -> I64 -> I64 ! {IO}
+index-value = curry (fork const (fork (string.slice 0) .1 .0 | string.length) (.1 | tap echo))
+generate-count : I64 -> String -> Array[I64] ! {IO}
+generate-count = curry (fork array.generate (.0 | tap echo) (.1 | tap echo | index-value))
+observe : String -> () ! {IO}
+observe = tap (generate-count 3 | echo)
+    | tap (generate-count 0 | echo)
+    | generate-count -1 | echo
+main = read-all () | observe

@@ -545,6 +545,23 @@ its existing child-owner rules. The accepted tests include aliases, pointer-like
 scalar bits, wide numeric boxes and failure cleanup. These rules remove specific
 count operations; they do not prove every record or call allocation-free.
 
+Known numeric `array.generate` callbacks can borrow their captures while the
+caller keeps them alive throughout generation. The compiler lowers the callback
+body with that ownership contract; escaping uses acquire their own owners.
+The existing partial-array builder handles errors and cancellation. Recursive
+callbacks and resource scopes keep their ordinary calling convention.
+
+A temporary record of caller-borrowed parameters can disappear when every use
+projects a field or passes it to a proved nonescaping call. Alias normalization
+then uses the caller's whole-call lifetime, including the last local read.
+Whole-record escapes and resource boundaries preserve ordinary owners; returning
+a projected field acquires ownership. Eligible numeric-array aliases qualify;
+algebraic list aliases retain their existing representation. The
+[application measurement](measurements/array-capture-descent.md) verifies zero
+retains in repeated packed descent on both Linux architectures. The
+[six-host ownership checks](measurements/array-capture-borrows.md) cover effects,
+shared inputs and cleanup; the [handoff](development-state.md) tracks final gates.
+
 A dying stack record can also transfer its sole counted numeric-array field.
 The compiler requires one tracked child owner, a matching `Array` of inline
 machine numbers, scalar siblings and no protected resource slot. The underlying

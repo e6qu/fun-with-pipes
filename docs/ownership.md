@@ -1379,6 +1379,24 @@ owners remain. Inlining also changes code size and stack frames; the binary
 comparison must report those costs alongside the count reduction. This is not
 a general zero-cost or execution-time claim.
 
+### Borrowing captures during array generation
+
+`array.generate` calls a function once per output index. If that known function
+reads an existing array, its caller can keep the array alive for the whole loop;
+each read needs no separate counted owner. Storing a capture in state or returning
+it still creates an owner for that longer-lived use. Zero and negative lengths
+prepare captures in the usual order but invoke no callback. Error and cancellation
+release the partially filled output and any owners actually acquired.
+
+The compiler also removes temporary parameter-record and alias owners when their
+uses cannot escape. It preserves ordinary ownership for unknown consumers,
+recursive callbacks and resource scopes. No ownership annotation or syntax change
+is needed. The [descent comparison](measurements/array-capture-descent.md) verifies
+zero capture retains with unchanged allocation requests and managed peak on both
+Linux architectures. The [six-host ownership report](measurements/array-capture-borrows.md)
+covers effects and cleanup; [delivery status](development-state.md) records final gates; this does not establish arbitrary closure
+borrowing or allocation-free array construction.
+
 ### Accepted input iterator ownership
 
 Accepted input ownership keeps two iterator nodes: the next node to read and

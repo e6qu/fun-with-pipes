@@ -320,6 +320,7 @@ jobs:
       FWP_QUEUED_FUNCTION_ARTIFACTS: pointer-evidence/raw
       FWP_POINTER_ARTIFACTS: pointer-evidence/callbacks
       FWP_STACK_ARRAY_ARTIFACTS: pointer-evidence/stack-arrays
+      FWP_ARRAY_CAPTURE_ARTIFACTS: pointer-evidence/array-captures
     steps:
       - uses: actions/checkout@v7
       - name: Prepare foreign ownership evidence
@@ -371,14 +372,14 @@ jobs:
         shell: bash
         run: |
           mkdir -p pointer-evidence
-          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership -- -D warnings 2>&1 | tee pointer-evidence/compiler.log
+          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership --test array_element_ownership --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership -- -D warnings 2>&1 | tee pointer-evidence/compiler.log
       - name: Windows compiler checks for manual pointer ownership
         id: file_compiler_windows
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force pointer-evidence | Out-Null
-          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership -- -D warnings 2>&1 | Tee-Object pointer-evidence/compiler.log
+          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership --test array_element_ownership --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership -- -D warnings 2>&1 | Tee-Object pointer-evidence/compiler.log
           exit $LASTEXITCODE
       - name: Publish compiler failures while independent tests continue
         if: ${{ !cancelled() && (steps.file_compiler.outcome == 'failure' || steps.file_compiler_windows.outcome == 'failure') }}
@@ -391,13 +392,13 @@ jobs:
         if: ${{ !cancelled() && runner.os != 'Windows' }}
         shell: bash
         run: |
-          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership -- --nocapture 2>&1 | tee pointer-evidence/tests.log
+          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership --test array_element_ownership --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership -- --nocapture 2>&1 | tee pointer-evidence/tests.log
       - name: Windows raw pointers, callbacks, libraries and the ARC corpus
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           whoami /priv | Out-File pointer-evidence/privileges.txt
-          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership -- --nocapture 2>&1 | Tee-Object pointer-evidence/tests.log
+          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership --test array_element_ownership --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership -- --nocapture 2>&1 | Tee-Object pointer-evidence/tests.log
           exit $LASTEXITCODE
       - name: Inventory execution examples admitted without tracing
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
@@ -407,9 +408,11 @@ jobs:
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
         shell: bash
         run: |
-          cargo test --lib -- --nocapture
-          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output pointer-evidence/contracts.json
-          python3 scripts/test-native-test-runner.py
+          status=0
+          cargo test --lib -- --nocapture || status=1
+          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output pointer-evidence/contracts.json || status=1
+          python3 scripts/test-native-test-runner.py || status=1
+          exit "$status"
       - name: Missing C compilers fail every C interop entry
         if: ${{ !cancelled() }}
         shell: bash
@@ -3005,17 +3008,19 @@ jobs:
           from pathlib import Path
           import subprocess
 
-          report = json.loads(Path('docs/measurements/packed-descent-2026-10-22.json').read_text())
+          report = json.loads(Path('docs/measurements/array-owner-moves-2026-10-22.json').read_text())
           host, = [row for row in report['hosts'] if row['host'] == os.environ['BASELINE_HOST']]
           path = Path('packed-baseline.zip')
           with path.open('wb') as stream:
               subprocess.run(['gh', 'api', f"repos/e6qu/fun-with-pipes/actions/artifacts/{host['artifact']}/zip"], stdout=stream, check=True)
           assert hashlib.sha256(path.read_bytes()).hexdigest() == host['archiveSha256']
           PYBASELINE
-      - name: Compare moved array owners with the packed baseline and C/Rust
+      - name: Numerical measurement requirement controls
+        run: python3 scripts/test-descent-budgets.py
+      - name: Compare borrowed captures with the accepted array-move baseline and C/Rust
         run: >-
           python3 scripts/measure-descent-peers.py --compiler target/release/fwp
-          --baseline-report docs/measurements/packed-descent-2026-10-22.json
+          --baseline-report docs/measurements/array-owner-moves-2026-10-22.json
           --baseline-archive packed-baseline.zip
           --cc gcc --rustc rustc --c-arch "${{ matrix.c_arch }}"
           --objdump objdump --nm nm --time /usr/bin/time

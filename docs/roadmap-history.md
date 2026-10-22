@@ -12,6 +12,33 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Array-owner moves and copied callback strings (PR #196)
+
+Synchronous C callbacks copy incoming strings into fwp-owned storage, including
+partial conversion, invalid UTF-8 and error cleanup. A dying stack record can
+transfer its sole numeric-array owner instead of retaining it again. Shared aliases
+and observable failure/cancellation behavior are preserved. The C-interop tutorial
+now includes its complete callback program and console sessions.
+
+[Ownership checks](measurements/stack-array-ownership.md) cover all six native
+hosts; [copied-input checks](measurements/callback-inputs.md) cover C callbacks.
+The [C/Rust derivative comparison](measurements/descent-peers.md),
+[packed arrays](measurements/packed-descent.md) and
+[array-owner measurements](measurements/array-owner-moves.md) separate allocation,
+count and timing costs. The largest packed case halves retains to 25,671 without
+increasing allocation requests or managed peak. Timing remains inconclusive;
+reports preserve slower controls and a larger ARM64 callback frame.
+
+[PR #196](https://github.com/e6qu/fun-with-pipes/pull/196) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39775586712)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39775586540)
+at `7bb4b5d49341fc67f9b76840feeeb8e479c3392e`. Complete logs and the exact-head
+PR check list were audited: every check was completed successfully, even while
+GitHub's workflow summary still said running. Squash merge
+`abc2636d164632ea25ab5709455ab193a3df9479` has identical files, the expected
+parent and one subject under 80 characters with no body or trailers. Redundant
+same-tree production CI was cancelled; documentation was preserved.
+
 ## Native commands and test recovery (PR #195)
 
 Native run/exec/test/serve/pipe commands accept explicit ARC or tracing selection.
