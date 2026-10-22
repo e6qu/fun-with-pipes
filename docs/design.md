@@ -636,6 +636,10 @@ released. Tracing starts from live roots (registers, stacks and globals) and
 finds reachable shared objects. Minor collections inspect young objects plus
 mutable storage; major collections trace the whole managed graph. Complete
 immutable allocations must not acquire untracked links to younger objects.
+Reuse checks read the allocator's actual age representation: a per-slot bitmap
+for small objects and a separate mark for large allocations. A constructor that
+holds storage across another allocation rechecks its age before writing fields.
+Mutable arrays are scanned each minor collection and have a separate reuse rule.
 [Ownership](ownership.md) explains these obligations and checked ARC mode.
 
 Linux, macOS and Windows find roots through their platform's executable-image

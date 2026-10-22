@@ -846,7 +846,8 @@ static inline int fwp_rc_young(V v) {
     uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
     gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
     size_t i = (size_t)(c - m->rc);
-    return !(m->bits[i >> 6] & ((uint64_t)1 << (i & 63)));
+    return m->type == GC_BIG ? !m->mark :
+        !(m->bits[i >> 6] & ((uint64_t)1 << (i & 63)));
 }
 
 /* `v`, shared (a value the runtime keeps) */
@@ -889,7 +890,9 @@ static inline int fwp_rc_unique(V v) {
     uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
     gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
     size_t i = (size_t)(c - m->rc);
-    if (m->bits[i >> 6] & ((uint64_t)1 << (i & 63))) return 0; /* old */
+    /* Large allocations have one age mark, not the small-slot bitmap. */
+    if (m->type == GC_BIG ? m->mark != 0 :
+        (m->bits[i >> 6] & ((uint64_t)1 << (i & 63))) != 0) return 0; /* old */
     if (__builtin_expect(fwp_reuse_verify < 0, 0)) {
         const char *e = getenv("FWP_REUSE_VERIFY");
         fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;

@@ -95,14 +95,14 @@ jobs:
         shell: bash
         run: |
           mkdir -p string-map-evidence
-          cargo clippy --lib --test string_map_ownership --test text_transform_ownership --test borrowed_callbacks --test text_ownership --test arc_execution --test static_constants --test reuse -- -D warnings 2>&1 | tee string-map-evidence/compiler.log
+          cargo clippy --lib --test string_map_ownership --test text_transform_ownership --test borrowed_callbacks --test text_ownership --test arc_execution --test static_constants --test reuse --test golden_run -- -D warnings 2>&1 | tee string-map-evidence/compiler.log
       - name: Windows compiler checks for string map ownership
         id: file_compiler_windows
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force string-map-evidence | Out-Null
-          cargo clippy --lib --test string_map_ownership --test text_transform_ownership --test borrowed_callbacks --test text_ownership --test arc_execution --test static_constants --test reuse -- -D warnings 2>&1 | Tee-Object string-map-evidence/compiler.log
+          cargo clippy --lib --test string_map_ownership --test text_transform_ownership --test borrowed_callbacks --test text_ownership --test arc_execution --test static_constants --test reuse --test golden_run -- -D warnings 2>&1 | Tee-Object string-map-evidence/compiler.log
           exit $LASTEXITCODE
       - name: Publish compiler failures while independent tests continue
         if: ${{ !cancelled() && (steps.file_compiler.outcome == 'failure' || steps.file_compiler_windows.outcome == 'failure') }}
@@ -130,6 +130,34 @@ jobs:
           cargo test --lib -- --nocapture
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output string-map-evidence/contracts.json
           python3 scripts/test-native-test-runner.py
+      - name: Missing C compilers must fail native golden and reuse checks
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          python3 - <<'PYCONTROL'
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          for target, test in [('reuse', 'golden_programs_with_reuse_verified'),
+                               ('golden_run', 'native_snapshots')]:
+              build = subprocess.check_output(['cargo', 'test', '--test', target,
+                  '--no-run', '--message-format=json'], text=True)
+              binary, = [row['executable'] for row in map(json.loads, build.splitlines())
+                  if row.get('reason') == 'compiler-artifact' and row.get('executable')
+                  and row['target']['name'] == target]
+              environment = dict(os.environ, CC=str(Path.cwd() / 'no-such-c-compiler'))
+              environment.pop('FWP_BLESS', None)
+              result = subprocess.run([binary, '--exact', test], env=environment,
+                  capture_output=True, text=True, timeout=180)
+              output = result.stdout + result.stderr
+              Path('string-map-evidence', target + '-missing-compiler.txt').write_text(output)
+              assert result.returncode != 0 and 'test result: FAILED' in output, output
+              if target == 'reuse':
+                  assert 'unexpected native compilation failure' in output, output
+              print(target + ': missing compiler is a failed check, not skipped coverage')
+          PYCONTROL
       - uses: actions/upload-artifact@v7
         if: always()
         with:

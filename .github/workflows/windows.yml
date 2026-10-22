@@ -194,6 +194,19 @@ jobs:
         run: |
           cargo test --test golden_run native_snapshots -- --exact 2>&1 | Tee-Object windows-golden_tests.log
           exit $LASTEXITCODE
+      - name: Native reuse and string ownership
+        if: ${{ !cancelled() && inputs.full && steps.native_compiler.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          cargo test --no-fail-fast --test reuse --test string_map_ownership --test text_ownership -- --nocapture 2>&1 | Tee-Object windows-reuse_tests.log
+          exit $LASTEXITCODE
+      - name: Publish native reuse diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-reuse-${{ matrix.runner }}
+          path: windows-reuse_tests.log
+          if-no-files-found: ignore
       - name: Publish failed complete native golden programs log
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() && steps.golden_tests.outcome == 'failure' }}
