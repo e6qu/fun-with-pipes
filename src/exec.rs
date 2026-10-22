@@ -18,6 +18,7 @@
 //!   binary when `FWP_OUT=bin`. Text records are lines.
 
 use std::io::{BufRead, Write};
+use std::process::{Command, Stdio};
 
 use crate::cli;
 use crate::interp::{report, Ctl, Interp};
@@ -607,7 +608,6 @@ pub fn run_pipeline(
     interp: bool,
     arc: Option<bool>,
 ) -> Result<i32, String> {
-    use std::process::{Command, Stdio};
     let stages = parse_pipeline(spec)?;
     let mut children = Vec::new();
     let mut prev_out: Option<std::process::ChildStdout> = None;

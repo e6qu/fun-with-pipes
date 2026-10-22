@@ -3208,6 +3208,9 @@ static V fwp_p_time_monotonic(void) {
 static V fwp_p_time_unix(void) { return fwp_duration(fwp_unix_ns()); }
 
 static V fwp_p_exit(V code) {
+#ifdef FWP_TESTS
+    fwp_test_abort(2, NULL, (int32_t)code);
+#endif
     fflush(stdout);
     exit((int)(code & 255));
 }

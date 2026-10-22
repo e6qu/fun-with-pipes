@@ -6,6 +6,7 @@
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
+use std::time::{Duration, Instant, SystemTime};
 
 fn fwp() -> &'static str {
     env!("CARGO_BIN_EXE_fwp")
@@ -75,17 +76,34 @@ fn render(o: &Output) -> String {
     )
 }
 
-/// A server started by `fwp`, and the address it prints on stderr
-/// (`... listening on [http://]host:port`). The caller kills and waits for
-/// it.
-#[allow(clippy::zombie_processes)]
-fn start(c: &mut Command) -> (std::process::Child, String) {
-    let mut child = c
-        .stdout(Stdio::null())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap();
-    let mut err = BufReader::new(child.stderr.take().unwrap());
+/// Keep the server alive only for its test, including when assertions panic.
+/// Windows retains a launcher process, so stopping it must include its child.
+struct ChildProcess(std::process::Child);
+
+impl Drop for ChildProcess {
+    fn drop(&mut self) {
+        if matches!(self.0.try_wait(), Ok(Some(_))) {
+            return;
+        }
+        #[cfg(windows)]
+        let _ = Command::new("taskkill")
+            .args(["/PID", &self.0.id().to_string(), "/T", "/F"])
+            .output();
+        #[cfg(not(windows))]
+        let _ = self.0.kill();
+        let _ = self.0.wait();
+    }
+}
+
+/// Start a server and read its `listening on [http://]host:port` diagnostic.
+fn start(c: &mut Command) -> (ChildProcess, String) {
+    let mut server = ChildProcess(
+        c.stdout(Stdio::null())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap(),
+    );
+    let mut err = BufReader::new(server.0.stderr.take().unwrap());
     let mut seen = String::new();
     for _ in 0..20 {
         let mut line = String::new();
@@ -95,11 +113,9 @@ fn start(c: &mut Command) -> (std::process::Child, String) {
         seen.push_str(&line);
         if let Some(a) = line.trim().split("listening on ").nth(1) {
             let a = a.strip_prefix("http://").unwrap_or(a);
-            return (child, a.to_string());
+            return (server, a.to_string());
         }
     }
-    let _ = child.kill();
-    let _ = child.wait();
     panic!("no address in the server's output:\n{}", seen);
 }
 
@@ -108,12 +124,16 @@ fn run_compiles_once_and_matches_the_interpreter() {
     assert!(have_cc(), "native command checks require a C compiler");
     let cache = Cache::new("run");
     let dir = root().join("tests/run");
+    let mut basics = None;
     for name in ["basics.fwp", "effects.fwp", "cli_parse.fwp"] {
         let before = cache.entries().len();
         let interp = output(cache.fwp(&["run", "--interp", name]).current_dir(&dir), b"");
         assert_eq!(cache.entries().len(), before, "--interp compiled {}", name);
         let native = output(cache.fwp(&["run", name]).current_dir(&dir), b"");
         assert_eq!(render(&native), render(&interp), "{}", name);
+        if name == "basics.fwp" {
+            basics = Some(cache.entries().into_iter().next().unwrap());
+        }
     }
     let built = cache.entries();
     assert_eq!(built.len(), 3);
@@ -122,6 +142,14 @@ fn run_compiles_once_and_matches_the_interpreter() {
         .iter()
         .map(|p| std::fs::metadata(p).unwrap().len())
         .collect();
+    let basics = basics.unwrap();
+    let old = SystemTime::UNIX_EPOCH + Duration::from_secs(60);
+    std::fs::OpenOptions::new()
+        .write(true)
+        .open(&basics)
+        .unwrap()
+        .set_modified(old)
+        .unwrap();
     let again = output(cache.fwp(&["run", "basics.fwp"]).current_dir(&dir), b"");
     assert!(again.status.success());
     assert_eq!(cache.entries().len(), 3);
@@ -130,6 +158,97 @@ fn run_compiles_once_and_matches_the_interpreter() {
         .map(|p| std::fs::metadata(p).unwrap().len())
         .collect();
     assert_eq!(before, after);
+    assert!(
+        std::fs::metadata(basics).unwrap().modified().unwrap() > old,
+        "cache hits must refresh eviction timestamps without writing executable data"
+    );
+}
+
+#[test]
+fn concurrent_compilers_publish_one_immutable_cached_executable() {
+    assert!(have_cc(), "native publication checks require a C compiler");
+    let cache = Cache::new("publication");
+    let native = cache.0.join("native");
+    std::fs::create_dir_all(&native).unwrap();
+    let publication = std::fs::OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .read(true)
+        .write(true)
+        .open(native.join(".publish.lock"))
+        .unwrap();
+    publication.lock().unwrap();
+    let mut children: Vec<_> = (0..2)
+        .map(|_| {
+            ChildProcess(
+                cache
+                    .fwp(&["run", "--native", "-O0"])
+                    .arg(root().join("examples/hello.fwp"))
+                    .stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
+                    .spawn()
+                    .unwrap(),
+            )
+        })
+        .collect();
+    let deadline = Instant::now() + Duration::from_secs(60);
+    loop {
+        for child in &mut children {
+            assert!(
+                child.0.try_wait().unwrap().is_none(),
+                "compiler bypassed the publication lock"
+            );
+        }
+        let ready = std::fs::read_dir(&native)
+            .unwrap()
+            .filter(|entry| {
+                let entry = entry.as_ref().unwrap();
+                entry.file_name().to_string_lossy().ends_with(".tmp")
+                    && entry.metadata().unwrap().len() > 0
+            })
+            .count();
+        if ready == 2 {
+            break;
+        }
+        assert!(
+            Instant::now() < deadline,
+            "compilers did not prepare both private images"
+        );
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    assert!(
+        cache.entries().is_empty(),
+        "published an image while its lock was held"
+    );
+    drop(publication);
+    for mut child in children {
+        let status = child.0.wait().unwrap();
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        child
+            .0
+            .stdout
+            .take()
+            .unwrap()
+            .read_to_end(&mut stdout)
+            .unwrap();
+        child
+            .0
+            .stderr
+            .take()
+            .unwrap()
+            .read_to_end(&mut stderr)
+            .unwrap();
+        assert!(status.success(), "{}", String::from_utf8_lossy(&stderr));
+        assert_eq!(stdout, b"hello, world\n");
+        assert!(stderr.is_empty());
+    }
+    assert_eq!(cache.entries().len(), 1);
+    assert!(std::fs::read_dir(&native).unwrap().all(|entry| !entry
+        .unwrap()
+        .file_name()
+        .to_string_lossy()
+        .ends_with(".tmp")));
 }
 
 #[test]
@@ -342,7 +461,7 @@ fn serve_rest_runs_a_native_server() {
         "# expose: rest\n# route: GET /double/{n}\nexport double : I64 -> I64\ndouble = mul 2\n",
     )
     .unwrap();
-    let (mut child, addr) = start(&mut cache.fwp(&[
+    let (server, addr) = start(&mut cache.fwp(&[
         "serve",
         "--rest",
         file.to_str().unwrap(),
@@ -357,8 +476,11 @@ fn serve_rest_runs_a_native_server() {
     .unwrap();
     let mut resp = String::new();
     s.read_to_string(&mut resp).unwrap();
-    let _ = child.kill();
-    let _ = child.wait();
+    drop(server);
+    assert!(
+        std::net::TcpStream::connect(&addr).is_err(),
+        "REST server survived cleanup"
+    );
     let _ = std::fs::remove_dir_all(&dir);
     assert!(resp.starts_with("HTTP/1.1 200"), "{}", resp);
     assert!(resp.ends_with("42"), "{}", resp);
@@ -404,7 +526,7 @@ fn serve_runs_a_native_service() {
         b"",
     );
     assert!(want.status.success());
-    let (mut server, addr) = start(
+    let (server, addr) = start(
         cache
             .fwp(&["serve", "main.fwp", "inventory", "--listen", "127.0.0.1:0"])
             .current_dir(&dir),
@@ -416,8 +538,11 @@ fn serve_runs_a_native_service() {
             .env("FWP_SERVICE_INVENTORY", &addr),
         b"",
     );
-    let _ = server.kill();
-    let _ = server.wait();
+    drop(server);
+    assert!(
+        std::net::TcpStream::connect(&addr).is_err(),
+        "service survived cleanup"
+    );
     assert_eq!(render(&got), render(&want));
     // the service and the client, each compiled once
     assert_eq!(cache.entries().len(), 2);
@@ -438,7 +563,7 @@ fn pipe_reuses_the_same_native_executable() {
     // execute that same file while another stage updates its usage timestamp.
     for i in 0..8 {
         let got = output(
-            &mut cache
+            cache
                 .fwp(&["pipe", "--native", &spec])
                 .env("FWP_RUN", "interp"),
             b"3\n",
@@ -492,7 +617,7 @@ fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
     let bad = dir.join("bad.fwp");
     std::fs::write(
         &bad,
-        "test \"good\" = True\ntest \"missing scope\" = get | eq 0\n",
+        "test \"good\" = True\ntest \"missing scope\" = () | get | eq 0\n",
     )
     .unwrap();
     let rejected = output(cache.fwp(&["test", "--gc", "arc"]).arg(&bad), b"");
@@ -544,10 +669,13 @@ fn failed_native_tests_release_errors_and_print_buffers() {
         source.push_str(
             "test \"scalar error\" = fail 7\ntest \"false\" = False\ntest \"after\" = True\n",
         );
+        source.push_str(include_str!("fixtures/test_recovery.fwp"));
         std::fs::write(&file, &source).unwrap();
         let reference = output(cache.fwp(&["test", "--interp"]).arg(&file), b"");
         assert_eq!(reference.status.code(), Some(1), "{}", render(&reference));
-        assert!(String::from_utf8_lossy(&reference.stdout).contains("2 passed, 66 failed"));
+        assert!(String::from_utf8_lossy(&reference.stdout).contains("5 passed, 71 failed"));
+        assert!(String::from_utf8_lossy(&reference.stdout)
+            .contains("visible output\ntest output ... ok"));
         let (_, program) = fwp::driver::compile_source(
             "native-test-cleanup.fwp",
             &source,
@@ -591,10 +719,22 @@ static void test_buffer_free(void *pointer) {
 static void fwp_buf_release(void *arg) { test_buffer_free(((fwp_buf *)arg)->d); }
 "#).replace("            fwp_write(&b, h.value, h.desc, 1);",
                "            fwp_write(&b, h.value, h.desc, 1); test_buffer_register(b.d);")
+                .replace("memcpy(fwp_test_message, message, bytes);",
+                    "memcpy(fwp_test_message, message, bytes); test_buffer_register(fwp_test_message);")
+                .replace("free(fwp_test_message);", "test_buffer_free(fwp_test_message);")
                 .replace("    /* Ownership observation point: before runtime teardown. */",
                     "    /* Ownership observation point: before runtime teardown. */\n    if(test_live_buffers)exit(234);\n    if(fwp_gc.budget < fwp_gc.budget_given)exit(233);");
             for opt in ["-O0", "-O2"] {
                 let mut cases = vec![("protected", measured.clone(), 1)];
+                // Exercise the root cancellation path at the exit primitive.
+                // Its expected diagnostic differs; later tests must still run.
+                let cancellation = measured.replace(
+                    "fwp_test_abort(2, NULL, (int32_t)code);",
+                    "test_cancel_root();",
+                );
+                assert_ne!(cancellation, measured);
+                let cancellation = format!("static void test_cancel_root(void);\n{cancellation}\nstatic void test_cancel_root(void) {{ fwp_tasks_init(); fwp_cur->cancelled = 1; fwp_check_cancel(); }}\n");
+                cases.push(("root-cancellation", cancellation, 1));
                 if arc {
                     cases.push((
                         "missing-error",
@@ -606,6 +746,14 @@ static void fwp_buf_release(void *arg) { test_buffer_free(((fwp_buf *)arg)->d); 
                         measured.replace(
                             "test_buffer_free(((fwp_buf *)arg)->d);",
                             "/* omit actual buffer free */",
+                        ),
+                        234,
+                    ));
+                    cases.push((
+                        "missing-trap-message",
+                        measured.replace(
+                            "test_buffer_free(fwp_test_message);",
+                            "/* omit actual trap message free */",
                         ),
                         234,
                     ));
@@ -627,8 +775,37 @@ static void fwp_buf_release(void *arg) { test_buffer_free(((fwp_buf *)arg)->d); 
                         "{label}: {}",
                         render(&actual)
                     );
-                    assert_eq!(actual.stdout, reference.stdout, "{label}");
+                    let expected = if control == "root-cancellation" {
+                        String::from_utf8_lossy(&reference.stdout)
+                            .replace(
+                                "test exit ... FAILED (exit -7)",
+                                "test exit ... FAILED (cancelled)",
+                            )
+                            .into_bytes()
+                    } else {
+                        reference.stdout.clone()
+                    };
+                    assert_eq!(actual.stdout, expected, "{label}");
                     assert_eq!(actual.stderr, reference.stderr, "{label}");
+                    if !arc && control == "protected" {
+                        let stressed = Command::new(&binary)
+                            .env_remove("FWP_GC")
+                            .env("FWP_GC_STRESS", "1")
+                            .env("FWP_GC_VERIFY", "1")
+                            .env("FWP_REUSE_VERIFY", "0")
+                            .output()
+                            .unwrap();
+                        assert_eq!(render(&stressed), render(&reference), "{label}, GC stress");
+                        if let Some(path) = &artifacts {
+                            std::fs::write(
+                                path.join(format!("{label}-stress.stdout")),
+                                stressed.stdout,
+                            )
+                            .unwrap();
+                            std::fs::write(path.join(format!("{label}-stress.status")), "1\n")
+                                .unwrap();
+                        }
+                    }
                     let symbols = Command::new("nm").arg(&binary).output().unwrap();
                     assert!(symbols.status.success(), "{}", render(&symbols));
                     if arc {
@@ -654,4 +831,31 @@ static void fwp_buf_release(void *arg) { test_buffer_free(((fwp_buf *)arg)->d); 
         }
         fwp::cgen::set_native_options(Default::default());
     });
+}
+
+#[test]
+fn child_task_failures_still_terminate_test_processes() {
+    assert!(
+        have_cc(),
+        "native child failure checks require a C compiler"
+    );
+    let cache = Cache::new("test-child-failure");
+    let directory = fwp::cgen::TempDir::new("test-child-failure").unwrap();
+    let file = directory.join("tests.fwp");
+    for body in ["const \"child trap\" | prim.trap", "const 7 | exit"] {
+        std::fs::write(&file, format!(
+            "test \"child\" = task.spawn ({body} | const ()) | task.await | eq (Some ())\ntest \"unreachable\" = True\n"
+        )).unwrap();
+        let reference = output(cache.fwp(&["test", "--interp"]).arg(&file), b"");
+        assert!(
+            !reference.status.success(),
+            "{body}: {}",
+            render(&reference)
+        );
+        assert!(!String::from_utf8_lossy(&reference.stdout).contains("unreachable"));
+        for mode in ["arc", "tracing"] {
+            let native = output(cache.fwp(&["test", "--gc", mode]).arg(&file), b"");
+            assert_eq!(render(&native), render(&reference), "{body}, {mode}");
+        }
+    }
 }

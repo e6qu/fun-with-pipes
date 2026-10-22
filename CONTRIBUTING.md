@@ -145,6 +145,19 @@ that Cargo produced every requested executable before starting tests. This
 scheduling change passed PR #154's complete acceptance matrix; that establishes
 coverage, not a measured speedup.
 
+Focused runner checks can select integration targets explicitly, for example:
+
+```sh
+python scripts/run-native-tests.py --targets aot std_tests --idle-timeout 600 --logs command-tests
+```
+
+This runs every test in the named targets and still audits the complete target
+inventory. Unknown or repeated names fail before compilation. The command checks
+use this ten-minute no-progress limit on all six hosts. On Windows, a timeout
+terminates the test process tree, including launched native programs; Unix uses
+its process group. Synthetic stuck-child controls verify termination and continued
+execution of the other targets. Focused checks supplement the full merge gates.
+
 For each macOS architecture, the two jobs use the explicit integration-target
 lists in `scripts/macos-test-shards.json`, read by `scripts/run-native-tests.py`.
 List order is execution priority: long targets start early so one worker is less

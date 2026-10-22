@@ -1133,14 +1133,20 @@ exports.deactivate = () => client && client.stop();
 
 ## Native tests with checked ownership
 
-`fwp test --gc arc tests.fwp` proves the ownership of every test before any test
-runs. `fwp test --std --gc arc` checks the standard library tests in the same mode.
+`fwp test --gc arc tests.fwp` checks every test against the ARC ownership rules
+before any test runs. `fwp test --std --gc arc` checks the standard library tests in the same mode.
 A rejected entry produces a compile diagnostic; it does not rerun under tracing.
 The existing default remains tracing while the wider migration is validated.
 
 For example, `test "length" = "abc" | string.length | eq 3` succeeds. A test that
 raises a language `Error` reports its value and fails; the runner releases that
-value and its temporary formatting buffer before continuing. Shared owners and
-scoped cleanup retain their ordinary rules. An unhandled primitive trap or process
-exit still terminates the native test executable; native tests do not yet provide
-the interpreter's per-test recovery for those cases.
+value and its temporary formatting buffer before continuing. A trap, explicit
+`exit` or cancellation in the test's root—the code running the test itself—also
+fails that test and lets later tests run. Owned values unwind, pending child tasks are cancelled and joined,
+and state storage is released. Both interpreter and native tests display output
+written by the test itself.
+
+For example, `test "stop" = 7 | exit` reports `FAILED (exit 7)` and the runner
+continues. This recovery belongs to the test runner: ordinary programs still
+exit. A trap or exit inside a child task remains process-fatal in both engines.
+The [handoff](development-state.md) records platform validation of these changes.

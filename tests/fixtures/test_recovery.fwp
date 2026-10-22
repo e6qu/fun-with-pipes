@@ -1,0 +1,12 @@
+# Failures of a test's root must release its owners and let later tests run.
+# The long allocated message must survive unwinding without truncation.
+test "output" = "visible output" | echo | const True
+test "long trap" = "owned trap " | string.repeat 200 | prim.trap
+test "exit" = -7 | exit
+test "state trap" = () | run-state ("state" | string.repeat 20) (get | prim.trap) | .0
+sleeping : () -> () ! {Async}
+sleeping = const 1h | task.sleep | const ()
+test "pending child" = task.spawn sleeping | const "parent trap" | prim.trap
+test "state after trap" = () | run-state "fresh" get | .0 | eq "fresh"
+test "after recovery" = True
+test "last state error" = () | run-state ("last" | string.repeat 20) (get | fail) | .0

@@ -1212,6 +1212,9 @@ static fwp_task *fwp_spawn(V thunk, int64_t deadline) { return fwp_spawn_task(th
 
 static void fwp_root_cancelled(void) {
     fwp_join_children();
+#ifdef FWP_TESTS
+    fwp_test_abort(3, NULL, 0);
+#endif
     fwp_flush();
     fprintf(stderr, "fwp: the main task was cancelled\n");
     exit(1);
@@ -1288,6 +1291,32 @@ static void fwp_tasks_abort(void) {
     for (fwp_task *c = fwp_cur->first_child; c; c = c->next_sibling) fwp_cancel_tree(c);
     fwp_join_children();
 }
+
+#ifdef FWP_TESTS
+static void fwp_test_abort(int kind, const char *message, int code) {
+    if (!fwp_test_active || (fwp_cur && fwp_cur != fwp_root)) return;
+    fwp_test_failure = kind;
+    fwp_test_exit_code = code;
+    if (message) {
+        size_t bytes = strlen(message) + 1;
+        fwp_test_message = malloc(bytes);
+        if (!fwp_test_message) {
+            fprintf(stderr, "fwp: out of memory\n"); fflush(NULL); _Exit(102);
+        }
+        memcpy(fwp_test_message, message, bytes);
+    }
+    /* Copy a trap message before its source owner unwinds. Join cancelled
+     * children before reusing this root's handler and stack for another test. */
+    fwp_cleanup_unwind(fwp_test_cleanup);
+    if (fwp_cur) {
+        fwp_cur->unwinding = 1;
+        fwp_tasks_abort();
+        fwp_cur->cancelled = 0;
+        fwp_cur->unwinding = 0;
+    }
+    longjmp(fwp_test_jump, 1);
+}
+#endif
 
 static V fwp_opt_result(fwp_task *t) { return t->has_result ? fwp_some(t->result) : FWP_NONE; }
 

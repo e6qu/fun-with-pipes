@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run all native Cargo test targets or one explicit macOS shard."""
+"""Run all native Cargo targets, one Mac shard or explicit focused targets."""
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
@@ -105,8 +105,9 @@ def test_executables(output, metadata, shard, selected):
     if len(set(executables.values())) != len(executables):
         raise ValueError("test targets share an executable path")
     order = {name: index for index, name in enumerate(selected)}
-    return sorted(executables.items(), key=lambda item:
+    ordered = sorted(executables.items(), key=lambda item:
                   (1, order[item[0][1]]) if item[0][0] == "test" else (0, *item[0]))
+    return [(key, [executable]) for key, executable in ordered]
 
 
 def run_tests(executables, test_args, logs, idle_timeout):
@@ -115,14 +116,14 @@ def run_tests(executables, test_args, logs, idle_timeout):
     logs.mkdir(parents=True, exist_ok=True)
 
     def run(item):
-        (kind, name), executable = item
+        (kind, name), invocation = item
         log = logs / f"{kind}-{name}.log"
         started = time.monotonic()
         print(f"Starting {kind}/{name}; log: {log}", flush=True)
         # Two executable workers, each with one harness thread. Individual tests
         # keep their existing internal parallelism (for example golden programs).
         with log.open("wb") as output:
-            with subprocess.Popen([executable, "--test-threads=1", *test_args],
+            with subprocess.Popen([*invocation, "--test-threads=1", *test_args],
                                   cwd=ROOT, stdout=output, stderr=subprocess.STDOUT,
                                   start_new_session=True) as process:
                 deadline = time.monotonic() + idle_timeout
@@ -143,10 +144,21 @@ def run_tests(executables, test_args, logs, idle_timeout):
                                 deadline = time.monotonic() + idle_timeout
                             if time.monotonic() < deadline:
                                 continue
-                            try:
-                                os.killpg(process.pid, signal.SIGKILL)
-                            except ProcessLookupError:
-                                pass  # The group exited between the deadline and kill.
+                            if os.name == "nt":
+                                # Windows has no POSIX process groups. Include
+                                # native programs and compilers launched by the
+                                # test process in the termination request.
+                                killed = subprocess.run(
+                                    ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                if killed.returncode and process.poll() is None:
+                                    output.write(killed.stdout)
+                                    raise RuntimeError(f"cannot terminate timed-out {kind}/{name}")
+                            else:
+                                try:
+                                    os.killpg(process.pid, signal.SIGKILL)
+                                except ProcessLookupError:
+                                    pass  # The group exited between deadline and kill.
                             process.wait()
                             output.write(f"\nNo completed test for {idle_timeout}s; target timed out\n".encode())
                             code = 124
@@ -166,6 +178,8 @@ def main():
     selection = parser.add_mutually_exclusive_group(required=True)
     selection.add_argument("--shard", choices=SHARDS)
     selection.add_argument("--all", action="store_true")
+    selection.add_argument("--targets", nargs="+", metavar="NAME",
+                           help="explicit integration targets; still audit full shard coverage")
     parser.add_argument("--logs", type=Path, required=True)
     parser.add_argument("--idle-timeout", type=int, required=True,
                         help="maximum seconds without a completed test case")
@@ -174,8 +188,20 @@ def main():
         parser.error("--idle-timeout must be positive")
     metadata = json.loads(subprocess.check_output(
         ["cargo", "metadata", "--no-deps", "--format-version", "1"], cwd=ROOT))
-    selected_group = "all" if options.all else options.shard
+    selected_group = "all" if options.all or options.targets else options.shard
     args, all_targets, selected = command(metadata, selected_group, assignment(SCHEDULE))
+    if options.targets:
+        if len(options.targets) != len(set(options.targets)):
+            parser.error("duplicate selected test target")
+        missing = set(options.targets) - set(all_targets)
+        if missing:
+            parser.error(f"unknown selected test targets: {sorted(missing)}")
+        selected_group = "selected"
+        selected = options.targets
+        args = ["cargo", "test", "--no-fail-fast"]
+        for name in selected:
+            args += ["--test", name]
+        args += ["--", "--nocapture"]
     print(f"Native {selected_group}: {len(selected)}/{len(all_targets)} "
           "integration targets", flush=True)
     print("\n".join(selected), flush=True)
