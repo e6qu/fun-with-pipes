@@ -303,3 +303,62 @@ fn pipe_string_copy_matches_raw_interpreter_under_gc_and_reuse_verification() {
         }
     }
 }
+
+#[test]
+fn raw_wide_integer_storage_preserves_all_bits_and_owned_result_boxes() {
+    let dir = fwp::cgen::TempDir::new("fwp-raw-wide-integers").unwrap();
+    let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/raw_integer_widths.fwp");
+    let expected = include_bytes!("fixtures/raw_integer_widths.out");
+    let reference = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .env("FWP_NO_OPT", "1")
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(reference.status.success(), "{reference:?}");
+    assert_eq!(reference.stdout, expected);
+    assert!(reference.stderr.is_empty());
+    for gc in ["tracing", "arc"] {
+        let cfile = dir.join("wide.c");
+        let emit = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--gc", gc, "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile)
+            .output()
+            .unwrap();
+        assert!(emit.status.success(), "{emit:?}");
+        let mut code = std::fs::read_to_string(&cfile).unwrap();
+        if gc == "arc" {
+            let init = "    fwp_init_consts();\n";
+            let end = "    /* Ownership observation point: before runtime teardown. */\n";
+            assert_eq!(code.matches(init).count(), 1);
+            assert_eq!(code.matches(end).count(), 1);
+            code = code.replace(init, &format!("{init}    intptr_t raw_budget=fwp_gc.budget_given;\n"))
+                .replace(end, &format!("{end}    if(fwp_gc.enabled || fwp_gc.ncollect || fwp_gc.budget<raw_budget)exit(214);\n"));
+        }
+        for opt in ["-O0", "-O2"] {
+            let binary = dir.join("wide.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let output = Command::new(&binary)
+                .env("FWP_GC_STRESS", if gc == "arc" { "0" } else { "1" })
+                .env("FWP_GC_VERIFY", if gc == "arc" { "0" } else { "1" })
+                .env("FWP_REUSE_VERIFY", if gc == "arc" { "0" } else { "1" })
+                .output()
+                .unwrap();
+            assert!(output.status.success(), "{gc}/{opt}: {output:?}");
+            assert_eq!(output.stdout, expected, "{gc}/{opt}");
+            assert!(output.stderr.is_empty(), "{gc}/{opt}: {output:?}");
+            if let Some(root) = std::env::var_os("FWP_QUEUED_FUNCTION_ARTIFACTS") {
+                let path = std::path::PathBuf::from(root).join("wide-integers");
+                std::fs::create_dir_all(&path).unwrap();
+                let stem = path.join(format!("{gc}{opt}"));
+                std::fs::write(stem.with_extension("c"), &code).unwrap();
+                std::fs::copy(&binary, stem.with_extension("exe")).unwrap();
+                std::fs::write(stem.with_extension("stdout"), output.stdout).unwrap();
+                std::fs::write(stem.with_extension("stderr"), output.stderr).unwrap();
+            }
+        }
+    }
+}

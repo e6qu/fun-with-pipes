@@ -9,8 +9,8 @@ shows allocation, a borrowed pointer into that allocation, copying and release.
 
 **Validation is in progress.** The initial pointer-admission source passes both
 Linux hosts and Intel macOS, with 63 native images independently inspected.
-The expanded batch also repairs interpreter string retention and 32-bit pointer
-storage/allocation bounds; it requires fresh native and 32-bit evidence. See the
+The expanded batch also repairs interpreter string retention, 32-bit pointer
+storage/allocation bounds and truncated 128-bit raw integers; it requires fresh native and 32-bit evidence. See the
 [handoff](../development-state.md) for source IDs, jobs and final delivery gates.
 These are correctness and cleanup checks, not benchmarks or C/Rust speed claims.
 
@@ -43,6 +43,7 @@ Checked ARC callbacks returning managed C string addresses remain rejected. See 
 | 32-bit pointers | Actual WebAssembly interpreter and generated WASI at O0/O2 | Pointer-sized reads/writes preserve adjacent bytes and signed values; offsets advance by four bytes; oversized allocation counts trap before narrowing. A deliberately omitted bound is detected. |
 | Raw buffers | The C sorting, formatting and suffix-search example at O0/O2, tracing and ARC | Exact golden output; all tracked manual allocations released; deliberately omitting `mem.free` exits with the observer's failure code. ARC also checks final managed charge and no collection. |
 | Callbacks | Nullable pointers, 65 repeated calls, nested calls, a caught error, suspension and cancellation; O1/O2 in both modes | Exact raw-interpreter output; no remaining callback frames or managed charge in ARC; omitted result release and task-context controls fail. |
+| Wide integer buffers | Two adjacent, unaligned I128/U128 cells, signed extremes and upper bits, at O0/O2 | All 128 bits round-trip, guard bytes stay unchanged, element offsets use 16 bytes, and ARC result boxes leave no managed charge. |
 | Libraries | Pointer identity, nullable pointers, a record with an owned string and borrowed pointer, and manual allocation/copy/release | The host's buffer remains its own; copied strings survive buffer changes/freeing; releasing a returned record releases its strings only. |
 | Library lifetime | 257 ordinary call sequences per loaded instance, failure controls, O1/O2, static/shared linkage, and three shared-library load/unload rounds | Zero final managed charge and collections; existing controls detect lost owners, extra result boxes and redundant retains. |
 
@@ -75,13 +76,15 @@ Rust interpreter tests for `wasm32-wasip1` and executes them in Node, then runs
 generated WASI pointer checks at O0/O2. Native pointer tests alone cannot verify
 32-bit behavior. No emulated run establishes support for a native platform.
 
-Each passing host retains 21 native images for independent inspection: 17
+The expanded suite retains 25 native images per host for inspection: 21
 executables and four static/shared libraries, with their generated C. Inspection
 checks artifact hashes, native architecture, actual disassembly and absence of
 tracing symbols in ARC images. It also checks exact outputs, raw-buffer negative
 controls, callback results and library unload ledgers. The 82 executed corpus
 cases are reported separately; only its C-interoperation binary is part of
-these 21 retained images.
+these 25 retained images. Four cover the wide-integer repair. The 32-bit job
+retains 12 WASI modules: pointer-sized storage, wide integers, three oversized
+allocation traps and a deliberately missing-bound control, each at O0/O2.
 
 The entry points are [raw-memory tests](../../tests/raw_memory_ownership.rs),
 [callback tests](../../tests/foreign_callback_ownership.rs),

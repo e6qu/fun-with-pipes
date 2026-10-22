@@ -6610,28 +6610,41 @@ impl<'p> Gen<'p> {
             "mem.string" => "size_t n = STR(l0)->len;\n    if (n == SIZE_MAX) fwp_trap(\"raw allocation too large\");\n    char *p = (char *)calloc(n + 1, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    memcpy(p, STR(l0)->d, n);\n    return (V)(uintptr_t)p;".into(),
             "ptr.cast" | "ptr.address" => "return l0;".into(),
             "ptr.at" => {
-                let t = crate::ffi::classify_scalar(&elem(&p(1), 0));
+                let element = elem(&p(1), 0);
+                let storage = match num_kind(&element).map(|(kind, _, _)| kind) {
+                    Some("K_I128") => "i128".into(),
+                    Some("K_U128") => "u128".into(),
+                    _ => crate::ffi::c_name(&crate::ffi::classify_scalar(&element)),
+                };
                 format!(
                     "return (V)((uintptr_t)l1 + (uintptr_t)l0 * sizeof({}));",
-                    crate::ffi::c_name(&t)
+                    storage
                 )
             }
-            "ptr.read" => {
+            "ptr.read" => match num_kind(&result).map(|(kind, _, _)| kind) {
+                Some("K_I128") => "i128 x;\n    memcpy(&x, (void *)(uintptr_t)l0, sizeof x);\n    return fwp_box_i128(x);".into(),
+                Some("K_U128") => "u128 x;\n    memcpy(&x, (void *)(uintptr_t)l0, sizeof x);\n    return fwp_box_u128(x);".into(),
+                _ => {
                 let t = crate::ffi::classify_scalar(&result);
                 format!(
                     "{} x;\n    memcpy(&x, (void *)(uintptr_t)l0, sizeof x);\n    return {};",
                     crate::ffi::c_name(&t),
                     ffi_from_c(&t, "x")
                 )
-            }
-            "ptr.write" => {
+                }
+            },
+            "ptr.write" => match num_kind(&p(0)).map(|(kind, _, _)| kind) {
+                Some("K_I128") => "i128 x = fwp_i128(l0);\n    memcpy((void *)(uintptr_t)l1, &x, sizeof x);\n    return FWP_UNIT;".into(),
+                Some("K_U128") => "u128 x = fwp_u128(l0);\n    memcpy((void *)(uintptr_t)l1, &x, sizeof x);\n    return FWP_UNIT;".into(),
+                _ => {
                 let t = crate::ffi::classify_scalar(&p(0));
                 format!(
                     "{} x = {};\n    memcpy((void *)(uintptr_t)l1, &x, sizeof x);\n    return FWP_UNIT;",
                     crate::ffi::c_name(&t),
                     ffi_to_c(&t, "l0")
                 )
-            }
+                }
+            },
             "ptr.read-string" => "if (!l0) fwp_trap(\"reading a string at a null pointer\");\n    return fwp_c_string((const char *)(uintptr_t)l0);".into(),
             "trit.from-sign" => {
                 "return (V)(int64_t)(((int64_t)l0 > 0) - ((int64_t)l0 < 0));".into()

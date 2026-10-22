@@ -545,17 +545,22 @@ foreign "C" text-alias : String -> String = "text_alias"
 foreign "C" callback-alias : (String -> String) -> String -> String = "callback_alias"
 foreign "C" callback-error : (String -> String ! {Error[String]}) -> String -> String ! {Error[String]} = "callback_alias"
 foreign "C" compare : String -> String -> I32 = "strcmp"
-aliased : String -> String
+export aliased : String -> String
 aliased = text-alias
-nested : String -> String
+export nested : String -> String
 nested = callback-alias text-alias
 raising : String -> String ! {Error[String]}
 raising = const "stop" | fail
-failed : String -> String ! {Error[String]}
+export failed : String -> String ! {Error[String]}
 failed = callback-error raising
-bad-argument : String -> I32
+export bad-argument : String -> I32
 bad-argument = flip compare "bad\0argument"
 "#, fwp::mono::Roots { exports: true, ..Default::default() }).map_err(|e| e.rendered).unwrap();
+    assert_eq!(
+        program.exports.len(),
+        4,
+        "all cleanup probes must be compiled"
+    );
     let input = fwp::value::Value::str(&"x".repeat(65536));
     let mut interpreter = fwp::interp::Interp::new(&program, Box::new(std::io::sink())).unwrap();
     for name in ["aliased", "nested", "failed", "bad-argument"] {

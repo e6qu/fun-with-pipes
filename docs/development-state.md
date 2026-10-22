@@ -99,40 +99,56 @@ publication/audit: `fwp-pointer-publication.json`, `fwp-audit-pointer.py` in
 
 Both initial Windows jobs finished all seven targets and found missing `.exe`
 suffixes in artifact copying. Repair `2eaccbc77c42` then exposed omitted OpenSSL
-setup in the focused corpus job. Both complete logs were audited; all six other
-targets passed. Preparation `003c7e84685d711e676ec51a5509225c2e94be17` adds
-production TLS setup and aggregates corpus native-build errors. Its Windows
-runs `39718444232`/`39718446980` are running the native suite. Audit with
-`/private/tmp/fwp-audit-pointer-repair.py`; receipt is
-`/private/tmp/fwp-pointer-repair-publication.json`.
+setup in the focused corpus job. All six other targets passed. Preparation
+`003c7e84685d711e676ec51a5509225c2e94be17` adds production TLS setup and aggregates
+corpus native-build errors. Windows runs `39718444232`/`39718446980` now both pass,
+with all logs audited. Receipt: `/private/tmp/fwp-pointer-repair-acceptance.json`.
+The same explicit macOS setup repairs ARM macOS's missing OpenSSL headers.
 
-Further review found three implementation bugs, now repaired locally in the same
-batch: the interpreter leaked temporary C strings, pointer-sized scalar storage
-used eight bytes on 32-bit targets, and raw allocation counts narrowed before
-checking the target size. String copies now belong to the receiving foreign
-call, including callback results and nested calls; returned strings copy before
-those owners drop. Invalid argument conversion and callback failures also drop
-the copies. Raw allocation/string-terminator bounds are explicit. Existing
-nonpositive allocation counts still request one byte.
+Preparation `e3ddc84eddaf14163ab7d27f4044d29f81cc22d9`, run `39719795583`, repairs
+three implementation bugs: leaked interpreter C strings, eight-byte pointer-sized
+storage on 32-bit targets, and allocation counts narrowed before validation.
+The actual 32-bit interpreter and generated WASI job passes with audited logs;
+all six native hosts finish all seven targets with only the new C-string fixture
+failing: its entry functions lacked explicit export declarations, so no
+allocation assertion ran. Every completed job and test target has been audited.
+The fixture now exports
+all four probes; a local C-header emission check verifies their actual interfaces.
+Publication/audit helpers are
+`/private/tmp/fwp-pointer-boundary-publication.json` and
+`/private/tmp/fwp-audit-pointer-boundaries.py`. These compiler changes invalidate
+any claim that earlier program source is unchanged.
 
-New checks count real C-string allocations/releases across aliases, reentry and
-errors. Actual 32-bit interpreter tests exercise reads, writes, signed values,
-neighboring bytes and allocation bounds. Generated WASI checks use O0/O2 and a
-missing-bound negative control. Because these repairs change compiler code,
-publish a fresh seven-job `pointer-ownership` preparation (six native hosts plus
-`pointer_width`) before delivery. Earlier unchanged-source evidence is only a
-baseline, not acceptance of these changes. No second PR is open.
+String copies now belong to the receiving foreign call, including callback
+results and nested calls; returned strings copy before those owners drop.
+Argument conversion and callback errors also drop the copies. Allocation and
+string-terminator bounds are explicit; nonpositive counts still allocate one byte.
+Checks count real C-string allocations/releases. Actual 32-bit execution checks
+signed values, adjacent bytes, offsets and bounds at O0/O2, with a missing-bound
+negative control. Earlier results are baselines, not acceptance of later changes.
 
-Focused local checks use the guard. `/private/tmp/fwp-check-pointer-boundary-fixes.py`
-passes in 6.71s: saved-compiler fixture execution, a standalone allocator observer
-that detects deliberate retention and recovery, formatting, actionlint and docs.
-A YAML quoting error caught on the first run was fixed before this pass.
-`/private/tmp/fwp-check-pointer-final-preparation.py` passes in 12.00s: source-based
-library documentation generation, workflow audit, 11 native-runner coverage and
-failure-propagation tests, all 392 primitive declarations against the frozen
-inventory, and diff checks. Changed Rust compiler execution still requires CI.
-The generated WASI negative control is included; publication repeats format,
-workflow and documentation checks. The readable report is `docs/measurements/manual-pointers.md`.
+The full width review then reproduced another existing bug: writing/reading
+1267650600228229401496703205377 through Ptr[I128] returned 1. I128/U128 raw access
+used the 64-bit conversion, losing upper bits; native generation also mistook
+boxed values for scalar words. The local repair uses 16-byte cells and explicit
+boxing/unboxing. It does not extend the foreign C by-value ABI. New native and
+WASI fixtures use adjacent unaligned signed/unsigned cells, extremes, guard
+bytes and physical ARC cleanup checks. The complete run found no other failures. Publish the wide repair together with
+the export-fixture fix, then validate the complete new source.
+No second PR is open.
+
+Guarded checks passed: `fwp-check-pointer-boundary-fixes.py` (6.71s: fixture
+semantics, allocator observer with intentional retention/recovery, format,
+workflow/docs); `fwp-check-pointer-final-preparation.py` (12.00s: generated
+library docs, 11 native-runner checks, 392 primitive contracts); and
+`fwp-check-wide-pointer-preparation.py` (6.80s: exact old-bug reproduction,
+new fixture syntax, format, workflow/docs). Scripts live in `/private/tmp`.
+The expanded width fixture and docs pass again in 6.69s. The repaired export
+fixture, actual emitted C header and allocator observer pass in 6.63s. Changed
+Rust execution requires CI. Publish with `/private/tmp/fwp-publish-wide-pointer-repair.py`
+only after `/private/tmp/fwp-audit-pointer-boundaries.py` has audited all seven
+completed jobs. The helper checks that every native failure is the known fixture
+error, archives the old receipts, publishes one repair and starts all seven jobs.
 
 A separate 64-word/eight-word-vocabulary generated-C probe identifies the next
 list optimization candidate. Moving unique list elements into `map` removes
@@ -186,3 +202,8 @@ Completed task-record evidence was losslessly archived to protect disk space:
 Its adjacent receipt verifies all 1,348 files byte-for-byte; extracted duplicates
 were removed, saving 245,634,872 bytes. No source or current evidence was removed.
 Guarded archival passed in 4.63s; free disk afterward was 64.98 GiB.
+
+Completed task-await evidence is also archived losslessly at
+`/private/tmp/fwp-task-await-evidence/f2b5d400feda/completed-native-evidence.zip`.
+The receipt verifies all 1,466 files; extracted duplicates were removed, saving
+137,986,136 bytes. Guarded archival passed in 3.81s, with 65.23 GiB free afterward.

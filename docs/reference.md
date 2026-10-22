@@ -485,7 +485,7 @@ A C name other than the fwp one comes after `=`: `c-div 7 2` calls
 
 | fwp | C |
 |---|---|
-| integers | `intN_t`, `uintN_t`; `ISize`/`USize` are `ptrdiff_t`/`size_t` |
+| `I8`–`I64`, `U8`–`U64`, `ISize`, `USize` | `intN_t`, `uintN_t`; `ISize`/`USize` are `ptrdiff_t`/`size_t` |
 | `F32`, `F64`, `Bool` | `float`, `double`, `_Bool` |
 | `F16`, `BF16` | `uint16_t` containing the raw format bits |
 | `F128` | `struct fwp_binary128 { uint64_t low, high; }` containing raw bits |
@@ -511,7 +511,8 @@ pointer element widths use the same representation (2/2/16 bytes).
   Pointer reads, writes and offsets use the C element's width; `ISize` and
   `USize` occupy four bytes on 32-bit targets and eight on maintained native
   targets. Copying bytes permits unaligned addresses but still requires valid
-  accessible storage.
+  accessible storage. `I128`/`U128` raw elements occupy 16 bytes and preserve
+  all bits; this does not add them to the foreign C by-value ABI.
 - C borrows `String`/`Bytes` arguments and string fields only for the call;
   it must copy data it wants to retain. Returned C strings are copied into
   owned language values before the call boundary finishes.
