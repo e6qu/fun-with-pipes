@@ -20,6 +20,9 @@ programs, current checks and remaining measurement gaps. The first
 time ratio for its larger input on two Linux hosts, with the implementation
 differences stated explicitly. The [unchanged-text candidate](measurements/unchanged-text.md)
 removes copies and reports paired old/new costs without hiding the remaining gap.
+The [string-map comparison](measurements/string-map-ownership.md) then moves
+unique string owners through normalization: larger-case ARC is 6.8–7.0% faster
+than its paired fwp baseline, while still taking 2.61–3.03× the C time.
 The [descent comparison](measurements/ad-application.md) measures saved history
 versus current weights and separates managed storage from unmeasured tape buffers.
 
