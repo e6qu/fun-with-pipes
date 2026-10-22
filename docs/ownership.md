@@ -913,8 +913,8 @@ Scoped foreign calls can borrow strings/bytes and copy supported scalar/record
 values. Synchronous callbacks run on the calling task before C returns; C must
 copy borrowed data before keeping it. Foreign strings copy into fwp-owned values.
 The manual-pointer extension admits `Ptr[T]` and `Option[Ptr[T]]` in native calls,
-callbacks and exports. Its cross-platform validation is tracked in the
-[handoff](development-state.md). A pointer copies an address, never an owner of
+callbacks and exports. Its [native checks](measurements/manual-pointers.md) and
+[handoff](development-state.md) track validation. A pointer copies an address, never an owner of
 `T`. ARC releases any surrounding option or record, but neither follows nor
 frees the address. This also applies when `T` names an opaque host type.
 Callbacks returning managed C strings remain rejected: their result needs a

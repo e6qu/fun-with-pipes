@@ -69,6 +69,27 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/setup-windows.ps1
+      - uses: actions/cache/restore@v6
+        id: pointer_windows_tls_cache
+        if: runner.os == 'Windows'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native Windows OpenSSL dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v6
+        if: ${{ !cancelled() && runner.os == 'Windows' && env.FWP_WINDOWS_DEPS_READY == '1' && steps.pointer_windows_tls_cache.outputs.cache-hit != 'true' }}
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - name: Compiler checks for manual pointer ownership
         id: file_compiler
