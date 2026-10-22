@@ -273,7 +273,9 @@ main = (read-all () | concat "needle!", ["needle", "skip"] | map (concat "!")) |
                 }
                 let code = format!("static unsigned probe_active,probe_retains,probe_calls;\n{runtime}\nint main(int argc,char **argv){{int status=original_main(argc,argv);if(!status && probe_calls!=2)return 89;return status;}}\n");
                 for opt in ["-O1", "-O2"] {
-                    let exe = dir.0.join(format!("borrowed-{fold}-{stack}-{broken}{opt}"));
+                    let exe = dir
+                        .0
+                        .join(format!("borrowed-{fold}-{stack}-{broken}{opt}.exe"));
                     fwp::cgen::compile_c(&code, &exe, opt).unwrap();
                     let artifacts =
                         std::env::var_os("FWP_CALLBACK_CAPTURE_ARTIFACTS").map(PathBuf::from);

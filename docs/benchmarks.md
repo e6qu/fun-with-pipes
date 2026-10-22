@@ -56,6 +56,11 @@ The [callback-local comparison](measurements/callback-locals.md) removes another
 function record and generic entry while preserving the allocation/count budgets.
 The [between-solve checks](measurements/descent-observers.md) verify zero live
 storage at every checkpoint and demonstrate why final-only checks are insufficient.
+The [matched-formula comparison](measurements/coordinate-work.md) adds coordinate-based
+C/Rust peers while retaining the original edge-based programs. Its largest case
+takes 10.40–13.69× C time and 11.86–14.07× Rust time; formula arrangement does not
+close the gap. Per-solve probes also check actual C/Rust buffer releases. The
+report preserves one failed timing control and explains the different memory scopes.
 
 ## Choose the question first
 

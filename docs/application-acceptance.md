@@ -136,17 +136,34 @@ accepted raw-storage and process-memory measurements. The
 [explicit-derivative comparison](measurements/descent-peers.md) supplies C/Rust
 baselines. The [packed-array version](measurements/packed-descent.md) reduces
 allocation requests, and [array-owner moves](measurements/array-owner-moves.md)
-halve its retains with unchanged managed peak. In that largest measured case,
-packed fwp still takes about 3.05× C time on AMD64 and 3.01× on ARM64. C and Rust
-reuse two output buffers; fwp allocates a new immutable array per update.
+halve its retains with unchanged managed peak. That historical array-owner run
+measured about 3.05× C time on AMD64 and 3.01× on ARM64 for the largest case.
+[Capture borrowing](measurements/array-capture-descent.md) subsequently removes
+the remaining retains; [callback locals](measurements/callback-locals.md) reduce
+generated code further. Neither establishes a dependable timing improvement.
+C and Rust reuse two buffers and compute each edge's residual once; fwp allocates
+a new immutable array per update and may recompute a residual for each adjacent
+coordinate. These ratios compare complete implementations, not language overhead.
 
-The latest protocol balances positions and immediate predecessor pairs within
-rounds and includes a byte-identical control. Copies of the same executable still
-differ by several percent. Timing budgets remain open; fewer retains alone do
-not establish a speed gain. These bounded repeat counts also stay below
+The [repeated-solve protocol](measurements/descent-batches.md) balances positions
+and immediate predecessor pairs and includes byte-identical controls. It runs
+512 complete solves per process; the largest adapter-only fwp case takes roughly
+10–12× C time. Some identical-copy controls still fail their 2% bound, so timing
+budgets remain open. [Per-solve observations](measurements/descent-observers.md)
+require zero managed/raw live storage after every solve and catch a deliberately
+delayed release that final-only checks miss. These finite counts stay below
 tape-generation exhaustion and do not prove a memory bound for arbitrary nesting
-or indefinitely long runs. The [handoff](development-state.md) tracks the next
-capture-borrowing experiment.
+or indefinitely long runs. The [handoff](development-state.md) records current
+delivery gates and the next measurement.
+
+The [matched-formula comparison](measurements/coordinate-work.md) uses the expanded
+callback-local compiler and adds C/Rust versions of fwp's coordinate formula.
+The largest case still takes 10.40–13.69× C time and 11.86–14.07× Rust time.
+Eleven of twelve identical-copy controls pass; AMD64's 3-coordinate/1,999-update
+case fails the 2% limit. Numerical buffer probes require cleanup after every
+C/Rust solve and catch deliberately omitted releases. Their buffer-only counts
+are not comparable to all fwp managed values or process memory. Output, checked
+access and buffer reuse remain separate costs to investigate.
 
 The descent runner saves every count/storage violation in `budget-failures.json`
 and in the final comparison report. It checks all requested input sizes before
@@ -321,5 +338,8 @@ remains unchanged. Both Linux jobs and 96 image inspections pass; the report
 records the allocation savings, unchanged retains, slower zero-update control
 and remaining C/Rust gaps. The [array-owner move](measurements/array-owner-moves.md)
 then halves retains without increasing allocation requests or managed peak. Its
-timing controls expose variation and preserve slower results. Capture borrowing
-remains separate work, with its own lifetime proof and measurements.
+timing controls expose variation and preserve slower results. Subsequent
+[capture borrowing](measurements/array-capture-descent.md) removes the remaining
+retains with unchanged request/peak budgets. [Callback locals](measurements/callback-locals.md)
+also remove eligible function records and unused generic entries; their report
+separates code/frame savings from inconclusive timing.

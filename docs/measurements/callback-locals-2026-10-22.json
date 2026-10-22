@@ -36919,7 +36919,45 @@
         "flatCaptureBindings": 2,
         "genericEntries": [
           "loop-fn"
-        ]
+        ],
+        "generatorFrames": {
+          "fwp-packed": 48,
+          "fwp-packed-baseline": 96
+        },
+        "generatorPrologues": {
+          "fwp-packed": [
+            "    5630:\t48 b8 fe ff ff ff ff \tmovabs $0x1ffffffffffffffe,%rax",
+            "    5637:\tff ff 1f ",
+            "    563a:\t41 55                \tpush   %r13",
+            "    563c:\t41 54                \tpush   %r12",
+            "    563e:\t55                   \tpush   %rbp",
+            "    563f:\t53                   \tpush   %rbx",
+            "    5640:\t48 83 ec 08          \tsub    $0x8,%rsp",
+            "    5644:\t48 39 f0             \tcmp    %rsi,%rax",
+            "    5647:\t0f 82 81 02 00 00    \tjb     58ce <fwp_hof0+0x29e>",
+            "    564d:\t48 89 fd             \tmov    %rdi,%rbp",
+            "    5650:\t48 89 f7             \tmov    %rsi,%rdi",
+            "    5653:\t49 89 f4             \tmov    %rsi,%r12",
+            "    5656:\te8 b5 fd ff ff       \tcall   5410 <fwp_array_new_packed.constprop.0>",
+            "    565b:\t48 89 c2             \tmov    %rax,%rdx"
+          ],
+          "fwp-packed-baseline": [
+            "    66c0:\t41 57                \tpush   %r15",
+            "    66c2:\t41 56                \tpush   %r14",
+            "    66c4:\t49 89 fe             \tmov    %rdi,%r14",
+            "    66c7:\t48 89 f7             \tmov    %rsi,%rdi",
+            "    66ca:\t41 55                \tpush   %r13",
+            "    66cc:\t41 54                \tpush   %r12",
+            "    66ce:\t55                   \tpush   %rbp",
+            "    66cf:\t53                   \tpush   %rbx",
+            "    66d0:\t48 89 f3             \tmov    %rsi,%rbx",
+            "    66d3:\t48 83 ec 28          \tsub    $0x28,%rsp",
+            "    66d7:\te8 f4 fd ff ff       \tcall   64d0 <fwp_array_typed_new.constprop.0>",
+            "    66dc:\t49 89 c7             \tmov    %rax,%r15",
+            "    66df:\t48 85 db             \ttest   %rbx,%rbx",
+            "    66e2:\t0f 84 e2 00 00 00    \tje     67ca <fwp_hof0+0x10a>"
+          ]
+        }
       }
     },
     {
@@ -73838,7 +73876,45 @@
         "flatCaptureBindings": 2,
         "genericEntries": [
           "loop-fn"
-        ]
+        ],
+        "generatorFrames": {
+          "fwp-packed": 48,
+          "fwp-packed-baseline": 96
+        },
+        "generatorPrologues": {
+          "fwp-packed": [
+            "    4620:\ta9bd7bfd \tstp\tx29, x30, [sp, #-48]!",
+            "    4624:\t910003fd \tmov\tx29, sp",
+            "    4628:\ta90153f3 \tstp\tx19, x20, [sp, #16]",
+            "    462c:\taa0003f4 \tmov\tx20, x0",
+            "    4630:\tb27fefe0 \tmov\tx0, #0x1ffffffffffffffe    \t// #2305843009213693950",
+            "    4634:\ta9025bf5 \tstp\tx21, x22, [sp, #32]",
+            "    4638:\teb00003f \tcmp\tx1, x0",
+            "    463c:\t540011c8 \tb.hi\t4874 <fwp_hof0+0x254>  // b.pmore",
+            "    4640:\taa0103f5 \tmov\tx21, x1",
+            "    4644:\taa0103e0 \tmov\tx0, x1",
+            "    4648:\t97ffff72 \tbl\t4410 <fwp_array_new_packed.constprop.0>",
+            "    464c:\taa0003f3 \tmov\tx19, x0",
+            "    4650:\t900000e2 \tadrp\tx2, 20000 <__data_start>",
+            "    4654:\t91016042 \tadd\tx2, x2, #0x58"
+          ],
+          "fwp-packed-baseline": [
+            "    60f0:\ta9ba7bfd \tstp\tx29, x30, [sp, #-96]!",
+            "    60f4:\t910003fd \tmov\tx29, sp",
+            "    60f8:\ta90153f3 \tstp\tx19, x20, [sp, #16]",
+            "    60fc:\taa0003f4 \tmov\tx20, x0",
+            "    6100:\taa0103e0 \tmov\tx0, x1",
+            "    6104:\ta9025bf5 \tstp\tx21, x22, [sp, #32]",
+            "    6108:\taa0103f6 \tmov\tx22, x1",
+            "    610c:\ta90363f7 \tstp\tx23, x24, [sp, #48]",
+            "    6110:\tf90023f9 \tstr\tx25, [sp, #64]",
+            "    6114:\tfd0027ea \tstr\td10, [sp, #72]",
+            "    6118:\t6d0527e8 \tstp\td8, d9, [sp, #80]",
+            "    611c:\t97ffff76 \tbl\t5ef4 <fwp_array_typed_new.constprop.0>",
+            "    6120:\taa0003f5 \tmov\tx21, x0",
+            "    6124:\tb4000716 \tcbz\tx22, 6204 <fwp_hof0+0x114>"
+          ]
+        }
       }
     }
   ],

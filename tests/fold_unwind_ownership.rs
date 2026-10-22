@@ -1,4 +1,4 @@
-//! Completed map results and scratch storage release on nonlocal unwind.
+//! Fold accumulators and scratch storage release on nonlocal unwind.
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
@@ -63,7 +63,7 @@ fn right_fold_releases_accumulator_and_scratch_on_failure() {
     let dir = Scratch::new("failure");
     let src = dir.0.join("fold.fwp");
     let cfile = dir.0.join("fold.c");
-    let exe = dir.0.join("fold");
+    let exe = dir.0.join("fold.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
     let reference = checked(

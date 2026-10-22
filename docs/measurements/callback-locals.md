@@ -45,6 +45,12 @@ kept two entries. Instruction bytes fall further, from 34,418 to 33,570 on AMD64
 and from 32,508 to 31,612 on ARM64. The table compares with the earlier #197
 baseline. Smaller code is the demonstrated improvement; timings remain noisy.
 
+The generator loop's static stack frame falls from 96 to 48 bytes on both
+architectures. Saved prologues confirm GCC's frame records: AMD64 saves four
+registers and reserves eight more bytes (plus its return address); ARM64 reserves
+48 bytes. The program-entry frame remains 2,192 bytes on AMD64 and 2,224 on
+ARM64. These are individual function frames, not total peak stack usage.
+
 | Host | Coordinates-updates | Old instructions | New instructions | New / old | New / identical | New / C | New / Rust |
 |---|---|---:|---:|---:|---:|---:|---:|
 | x86_64 | 3-0 | 30418 | 22450 | 1.0429 | 0.9991 | 1.364 | 1.151 |
