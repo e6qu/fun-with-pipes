@@ -128,7 +128,7 @@ main = [
                 .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if(fwp_foreign_callbacks || fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < foreign_budget) { fprintf(stderr,\"foreign bytes left: %ld\\n\",(long)(foreign_budget-fwp_gc.budget)); exit(193); }\n"));
         }
         for opt in ["-O1", "-O2"] {
-            let binary = dir.join(format!("{gc}{opt}"));
+            let binary = dir.join(format!("{gc}{opt}.exe"));
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
             let verify = if gc == "arc" { "0" } else { "1" };
             let output = checked(

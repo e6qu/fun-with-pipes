@@ -99,7 +99,7 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
             let main = main.replace("    fwp_init_consts();\n", "    fwp_init_consts();\n    fwp_tasks_init();\n    intptr_t arc_budget = fwp_gc.budget_given;\n")
                 .replace("    /* Ownership observation point: before runtime teardown. */\n", "    /* Ownership observation point: before runtime teardown. */\n    if (fwp_gc.ncollect || fwp_gc.enabled || fwp_gc.budget < arc_budget) { fprintf(stderr, \"ARC unreclaimed bytes: %ld\\n\", (long)(arc_budget-fwp_gc.budget)); exit(193); }\n");
             let measured = format!("{runtime}{main}");
-            let binary = scratch.join(name);
+            let binary = scratch.join(format!("{name}.exe"));
             fwp::cgen::compile_c(&measured, &binary, "-O1").unwrap();
             let input = match std::fs::read(path.with_extension("in")) {
                 Ok(input) => input,

@@ -98,7 +98,7 @@ outside the benchmark suite.
    Weak handles remain a proposal. Distinguish missing proofs from definite cycles,
    and reject unproved retention instead of silently enabling tracing.
    The [execution-example inventory](docs/measurements/file-applications.md#which-maintained-examples-pass-arcs-checks)
-   identifies raw-pointer C interop as a concrete remaining boundary. Keep its
+   identified raw-pointer C interop for the current extension. Keep its
    programmer-managed `Unsafe` obligations explicit; do not admit invalid
    inter-task derivative lifetimes merely to increase the accepted count.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
