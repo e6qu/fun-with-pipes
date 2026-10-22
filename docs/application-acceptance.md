@@ -14,7 +14,7 @@ performance and platform requirements in the last column.
 | [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and a small tracing control | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | Preserve these observations as ownership changes; allocation-failure coverage remains |
 | [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scaled counting/filtering/CSV cleanup passes on six hosts; separate input/output costs and extend task-file coverage |
 | Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](benchmarks.md#current-numerical-comparison-and-record-moves) | Repeat current-revision comparisons; set per-size budgets; include a larger numerical application |
-| Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/1,999-update controls | [Managed/raw storage, process memory and timing](measurements/ad-application.md) on two Linux hosts | Establish equivalent-work C/Rust budgets; extend nested and platform evidence |
+| Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/1,999-update controls | [Managed/raw storage, process memory and timing](measurements/ad-application.md) on two Linux hosts | [C/Rust and explicit-fwp baseline](measurements/descent-peers.md) accepted; set repeated-host budgets and extend nested/platform evidence |
 | Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](benchmarks.md#server-memory-after-completed-remote-calls) | Consolidate one repeatable service scenario with bounded concurrency, disconnects and repeated live-memory samples |
 
 Before declaring this suite accepted, name the exact revisions, inputs and native
@@ -132,8 +132,9 @@ observer requires no live tapes or managed charge; a control that omits tape
 retirement must fail. This does not establish constant memory for arbitrary AD,
 or bounded long-running retention from a clean exit alone. The [first measured results](measurements/ad-application.md) show much lower
 managed peak storage with mixed, modest timing changes. The same report records
-accepted raw-storage and process-memory measurements; repeated-host timing budgets
-and C/Rust comparisons remain open. These bounded
+accepted raw-storage and process-memory measurements. The
+[explicit-derivative comparison](measurements/descent-peers.md) now supplies
+C/Rust baselines; repeated-host timing budgets remain open. These bounded
 repeat counts stay below tape-generation exhaustion and do not prove a bound for
 arbitrary nesting or indefinitely long runs.
 
@@ -247,7 +248,7 @@ and check their final managed storage; extend that coverage as admissions change
 
 ## Separating derivative and representation costs
 
-The `descent-peers` workflow compares four implementations of the same Rosenbrock
+The first `descent-peers` baseline compares four implementations of the same Rosenbrock
 descent: fwp with reverse automatic differentiation (AD), fwp with an explicit
 derivative, and explicit derivatives in C and Rust. An explicit derivative is a
 formula written by the programmer; reverse AD computes it by recording arithmetic
@@ -279,6 +280,23 @@ hashes are recorded separately. Untimed fwp profiles measure managed storage
 and raw derivative buffers; separate runs measure resident process memory for
 all four variants. Those peaks must not be added.
 
-This comparison is under preparation. Results and workload budgets are not yet
-accepted; the session handoff records actual runs and inspections. Preserve all
-samples and slower results before choosing the next optimization.
+The [first baseline](measurements/descent-peers.md) passes both Linux hosts with
+72 independently inspected images. Workload budgets and repeated-host timing
+acceptance remain open. Preserve these samples and slower results before
+choosing the next optimization; the session handoff records ongoing work.
+
+
+The next experiment adds a fifth implementation: explicit fwp derivatives with
+packed `Array[F64]` storage. Each update reads the previous immutable array at
+checked indices and generates one result array. It uses existing language/library
+features; this is a program-representation comparison, not a compiler change.
+For cases with at least 199 updates, require fewer managed allocation requests
+and no higher managed peak than the explicit-list form, plus zero final managed
+and raw charge. These requirements precede measurement. Retains and all timings,
+including any regressions and extra short-case setup, remain visible.
+
+The five-way run uses 40 samples after two warmups, rotating and reversing all
+five positions equally. It recompiles and measures every peer on the same runner;
+it does not compare times from different CPU models. The two original fwp forms
+must reproduce their recorded managed/raw profiles exactly. The original four-way data
+remains unchanged. This packed-array experiment is under validation.

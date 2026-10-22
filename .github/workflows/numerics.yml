@@ -2990,15 +2990,16 @@ jobs:
       - run: cargo build --locked --release --bin fwp
       - name: Check explicit derivative source formatting
         run: |
-          target/release/fwp fmt --check tests/fixtures/descent_explicit.fwp
+          target/release/fwp fmt --check tests/fixtures/descent_explicit.fwp tests/fixtures/descent_packed.fwp
           rustfmt --edition 2021 --check tests/fixtures/descent_explicit.rs
-      - name: Compare reverse AD and explicit derivatives with C and Rust
+      - name: Compare reverse AD, list/packed derivatives and C/Rust
         run: >-
           python3 scripts/measure-descent-peers.py --compiler target/release/fwp
+          --baseline-report docs/measurements/descent-peers-2026-10-22.json
           --cc gcc --rustc rustc --c-arch "${{ matrix.c_arch }}"
           --objdump objdump --nm nm --time /usr/bin/time
           --case 3:0 --case 3:1 --case 3:199 --case 3:1999 --case 33:199 --case 129:199
-          --warmups 2 --samples 24 --timeout 180
+          --warmups 2 --samples 40 --timeout 180
           --host "${{ matrix.runner }}" --output descent-peers-evidence
       - uses: actions/upload-artifact@v7
         if: always()

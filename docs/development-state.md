@@ -4,143 +4,114 @@
 
 Main is `f74c9d2998d595b4a3c15ee4a225a49963c1a6ea`, the verified squash merge of
 [PR #194](https://github.com/e6qu/fun-with-pipes/pull/194). All nine production
-jobs and documentation passed at `489d8414e68678e30829df525982ce8790a4aadc`;
-complete logs, merge files, parent and single-line message were checked.
-[History](roadmap-history.md)
-records the result. Redundant same-tree push CI `39753088259` was cancelled;
-the documentation run was preserved. Receipt: `/private/tmp/fwp-194-final-acceptance.json`.
+jobs and documentation passed. Its files, parent and single-line message were
+verified; redundant same-tree push CI was cancelled. Evidence:
+`/private/tmp/fwp-194-final-acceptance.json` and [history](roadmap-history.md).
 
-[PR #195](https://github.com/e6qu/fun-with-pipes/pull/195) is open at `a284eb0a338cae4efdd9534fd2d67c60a4f04e82`.
-Production run `39753716407` and documentation run `39753716342`
-are its final-head gates. Benchmarks and documentation pass; both Linux, all
-four Mac and both Windows jobs are running with no failed step in the latest audit. The combined delivery is branch `native-command-ownership`, worktree
-`/private/tmp/fwp-native-command-delivery`. Its four prepared commits replay onto
-#194's merge with identical files before documentation updates. Preparation
-source: `3a56acd7bf9003df61293bd71abd01bc1c0d4c60`;
-six-host run: [39752987389](https://github.com/e6qu/fun-with-pipes/actions/runs/39752987389).
-Both Linux hosts, both Windows hosts and Intel Mac pass all 23 integration
-tests; AMD64 Linux also passes 176 unit tests. ARM Mac remains queued. Seventy
-actual binaries across the five passing hosts were inspected, including generated
-C, native instructions, cleanup controls and tracing-code exclusion in ARC.
-Full final-head production and documentation gates are also required before merge. The batch contains:
+[PR #195](https://github.com/e6qu/fun-with-pipes/pull/195) is the sole active PR,
+at `a284eb0a338cae4efdd9534fd2d67c60a4f04e82`, branch `native-command-ownership`,
+worktree `/private/tmp/fwp-native-command-delivery`. Final production run
+`39753716407` has passed benchmarks and regular/GC-stress ARM macOS; both Linux,
+both Intel macOS and both Windows jobs are still running without failed steps.
+Documentation run `39753716342` passes. Preserve this head while gates finish.
 
-- Explicit `--gc arc`/`--gc tracing` for native run, exec, test, serve and pipe.
-  Every test entry is checked. Missing C compilers report an error; interpretation
-  must be selected explicitly. Tracing remains the default pending migration.
-- Native test recovery after root traps, exits and cancellation. Owners, pending
-  children, state scratch storage and failure messages release before later tests
-  run. Child traps/exits remain process-fatal in both engines. See the
-  test examples in the prepared reference.
-- Concurrent executable publication under a short file lock, Windows cache
-  timestamp access, server-process cleanup and bounded cross-platform test
-  monitoring with preserved diagnostics.
-- [Derivative measurements](measurements/ad-application.md) separating managed
-  storage, raw tape buffers and process memory. All 104 measured Linux images
-  and cleanup controls were inspected. This is measurement, not a new runtime
-  optimization or a C/Rust parity claim.
+This delivery adds explicit native ARC selection across commands, recovers native
+tests after root failures, releases error messages and pending task/state owners,
+repairs concurrent executable publication and Windows server/cache cleanup, and
+records derivative workspace measurements. Tracing remains the default. Child
+traps/exits remain process-fatal in both engines.
 
-Next: audit every completed job in the six-host run, inspect its generated C and
-executed binaries, and audit PR #195’s final-head gates. Fix all encountered failures
-together. Require all nine final-head production jobs and documentation before
-squash merge, with an explicit subject of at most 80 characters and empty body.
-Verify the merge files, parent and message, then continue the plan. Publication
-and merge are already authorized.
+Focused source `3a56acd7bf9003df61293bd71abd01bc1c0d4c60`, run `39752987389`,
+passes all six native hosts: 23 integration tests each and 176 AMD64 Linux unit
+tests. All 84 actual binaries were independently inspected, including generated
+C, instructions, cleanup controls and tracing-code exclusion in ARC. Earlier
+Windows monitor quoting/cache/process failures and fixture errors are repaired;
+failed-run receipts are retained, not counted as support. The derivative report
+also has both Linux jobs and all 104 image inspections accepted at `be8d87f0e56c`.
+Do not repeat accepted measurements/downloads.
 
-## Checks and unresolved validation
+**Next:** audit all final-head jobs; fix every failure together. Once all nine
+production jobs and documentation pass, use the prepared merge helpers below.
+They verify acceptance, squash with one subject of at most 80 characters and
+empty body, and verify the resulting files, parent and message. Continue the
+next combined batch afterwards. Publication and merge are already authorized.
 
-At `03e1e6942419565b67b83249ca787a9740e1680a`, run `39749922003` passes both
-Linux and both Mac jobs: 23 integration tests per host and 176 Linux AMD64 unit
-tests. Both Windows jobs failed a synthetic monitor command whose nested quoting
-misread path backslashes; this then skipped evidence-directory creation. The
-repair covers a real quoted/spaced path, creates evidence before checks and lets
-independent compiler checks continue. All six logs were audited. Windows native
-tests did not execute in that run; the current rerun must establish their result.
-
-Earlier run `39741271730` exposed an unnecessary Rust borrow, a malformed state
-fixture, Windows cache replacement of an executing image and surviving server
-children after test completion. All are repaired in this batch; earlier failures
-remain in archived receipts instead of being counted as passing coverage.
-
-The derivative experiment at `be8d87f0e56cb6bb496716d102b0b89bff6d9000` passes
-both Linux jobs in run `39739049666`. Its three-coordinate loop keeps 1,792 raw
-bytes between updates at both 199 and 1,999 updates, then frees them at shutdown.
-Timings include a 5.3% slower ARM loop. Complete samples and binary hashes are in
-the prepared report data. Repeated identical
-checkpoints are losslessly encoded; reconstructing the original inspection hash
-passes. Do not rerun these accepted measurements with a different source.
-
-Focused local checks, serially through `python3 scripts/local-guard.py python3 SCRIPT`:
-
-- `/private/tmp/fwp-check-test-recovery-fixtures.py`, 0.98s: eight root examples
-  and two child failures in the saved interpreter; formatting passes.
-- `/private/tmp/fwp-check-native-test-runtime.py`, 1.34s: O0/O2 ARC/tracing
-  runtime trap/exit/cancellation and owner/state cleanup pass.
-- `/private/tmp/fwp-ready-native-recovery.py`, 5.93s: Rust formatting, workflow
-  syntax, docs, diff checks and lossless measurement reconstruction pass.
-- Prepared `scripts/test-native-test-runner.py`, 7.67s: all 13 controls pass,
-  including stuck-child termination, noisy hangs and continued target execution.
-
-These focused checks do not replace native runner or final production acceptance.
-The disk guard refused publication below 64 GiB; 411 MiB of downloaded archives
-from completed deliveries were removed, preserving tracked reports, hashes,
-receipts and all current evidence. Publication then passed within the guard.
-Cleanup receipt: `/private/tmp/fwp-completed-archive-cleanup-20261022.json`.
-
-## Independent numerical comparison
+## Next combined batch
 
 Branch `compare-derivative-descent`, worktree `/private/tmp/fwp-ad-comparison`,
-is based on PR #195's head. It adds four-way Rosenbrock descent comparisons:
-fwp reverse AD, fwp explicit derivatives, and C/Rust explicit derivatives.
-The latter two reuse flat buffers; fwp uses lists. Results must distinguish
-extra AD work and representation costs instead of calling the whole gap compiler
-overhead. Six cases include zero/one update, 1,999 updates and 129 coordinates.
+is based on #195's head. No second PR is open. After #195 merges, replay its
+prepared commits onto the identical merge tree and verify files before updating
+delivery docs. Preparation contains:
 
-The independent Python derivative agrees with small C/Rust/fwp fixtures through
-guarded `/private/tmp/fwp-check-descent-peers.py` (4.51s). Workflow syntax,
-formatting and docs pass through `/private/tmp/fwp-ready-descent-peers.py` (6.87s).
-These are correctness checks, not local benchmarks or GCC validation. Next
-independent action: audit `descent-peers` run `39755925964` at
-`018581d6c0711b6a0eba81ed9fdb3e7c41973576` on both Linux hosts, fix all failures
-and inspect actual binaries/samples. Auditor: `/private/tmp/fwp-audit-descent-peers.py`. Keep one active PR;
-this batch follows #195. Preparation receipt:
-`/private/tmp/fwp-ad-comparison-preparation.json`.
+- **Accepted C/Rust comparison**, source `018581d6c0711b6a0eba81ed9fdb3e7c41973576`,
+  run `39755925964`: both Linux jobs and 72 actual image inspections pass. Four
+  programs compute the same Rosenbrock descent: reverse AD, explicit fwp, explicit
+  C and explicit Rust. At 129 coordinates/199 updates, explicit fwp takes
+  6.38×/6.91× C time on AMD64/ARM64; AD adds another 5.60×/6.56× relative to
+  explicit fwp. C/Rust reuse flat buffers while fwp uses lists; these are complete
+  implementation comparisons, not isolated compiler overhead. Exact samples,
+  counts and limits are in the prepared `docs/measurements/descent-peers.md` and
+  its data. F64 values already fit inline; investigate containers and closures.
+- **Copied C callback inputs**, published at
+  `6d8ef30bb428e1c0743de4a28fba62b7f3149b36`, run `39758960569`: checked ARC now
+  admits copied strings for synchronous callbacks. Returned managed addresses
+  and struct-valued callback arguments remain unsupported. Cases retain copies
+  after C mutates buffers, nest callbacks, suspend, cancel and fail partway
+  through input conversion. A deliberately omitted input owner must fail cleanup.
+  Four C interop tests now fail explicitly on missing compilers. Four native
+  hosts and the 32-bit interpreter/WASI job pass; Intel Mac and AMD64 Linux remain
+  pending. Audit full logs and inspect every native host's artifacts before acceptance.
+  The audit's command-echo false positive was fixed without excluding actual failures.
+- **Packed-array comparison**, being prepared locally: explicit derivatives read
+  checked indices from immutable `Array[F64]` and generate a new packed output
+  array each update. This uses existing language features, not a compiler change.
+  Compare all five forms together at the same six sizes; 40 samples rotate/reverse
+  execution order. For cases with at least 199 updates, require fewer managed
+  allocation requests and no higher managed peak than the explicit-list form.
+  Require the original fwp forms to reproduce accepted memory profiles exactly.
+  Report retains, all timings and remaining gaps; no speed threshold is claimed.
+  Local oracle checks pass; native measurements remain required on both Linux hosts.
 
-The same preparation now extends checked C callbacks to copied string inputs.
-It keeps scalar/raw-pointer results and rejects returned managed addresses.
-Fixtures cover retained copies after C mutates stack buffers, multiple inputs,
-nested calls, errors, suspension and cancellation; the saved interpreter oracle
-passes, including partial conversion failures (guarded
-`/private/tmp/fwp-check-callback-inputs.py`, 1.36s). Struct-valued
-callback parameters remain unsupported; multiple string parameters exercise the
-existing ABI. Native evidence and a deliberately omitted input-owner control
-remain required. Four C interop tests now fail on a missing/broken compiler;
-the focused workflow checks those failures explicitly. The primitive inventory, formatting, workflow and docs pass
-(`/private/tmp/fwp-ready-callback-inputs.py`, 7.44s). These changes are not yet
-published and do not alter #195's final head or the numerical run's source. The two Linux numerical jobs now pass at
-`018581d6c071`; actual binary/report inspection is still required.
+The accepted comparison report, plan/application updates, packed fixture and
+measurement workflow are local edits awaiting the next preparation commit.
+Keep the frozen four-way measurements intact when recording the new experiment.
+
+## Checks and resource limits
+
+Run focused local checks serially through
+`python3 scripts/local-guard.py python3 SCRIPT`. Recent passing checks:
+
+| Script under `/private/tmp/` | Result |
+|---|---|
+| `fwp-ready-native-delivery.py` | 6.60s; formatting, workflow, docs and lossless derivative-data reconstruction |
+| `fwp-check-callback-inputs.py` | 1.36s; saved-interpreter callback and partial-conversion examples |
+| `fwp-ready-callback-inputs.py` | 7.46s; formatting, workflow, frozen primitive inventory and docs |
+| `fwp-check-descent-report.py` | 2.82s; links, exact accepted samples and 72 image records |
+| `fwp-check-packed-descent.py` | 4.76s; independent oracle at boundary indices and multiple sizes, formatting/workflow |
+
+Saved-interpreter checks do not verify new compiler behavior. Full builds, suites
+and measurements run on GitHub. Preserve 64 GiB free disk, generated targets below
+2 GiB, sampled RSS below 1 GiB and the 180-second guard deadline. Never raise limits.
+The guard previously refused below 64 GiB; 411 MiB of completed-delivery downloaded
+archives were removed, preserving reports/hashes/receipts and all current evidence.
+Cleanup receipt: `/private/tmp/fwp-completed-archive-cleanup-20261022.json`.
 
 ## Resume files
 
-PR source/run receipt: `/private/tmp/fwp-native-command-delivery-publication.json`.
-Final-gate auditor: `/private/tmp/fwp-audit-195-final.py`.
-Ready merge helpers (not yet run): `/private/tmp/fwp-merge-195.py` and
-`/private/tmp/fwp-after-merge-195.py`. They require exact-head acceptance.
-Native image inspection: `/private/tmp/fwp-inspect-native-commands.py --host HOST`;
-five accepted host receipts are under `/private/tmp/fwp-native-command-evidence/3a56acd7bf90/`.
-
-| Purpose | Local path |
+| Purpose | Local path under `/private/tmp/` |
 |---|---|
-| Current focused source/run and audit | `/private/tmp/fwp-native-commands-publication.json`, `/private/tmp/fwp-audit-native-commands.py` |
-| Focused acceptance and all failed-run receipts | `/private/tmp/fwp-native-commands-acceptance*.json` |
-| Replay and exact-file check | `/private/tmp/fwp-native-command-delivery-integration.json` |
-| Accepted derivative check | `/private/tmp/fwp-ad-memory-acceptance.json` |
-| Inspected derivative images | `/private/tmp/fwp-ad-memory-evidence/be8d87f0e56c/inspection.json` |
+| #195 publication and final audit | `fwp-native-command-delivery-publication.json`, `fwp-audit-195-final.py` |
+| #195 acceptance | `fwp-195-final-acceptance.json` |
+| Ready merge/postmerge helpers, not yet run | `fwp-merge-195.py`, `fwp-after-merge-195.py` |
+| Six-host command acceptance and images | `fwp-native-commands-acceptance.json`, `fwp-native-command-evidence/3a56acd7bf90/` |
+| Accepted derivative workspace | `fwp-ad-memory-acceptance.json`, `fwp-ad-memory-evidence/be8d87f0e56c/inspection.json` |
+| Four-way comparison source and accepted evidence | `fwp-ad-comparison-preparation.json`, `fwp-descent-peers-acceptance.json`, `fwp-descent-peers-evidence/018581d6c071/` |
+| Callback source/run and audit | `fwp-callback-input-publication.json`, `fwp-audit-callback-inputs.py` |
+| Callback image inspector | `fwp-inspect-callback-inputs.py --host HOST` |
 
-The primary checkout is detached at #194 with this handoff as its only edit.
-Use it for guarded checks; full builds, suites and benchmarks run on GitHub.
-Preserve 64 GiB free disk, target data below 2 GiB, sampled RSS below 1 GiB and
-the 180-second deadline. Never raise limits. The preparation worktree
-`/private/tmp/fwp-ad-memory` is clean and remains the focused run's source.
+The primary checkout is detached at #194 with this handoff as its only edit;
+run guarded checks there. Prepared delivery and older measurement worktrees
+preserve their exact sources. Do not modify accepted source heads.
 
 ## Roadmap status
 
@@ -154,8 +125,7 @@ the 180-second deadline. Never raise limits. The preparation worktree
 | 6 | In progress | Establish comparable measurements and budgets. |
 | 7 | In progress | Complete the finite application suite. |
 
-All seven [plan](../PLAN.md) areas remain open. Default native execution still
-uses tracing. Retained foreign callbacks, host owners and cyclic data remain
-ownership work; performance and application acceptance also remain incomplete.
-Continue substantial related batches, guided by the
-[application suite](application-acceptance.md). JIT is excluded.
+All seven [plan](../PLAN.md) areas remain open. Retained foreign callbacks,
+host owners and cyclic data remain ownership work. A completed batch does not
+finish these goals. Continue substantial related batches with one active PR.
+JIT is excluded.
