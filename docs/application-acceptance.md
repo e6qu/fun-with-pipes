@@ -148,6 +148,15 @@ tape-generation exhaustion and do not prove a memory bound for arbitrary nesting
 or indefinitely long runs. The [handoff](development-state.md) tracks the next
 capture-borrowing experiment.
 
+The descent runner saves every count/storage violation in `budget-failures.json`
+and in the final comparison report. It checks all requested input sizes before
+exiting with failure, so one remaining retain cannot hide another size's larger
+peak or changed allocation count. Output mismatches, cleanup violations, invalid raw-memory traces and tool
+failures still stop that run immediately. Measurements from a run with failed requirements are
+investigation evidence, not accepted performance results. The production benchmark
+job and numerical workflow check the requirement collector against retained data
+and deliberately corrupted profiles.
+
 ## Testing unchanged string ownership
 
 The text candidate consumes the source owner for ASCII case conversion,

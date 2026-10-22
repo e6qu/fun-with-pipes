@@ -3013,6 +3013,8 @@ jobs:
               subprocess.run(['gh', 'api', f"repos/e6qu/fun-with-pipes/actions/artifacts/{host['artifact']}/zip"], stdout=stream, check=True)
           assert hashlib.sha256(path.read_bytes()).hexdigest() == host['archiveSha256']
           PYBASELINE
+      - name: Numerical measurement requirement controls
+        run: python3 scripts/test-descent-budgets.py
       - name: Compare borrowed captures with the accepted array-move baseline and C/Rust
         run: >-
           python3 scripts/measure-descent-peers.py --compiler target/release/fwp

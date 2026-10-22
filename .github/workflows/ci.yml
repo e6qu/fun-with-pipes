@@ -102,7 +102,8 @@ jobs:
           FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
           CC: clang
         run: |
-          export FWP_OBJDUMP="$(xcrun --find llvm-objdump)"
+          FWP_OBJDUMP="$(xcrun --find llvm-objdump)"
+          export FWP_OBJDUMP
           python3 -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v
       - name: Build standalone compiler
         run: cargo build --release --bin fwp
@@ -391,6 +392,8 @@ jobs:
           echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
       - name: OpenSSL headers (TLS)
         run: sudo apt-get update && sudo apt-get install -y libssl-dev
+      - name: Numerical measurement requirement controls
+        run: python3 scripts/test-descent-budgets.py
       - name: Generated standard-library docs preflight
         run: |
           CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"

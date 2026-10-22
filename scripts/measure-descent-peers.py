@@ -6,6 +6,7 @@ import hashlib
 import importlib.util
 import json
 import math
+import operator
 import os
 from pathlib import Path
 import platform
@@ -56,6 +57,28 @@ def measurement_orders(labels, samples, seed):
         rng.shuffle(shuffled)
         orders.extend(shuffled)
     return orders
+
+
+def ownership_budget_failures(profiles, baseline, updates):
+    """Report every violated storage/count requirement without weakening it."""
+    checks = [('fwp-packed-baseline', 'accepted profile', 'equal',
+               profiles['fwp-packed-baseline'], baseline['fwp-packed'])]
+    for label in ['fwp-ad', 'fwp-explicit', 'fwp-packed']:
+        current, old = profiles[label], baseline[label]
+        for key in ['rawDerivativeStorage', 'expandedRawSha256']:
+            checks.append((label, key, 'equal', current[key], old[key]))
+        for key in ['requests', 'requestedBytes', 'finalChargedBytes', 'collections']:
+            checks.append((label, key, 'equal', current['managed'][key], old['managed'][key]))
+        for key in ['retains', 'peakChargedBytes']:
+            checks.append((label, key, 'at most', current['managed'][key], old['managed'][key]))
+    if updates >= 199:
+        checks.extend([
+            ('fwp-packed', 'retains', 'equal', profiles['fwp-packed']['managed']['retains'], 0),
+            ('fwp-packed-baseline', 'retains', 'greater than', profiles['fwp-packed-baseline']['managed']['retains'], 0),
+        ])
+    compare = {'equal': operator.eq, 'at most': operator.le, 'greater than': operator.gt}
+    return [dict(program=label, metric=metric, requirement=rule, actual=actual, expected=expected)
+            for label, metric, rule, actual, expected in checks if not compare[rule](actual, expected)]
 
 
 def main():
@@ -118,6 +141,7 @@ def main():
                    for a, b in zip(values, expected)), (values, expected)
 
     results = {}
+    budget_failures = []
     for case in args.case:
         points, updates = map(int, case.split(':'))
         assert 2 <= points <= 4096 and 0 <= updates <= 4091
@@ -164,12 +188,12 @@ def main():
             profiled_binary = directory / (label + '-profile')
             build([args.cc, *cflags, '-w', profiled_source, '-o', profiled_binary, '-lm', '-lpthread', '-ldl'])
             profile = run([profiled_binary], environment)
+            (directory / (label + '-profile.stderr')).write_bytes(profile.stderr)
             assert profile.stdout == actual.stdout
             managed, raw = [json.loads(line) for line in profile.stderr.splitlines()]
             assert managed['finalChargedBytes'] == managed['collections'] == 0
             raw = raw['rawDerivativeStorage']
             AD.RAW.check_profile(raw, updates if label == 'fwp-ad' else 0, True)
-            (directory / (label + '-profile.stderr')).write_bytes(profile.stderr)
             raw_hash = digest(json.dumps(raw, sort_keys=True).encode())
             checkpoints = raw.pop('afterBackward')
             assert not checkpoints or all(value == checkpoints[0] for value in checkpoints)
@@ -227,19 +251,11 @@ def main():
         labels = list(binaries)
         assert labels == ['fwp-ad', 'fwp-explicit', 'fwp-packed', 'fwp-packed-baseline', 'c-explicit', 'rust-explicit', 'fwp-packed-identical']
         baseline_case = baseline_host['report']['results'][name]
-        assert profiles['fwp-packed-baseline'] == baseline_case['fwpProfiles']['fwp-packed']
-        for label in ['fwp-ad', 'fwp-explicit', 'fwp-packed']:
-            current, old = profiles[label], baseline_case['fwpProfiles'][label]
-            assert current['rawDerivativeStorage'] == old['rawDerivativeStorage']
-            assert current['expandedRawSha256'] == old['expandedRawSha256']
-            for key in ['requests', 'requestedBytes', 'finalChargedBytes', 'collections']:
-                assert current['managed'][key] == old['managed'][key], (name, label, key, current, old)
-            for key in ['retains', 'peakChargedBytes']:
-                assert current['managed'][key] <= old['managed'][key], (name, label, key, current, old)
-        # The accepted packed baseline defines the budget before changing C generation.
-        if updates >= 199:
-            assert profiles['fwp-packed']['managed']['retains'] == 0
-            assert profiles['fwp-packed-baseline']['managed']['retains'] > 0
+        # Retain every count/storage failure across variants and input sizes.
+        # Output correctness is checked separately before measuring each case.
+        budget_failures.extend(dict(case=name, **failure) for failure in
+            ownership_budget_failures(profiles, baseline_case['fwpProfiles'], updates))
+        (out / 'budget-failures.json').write_text(json.dumps(budget_failures, indent=2) + '\n')
         for _ in range(args.warmups):
             for label in labels:
                 actual = run([binaries[label]], environment)
@@ -294,6 +310,7 @@ def main():
                                    'baseline_report': str(args.baseline_report), 'baseline_archive': str(args.baseline_archive)},
         baseline=dict(source=baseline['source'], run=baseline['run'], reportSha256=digest(baseline_bytes), archiveSha256=digest(archive_bytes)),
         sourceHashes={name: digest((ROOT / name).read_bytes()) for name in paths}, results=results,
+        budgetFailures=budget_failures,
         scope='Six program forms compute the same Rosenbrock descent and complete final vector. '
         'A seventh timing entry is a byte-identical copy of fwp-packed under a different filename. '
         'Its timing ratio is a control for differences unrelated to executable contents. '
@@ -320,6 +337,8 @@ def main():
     archive.close()
     (out / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({name: row['ratios'] for name, row in results.items()}, indent=2))
+    if budget_failures:
+        raise SystemExit('Ownership budgets failed:\n' + json.dumps(budget_failures, indent=2))
 
 
 if __name__ == '__main__':
