@@ -3020,7 +3020,7 @@ jobs:
           --cc gcc --rustc rustc --c-arch "${{ matrix.c_arch }}"
           --objdump objdump --nm nm --time /usr/bin/time
           --case 3:0 --case 3:1 --case 3:199 --case 3:1999 --case 33:199 --case 129:199
-          --warmups 2 --samples 48 --timeout 180
+          --warmups 2 --samples 56 --order-seed 20261022 --timeout 180
           --host "${{ matrix.runner }}" --output descent-peers-evidence
       - uses: actions/upload-artifact@v7
         if: always()
