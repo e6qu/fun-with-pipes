@@ -125,8 +125,11 @@ def main():
         cbin = directory / 'c-explicit'
         build([args.cc, *cflags, '-Wall', '-Wextra', '-Werror', csource, '-o', cbin, '-lm'])
         rust_source = directory / 'rust-explicit.rs'
-        rust_source.write_text(f'const DIMENSIONS: usize = {points};\nconst UPDATES: usize = {updates};\n' +
-                               (ROOT / 'tests/fixtures/descent_explicit.rs').read_text())
+        rust_template = (ROOT / 'tests/fixtures/descent_explicit.rs').read_text()
+        parameter_marker = '// Measurement parameters are inserted here.'
+        assert rust_template.count(parameter_marker) == 1
+        rust_source.write_text(rust_template.replace(parameter_marker,
+            f'const DIMENSIONS: usize = {points};\nconst UPDATES: usize = {updates};'))
         rustbin = directory / 'rust-explicit'
         build([args.rustc, '--crate-name', 'descent_explicit', '--edition=2021', '-D', 'warnings', '-C', 'opt-level=2', '-C',
                'overflow-checks=yes', '-C', 'codegen-units=1', '-C', 'target-cpu=generic', '-C',

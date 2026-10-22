@@ -35,7 +35,9 @@ is the runtime entry that implements that transfer policy.
 A synchronous C callback runs before the foreign call returns. Its temporary
 values and context have scoped cleanup. A raw pointer has a manual pointee
 lifetime: copying its address never acquires an ARC owner. The programmer still
-ensures validity and cleanup. This extension is under [validation](development-state.md).
+ensures validity and cleanup; PR #193 records native acceptance. The current
+[callback-input extension](ownership.md#c-library-results-and-foreign-calls) copies
+incoming C strings into owned fwp values and is under validation.
 Retained unknown callbacks and callbacks returning managed C addresses remain
 outside the checked contract.
 

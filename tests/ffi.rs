@@ -17,7 +17,10 @@ fn dir() -> PathBuf {
 }
 
 fn have(tool: &str) -> bool {
-    Command::new(tool).arg("--version").output().is_ok()
+    Command::new(tool)
+        .arg("--version")
+        .output()
+        .is_ok_and(|output| output.status.success())
 }
 
 fn cc() -> String {
@@ -67,9 +70,7 @@ const VEC_OUT: &str = "Vec2 {x = 11.0, y = 22.0}
 
 #[test]
 fn foreign_functions_interpreted() {
-    if !have(&cc()) {
-        return;
-    }
+    assert!(have(&cc()), "C interop checks require a working C compiler");
     let mut cmd = Command::new(fwp());
     cmd.args(["run", "--interp", "--link"])
         .arg(dir().join("vec.c"))
@@ -167,9 +168,7 @@ main = ["effect" | file.write-new "effect.txt", -7i32 | abs | echo] | ignore
 
 #[test]
 fn foreign_functions_native() {
-    if !have(&cc()) {
-        return;
-    }
+    assert!(have(&cc()), "C interop checks require a working C compiler");
     let d = scratch("native");
     let exe = d.join("vec");
     let mut build = Command::new(fwp());
@@ -355,9 +354,10 @@ int main(void) {
 
 #[test]
 fn static_library_from_rust() {
-    if !have(&cc()) || !have("rustc") {
-        return;
-    }
+    assert!(
+        have(&cc()) && have("rustc"),
+        "C/Rust interop checks require both compilers"
+    );
     let d = scratch("static");
     let mut build = Command::new(fwp());
     build
@@ -397,9 +397,7 @@ fn static_library_from_rust() {
 
 #[test]
 fn shared_library_from_c() {
-    if !have(&cc()) {
-        return;
-    }
+    assert!(have(&cc()), "C interop checks require a working C compiler");
     let d = scratch("shared");
     let mut build = Command::new(fwp());
     build
