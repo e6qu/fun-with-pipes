@@ -12,7 +12,8 @@ verified; redundant same-tree push CI was cancelled. Evidence:
 at `a284eb0a338cae4efdd9534fd2d67c60a4f04e82`, branch `native-command-ownership`,
 worktree `/private/tmp/fwp-native-command-delivery`. Final production run
 `39753716407` has passed benchmarks, Linux ARM64 and all four Mac jobs; Linux
-AMD64 and both Windows jobs are still running without failed steps.
+AMD64 and Windows AMD64 are still running without failed steps; Windows ARM64
+also passes.
 Documentation run `39753716342` passes. Preserve this head while gates finish.
 
 This delivery adds explicit native ARC selection across commands, recovers native
@@ -89,6 +90,38 @@ The accepted comparison report, plan/application updates, packed fixture and
 measurement workflow are committed in the preparation. Both Linux measurements and all 96 image inspections are accepted. Receipt/auditor: `/private/tmp/fwp-packed-descent-publication.json`,
 `/private/tmp/fwp-audit-packed-descent.py`.
 Keep the frozen four-way measurements intact when recording the new experiment.
+
+## Current compiler candidate
+
+The same preparation now moves the sole numeric-array owner out of a dying stack
+record. The recorded packed program duplicates/releases this owner on every
+coordinate read; the change uses the existing ownership transfer instead.
+Only one tracked child, matching inline numeric-array type, scalar siblings and
+an unprotected record slot qualify. Other array aliases retain their owners.
+This targets one of the two retains per coordinate; callback capture borrowing
+remains separate work. No new syntax, runtime wrapper or fallback is added.
+
+The existing boxed-projection target adds stack-array checks, so no new test shard
+is needed. Tests compare interpreter results and verify shared aliases, failure
+and cancellation after transfer at O0/O2 in ARC/tracing, including tracing stress.
+Controls restore the redundant retain or omit result cleanup. The focused
+pointer suite now also runs field/array ownership targets on all six hosts.
+
+The numerical runner compares six forms: current AD/list/packed fwp, accepted
+packed C recompiled on the same runner, and C/Rust peers. The old packed profile
+must reproduce exactly; every current form must preserve requests/bytes and raw
+storage without raising retains or peak managed bytes. Four repeated packed cases
+must lower retains. Forty-eight samples balance six execution positions. GCC
+static frame estimates are recorded separately from executable/code size; they
+are not peak stack use. Compiler settings and baseline archive/hash are explicit.
+
+Source/test/workflow changes are local and not yet natively validated. Guarded
+`/private/tmp/fwp-check-stack-array-probe.py` passes in 4.90s: the C observer's
+success, alias, trap, cancellation and deliberately broken controls work with
+explicit transfer stubs. This validates the observer, not the new compiler.
+Next independent action: finish preflight, publish the combined compiler candidate
+and dispatch six-host ownership plus paired Linux measurements. Keep #195's final
+head unchanged and merge it only after its two remaining jobs pass.
 
 ## Checks and resource limits
 

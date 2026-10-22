@@ -319,6 +319,7 @@ jobs:
       FWP_LIBRARY_RESULT_ARTIFACTS: pointer-evidence/libraries
       FWP_QUEUED_FUNCTION_ARTIFACTS: pointer-evidence/raw
       FWP_POINTER_ARTIFACTS: pointer-evidence/callbacks
+      FWP_STACK_ARRAY_ARTIFACTS: pointer-evidence/stack-arrays
     steps:
       - uses: actions/checkout@v7
       - name: Prepare foreign ownership evidence
@@ -370,14 +371,14 @@ jobs:
         shell: bash
         run: |
           mkdir -p pointer-evidence
-          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic -- -D warnings 2>&1 | tee pointer-evidence/compiler.log
+          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership -- -D warnings 2>&1 | tee pointer-evidence/compiler.log
       - name: Windows compiler checks for manual pointer ownership
         id: file_compiler_windows
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force pointer-evidence | Out-Null
-          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic -- -D warnings 2>&1 | Tee-Object pointer-evidence/compiler.log
+          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership -- -D warnings 2>&1 | Tee-Object pointer-evidence/compiler.log
           exit $LASTEXITCODE
       - name: Publish compiler failures while independent tests continue
         if: ${{ !cancelled() && (steps.file_compiler.outcome == 'failure' || steps.file_compiler_windows.outcome == 'failure') }}
@@ -390,13 +391,13 @@ jobs:
         if: ${{ !cancelled() && runner.os != 'Windows' }}
         shell: bash
         run: |
-          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic -- --nocapture 2>&1 | tee pointer-evidence/tests.log
+          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership -- --nocapture 2>&1 | tee pointer-evidence/tests.log
       - name: Windows raw pointers, callbacks, libraries and the ARC corpus
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         shell: pwsh
         run: |
           whoami /priv | Out-File pointer-evidence/privileges.txt
-          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic -- --nocapture 2>&1 | Tee-Object pointer-evidence/tests.log
+          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic --test boxed_projection_ownership --test field_moves --test array_loop_borrows --test array_unwind_ownership -- --nocapture 2>&1 | Tee-Object pointer-evidence/tests.log
           exit $LASTEXITCODE
       - name: Inventory execution examples admitted without tracing
         if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
@@ -2992,14 +2993,34 @@ jobs:
         run: |
           target/release/fwp fmt --check tests/fixtures/descent_explicit.fwp tests/fixtures/descent_packed.fwp
           rustfmt --edition 2021 --check tests/fixtures/descent_explicit.rs
-      - name: Compare reverse AD, list/packed derivatives and C/Rust
+      - name: Download the accepted packed-array baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASELINE_HOST: ${{ matrix.runner }}
+        run: |
+          python3 - <<'PYBASELINE'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          report = json.loads(Path('docs/measurements/packed-descent-2026-10-22.json').read_text())
+          host, = [row for row in report['hosts'] if row['host'] == os.environ['BASELINE_HOST']]
+          path = Path('packed-baseline.zip')
+          with path.open('wb') as stream:
+              subprocess.run(['gh', 'api', f"repos/e6qu/fun-with-pipes/actions/artifacts/{host['artifact']}/zip"], stdout=stream, check=True)
+          assert hashlib.sha256(path.read_bytes()).hexdigest() == host['archiveSha256']
+          PYBASELINE
+      - name: Compare moved array owners with the packed baseline and C/Rust
         run: >-
           python3 scripts/measure-descent-peers.py --compiler target/release/fwp
-          --baseline-report docs/measurements/descent-peers-2026-10-22.json
+          --baseline-report docs/measurements/packed-descent-2026-10-22.json
+          --baseline-archive packed-baseline.zip
           --cc gcc --rustc rustc --c-arch "${{ matrix.c_arch }}"
           --objdump objdump --nm nm --time /usr/bin/time
           --case 3:0 --case 3:1 --case 3:199 --case 3:1999 --case 33:199 --case 129:199
-          --warmups 2 --samples 40 --timeout 180
+          --warmups 2 --samples 48 --timeout 180
           --host "${{ matrix.runner }}" --output descent-peers-evidence
       - uses: actions/upload-artifact@v7
         if: always()

@@ -110,8 +110,9 @@ outside the benchmark suite.
    differentiation from explicit fwp/C/Rust formulas. The subsequent
    [packed-array comparison](docs/measurements/packed-descent.md) reduces the
    largest explicit case from 206,891 to 459 requests, but retains remain at
-   51,342 and time at 3.34–3.40× C. Next, prove borrowing of captured arrays for
-   eligible callbacks instead of repeatedly transferring counted owners. Require
+   51,342 and time at 3.34–3.40× C. First remove the redundant
+   retain/release when a dying stack record transfers its sole array field; then
+   prove borrowing of captures throughout eligible callbacks. Require
    fewer retains with no additional requests or higher managed peak in the four
    repeated packed cases; preserve failure/cancellation and all output. Compare
    recompiled baselines and report timing, code size and stack costs.
