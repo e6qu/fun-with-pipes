@@ -1,0 +1,46 @@
+# Appended to csvtool. Selecting two columns preserves every row and their order.
+# A missing column returns Err; failed file reads use the separate IoError effect.
+foreign "C" checkpoint : I64 -> I64 -> () ! {IO} = "file_app_checkpoint"
+
+cut-file =
+    Some
+    | cut-columns { column = ["name", "id"], format = Tsv, separator = "," }
+require-ok : Result[List[String], String] -> List[String]
+require-ok = match
+    Ok _ -> id
+    Err _ -> prim.trap
+require-column-error : Result[List[String], String] -> ()
+require-column-error =
+    result.is-ok
+    | if id (const "expected a missing column" | prim.trap) (const ())
+require-read-error : Result[List[Result[List[String], String]], IoError] -> ()
+require-read-error =
+    result.is-ok
+    | if id (const "expected a CSV read error" | prim.trap) (const ())
+
+read-cycle =
+    tap (checkpoint 0)
+    | tap (const "first.txt" | cut-file | require-ok | ignore)
+    | sub 1
+missing-cycle =
+    tap (checkpoint 1)
+    | tap (const ["first.txt", "missing.txt"]
+        | attempt (map cut-file)
+        | require-read-error)
+    | sub 1
+invalid-cycle =
+    tap (checkpoint 2)
+    | tap (const ["first.txt", "invalid.txt"]
+        | attempt (map cut-file)
+        | require-read-error)
+    | tap (const (Some "first.txt")
+        | cut-columns { column = ["missing"], format = Tsv, separator = "," }
+        | require-column-error)
+    | sub 1
+
+main = [
+    "first.txt" | cut-file | require-ok | each echo,
+    64 | loop (if (eq 0) Stop (read-cycle | Again)) | ignore,
+    64 | loop (if (eq 0) Stop (missing-cycle | Again)) | ignore,
+    64 | loop (if (eq 0) Stop (invalid-cycle | Again)) | ignore,
+] | ignore

@@ -1,0 +1,69 @@
+# Appended to the maintained grep example. Failed second reads must retire the
+# first file's lines. Successful searches also release their selected output.
+foreign "C" checkpoint : I64 -> I64 -> () ! {IO} = "file_app_checkpoint"
+
+search-files =
+    grep
+        {
+            ignore-case = True,
+            invert = False,
+            line-number = True,
+            count = False,
+        }
+        "a"
+require-error : Result[Outcome[List[String]], IoError] -> ()
+require-error =
+    result.is-ok
+    | if id (const "expected a grep read error" | prim.trap) (const ())
+
+read-cycle =
+    tap (checkpoint 0)
+    | tap (const ["first.txt", "second.txt"] | search-files | ignore)
+    | sub 1
+missing-cycle =
+    tap (checkpoint 1)
+    | tap (const ["first.txt", "missing.txt"]
+        | attempt search-files
+        | require-error)
+    | sub 1
+invalid-cycle =
+    tap (checkpoint 2)
+    | tap (const ["first.txt", "invalid.txt"]
+        | attempt search-files
+        | require-error)
+    | sub 1
+
+main = [
+    ["first.txt", "second.txt"]
+    | search-files
+    | tap (.status | echo)
+    | .output
+    | each echo,
+    ["first.txt", "second.txt"]
+    | grep
+        {
+            ignore-case = False,
+            invert = True,
+            line-number = False,
+            count = True,
+        }
+        "a"
+    | tap (.status | echo)
+    | .output
+    | each echo,
+    ["first.txt", "second.txt"]
+    | grep
+        {
+            ignore-case = False,
+            invert = False,
+            line-number = False,
+            count = True,
+        }
+        "absent-pattern"
+    | tap (.status | echo)
+    | .output
+    | each echo,
+    64 | loop (if (eq 0) Stop (read-cycle | Again)) | ignore,
+    64 | loop (if (eq 0) Stop (missing-cycle | Again)) | ignore,
+    64 | loop (if (eq 0) Stop (invalid-cycle | Again)) | ignore,
+] | ignore

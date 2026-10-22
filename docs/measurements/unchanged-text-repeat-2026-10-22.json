@@ -1,0 +1,7027 @@
+{
+  "runnerSource": "4ce989e5ffb9252fe47abbdb7dbebb50728fbad7",
+  "reports": [
+    {
+      "source": "67b684506bb4a7220ed56aec82c45a6c44b09fb0",
+      "host": "ubuntu-latest",
+      "machine": "x86_64",
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.28\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "sourceReportSha256": "c1be515777c0b4446ff97c76d9ce8c7c43e57e1e43c7258f11f3b23999634619",
+      "binaries": {
+        "c": {
+          "sha256": "af35d7ed0936ec33f30f53158f66a4d6285bcd59dfc6a11b12c8a3aab74d626d",
+          "bytes": 16552,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/c:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000001650\n\n",
+          "buildNs": 69253642
+        },
+        "rust": {
+          "sha256": "bca13b57547fb709e86aa28c4d48bd49a5d0691234a0febb0c4a85493bff1165",
+          "bytes": 4567768,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/rust:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000015d90\n\n",
+          "buildNs": 258296298
+        },
+        "fwp-arc": {
+          "sha256": "f05a221c2bd42a29321eb9366c37072b17940bb63e1bf206006a63c736fdb4e7",
+          "bytes": 102240,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x00000000000039c0\n\n",
+          "buildNs": 1093419152
+        },
+        "fwp-tracing": {
+          "sha256": "ff38beb7f5932fa85a01d327f8c238ae3a9c8fb843644b470ea6cc75ddcd06b0",
+          "bytes": 110968,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000003a30\n\n",
+          "buildNs": 1348047266
+        },
+        "before-arc": {
+          "sha256": "ac38c3acbd7dfb7ba55edd1f0482b6074df73a55f4c277d9cbef057254fd9ad1",
+          "bytes": 102240,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x00000000000039c0\n\n",
+          "buildNs": 1098724749
+        },
+        "before-tracing": {
+          "sha256": "b72ac0f47a8544061d1845af224cdd6b71ceba43f11bef86b816baaa7ce6a684",
+          "bytes": 110968,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing:     file format elf64-x86-64\narchitecture: i386:x86-64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000003a30\n\n",
+          "buildNs": 1260034754
+        }
+      },
+      "configuration": {
+        "warmups": 2,
+        "samples": 24,
+        "timeout": 180
+      },
+      "environment": {
+        "FWP_LTO": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "results": {
+        "4096-64": {
+          "inputSha256": "a0aaf42271d64f12020436b3483630e2afcfe58d63c927fd8f264a2defe15274",
+          "samplesNs": {
+            "c": [
+              1322178,
+              1127175,
+              1137200,
+              1188446,
+              1096850,
+              2427071,
+              1107066,
+              1097752,
+              1088248,
+              1110291,
+              1122349,
+              1058844,
+              1219672,
+              1255225,
+              1192982,
+              1671174,
+              1132232,
+              1139844,
+              1508449,
+              1129198,
+              1120426,
+              1061748,
+              1064252,
+              1092073
+            ],
+            "rust": [
+              1453898,
+              1601987,
+              1470012,
+              1442671,
+              1433568,
+              1616418,
+              1506676,
+              1467989,
+              1452667,
+              1507046,
+              1617870,
+              1696801,
+              1463712,
+              1538092,
+              1452526,
+              1587145,
+              1598992,
+              1502264,
+              1581637,
+              1644609,
+              1492575,
+              1521598,
+              1419657,
+              1463332
+            ],
+            "fwp-arc": [
+              2113358,
+              2221012,
+              2216254,
+              2601615,
+              2306417,
+              2090970,
+              2194832,
+              2163556,
+              3751062,
+              2596000,
+              2552481,
+              2294972,
+              2122035,
+              2166641,
+              2178609,
+              2229023,
+              2651037,
+              2333437,
+              5470532,
+              3305023,
+              2601123,
+              3535313,
+              2160864,
+              2094404
+            ],
+            "fwp-tracing": [
+              2180652,
+              2681623,
+              2255463,
+              2735462,
+              2191983,
+              2155394,
+              2089181,
+              2175305,
+              2144218,
+              2141775,
+              2170467,
+              2160923,
+              2159531,
+              2938822,
+              2389390,
+              2080974,
+              2250155,
+              2190380,
+              2469118,
+              3030303,
+              2190076,
+              2385220,
+              2248737,
+              2136177
+            ],
+            "before-arc": [
+              2821308,
+              2501356,
+              2463750,
+              3265826,
+              3064888,
+              2760398,
+              2978986,
+              2378373,
+              2387903,
+              2438418,
+              2495838,
+              2480439,
+              2976407,
+              2932813,
+              2671988,
+              2624868,
+              2470801,
+              2620301,
+              2982176,
+              2449443,
+              2422209,
+              2464972,
+              2441858,
+              2642584
+            ],
+            "before-tracing": [
+              3447673,
+              2532271,
+              2508315,
+              2514875,
+              2746759,
+              2409270,
+              2520554,
+              2875303,
+              2653826,
+              2643275,
+              2524219,
+              2500295,
+              2549717,
+              2555545,
+              2621994,
+              2976243,
+              2572971,
+              2935627,
+              3093626,
+              2634222,
+              2863000,
+              2481036,
+              2595359,
+              2648734
+            ]
+          },
+          "medianNs": {
+            "c": 1128186.5,
+            "rust": 1504470.0,
+            "fwp-arc": 2261997.5,
+            "fwp-tracing": 2190228.0,
+            "before-arc": 2560828.5,
+            "before-tracing": 2608676.5
+          },
+          "orders": [
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ],
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ]
+          ],
+          "candidateOverBaseline": {
+            "arc": 0.8833069063391008,
+            "tracing": 0.8395935640160825
+          },
+          "ratios": {
+            "arc": {
+              "c": 2.0049854345890505,
+              "rust": 1.5035178501399165
+            },
+            "tracing": {
+              "c": 1.9413705092198852,
+              "rust": 1.4558136752477617
+            }
+          }
+        },
+        "65536-1024": {
+          "inputSha256": "76bbb0dd75f6c1944bdb76dffcdca62251bcfc98851dc648ae983d7da8592160",
+          "samplesNs": {
+            "c": [
+              8724450,
+              8590102,
+              8555340,
+              8682538,
+              8686474,
+              8613115,
+              8799040,
+              8549821,
+              8456504,
+              8598294,
+              8461601,
+              8375244,
+              8691301,
+              8565285,
+              8705722,
+              8738862,
+              8788565,
+              8825670,
+              8560127,
+              8519627,
+              8927685,
+              9461659,
+              8520018,
+              8747604
+            ],
+            "rust": [
+              12579425,
+              12632413,
+              12532767,
+              12500409,
+              12617111,
+              12700725,
+              12843380,
+              12581278,
+              12350266,
+              12826841,
+              12636900,
+              12623060,
+              12319752,
+              12737339,
+              12524444,
+              12419820,
+              12293733,
+              12509001,
+              12605925,
+              14167221,
+              13121687,
+              13750846,
+              12577292,
+              12987879
+            ],
+            "fwp-arc": [
+              22362790,
+              21488713,
+              22552419,
+              23078086,
+              27514171,
+              22570592,
+              27264892,
+              22673689,
+              23035564,
+              22749581,
+              22642363,
+              21859226,
+              27173878,
+              22097338,
+              22065245,
+              22071639,
+              21929510,
+              27403026,
+              21746940,
+              22882828,
+              23358431,
+              22475215,
+              22312971,
+              21550534
+            ],
+            "fwp-tracing": [
+              22340742,
+              23135141,
+              22967133,
+              26774167,
+              23204223,
+              23924406,
+              21894738,
+              22067052,
+              21574285,
+              28064033,
+              22380476,
+              22722381,
+              22470780,
+              28412528,
+              22317513,
+              22244560,
+              22529897,
+              22359585,
+              27952638,
+              27597714,
+              21996388,
+              28430945,
+              23394234,
+              22942175
+            ],
+            "before-arc": [
+              32512321,
+              26597021,
+              26614817,
+              26879232,
+              26986040,
+              27676691,
+              27217968,
+              32471125,
+              32596740,
+              27060971,
+              32230955,
+              28631962,
+              32538824,
+              25999954,
+              27060160,
+              33517730,
+              28943622,
+              26502496,
+              27563774,
+              28129274,
+              33695503,
+              27462343,
+              27074010,
+              28132243
+            ],
+            "before-tracing": [
+              29340770,
+              29233651,
+              28566044,
+              28763567,
+              29754821,
+              29417448,
+              28888271,
+              29503219,
+              28713523,
+              29858594,
+              28373465,
+              29809061,
+              29531706,
+              28480028,
+              29009019,
+              28912892,
+              33995852,
+              28263618,
+              28337867,
+              33726139,
+              33609857,
+              33413456,
+              34037187,
+              28965635
+            ]
+          },
+          "medianNs": {
+            "c": 8647826.5,
+            "rust": 12611518.0,
+            "fwp-arc": 22561505.5,
+            "fwp-tracing": 22832278.0,
+            "before-arc": 27620232.5,
+            "before-tracing": 29287210.5
+          },
+          "orders": [
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ],
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ]
+          ],
+          "candidateOverBaseline": {
+            "arc": 0.8168470522469353,
+            "tracing": 0.779598931076075
+          },
+          "ratios": {
+            "arc": {
+              "c": 2.6089220800162907,
+              "rust": 1.7889603376849639
+            },
+            "tracing": {
+              "c": 2.6402331267862507,
+              "rust": 1.8104305920984294
+            }
+          }
+        }
+      },
+      "stack": {
+        "fwp-arc": {
+          "generatedCSha256": "9662f6e1f415816f342e7eedfe09895688188231a8efa9d4025edd533304d245",
+          "rebuiltSha256": "f05a221c2bd42a29321eb9366c37072b17940bb63e1bf206006a63c736fdb4e7",
+          "instructionsUnchanged": true,
+          "frames": [
+            {
+              "function": "fwp_fmt_u128",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args10",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_buf_release",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_release",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "buf_grow",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "buf_put",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_chunks",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_segv",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cancel_tree.part.0",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_trap",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_collect",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_push",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_finish_float",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args27",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_format_g.constprop",
+              "bytes": 224,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "fwp_gc_report",
+              "bytes": 336,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "fwp_trap_overflow.constprop",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry27",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_init",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_spent",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_wake_io",
+              "bytes": 24,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop.part.0",
+              "bytes": 608,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_poll_events",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_wide_dup",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_forget_slot",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_mem_free",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_arr.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_big",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_refill",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_slow",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply",
+              "bytes": 96,
+              "kind": "dynamic"
+            },
+            {
+              "function": "fwp_own_tree0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_share",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e27",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e22",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e16",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e32",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_dup",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_obj",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop0",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop4",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop6",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop37",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop9",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop12",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop11",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps10",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop5",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop1",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps27",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_task_dispose",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_block",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cmp",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_msort.constprop",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_map_finish_protected.isra",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_map_items",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "f13",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "e13",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f6",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "e6",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps37",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps12",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps9",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps4",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry9",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e9",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f33",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "e33",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args9",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args4",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args12",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args37",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "f34",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "e34",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e4",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry4",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_words",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "e2",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps8",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps11",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps36",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_read_stdin_all",
+              "bytes": 65776,
+              "kind": "static"
+            },
+            {
+              "function": "e1",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_owned",
+              "bytes": 112,
+              "kind": "dynamic"
+            },
+            {
+              "function": "e11",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "f8",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry8",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "e8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_borrowed_span.constprop",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "e3",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "f7",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "e7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_map_update_typed.constprop",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "e25",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "f36",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry36",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "e36",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e23",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "e20",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_write",
+              "bytes": 720,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_format.constprop",
+              "bytes": 336,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "e15",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f37.isra",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e37",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_main_thread",
+              "bytes": 320,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry37",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "main",
+              "bytes": 128,
+              "kind": "static"
+            }
+          ],
+          "largestReportedFrame": 65776
+        },
+        "fwp-tracing": {
+          "generatedCSha256": "4d242245223c870c0642aed013e61a8851ff52ecf1c3278b333ba2a0856c862d",
+          "rebuiltSha256": "ff38beb7f5932fa85a01d327f8c238ae3a9c8fb843644b470ea6cc75ddcd06b0",
+          "instructionsUnchanged": true,
+          "frames": [
+            {
+              "function": "fwp_fmt_u128",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args10",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_buf_release",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_release",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_clear_marks",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "buf_grow",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_push",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "buf_put",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_chunks",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_sp",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_segv",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cancel_tree.part.0",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_trap",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_find_data",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_push",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_finish_float",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args27",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_format_g.constprop",
+              "bytes": 224,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "fwp_gc_report",
+              "bytes": 336,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "fwp_trap_overflow.constprop",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry27",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_init",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_wake_io",
+              "bytes": 24,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop.part.0",
+              "bytes": 608,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_poll_events",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_wide_dup",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_forget_slot",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_mem_free",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_arr.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_clear_chunk",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_refill",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_drain",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_own_tree0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_dup",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_obj",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop0",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop4",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop6",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop37",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop9",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop12",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop11",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps10",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop5",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop1",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps27",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_task_dispose",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_block",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_share",
+              "bytes": 576,
+              "kind": "static"
+            },
+            {
+              "function": "e27",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e22",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e16",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e32",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cmp",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_msort.constprop",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_scan",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_mark_all",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_collect",
+              "bytes": 592,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "fwp_gc_spent",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_big",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_slow",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply",
+              "bytes": 96,
+              "kind": "dynamic"
+            },
+            {
+              "function": "fwp_map_finish_protected.isra",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_map_items",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "f13",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "e13",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "f6",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "e6",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps37",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps12",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps4",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps9",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry9",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e9",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f33",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "e33",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args12",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args4",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args9",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args37",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "f34",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "e34",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e4",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry4",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_words",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "e2",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps8",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps11",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps36",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_read_stdin_all",
+              "bytes": 65776,
+              "kind": "static"
+            },
+            {
+              "function": "e1",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_owned",
+              "bytes": 128,
+              "kind": "dynamic"
+            },
+            {
+              "function": "e11",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "f8",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry8",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "e8",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_borrowed_span.constprop",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "e3",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "f7",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "e7",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_map_update_typed.constprop",
+              "bytes": 176,
+              "kind": "static"
+            },
+            {
+              "function": "e25",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "f36",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry36",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "e36",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e23",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "e20",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_write",
+              "bytes": 720,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_format.constprop",
+              "bytes": 336,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "f37.isra",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "e37",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_main_thread",
+              "bytes": 320,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry37",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "e15",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "main",
+              "bytes": 128,
+              "kind": "static"
+            }
+          ],
+          "largestReportedFrame": 65776
+        },
+        "before-arc": {
+          "generatedCSha256": "9cd977f86ff4b3fdc49bea676a3991f58722630bc2731d42523167444929de76",
+          "rebuiltSha256": "ac38c3acbd7dfb7ba55edd1f0482b6074df73a55f4c277d9cbef057254fd9ad1",
+          "instructionsUnchanged": true,
+          "frames": [
+            {
+              "function": "fwp_fmt_u128",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args10",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_buf_release",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_release",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "buf_grow",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "buf_put",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_chunks",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_segv",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cancel_tree.part.0",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_trap",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_collect",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_push",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_finish_float",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args27",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_format_g.constprop",
+              "bytes": 224,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "fwp_gc_report",
+              "bytes": 336,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "fwp_trap_overflow.constprop",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry27",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_init",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_spent",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_wake_io",
+              "bytes": 24,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop.part.0",
+              "bytes": 608,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_poll_events",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_wide_dup",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_forget_slot",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_mem_free",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_arr.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_big",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_refill",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_slow",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply",
+              "bytes": 96,
+              "kind": "dynamic"
+            },
+            {
+              "function": "fwp_own_tree0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_share",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e27",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e22",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e16",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e32",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_dup",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_obj",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop0",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop4",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop6",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop37",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop9",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop12",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop11",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps10",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop5",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop1",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps27",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_task_dispose",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_block",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cmp",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_msort.constprop",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_map_finish_protected.isra",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_map_items",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "f13",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "e13",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f6",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "e6",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e33",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps37",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps9",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps12",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps4",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry9",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e9",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args4",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args9",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args12",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args37",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_words",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "e2",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps8",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps11",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "f34",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "e34",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f4",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry4",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "e4",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps36",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_read_stdin_all",
+              "bytes": 65776,
+              "kind": "static"
+            },
+            {
+              "function": "e1",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_owned",
+              "bytes": 112,
+              "kind": "dynamic"
+            },
+            {
+              "function": "e11",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "f8",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry8",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "e8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_borrowed_span.constprop",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "e3",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "f7",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "e7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_map_update_typed.constprop",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "e25",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "f36",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry36",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "e36",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e23",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "e20",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_write",
+              "bytes": 720,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_format.constprop",
+              "bytes": 336,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "e15",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f37.isra",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e37",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_main_thread",
+              "bytes": 304,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry37",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "main",
+              "bytes": 128,
+              "kind": "static"
+            }
+          ],
+          "largestReportedFrame": 65776
+        },
+        "before-tracing": {
+          "generatedCSha256": "6f48be934a71820c715b5b4c16d71afa1014aa8915d4557a82aea019547bbe8a",
+          "rebuiltSha256": "b72ac0f47a8544061d1845af224cdd6b71ceba43f11bef86b816baaa7ce6a684",
+          "instructionsUnchanged": true,
+          "frames": [
+            {
+              "function": "fwp_fmt_u128",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args10",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_buf_release",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_release",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_clear_marks",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "buf_grow",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_push",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "buf_put",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_chunks",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_sp",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_segv",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cancel_tree.part.0",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_trap",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_find_data",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_push",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_finish_float",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args27",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_format_g.constprop",
+              "bytes": 224,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "fwp_gc_report",
+              "bytes": 336,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "fwp_trap_overflow.constprop",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry27",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_init",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_wake_io",
+              "bytes": 24,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop.part.0",
+              "bytes": 608,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_poll_events",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_wide_dup",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_forget_slot",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_mem_free",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_arr.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_clear_chunk",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_refill",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_drain",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_own_tree0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_dup",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_obj",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop0",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop4",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop6",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop37",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop9",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop12",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop11",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps10",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop5",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop1",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps27",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_task_dispose",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_block",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_share",
+              "bytes": 576,
+              "kind": "static"
+            },
+            {
+              "function": "e27",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e22",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e16",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e32",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cmp",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_msort.constprop",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_scan",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_mark_all",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_collect",
+              "bytes": 592,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "fwp_gc_spent",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_big",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_slow",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply",
+              "bytes": 96,
+              "kind": "dynamic"
+            },
+            {
+              "function": "fwp_map_finish_protected.isra",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_map_items",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "f13",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "e13",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "f6",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "e6",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e33",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps37",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps4",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps12",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps9",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry9",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e9",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args12",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args4",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args9",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args37",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_words",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "e2",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps8",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps11",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "f34",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "e34",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "f4",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry4",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "e4",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps36",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_read_stdin_all",
+              "bytes": 65776,
+              "kind": "static"
+            },
+            {
+              "function": "e1",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_owned",
+              "bytes": 128,
+              "kind": "dynamic"
+            },
+            {
+              "function": "e11",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "f8",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry8",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "e8",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_borrowed_span.constprop",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "e3",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "f7",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "e7",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_map_update_typed.constprop",
+              "bytes": 176,
+              "kind": "static"
+            },
+            {
+              "function": "e25",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "f36",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry36",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "e36",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e23",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "e20",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_write",
+              "bytes": 720,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_format.constprop",
+              "bytes": 336,
+              "kind": "dynamic,bounded"
+            },
+            {
+              "function": "f37.isra",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "e37",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_main_thread",
+              "bytes": 304,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry37",
+              "bytes": 8,
+              "kind": "static"
+            },
+            {
+              "function": "e15",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "main",
+              "bytes": 128,
+              "kind": "static"
+            }
+          ],
+          "largestReportedFrame": 65776
+        }
+      },
+      "commands": [
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-fstack-usage",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/fwp-arc.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/fwp-arc",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-fstack-usage",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/fwp-tracing.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/fwp-tracing",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-fstack-usage",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/before-arc.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/before-arc",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-fstack-usage",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/before-tracing.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/before-tracing",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ]
+      ],
+      "scope": "Whole fresh process as in the source comparison, using exactly its accepted binaries. Compilation and inspection occur before warmup and timing. Stack estimates are GCC per-function frames for identical emitted instructions, not summed live stack or recursion bounds. Managed counts are not remeasured here. Slower results remain in the report; no timing gate is set."
+    },
+    {
+      "source": "67b684506bb4a7220ed56aec82c45a6c44b09fb0",
+      "host": "ubuntu-24.04-arm",
+      "machine": "aarch64",
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "sourceReportSha256": "ec4c042f9361ff79a914480193e227308b9fa1bb545dc876f4cc6e25965e2978",
+      "binaries": {
+        "c": {
+          "sha256": "25d62737682b3b24d07fce56b3f3797d77c472b6b06f39d262442eb54004b0c5",
+          "bytes": 70912,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/c:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000000e00\n\n",
+          "buildNs": 78365507
+        },
+        "rust": {
+          "sha256": "651f2ba189a33a8c4d9219cd914e525948bbf3d7697ba9610bb093a3052572e9",
+          "bytes": 4697984,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/rust:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000008ec0\n\n",
+          "buildNs": 362621728
+        },
+        "fwp-arc": {
+          "sha256": "4b80655b98b38ba259389c95a550b454d93b4e75cff59092fe9a1104459ec2ce",
+          "bytes": 152720,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-arc:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000002640\n\n",
+          "buildNs": 1338322241
+        },
+        "fwp-tracing": {
+          "sha256": "c1e675746416b31c4deff8ee1482fd496769e840c9ab05bfd51da7a5c35a9ac4",
+          "bytes": 153192,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/fwp-tracing:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000002700\n\n",
+          "buildNs": 1514223459
+        },
+        "before-arc": {
+          "sha256": "7c8d82a22fa5cfbb45b25d8a3ee8244e57f834c32530572552e4a5c62cc828c7",
+          "bytes": 152720,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-arc:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000002640\n\n",
+          "buildNs": 1403911725
+        },
+        "before-tracing": {
+          "sha256": "162ffe14a0bafd572c40fdd36a7bdc7aee8647f22d651c0f24868471ae07b270",
+          "bytes": 153192,
+          "header": "\n/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-evidence/before-tracing:     file format elf64-littleaarch64\narchitecture: aarch64, flags 0x00000150:\nHAS_SYMS, DYNAMIC, D_PAGED\nstart address 0x0000000000002700\n\n",
+          "buildNs": 1527750036
+        }
+      },
+      "configuration": {
+        "warmups": 2,
+        "samples": 24,
+        "timeout": 180
+      },
+      "environment": {
+        "FWP_LTO": "0",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "results": {
+        "4096-64": {
+          "inputSha256": "a0aaf42271d64f12020436b3483630e2afcfe58d63c927fd8f264a2defe15274",
+          "samplesNs": {
+            "c": [
+              1350123,
+              1522753,
+              1532417,
+              1341748,
+              1513042,
+              1465613,
+              1276528,
+              1221234,
+              2357842,
+              1309573,
+              1267305,
+              1300390,
+              1309942,
+              1367722,
+              1444846,
+              1444510,
+              1433583,
+              2445309,
+              1419727,
+              1309046,
+              1235794,
+              1248857,
+              1209684,
+              1274815
+            ],
+            "rust": [
+              1719374,
+              1862806,
+              1871654,
+              1690736,
+              1845775,
+              1718263,
+              1794355,
+              1778987,
+              1674737,
+              1822169,
+              1847791,
+              1850967,
+              1624132,
+              1929082,
+              1706303,
+              1709447,
+              1721958,
+              1753116,
+              1923403,
+              1672057,
+              1669177,
+              1750029,
+              1713527,
+              1726598
+            ],
+            "fwp-arc": [
+              2505490,
+              2704271,
+              2716990,
+              2419679,
+              2680576,
+              2528545,
+              2718358,
+              3246591,
+              2683191,
+              2558031,
+              2525792,
+              2589453,
+              2457005,
+              3056539,
+              2586653,
+              2625571,
+              2585245,
+              2450229,
+              2885276,
+              2628507,
+              2493907,
+              3709614,
+              2465772,
+              2464309
+            ],
+            "fwp-tracing": [
+              2592293,
+              3244840,
+              2930474,
+              2831608,
+              3216225,
+              2624931,
+              3766379,
+              2529361,
+              2558823,
+              2600133,
+              2643042,
+              2755716,
+              2592973,
+              2695799,
+              2620715,
+              2488131,
+              2479868,
+              2528625,
+              3567166,
+              3304541,
+              2673648,
+              2595109,
+              2538344,
+              2543767
+            ],
+            "before-arc": [
+              3029068,
+              3277550,
+              3145886,
+              3159205,
+              2817225,
+              2965184,
+              3057858,
+              2851902,
+              3007670,
+              2894667,
+              2962856,
+              2950529,
+              2896276,
+              3016221,
+              4186075,
+              3067226,
+              2824440,
+              3015109,
+              3767474,
+              2802674,
+              2885404,
+              2898092,
+              2861214,
+              2849615
+            ],
+            "before-tracing": [
+              3189235,
+              3194387,
+              3174628,
+              3127047,
+              3152709,
+              3336723,
+              3216570,
+              2935114,
+              2906220,
+              2955665,
+              2959545,
+              3004997,
+              2923186,
+              3085513,
+              3131918,
+              3076441,
+              3102736,
+              3061651,
+              3675127,
+              3232049,
+              2915675,
+              2904395,
+              2918731,
+              2900500
+            ]
+          },
+          "medianNs": {
+            "c": 1345935.5,
+            "rust": 1738313.5,
+            "fwp-arc": 2588053.0,
+            "fwp-tracing": 2622823.0,
+            "before-arc": 2964020.0,
+            "before-tracing": 3080977.0
+          },
+          "orders": [
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ],
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ]
+          ],
+          "candidateOverBaseline": {
+            "arc": 0.8731563889582391,
+            "tracing": 0.8512958714070245
+          },
+          "ratios": {
+            "arc": {
+              "c": 1.9228655459344077,
+              "rust": 1.4888298342042445
+            },
+            "tracing": {
+              "c": 1.948698878958167,
+              "rust": 1.5088319799621874
+            }
+          }
+        },
+        "65536-1024": {
+          "inputSha256": "76bbb0dd75f6c1944bdb76dffcdca62251bcfc98851dc648ae983d7da8592160",
+          "samplesNs": {
+            "c": [
+              10111083,
+              10036720,
+              9769591,
+              9903215,
+              10020416,
+              9991618,
+              9926758,
+              9917478,
+              9981891,
+              9994145,
+              10408914,
+              9778222,
+              9934837,
+              9885911,
+              9831259,
+              9872737,
+              10032496,
+              9746400,
+              9856537,
+              9844762,
+              9817156,
+              9640421,
+              9664037,
+              9938644
+            ],
+            "rust": [
+              12865839,
+              12959794,
+              12924284,
+              12653355,
+              12797594,
+              12829409,
+              13050253,
+              13043701,
+              12717791,
+              12826929,
+              13333813,
+              12691464,
+              12536753,
+              12968546,
+              12573864,
+              12675273,
+              12675481,
+              12567911,
+              12918340,
+              12702040,
+              12649499,
+              12838721,
+              12677906,
+              12761205
+            ],
+            "fwp-arc": [
+              26895259,
+              27243472,
+              27377721,
+              27519432,
+              27181804,
+              27295293,
+              27687623,
+              27393335,
+              26995166,
+              26964264,
+              27170948,
+              26698656,
+              26990823,
+              27284438,
+              27385960,
+              26544288,
+              26762484,
+              26998879,
+              27948960,
+              27183948,
+              26857086,
+              27141863,
+              26915739,
+              26983111
+            ],
+            "fwp-tracing": [
+              27413189,
+              27982942,
+              27721469,
+              27830703,
+              27667240,
+              27852230,
+              27144662,
+              27102889,
+              27918962,
+              28100848,
+              27652705,
+              27199923,
+              28124206,
+              27757828,
+              27814248,
+              27610020,
+              27477467,
+              27179979,
+              27200851,
+              27614491,
+              27429302,
+              27224562,
+              27620163,
+              27497866
+            ],
+            "before-arc": [
+              32903279,
+              33068598,
+              33075046,
+              32689883,
+              32976771,
+              32970252,
+              32622327,
+              32983379,
+              33969427,
+              33203631,
+              32964268,
+              32365550,
+              33142586,
+              33087022,
+              32650942,
+              33087829,
+              32526757,
+              33432698,
+              32976907,
+              32810077,
+              33050431,
+              32991002,
+              32042993,
+              32516717
+            ],
+            "before-tracing": [
+              34568072,
+              35150520,
+              35147192,
+              34699730,
+              34620439,
+              34575169,
+              34786805,
+              34307960,
+              34495294,
+              34608111,
+              35359548,
+              34609279,
+              34613095,
+              35611351,
+              34421162,
+              34230436,
+              34474646,
+              34401019,
+              34307320,
+              34194470,
+              34602120,
+              34108452,
+              33974451,
+              34291817
+            ]
+          },
+          "medianNs": {
+            "c": 9910346.5,
+            "rust": 12779399.5,
+            "fwp-arc": 27156405.5,
+            "fwp-tracing": 27617327.0,
+            "before-arc": 32976839.0,
+            "before-tracing": 34571620.5
+          },
+          "orders": [
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ],
+            [
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing"
+            ],
+            [
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c"
+            ],
+            [
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust"
+            ],
+            [
+              "fwp-tracing",
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc"
+            ],
+            [
+              "before-arc",
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing"
+            ],
+            [
+              "before-tracing",
+              "c",
+              "rust",
+              "fwp-arc",
+              "fwp-tracing",
+              "before-arc"
+            ],
+            [
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c"
+            ],
+            [
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust"
+            ],
+            [
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc"
+            ],
+            [
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc",
+              "fwp-tracing"
+            ],
+            [
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing",
+              "before-arc"
+            ],
+            [
+              "before-arc",
+              "fwp-tracing",
+              "fwp-arc",
+              "rust",
+              "c",
+              "before-tracing"
+            ]
+          ],
+          "candidateOverBaseline": {
+            "arc": 0.8234993505593425,
+            "tracing": 0.7988438667490291
+          },
+          "ratios": {
+            "arc": {
+              "c": 2.7402074690324905,
+              "rust": 2.1250142074359597
+            },
+            "tracing": {
+              "c": 2.7867165895763586,
+              "rust": 2.1610817472292028
+            }
+          }
+        }
+      },
+      "stack": {
+        "fwp-arc": {
+          "generatedCSha256": "9662f6e1f415816f342e7eedfe09895688188231a8efa9d4025edd533304d245",
+          "rebuiltSha256": "4b80655b98b38ba259389c95a550b454d93b4e75cff59092fe9a1104459ec2ce",
+          "instructionsUnchanged": true,
+          "frames": [
+            {
+              "function": "fwp_fmt_u128",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args10",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_buf_release",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_release",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "buf_grow",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "buf_put",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_chunks",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_segv",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cancel_tree.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_trap",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_collect",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_push",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_finish_float",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args27",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_format_g.constprop",
+              "bytes": 208,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_report",
+              "bytes": 416,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_trap_overflow.constprop",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry27",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_init",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_spent",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_wake_io",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop.part.0",
+              "bytes": 640,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_poll_events",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_wide_dup",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_forget_slot",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_mem_free",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_arr.part.0",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_big",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_refill",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_slow",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply",
+              "bytes": 128,
+              "kind": "dynamic"
+            },
+            {
+              "function": "fwp_own_tree0",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_share",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e32",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e27",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e22",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e10",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e16",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_dup",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_obj",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop4",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop6",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop37",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop9",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop12",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps10",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop5",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop1",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps27",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_task_dispose",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_block",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2.part.0",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cmp",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_msort.constprop",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_map_finish_protected.isra",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_map_items",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f13",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "e13",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f6",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "e6",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps37",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps4",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps9",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry9",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "e12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e9",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "f33",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "e33",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args4",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args12",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args9",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args37",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "f34",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "e34",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "e4",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry4",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_words",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "e2",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps11",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_read_stdin_all",
+              "bytes": 65744,
+              "kind": "static"
+            },
+            {
+              "function": "e1",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_owned",
+              "bytes": 144,
+              "kind": "dynamic"
+            },
+            {
+              "function": "e11",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "f8",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "e8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_borrowed_span.constprop",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "e3",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "f7",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "e7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_map_update_typed.constprop",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "e25",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "f36",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry36",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "e36",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e23",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "e20",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry11",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_write",
+              "bytes": 704,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_format.constprop",
+              "bytes": 288,
+              "kind": "static"
+            },
+            {
+              "function": "e15",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f37.isra",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "e37",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_main_thread",
+              "bytes": 368,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry37",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "main",
+              "bytes": 160,
+              "kind": "static"
+            }
+          ],
+          "largestReportedFrame": 65744
+        },
+        "fwp-tracing": {
+          "generatedCSha256": "4d242245223c870c0642aed013e61a8851ff52ecf1c3278b333ba2a0856c862d",
+          "rebuiltSha256": "c1e675746416b31c4deff8ee1482fd496769e840c9ab05bfd51da7a5c35a9ac4",
+          "instructionsUnchanged": true,
+          "frames": [
+            {
+              "function": "fwp_fmt_u128",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args10",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_buf_release",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_release",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_clear_marks",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "buf_grow",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_push",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "buf_put",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_chunks",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_sp",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_segv",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cancel_tree.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_trap",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_find_data",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_push",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_finish_float",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args27",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_format_g.constprop",
+              "bytes": 208,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_report",
+              "bytes": 416,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_trap_overflow.constprop",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry27",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_init",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_wake_io",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop.part.0",
+              "bytes": 640,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_poll_events",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_wide_dup",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_forget_slot",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_mem_free",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_arr.part.0",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_clear_chunk",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_refill",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_drain",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_own_tree0",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_dup",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_obj",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop4",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop6",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop37",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop9",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop12",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps10",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop5",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop1",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps27",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_task_dispose",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_block",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2.part.0",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_share",
+              "bytes": 608,
+              "kind": "static"
+            },
+            {
+              "function": "e32",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e27",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e22",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e10",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e16",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cmp",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_msort.constprop",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_scan",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_mark_all",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_collect",
+              "bytes": 672,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_spent",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_big",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_slow",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply",
+              "bytes": 128,
+              "kind": "dynamic"
+            },
+            {
+              "function": "fwp_map_finish_protected.isra",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_map_items",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f13",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "e13",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f6",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "e6",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps37",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps4",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps9",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry9",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "e12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e9",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "f33",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "e33",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args4",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args9",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args12",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args37",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "f34",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "e34",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e4",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry4",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_words",
+              "bytes": 176,
+              "kind": "static"
+            },
+            {
+              "function": "e2",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps11",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_read_stdin_all",
+              "bytes": 65744,
+              "kind": "static"
+            },
+            {
+              "function": "e1",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_owned",
+              "bytes": 144,
+              "kind": "dynamic"
+            },
+            {
+              "function": "e11",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "f8",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "e8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_borrowed_span.constprop",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "e3",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "f7",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "e7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_map_update_typed.constprop",
+              "bytes": 176,
+              "kind": "static"
+            },
+            {
+              "function": "e25",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "f36",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry36",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "e36",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e23",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "e20",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry11",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_write",
+              "bytes": 704,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_format.constprop",
+              "bytes": 304,
+              "kind": "static"
+            },
+            {
+              "function": "e15",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f37.isra",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "e37",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_main_thread",
+              "bytes": 368,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry37",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "main",
+              "bytes": 160,
+              "kind": "static"
+            }
+          ],
+          "largestReportedFrame": 65744
+        },
+        "before-arc": {
+          "generatedCSha256": "9cd977f86ff4b3fdc49bea676a3991f58722630bc2731d42523167444929de76",
+          "rebuiltSha256": "7c8d82a22fa5cfbb45b25d8a3ee8244e57f834c32530572552e4a5c62cc828c7",
+          "instructionsUnchanged": true,
+          "frames": [
+            {
+              "function": "fwp_fmt_u128",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args10",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_buf_release",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_release",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "buf_grow",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "buf_put",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_chunks",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_segv",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cancel_tree.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_trap",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_collect",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_push",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_finish_float",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args27",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_format_g.constprop",
+              "bytes": 208,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_report",
+              "bytes": 416,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_trap_overflow.constprop",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry27",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_init",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_spent",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_wake_io",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop.part.0",
+              "bytes": 640,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_poll_events",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_wide_dup",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_forget_slot",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_mem_free",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_arr.part.0",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_big",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_refill",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_slow",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply",
+              "bytes": 128,
+              "kind": "dynamic"
+            },
+            {
+              "function": "fwp_own_tree0",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_share",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "e32",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e27",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e22",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e10",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e16",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_dup",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_obj",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop4",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop6",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop37",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop9",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop12",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps10",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop5",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop1",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps27",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_task_dispose",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_block",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2.part.0",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cmp",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_msort.constprop",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_map_finish_protected.isra",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_map_items",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f13",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "e13",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f6",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "e6",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e33",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps37",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps9",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps4",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry9",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "e12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e9",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args9",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args4",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args12",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args37",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_words",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "e2",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps11",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "f34",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "e34",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "f4",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry4",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "e4",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_read_stdin_all",
+              "bytes": 65744,
+              "kind": "static"
+            },
+            {
+              "function": "e1",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_owned",
+              "bytes": 144,
+              "kind": "dynamic"
+            },
+            {
+              "function": "e11",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "f8",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "e8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_borrowed_span.constprop",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "e3",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "f7",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "e7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_map_update_typed.constprop",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "e25",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "f36",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry36",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "e36",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e23",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "e20",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry11",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_write",
+              "bytes": 704,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_format.constprop",
+              "bytes": 288,
+              "kind": "static"
+            },
+            {
+              "function": "e15",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f37.isra",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "e37",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_main_thread",
+              "bytes": 352,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry37",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "main",
+              "bytes": 160,
+              "kind": "static"
+            }
+          ],
+          "largestReportedFrame": 65744
+        },
+        "before-tracing": {
+          "generatedCSha256": "6f48be934a71820c715b5b4c16d71afa1014aa8915d4557a82aea019547bbe8a",
+          "rebuiltSha256": "162ffe14a0bafd572c40fdd36a7bdc7aee8647f22d651c0f24868471ae07b270",
+          "instructionsUnchanged": true,
+          "frames": [
+            {
+              "function": "fwp_fmt_u128",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args10",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_flush",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_buf_release",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_release",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_clear_marks",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_oom",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "buf_grow",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_push",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "buf_put",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_chunks",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_sp",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_segv",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cancel_tree.part.0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_trap",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_find_data",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop_push",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_now_ns",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_finish_float",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args27",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_format_g.constprop",
+              "bytes": 208,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_report",
+              "bytes": 416,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_trap_overflow.constprop",
+              "bytes": 144,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry10",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry27",
+              "bytes": 16,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_init",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_wake_io",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop.part.0",
+              "bytes": 640,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_poll_events",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_wide_dup",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_forget_slot",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_mem_free",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_arr.part.0",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_clear_chunk",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_refill",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_drain",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_own_tree0",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_dup",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_closure_drop",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_free_obj",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop0",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop4",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop6",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop37",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop9",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop12",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps10",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop5",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop1",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps27",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_task_dispose",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_free_zombie",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_block",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2.part.0",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_drop2",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_arg_drop36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_rc_share",
+              "bytes": 608,
+              "kind": "static"
+            },
+            {
+              "function": "e32",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e27",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e22",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e10",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e16",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_cmp",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_msort.constprop",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_scan",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_mark_all",
+              "bytes": 112,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_collect",
+              "bytes": 672,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_spent",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_big",
+              "bytes": 80,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_gc_alloc_slow",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply",
+              "bytes": 128,
+              "kind": "dynamic"
+            },
+            {
+              "function": "fwp_map_finish_protected.isra",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_map_items",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f13",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "e13",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f6",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "e6",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e33",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps37",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps9",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps4",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry9",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "e12",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e9",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args12",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args4",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args9",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args37",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_words",
+              "bytes": 176,
+              "kind": "static"
+            },
+            {
+              "function": "e2",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps11",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "f34",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "e34",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "f4",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry4",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "e4",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_caps36",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args8",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_args11",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_read_stdin_all",
+              "bytes": 65744,
+              "kind": "static"
+            },
+            {
+              "function": "e1",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_owned",
+              "bytes": 144,
+              "kind": "dynamic"
+            },
+            {
+              "function": "e11",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "f8",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry8",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "e8",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_apply_borrowed_span.constprop",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "e3",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "f7",
+              "bytes": 160,
+              "kind": "static"
+            },
+            {
+              "function": "e7",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_map_update_typed.constprop",
+              "bytes": 176,
+              "kind": "static"
+            },
+            {
+              "function": "e25",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "f36",
+              "bytes": 128,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry36",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "e36",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "e23",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "e20",
+              "bytes": 96,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry11",
+              "bytes": 64,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_write",
+              "bytes": 704,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_p_format.constprop",
+              "bytes": 304,
+              "kind": "static"
+            },
+            {
+              "function": "f37.isra",
+              "bytes": 48,
+              "kind": "static"
+            },
+            {
+              "function": "e37",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_main_thread",
+              "bytes": 352,
+              "kind": "static"
+            },
+            {
+              "function": "fwp_owned_entry37",
+              "bytes": 0,
+              "kind": "static"
+            },
+            {
+              "function": "e15",
+              "bytes": 32,
+              "kind": "static"
+            },
+            {
+              "function": "main",
+              "bytes": 160,
+              "kind": "static"
+            }
+          ],
+          "largestReportedFrame": 65744
+        }
+      },
+      "commands": [
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-fstack-usage",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/fwp-arc.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/fwp-arc",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-fstack-usage",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/fwp-tracing.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/fwp-tracing",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-fstack-usage",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/before-arc.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/before-arc",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ],
+        [
+          "gcc",
+          "-O2",
+          "-std=gnu11",
+          "-ffp-contract=off",
+          "-fstack-usage",
+          "-w",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/before-tracing.c",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/wordfreq-repeat/before-tracing",
+          "-lm",
+          "-lpthread",
+          "-ldl"
+        ]
+      ],
+      "scope": "Whole fresh process as in the source comparison, using exactly its accepted binaries. Compilation and inspection occur before warmup and timing. Stack estimates are GCC per-function frames for identical emitted instructions, not summed live stack or recursion bounds. Managed counts are not remeasured here. Slower results remain in the report; no timing gate is set."
+    }
+  ],
+  "inspection": [
+    {
+      "host": "ubuntu-latest",
+      "variant": "fwp-arc",
+      "rebuiltSha256": "f05a221c2bd42a29321eb9366c37072b17940bb63e1bf206006a63c736fdb4e7",
+      "textSectionIdentical": true
+    },
+    {
+      "host": "ubuntu-latest",
+      "variant": "fwp-tracing",
+      "rebuiltSha256": "ff38beb7f5932fa85a01d327f8c238ae3a9c8fb843644b470ea6cc75ddcd06b0",
+      "textSectionIdentical": true
+    },
+    {
+      "host": "ubuntu-latest",
+      "variant": "before-arc",
+      "rebuiltSha256": "ac38c3acbd7dfb7ba55edd1f0482b6074df73a55f4c277d9cbef057254fd9ad1",
+      "textSectionIdentical": true
+    },
+    {
+      "host": "ubuntu-latest",
+      "variant": "before-tracing",
+      "rebuiltSha256": "b72ac0f47a8544061d1845af224cdd6b71ceba43f11bef86b816baaa7ce6a684",
+      "textSectionIdentical": true
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "variant": "fwp-arc",
+      "rebuiltSha256": "4b80655b98b38ba259389c95a550b454d93b4e75cff59092fe9a1104459ec2ce",
+      "textSectionIdentical": true
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "variant": "fwp-tracing",
+      "rebuiltSha256": "c1e675746416b31c4deff8ee1482fd496769e840c9ab05bfd51da7a5c35a9ac4",
+      "textSectionIdentical": true
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "variant": "before-arc",
+      "rebuiltSha256": "7c8d82a22fa5cfbb45b25d8a3ee8244e57f834c32530572552e4a5c62cc828c7",
+      "textSectionIdentical": true
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "variant": "before-tracing",
+      "rebuiltSha256": "162ffe14a0bafd572c40fdd36a7bdc7aee8647f22d651c0f24868471ae07b270",
+      "textSectionIdentical": true
+    }
+  ]
+}

@@ -951,8 +951,9 @@ separately from returned arrays. See [numerics](numerics.md#reverse-mode).
 `rev.jacobian f` calls `f` once to count outputs, then once per output row to
 compute derivatives. The counting pass has its own tape scope, just like each
 row. Temporary tapes must be released before the next expression, including when
-`f` creates a tape that it never uses. These scope repairs are under validation;
-see [the handoff](development-state.md) for checked revisions and remaining gates.
+`f` creates a tape that it never uses. These scope repairs passed
+[PR #191](roadmap-history.md#task-results-and-explicit-cpu-execution-pr-191), including the native
+production gates and focused WebAssembly cleanup controls.
 
 Process calls borrow arguments/input during execution. `process.run` and
 `process.run-input` return owned status/output/error records; `process.call`

@@ -95,12 +95,16 @@ outside the benchmark suite.
    extensions are baselines, not new tasks. Prefer borrowing and scoped cleanup.
    Weak handles remain a proposal. Distinguish missing proofs from definite cycles,
    and reject unproved retention instead of silently enabling tracing.
+   The [execution-example inventory](docs/measurements/file-applications.md#which-maintained-examples-pass-arcs-checks)
+   identifies raw-pointer C interop as a concrete remaining boundary. Keep its
+   programmer-managed `Unsafe` obligations explicit; do not admit invalid
+   inter-task derivative lifetimes merely to increase the accepted count.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.
    [Integer counting](docs/measurements/integer-counting.md) and
    [checked products](docs/measurements/checked-products.md) retain slower controls,
    optimization-level differences and unexplained AMD64 variability. Resource-owning
    tail frames and mutual recursion still need separate lifetime proofs.
-3. Select larger representative applications and use equivalent-work measurements
+3. Complete the [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
    to choose the next costs to remove: dynamic calls, input copies, container
    layout, numerical workspace and derivative recording. Establish workload-specific
    time/memory budgets before claiming improvement. The [benchmark index](docs/benchmarks.md)
@@ -160,8 +164,9 @@ option. Keep native compilation ahead of execution and the interpreter; do not
 add a JIT to either the compiler or the generated runtime. Prepare interpreter
 foreign-call bridges before evaluation; no C compiler starts during a foreign call.
 
-Remove the existing runtime OpenCL compiler and its GPU API. Keep the CPU kernel
-interpreter, which evaluates instructions without generating machine code. A
+The runtime OpenCL compiler and its GPU API were removed in
+[PR #191](docs/roadmap-history.md#task-results-and-explicit-cpu-execution-pr-191). The CPU kernel
+interpreter evaluates instructions without generating machine code. A
 future GPU proposal would require explicitly supported ahead-of-time artifacts
 and real device execution evidence; it is not required to finish this plan.
 

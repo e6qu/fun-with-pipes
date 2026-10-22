@@ -268,6 +268,17 @@ for row in rows:
         assert row['contract'] == 'Some(Contract { arguments: [Borrow], result: ' + result + ', callback: None, aliases: [] })'
         changed_symbols.add(row['symbol'])
         continue
+    if row['symbol'] in {'trim', 'trim-start', 'trim-end', 'lower', 'upper', 'replace'}:
+        assert all(row[name] == before[name] for name in fields if name != 'contract')
+        argument = 2 if row['symbol'] == 'replace' else 0
+        prior_arguments = '[Borrow, Borrow, Borrow]' if argument == 2 else '[Borrow]'
+        prior_result = 'FreshOrAliasLeaf { argument: 2 }' if argument == 2 else 'FreshLeaf'
+        prior_aliases = '[2]' if argument == 2 else '[]'
+        assert before['contract'] == f'Some(Contract {{ arguments: {prior_arguments}, result: {prior_result}, callback: None, aliases: {prior_aliases} }})'
+        arguments = '[Borrow, Borrow, Consume]' if argument == 2 else '[Consume]'
+        assert row['contract'] == f'Some(Contract {{ arguments: {arguments}, result: OwnedLeaf {{ argument: {argument} }}, callback: None, aliases: [{argument}] }})'
+        changed_symbols.add(row['symbol'])
+        continue
     if row['symbol'] == 'channel.send':
         assert before['contract'] == 'Some(Contract { arguments: [Borrow, Borrow], result: ChannelOperation, callback: None, aliases: [] })'
         assert all(row[name] == before[name] for name in fields if name != 'contract')
@@ -357,7 +368,7 @@ for row in rows:
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | set(service_scopes) | {'task.spawn', 'task.within', 'channel.send', 'http2.serve', 'grpc._force', 'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
+assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | set(service_scopes) | {'trim', 'trim-start', 'trim-end', 'lower', 'upper', 'replace', 'task.spawn', 'task.within', 'channel.send', 'http2.serve', 'grpc._force', 'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float'}
 expected_counts = dict(baseline['counts'])
 expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes) + len(scalar_math)
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22

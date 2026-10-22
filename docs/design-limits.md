@@ -62,8 +62,8 @@ and the implemented [precision and tape contracts](numerics.md#reverse-mode).
 **5. CPU numerics fits the design; portable GPU execution without runtime
 compilation needs a narrower scope.** Improve known CPU kernels while preserving
 their rounding/reduction rules; do not silently enable reassociation or fused
-operations to match a different numerical contract. Remove the runtime OpenCL
-compiler rather than make a JIT exception. An ahead-of-time device proposal would
+operations to match a different numerical contract. Runtime OpenCL compilation
+has been removed; JIT compilation remains excluded. An ahead-of-time device proposal would
 need supported toolchain/device artifacts and verified loading behavior. An
 intermediate binary alone does not prove this: [OpenCL binaries can contain
 intermediate code](https://registry.khronos.org/OpenCL/specs/unified/refpages/man/html/clCreateProgramWithBinary.html).

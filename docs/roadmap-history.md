@@ -12,6 +12,26 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Task results and explicit CPU execution (PR #191)
+
+Immediate task-result fields avoid a temporary `Some` box. The measured fixture
+uses 34 fewer allocation requests and 544 fewer requested bytes, with unchanged
+retains and peak storage; [the report](measurements/task-await-fields.md) records
+the native/WebAssembly controls and limits. State callback scopes, Jacobian tape
+cleanup and C-interop buffer releases are also repaired.
+
+CPU kernels use explicit worker limits and no longer compile OpenCL source at
+runtime. The GPU API is removed. Interpreter foreign-call bridges are prepared
+before program effects, so calling foreign code does not start a compiler.
+
+[PR #191](https://github.com/e6qu/fun-with-pipes/pull/191) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39688998592),
+[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39688998567)
+and the [focused GCC check](https://github.com/e6qu/fun-with-pipes/actions/runs/39688997806)
+at `12be5afcee7c81f1b98ffed2081d698e1124b000`. All complete logs were audited.
+Squash merge `19f3afbcbed22802a96f092d9d0ee3d7913335e3` has the identical tree
+and a verified one-line message without body or trailers.
+
 ## Queued task owners and callback transfers (PR #190)
 
 Queued callbacks and messages can retain proved task handles without tracing.

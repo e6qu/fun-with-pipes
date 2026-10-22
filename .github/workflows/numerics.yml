@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -30,6 +30,148 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  file_inspection:
+    if: inputs.suite == 'file-inspection'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    env:
+      FWP_LTO: '0'
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify the source execution run
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          PROGRAM_SOURCE: ${{ inputs.source_revision }}
+        run: |
+          python3 - <<'PYCODE'
+          import json
+          import os
+          import subprocess
+          run = os.environ['EVIDENCE_RUN']
+          source = os.environ['PROGRAM_SOURCE']
+          assert run.isdecimal() and len(source) == 40 and all(c in '0123456789abcdef' for c in source)
+          data = json.loads(subprocess.check_output(['gh', 'run', 'view', run, '--json', 'headSha,status,conclusion,jobs'], text=True))
+          assert data['headSha'] == source and data['status'] == 'completed' and data['conclusion'] == 'success'
+          jobs = [job for job in data['jobs'] if job['conclusion'] != 'skipped']
+          hosts = ['ubuntu-latest', 'ubuntu-24.04-arm', 'macos-15', 'macos-15-intel', 'windows-2025', 'windows-11-arm']
+          assert {job['name'] for job in jobs} == {f'file_applications ({host})' for host in hosts}
+          assert len(jobs) == 6 and all(job['conclusion'] == 'success' for job in jobs)
+          PYCODE
+      - uses: actions/download-artifact@v8
+        with:
+          name: file-applications-${{ matrix.runner }}
+          path: file-application-evidence
+          run-id: ${{ inputs.evidence_run }}
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          digest-mismatch: error
+      - name: Reinspect retained native code and decode outputs as UTF-8
+        shell: bash
+        env:
+          PROGRAM_SOURCE: ${{ inputs.source_revision }}
+        run: python3 scripts/inspect-file-applications.py --input file-application-evidence --mode reinspect --program-source "$PROGRAM_SOURCE"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: file-applications-${{ matrix.runner }}
+          path: file-application-evidence/
+          if-no-files-found: error
+  file_applications:
+    if: inputs.suite == 'file-applications'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]' || format('["{0}"]', inputs.native_runner)) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    env:
+      CC: ${{ startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      FWP_LTO: '0'
+      FWP_FILE_APPLICATION_ARTIFACTS: file-application-evidence
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies
+        shell: bash
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
+      - name: Native Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/setup-windows.ps1
+      - run: cargo fmt --all -- --check
+      - name: Compiler checks for the file applications
+        id: file_compiler
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p file-application-evidence
+          cargo clippy --test directory_report --test text_file_tools --test text_transform_ownership -- -D warnings 2>&1 | tee file-application-evidence/compiler.log
+      - name: Windows compiler checks for the file applications
+        id: file_compiler_windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force file-application-evidence | Out-Null
+          cargo clippy --test directory_report --test text_file_tools --test text_transform_ownership -- -D warnings 2>&1 | Tee-Object file-application-evidence/compiler.log
+          exit $LASTEXITCODE
+      - name: Publish compiler failures while independent tests continue
+        if: ${{ !cancelled() && (steps.file_compiler.outcome == 'failure' || steps.file_compiler_windows.outcome == 'failure') }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: file-compiler-${{ matrix.runner }}
+          path: file-application-evidence/compiler.log
+          if-no-files-found: error
+      - name: File applications, repeated failures and deliberate leaks
+        if: ${{ !cancelled() && runner.os != 'Windows' }}
+        shell: bash
+        run: |
+          cargo test --no-fail-fast --test directory_report --test text_file_tools --test text_transform_ownership -- --nocapture 2>&1 | tee file-application-evidence/tests.log
+      # Git Bash's MSYS runtime enables backup/restore privileges, which can
+      # bypass the denied-directory ACL. Launch native tests from PowerShell.
+      - name: Windows file applications, repeated failures and deliberate leaks
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          whoami /priv | Out-File file-application-evidence/privileges.txt
+          cargo test --no-fail-fast --test directory_report --test text_file_tools --test text_transform_ownership -- --nocapture 2>&1 | Tee-Object file-application-evidence/tests.log
+          exit $LASTEXITCODE
+      - name: Inventory execution examples admitted without tracing
+        if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
+        shell: bash
+        run: python3 scripts/inventory-arc-programs.py --compiler target/debug/fwp --root . --sources tests/run --optimization O1 --timeout 30 --output file-application-evidence/arc-admission.json
+      - name: Inspect native binaries and save memory observations
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: python3 scripts/inspect-file-applications.py --input file-application-evidence --mode collect --program-source "${{ github.sha }}"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: file-applications-${{ matrix.runner }}
+          path: file-application-evidence/
+          if-no-files-found: error
   task_cancellation_storage:
     if: inputs.suite == 'task-cancellation'
     strategy:
@@ -2240,6 +2382,157 @@ jobs:
           name: compiler-crashes-console-${{ matrix.runner }}
           path: ~/Library/Logs/DiagnosticReports/fwp*
           if-no-files-found: ignore
+  wordfreq:
+    if: inputs.suite == 'wordfreq'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Synchronous WASI toolchain
+        run: |
+          sudo apt-get update && sudo apt-get install -y clang llvm lld wabt wasi-libc libclang-rt-18-dev-wasm32 libc++-18-dev-wasm32
+          rustup target add wasm32-wasip1
+      - run: cargo fmt --all -- --check
+      - run: cargo build --locked --release --bin fwp
+      - name: Consumed text owners, alias preservation and forced failures
+        env:
+          FWP_TEXT_TRANSFORM_ARTIFACTS: text-transform-evidence
+        run: cargo test --locked --release --test text_transform_ownership -- --nocapture
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: text-transform-${{ matrix.runner }}
+          path: text-transform-evidence/
+          if-no-files-found: error
+      - name: Native interpreter counts
+        if: ${{ !cancelled() }}
+        run: >-
+          cargo test --locked --release --lib prims_std::count_tests:: -- --test-threads=1
+      - name: Interpreter counts on 32-bit WebAssembly
+        if: ${{ !cancelled() }}
+        env:
+          CC_wasm32_wasip1: clang
+          CXX_wasm32_wasip1: clang++
+          CARGO_TARGET_WASM32_WASIP1_RUNNER: node tests/wasm/wasi-run.mjs
+        run: >-
+          cargo test --locked --release --lib --target wasm32-wasip1 prims_std::count_tests:: -- --test-threads=1
+      - name: Synchronous WASI text aliases and physical cleanup
+        if: ${{ !cancelled() }}
+        env:
+          FWP_REQUIRE_WASI_ARC: '1'
+          FWP_WASI_ARC_ARTIFACTS: text-wasi-evidence
+          FWP_WASM_CC: clang
+        run: cargo test --locked --release --test wasm_arc synchronous_wasi_ -- --nocapture
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: text-wasi-${{ matrix.runner }}
+          path: text-wasi-evidence/
+          if-no-files-found: error
+      - name: Word-frequency native and interpreter boundary cases
+        if: ${{ !cancelled() }}
+        run: cargo test --locked --release --test text_file_tools word_frequencies_preserve_separators_normalization_and_tie_order -- --exact
+      - name: Download the explicit accepted word-frequency baseline
+        id: baseline
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASELINE_RUN: ${{ inputs.baseline_run }}
+        run: |
+          test -n "$BASELINE_RUN"
+          gh run view "$BASELINE_RUN" --json headSha,conclusion > baseline-run.json
+          python3 -c 'import json; r=json.load(open("baseline-run.json")); assert r["conclusion"] == "success" and r["headSha"] == "74263bccf8e2e67865e1863e2c04a296a97877bb"'
+          gh run download "$BASELINE_RUN" --name "wordfreq-${{ matrix.runner }}" --dir wordfreq-before
+      - name: Compare the maintained word-frequency application
+        if: ${{ !cancelled() && steps.baseline.conclusion == 'success' }}
+        run: >-
+          python3 scripts/measure-wordfreq.py --compiler target/release/fwp
+          --cc gcc --rustc rustc --objdump objdump --nm nm --time /usr/bin/time
+          --case 4096:64 --case 65536:1024 --warmups 2 --samples 24
+          --baseline wordfreq-before --baseline-source 74263bccf8e2e67865e1863e2c04a296a97877bb
+          --timeout 180 --host "${{ matrix.runner }}" --output wordfreq-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: wordfreq-${{ matrix.runner }}
+          path: wordfreq-evidence/
+          if-no-files-found: error
+  wordfreq_repeat:
+    if: inputs.suite == 'wordfreq-repeat'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download the explicit accepted word-frequency comparison
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          SOURCE: ${{ inputs.source_revision }}
+        run: |
+          test -n "$EVIDENCE_RUN" && test -n "$SOURCE"
+          gh run view "$EVIDENCE_RUN" --json headSha,conclusion > evidence-run.json
+          python3 -c 'import json, os; r=json.load(open("evidence-run.json")); assert r["conclusion"] == "success" and r["headSha"] == os.environ["SOURCE"]'
+          gh run download "$EVIDENCE_RUN" --name "wordfreq-${{ matrix.runner }}" --dir wordfreq-input
+      - name: Repeat accepted binaries and compare stack estimates
+        env:
+          SOURCE: ${{ inputs.source_revision }}
+        run: >-
+          python3 scripts/repeat-wordfreq.py --input wordfreq-input --source "$SOURCE"
+          --cc gcc --nm nm --objdump objdump --host "${{ matrix.runner }}"
+          --warmups 2 --samples 24 --timeout 180 --output wordfreq-repeat
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: wordfreq-repeat-${{ matrix.runner }}
+          path: wordfreq-repeat/
+          if-no-files-found: error
+  ad_application:
+    if: inputs.suite == 'ad-application'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --locked --release --bin fwp
+      - name: Compare stored descent history with current-vector iteration
+        run: >-
+          python3 scripts/measure-ad-application.py --compiler target/release/fwp
+          --cc gcc --objdump objdump --nm nm
+          --case 3:200 --case 33:200 --case 129:200
+          --warmups 2 --samples 16 --timeout 180
+          --host "${{ matrix.runner }}" --output ad-application-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ad-application-${{ matrix.runner }}
+          path: ad-application-evidence/
+          if-no-files-found: error
   precision:
     if: inputs.suite == 'precision'
     strategy:

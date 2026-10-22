@@ -20,9 +20,9 @@ main = [
     [-1.2, 1.0, 0.5] | grad rosenbrock | show | print,
     [-1.2, 1.0, 0.5] | gradient rosenbrock | show | print,
     [-1.2, 1.0, 0.5]
-    | iterate 200 descend
-    | last
-    | option.unwrap-or []
+    | both (const 199) id
+    | loop
+        (if (.0 | eq 0) (.1 | Stop) (both (.0 | sub 1) (.1 | descend) | Again))
     | rosenbrock
     | show
     | print,

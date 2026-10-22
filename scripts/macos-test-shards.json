@@ -23,6 +23,7 @@
     "numeric_array_fusion",
     "state_sequence_ownership",
     "text_file_tools",
+    "text_transform_ownership",
     "autodiff_workspace",
     "grpc_capture_resources",
     "range_array",

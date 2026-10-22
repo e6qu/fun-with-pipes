@@ -1,8 +1,9 @@
 # Matching task results without a temporary box
 
 Immediate task-result matches avoid a temporary heap object. The measured source
-passes six native and two WebAssembly focused jobs. Final delivery checks remain
-separate; see [the handoff](../development-state.md).
+passes six native and two WebAssembly focused jobs. The combined delivery passed
+all nine production jobs and documentation in
+[PR #191](../roadmap-history.md#task-results-and-explicit-cpu-execution-pr-191).
 
 `Task[String]` is a handle to a computation that returns text. Awaiting it produces
 an `Option[String]`: `Some` contains the successful result; `None` means that the

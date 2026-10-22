@@ -160,6 +160,7 @@ static V fwp_record(uint32_t n, const V *f) {
 static V fwp_tuple2(V a, V b) { V f[2] = {a, b}; return fwp_record(2, f); }
 
 static V fwp_str_new(const char *s, size_t len) {
+    if (len > SIZE_MAX - sizeof(fwp_str) - 1) fwp_trap("string too large");
     fwp_str *r = (fwp_str *)fwp_alloc_leaf(sizeof(fwp_str) + len + 1);
     r->len = len;
     memcpy(r->d, s, len);

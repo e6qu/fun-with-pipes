@@ -1,0 +1,3286 @@
+{
+  "reports": [
+    {
+      "source": "4815e3d16c349ad5af2ecca9fe313924dfa00985",
+      "host": "ubuntu-latest",
+      "machine": "x86_64",
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.24\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "commands": [
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "arc",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-arc.c"
+          ],
+          "elapsedNs": 273910567
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-arc.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-arc",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1269497593
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-arc-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-arc-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1222079702
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "tracing",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-tracing.c"
+          ],
+          "elapsedNs": 268663592
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-tracing.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-tracing",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1261039084
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-tracing-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-tracing-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1270524914
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "arc",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-arc.c"
+          ],
+          "elapsedNs": 281911160
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-arc.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-arc",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1228269368
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-arc-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-arc-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1238015010
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/missing-retirement.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/missing-retirement",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1248034039
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "tracing",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-tracing.c"
+          ],
+          "elapsedNs": 269236099
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-tracing.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-tracing",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1260065409
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-tracing-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-tracing-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1264491479
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "arc",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-arc.c"
+          ],
+          "elapsedNs": 275453066
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-arc.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-arc",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1221304639
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-arc-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-arc-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1247507539
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "tracing",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-tracing.c"
+          ],
+          "elapsedNs": 267655115
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-tracing.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-tracing",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1286995934
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-tracing-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-tracing-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1295260347
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "arc",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-arc.c"
+          ],
+          "elapsedNs": 275236051
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-arc.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-arc",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1234184321
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-arc-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-arc-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1233345391
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/missing-retirement.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/missing-retirement",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1222472228
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "tracing",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-tracing.c"
+          ],
+          "elapsedNs": 272993868
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-tracing.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-tracing",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1294112492
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-tracing-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-tracing-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1322778002
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "arc",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-arc.c"
+          ],
+          "elapsedNs": 273805142
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-arc.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-arc",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1216070364
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-arc-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-arc-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1234816306
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "tracing",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-tracing.c"
+          ],
+          "elapsedNs": 271114736
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-tracing.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-tracing",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1338759658
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-tracing-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-tracing-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1309751321
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "arc",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-arc.c"
+          ],
+          "elapsedNs": 263468037
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-arc.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-arc",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1186696286
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-arc-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-arc-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1286037828
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/missing-retirement.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/missing-retirement",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1749581798
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "tracing",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-tracing.c"
+          ],
+          "elapsedNs": 261797130
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-tracing.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-tracing",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1325116430
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-tracing-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-tracing-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1340103830
+        }
+      ],
+      "configuration": {
+        "warmups": 2,
+        "samples": 16,
+        "timeout": 180
+      },
+      "environment": {
+        "FWP_LTO": "0",
+        "FWP_AD_WORKSPACE": "1",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "sourceHashes": {
+        "scripts/measure-ad-application.py": "a209a4253afeebd28f9306cd0dff35f4c0e542554739951c5a3d7fab75eb7f32",
+        "scripts/measure-iteration.py": "fe7cc4d2931eccf157012ade4a37235910f701e39d3ffa96f1874d0a6f96137b",
+        "docs/tutorials/20-autodiff-and-devices/main.fwp": "015f19fee401b9ad91085b0171a99048862e31c2b24062a8e8c54a5e660363e5"
+      },
+      "results": {
+        "3-200": {
+          "dimensions": 3,
+          "storedValues": 200,
+          "updates": 199,
+          "samplesNs": {
+            "history-arc": [
+              1557933,
+              1513349,
+              1741764,
+              1394297,
+              1522305,
+              1480591,
+              1346600,
+              1453641,
+              1500301,
+              1439520,
+              1686973,
+              1357251,
+              2643265,
+              1359245,
+              1909073,
+              1486510
+            ],
+            "history-tracing": [
+              1926335,
+              2719410,
+              2474831,
+              1654277,
+              1651717,
+              2021639,
+              2519829,
+              2047001,
+              1944819,
+              1538916,
+              1363694,
+              1628653,
+              1446414,
+              1456737,
+              1698740,
+              1675548
+            ],
+            "loop-arc": [
+              1446280,
+              2821645,
+              1539418,
+              1307265,
+              2398069,
+              1737731,
+              1342003,
+              1322564,
+              2645698,
+              1455505,
+              1344116,
+              1568003,
+              1352625,
+              1599279,
+              1555213,
+              1465969
+            ],
+            "loop-tracing": [
+              1850397,
+              1369572,
+              1368614,
+              1383891,
+              1321112,
+              1492357,
+              1345600,
+              1322645,
+              1755565,
+              1324866,
+              1325058,
+              1379064,
+              2812950,
+              1351151,
+              1334322,
+              2433496
+            ]
+          },
+          "medianNs": {
+            "history-arc": 1493405.5,
+            "history-tracing": 1687144.0,
+            "loop-arc": 1502693.5,
+            "loop-tracing": 1369093.0
+          },
+          "orders": [
+            [
+              "history-arc",
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing",
+              "history-arc"
+            ],
+            [
+              "loop-arc",
+              "loop-tracing",
+              "history-arc",
+              "history-tracing"
+            ],
+            [
+              "loop-tracing",
+              "history-arc",
+              "history-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing",
+              "history-arc"
+            ],
+            [
+              "history-arc",
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing"
+            ],
+            [
+              "history-tracing",
+              "history-arc",
+              "loop-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-arc",
+              "history-tracing",
+              "history-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-arc",
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing",
+              "history-arc"
+            ],
+            [
+              "loop-arc",
+              "loop-tracing",
+              "history-arc",
+              "history-tracing"
+            ],
+            [
+              "loop-tracing",
+              "history-arc",
+              "history-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing",
+              "history-arc"
+            ],
+            [
+              "history-arc",
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing"
+            ],
+            [
+              "history-tracing",
+              "history-arc",
+              "loop-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-arc",
+              "history-tracing",
+              "history-arc",
+              "loop-tracing"
+            ]
+          ],
+          "loopOverHistory": {
+            "arc": 1.006219342301873,
+            "tracing": 0.8114855637693048
+          },
+          "managedProfiles": {
+            "history-arc": {
+              "requests": 25878,
+              "requestedBytes": 675241,
+              "retains": 16321,
+              "peakChargedBytes": 32032,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "history-tracing": {
+              "requests": 25878,
+              "requestedBytes": 675241,
+              "retains": 16321,
+              "peakChargedBytes": 32032,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "loop-arc": {
+              "requests": 25477,
+              "requestedBytes": 664033,
+              "retains": 15920,
+              "peakChargedBytes": 896,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "loop-tracing": {
+              "requests": 25477,
+              "requestedBytes": 664033,
+              "retains": 15920,
+              "peakChargedBytes": 896,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          },
+          "binaries": {
+            "history-arc": {
+              "bytes": 142960,
+              "sha256": "b4646dc722b4f373a388632f966995d08b0ed7a639298b819fea13cfa54b2b57",
+              "cSha256": "b68127477810624987650b10ec5776ca2e083eb8b628e3193216ff012428fb55"
+            },
+            "history-tracing": {
+              "bytes": 143688,
+              "sha256": "7cebe1398200c1e1afb07cabf567c21c3be71562f445c52904c084506a2f5430",
+              "cSha256": "15fe92063e2601820e95fadc0420fea3f5c13daeab0648e61c2523f6583d3818"
+            },
+            "loop-arc": {
+              "bytes": 142864,
+              "sha256": "97759cb3b6a0354d60f8ad755e8a8fecab736ae9998e29eb85880e90fd0b1baf",
+              "cSha256": "454d1291fa4f4487ec22db13ebb6f3c3660dce88e28f5758bdf0709311519fff"
+            },
+            "loop-tracing": {
+              "bytes": 143544,
+              "sha256": "478f0766fe85f18a4ba57db121cf046a284c88e129b6319ff6faf9be3b758d18",
+              "cSha256": "51a6301acb44901712b94a62218a20b70a5a1f16c1e9c9667651cf7e281e8afb"
+            }
+          },
+          "output": "[-0.2510237644462731, 0.0754701617704703, 0.0061914241354485595]\n",
+          "analyticReference": [
+            -0.2510237644462732,
+            0.07547016177047036,
+            0.006191424135448568
+          ]
+        },
+        "33-200": {
+          "dimensions": 33,
+          "storedValues": 200,
+          "updates": 199,
+          "samplesNs": {
+            "history-arc": [
+              7550718,
+              7192720,
+              7040121,
+              9250609,
+              7347792,
+              8001154,
+              7075284,
+              6929574,
+              7004575,
+              8693348,
+              7693952,
+              7558679,
+              7081498,
+              10768548,
+              7026049,
+              7595490
+            ],
+            "history-tracing": [
+              10379244,
+              7364647,
+              7185168,
+              7042725,
+              6955494,
+              7100562,
+              8121894,
+              7356256,
+              7479325,
+              7007822,
+              7006259,
+              7108483,
+              7428203,
+              7023511,
+              7689415,
+              6966419
+            ],
+            "loop-arc": [
+              7981335,
+              7240080,
+              7231268,
+              7235423,
+              8108243,
+              7609095,
+              7217397,
+              6704276,
+              7775760,
+              7282134,
+              6927336,
+              8336641,
+              6807531,
+              7367923,
+              10240313,
+              10263510
+            ],
+            "loop-tracing": [
+              6908473,
+              7310056,
+              7398939,
+              8021475,
+              6748412,
+              6836955,
+              8684432,
+              7747683,
+              7554969,
+              6931231,
+              8378645,
+              7433601,
+              7461643,
+              8087047,
+              7167158,
+              7425344
+            ]
+          },
+          "medianNs": {
+            "history-arc": 7449255.0,
+            "history-tracing": 7146825.5,
+            "loop-arc": 7325028.5,
+            "loop-tracing": 7429472.5
+          },
+          "orders": [
+            [
+              "history-arc",
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing",
+              "history-arc"
+            ],
+            [
+              "loop-arc",
+              "loop-tracing",
+              "history-arc",
+              "history-tracing"
+            ],
+            [
+              "loop-tracing",
+              "history-arc",
+              "history-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing",
+              "history-arc"
+            ],
+            [
+              "history-arc",
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing"
+            ],
+            [
+              "history-tracing",
+              "history-arc",
+              "loop-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-arc",
+              "history-tracing",
+              "history-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-arc",
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing",
+              "history-arc"
+            ],
+            [
+              "loop-arc",
+              "loop-tracing",
+              "history-arc",
+              "history-tracing"
+            ],
+            [
+              "loop-tracing",
+              "history-arc",
+              "history-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing",
+              "history-arc"
+            ],
+            [
+              "history-arc",
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing"
+            ],
+            [
+              "history-tracing",
+              "history-arc",
+              "loop-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-arc",
+              "history-tracing",
+              "history-arc",
+              "loop-tracing"
+            ]
+          ],
+          "loopOverHistory": {
+            "arc": 0.9833236343768605,
+            "tracing": 1.0395486079798646
+          },
+          "managedProfiles": {
+            "history-arc": {
+              "requests": 282618,
+              "requestedBytes": 7983894,
+              "retains": 219301,
+              "peakChargedBytes": 224032,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "history-tracing": {
+              "requests": 282618,
+              "requestedBytes": 7983894,
+              "retains": 219301,
+              "peakChargedBytes": 224032,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "loop-arc": {
+              "requests": 282217,
+              "requestedBytes": 7972686,
+              "retains": 218900,
+              "peakChargedBytes": 6896,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "loop-tracing": {
+              "requests": 282217,
+              "requestedBytes": 7972686,
+              "retains": 218900,
+              "peakChargedBytes": 6896,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          },
+          "binaries": {
+            "history-arc": {
+              "bytes": 142888,
+              "sha256": "d1bbfb89e3e656a29890b5380d4b2326264bcfa4fbb3278481ff48caba33050d",
+              "cSha256": "74256973d0df9c547b28a046f8ba3a3d96f6789c84e3459345f33daf3837a300"
+            },
+            "history-tracing": {
+              "bytes": 147776,
+              "sha256": "c01a718ce08b1fcbb8f81bacbff37027a595dbe52ea033d653da7e46b88d2bb4",
+              "cSha256": "3baf971081adf12de5e77063624265fcad14e654d7893d9885fccfdef63e58c2"
+            },
+            "loop-arc": {
+              "bytes": 142784,
+              "sha256": "061f73606a5b90b9a751340ed5b51f861778cb045a3a6c2979e3c099551e3464",
+              "cSha256": "48aed9a4439fda5dde0cad5a4fd67ecd41aeefe660abf99eb4a0c62647240720"
+            },
+            "loop-tracing": {
+              "bytes": 147664,
+              "sha256": "253eee32eac94ab925f92509c90140650373db6e0d1e5c71d672d0483f81ba84",
+              "cSha256": "fc00ab01dc7e4971eb2c4ce3c6156daa5a57086499ef01bcff8cc0a2ac170715"
+            }
+          },
+          "output": "[-0.3946128701925749, 0.1699520238443063, 0.04003344197866743, 0.011783423085932724, 0.010244904496461323, 0.01020920912951329, 0.010208440696288042, 0.010208424196136502, 0.010208423842120104, 0.010208423834530186, 0.010208423834367581, 0.0102084238343641, 0.010208423834364018, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364013, 0.010208423834363696, 0.01020842383434829, 0.010208423833601234, 0.010208423797385024, 0.01020842204166119, 0.010208336926003354, 0.010204210572710547, 0.01000408506278437, 0.0001000817179434253]\n",
+          "analyticReference": [
+            -0.3946128701925751,
+            0.16995202384430647,
+            0.04003344197866749,
+            0.01178342308593273,
+            0.010244904496461323,
+            0.01020920912951329,
+            0.01020844069628804,
+            0.010208424196136502,
+            0.010208423842120106,
+            0.010208423834530186,
+            0.010208423834367581,
+            0.0102084238343641,
+            0.010208423834364022,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.010208423834364013,
+            0.010208423834363696,
+            0.010208423834348286,
+            0.010208423833601234,
+            0.010208423797385024,
+            0.010208422041661192,
+            0.010208336926003357,
+            0.010204210572710547,
+            0.01000408506278437,
+            0.0001000817179434253
+          ]
+        },
+        "129-200": {
+          "dimensions": 129,
+          "storedValues": 200,
+          "updates": 199,
+          "samplesNs": {
+            "history-arc": [
+              24687353,
+              23546842,
+              23501774,
+              23551008,
+              23844468,
+              24844669,
+              24128174,
+              26834794,
+              24647473,
+              25058800,
+              26594073,
+              24621904,
+              24428775,
+              24038490,
+              24890297,
+              24398173
+            ],
+            "history-tracing": [
+              23765530,
+              23612160,
+              23817047,
+              29717223,
+              24253862,
+              24628651,
+              31213828,
+              24958836,
+              23989221,
+              24327063,
+              23514734,
+              23703196,
+              24045180,
+              24123362,
+              24555104,
+              23402426
+            ],
+            "loop-arc": [
+              24690087,
+              24330488,
+              23861044,
+              28469156,
+              23966031,
+              23883487,
+              24235500,
+              23697548,
+              23926221,
+              23867729,
+              23866601,
+              33842406,
+              30024269,
+              31024379,
+              24249136,
+              23773498
+            ],
+            "loop-tracing": [
+              23104859,
+              22842965,
+              23097774,
+              23055665,
+              22305931,
+              30923938,
+              24501900,
+              24836682,
+              30490473,
+              24073967,
+              23811355,
+              23547123,
+              23202425,
+              23677187,
+              23366812,
+              23147564
+            ]
+          },
+          "medianNs": {
+            "history-arc": 24525339.5,
+            "history-tracing": 24084271.0,
+            "loop-arc": 24100765.5,
+            "loop-tracing": 23456967.5
+          },
+          "orders": [
+            [
+              "history-arc",
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing",
+              "history-arc"
+            ],
+            [
+              "loop-arc",
+              "loop-tracing",
+              "history-arc",
+              "history-tracing"
+            ],
+            [
+              "loop-tracing",
+              "history-arc",
+              "history-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing",
+              "history-arc"
+            ],
+            [
+              "history-arc",
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing"
+            ],
+            [
+              "history-tracing",
+              "history-arc",
+              "loop-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-arc",
+              "history-tracing",
+              "history-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-arc",
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing",
+              "history-arc"
+            ],
+            [
+              "loop-arc",
+              "loop-tracing",
+              "history-arc",
+              "history-tracing"
+            ],
+            [
+              "loop-tracing",
+              "history-arc",
+              "history-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing",
+              "history-arc"
+            ],
+            [
+              "history-arc",
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing"
+            ],
+            [
+              "history-tracing",
+              "history-arc",
+              "loop-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-arc",
+              "history-tracing",
+              "history-arc",
+              "loop-tracing"
+            ]
+          ],
+          "loopOverHistory": {
+            "arc": 0.9826883538146333,
+            "tracing": 0.973953809936784
+          },
+          "managedProfiles": {
+            "history-arc": {
+              "requests": 1104186,
+              "requestedBytes": 31371606,
+              "retains": 868837,
+              "peakChargedBytes": 845424,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "history-tracing": {
+              "requests": 1104186,
+              "requestedBytes": 31371606,
+              "retains": 868837,
+              "peakChargedBytes": 845424,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "loop-arc": {
+              "requests": 1103785,
+              "requestedBytes": 31360398,
+              "retains": 868436,
+              "peakChargedBytes": 26288,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "loop-tracing": {
+              "requests": 1103785,
+              "requestedBytes": 31360398,
+              "retains": 868436,
+              "peakChargedBytes": 26288,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          },
+          "binaries": {
+            "history-arc": {
+              "bytes": 142928,
+              "sha256": "cb67fb9420043f8e25ec99dc21610fff46cf3d7128b8fcdf096560a13543adb9",
+              "cSha256": "04a9d32e08b940d729ab29be3a9b5e5db2510a399eb6a9e8a477c80ac3ba5cc7"
+            },
+            "history-tracing": {
+              "bytes": 151832,
+              "sha256": "9d8d5534fcb44169558e19afe809f6f0d4dc983e603d2da40f931f894736eb73",
+              "cSha256": "8fc83c4ae68ad9c9c72285345c5c16cf55a0f25cbc14edd30c76ea856f55261f"
+            },
+            "loop-arc": {
+              "bytes": 146928,
+              "sha256": "fd136d2603323c53f572c06053c2d3f4baeeea329067af8035421fae6cfb00d5",
+              "cSha256": "08e666c9a7ea0aaf1096e3c420649b305e84e438af92566648d8f005ef76bd2f"
+            },
+            "loop-tracing": {
+              "bytes": 151728,
+              "sha256": "18b9ba9c62b8712baa3536b014ef94b59fcc0400f1a728e91d1065c43b404556",
+              "cSha256": "5710776905c7fa8bc49d1a2f0a392577fd49191230299c7ae6736cb13ba60b37"
+            }
+          },
+          "output": "[-0.3946128701925749, 0.1699520238443063, 0.04003344197866743, 0.011783423085932724, 0.010244904496461323, 0.01020920912951329, 0.010208440696288042, 0.010208424196136502, 0.010208423842120104, 0.010208423834530186, 0.010208423834367581, 0.0102084238343641, 0.010208423834364018, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364013, 0.010208423834363696, 0.01020842383434829, 0.010208423833601234, 0.010208423797385024, 0.01020842204166119, 0.010208336926003354, 0.010204210572710547, 0.01000408506278437, 0.0001000817179434253]\n",
+          "analyticReference": [
+            -0.3946128701925751,
+            0.16995202384430647,
+            0.04003344197866749,
+            0.01178342308593273,
+            0.010244904496461323,
+            0.01020920912951329,
+            0.01020844069628804,
+            0.010208424196136502,
+            0.010208423842120106,
+            0.010208423834530186,
+            0.010208423834367581,
+            0.0102084238343641,
+            0.010208423834364022,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.010208423834364013,
+            0.010208423834363696,
+            0.010208423834348286,
+            0.010208423833601234,
+            0.010208423797385024,
+            0.010208422041661192,
+            0.010208336926003357,
+            0.010204210572710547,
+            0.01000408506278437,
+            0.0001000817179434253
+          ]
+        }
+      },
+      "scope": "Same fwp Rosenbrock objective and reverse-mode gradient, input and step size. History stores N values including the initial point, so both execute N-1 updates. Loop keeps only current weights. Raw interpreters and native outputs match exactly; an independent analytic derivative is checked with relative/absolute tolerance 1e-10. This is a program-structure comparison, not a compiler improvement or C/Rust overhead. Timings include fresh-process startup, calculation, printing and teardown. Compilation, raw interpretation and separate managed profiles are excluded. Profiles omit raw tape buffers, allocator metadata, stacks and process RSS. Workspace reuse is explicitly enabled. All timing samples are retained; no budget is set."
+    },
+    {
+      "source": "4815e3d16c349ad5af2ecca9fe313924dfa00985",
+      "host": "ubuntu-24.04-arm",
+      "machine": "aarch64",
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "commands": [
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "arc",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-arc.c"
+          ],
+          "elapsedNs": 357126184
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-arc.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-arc",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1847004008
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-arc-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-arc-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1846746352
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "tracing",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-tracing.c"
+          ],
+          "elapsedNs": 338666663
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-tracing.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-tracing",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1845966791
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-tracing-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/history-tracing-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1814548500
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "arc",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-arc.c"
+          ],
+          "elapsedNs": 349138531
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-arc.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-arc",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1786970859
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-arc-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-arc-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1789389229
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/missing-retirement.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/missing-retirement",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1745813278
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "tracing",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-tracing.c"
+          ],
+          "elapsedNs": 331376384
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-tracing.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-tracing",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1786846271
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-tracing-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/3-200/loop-tracing-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1796023789
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "arc",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-arc.c"
+          ],
+          "elapsedNs": 342896443
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-arc.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-arc",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1702670048
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-arc-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-arc-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1716836825
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "tracing",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-tracing.c"
+          ],
+          "elapsedNs": 330948189
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-tracing.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-tracing",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1790260191
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-tracing-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/history-tracing-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1847487748
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "arc",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-arc.c"
+          ],
+          "elapsedNs": 345176850
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-arc.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-arc",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1720499827
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-arc-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-arc-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1734929164
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/missing-retirement.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/missing-retirement",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1735389407
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "tracing",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-tracing.c"
+          ],
+          "elapsedNs": 332845695
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-tracing.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-tracing",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1769891651
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-tracing-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/33-200/loop-tracing-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1842481205
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "arc",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-arc.c"
+          ],
+          "elapsedNs": 345928343
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-arc.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-arc",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1761713320
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-arc-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-arc-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1866237463
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "tracing",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-tracing.c"
+          ],
+          "elapsedNs": 346178274
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-tracing.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-tracing",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 2025693600
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-tracing-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/history-tracing-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 2027992864
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "arc",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-arc.c"
+          ],
+          "elapsedNs": 350842650
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-arc.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-arc",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1784751813
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-arc-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-arc-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1795418045
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/missing-retirement.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/missing-retirement",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1780677923
+        },
+        {
+          "command": [
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+            "build",
+            "--gc",
+            "tracing",
+            "--emit-c",
+            "-O2",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop.fwp",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-tracing.c"
+          ],
+          "elapsedNs": 340340765
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-tracing.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-tracing",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1887931743
+        },
+        {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-tracing-profile.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/ad-application-evidence/129-200/loop-tracing-profile",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1886134339
+        }
+      ],
+      "configuration": {
+        "warmups": 2,
+        "samples": 16,
+        "timeout": 180
+      },
+      "environment": {
+        "FWP_LTO": "0",
+        "FWP_AD_WORKSPACE": "1",
+        "FWP_GC_STRESS": "0",
+        "FWP_GC_VERIFY": "0",
+        "FWP_REUSE_VERIFY": "0"
+      },
+      "sourceHashes": {
+        "scripts/measure-ad-application.py": "a209a4253afeebd28f9306cd0dff35f4c0e542554739951c5a3d7fab75eb7f32",
+        "scripts/measure-iteration.py": "fe7cc4d2931eccf157012ade4a37235910f701e39d3ffa96f1874d0a6f96137b",
+        "docs/tutorials/20-autodiff-and-devices/main.fwp": "015f19fee401b9ad91085b0171a99048862e31c2b24062a8e8c54a5e660363e5"
+      },
+      "results": {
+        "3-200": {
+          "dimensions": 3,
+          "storedValues": 200,
+          "updates": 199,
+          "samplesNs": {
+            "history-arc": [
+              2434604,
+              1904301,
+              1890540,
+              1930246,
+              2248430,
+              2951354,
+              1877444,
+              2371562,
+              1921229,
+              1816707,
+              2040705,
+              1849132,
+              1846747,
+              1883564,
+              1962150,
+              1847339
+            ],
+            "history-tracing": [
+              1892652,
+              1850747,
+              1845259,
+              1934181,
+              1839619,
+              1888469,
+              1815978,
+              1903804,
+              3037205,
+              1794441,
+              1955510,
+              1920125,
+              1901045,
+              2462197,
+              2014280,
+              1994944
+            ],
+            "loop-arc": [
+              2158996,
+              1810178,
+              1911493,
+              1909373,
+              1918405,
+              2959458,
+              2985291,
+              1872588,
+              1908869,
+              1879997,
+              1866756,
+              1857403,
+              1851611,
+              2486381,
+              1760481,
+              2975018
+            ],
+            "loop-tracing": [
+              2175581,
+              2020600,
+              1860372,
+              3036532,
+              2201669,
+              3260755,
+              1890413,
+              2766957,
+              2298960,
+              2939601,
+              1832954,
+              1866884,
+              1798593,
+              2127971,
+              1852404,
+              3118367
+            ]
+          },
+          "medianNs": {
+            "history-arc": 1912765.0,
+            "history-tracing": 1902424.5,
+            "loop-arc": 1909121.0,
+            "loop-tracing": 2151776.0
+          },
+          "orders": [
+            [
+              "history-arc",
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing",
+              "history-arc"
+            ],
+            [
+              "loop-arc",
+              "loop-tracing",
+              "history-arc",
+              "history-tracing"
+            ],
+            [
+              "loop-tracing",
+              "history-arc",
+              "history-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing",
+              "history-arc"
+            ],
+            [
+              "history-arc",
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing"
+            ],
+            [
+              "history-tracing",
+              "history-arc",
+              "loop-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-arc",
+              "history-tracing",
+              "history-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-arc",
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing",
+              "history-arc"
+            ],
+            [
+              "loop-arc",
+              "loop-tracing",
+              "history-arc",
+              "history-tracing"
+            ],
+            [
+              "loop-tracing",
+              "history-arc",
+              "history-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing",
+              "history-arc"
+            ],
+            [
+              "history-arc",
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing"
+            ],
+            [
+              "history-tracing",
+              "history-arc",
+              "loop-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-arc",
+              "history-tracing",
+              "history-arc",
+              "loop-tracing"
+            ]
+          ],
+          "loopOverHistory": {
+            "arc": 0.9980949044968932,
+            "tracing": 1.1310703788770593
+          },
+          "managedProfiles": {
+            "history-arc": {
+              "requests": 25878,
+              "requestedBytes": 675241,
+              "retains": 16321,
+              "peakChargedBytes": 32032,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "history-tracing": {
+              "requests": 25878,
+              "requestedBytes": 675241,
+              "retains": 16321,
+              "peakChargedBytes": 32032,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "loop-arc": {
+              "requests": 25477,
+              "requestedBytes": 664033,
+              "retains": 15920,
+              "peakChargedBytes": 896,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "loop-tracing": {
+              "requests": 25477,
+              "requestedBytes": 664033,
+              "retains": 15920,
+              "peakChargedBytes": 896,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          },
+          "binaries": {
+            "history-arc": {
+              "bytes": 160736,
+              "sha256": "994fc89ac881bbd5168569ebbfcf540b593be8707690ad43f20474a94468aef8",
+              "cSha256": "b68127477810624987650b10ec5776ca2e083eb8b628e3193216ff012428fb55"
+            },
+            "history-tracing": {
+              "bytes": 161280,
+              "sha256": "abadf2af74cc4e2e84011b2d8eff955d16e27edac51d657618f191a4305bcb01",
+              "cSha256": "15fe92063e2601820e95fadc0420fea3f5c13daeab0648e61c2523f6583d3818"
+            },
+            "loop-arc": {
+              "bytes": 160648,
+              "sha256": "c5184542fa2dbe09bf766691fbf6a8ee5530db8e195242a81bbcf50e196ae500",
+              "cSha256": "454d1291fa4f4487ec22db13ebb6f3c3660dce88e28f5758bdf0709311519fff"
+            },
+            "loop-tracing": {
+              "bytes": 161136,
+              "sha256": "65c01d7631742449b3d8ee53114140ee26bd33afa7d73bb8bdc7516cafde407d",
+              "cSha256": "51a6301acb44901712b94a62218a20b70a5a1f16c1e9c9667651cf7e281e8afb"
+            }
+          },
+          "output": "[-0.2510237644462731, 0.0754701617704703, 0.0061914241354485595]\n",
+          "analyticReference": [
+            -0.2510237644462732,
+            0.07547016177047036,
+            0.006191424135448568
+          ]
+        },
+        "33-200": {
+          "dimensions": 33,
+          "storedValues": 200,
+          "updates": 199,
+          "samplesNs": {
+            "history-arc": [
+              11197559,
+              11259737,
+              11251697,
+              11168791,
+              11264962,
+              11144942,
+              11153566,
+              11280362,
+              11210295,
+              11158262,
+              11262338,
+              11275554,
+              11263041,
+              11122437,
+              11340636,
+              11305099
+            ],
+            "history-tracing": [
+              11331268,
+              11363429,
+              11469215,
+              12088162,
+              11519545,
+              11321419,
+              11375181,
+              11459655,
+              11429519,
+              11432647,
+              11574026,
+              11631244,
+              11447798,
+              11527817,
+              11320691,
+              11652765
+            ],
+            "loop-arc": [
+              12128819,
+              11007529,
+              11246753,
+              11160759,
+              11186039,
+              11051891,
+              11088861,
+              11209799,
+              11051347,
+              11080796,
+              11327012,
+              11163646,
+              11081139,
+              11264017,
+              11144998,
+              11370860
+            ],
+            "loop-tracing": [
+              11147190,
+              11064052,
+              11137222,
+              11085284,
+              11189247,
+              11347491,
+              11064443,
+              11209015,
+              11122237,
+              11187383,
+              11038762,
+              11160342,
+              11678830,
+              11077372,
+              10978913,
+              11092108
+            ]
+          },
+          "medianNs": {
+            "history-arc": 11255717.0,
+            "history-tracing": 11453726.5,
+            "loop-arc": 11162202.5,
+            "loop-tracing": 11129729.5
+          },
+          "orders": [
+            [
+              "history-arc",
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing",
+              "history-arc"
+            ],
+            [
+              "loop-arc",
+              "loop-tracing",
+              "history-arc",
+              "history-tracing"
+            ],
+            [
+              "loop-tracing",
+              "history-arc",
+              "history-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing",
+              "history-arc"
+            ],
+            [
+              "history-arc",
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing"
+            ],
+            [
+              "history-tracing",
+              "history-arc",
+              "loop-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-arc",
+              "history-tracing",
+              "history-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-arc",
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing",
+              "history-arc"
+            ],
+            [
+              "loop-arc",
+              "loop-tracing",
+              "history-arc",
+              "history-tracing"
+            ],
+            [
+              "loop-tracing",
+              "history-arc",
+              "history-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing",
+              "history-arc"
+            ],
+            [
+              "history-arc",
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing"
+            ],
+            [
+              "history-tracing",
+              "history-arc",
+              "loop-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-arc",
+              "history-tracing",
+              "history-arc",
+              "loop-tracing"
+            ]
+          ],
+          "loopOverHistory": {
+            "arc": 0.9916918220314175,
+            "tracing": 0.9717125251768497
+          },
+          "managedProfiles": {
+            "history-arc": {
+              "requests": 282618,
+              "requestedBytes": 7983894,
+              "retains": 219301,
+              "peakChargedBytes": 224032,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "history-tracing": {
+              "requests": 282618,
+              "requestedBytes": 7983894,
+              "retains": 219301,
+              "peakChargedBytes": 224032,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "loop-arc": {
+              "requests": 282217,
+              "requestedBytes": 7972686,
+              "retains": 218900,
+              "peakChargedBytes": 6896,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "loop-tracing": {
+              "requests": 282217,
+              "requestedBytes": 7972686,
+              "retains": 218900,
+              "peakChargedBytes": 6896,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          },
+          "binaries": {
+            "history-arc": {
+              "bytes": 160656,
+              "sha256": "3e0454cf134fb3befe44102d44b4195f4dda610e6a0800b9236076e782197831",
+              "cSha256": "74256973d0df9c547b28a046f8ba3a3d96f6789c84e3459345f33daf3837a300"
+            },
+            "history-tracing": {
+              "bytes": 161264,
+              "sha256": "f0f7eca824b4ae0f232e8551a233e880d9fa31ecf1029810dd91cee747a71135",
+              "cSha256": "3baf971081adf12de5e77063624265fcad14e654d7893d9885fccfdef63e58c2"
+            },
+            "loop-arc": {
+              "bytes": 160592,
+              "sha256": "73d2e282f8dbebd5b99285ff85104cd952d6be972870133d290b41e81ef96f86",
+              "cSha256": "48aed9a4439fda5dde0cad5a4fd67ecd41aeefe660abf99eb4a0c62647240720"
+            },
+            "loop-tracing": {
+              "bytes": 161160,
+              "sha256": "51747a1d26b616b3748c567e006473b28986a8ef69fbdda0a2d59f2468bf67a0",
+              "cSha256": "fc00ab01dc7e4971eb2c4ce3c6156daa5a57086499ef01bcff8cc0a2ac170715"
+            }
+          },
+          "output": "[-0.3946128701925749, 0.1699520238443063, 0.04003344197866743, 0.011783423085932724, 0.010244904496461323, 0.01020920912951329, 0.010208440696288042, 0.010208424196136502, 0.010208423842120104, 0.010208423834530186, 0.010208423834367581, 0.0102084238343641, 0.010208423834364018, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364013, 0.010208423834363696, 0.01020842383434829, 0.010208423833601234, 0.010208423797385024, 0.01020842204166119, 0.010208336926003354, 0.010204210572710547, 0.01000408506278437, 0.0001000817179434253]\n",
+          "analyticReference": [
+            -0.3946128701925751,
+            0.16995202384430647,
+            0.04003344197866749,
+            0.01178342308593273,
+            0.010244904496461323,
+            0.01020920912951329,
+            0.01020844069628804,
+            0.010208424196136502,
+            0.010208423842120106,
+            0.010208423834530186,
+            0.010208423834367581,
+            0.0102084238343641,
+            0.010208423834364022,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.010208423834364013,
+            0.010208423834363696,
+            0.010208423834348286,
+            0.010208423833601234,
+            0.010208423797385024,
+            0.010208422041661192,
+            0.010208336926003357,
+            0.010204210572710547,
+            0.01000408506278437,
+            0.0001000817179434253
+          ]
+        },
+        "129-200": {
+          "dimensions": 129,
+          "storedValues": 200,
+          "updates": 199,
+          "samplesNs": {
+            "history-arc": [
+              41774668,
+              41336559,
+              41672633,
+              41209996,
+              41476027,
+              42351374,
+              41431698,
+              41162242,
+              41247780,
+              41259260,
+              41278117,
+              41473587,
+              42017620,
+              42104111,
+              41715154,
+              41467395
+            ],
+            "history-tracing": [
+              41092312,
+              42627574,
+              40955051,
+              40941994,
+              41106936,
+              41050574,
+              40942635,
+              40966220,
+              40965380,
+              41128289,
+              40950875,
+              41201907,
+              41917145,
+              41193851,
+              41332519,
+              41357127
+            ],
+            "loop-arc": [
+              39999270,
+              40085872,
+              39931067,
+              39971901,
+              40051648,
+              41387905,
+              39917660,
+              39957652,
+              39947060,
+              39896795,
+              39994317,
+              40094089,
+              40128298,
+              40657386,
+              40133330,
+              40042839
+            ],
+            "loop-tracing": [
+              40065112,
+              39860810,
+              39874746,
+              39783735,
+              39994749,
+              40222804,
+              40433691,
+              39845625,
+              39851665,
+              39781127,
+              39904291,
+              40398538,
+              40054231,
+              40299511,
+              40069144,
+              39824257
+            ]
+          },
+          "medianNs": {
+            "history-arc": 41470491.0,
+            "history-tracing": 41099624.0,
+            "loop-arc": 40021054.5,
+            "loop-tracing": 39949520.0
+          },
+          "orders": [
+            [
+              "history-arc",
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing",
+              "history-arc"
+            ],
+            [
+              "loop-arc",
+              "loop-tracing",
+              "history-arc",
+              "history-tracing"
+            ],
+            [
+              "loop-tracing",
+              "history-arc",
+              "history-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing",
+              "history-arc"
+            ],
+            [
+              "history-arc",
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing"
+            ],
+            [
+              "history-tracing",
+              "history-arc",
+              "loop-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-arc",
+              "history-tracing",
+              "history-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-arc",
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing"
+            ],
+            [
+              "history-tracing",
+              "loop-arc",
+              "loop-tracing",
+              "history-arc"
+            ],
+            [
+              "loop-arc",
+              "loop-tracing",
+              "history-arc",
+              "history-tracing"
+            ],
+            [
+              "loop-tracing",
+              "history-arc",
+              "history-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing",
+              "history-arc"
+            ],
+            [
+              "history-arc",
+              "loop-tracing",
+              "loop-arc",
+              "history-tracing"
+            ],
+            [
+              "history-tracing",
+              "history-arc",
+              "loop-tracing",
+              "loop-arc"
+            ],
+            [
+              "loop-arc",
+              "history-tracing",
+              "history-arc",
+              "loop-tracing"
+            ]
+          ],
+          "loopOverHistory": {
+            "arc": 0.9650489669871524,
+            "tracing": 0.9720166783034316
+          },
+          "managedProfiles": {
+            "history-arc": {
+              "requests": 1104186,
+              "requestedBytes": 31371606,
+              "retains": 868837,
+              "peakChargedBytes": 845424,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "history-tracing": {
+              "requests": 1104186,
+              "requestedBytes": 31371606,
+              "retains": 868837,
+              "peakChargedBytes": 845424,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "loop-arc": {
+              "requests": 1103785,
+              "requestedBytes": 31360398,
+              "retains": 868436,
+              "peakChargedBytes": 26288,
+              "finalChargedBytes": 0,
+              "collections": 0
+            },
+            "loop-tracing": {
+              "requests": 1103785,
+              "requestedBytes": 31360398,
+              "retains": 868436,
+              "peakChargedBytes": 26288,
+              "finalChargedBytes": 0,
+              "collections": 0
+            }
+          },
+          "binaries": {
+            "history-arc": {
+              "bytes": 160696,
+              "sha256": "a5d8fff80c7c5cb89850445189171a3186121ef8f98ce02fbc6af0b974d30531",
+              "cSha256": "04a9d32e08b940d729ab29be3a9b5e5db2510a399eb6a9e8a477c80ac3ba5cc7"
+            },
+            "history-tracing": {
+              "bytes": 161224,
+              "sha256": "53c54444fd513f63345687e2df18b3167f01170e0dceb0c2a6c3173e662a71e0",
+              "cSha256": "8fc83c4ae68ad9c9c72285345c5c16cf55a0f25cbc14edd30c76ea856f55261f"
+            },
+            "loop-arc": {
+              "bytes": 160640,
+              "sha256": "ed677cff5d6bbd612f543686ed49fd1bd2d963623e43ac16420c89f7bc5d2b1f",
+              "cSha256": "08e666c9a7ea0aaf1096e3c420649b305e84e438af92566648d8f005ef76bd2f"
+            },
+            "loop-tracing": {
+              "bytes": 161128,
+              "sha256": "aa8e66faf97c0edab3298ffa1fa61d0aa36a1cbeee1637c8c5876f8bafca6512",
+              "cSha256": "5710776905c7fa8bc49d1a2f0a392577fd49191230299c7ae6736cb13ba60b37"
+            }
+          },
+          "output": "[-0.3946128701925749, 0.1699520238443063, 0.04003344197866743, 0.011783423085932724, 0.010244904496461323, 0.01020920912951329, 0.010208440696288042, 0.010208424196136502, 0.010208423842120104, 0.010208423834530186, 0.010208423834367581, 0.0102084238343641, 0.010208423834364018, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364017, 0.010208423834364013, 0.010208423834363696, 0.01020842383434829, 0.010208423833601234, 0.010208423797385024, 0.01020842204166119, 0.010208336926003354, 0.010204210572710547, 0.01000408506278437, 0.0001000817179434253]\n",
+          "analyticReference": [
+            -0.3946128701925751,
+            0.16995202384430647,
+            0.04003344197866749,
+            0.01178342308593273,
+            0.010244904496461323,
+            0.01020920912951329,
+            0.01020844069628804,
+            0.010208424196136502,
+            0.010208423842120106,
+            0.010208423834530186,
+            0.010208423834367581,
+            0.0102084238343641,
+            0.010208423834364022,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.01020842383436402,
+            0.010208423834364013,
+            0.010208423834363696,
+            0.010208423834348286,
+            0.010208423833601234,
+            0.010208423797385024,
+            0.010208422041661192,
+            0.010208336926003357,
+            0.010204210572710547,
+            0.01000408506278437,
+            0.0001000817179434253
+          ]
+        }
+      },
+      "scope": "Same fwp Rosenbrock objective and reverse-mode gradient, input and step size. History stores N values including the initial point, so both execute N-1 updates. Loop keeps only current weights. Raw interpreters and native outputs match exactly; an independent analytic derivative is checked with relative/absolute tolerance 1e-10. This is a program-structure comparison, not a compiler improvement or C/Rust overhead. Timings include fresh-process startup, calculation, printing and teardown. Compilation, raw interpretation and separate managed profiles are excluded. Profiles omit raw tape buffers, allocator metadata, stacks and process RSS. Workspace reuse is explicitly enabled. All timing samples are retained; no budget is set."
+    }
+  ],
+  "inspection": [
+    {
+      "host": "ubuntu-latest",
+      "case": "3-200",
+      "variant": "history-arc",
+      "sha256": "b4646dc722b4f373a388632f966995d08b0ed7a639298b819fea13cfa54b2b57",
+      "bytes": 142960,
+      "machine": 62,
+      "tracing_excluded": true
+    },
+    {
+      "host": "ubuntu-latest",
+      "case": "3-200",
+      "variant": "history-tracing",
+      "sha256": "7cebe1398200c1e1afb07cabf567c21c3be71562f445c52904c084506a2f5430",
+      "bytes": 143688,
+      "machine": 62,
+      "tracing_excluded": false
+    },
+    {
+      "host": "ubuntu-latest",
+      "case": "3-200",
+      "variant": "loop-arc",
+      "sha256": "97759cb3b6a0354d60f8ad755e8a8fecab736ae9998e29eb85880e90fd0b1baf",
+      "bytes": 142864,
+      "machine": 62,
+      "tracing_excluded": true
+    },
+    {
+      "host": "ubuntu-latest",
+      "case": "3-200",
+      "variant": "loop-tracing",
+      "sha256": "478f0766fe85f18a4ba57db121cf046a284c88e129b6319ff6faf9be3b758d18",
+      "bytes": 143544,
+      "machine": 62,
+      "tracing_excluded": false
+    },
+    {
+      "host": "ubuntu-latest",
+      "case": "33-200",
+      "variant": "history-arc",
+      "sha256": "d1bbfb89e3e656a29890b5380d4b2326264bcfa4fbb3278481ff48caba33050d",
+      "bytes": 142888,
+      "machine": 62,
+      "tracing_excluded": true
+    },
+    {
+      "host": "ubuntu-latest",
+      "case": "33-200",
+      "variant": "history-tracing",
+      "sha256": "c01a718ce08b1fcbb8f81bacbff37027a595dbe52ea033d653da7e46b88d2bb4",
+      "bytes": 147776,
+      "machine": 62,
+      "tracing_excluded": false
+    },
+    {
+      "host": "ubuntu-latest",
+      "case": "33-200",
+      "variant": "loop-arc",
+      "sha256": "061f73606a5b90b9a751340ed5b51f861778cb045a3a6c2979e3c099551e3464",
+      "bytes": 142784,
+      "machine": 62,
+      "tracing_excluded": true
+    },
+    {
+      "host": "ubuntu-latest",
+      "case": "33-200",
+      "variant": "loop-tracing",
+      "sha256": "253eee32eac94ab925f92509c90140650373db6e0d1e5c71d672d0483f81ba84",
+      "bytes": 147664,
+      "machine": 62,
+      "tracing_excluded": false
+    },
+    {
+      "host": "ubuntu-latest",
+      "case": "129-200",
+      "variant": "history-arc",
+      "sha256": "cb67fb9420043f8e25ec99dc21610fff46cf3d7128b8fcdf096560a13543adb9",
+      "bytes": 142928,
+      "machine": 62,
+      "tracing_excluded": true
+    },
+    {
+      "host": "ubuntu-latest",
+      "case": "129-200",
+      "variant": "history-tracing",
+      "sha256": "9d8d5534fcb44169558e19afe809f6f0d4dc983e603d2da40f931f894736eb73",
+      "bytes": 151832,
+      "machine": 62,
+      "tracing_excluded": false
+    },
+    {
+      "host": "ubuntu-latest",
+      "case": "129-200",
+      "variant": "loop-arc",
+      "sha256": "fd136d2603323c53f572c06053c2d3f4baeeea329067af8035421fae6cfb00d5",
+      "bytes": 146928,
+      "machine": 62,
+      "tracing_excluded": true
+    },
+    {
+      "host": "ubuntu-latest",
+      "case": "129-200",
+      "variant": "loop-tracing",
+      "sha256": "18b9ba9c62b8712baa3536b014ef94b59fcc0400f1a728e91d1065c43b404556",
+      "bytes": 151728,
+      "machine": 62,
+      "tracing_excluded": false
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "case": "3-200",
+      "variant": "history-arc",
+      "sha256": "994fc89ac881bbd5168569ebbfcf540b593be8707690ad43f20474a94468aef8",
+      "bytes": 160736,
+      "machine": 183,
+      "tracing_excluded": true
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "case": "3-200",
+      "variant": "history-tracing",
+      "sha256": "abadf2af74cc4e2e84011b2d8eff955d16e27edac51d657618f191a4305bcb01",
+      "bytes": 161280,
+      "machine": 183,
+      "tracing_excluded": false
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "case": "3-200",
+      "variant": "loop-arc",
+      "sha256": "c5184542fa2dbe09bf766691fbf6a8ee5530db8e195242a81bbcf50e196ae500",
+      "bytes": 160648,
+      "machine": 183,
+      "tracing_excluded": true
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "case": "3-200",
+      "variant": "loop-tracing",
+      "sha256": "65c01d7631742449b3d8ee53114140ee26bd33afa7d73bb8bdc7516cafde407d",
+      "bytes": 161136,
+      "machine": 183,
+      "tracing_excluded": false
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "case": "33-200",
+      "variant": "history-arc",
+      "sha256": "3e0454cf134fb3befe44102d44b4195f4dda610e6a0800b9236076e782197831",
+      "bytes": 160656,
+      "machine": 183,
+      "tracing_excluded": true
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "case": "33-200",
+      "variant": "history-tracing",
+      "sha256": "f0f7eca824b4ae0f232e8551a233e880d9fa31ecf1029810dd91cee747a71135",
+      "bytes": 161264,
+      "machine": 183,
+      "tracing_excluded": false
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "case": "33-200",
+      "variant": "loop-arc",
+      "sha256": "73d2e282f8dbebd5b99285ff85104cd952d6be972870133d290b41e81ef96f86",
+      "bytes": 160592,
+      "machine": 183,
+      "tracing_excluded": true
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "case": "33-200",
+      "variant": "loop-tracing",
+      "sha256": "51747a1d26b616b3748c567e006473b28986a8ef69fbdda0a2d59f2468bf67a0",
+      "bytes": 161160,
+      "machine": 183,
+      "tracing_excluded": false
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "case": "129-200",
+      "variant": "history-arc",
+      "sha256": "a5d8fff80c7c5cb89850445189171a3186121ef8f98ce02fbc6af0b974d30531",
+      "bytes": 160696,
+      "machine": 183,
+      "tracing_excluded": true
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "case": "129-200",
+      "variant": "history-tracing",
+      "sha256": "53c54444fd513f63345687e2df18b3167f01170e0dceb0c2a6c3173e662a71e0",
+      "bytes": 161224,
+      "machine": 183,
+      "tracing_excluded": false
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "case": "129-200",
+      "variant": "loop-arc",
+      "sha256": "ed677cff5d6bbd612f543686ed49fd1bd2d963623e43ac16420c89f7bc5d2b1f",
+      "bytes": 160640,
+      "machine": 183,
+      "tracing_excluded": true
+    },
+    {
+      "host": "ubuntu-24.04-arm",
+      "case": "129-200",
+      "variant": "loop-tracing",
+      "sha256": "aa8e66faf97c0edab3298ffa1fa61d0aa36a1cbeee1637c8c5876f8bafca6512",
+      "bytes": 161128,
+      "machine": 183,
+      "tracing_excluded": false
+    }
+  ]
+}
