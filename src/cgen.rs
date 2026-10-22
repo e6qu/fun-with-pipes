@@ -5410,7 +5410,6 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 Expr::Apply(_, values) => self.args(values),
                 _ => unreachable!(),
             };
-            self.g.used_closures[g] = true;
             let key = ("array.generate".to_string(), g, captures);
             let i = match self.g.hofs.iter().position(|h| *h == key) {
                 Some(i) => i,
@@ -7419,6 +7418,11 @@ impl<'p> Gen<'p> {
         method: &str,
         iter_fn: Option<FuncId>,
     ) -> Result<RpcSpec, String> {
+        // The transport constructs this iterator by function id, outside the
+        // expression emitter that ordinarily records function-value uses.
+        if let Some(iterator) = iter_fn {
+            self.used_closures[iterator] = true;
+        }
         let f = &self.prog.funcs[of];
         let (ty, arity) = (f.ty.clone(), f.arity as usize);
         let shape = crate::rpc::shape(&ty, arity, error);
@@ -9836,6 +9840,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     while i < g.hofs.len() {
         let hof = g.hofs[i].clone();
         let borrowed_step = g.borrowed_hof_step(i, &hof);
+        if hof.0 == "array.generate" && borrowed_step.is_none() {
+            // The ordinary loop calls the owned entry. A borrowed loop calls
+            // its specialized body directly and needs no generic adapter.
+            g.used_closures[hof.1] = true;
+        }
         if let Some(body) = &borrowed_step {
             bodies.push_str(body);
         }
@@ -10299,13 +10308,14 @@ static const fwp_exec_spec exec_spec{i} = {{
                 m.iter_fn,
             )?;
             spec.fingerprint = svc.fingerprint(prog, m);
+            // Service dispatch uses the table in both ownership modes.
+            if prog.funcs[m.func].arity > 0 {
+                g.used_closures[m.func] = true;
+            }
             if g.reuse {
                 let function = &prog.funcs[m.func];
                 let result = function.ty.params(function.arity as usize).1.clone();
                 spec.result_drop = g.value_drop(&result);
-                if function.arity > 0 {
-                    g.used_closures[m.func] = true;
-                }
             }
             served.push(spec);
         }
@@ -10795,10 +10805,11 @@ static const fwp_exec_spec exec_spec{i} = {{
     }
     // Constant applicative forms retain their typed cached owners.
     out.push_str(&caf_defs);
-    // entries and the function table (whose entries for functions nothing
-    // reaches stay, without code, so function ids keep their positions)
+    // Only runtime function values and external dispatch need generic entries.
+    // Keep table positions and names for every id, without retaining adapters
+    // (and their otherwise unused bodies) for exclusively direct calls.
     for (id, f) in prog.funcs.iter().enumerate().filter(|(id, _)| live[*id]) {
-        if f.arity > 0 {
+        if f.arity > 0 && g.used_closures[id] {
             let args: Vec<String> = (0..f.arity).map(|i| format!("a[{}]", i)).collect();
             let mut share_args = String::new();
             if g.reuse {
@@ -10820,7 +10831,7 @@ static const fwp_exec_spec exec_spec{i} = {{
     out.push_str(&owned_defs);
     out.push_str("static const fwp_fninfo fwp_fn_table[] = {\n");
     for (id, f) in prog.funcs.iter().enumerate() {
-        let entry = if f.arity > 0 && live[id] {
+        let entry = if f.arity > 0 && live[id] && g.used_closures[id] {
             format!("e{}", id)
         } else {
             "0".into()

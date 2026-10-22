@@ -59,7 +59,7 @@ def measurement_orders(labels, samples, seed):
     return orders
 
 
-def ownership_budget_failures(profiles, baseline, updates):
+def ownership_budget_failures(profiles, baseline):
     """Report every violated storage/count requirement without weakening it."""
     checks = [('fwp-packed-baseline', 'accepted profile', 'equal',
                profiles['fwp-packed-baseline'], baseline['fwp-packed'])]
@@ -71,12 +71,7 @@ def ownership_budget_failures(profiles, baseline, updates):
             checks.append((label, key, 'equal', current['managed'][key], old['managed'][key]))
         for key in ['retains', 'peakChargedBytes']:
             checks.append((label, key, 'at most', current['managed'][key], old['managed'][key]))
-    if updates >= 199:
-        checks.extend([
-            ('fwp-packed', 'retains', 'equal', profiles['fwp-packed']['managed']['retains'], 0),
-            ('fwp-packed-baseline', 'retains', 'greater than', profiles['fwp-packed-baseline']['managed']['retains'], 0),
-        ])
-    compare = {'equal': operator.eq, 'at most': operator.le, 'greater than': operator.gt}
+    compare = {'equal': operator.eq, 'at most': operator.le}
     return [dict(program=label, metric=metric, requirement=rule, actual=actual, expected=expected)
             for label, metric, rule, actual, expected in checks if not compare[rule](actual, expected)]
 
@@ -254,7 +249,7 @@ def main():
         # Retain every count/storage failure across variants and input sizes.
         # Output correctness is checked separately before measuring each case.
         budget_failures.extend(dict(case=name, **failure) for failure in
-            ownership_budget_failures(profiles, baseline_case['fwpProfiles'], updates))
+            ownership_budget_failures(profiles, baseline_case['fwpProfiles']))
         (out / 'budget-failures.json').write_text(json.dumps(budget_failures, indent=2) + '\n')
         for _ in range(args.warmups):
             for label in labels:
@@ -331,7 +326,7 @@ def main():
         'Separate uninstrumented process RSS includes all process storage; do not add it to allocation peaks. '
         'The recompiled packed baseline must reproduce its recorded managed/raw profile exactly. Current fwp forms '
         'must preserve allocation requests/bytes and raw storage, without increasing retains or managed peak. '
-        'At least 199 updates must remove packed retains. All timing peers are rebuilt and measured together. '
+        'The accepted borrowed-capture baseline has zero packed retains in every case; its count budget preserves that. All timing peers are rebuilt and measured together. '
         'All samples, compile commands and GCC static frame estimates are retained. Frame estimates are not '
         'peak stack use and do not cover Rust. No speed threshold is claimed.')
     archive.close()

@@ -6,6 +6,10 @@ the C implementation's time. Saved GCC machine code calls a scalar derivative
 helper inside the array-generation loop. This experiment asks whether removing
 that call is worth a compiler change. It does not change fwp's compiler.
 
+The [first result](descent-call-costs.md) did not meet the declared speed target;
+no inlining rule was selected. The protocol below remains the original decision
+rule, rather than a target adjusted after seeing measurements.
+
 Inlining places a function's operations at its call site. Besides removing the
 call, this may let the C compiler share loads and simplify bounds checks using
 facts from the surrounding loop. It can also enlarge code and make instruction

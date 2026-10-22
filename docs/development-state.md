@@ -85,31 +85,55 @@ before selecting another numerical optimization. Establish stable repeated timin
 controls and a per-input budget. Continue the ownership boundaries and finite
 application suite in the plan; zero retains here do not finish GC removal.
 
-## Independent preparation: scalar helper call costs
+## Independent preparation: direct calls and generic entries
 
-Branch `measure-descent-call-costs`, worktree `/private/tmp/fwp-descent-call-costs`,
-starts at #197 head `0367e819`. It does not change the compiler. A new
-`scripts/measure-descent-call-costs.py` compares saved packed-descent C with an
-explicit inline hint and forced-inline edit to helper `w36`, plus two byte-identical
-controls and the existing C/Rust peers. The `descent-call-costs` workflow suite
-runs on native Linux AMD64/ARM64 without a Rust compiler build of fwp.
+Worktree `/private/tmp/fwp-descent-call-costs`, branch `measure-descent-call-costs`,
+starts at #197 head `0367e819`. The compiler change emits generic call adapters
+only for function values and external dispatch. Direct calls retain their
+concrete bodies. Borrowed array callbacks no longer request an unused owned entry;
+ordinary array callbacks still do. Services keep table entries in both ownership
+modes, and transport-created iterators explicitly request theirs.
 
-`docs/measurements/descent-call-protocol.md` records the experiment before timing:
-all six prior inputs, 56 samples/two warmups, balanced ordering seed 20261022.
-The 129×199 decision case needs both identical-code controls within 2%, candidate
-median at most 0.95 of unchanged fwp, and instruction bytes at most 1.02, with
-identical outputs and managed/raw profiles for every case. Require two independent
-runs on matching CPU models for both architectures before selecting any compiler
-rule. A failed timing screen is diagnostic evidence, not a waived correctness test.
+New tests compare direct calls and runtime-selected function values with the
+interpreter at O0/O2, ARC/tracing and reuse on/off. The focused ownership matrix
+also includes existing gRPC and queued-function tests, covering service methods,
+transport iterators, dynamic callbacks, aliases and failure cleanup. These new
+native checks have not yet run. The two fixture examples pass the saved
+interpreter; the first draft's ambiguous function-value pipe was corrected to
+explicit function application. Formatting/workflow/docs pass in 6.27s. This does
+not verify new C generation.
 
-A bounded local Clang counterfactual preserves output/count/storage and removes
-four static helper call sites while adding 144 instruction bytes. It is not a
-timing or GCC claim. The first diagnostic script misread the raw-profile JSON path;
-the corrected check passes in 2.43s. Evidence:
-`/private/tmp/fwp-descent-inline-diagnosis-checked/report.json`.
-Guarded `fwp-check-descent-call-probe.py` passes 72 saved-source edits, Python syntax,
-workflow and docs in 6.74s. Full diagnostic timing stays on GitHub. Preparation
-publication is next; do not open another PR while #197 is active.
+The completed inline diagnostic at `55de3ce53f0924c9cd688a0d680058b3f47d076d`,
+run `39798044726`, passes both Linux jobs. All 120 images are inspected. Neither
+candidate reaches the predeclared 5% improvement in the largest case: reductions
+are only 0.4–1.9%. Controls there stay within 2%, while smaller inputs include
+noisy or slower results. No inlining rule was selected. The next branch retains
+`docs/measurements/descent-call-costs.md` and its raw JSON. Receipts are
+`/private/tmp/fwp-descent-call-acceptance.json` and
+`/private/tmp/fwp-descent-call-evidence/55de3ce53f09/`. Do not redownload or rerun
+that experiment to seek a favourable sample. A report-writing script initially
+used the wrong inspection-record key; it was corrected before writing the report.
+
+The next comparison rebuilds the accepted borrowed-capture C from source
+`d1467854766fd93fa6e6c768d42f35e83fec3c1a` and current generated C together.
+It retains all six inputs, C/Rust/AD/list peers, 56 samples, two warmups and balanced
+ordering seed 20261022. All packed inputs must preserve zero retains, requests,
+bytes and raw storage, with no greater managed peak. The baseline must reproduce
+its complete accepted profile exactly. The old requirement that the baseline
+have positive retains belonged to the completed capture-removal experiment;
+the new baseline has zero. Fault controls still test seven simultaneous violations
+and a changed rebuilt baseline. Early cleanup failure remains immediate.
+
+Before measuring, the code-size goal is smaller packed instruction sections in
+the 129×199 case on both Linux architectures, with no instruction growth in other
+packed cases. Record binary/metadata bytes, real instructions, frames and compiler
+cost too; table names and ids remain present. Timing remains diagnostic, with no
+speed claim or relaxed correctness requirement. Full native/compiler checks and
+measurements run on GitHub. Do not open a second PR while #197 is active.
+
+Next: validate the changed budget controls and docs, publish this preparation,
+then dispatch native ownership and numerical comparisons. Inspect every failed
+job before repairing; record exact source/run ids here. Continue auditing #197.
 
 ## Resume files and validation
 

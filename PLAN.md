@@ -117,8 +117,11 @@ outside the benchmark suite.
    remain noisy. Next separate remaining dynamic calls, bounds checks and output
    costs before selecting another optimization. Establish a repeatable timing
    budget first; preserve checked arithmetic, trap order and code/stack evidence.
-   The [helper-call protocol](docs/measurements/descent-call-protocol.md) tests one
-   possible cost with saved C; it does not change the compiler or claim a speedup.
+   The [helper-call result](docs/measurements/descent-call-costs.md) failed its
+   predeclared speed screen; do not add an inlining rule from it. Current
+   preparation removes generic call adapters for direct-only functions and
+   measures code size against the borrowed-capture baseline. Preserve zero
+   retains and the existing allocation/storage limits; establish timing separately.
    Resource-owning tail frames and mutual recursion need separate lifetime proofs.
 3. Complete the [application acceptance suite](docs/application-acceptance.md) and use equivalent-work measurements
    to choose the next costs to remove: dynamic calls, input copies, container
