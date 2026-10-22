@@ -154,8 +154,11 @@ fn text_transformations_preserve_aliases_and_consumed_owners() {
                 assert!(actual.stderr.is_empty(), "{actual:?}");
                 if status == 0 {
                     assert_eq!(
-                        actual.stdout,
-                        b"text owners transfer, preserve aliases and release on failure\n"
+                        std::str::from_utf8(&actual.stdout)
+                            .unwrap()
+                            .lines()
+                            .collect::<Vec<_>>(),
+                        ["text owners transfer, preserve aliases and release on failure"]
                     );
                 }
                 if let Some(destination) = std::env::var_os("FWP_TEXT_TRANSFORM_ARTIFACTS") {

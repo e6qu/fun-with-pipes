@@ -1,0 +1,42 @@
+# Appended to the maintained dirstat example by the native/interpreter test.
+# The host observes memory before each completed-report cycle. Its interpreter
+# implementation is a no-op; native instrumentation records live storage.
+foreign "C" checkpoint : I64 -> I64 -> () ! {IO} = "file_app_checkpoint"
+
+require-error : Result[List[String], IoError] -> ()
+require-error =
+    result.is-ok
+    | if id (const "expected a directory error" | prim.trap) (const ())
+
+read-cycle =
+    tap (checkpoint 0)
+    | tap
+        (const "tree" | dirstat { top = 20, all = True, sort = Name } | ignore)
+    | sub 1
+missing-cycle =
+    tap (checkpoint 1)
+    | tap (const "tree/missing"
+        | attempt (dirstat { top = 20, all = True, sort = Name })
+        | require-error)
+    | sub 1
+file-cycle =
+    tap (checkpoint 2)
+    | tap (const "ordinary-file"
+        | attempt (dirstat { top = 20, all = True, sort = Name })
+        | require-error)
+    | tap (const "denied-tree"
+        | attempt (dirstat { top = 10, all = True, sort = Name })
+        | require-error)
+    | sub 1
+
+main = [
+    "tree" | dirstat { top = 20, all = False, sort = Bytes } | each echo,
+    "---" | echo,
+    "tree" | dirstat { top = 20, all = True, sort = Files } | each echo,
+    "---" | echo,
+    "tree" | dirstat { top = 2, all = True, sort = Name } | each echo,
+    "---" | echo,
+    64 | loop (if (eq 0) Stop (read-cycle | Again)) | ignore,
+    64 | loop (if (eq 0) Stop (missing-cycle | Again)) | ignore,
+    64 | loop (if (eq 0) Stop (file-cycle | Again)) | ignore,
+] | ignore

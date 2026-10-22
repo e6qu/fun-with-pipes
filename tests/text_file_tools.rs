@@ -2,6 +2,9 @@
 use std::io::Write;
 use std::process::{Command, Output, Stdio};
 
+#[path = "support/file_application_memory.rs"]
+mod file_application_memory;
+
 #[test]
 fn word_frequencies_preserve_separators_normalization_and_tie_order() {
     let dir = fwp::cgen::TempDir::new("wordfreq-application").unwrap();
@@ -176,8 +179,6 @@ fn maintained_text_tools_release_repeated_and_retained_results() {
 
 #[test]
 fn maintained_text_command_lines_match_raw_interpretation() {
-    use std::io::Write;
-    use std::process::Stdio;
     let dir = fwp::cgen::TempDir::new("text-command-lines").unwrap();
     let root = dir.path();
     std::fs::write(root.join("input.txt"), "Apple pie\nbanana\n世界\n").unwrap();
@@ -264,6 +265,170 @@ fn maintained_text_command_lines_match_raw_interpretation() {
                 );
                 assert_eq!(result.stdout, expected.as_bytes(), "{name} {mode}");
                 assert!(result.stderr.is_empty(), "{name} {mode}: {result:?}");
+            }
+        }
+    }
+}
+
+#[test]
+fn scaled_word_counts_release_partial_results_and_file_handles() {
+    let dir = fwp::cgen::TempDir::new("wc-live").unwrap();
+    let source = dir.join("wc.fwp");
+    std::fs::write(
+        &source,
+        format!(
+            "{}\n{}",
+            include_str!("../examples/cli/wc.fwp"),
+            include_str!("fixtures/wc_live.fwp")
+        ),
+    )
+    .unwrap();
+    std::fs::write(dir.join("invalid.txt"), [b'a', b'\n', 0xff]).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let cfile = dir.join("wc.c");
+    checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--gc", "arc", "--emit-c", "-O1"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let measured = file_application_memory::observe(&std::fs::read_to_string(&cfile).unwrap());
+    let omitted = measured.replace(
+        "static void fwp_rc_free_obj(V v) {",
+        "static void fwp_rc_free_obj(V v) { if(file_app_active) return;",
+    );
+    let unclosed = measured.replace(
+        "#define FILE_APP_OMIT_CLOSE 0",
+        "#define FILE_APP_OMIT_CLOSE 1",
+    );
+    assert_ne!(omitted, measured);
+    assert_ne!(unclosed, measured);
+    let raw_leak = measured.replace(
+        "#define FILE_APP_OMIT_RAW_FREE 0",
+        "#define FILE_APP_OMIT_RAW_FREE 1",
+    );
+    assert_ne!(raw_leak, measured);
+    for opt in ["-O1", "-O2"] {
+        let binaries = [
+            dir.join("measured.exe"),
+            dir.join("missing-release.exe"),
+            dir.join("missing-close.exe"),
+            dir.join("missing-buffer-free.exe"),
+        ];
+        for (label, code, binary) in [
+            ("measured", &measured, &binaries[0]),
+            ("missing-release", &omitted, &binaries[1]),
+            ("missing-close", &unclosed, &binaries[2]),
+            ("missing-buffer-free", &raw_leak, &binaries[3]),
+        ] {
+            fwp::cgen::compile_c(code, binary, opt).unwrap();
+            if let Some(path) = std::env::var_os("FWP_FILE_APPLICATION_ARTIFACTS") {
+                let path = std::path::PathBuf::from(path);
+                std::fs::create_dir_all(&path).unwrap();
+                std::fs::copy(&source, path.join("wc.fwp")).unwrap();
+                std::fs::write(path.join(format!("wc-{label}{opt}.c")), code).unwrap();
+                std::fs::copy(binary, path.join(format!("wc-{label}{opt}.bin"))).unwrap();
+            }
+        }
+        for lines in [128, 4096] {
+            let first = "Apple pie\nhéllo 世界\n\nlast\n".repeat(lines / 4);
+            let second = "one\ttwo three\n\n".repeat(lines / 2);
+            std::fs::write(dir.join("first.txt"), &first).unwrap();
+            std::fs::write(dir.join("second.txt"), &second).unwrap();
+            let counts = [&first, &second].map(|text| {
+                (
+                    text.bytes().filter(|&byte| byte == b'\n').count(),
+                    text.split([' ', '\t', '\r', '\n'])
+                        .filter(|word| !word.is_empty())
+                        .count(),
+                    text.len(),
+                )
+            });
+            let expected = [
+                counts[0],
+                counts[1],
+                (
+                    counts[0].0 + counts[1].0,
+                    counts[0].1 + counts[1].1,
+                    counts[0].2 + counts[1].2,
+                ),
+            ];
+            let reference = checked(
+                Command::new(compiler)
+                    .current_dir(dir.path())
+                    .env("FWP_NO_OPT", "1")
+                    .args(["run", "--interp", "--link"])
+                    .arg(
+                        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                            .join("tests/fixtures/file_app_checkpoint.c"),
+                    )
+                    .arg(&source),
+            );
+            assert!(reference.stderr.is_empty());
+            let rows: Vec<_> = std::str::from_utf8(&reference.stdout)
+                .unwrap()
+                .lines()
+                .collect();
+            assert_eq!(rows.len(), 3);
+            for ((row, expected), name) in
+                rows.iter()
+                    .zip(expected)
+                    .zip(["first.txt", "second.txt", "total"])
+            {
+                let fields: Vec<_> = row.split_whitespace().collect();
+                assert_eq!(fields.len(), 4);
+                assert_eq!(fields[3], name);
+                assert_eq!(
+                    (
+                        fields[0].parse::<usize>().unwrap(),
+                        fields[1].parse::<usize>().unwrap(),
+                        fields[2].parse::<usize>().unwrap()
+                    ),
+                    expected
+                );
+            }
+            for (index, binary) in binaries.iter().enumerate() {
+                let mut command = Command::new(binary);
+                command
+                    .current_dir(dir.path())
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "0")
+                    .env("FWP_REUSE_VERIFY", "0");
+                let (actual, resident) = if index == 0 {
+                    file_application_memory::run_observed(&mut command)
+                } else {
+                    (
+                        command.env("FWP_FILE_APP_RSS", "0").output().unwrap(),
+                        String::new(),
+                    )
+                };
+                assert_eq!(
+                    actual.status.code(),
+                    Some(if index == 0 { 0 } else { 241 }),
+                    "{opt}, {lines}: {actual:?}"
+                );
+                if index == 0 {
+                    assert_eq!(actual.stdout, reference.stdout);
+                    file_application_memory::check_observations(&actual.stderr);
+                    if let Some(path) = std::env::var_os("FWP_FILE_APPLICATION_ARTIFACTS") {
+                        let path = std::path::PathBuf::from(path);
+                        std::fs::write(path.join(format!("wc-{lines}{opt}.rss.tsv")), resident)
+                            .unwrap();
+                        std::fs::write(
+                            path.join(format!("wc-{lines}{opt}.stdout")),
+                            &actual.stdout,
+                        )
+                        .unwrap();
+                        std::fs::write(
+                            path.join(format!("wc-{lines}{opt}.memory")),
+                            &actual.stderr,
+                        )
+                        .unwrap();
+                    }
+                }
             }
         }
     }

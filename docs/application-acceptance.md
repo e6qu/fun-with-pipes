@@ -11,8 +11,8 @@ performance and platform requirements in the last column.
 | Program family | Work and current input | Existing evidence | Still required for this suite |
 |---|---|---|---|
 | [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [C/Rust baseline](measurements/wordfreq.md) and [paired/repeated text comparison](measurements/unchanged-text.md) on two Linux hosts | Set time/memory budgets; validate the current runtime and preserve six-platform cleanup evidence |
-| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; current test repeats a six-file tree 64 times | `tests/directory_report.rs`: interpreter/native agreement and final managed storage | Add a larger tree, permission/error controls and repeated live-memory measurements |
-| [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Scale file sizes; measure input/output storage separately; record failure cleanup |
+| [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; current test repeats a six-file tree 64 times | `tests/directory_report.rs`: interpreter/native agreement and final managed storage | Accept the scaled/error checks below on six native hosts; retain repeated memory observations |
+| [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Accept scaled word-count cleanup below; extend scaled filtering and CSV coverage; separate input/output costs |
 | Numerical pipeline | Map/reduce 65,537 elements and multiply 65×67 by 67×63 matrices, eight rounds | [Existing C/Rust comparison](benchmarks.md#current-numerical-comparison-and-record-moves) | Repeat current-revision comparisons; set per-size budgets; include a larger numerical application |
 | Derivative application | Rosenbrock descent from alternating −1.2/1.0 inputs: 3, 33 and 129 dimensions, 199 gradient updates | [Measured descent comparison](measurements/ad-application.md) on two Linux hosts; nested/workspace checks remain | Measure raw tapes, workspace and process memory separately; set time/memory budgets and extend native evidence |
 | Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](benchmarks.md#server-memory-after-completed-remote-calls) | Consolidate one repeatable service scenario with bounded concurrency, disconnects and repeated live-memory samples |
@@ -142,3 +142,47 @@ managed counts must reproduce exactly. Downloaded baseline binaries are checked
 against their original report; the newly executed binaries have their own hashes,
 disassembly and size records. The explicit baseline source is
 `74263bccf8e2e67865e1863e2c04a296a97877bb`, run `39690307737`.
+
+
+## Repeated directory and file work
+
+The `file-applications` workflow suite checks larger inputs with the current
+compiler on all six native hosts. It is a cleanup experiment, **not a timing
+comparison or evidence of C/Rust parity**. Preparation is not yet accepted;
+see the [handoff](development-state.md) for the exact revision and runner results.
+
+The directory case creates 64 and 1,024 files spread among sixteen visible
+folders and a hidden folder. Names include Unicode, hidden files and five
+extension categories. A separate Rust calculation supplies expected file/byte
+totals and sort order. Three reports cover hidden-file filtering, largest counts
+and the first two names. Each process then repeats successful reports, missing
+paths, a file used as a directory, and a permission-denied subtree 64 times.
+The denied subtree sorts after a readable subtree, exercising partial traversal.
+Tests verify that the operating system denies access and restore permissions.
+
+The word-count case reads two UTF-8 files, each with 128 or 4,096 lines. It checks
+line, word and byte counts against independent Rust counts, including blank lines,
+tabs and multibyte characters, then checks the two-file total. It repeats three
+cases 64 times each: both reads succeed; the second file is missing; the second
+contains invalid UTF-8. Both failures follow a completed first read, so partially
+built results must also be released.
+
+Both programs must match raw interpretation. Native checks compile fwp at O1
+and generated C at O1 and O2 with LTO disabled. Existing small tracing/stress
+checks remain; the larger observations use checked ARC. Each checkpoint records:
+
+- Managed allocator charge after the preceding operation. It must stay constant
+  within each phase and return to its initial value before runtime teardown.
+- Successfully opened directory/file-read handles minus actual closes: zero.
+- C scratch bytes belonging to `file.read`: zero. This excludes other C buffers.
+- Process resident memory at rounds 0, 32 and 63 of each phase, while the child
+  waits at the checkpoint. RSS includes allocator pages, libraries, stacks and
+  observer overhead. It is recorded separately, with no invented zero-growth
+  threshold or claim that managed charge represents the whole process.
+
+Controls deliberately omit managed releases, handle closes and file-read scratch
+frees. Each must fail the observer before shutdown. The tests retain generated C,
+native binaries, disassembly, output and memory series. Machine headers verify
+that artifacts target the runner's actual architecture. These cases do not yet
+cover forced allocation failure or every file operation and do not complete the
+application suite.
