@@ -87,42 +87,52 @@ callback values through reentry/failure/suspension/cancellation, and static/shar
 library pointer aliases with independent owned strings. No pointee-lifetime proof
 or automatic raw-buffer cleanup is claimed.
 
-Focused commands passed through the local guard:
-`python3 /private/tmp/fwp-check-pointer-fixtures.py` (2.75s: saved-compiler raw
-interpretation, exact ffi golden, pointer tutorial and callback/library fixtures)
-and `python3 /private/tmp/fwp-check-pointer-preflight.py` (17.30s: actionlint,
-docs, native coverage/failure propagation, all 392 primitive declarations against
-the frozen inventory, tutorial source copies, diff checks). Initial edit syntax
-and callback application errors were corrected before these passes. Compiler
-changes still require the new six-host `pointer-ownership` evidence suite and
-final production gates. Preparation `0ca3fba4f718fb02afbcc385ac41e763a8320361` is published; six-host run
-`39716002463`: both Linux hosts pass (including 173 compiler unit tests on AMD64).
-Both Windows hosts finish all seven targets; only artifact saving fails in
-arc_corpus and foreign_callback_ownership because filesystem copies omit .exe.
-The paths are repaired at `2eaccbc77c428ab37986d8130d70ff1c2e9ca1cf`.
-Windows AMD64 run `39717062123` and ARM64 run `39717065021` both finish all
-seven targets. The six non-corpus targets pass; corpus now reaches http and
-fails because this focused job omitted production OpenSSL setup. Both logs
-are fully audited. Add production TLS setup and aggregate corpus native-build
-errors so one compile failure cannot hide later programs. Those repairs are
-local and need publication plus Windows reruns.
-Repair publication/audit: `/private/tmp/fwp-pointer-repair-publication.json`,
-`/private/tmp/fwp-audit-pointer-repair.py`. Compiler/runtime/fixtures are
-identical to 0ca3fba4; only two explicit .exe paths and docs differ. Intel macOS passes; ARM macOS has started its native tests. Receipt: `/private/tmp/fwp-pointer-publication.json`.
-Audit with `/private/tmp/fwp-audit-pointer.py`. No additional PR is open; audit
-every native result and inspect retained binaries before delivery. Audit the two
-Windows repair runs; preserve the ongoing macOS jobs and the
-passing Linux evidence because compiler/runtime/program code is unchanged.
-Independent Linux AMD64/ARM64 inspections each verify 21 actual native images,
-the 86-case corpus (82 executed, three compile errors, one deliberate ARC
-rejection), callback outputs, raw-buffer negative controls and library unload
-ledgers. Artifacts/receipts: `/private/tmp/fwp-pointer-evidence/0ca3fba4f718/`.
-Do not repeat those inspections. `/private/tmp/fwp-inspect-pointer.py --host HOST`
-requires a successful full-log audit and checks binary/C hashes and machine code.
-Local guard commands passed in 5.50s (AMD64) and 4.97s (ARM64);
-add remaining hosts only after their passing native runs. A concise report is
-prepared in `docs/measurements/manual-pointers.md`; replace its pending status
-with actual evidence before delivery.
+The initial source `0ca3fba4f718fb02afbcc385ac41e763a8320361`, native run
+`39716002463`, passes Linux AMD64/ARM64 and Intel macOS. Independent inspection
+verifies 21 images per host (63 total), exact outputs and cleanup controls.
+ARM macOS finishes all seven targets; only the corpus fails because OpenSSL
+headers are missing. The explicit macOS setup in 003c7e84685d repairs that
+configuration; verify it in the new run. Retain those baseline results; do not repeat
+completed inspection. Evidence: `/private/tmp/fwp-pointer-evidence/0ca3fba4f718/`;
+publication/audit: `fwp-pointer-publication.json`, `fwp-audit-pointer.py` in
+`/private/tmp`.
+
+Both initial Windows jobs finished all seven targets and found missing `.exe`
+suffixes in artifact copying. Repair `2eaccbc77c42` then exposed omitted OpenSSL
+setup in the focused corpus job. Both complete logs were audited; all six other
+targets passed. Preparation `003c7e84685d711e676ec51a5509225c2e94be17` adds
+production TLS setup and aggregates corpus native-build errors. Its Windows
+runs `39718444232`/`39718446980` are running the native suite. Audit with
+`/private/tmp/fwp-audit-pointer-repair.py`; receipt is
+`/private/tmp/fwp-pointer-repair-publication.json`.
+
+Further review found three implementation bugs, now repaired locally in the same
+batch: the interpreter leaked temporary C strings, pointer-sized scalar storage
+used eight bytes on 32-bit targets, and raw allocation counts narrowed before
+checking the target size. String copies now belong to the receiving foreign
+call, including callback results and nested calls; returned strings copy before
+those owners drop. Invalid argument conversion and callback failures also drop
+the copies. Raw allocation/string-terminator bounds are explicit. Existing
+nonpositive allocation counts still request one byte.
+
+New checks count real C-string allocations/releases across aliases, reentry and
+errors. Actual 32-bit interpreter tests exercise reads, writes, signed values,
+neighboring bytes and allocation bounds. Generated WASI checks use O0/O2 and a
+missing-bound negative control. Because these repairs change compiler code,
+publish a fresh seven-job `pointer-ownership` preparation (six native hosts plus
+`pointer_width`) before delivery. Earlier unchanged-source evidence is only a
+baseline, not acceptance of these changes. No second PR is open.
+
+Focused local checks use the guard. `/private/tmp/fwp-check-pointer-boundary-fixes.py`
+passes in 6.71s: saved-compiler fixture execution, a standalone allocator observer
+that detects deliberate retention and recovery, formatting, actionlint and docs.
+A YAML quoting error caught on the first run was fixed before this pass.
+`/private/tmp/fwp-check-pointer-final-preparation.py` passes in 12.00s: source-based
+library documentation generation, workflow audit, 11 native-runner coverage and
+failure-propagation tests, all 392 primitive declarations against the frozen
+inventory, and diff checks. Changed Rust compiler execution still requires CI.
+The generated WASI negative control is included; publication repeats format,
+workflow and documentation checks. The readable report is `docs/measurements/manual-pointers.md`.
 
 A separate 64-word/eight-word-vocabulary generated-C probe identifies the next
 list optimization candidate. Moving unique list elements into `map` removes

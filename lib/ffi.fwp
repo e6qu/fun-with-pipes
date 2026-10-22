@@ -16,13 +16,16 @@
 
 Ptr[T] = builtin
 
-# zero-initialized memory
+# Zero-initialized bytes. Nonpositive counts allocate one byte; counts that
+# exceed the target's address width trap before allocation.
 foreign "fwp" mem.alloc : I64 -> Ptr[a] ! {Unsafe}
 foreign "fwp" mem.free : Ptr[a] -> () ! {Unsafe}
 # a NUL-terminated copy of a string, to be freed with mem.free
 foreign "fwp" mem.string : String -> Ptr[U8] ! {Unsafe}
 foreign "fwp" ptr.cast : Ptr[a] -> Ptr[b]
-# the address of the n-th element; offsets wrap at the native pointer width
+# The address of the n-th element; offsets wrap at the native pointer width.
+# ISize/USize elements use ptrdiff_t/size_t storage: 4 bytes on a 32-bit target,
+# 8 bytes on the maintained 64-bit targets.
 foreign "fwp" ptr.at : I64 -> Ptr[a] -> Ptr[a] where Numeric[a]
 foreign "fwp" ptr.read : Ptr[a] -> a ! {Unsafe} where Numeric[a]
 foreign "fwp" ptr.write : a -> Ptr[a] -> () ! {Unsafe} where Numeric[a]

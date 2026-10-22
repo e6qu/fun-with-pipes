@@ -3,6 +3,8 @@
 //! Rust (static library) and C (shared library through the generated
 //! header).
 
+use std::alloc::{GlobalAlloc, Layout, System};
+use std::cell::Cell;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -472,4 +474,117 @@ fn unsupported_types_are_reported() {
         "fwp build: foreign function `abs`: `List[I64]` has no C representation (records need `repr(C)`)\n"
     );
     let _ = std::fs::remove_dir_all(&d);
+}
+
+// Count the real allocator operations for the large, NUL-terminated copies in
+// this test. Other threads and differently sized compiler allocations are excluded.
+thread_local! {
+    static C_STRING_COUNTS: Cell<(bool, usize, usize)> = const { Cell::new((false, 0, 0)) };
+}
+struct CStringAllocator;
+fn count_c_string(size: usize, released: bool) {
+    if size == 65537 {
+        C_STRING_COUNTS.with(|state| {
+            let (active, allocated, freed) = state.get();
+            if active {
+                state.set((
+                    active,
+                    allocated + usize::from(!released),
+                    freed + usize::from(released),
+                ));
+            }
+        });
+    }
+}
+unsafe impl GlobalAlloc for CStringAllocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        let pointer = System.alloc(layout);
+        if !pointer.is_null() {
+            count_c_string(layout.size(), false);
+        }
+        pointer
+    }
+    unsafe fn dealloc(&self, pointer: *mut u8, layout: Layout) {
+        count_c_string(layout.size(), true);
+        System.dealloc(pointer, layout);
+    }
+    unsafe fn realloc(&self, pointer: *mut u8, layout: Layout, size: usize) -> *mut u8 {
+        let result = System.realloc(pointer, layout, size);
+        if !result.is_null() {
+            count_c_string(layout.size(), true);
+            count_c_string(size, false);
+        }
+        result
+    }
+}
+#[global_allocator]
+static C_STRING_ALLOCATOR: CStringAllocator = CStringAllocator;
+
+#[test]
+fn interpreter_reclaims_foreign_string_copies_after_aliases_reentry_and_errors() {
+    let dir = fwp::cgen::TempDir::new("ffi-string-lifetimes").unwrap();
+    let c = dir.join("strings.c");
+    std::fs::write(
+        &c,
+        r#"
+#include <stddef.h>
+#include <string.h>
+const char *text_alias(const char *s) { return s; }
+const char *callback_alias(const char *(*f)(const char *), const char *s) {
+    const char *first = f(s);
+    const char *second = f(s);
+    if (!first || !second) return NULL;
+    return strcmp(first, second) == 0 ? first : NULL;
+}
+"#,
+    )
+    .unwrap();
+    fwp::ffi::set_links(vec![c.to_string_lossy().into_owned()]);
+    let (_, program) = fwp::driver::compile_source("strings.fwp", r#"
+foreign "C" text-alias : String -> String = "text_alias"
+foreign "C" callback-alias : (String -> String) -> String -> String = "callback_alias"
+foreign "C" callback-error : (String -> String ! {Error[String]}) -> String -> String ! {Error[String]} = "callback_alias"
+foreign "C" compare : String -> String -> I32 = "strcmp"
+aliased : String -> String
+aliased = text-alias
+nested : String -> String
+nested = callback-alias text-alias
+raising : String -> String ! {Error[String]}
+raising = const "stop" | fail
+failed : String -> String ! {Error[String]}
+failed = callback-error raising
+bad-argument : String -> I32
+bad-argument = flip compare "bad\0argument"
+"#, fwp::mono::Roots { exports: true, ..Default::default() }).map_err(|e| e.rendered).unwrap();
+    let input = fwp::value::Value::str(&"x".repeat(65536));
+    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(std::io::sink())).unwrap();
+    for name in ["aliased", "nested", "failed", "bad-argument"] {
+        let id = program.exports.iter().find(|(n, _)| n == name).unwrap().1;
+        C_STRING_COUNTS.with(|state| state.set((true, 0, 0)));
+        for _ in 0..16 {
+            let result = interpreter.call(id, vec![input.clone()]);
+            match name {
+                "aliased" | "nested" => assert_eq!(result.unwrap(), input),
+                "failed" => assert!(
+                    matches!(result, Err(fwp::interp::Ctl::Fail(..))),
+                    "{result:?}"
+                ),
+                "bad-argument" => assert!(
+                    matches!(result, Err(fwp::interp::Ctl::Trap(ref message)) if message.contains("NUL")),
+                    "{result:?}"
+                ),
+                _ => unreachable!(),
+            }
+        }
+        let (_, allocated, freed) = C_STRING_COUNTS.with(|state| state.replace((false, 0, 0)));
+        assert!(
+            allocated >= 16,
+            "{name}: the observer must see actual C-string copies"
+        );
+        assert_eq!(
+            allocated, freed,
+            "{name}: foreign C-string copies remain allocated"
+        );
+    }
+    fwp::ffi::set_links(Vec::new());
 }

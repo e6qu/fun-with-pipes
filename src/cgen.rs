@@ -6605,9 +6605,9 @@ impl<'p> Gen<'p> {
                 rw
             ),
             "prim.from-float" => format!("return fwp_float_of({}, fwp_f64(l0));", rk),
-            "mem.alloc" => "size_t n = (int64_t)l0 > 0 ? (size_t)(int64_t)l0 : 1;\n    void *p = calloc(n, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    return (V)(uintptr_t)p;".into(),
+            "mem.alloc" => "uint64_t count = (int64_t)l0 > 0 ? (uint64_t)l0 : 1;\n    if (count > SIZE_MAX) fwp_trap(\"raw allocation too large\");\n    size_t n = (size_t)count;\n    void *p = calloc(n, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    return (V)(uintptr_t)p;".into(),
             "mem.free" => "free((void *)(uintptr_t)l0);\n    return FWP_UNIT;".into(),
-            "mem.string" => "size_t n = STR(l0)->len;\n    char *p = (char *)calloc(n + 1, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    memcpy(p, STR(l0)->d, n);\n    return (V)(uintptr_t)p;".into(),
+            "mem.string" => "size_t n = STR(l0)->len;\n    if (n == SIZE_MAX) fwp_trap(\"raw allocation too large\");\n    char *p = (char *)calloc(n + 1, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    memcpy(p, STR(l0)->d, n);\n    return (V)(uintptr_t)p;".into(),
             "ptr.cast" | "ptr.address" => "return l0;".into(),
             "ptr.at" => {
                 let t = crate::ffi::classify_scalar(&elem(&p(1), 0));
