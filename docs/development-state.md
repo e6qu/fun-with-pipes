@@ -11,8 +11,9 @@ but its assertion requires LF. A line-based diagnostic assertion is prepared in
 `application-ownership/tests/text_transform_ownership.rs`. Runtime/interpreter
 byte comparisons stay exact. Audit all remaining jobs and batch all repairs
 before updating the delivery head; no merge is authorized on these failing gates.
-Docs, benchmarks and all four macOS jobs pass, fully audited. The complete Windows
-ARM64 job has finished with only that newline assertion failure; Linux ARM64 now passes fully too; Linux AMD64 and Windows AMD64 remain in progress.
+Docs, benchmarks and all four macOS jobs pass, fully audited. Both Windows jobs have finished with only that newline assertion failure.
+Linux ARM64 passes fully too; Linux AMD64 now passes too; all ten old-head jobs are complete and fully audited.
+The two Windows newline assertions are the only failures.
 
 Use `/private/tmp/fwp-audit-192-final.py` and
 `/private/tmp/fwp-read-192-failed-artifacts.py`. Archive the old acceptance receipt
@@ -35,10 +36,10 @@ rewrite its description for the combined result. All seven plan areas remain ope
   `/private/tmp/fwp-application-delivery-publication.json`; integration receipt:
   `/private/tmp/fwp-application-integration.json`.
 - Next preparation: `file-application-lifetimes`,
-  `/private/tmp/fwp-file-application-lifetimes`, based on #192's head. Its directory
-  preparation `1d090a3209e8c5d99e1084f306f166907b4a6f25` is running focused
-  six-host CI `39706936977`; Windows AMD64 permission setup failed. A combined
-  permission/launch-context correction is locally dirty; acceptance is pending.
+  `/private/tmp/fwp-file-application-lifetimes`, based on #192's head. Its repair
+  preparation `c8e8199294a89bd96d67c86c892861c60e6971af` is running focused
+  six-host CI `39711302083`; five hosts pass and Intel macOS is pending. The previous expansion
+  `1d090a3209e8` is fully audited with Windows permission/observer failures.
   `/private/tmp/fwp-file-application-preparation.json` records the starting scope.
 - `application-baselines` at `/private/tmp/fwp-application-baselines` preserves
   immutable application preparation `54b01db94079`; staged documentation was
@@ -156,17 +157,58 @@ interpretation, Clang O1, permission failures, deliberate leaks, shared Rust
 observer and RSS handshake. It takes about seventeen seconds below local limits.
 The old compiler predates the named teardown marker; this local probe uses its
 known observation location, while committed tests require the current marker.
-Next: finish auditing all six jobs, validate/publish the complete permission
-repair, and require six-host acceptance before folding this group into #192.
-`/private/tmp/fwp-inspect-file-applications.py` is ready for accepted artifacts;
+Repair `c8e8199294a8` is published with all permission/observer fixes and the ARC
+inventory. In run `39711302083`, both Linux hosts, both Windows hosts and ARM
+macOS pass; Intel macOS is pending. ARM Windows text tests finish in 206.13s
+after the previous timeout; AMD64 finishes in 263.39s. These job durations do
+not isolate the API/shell changes or measure fwp throughput. Next: audit all six jobs and
+require acceptance before folding this group into #192.
+`/private/tmp/fwp-inspect-file-applications.py` is inspecting passed hosts;
+it saves each completed host to `inspection.partial.json` and only finalizes
+`inspection.json` after all six jobs pass. Integration/report scripts
+`/private/tmp/fwp-integrate-file-repair.py` and
+`/private/tmp/fwp-report-file-applications.py` are ready but not yet run.
+The repaired merge helper is `/private/tmp/fwp-merge-192-repaired.py`; publication
+must set its `filePreparedSource` and `fileFocusedRun` fields.
+The inspection
 it verifies hashes, actual architecture/instructions and all live-memory series
 without extracting whole archives. Preserve the 64 GiB floor (about 64.9 GiB free).
 
 
+## Report encoding repair discovered by independent inspection
+
+Independent inspection completed 30 binaries/sixteen series on each Linux host
+and ARM macOS, saved in
+`/private/tmp/fwp-file-application-evidence/c8e8199294a8/inspection.partial.json`.
+It then correctly failed on Windows AMD64 CSV report text: original `.stdout`
+bytes are valid UTF-8 and passed native/interpreter oracles, but the Python
+collector's implicit Windows encoding produced `hÃ©llo` in `inspection.json`.
+The mismatch exactly reproduces CP1252 decoding; do not suppress the assertion.
+
+The file preparation now has a report-only repair dirty in
+`.github/workflows/numerics.yml` and `scripts/inspect-file-applications.py`:
+explicit UTF-8 reads/writes and a `file-inspection` workflow suite. This suite
+requires an accepted original six-host execution run, downloads its hash-checked
+artifacts, and regenerates reports without rebuilding/rerunning programs.
+`--mode collect|reinspect` and `--program-source` are required. Reinspection keeps
+the original execution/toolchain metadata, records its own source separately,
+and verifies native/C hashes against the original report. Original native
+preparation remains `c8e8199294a8` / `39711302083`; do not overwrite that receipt
+with the report-only source/run. Publish the report repair only after local
+workflow/Python checks; dispatch it after original six-host acceptance.
+
+The temporary independent inspector, integration/report scripts and repaired
+merge helper still need adapting for the **two sources/runs** (program execution
+and report generation). Preserve completed binary inspections when hashes match;
+refresh report text from corrected artifacts. Final integration can differ from
+the native-tested source only in report scripts/workflow/docs, and all nine full
+production jobs plus docs still run for the final PR commit. No PR update has
+been pushed yet; #192 remains at `71bde450`.
+
 ## ARC admission inventory
 
 The repair preparation also adds `scripts/inventory-arc-programs.py` to report
-C-emission acceptance for the 86 maintained `tests/run/*.fwp` examples, in tracing
+C-emission acceptance for the 85 top-level `tests/run/*.fwp` examples, in tracing
 and ARC modes at explicit O1/dynamic/stack-enabled settings. It runs once on Linux
 AMD64 using the already-built compiler. It distinguishes ARC-only rejections from
 ordinary compile-error fixtures; acceptance is not runtime or cleanup verification.
@@ -174,8 +216,15 @@ The report retains source/compiler hashes and full diagnostics. Timeouts/crashes
 fail the inventory. A three-program prior-compiler check through
 `python3 scripts/local-guard.py python3 /private/tmp/fwp-check-arc-inventory.py`
 passes for accepted code, an unproved raw-pointer lifetime and an ordinary type
-error, followed by format/workflow/docs checks (7.3 seconds). The full inventory
-remains pending CI. Incidental inline imports in `tests/golden_run.rs` move to
+error, followed by format/workflow/docs checks (7.3 seconds). Linux AMD64 now completes the full inventory: 80 accepted in both modes, two
+ARC-only rejections and three ordinary intentional compile errors. Results are
+`/private/tmp/fwp-file-application-evidence/c8e8199294a8/arc-admission.json` in the
+hash-verified Linux artifact. `ffi.fwp` uses manually managed C pointers;
+`ad_task_reuse.fwp` deliberately returns an expired derivative value from one
+task to another, so its earlier ARC rejection is expected safety behavior,
+not evidence that this invalid program should become accepted. The extra nested
+`tests/run/mods/macrolib.fwp` file is an imported module, not an execution case.
+The inventory is admission evidence only; no native execution is implied. Incidental inline imports in `tests/golden_run.rs` move to
 its top-level import block; full snapshot tests stay on production CI.
 
 ## Next optimization evidence

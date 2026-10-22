@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -30,6 +30,61 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  file_inspection:
+    if: inputs.suite == 'file-inspection'
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-15, macos-15-intel, windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    env:
+      FWP_LTO: '0'
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify the source execution run
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          PROGRAM_SOURCE: ${{ inputs.source_revision }}
+        run: |
+          python3 - <<'PYCODE'
+          import json
+          import os
+          import subprocess
+          run = os.environ['EVIDENCE_RUN']
+          source = os.environ['PROGRAM_SOURCE']
+          assert run.isdecimal() and len(source) == 40 and all(c in '0123456789abcdef' for c in source)
+          data = json.loads(subprocess.check_output(['gh', 'run', 'view', run, '--json', 'headSha,status,conclusion,jobs'], text=True))
+          assert data['headSha'] == source and data['status'] == 'completed' and data['conclusion'] == 'success'
+          jobs = [job for job in data['jobs'] if job['conclusion'] != 'skipped']
+          hosts = ['ubuntu-latest', 'ubuntu-24.04-arm', 'macos-15', 'macos-15-intel', 'windows-2025', 'windows-11-arm']
+          assert {job['name'] for job in jobs} == {f'file_applications ({host})' for host in hosts}
+          assert len(jobs) == 6 and all(job['conclusion'] == 'success' for job in jobs)
+          PYCODE
+      - uses: actions/download-artifact@v8
+        with:
+          name: file-applications-${{ matrix.runner }}
+          path: file-application-evidence
+          run-id: ${{ inputs.evidence_run }}
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          digest-mismatch: error
+      - name: Reinspect retained native code and decode outputs as UTF-8
+        shell: bash
+        env:
+          PROGRAM_SOURCE: ${{ inputs.source_revision }}
+        run: python3 scripts/inspect-file-applications.py --input file-application-evidence --mode reinspect --program-source "$PROGRAM_SOURCE"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: file-applications-${{ matrix.runner }}
+          path: file-application-evidence/
+          if-no-files-found: error
   file_applications:
     if: inputs.suite == 'file-applications'
     strategy:
@@ -110,7 +165,7 @@ jobs:
       - name: Inspect native binaries and save memory observations
         if: ${{ !cancelled() }}
         shell: bash
-        run: python3 scripts/inspect-file-applications.py --input file-application-evidence
+        run: python3 scripts/inspect-file-applications.py --input file-application-evidence --mode collect --program-source "${{ github.sha }}"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
