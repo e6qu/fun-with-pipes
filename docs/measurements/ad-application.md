@@ -70,3 +70,14 @@ process resident memory. Peak managed charge is not total differentiation
 memory. These measurements do not establish bounded total memory for longer
 runs or arbitrary nested differentiation. Measure those components and compare
 matched C/Rust work before setting total-memory or language-overhead budgets.
+
+## Raw-storage experiment in preparation
+
+The extended runner keeps the original timing comparison and adds separate raw
+allocator and process-memory observations. It also compares raw allocation
+traffic with workspace reuse enabled and disabled, outside timed runs.
+The [protocol](../application-acceptance.md#descent-with-and-without-a-saved-history)
+explains the components, zero-update and longer-run controls, and missing-free
+checks. Results are pending; the earlier table above does not include these
+observations. This experiment changes measurement code, not the differentiation
+algorithm. It will identify which costs to address before claiming an improvement.
