@@ -1156,6 +1156,11 @@ main = [16 | mem.alloc | check, [0, -1, -9223372036854775808] | each (mem.alloc 
 "#;
     for (name, program, expected) in [
         (
+            "wide-integers",
+            include_str!("fixtures/raw_integer_widths.fwp").to_owned(),
+            include_str!("fixtures/raw_integer_widths.out"),
+        ),
+        (
             "storage",
             success.to_owned(),
             "-7\n165\n4294967295\n165\nTrue\nTrue\n37\n37\n37\n",
@@ -1193,7 +1198,7 @@ main = [16 | mem.alloc | check, [0, -1, -9223372036854775808] | each (mem.alloc 
                 expected.as_bytes(),
                 "{name}/{opt}: {output:?}"
             );
-            if name == "storage" {
+            if matches!(name, "storage" | "wide-integers") {
                 assert!(output.status.success(), "{name}/{opt}: {output:?}");
             } else {
                 assert_eq!(output.status.code(), Some(101), "{name}/{opt}: {output:?}");

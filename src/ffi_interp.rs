@@ -342,7 +342,7 @@ fn elem_size(mt: &MT) -> usize {
         MT::Con(n, _) => match n.as_str() {
             "std::I8" | "std::U8" => 1,
             "std::I16" | "std::U16" | "std::F16" | "std::BF16" => 2,
-            "std::F128" => 16,
+            "std::I128" | "std::U128" | "std::F128" => 16,
             "std::I32" | "std::U32" | "std::F32" => 4,
             "std::ISize" | "std::USize" => std::mem::size_of::<usize>(),
             _ => 8,
@@ -398,6 +398,17 @@ pub fn pointer_prim(sym: &str, a: &[Value], params: &[MT], result: &MT) -> R<Val
             }
             "ptr.read" => {
                 let p = addr(&a[0]) as *const u8;
+                if let MT::Con(name, _) = result {
+                    if matches!(name.as_str(), "std::I128" | "std::U128") {
+                        let mut bits = [0u8; 16];
+                        std::ptr::copy_nonoverlapping(p, bits.as_mut_ptr(), 16);
+                        return Ok(if name == "std::I128" {
+                            Value::I128(i128::from_le_bytes(bits))
+                        } else {
+                            Value::U128(u128::from_le_bytes(bits))
+                        });
+                    }
+                }
                 if ffi::classify_scalar(result) == CType::F128 {
                     let mut bits = [0u8; 16];
                     std::ptr::copy_nonoverlapping(p, bits.as_mut_ptr(), 16);
@@ -415,6 +426,15 @@ pub fn pointer_prim(sym: &str, a: &[Value], params: &[MT], result: &MT) -> R<Val
             "ptr.write" => {
                 let mt = &params[0];
                 let t = ffi::classify_scalar(mt);
+                let integer_bits = match &a[0] {
+                    Value::I128(x) => Some(x.to_le_bytes()),
+                    Value::U128(x) => Some(x.to_le_bytes()),
+                    _ => None,
+                };
+                if let Some(bits) = integer_bits {
+                    std::ptr::copy_nonoverlapping(bits.as_ptr(), addr(&a[1]) as *mut u8, 16);
+                    return Ok(Value::unit());
+                }
                 if let (CType::F128, Value::F128(x)) = (&t, &a[0]) {
                     let bits = x.to_bits().to_le_bytes();
                     std::ptr::copy_nonoverlapping(bits.as_ptr(), addr(&a[1]) as *mut u8, 16);
@@ -461,6 +481,48 @@ extern "C" {
 #[cfg(test)]
 mod pointer_tests {
     use super::*;
+
+    #[test]
+    fn wide_integer_storage_preserves_bits_and_adjacent_bytes() {
+        for (name, value) in [
+            ("I128", Value::I128(i128::MIN + 17)),
+            ("U128", Value::U128(u128::MAX)),
+        ] {
+            let scalar = MT::con(&format!("std::{name}"));
+            let pointer = MT::Con("std::Ptr".into(), vec![scalar.clone()]);
+            let mut storage = [0xa5u8; 34];
+            let address = Value::U64(unsafe { storage.as_mut_ptr().add(1) } as usize as u64);
+            pointer_prim(
+                "ptr.write",
+                &[value.clone(), address.clone()],
+                &[scalar.clone(), pointer.clone()],
+                &MT::unit(),
+            )
+            .unwrap();
+            assert_eq!(storage[0], 0xa5);
+            assert!(storage[17..].iter().all(|&b| b == 0xa5));
+            assert_eq!(
+                pointer_prim(
+                    "ptr.read",
+                    std::slice::from_ref(&address),
+                    std::slice::from_ref(&pointer),
+                    &scalar
+                )
+                .unwrap(),
+                value
+            );
+            assert_eq!(
+                pointer_prim(
+                    "ptr.at",
+                    &[Value::I64(1), address.clone()],
+                    &[MT::con("std::I64"), pointer.clone()],
+                    &pointer
+                )
+                .unwrap(),
+                Value::U64(address.as_i128().unwrap() as u64 + 16)
+            );
+        }
+    }
 
     #[test]
     fn pointer_sized_storage_preserves_sign_and_adjacent_bytes() {

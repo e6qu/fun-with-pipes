@@ -14,7 +14,12 @@ fn interpreter_offsets_wrap_at_pointer_width_for_all_numeric_storage_widths() {
         ("I32", 4),
         ("U32", 4),
         ("F32", 4),
+        ("F16", 2),
+        ("BF16", 2),
+        ("F128", 16),
         ("I64", 8),
+        ("I128", 16),
+        ("U128", 16),
         ("U64", 8),
         ("F64", 8),
         ("ISize", std::mem::size_of::<isize>()),
@@ -73,7 +78,8 @@ fn native_boundary_offsets_match_raw_interpreter_and_reject_signed_overflow() {
     let cfile = dir.join("probe.c");
     let mut text = String::new();
     let names = [
-        "I8", "U8", "I16", "U16", "I32", "U32", "I64", "U64", "F32", "F64", "ISize", "USize",
+        "I8", "U8", "I16", "U16", "I32", "U32", "I64", "U64", "I128", "U128", "F32", "F64",
+        "ISize", "USize",
     ];
     for name in &names {
         let suffix = name.to_ascii_lowercase();
