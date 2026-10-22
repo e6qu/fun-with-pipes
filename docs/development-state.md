@@ -12,7 +12,8 @@ the documentation run was preserved. Receipt: `/private/tmp/fwp-194-final-accept
 
 [PR #195](https://github.com/e6qu/fun-with-pipes/pull/195) is open at `a284eb0a338cae4efdd9534fd2d67c60a4f04e82`.
 Production run `39753716407` and documentation run `39753716342`
-are its final-head gates. The combined delivery is branch `native-command-ownership`, worktree
+are its final-head gates. Benchmarks and documentation pass; both Linux, all
+four Mac and both Windows jobs are running with no failed step in the latest audit. The combined delivery is branch `native-command-ownership`, worktree
 `/private/tmp/fwp-native-command-delivery`. Its four prepared commits replay onto
 #194's merge with identical files before documentation updates. Preparation
 source: `3a56acd7bf9003df61293bd71abd01bc1c0d4c60`;
@@ -98,15 +99,34 @@ The independent Python derivative agrees with small C/Rust/fwp fixtures through
 guarded `/private/tmp/fwp-check-descent-peers.py` (4.51s). Workflow syntax,
 formatting and docs pass through `/private/tmp/fwp-ready-descent-peers.py` (6.87s).
 These are correctness checks, not local benchmarks or GCC validation. Next
-independent action: publish preparation, run `descent-peers` on both Linux hosts,
-audit all failures and inspect actual binaries/samples. Keep one active PR;
+independent action: audit `descent-peers` run `39755925964` at
+`018581d6c0711b6a0eba81ed9fdb3e7c41973576` on both Linux hosts, fix all failures
+and inspect actual binaries/samples. Auditor: `/private/tmp/fwp-audit-descent-peers.py`. Keep one active PR;
 this batch follows #195. Preparation receipt:
 `/private/tmp/fwp-ad-comparison-preparation.json`.
+
+The same preparation now extends checked C callbacks to copied string inputs.
+It keeps scalar/raw-pointer results and rejects returned managed addresses.
+Fixtures cover retained copies after C mutates stack buffers, multiple inputs,
+nested calls, errors, suspension and cancellation; the saved interpreter oracle
+passes, including partial conversion failures (guarded
+`/private/tmp/fwp-check-callback-inputs.py`, 1.36s). Struct-valued
+callback parameters remain unsupported; multiple string parameters exercise the
+existing ABI. Native evidence and a deliberately omitted input-owner control
+remain required. Four C interop tests now fail on a missing/broken compiler;
+the focused workflow checks those failures explicitly. The primitive inventory, formatting, workflow and docs pass
+(`/private/tmp/fwp-ready-callback-inputs.py`, 7.44s). These changes are not yet
+published and do not alter #195's final head or the numerical run's source. The two Linux numerical jobs now pass at
+`018581d6c071`; actual binary/report inspection is still required.
 
 ## Resume files
 
 PR source/run receipt: `/private/tmp/fwp-native-command-delivery-publication.json`.
 Final-gate auditor: `/private/tmp/fwp-audit-195-final.py`.
+Ready merge helpers (not yet run): `/private/tmp/fwp-merge-195.py` and
+`/private/tmp/fwp-after-merge-195.py`. They require exact-head acceptance.
+Native image inspection: `/private/tmp/fwp-inspect-native-commands.py --host HOST`;
+five accepted host receipts are under `/private/tmp/fwp-native-command-evidence/3a56acd7bf90/`.
 
 | Purpose | Local path |
 |---|---|

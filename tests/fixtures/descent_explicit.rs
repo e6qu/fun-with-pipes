@@ -2,6 +2,8 @@
 // Two owned vectors are reused. This is the explicit derivative, without a tape.
 use std::io::{self, Write};
 
+// Measurement parameters are inserted here.
+
 fn main() -> io::Result<()> {
     assert!((2..=4096).contains(&DIMENSIONS) && UPDATES <= 4091);
     let mut x: Vec<f64> = (0..DIMENSIONS)
