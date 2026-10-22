@@ -93,7 +93,9 @@ The `ad-application` suite uses the objective and reverse-mode gradient from
 one number to a candidate vector; a gradient says how each component changes
 that number. Each update subtracts 0.001 times the gradient.
 
-The starting vector alternates −1.2 and 1.0. Cases have 3, 33 or 129 dimensions.
+The starting vector alternates −1.2 and 1.0. The original cases have 3, 33 or
+129 dimensions. The raw-storage extension adds zero-update and 1,999-update
+three-dimensional controls; all variants of each case perform identical work.
 The former tutorial expression `iterate 200 descend | last` retains 200 vectors, including the
 initial one, so it performs **199 updates**. The comparison loop performs the
 same updates while retaining only its current vector. Both return the complete
@@ -110,16 +112,29 @@ Linux ARM64/AMD64 measurements use explicit GCC O2, ARC/tracing, disabled LTO an
 enabled bounded derivative-workspace reuse. Two warmups precede sixteen timed
 fresh processes per variant, with rotated and reversed order. Timing includes
 startup, calculation, printing and teardown. Separate instrumented runs record
-fwp allocation requests, bytes, retains and peak/final managed charge. Raw tape
-buffers, allocator metadata, stacks and resident memory are outside those counters;
-these numbers cannot establish total autodiff memory use.
+fwp allocation requests, bytes, retains and peak/final managed charge. Raw tape storage has its own allocator ledger: parent indices, local derivatives,
+backward-pass adjoints and the tape registry. It observes successful allocation
+and free calls, so losing a runtime pointer cannot hide a leak. Each backward
+pass records the registry, retained workspace and other raw bytes. The selected
+workloads require constant idle storage across updates and zero raw bytes after
+real shutdown. Separate controls omit a parent-buffer free or the registry free;
+both must fail. An extra untimed profile disables workspace reuse.
+
+Process peak resident memory comes from a separate uninstrumented run under
+GNU time. Managed charge, raw requested storage and resident memory measure
+different things. Do not add their peaks: they may occur at different times and
+resident memory already includes both allocators. Raw observations exclude
+allocator metadata and temporary copies inside realloc. Typed nested weights
+are managed values; this numeric descent experiment does not isolate them.
 
 Generated C, native binaries, disassembly and hashes are retained. The final
 observer requires no live tapes or managed charge; a control that omits tape
 retirement must fail. This does not establish constant memory for arbitrary AD,
 or bounded long-running retention from a clean exit alone. The [first measured results](measurements/ad-application.md) show much lower
-managed peak storage with mixed, modest timing changes. Total-memory measurements
-and repeated-host timing budgets remain open.
+managed peak storage with mixed, modest timing changes. The raw-storage extension is under validation in the [handoff](development-state.md);
+repeated-host timing budgets and C/Rust comparisons remain open. These bounded
+repeat counts stay below tape-generation exhaustion and do not prove a bound for
+arbitrary nesting or indefinitely long runs.
 
 ## Testing unchanged string ownership
 
@@ -225,6 +240,6 @@ The ordinary execution snapshots and the runtime ownership tests remain necessar
 
 The [pre-extension inventory](measurements/file-applications.md#which-maintained-examples-pass-arcs-checks)
 identified the raw-pointer gap and distinguished it from an intentionally invalid
-inter-task derivative lifetime. The [handoff](development-state.md) tracks the
-manual-pointer extension. Existing `arc_corpus` tests execute admitted programs
+inter-task derivative lifetime. [PR #193](roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193)
+records the accepted manual-pointer extension. Existing `arc_corpus` tests execute admitted programs
 and check their final managed storage; extend that coverage as admissions change.

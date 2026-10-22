@@ -8,6 +8,7 @@ import math
 import os
 from pathlib import Path
 import platform
+import re
 import statistics
 import subprocess
 import time
@@ -17,6 +18,10 @@ PROFILE_SPEC = importlib.util.spec_from_file_location(
     'iteration_profile', ROOT / 'scripts/measure-iteration.py')
 PROFILE = importlib.util.module_from_spec(PROFILE_SPEC)
 PROFILE_SPEC.loader.exec_module(PROFILE)
+RAW_SPEC = importlib.util.spec_from_file_location(
+    'ad_storage_profile', ROOT / 'scripts/ad-storage-profile.py')
+RAW = importlib.util.module_from_spec(RAW_SPEC)
+RAW_SPEC.loader.exec_module(RAW)
 
 
 def analytic(points, count):
@@ -59,6 +64,7 @@ def main():
     parser.add_argument('--cc', required=True)
     parser.add_argument('--objdump', required=True)
     parser.add_argument('--nm', required=True)
+    parser.add_argument('--time', required=True, help='GNU time for separate peak-RSS observations')
     parser.add_argument('--case', required=True, action='append', help='DIMENSIONS:STORED_VALUES')
     parser.add_argument('--warmups', required=True, type=int)
     parser.add_argument('--samples', required=True, type=int)
@@ -99,13 +105,13 @@ def main():
     results = {}
     for case in args.case:
         points, count = map(int, case.split(':'))
-        assert points >= 2 and count >= 1
+        assert points >= 2 and 1 <= count <= 8192
         name = f'{points}-{count}'
         assert name not in results
         directory = out / name
         directory.mkdir()
         expected = analytic(points, count)
-        binaries, profiles, metadata = {}, {}, {}
+        binaries, profiles, raw_profiles, no_workspace, metadata = {}, {}, {}, {}, {}
         reference = None
         for variant in ('history', 'loop'):
             source = directory / (variant + '.fwp')
@@ -130,6 +136,7 @@ def main():
                 profile_code = profile_code.replace(marker, '''    if(fwp_owned_tapes)exit(230);
     for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(231);
 ''' + marker)
+                profile_code = RAW.instrument(profile_code)
                 profiled = directory / (label + '-profile.c')
                 profiled.write_text(profile_code)
                 binary = directory / label
@@ -148,11 +155,22 @@ def main():
                 (directory / (label + '.asm')).write_bytes(run([args.objdump, '-d', binary], environment).stdout)
                 actual = run([profile_binary], environment)
                 assert actual.stdout == reference
-                counts = json.loads(actual.stderr)
+                counts, raw_record = [json.loads(line) for line in actual.stderr.splitlines()]
+                raw_counts = raw_record['rawDerivativeStorage']
+                RAW.check_profile(raw_counts, count - 1, True)
                 assert counts['finalChargedBytes'] == 0, (name, label, counts)
                 if mode == 'arc':
                     assert counts['collections'] == 0
                 profiles[label] = counts
+                raw_profiles[label] = raw_counts
+                (directory / (label + '-profile.stderr')).write_bytes(actual.stderr)
+                uncached = run([profile_binary], dict(environment, FWP_AD_WORKSPACE='0'))
+                assert uncached.stdout == reference
+                uncached_managed, uncached_raw = [json.loads(line) for line in uncached.stderr.splitlines()]
+                RAW.check_profile(uncached_raw['rawDerivativeStorage'], count - 1, False)
+                assert uncached_managed == counts, (name, label, uncached_managed, counts)
+                no_workspace[label] = uncached_raw['rawDerivativeStorage']
+                (directory / (label + '-no-workspace.stderr')).write_bytes(uncached.stderr)
                 metadata[label] = dict(bytes=binary.stat().st_size,
                                        sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
                                        cSha256=hashlib.sha256(code.encode()).hexdigest())
@@ -170,6 +188,24 @@ def main():
                     failed = subprocess.run([str(control)], env=environment, capture_output=True,
                                             timeout=args.timeout)
                     assert failed.returncode == 231, failed
+                    (directory / 'missing-retirement.stderr').write_bytes(failed.stderr)
+                    # An orphaned allocation is absent from the runtime's tape
+                    # pointers. The physical ledger must still detect it.
+                    for control_name, release in [
+                        ('missing-parent-free', 'ad_raw_free(b->pa);'),
+                        ('missing-registry-free', 'ad_raw_free(fwp_tapes);'),
+                    ]:
+                        broken = directory / (control_name + '.c')
+                        broken.write_text(RAW.replace_once(profile_code, release,
+                                                          '/* deliberately omit physical release */'))
+                        control = directory / control_name
+                        build([args.cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-w', broken,
+                               '-o', control, '-lm', '-lpthread', '-ldl'])
+                        failed = subprocess.run([str(control)], env=environment, capture_output=True,
+                                                timeout=args.timeout)
+                        assert failed.returncode == 232, failed
+                        assert b'unreleased raw derivative storage' in failed.stderr, failed
+                        (directory / (control_name + '.stderr')).write_bytes(failed.stderr)
         for _ in range(args.warmups):
             for binary in binaries.values():
                 actual = run([binary], environment)
@@ -189,14 +225,26 @@ def main():
                 assert actual.stdout == reference and not actual.stderr
                 samples[label].append(elapsed)
         medians = {label: statistics.median(values) for label, values in samples.items()}
+        resident = {}
+        for label, binary in binaries.items():
+            # Uninstrumented executable, in a separate process outside timing.
+            observed = run([args.time, '-v', binary], environment)
+            assert observed.stdout == reference
+            match = re.search(rb'Maximum resident set size \(kbytes\):\s*(\d+)', observed.stderr)
+            assert match, observed.stderr
+            resident[label] = int(match[1]) * 1024
+            (directory / (label + '-rss.txt')).write_bytes(observed.stderr)
         results[name] = dict(dimensions=points, storedValues=count, updates=count - 1,
                              samplesNs=samples, medianNs=medians, orders=orders,
                              loopOverHistory={mode: medians['loop-' + mode] / medians['history-' + mode]
                                               for mode in ('arc', 'tracing')},
-                             managedProfiles=profiles, binaries=metadata,
+                             managedProfiles=profiles, rawDerivativeProfiles=raw_profiles,
+                             rawDerivativeProfilesWithoutWorkspace=no_workspace,
+                             peakProcessRssBytes=resident, binaries=metadata,
                              output=reference.decode(), analyticReference=expected)
         (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
     tracked = [Path(__file__), ROOT / 'scripts/measure-iteration.py',
+               ROOT / 'scripts/ad-storage-profile.py', ROOT / 'tests/fixtures/ad_raw_storage_probe.c',
                ROOT / 'docs/tutorials/20-autodiff-and-devices/main.fwp']
     report = dict(source=os.environ['GITHUB_SHA'], host=args.host, machine=platform.machine(),
                   cpu=run(['lscpu'], environment).stdout.decode(),
@@ -213,8 +261,17 @@ def main():
                   'This is a program-structure comparison, not a compiler improvement or C/Rust overhead. '
                   'Timings include fresh-process startup, calculation, printing and teardown. '
                   'Compilation, raw interpretation and separate managed profiles are excluded. '
-                  'Profiles omit raw tape buffers, allocator metadata, stacks and process RSS. '
-                  'Workspace reuse is explicitly enabled. All timing samples are retained; no budget is set.')
+                  'Managed profiles and raw numeric derivative storage are separate ledgers. '
+                  'Raw profiles track actual successful allocator requests and frees for registry, '
+                  'parents, local derivatives and backward adjoints, including retained workspace. '
+                  'They exclude allocator metadata, temporary realloc copies and stack storage. '
+                  'Per-kind peaks need not coincide; do not add them to obtain a process peak. '
+                  'Separate uninstrumented GNU-time runs report process peak RSS. '
+                  'Timings explicitly enable workspace reuse; extra untimed profiles disable it. '
+                  'Idle raw storage must be constant after each selected backward pass and zero '
+                  'after actual shutdown. The finite repeated cases stay below tape-generation '
+                  'exhaustion and do not establish bounds for arbitrary nesting or run lengths. '
+                  'All timing samples are retained; no elapsed-time budget is set.')
     (out / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({name: row['loopOverHistory'] for name, row in results.items()}, indent=2))
 

@@ -2814,8 +2814,8 @@ jobs:
       - name: Compare stored descent history with current-vector iteration
         run: >-
           python3 scripts/measure-ad-application.py --compiler target/release/fwp
-          --cc gcc --objdump objdump --nm nm
-          --case 3:200 --case 33:200 --case 129:200
+          --cc gcc --objdump objdump --nm nm --time /usr/bin/time
+          --case 3:1 --case 3:200 --case 3:2000 --case 33:200 --case 129:200
           --warmups 2 --samples 16 --timeout 180
           --host "${{ matrix.runner }}" --output ad-application-evidence
       - uses: actions/upload-artifact@v7

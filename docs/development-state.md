@@ -9,7 +9,11 @@ The merge has identical files and a single-line message with no body or trailers
 Redundant same-tree push CI `39737137413` was cancelled. [History](roadmap-history.md)
 records the manual-pointer and foreign-storage changes.
 
-The next delivery is branch `move-strings-and-repair-reuse`, worktree
+[PR #194](https://github.com/e6qu/fun-with-pipes/pull/194) is open at
+`489d8414e68678e30829df525982ce8790a4aadc`. Production run `39737931809` and
+documentation run `39737931776` are its exact-head gates. Documentation passes; all nine production jobs are
+running with no failed step in the last audit. Receipt: `/private/tmp/fwp-194-final-acceptance.json`.
+The delivery is branch `move-strings-and-repair-reuse`, worktree
 `/private/tmp/fwp-string-map-delivery`. It groups:
 
 - Moving unique strings through known map callbacks and reusing private ASCII
@@ -65,6 +69,23 @@ pass through guarded `/private/tmp/fwp-ready-map-docs.py` (8.26s).
 Full builds, suites and benchmarks run on GitHub. A comparison download hit the
 deadline; checkpointed inspection completed in 5.94s without raising limits.
 The primary checkout is detached at #193 with this live handoff as its only edit.
+
+## Independent preparation: derivative storage
+
+While #194 runs, branch `measure-derivative-storage` in
+`/private/tmp/fwp-ad-memory` extends the descent experiment. It counts actual raw
+parent/partial/adjoint/registry allocations, samples idle storage after every
+backward pass, verifies physical shutdown release, and measures process peak RSS
+separately with an uninstrumented executable. Extra profiles disable workspace
+reuse; zero-update and 1,999-update cases extend the original selected dimensions.
+No runtime optimization or total-memory improvement is claimed.
+
+Guarded `/private/tmp/fwp-check-ad-raw-observer.py` passes in 1.43s against saved
+generated C. Both missing-parent-free and missing-registry-free controls fail
+with workspace reuse on and off. This is local observer validation, not evidence
+for the current compiler or all platforms. The next independent check is the
+runner-only `ad-application` suite on both Linux architectures; do not merge it
+into #194 or open a second PR. Preserve the existing final-head gates.
 
 ## Roadmap status
 
