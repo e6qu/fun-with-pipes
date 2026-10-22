@@ -7,11 +7,15 @@ its programmer or host remains responsible for the storage at that address.
 The [C tutorial](../tutorials/09-c-interop/README.md#a-pointer-into-a-c-buffer)
 shows allocation, a borrowed pointer into that allocation, copying and release.
 
-**Validation is in progress.** The initial pointer-admission source passes both
-Linux hosts and Intel macOS, with 63 native images independently inspected.
-The expanded batch also repairs interpreter string retention, 32-bit pointer
-storage/allocation bounds and truncated 128-bit raw integers; it requires fresh native and 32-bit evidence. See the
-[handoff](../development-state.md) for source IDs, jobs and final delivery gates.
+The focused suite passes on all six native hosts and actual 32-bit WebAssembly.
+Independent inspection covers **150 native images and 12 WASI modules** at source
+`7173927b7bc899f8c43b17e909656d9550bb2bbe`,
+[run 39721437783](https://github.com/e6qu/fun-with-pipes/actions/runs/39721437783).
+The [machine-readable report](manual-pointers-2026-10-22.json) records C/binary
+hashes, architecture and code inspection, outputs, source IDs and complete-log
+hashes. Exact-head production and documentation gates still precede delivery;
+see the [handoff](../development-state.md).
+
 These are correctness and cleanup checks, not benchmarks or C/Rust speed claims.
 
 ## What changes at the boundary
@@ -61,22 +65,25 @@ uses production GCC on Linux, Clang on macOS and LLVM-MinGW on Windows. Select
 `native_runner=all` for all six hosts, or name a host explicitly. It runs the
 existing corpus, raw-memory, callback, library, ARC execution, C interop and
 pointer-arithmetic targets without stopping after a failed target. Linux AMD64
-also runs all compiler unit tests and audits the primitive contracts.
+also runs all compiler unit tests and audits the primitive contracts. Each host
+passes 24 test functions across seven integration targets; Linux AMD64 also
+passes 176 compiler unit tests. The corpus function executes its 82 programs
+and four diagnostic cases within that count.
 
-The initial admission source is `0ca3fba4f718fb02afbcc385ac41e763a8320361`, run
-`39716002463`. Windows preparation exposed missing `.exe` artifact suffixes,
-then missing OpenSSL headers in the focused workflow. Both are repaired; the
-corpus now records native compilation errors and continues through later cases.
-These setup repairs preserve the earlier program source. The later interpreter
-and width repairs change program/compiler code and require a new complete run;
-earlier results do not establish their correctness.
+Preparation found and fixed missing executable suffixes in Windows artifact
+copying and missing OpenSSL setup on Windows/ARM macOS. The corpus now records
+native compilation errors while continuing through later cases. The new string
+allocation test initially omitted its exported entries; the repaired test checks
+that all four probes are compiled before calling them. Every native target and
+completed job was audited before the combined repair. Earlier preparation runs
+are retained in the handoff's receipts; the source and results above supersede them.
 
 Selecting `native_runner=all` also runs the `pointer_width` job. It compiles the
 Rust interpreter tests for `wasm32-wasip1` and executes them in Node, then runs
 generated WASI pointer checks at O0/O2. Native pointer tests alone cannot verify
 32-bit behavior. No emulated run establishes support for a native platform.
 
-The expanded suite retains 25 native images per host for inspection: 21
+The accepted suite retains 25 native images per host for inspection: 21
 executables and four static/shared libraries, with their generated C. Inspection
 checks artifact hashes, native architecture, actual disassembly and absence of
 tracing symbols in ARC images. It also checks exact outputs, raw-buffer negative

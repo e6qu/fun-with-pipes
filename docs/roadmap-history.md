@@ -12,6 +12,28 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## String ownership and repeated file cleanup (PR #192)
+
+Unchanged text transformations now transfer their existing string owner. Count,
+index and byte-size guards reject or clamp large inputs before 32-bit narrowing.
+The [word-frequency comparison](measurements/unchanged-text.md) records fewer
+allocation requests and lower medians, while retaining the remaining C/Rust gaps
+and differences in normalization work. It does not establish C/Rust parity.
+
+[Repeated file programs](measurements/file-applications.md) check managed storage,
+handles and scratch buffers after each completed round, with failure controls and
+separate process-memory samples on all six native hosts. Windows permission checks
+and UTF-8 report decoding are repaired. The [autodiff application](measurements/ad-application.md)
+compares the same 199 updates with and without retaining intermediate vectors.
+
+[PR #192](https://github.com/e6qu/fun-with-pipes/pull/192) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39714665578)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39714665552)
+at `36998a99f689b254edfc127bbbc8e8aac054c509`. Complete logs were audited.
+Squash merge `3003e2cdebf6e98f45b06b4f523d8dd21d8150c5` has identical files and the
+verified single-line subject “Reduce string copies and verify repeated file cleanup”,
+with no body or trailers.
+
 ## Task results and explicit CPU execution (PR #191)
 
 Immediate task-result fields avoid a temporary `Some` box. The measured fixture

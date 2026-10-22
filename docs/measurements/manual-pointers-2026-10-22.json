@@ -1,0 +1,3496 @@
+{
+  "source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+  "run": 39721437783,
+  "scope": "Executed correctness, raw-buffer and managed-ownership checks. Not elapsed-time, allocation-free or C/Rust performance evidence.",
+  "hosts": {
+    "ubuntu-latest": {
+      "source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+      "program_source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+      "run": 39721437783,
+      "host": "ubuntu-latest",
+      "artifact": 12401043136,
+      "archive_sha256": "8fea52676f6903a1ab2ded595f82227cd4b72cd8c937333bee1fa4524198e383",
+      "binaries": {
+        "corpus/corpus-ffi.exe": {
+          "machine": 62,
+          "bytes": 118728,
+          "sha256": "fdf179b55e18f4cbce98cc1357c405d32d3d31976aae8e7f98785e272487b2be",
+          "c_sha256": "54a5867961038f02f132627ca73c331cf6a00b5fe8b21a05269babef1f16c924",
+          "instruction_bytes": 50450,
+          "headers_sha256": "f668135a7e0a40ff284d2a5b4a0fa7c90f976429f5104782b879ba6a7b3a14ee",
+          "disassembly_sha256": "1f7c10022d313a5a7f6ace125ee58f31afa2a918f7b67844f5a307ce0febf77d",
+          "arc": true
+        },
+        "callbacks/callbacks-tracing-O1.exe": {
+          "machine": 62,
+          "bytes": 202776,
+          "sha256": "6dd8cd4456d586960de91dc3ca92b1a526aa1eecf727b14f9d1f23146f245a51",
+          "c_sha256": "1acd19054d5afad617405bbbe0d14268d9cca7d6a1e9b155adfdcf8486ef0558",
+          "instruction_bytes": 108130,
+          "headers_sha256": "c11f54d4f630b65873dd01fdeeb0c6194a94838d5d9bf8a9b0ab09d9fb53f728",
+          "disassembly_sha256": "86e931625534a475a4e6d0fb1d43dde687ca344d53c67ed9156176a8529e52fe",
+          "arc": false
+        },
+        "callbacks/callbacks-tracing-O2.exe": {
+          "machine": 62,
+          "bytes": 223568,
+          "sha256": "dcf6dd756c16300d1b121c8367bdde2785736e1d6b19b3377c59565e11058061",
+          "c_sha256": "1acd19054d5afad617405bbbe0d14268d9cca7d6a1e9b155adfdcf8486ef0558",
+          "instruction_bytes": 124066,
+          "headers_sha256": "963c1ab79c91a27a02c76e544e933f8fca5e7b80ee58ae60ee9434fae17baeef",
+          "disassembly_sha256": "6e41d2d2a02811ae11394b97100a851f0465db3f191b048e1988aaf7922d6651",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-released-O0.exe": {
+          "machine": 62,
+          "bytes": 480664,
+          "sha256": "e128eedbece0075b7e45335404fe8d256dfcaea53554f9be3505af5923841b6c",
+          "c_sha256": "394eddc40fb3999ec8a82cc6503722bf2456fc2bf47ee6404b69068a7c61ee2a",
+          "instruction_bytes": 316642,
+          "headers_sha256": "4c918a6faf0e98318008e44f92d9bbb9f855ad752c4c4e6e5f761572ee4d6d37",
+          "disassembly_sha256": "7b69576c8c0094afa7776e22209297ae7e8c55dbad762107bcfbc198820692b4",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-missing-free-O0.exe": {
+          "machine": 62,
+          "bytes": 480664,
+          "sha256": "c62472640a2e11dee77b0590b9148bc5c7aa4e47890bb185b6bc898b43bc7623",
+          "c_sha256": "903ce6cf30c7d74bb7dec85b528856f8c9c0f372096bf163b02c3140d376a25c",
+          "instruction_bytes": 316610,
+          "headers_sha256": "e9cc4bc1438bc0c9eaa46a60fc6a987c1803bd368112eb2f724bc6e5fcb9891e",
+          "disassembly_sha256": "6b2fe094fc11c2b2c9fad0806a25bc8e05c7c685ca1f3165cc21e941ec377def",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-released-O2.exe": {
+          "machine": 62,
+          "bytes": 140088,
+          "sha256": "888f9fb477a0861af4c706ed61d9ee4524359b53202e9c3ef58fb4ff14c1e1b4",
+          "c_sha256": "394eddc40fb3999ec8a82cc6503722bf2456fc2bf47ee6404b69068a7c61ee2a",
+          "instruction_bytes": 68066,
+          "headers_sha256": "cf6001f51d93f542be67b6832250d92e31ebdd0b8410ab2607c681416807edfb",
+          "disassembly_sha256": "96469d3e3b6bcd1aa8ef73833afcd7092e7d0873e60b281f0d2c63f74c71ac25",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-missing-free-O2.exe": {
+          "machine": 62,
+          "bytes": 140088,
+          "sha256": "52cd572062af49b081a7ac9ba5aa29e05b1db2e7e71541c13b1931882c5f9926",
+          "c_sha256": "903ce6cf30c7d74bb7dec85b528856f8c9c0f372096bf163b02c3140d376a25c",
+          "instruction_bytes": 67794,
+          "headers_sha256": "bdb882954f5653f461951ff70d0dec0e2879f709a8a800f893c577e66d96827d",
+          "disassembly_sha256": "fea878f5855b45ff38bfd17b0368b43e10bf8ae7bb69b2545e4dcbb926d3adde",
+          "arc": false
+        },
+        "callbacks/callbacks-arc-O1.exe": {
+          "machine": 62,
+          "bytes": 198152,
+          "sha256": "b011d501bb714e511608edea5431f474b29f023e27f5adb6c7bfa58e32633891",
+          "c_sha256": "ea51446d387506e4442956672736414f614290eeeb929d369a9847e2746b12c5",
+          "instruction_bytes": 103154,
+          "headers_sha256": "2788c282341e2f38b27df6a310cfc6abee8a914fb0e0110ac8cd779f35cc485a",
+          "disassembly_sha256": "db25de983c5fd3610d4220b2683ac68f039144bf2556bb614577f9d666414e67",
+          "arc": true
+        },
+        "callbacks/callbacks-arc-O2.exe": {
+          "machine": 62,
+          "bytes": 214992,
+          "sha256": "93b14e47274ea40bc6e4253bfc34a68fa5287e4035e378b326098e7e4add5c42",
+          "c_sha256": "ea51446d387506e4442956672736414f614290eeeb929d369a9847e2746b12c5",
+          "instruction_bytes": 119314,
+          "headers_sha256": "7f9761a65e31ce0a2f554d19d1221611dafc6c96f88e8b18a7c29ab20a8a9681",
+          "disassembly_sha256": "7803d948f7b5de054eceb707a6b1aef2801645c769b7772ac33522ace498c408",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-released-O0.exe": {
+          "machine": 62,
+          "bytes": 471784,
+          "sha256": "31193086c189b4d9367da0c9a0bdb9d03c6e73037e52b3831e7d97b525d08195",
+          "c_sha256": "cc429dec83c046e0153d17c55277fec2abc6a24114aff068db40ee9e20a391aa",
+          "instruction_bytes": 309058,
+          "headers_sha256": "2bd7411a7532ae15f7e6f5503a2fc81fb7123518840c52783d0599cade70d18e",
+          "disassembly_sha256": "263fa583acc6a7120ef2cc02bdcefedbcb29689233ce6d83275d95f37ac828e4",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-missing-free-O0.exe": {
+          "machine": 62,
+          "bytes": 471784,
+          "sha256": "c541cd7206a8a649a382a0432a0a86843ac97e38eddf5fd188754a189a099a42",
+          "c_sha256": "f047703119135ef055d336d98b146bb3ed2211a419142225eb0eb096e35dad57",
+          "instruction_bytes": 309026,
+          "headers_sha256": "df3c72ba347c523ee6dcf384c9f818e80ac826c4bf9b1e2ea5a9b6cddf13612a",
+          "disassembly_sha256": "aee0d6c5b7caa8c67ad5e31b9ea0ea7b4f8472448571f0ae00edcc0b0b709487",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-released-O2.exe": {
+          "machine": 62,
+          "bytes": 131224,
+          "sha256": "33a18a6bef3c1b56c65141a6e630196ed4ce56e9ea2d57666a1df55442ce14dc",
+          "c_sha256": "cc429dec83c046e0153d17c55277fec2abc6a24114aff068db40ee9e20a391aa",
+          "instruction_bytes": 61106,
+          "headers_sha256": "a4737e169f985d1af554a8532b7ba45a8f745a4377b2b41d3e8d60d00b81c76a",
+          "disassembly_sha256": "10714a8d7811edb34a25a7e3b3b0c3538384500bc9ee8c072db6c4d337f50f99",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-missing-free-O2.exe": {
+          "machine": 62,
+          "bytes": 131224,
+          "sha256": "4d0984114585e05b67a7048d5f86024f84a7fb1633a7a0a50dbbaa73fac1ed32",
+          "c_sha256": "f047703119135ef055d336d98b146bb3ed2211a419142225eb0eb096e35dad57",
+          "instruction_bytes": 60434,
+          "headers_sha256": "fa85161b1290d789aa70061b78a7740f4963a229ac83eff9c85ba2c98e83f95a",
+          "disassembly_sha256": "29de260896bb77cbe81f95bb2f3c54a16a0c443091dd8b0eac89d7ab9954ea46",
+          "arc": true
+        },
+        "raw/wide-integers/tracing-O0.exe": {
+          "machine": 62,
+          "bytes": 428408,
+          "sha256": "85308a65a2e7f8d674ad79a3effd0ab5c0186e0e4c51baec1cf4f9867dac9c60",
+          "c_sha256": "a1175f2b590a9a71844ce840d87c994ba50fce1e2e6375e00850e91e21d1ef08",
+          "instruction_bytes": 290530,
+          "headers_sha256": "108eaca837310b87f419d9aa6885fe28daaf6a1bbec16813d40ad3d7a5ecf79f",
+          "disassembly_sha256": "f044a14e81ec2a36715e455a2bc45e98bf65323827fe33252f630069fbf8dc06",
+          "arc": false
+        },
+        "raw/wide-integers/tracing-O2.exe": {
+          "machine": 62,
+          "bytes": 66352,
+          "sha256": "eb689822722c0ff24f8ece6518d92a76418e5d181e2534e336e54ef812917d6e",
+          "c_sha256": "a1175f2b590a9a71844ce840d87c994ba50fce1e2e6375e00850e91e21d1ef08",
+          "instruction_bytes": 28498,
+          "headers_sha256": "5e2c72a977f26863d03071b537ecbc96d96698d183d1fccf5e75f83f8ccdad0d",
+          "disassembly_sha256": "05e5fb35d0c83b0a743f1e81114d0ab726f98eed9bacbeb00962c1ce5091e658",
+          "arc": false
+        },
+        "raw/wide-integers/arc-O0.exe": {
+          "machine": 62,
+          "bytes": 419528,
+          "sha256": "56d520a280b7b33a10f4f882196e4d62fce360fc83ddde6587bda4b28b936a97",
+          "c_sha256": "c472176da3f6097de526b1df26c99dff922c39c7b69398e11a9e464161a1f80c",
+          "instruction_bytes": 283202,
+          "headers_sha256": "ef18adeaed69c5313848d4d227aded514a065445439b996cb8f9184d3ab5aa02",
+          "disassembly_sha256": "5a56e49d10d42d141a9964f7e233579193df6f471f11298b0de120b72d03b4fa",
+          "arc": true
+        },
+        "raw/wide-integers/arc-O2.exe": {
+          "machine": 62,
+          "bytes": 57632,
+          "sha256": "ba6fb36c4638e5b160b08126b483efe254797913d601abdbf80b7fb41987df91",
+          "c_sha256": "c472176da3f6097de526b1df26c99dff922c39c7b69398e11a9e464161a1f80c",
+          "instruction_bytes": 20962,
+          "headers_sha256": "68287e57ad4b4372d275fcc74489967be6d4e1ab750b392e833c171cf91ab1d4",
+          "disassembly_sha256": "53f166acf882f7c85c7f3855518fd0f3e414473f2f5527ea174f518a1f5488f1",
+          "arc": true
+        },
+        "libraries/broken-box.exe": {
+          "machine": 62,
+          "bytes": 153440,
+          "sha256": "2c519751a0455023fdb8affc461c0130b017574c30fff3323307bf2389f43fc1",
+          "c_sha256": "514f7f9a0eab292c56a836ab108b4314a553b849b474005f3b9234e087f02918",
+          "instruction_bytes": 68258,
+          "headers_sha256": "f4646597c61d020b865835725bdc9b7059b6175990330dc49bfca54d2edea2e4",
+          "disassembly_sha256": "04d4e0db31ad1c268c93fa7e53f94a3cc6b371e6c0093b4e591f968529f27dc0",
+          "arc": true
+        },
+        "libraries/broken-host.exe": {
+          "machine": 62,
+          "bytes": 153512,
+          "sha256": "01e7ddd8ccff302b7b1f0f275c6c90253848f6e191ef3bbe41fbb484eb9d98ef",
+          "c_sha256": "e78da0da8c3a094e9ea26cc17ce16ec7cac860d49432834ae7075af839a49649",
+          "instruction_bytes": 68098,
+          "headers_sha256": "875ea734cdb0c703752a90b84393caeb926b95ec9c1a09b5ad5a15271fbc42cb",
+          "disassembly_sha256": "e348e62d335045d03914f4d42308106360e6e2643b25638e30173fafc3405fc9",
+          "arc": true
+        },
+        "libraries/broken-extra-box.exe": {
+          "machine": 62,
+          "bytes": 153472,
+          "sha256": "e735d6db830fc0eea3205c2dce6a4b001b2d173f3be2048fc0ab5829112fa6d8",
+          "c_sha256": "f723f652ff2ae1399b30961aa45c6c90e34db78cb96e1d2698aca81b89b9c773",
+          "instruction_bytes": 68034,
+          "headers_sha256": "05263d29466d3e049d0a46c52cc8be1c6aaa7ccc2a3027a9e979742580319122",
+          "disassembly_sha256": "305a112267490f8b49f51230740616ecfdd72ea50a5b64948fd7a766c4d56e02",
+          "arc": true
+        },
+        "libraries/broken-extra-counts.exe": {
+          "machine": 62,
+          "bytes": 153304,
+          "sha256": "a42efba23b17749dadc3087d5b886a52b4e142a913371202b0394fcbbc6771c9",
+          "c_sha256": "9080ea3ff78e6143a48e1bf7ba1aac53ff0e3fe96af23e7d583c847b7d482267",
+          "instruction_bytes": 68402,
+          "headers_sha256": "8c25d393753e5d1423f10a4d7af5917a95e34cd7164027a150cde2ca1bb34f75",
+          "disassembly_sha256": "650a01aecdad026d8c0dcbbe03565b2d3a2ea2185b2d2675746b989240cd5199",
+          "arc": true
+        },
+        "libraries/library--O1-static.a": {
+          "machine": "archive",
+          "bytes": 176642,
+          "sha256": "ecdbcf4b13a32efeb76f8ddd0fe02ad0a6d4d4e33ce8c235af3c25f0c690c95e",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 67712,
+          "headers_sha256": "46acea82d15682cc732d3f55908795078592837f7e45549d982634e77af11672",
+          "disassembly_sha256": "6184087eca0236a0c322b5490e62aa02307a74fe28b7d2a767cdab826cfe220c",
+          "arc": true
+        },
+        "libraries/library--O1-shared.so": {
+          "machine": 62,
+          "bytes": 148952,
+          "sha256": "0c9652eb0763d5614c756d571a34b59e03ac4b6badcb275149d607fb3e86ccd4",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 68162,
+          "headers_sha256": "413bd2c87083ecdffca2a3b3b43a517bc8959e0967d3ede36ee87c48bfc0dd20",
+          "disassembly_sha256": "11e83c5d0689c9afee2ed59ba3a69b12ee532c46c699c5690fcd323bdb985ed3",
+          "arc": true
+        },
+        "libraries/library--O2-static.a": {
+          "machine": "archive",
+          "bytes": 178082,
+          "sha256": "6ac01048380c04292b4f5b9902c4cab7dfd4772a0db1ccb3f88dd70d628fa46d",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 63631,
+          "headers_sha256": "6d01240ec42104e4bd4f51b7756e25ebb0dd572c4c96d3fefe9270d8ddf8ea4f",
+          "disassembly_sha256": "f81aa8ecb95c80e73c977c040730c40bb9fc44f514b5ef0a8adf221f5cde809d",
+          "arc": true
+        },
+        "libraries/library--O2-shared.so": {
+          "machine": 62,
+          "bytes": 153672,
+          "sha256": "9a8bb836c75b480f863a4264c57d83e056685f1b45ac6463953084a9de0e1d7f",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 68018,
+          "headers_sha256": "712d651fb32c428e49fcffd78168375809a595c9a9dac164665125194b935b48",
+          "disassembly_sha256": "a8188d531d2c600f9aef87d153d83708d7b60ebec3a432f558d13f631addf931",
+          "arc": true
+        }
+      },
+      "wide_integer_stdout": "-170141183460469231731687303715884105728\n170141183460469231731687303715884105727\n0\n0\n340282366920938463463374607431768211455\n18446744073709551617\n0\n0\n",
+      "callback_stdout": "2405\n37\nErr \"pointer callback error\"\n37\nNone\n65\n63\n66\nErr \"foreign error\"\n17\n[Some 15, Some 17, Some 19]\nNone\n198\n8.32e3\n",
+      "corpus": {
+        "total": 86,
+        "executed": 82,
+        "intentionalCompileErrors": 3,
+        "invalidDerivativeLifetimeRejected": 1,
+        "nativeBuildErrors": 0
+      }
+    },
+    "ubuntu-24.04-arm": {
+      "source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+      "program_source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+      "run": 39721437783,
+      "host": "ubuntu-24.04-arm",
+      "artifact": 12401755864,
+      "archive_sha256": "70c8701ef68a7c12fd8d0ea1fd7fcf6589afc4188954853f0186364dd1e158e1",
+      "binaries": {
+        "corpus/corpus-ffi.exe": {
+          "machine": 183,
+          "bytes": 157136,
+          "sha256": "02e1ef7e978403fab56807e69f1e95a59c41a06efbb54c072a041ce1f2621ee5",
+          "c_sha256": "54a5867961038f02f132627ca73c331cf6a00b5fe8b21a05269babef1f16c924",
+          "instruction_bytes": 56924,
+          "headers_sha256": "887225e0c3e47f536657dbe6bbe4181ab0b8faf186c9fecdafb8be9e23d346d3",
+          "disassembly_sha256": "ddb16cdc05c6dcd15573565e15bd72448b7239cdf4e30d8cfcf8f7b933b34d0b",
+          "arc": true
+        },
+        "callbacks/callbacks-tracing-O1.exe": {
+          "machine": 183,
+          "bytes": 240912,
+          "sha256": "b4f965e4d1427cfe14d8eaf5b518de2d445a918de2c497c3712232f0d3e17ca3",
+          "c_sha256": "1acd19054d5afad617405bbbe0d14268d9cca7d6a1e9b155adfdcf8486ef0558",
+          "instruction_bytes": 112236,
+          "headers_sha256": "aef03b0df8aa83e232af06a3b01ec0dde135f28bdd57dec0c8f9de4800fdc212",
+          "disassembly_sha256": "ff7e8828f30e2aa020f60674b38ea62609d2c5fb921b5e298958a7e01469a899",
+          "arc": false
+        },
+        "callbacks/callbacks-tracing-O2.exe": {
+          "machine": 183,
+          "bytes": 240392,
+          "sha256": "31dbec45f6b60b08fde5dfa9d21df5ec86f9605a0c4ea9d36879244983b5136f",
+          "c_sha256": "1acd19054d5afad617405bbbe0d14268d9cca7d6a1e9b155adfdcf8486ef0558",
+          "instruction_bytes": 120812,
+          "headers_sha256": "3971afc2f5dc5fcd618be8ad542c70d1225062e2e42927891a7863d0f58457ab",
+          "disassembly_sha256": "c779a634a5cf5a6d226d675d7e2eca231c31783186e9fbdb59b79edd5872917d",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-released-O0.exe": {
+          "machine": 183,
+          "bytes": 528768,
+          "sha256": "1106124c716380e2128cca6ce368214efe1fc1be268302a6689503b76a8de598",
+          "c_sha256": "394eddc40fb3999ec8a82cc6503722bf2456fc2bf47ee6404b69068a7c61ee2a",
+          "instruction_bytes": 325132,
+          "headers_sha256": "36bac3b9881a2790e55efa76158b351f178a2bcc310b666caffbf4f396134603",
+          "disassembly_sha256": "ea9a72361cbf3a10a7115e1e6a606378488e999700e34311c67dde80c03c1a7e",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-missing-free-O0.exe": {
+          "machine": 183,
+          "bytes": 528768,
+          "sha256": "db76cd88781aa4d353be8db5cc4c3f8d86c260ecebfa590eca98a004fd570593",
+          "c_sha256": "903ce6cf30c7d74bb7dec85b528856f8c9c0f372096bf163b02c3140d376a25c",
+          "instruction_bytes": 325116,
+          "headers_sha256": "cf925e541274a2a6bc5c197e99e05d119cdc5438ca663635ac58272817bb3ac2",
+          "disassembly_sha256": "10827292c9ae3a109f2adbe24e80e8bd9011fbabccdb605f3de555e205640b9b",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-released-O2.exe": {
+          "machine": 183,
+          "bytes": 157312,
+          "sha256": "e3f2a6a4006a7650247e7b1cd96b63ee2933d7d19ce80c3fe866905dbed2f0b1",
+          "c_sha256": "394eddc40fb3999ec8a82cc6503722bf2456fc2bf47ee6404b69068a7c61ee2a",
+          "instruction_bytes": 67868,
+          "headers_sha256": "b9d20b30e2a28989cf7691debc38faadf8343a2f85ac4931b73ef00408b47d0e",
+          "disassembly_sha256": "a439c4f83b151e94721aa7cc7a8f18091b0115972f3878ed683a79399d8fc590",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-missing-free-O2.exe": {
+          "machine": 183,
+          "bytes": 157288,
+          "sha256": "25f73f457a9fb24b1457bbb495d591c46389011c63856eb309ea73648655e2d5",
+          "c_sha256": "903ce6cf30c7d74bb7dec85b528856f8c9c0f372096bf163b02c3140d376a25c",
+          "instruction_bytes": 63436,
+          "headers_sha256": "660f61e857bb168e3f7295ab0f55471d69257d4ce3454013b19cd78c6dc92542",
+          "disassembly_sha256": "4d18ad684cb8d2d65805be5aa51043de0073ffc36d29cc744d5d741221c9b596",
+          "arc": false
+        },
+        "callbacks/callbacks-arc-O1.exe": {
+          "machine": 183,
+          "bytes": 240424,
+          "sha256": "4f278b4cf0d2ceed5e59d58222dcd17aa1a31e5f17887fd06c4368f211b1d6a3",
+          "c_sha256": "ea51446d387506e4442956672736414f614290eeeb929d369a9847e2746b12c5",
+          "instruction_bytes": 107244,
+          "headers_sha256": "f0ec387f1b63b32995544077694bfcb225522ca598b0e78d3c5b334bc6ad0720",
+          "disassembly_sha256": "cf1c863e91cde85c919d5f1646965d0646701115479de5105660a1ffbaadff14",
+          "arc": true
+        },
+        "callbacks/callbacks-arc-O2.exe": {
+          "machine": 183,
+          "bytes": 239936,
+          "sha256": "64391b103c9493907ec2c6c2d5f1d7710cdb8b4602fc3796001deb24776dfcbe",
+          "c_sha256": "ea51446d387506e4442956672736414f614290eeeb929d369a9847e2746b12c5",
+          "instruction_bytes": 121004,
+          "headers_sha256": "a91d10137a5aa27dfb41fcee8aea2d6d565f21e1fdfa12200332eaa820e26b06",
+          "disassembly_sha256": "b41bddfc839d31c82099dd6db86a6289d9b4dd2db5a5fe6bafd362c9a6109ed6",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-released-O0.exe": {
+          "machine": 183,
+          "bytes": 528120,
+          "sha256": "f69cccea4215c647fde0a442dd2cd588b7c0509e3dce962e192bcf56da5ed0cd",
+          "c_sha256": "cc429dec83c046e0153d17c55277fec2abc6a24114aff068db40ee9e20a391aa",
+          "instruction_bytes": 316764,
+          "headers_sha256": "9b7bd7496167cc3cc104c8241a667e9c216abd41824b820acec99308644dc80f",
+          "disassembly_sha256": "79ab566ebafa0e6a7410236f4ca2db099868e90bc6546edf21a40f2300297bdc",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-missing-free-O0.exe": {
+          "machine": 183,
+          "bytes": 528120,
+          "sha256": "58d8484fdb17cd42a8b3d959fdb2ab0f2aff5570535eab66dbfac7980ab6caae",
+          "c_sha256": "f047703119135ef055d336d98b146bb3ed2211a419142225eb0eb096e35dad57",
+          "instruction_bytes": 316748,
+          "headers_sha256": "188d54cf937304c7ef19e22bd6e1156509e7dd7bde13e5b7014951f909c3d557",
+          "disassembly_sha256": "a8b6bdb669e0b475daceb32e8122b7415fc50d0080766fc68acab296896ad676",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-released-O2.exe": {
+          "machine": 183,
+          "bytes": 156816,
+          "sha256": "fa0e068089f9a6bc84b0cb605d8cb93c534f5937c479bbaebf68a44f94a17451",
+          "c_sha256": "cc429dec83c046e0153d17c55277fec2abc6a24114aff068db40ee9e20a391aa",
+          "instruction_bytes": 58204,
+          "headers_sha256": "d8adc23b34b56edfdea1f53bf059cb4cfe53622e73b3571803d65b3cdd87865c",
+          "disassembly_sha256": "c658307d34579bc2a529a8b6821beea2141d17d0fc3359d36edc148bda6281d4",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-missing-free-O2.exe": {
+          "machine": 183,
+          "bytes": 156816,
+          "sha256": "81e908011dde7e6c72813f8a5f41750048f015bdd976a789697f50d2cfdd0d83",
+          "c_sha256": "f047703119135ef055d336d98b146bb3ed2211a419142225eb0eb096e35dad57",
+          "instruction_bytes": 57644,
+          "headers_sha256": "e693d85f518eea24108c2972c849506690a85d2c308a336bef47159681aeed25",
+          "disassembly_sha256": "43a44143d351019f58eb2fe24a9678aaec15ecb41e457ddcf32f5a0d41916ed6",
+          "arc": true
+        },
+        "raw/wide-integers/tracing-O0.exe": {
+          "machine": 183,
+          "bytes": 456056,
+          "sha256": "dd912c781fb9caa39d0c6a492321200f6760f1f168248d7a1a1d53f03dcfd6b3",
+          "c_sha256": "a1175f2b590a9a71844ce840d87c994ba50fce1e2e6375e00850e91e21d1ef08",
+          "instruction_bytes": 300012,
+          "headers_sha256": "aa60473978d76f69ced1e65683bb43177d7432d25610138f869b24c11cd5c9c3",
+          "disassembly_sha256": "3091bea0127facc2f49089a5ecdb77afa534ff0c1f34d984ea7629706eabfc89",
+          "arc": false
+        },
+        "raw/wide-integers/tracing-O2.exe": {
+          "machine": 183,
+          "bytes": 84056,
+          "sha256": "5ec0cbdde05dc68ad2d973ab942c8863738f49d1f86fe5ff6f4d8a269e8fc509",
+          "c_sha256": "a1175f2b590a9a71844ce840d87c994ba50fce1e2e6375e00850e91e21d1ef08",
+          "instruction_bytes": 27500,
+          "headers_sha256": "f449006800ba66845aa78e7f7b28ec033ec0f3253417eb2bdf76025f3191157f",
+          "disassembly_sha256": "f19f68b7350d99a8f7951b5ec005f117afd84338241e56eba0b429c231b5ff56",
+          "arc": false
+        },
+        "raw/wide-integers/arc-O0.exe": {
+          "machine": 183,
+          "bytes": 455408,
+          "sha256": "587c6af57abb69e215caa97329f3effada024d71a80234c771fac743dc94fbbd",
+          "c_sha256": "c472176da3f6097de526b1df26c99dff922c39c7b69398e11a9e464161a1f80c",
+          "instruction_bytes": 291756,
+          "headers_sha256": "9db8597c6fb5cb66f267975809531d7d69322b7b22720fc0b3c2843513d0ca9f",
+          "disassembly_sha256": "acf020e0e29d6e965c8b21f9e092ac127a6d92411b56ed3c6bedab74059ee3a9",
+          "arc": true
+        },
+        "raw/wide-integers/arc-O2.exe": {
+          "machine": 183,
+          "bytes": 83608,
+          "sha256": "14c370aa1c0ee53903c9f60083984094315ed53610adbc159cb274ce654926fe",
+          "c_sha256": "c472176da3f6097de526b1df26c99dff922c39c7b69398e11a9e464161a1f80c",
+          "instruction_bytes": 21308,
+          "headers_sha256": "b70cc7d8d21c950d870ae437a5692331bedf07cb567b01a94034b04b722c13e8",
+          "disassembly_sha256": "518c27d52aeb817f85061ade7dcbf00b603b701cc5a4fe97f6e867535d03336a",
+          "arc": true
+        },
+        "libraries/broken-box.exe": {
+          "machine": 183,
+          "bytes": 162864,
+          "sha256": "23a7b2127e01f5e75b1cf8ea885e0710d4ffa968ef544fef3bba3843cec4f599",
+          "c_sha256": "514f7f9a0eab292c56a836ab108b4314a553b849b474005f3b9234e087f02918",
+          "instruction_bytes": 73340,
+          "headers_sha256": "a0361c58cf5c2311ebda503e9d53b7ed508fe19fbe19eab2c162b10942e83032",
+          "disassembly_sha256": "02b3c54c299ec22abe8d02665aaa8e3703cd69d432913a57d57e185c266b7fe4",
+          "arc": true
+        },
+        "libraries/broken-host.exe": {
+          "machine": 183,
+          "bytes": 162920,
+          "sha256": "0ee03b0055a53c064e622b518123063c3e1551a421c4b76fb1c8797cd76df6a3",
+          "c_sha256": "e78da0da8c3a094e9ea26cc17ce16ec7cac860d49432834ae7075af839a49649",
+          "instruction_bytes": 73180,
+          "headers_sha256": "98305d12b8dd526fddb0ec74ac430c410977a9e99e396aee32e48504c1c1ceee",
+          "disassembly_sha256": "f625c9caff01877c308b0017cc2278ce83a3bc1ca65a057a927d51bdd6cd3065",
+          "arc": true
+        },
+        "libraries/broken-extra-box.exe": {
+          "machine": 183,
+          "bytes": 162928,
+          "sha256": "fcc26d6adb44b013a9d9bbcde26ffbb08743afab75ab68346450c212da3d47e1",
+          "c_sha256": "f723f652ff2ae1399b30961aa45c6c90e34db78cb96e1d2698aca81b89b9c773",
+          "instruction_bytes": 72972,
+          "headers_sha256": "04e3057a1718d574af50cb46a8ab8cca5d48329d30b391481ae9f1f9dfa8cd02",
+          "disassembly_sha256": "6d89761b03a0e17d0903c972fc5ee5926b43f57362524952a608cb6e0cc9206b",
+          "arc": true
+        },
+        "libraries/broken-extra-counts.exe": {
+          "machine": 183,
+          "bytes": 162928,
+          "sha256": "8979d04ab9cae8d4b4aa7ea168009aa055bdc662014fe05e026739bd22eb5e54",
+          "c_sha256": "9080ea3ff78e6143a48e1bf7ba1aac53ff0e3fe96af23e7d583c847b7d482267",
+          "instruction_bytes": 73404,
+          "headers_sha256": "efa6e325bfe594fed43f858da4eeb58fe99a67dd67e17bca0a42bdce010c0af0",
+          "disassembly_sha256": "1ed9500b6f6f50941c7ac26edaf941820fb593161e0dcbc8e4160c554522e740",
+          "arc": true
+        },
+        "libraries/library--O1-static.a": {
+          "machine": "archive",
+          "bytes": 203258,
+          "sha256": "9b7c913d30013e56f1dfc7a0a417734a5dc8a374c60fda633adbcccbdedc68e7",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 72660,
+          "headers_sha256": "97f1b337d2a004ea492d29652526d13c9dae5fa88836eaa06920fd16aca26773",
+          "disassembly_sha256": "98444494e177037c484ba15d63ffb2ea24b249c2b82d58e94a3bf145b9834713",
+          "arc": true
+        },
+        "libraries/library--O1-shared.so": {
+          "machine": 183,
+          "bytes": 162984,
+          "sha256": "3d1dc0dac89c5da52b449baa5ae470a525498e76103a99345ee6032255bec3a7",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 79980,
+          "headers_sha256": "f1fd1f0264dedbc220eed4ea914fb01d8962df83efdc7f5e8f8e4d4ce65c5c6e",
+          "disassembly_sha256": "0f615add3f4b1a5ec132ca7c6b652c5e1350eb37caa1d41306591ed9946f1c84",
+          "arc": true
+        },
+        "libraries/library--O2-static.a": {
+          "machine": "archive",
+          "bytes": 182242,
+          "sha256": "bb246f7a085b56072c53cd88ee5bd93ff511746bde60c72f68e971a50add0323",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 62432,
+          "headers_sha256": "18f2c4dec96c93166a6a55da313221c7fa54fb7d57f4af088bab59de6f599f99",
+          "disassembly_sha256": "f5480f5785daa362b1a73e86c705cdb76344dd00c5eb805815275c55ab0c2442",
+          "arc": true
+        },
+        "libraries/library--O2-shared.so": {
+          "machine": 183,
+          "bytes": 162776,
+          "sha256": "6c280b3bacc29c38dd6b81d409d430b676410d2caec351a8d3620dd50bb50132",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 73100,
+          "headers_sha256": "66b9ef64f6f73b439bee2d5ef10757da8fba01426d88a0966c19f178f1063287",
+          "disassembly_sha256": "97da8aa701f203474b01fa6cdc1da5d1b240391a8372f3a18829a7116c40b8f2",
+          "arc": true
+        }
+      },
+      "wide_integer_stdout": "-170141183460469231731687303715884105728\n170141183460469231731687303715884105727\n0\n0\n340282366920938463463374607431768211455\n18446744073709551617\n0\n0\n",
+      "callback_stdout": "2405\n37\nErr \"pointer callback error\"\n37\nNone\n65\n63\n66\nErr \"foreign error\"\n17\n[Some 15, Some 17, Some 19]\nNone\n198\n8.32e3\n",
+      "corpus": {
+        "total": 86,
+        "executed": 82,
+        "intentionalCompileErrors": 3,
+        "invalidDerivativeLifetimeRejected": 1,
+        "nativeBuildErrors": 0
+      }
+    },
+    "macos-15": {
+      "source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+      "program_source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+      "run": 39721437783,
+      "host": "macos-15",
+      "artifact": 12401721330,
+      "archive_sha256": "e34bd3b3cf56f18fa2d35495b8974c3d4599371279e09a7c271c4053265e8812",
+      "binaries": {
+        "corpus/corpus-ffi.exe": {
+          "machine": 16777228,
+          "bytes": 127672,
+          "sha256": "02bc6e1be2450bda83c78a2e7d288e58f8ce077fae3de3d2509fa9c985f53923",
+          "c_sha256": "54a5867961038f02f132627ca73c331cf6a00b5fe8b21a05269babef1f16c924",
+          "instruction_bytes": 64924,
+          "headers_sha256": "a084683118c36f5438544d6a7ce14993014add4179c29eb1d00dec9d84466a94",
+          "disassembly_sha256": "d6df032e25f0b064cebbc1f3f27cc43253e1c93643e9481b241b95d14d82df33",
+          "arc": true
+        },
+        "callbacks/callbacks-tracing-O1.exe": {
+          "machine": 16777228,
+          "bytes": 225120,
+          "sha256": "d995a418e4e9a1b4537cc28827efa00c4705193e0d91c34ef90048f7ba8605cd",
+          "c_sha256": "1acd19054d5afad617405bbbe0d14268d9cca7d6a1e9b155adfdcf8486ef0558",
+          "instruction_bytes": 144100,
+          "headers_sha256": "71ea5345ba652144cb2d2d118a81d2d7c189272b98a64129cd89e22e7b901fec",
+          "disassembly_sha256": "4959fff3781c89a716d324ee57ec1f9ec17e0f62b07e81dc0f65b8bb5550c1d9",
+          "arc": false
+        },
+        "callbacks/callbacks-tracing-O2.exe": {
+          "machine": 16777228,
+          "bytes": 225344,
+          "sha256": "35f3a94153f76e5cb63b7f9e78d334925a228112905c2dafcb1e4ba33ae9a687",
+          "c_sha256": "1acd19054d5afad617405bbbe0d14268d9cca7d6a1e9b155adfdcf8486ef0558",
+          "instruction_bytes": 147488,
+          "headers_sha256": "6dcf1f6788bba98a8b56fa14954045ed593d8786af9d7d3b1ab96cf351126512",
+          "disassembly_sha256": "f04e7b39f1dc13c2c915b65edcf7312a7dcb51a1c9fcae5193cb447c3c460a4b",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-released-O0.exe": {
+          "machine": 16777228,
+          "bytes": 133880,
+          "sha256": "1353d353e7506bb7289143a904cc5a79e4c1c619c2e4724209d3be7712e27589",
+          "c_sha256": "394eddc40fb3999ec8a82cc6503722bf2456fc2bf47ee6404b69068a7c61ee2a",
+          "instruction_bytes": 70848,
+          "headers_sha256": "f80df6396cd2ed37331e943c45fcc18d1c32ee096db86171e5ce6af789273cad",
+          "disassembly_sha256": "5929feff521120e86fa81907cd8df97a997c36ea98b15bfdea2d692cda587390",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-missing-free-O0.exe": {
+          "machine": 16777228,
+          "bytes": 133848,
+          "sha256": "2add6e715d450177c2b8cf6f04dbb907528e5a5cd4013a49d28da78f92e35940",
+          "c_sha256": "903ce6cf30c7d74bb7dec85b528856f8c9c0f372096bf163b02c3140d376a25c",
+          "instruction_bytes": 70644,
+          "headers_sha256": "409916b5058f98c5a26f1783c5ca396fad1aab58b05d234d4f720e94165682ef",
+          "disassembly_sha256": "7afe459c1268b79e382e1481b76575d74aa388be75ae0ad62ad7fadc6144f10b",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-released-O2.exe": {
+          "machine": 16777228,
+          "bytes": 127656,
+          "sha256": "3d0e3c693b90df2be00636d57d177c2bdafbd1fcf3d6800364502a2a5176d2a9",
+          "c_sha256": "394eddc40fb3999ec8a82cc6503722bf2456fc2bf47ee6404b69068a7c61ee2a",
+          "instruction_bytes": 68752,
+          "headers_sha256": "e325604fbd0084ab58d9d6ef0cac862798ce789eb4325785a6f937594bca68ee",
+          "disassembly_sha256": "acb9870706f2b9fad8d3b271731a53d2786c91e039007d3e26d5d1211bfe11f0",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-missing-free-O2.exe": {
+          "machine": 16777228,
+          "bytes": 127464,
+          "sha256": "b809a0ead5445249ea67d03d78597cbf24c9f541575352cb71bddc490e23bbd6",
+          "c_sha256": "903ce6cf30c7d74bb7dec85b528856f8c9c0f372096bf163b02c3140d376a25c",
+          "instruction_bytes": 67252,
+          "headers_sha256": "66b7a1539897705d960435c2d82d472e5c9973976bfcebfe1d1c7c69ad1ecd33",
+          "disassembly_sha256": "1809482d08be827a622c794f5fce3024d141df4ec6823b5313ffdb8dbe5fce56",
+          "arc": false
+        },
+        "callbacks/callbacks-arc-O1.exe": {
+          "machine": 16777228,
+          "bytes": 208072,
+          "sha256": "cb20652b0218e7959e53fe8daef1aa350dedb5ec9024b077bdf42db572c3698b",
+          "c_sha256": "ea51446d387506e4442956672736414f614290eeeb929d369a9847e2746b12c5",
+          "instruction_bytes": 138216,
+          "headers_sha256": "5bd9671fbc067a0c46e3cb6ddae93925eede90adb31f365a76b20dba935c46be",
+          "disassembly_sha256": "71c54bc967e5ce01a3476b8db997afa1be816378419701e133d53e9c7f71ccdb",
+          "arc": true
+        },
+        "callbacks/callbacks-arc-O2.exe": {
+          "machine": 16777228,
+          "bytes": 224776,
+          "sha256": "531b0f3ae202023ed326643c756a9a63a04cf6bd642ed91800488b18ef6d4207",
+          "c_sha256": "ea51446d387506e4442956672736414f614290eeeb929d369a9847e2746b12c5",
+          "instruction_bytes": 141856,
+          "headers_sha256": "8086a38379b71d418b04fad6ba9abccc46c03f09de2772004afc4bde08628ac0",
+          "disassembly_sha256": "02c7ad032bc4e7eed573f2064b8ed5b0a002dd445461e200b0c6d2829f7b7723",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-released-O0.exe": {
+          "machine": 16777228,
+          "bytes": 133000,
+          "sha256": "e2526dbc9a1e56909acef23b795576e0453f7b9bffdf06a9b6852591a2ff782f",
+          "c_sha256": "cc429dec83c046e0153d17c55277fec2abc6a24114aff068db40ee9e20a391aa",
+          "instruction_bytes": 63436,
+          "headers_sha256": "12bfcec58bd0a89164ae6a97e9bb684c3180cbcb6d480742a8dd5de5120f69b5",
+          "disassembly_sha256": "55ce5609d32f8f139ffec15dff9a5b414209277cddce1c3e568cdadc91d6821c",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-missing-free-O0.exe": {
+          "machine": 16777228,
+          "bytes": 132968,
+          "sha256": "668328bdc41e3536820f6a01b197bd5e77512926a6c626cd29aa747c53d8b86c",
+          "c_sha256": "f047703119135ef055d336d98b146bb3ed2211a419142225eb0eb096e35dad57",
+          "instruction_bytes": 63232,
+          "headers_sha256": "5b9e81448526a4609109ae2f1667a3893246acd7ecf518689c8ace83e77b7355",
+          "disassembly_sha256": "9659ae825c9d2a38145ed9905246708ce30baa685ff8cf06a030a480aad5b69d",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-released-O2.exe": {
+          "machine": 16777228,
+          "bytes": 127096,
+          "sha256": "ca285ea27b422e336e5bcd8409ef440a101dfd625f1b3873183afe885549944f",
+          "c_sha256": "cc429dec83c046e0153d17c55277fec2abc6a24114aff068db40ee9e20a391aa",
+          "instruction_bytes": 62712,
+          "headers_sha256": "217ebd66a085718619b29a0b1a78f9e6103f1ecdb1a5da81931ef39863123481",
+          "disassembly_sha256": "6fed7c51f9fa9eadb82d6c3568d69c512334638214940753e35dffc14dcb9ac2",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-missing-free-O2.exe": {
+          "machine": 16777228,
+          "bytes": 126904,
+          "sha256": "8be09a8fb764ce56b6dbbb7eed23f10764d6f41e1f3e50c7adcc30fa520d4a48",
+          "c_sha256": "f047703119135ef055d336d98b146bb3ed2211a419142225eb0eb096e35dad57",
+          "instruction_bytes": 61116,
+          "headers_sha256": "e48d752189c391d61004f58b43e8157db3ab5bd265c5b68ac1f97b479ac71c3c",
+          "disassembly_sha256": "63310e0b1254defce6831e90e67ab16e1d899fa67aebdddc61b074603ec93a7c",
+          "arc": true
+        },
+        "raw/wide-integers/tracing-O0.exe": {
+          "machine": 16777228,
+          "bytes": 92824,
+          "sha256": "6ed3f5762c5bed0cde1e260cbdb42127e1e7f195c5e749201be0f036c50e801e",
+          "c_sha256": "a1175f2b590a9a71844ce840d87c994ba50fce1e2e6375e00850e91e21d1ef08",
+          "instruction_bytes": 37952,
+          "headers_sha256": "92f8a0feabb6276cb4c6d2268d8503ce176eff83a16f319e93b7170d257c3e2a",
+          "disassembly_sha256": "4333725cda95c01a3e120b1d10a5d58776673f45d79447c88669f33d3193e239",
+          "arc": false
+        },
+        "raw/wide-integers/tracing-O2.exe": {
+          "machine": 16777228,
+          "bytes": 71096,
+          "sha256": "973fdbee2f608b4f89a2250079239e9da3abf7832caa7f6ce166869343804ec3",
+          "c_sha256": "a1175f2b590a9a71844ce840d87c994ba50fce1e2e6375e00850e91e21d1ef08",
+          "instruction_bytes": 24676,
+          "headers_sha256": "693d9c58139ca105760e2bcadaef25a658edbbcadee482cb2e5bb04b126b223c",
+          "disassembly_sha256": "d54ec70a1f543d17574058bb8c3ca926132b0d7a6b0aa89f8f9c78c8690c9479",
+          "arc": false
+        },
+        "raw/wide-integers/arc-O0.exe": {
+          "machine": 16777228,
+          "bytes": 91944,
+          "sha256": "aec1efe319433ec4c3c183bd8de92c714ebfe0928cea245e7d2bea7b1f75cafc",
+          "c_sha256": "c472176da3f6097de526b1df26c99dff922c39c7b69398e11a9e464161a1f80c",
+          "instruction_bytes": 30724,
+          "headers_sha256": "02c149d9e02b8595793cce9fd698427f836b36a0863a84c3deb75b5ba3f72917",
+          "disassembly_sha256": "730965d58ce96b0670d66c69d0b7d8a1eac47077a9f209a2010735f197b735b1",
+          "arc": true
+        },
+        "raw/wide-integers/arc-O2.exe": {
+          "machine": 16777228,
+          "bytes": 70392,
+          "sha256": "e428b0a9fee44b648b7b8a73e0906955c2f8337d357120f507422b9c7702d1e6",
+          "c_sha256": "c472176da3f6097de526b1df26c99dff922c39c7b69398e11a9e464161a1f80c",
+          "instruction_bytes": 20116,
+          "headers_sha256": "aad1f8c19bb5822a37ae12632121a216b4dae61805c08eab268c461e8cf5fec0",
+          "disassembly_sha256": "b4bd7398bac62b4cab88d785c0e26f6a239e6778f52eafbbce41302eb412f72d",
+          "arc": true
+        },
+        "libraries/broken-box.exe": {
+          "machine": 16777228,
+          "bytes": 147808,
+          "sha256": "c177cfe2c859485be129a26ca948ba100b33d3c937c3b32cbdcc2313210670d1",
+          "c_sha256": "514f7f9a0eab292c56a836ab108b4314a553b849b474005f3b9234e087f02918",
+          "instruction_bytes": 87632,
+          "headers_sha256": "4ec923819a8d673779082f53de2f7b9816a7d3ecc8279660bb6c223683576a1a",
+          "disassembly_sha256": "67baa4c9762112656541e08add7d4966a0504bdccb21b1847e05743d2e39f8f9",
+          "arc": true
+        },
+        "libraries/broken-host.exe": {
+          "machine": 16777228,
+          "bytes": 147808,
+          "sha256": "eb74b4b61d1630b8c166369acda11b548b33e8cd274cd7e1a198e902a1d17cd0",
+          "c_sha256": "e78da0da8c3a094e9ea26cc17ce16ec7cac860d49432834ae7075af839a49649",
+          "instruction_bytes": 87956,
+          "headers_sha256": "2b7552d1b3f43579b4048079b43bd345f2b014fd9d4f133fe40058e4aacb3599",
+          "disassembly_sha256": "a2d19903d2d0e83ef23ad9b31824d48776e8456e5cfb279e0094c4c0cd80e0cc",
+          "arc": true
+        },
+        "libraries/broken-extra-box.exe": {
+          "machine": 16777228,
+          "bytes": 147816,
+          "sha256": "856ded885c228efe01ac301e2d88b78d32fcb429f80b8ee876b258ef419ec23f",
+          "c_sha256": "f723f652ff2ae1399b30961aa45c6c90e34db78cb96e1d2698aca81b89b9c773",
+          "instruction_bytes": 88660,
+          "headers_sha256": "a8feb665fe20ba286a4978b2587c004895eebf4f1940211c85bf242bcfb4a7ee",
+          "disassembly_sha256": "d3b64f7715b171d3395f3aba3818ef918b95d258623384b6325edbd22eaf5575",
+          "arc": true
+        },
+        "libraries/broken-extra-counts.exe": {
+          "machine": 16777228,
+          "bytes": 147816,
+          "sha256": "b0b0723fd2542719b93fbdcd8bd82c39276ece375634cb841ac993fd73d0596d",
+          "c_sha256": "9080ea3ff78e6143a48e1bf7ba1aac53ff0e3fe96af23e7d583c847b7d482267",
+          "instruction_bytes": 89244,
+          "headers_sha256": "6139c0d3ad6350d20f00295ea222905f77afceb6fe00fe1b302098927e26b396",
+          "disassembly_sha256": "af01e797acb04912e39e04f399f89c6e25e005634d11285b7ad81130eb99ca0a",
+          "arc": true
+        },
+        "libraries/library--O1-static.a": {
+          "machine": "archive",
+          "bytes": 190592,
+          "sha256": "21e741e99a6e427b3938eb52ea7248c131181129c2b82e5897d2f82405a1bf23",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 88740,
+          "headers_sha256": "6bacf18fdedefad9bdfafebdee206af0b5155404a7aaf6f24642deda9bba7ed1",
+          "disassembly_sha256": "1b063e4a6e9c70a93b2cff9b29ff18783bd057da4b3e5c2eef2389e31a1bc025",
+          "arc": true
+        },
+        "libraries/library--O1-shared.dylib": {
+          "machine": 16777228,
+          "bytes": 147936,
+          "sha256": "170ebeda56f761312a1f8b22bdea9fee0d45bd73841ebbc47b17753a5f18ef79",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 88764,
+          "headers_sha256": "f329533876e5ca4a401b795c104ee285a1219d1dd3557c0d3c5eb5b55de0c395",
+          "disassembly_sha256": "5343747fb24385cb9b855740ecd13b67fdca161e0e396ba1f8b762b583309002",
+          "arc": true
+        },
+        "libraries/library--O2-static.a": {
+          "machine": "archive",
+          "bytes": 191056,
+          "sha256": "7de7697664ac7b71dfcbffe3964e4546f30a19d360cbc97295474ff67e71a63b",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 88912,
+          "headers_sha256": "9506161ef2fe5f51372b966d8b8c5a7c1159e4613491a9e8c3382be3c5074235",
+          "disassembly_sha256": "d9c5e7df8c4aea7c1a140e3caf44d8a11614b00e804f51c043ca29de6131eb29",
+          "arc": true
+        },
+        "libraries/library--O2-shared.dylib": {
+          "machine": 16777228,
+          "bytes": 147712,
+          "sha256": "f0b1deeba39c4840401035e320568d9d073253b71af20886c657d232714a72db",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 88936,
+          "headers_sha256": "67347a2af0cc72d149ce4833dd40a3eb0cfca804bc04a84b067e0ad376b9ff63",
+          "disassembly_sha256": "f31b72cc67a74646e546cd84fb7a39c5207e90c5eea49f55693acee3ba6e0fa0",
+          "arc": true
+        }
+      },
+      "wide_integer_stdout": "-170141183460469231731687303715884105728\n170141183460469231731687303715884105727\n0\n0\n340282366920938463463374607431768211455\n18446744073709551617\n0\n0\n",
+      "callback_stdout": "2405\n37\nErr \"pointer callback error\"\n37\nNone\n65\n63\n66\nErr \"foreign error\"\n17\n[Some 15, Some 17, Some 19]\nNone\n198\n8.32e3\n",
+      "corpus": {
+        "total": 86,
+        "executed": 82,
+        "intentionalCompileErrors": 3,
+        "invalidDerivativeLifetimeRejected": 1,
+        "nativeBuildErrors": 0
+      }
+    },
+    "macos-15-intel": {
+      "source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+      "program_source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+      "run": 39721437783,
+      "host": "macos-15-intel",
+      "artifact": 12401347924,
+      "archive_sha256": "54e87b4332a8504a9efe588877f90884f94a349ef6aa0c8c0b3a763f172a5c31",
+      "binaries": {
+        "corpus/corpus-ffi.exe": {
+          "machine": 16777223,
+          "bytes": 106096,
+          "sha256": "8f44d567d7423efc2f675850a08533b875d5150dbf8c20cc81f9e6ba0ee10097",
+          "c_sha256": "54a5867961038f02f132627ca73c331cf6a00b5fe8b21a05269babef1f16c924",
+          "instruction_bytes": 72208,
+          "headers_sha256": "515f26505b8bb02f6aa162b2e88c0c3369880e15710100eebbec6632e4d08404",
+          "disassembly_sha256": "a17d9a1694a5947a370b0a73d652e93de30600ac0344148345dad1ae0f37c582",
+          "arc": true
+        },
+        "callbacks/callbacks-tracing-O1.exe": {
+          "machine": 16777223,
+          "bytes": 207008,
+          "sha256": "9b625466b6aae6aeaf69359ece4d15d50929afc7ffd9c4921bc825ef5ff0ec94",
+          "c_sha256": "1acd19054d5afad617405bbbe0d14268d9cca7d6a1e9b155adfdcf8486ef0558",
+          "instruction_bytes": 155386,
+          "headers_sha256": "06b686357abcd9bd8e417a9a52daf61644bb40865de9b913b18ef20dce141894",
+          "disassembly_sha256": "f264712407017cb43705b5659f24ed8eae611d9e87f58dbfa5233539c2bb681b",
+          "arc": false
+        },
+        "callbacks/callbacks-tracing-O2.exe": {
+          "machine": 16777223,
+          "bytes": 215296,
+          "sha256": "219b6662dce69c13fec8d8580a399cddb99aba9b7957a56ac4948ca0fbb4f874",
+          "c_sha256": "1acd19054d5afad617405bbbe0d14268d9cca7d6a1e9b155adfdcf8486ef0558",
+          "instruction_bytes": 161847,
+          "headers_sha256": "62e270dfb663837588dbdedf5039d025414244e5b5bdd94740a2958fe852a62b",
+          "disassembly_sha256": "3ea85198b061f53c000514d423de1cc9c73887f1d72abfb63cbf6451db5620e3",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-released-O0.exe": {
+          "machine": 16777223,
+          "bytes": 112224,
+          "sha256": "1596a97a0d6034088dd4ade6ede3bfc12c3e6df7c2f0dc5920a733eb5eb4dc82",
+          "c_sha256": "394eddc40fb3999ec8a82cc6503722bf2456fc2bf47ee6404b69068a7c61ee2a",
+          "instruction_bytes": 69328,
+          "headers_sha256": "de42d16ca91e3fdd47d0cc2904cbce630d26d2cf2995d068118e2fa87d75521f",
+          "disassembly_sha256": "94b5bdd001b71fc9e85f114e498c889972466ea445de6fa173e263cbd62395cf",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-missing-free-O0.exe": {
+          "machine": 16777223,
+          "bytes": 112192,
+          "sha256": "4867ae806e5aec8c1e2eb8b73ee82bbc86378e0c256126bd81de02fdc4692502",
+          "c_sha256": "903ce6cf30c7d74bb7dec85b528856f8c9c0f372096bf163b02c3140d376a25c",
+          "instruction_bytes": 69168,
+          "headers_sha256": "84cae01bb003c57cf3779007a41fa0b00ee4609968ef1cc93444c02fe8a7791c",
+          "disassembly_sha256": "0a847eb9a39e9b151d45fcf676c7e70685092d8c89f98426a1f8b013ff589116",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-released-O2.exe": {
+          "machine": 16777223,
+          "bytes": 114184,
+          "sha256": "49a8cdbf3d894c3e4248e071e6ffa4c2fd3df1e93436cade0c0a2677cd2bbf54",
+          "c_sha256": "394eddc40fb3999ec8a82cc6503722bf2456fc2bf47ee6404b69068a7c61ee2a",
+          "instruction_bytes": 79632,
+          "headers_sha256": "0c9413c5ca00f6dfbf15e48aa3df52604ac6a0a84cfe0c8527c78ebb46432b96",
+          "disassembly_sha256": "4925eacf0792e04087a0a75d1e6617ac25963f3b30d4363c5ddc91dc45b845d4",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-missing-free-O2.exe": {
+          "machine": 16777223,
+          "bytes": 113992,
+          "sha256": "ba383ca2cf50b8b8a9ef12ce0ecdbd0cb975ff92c9f0a4ba7bf4501b1b6f2dbd",
+          "c_sha256": "903ce6cf30c7d74bb7dec85b528856f8c9c0f372096bf163b02c3140d376a25c",
+          "instruction_bytes": 77536,
+          "headers_sha256": "1c3b204caf332da929f81a789af05034439c2fe2b333bcbff34bc15e32766a6c",
+          "disassembly_sha256": "c9a91dca914d9518229dd143ea92eb6a3b4cea9b50bb03c6880dfb6cd6fd483d",
+          "arc": false
+        },
+        "callbacks/callbacks-arc-O1.exe": {
+          "machine": 16777223,
+          "bytes": 198296,
+          "sha256": "4b4bbc34512bad78110728ee46ae804ae704827e06efe295fe9937b01e30a404",
+          "c_sha256": "ea51446d387506e4442956672736414f614290eeeb929d369a9847e2746b12c5",
+          "instruction_bytes": 149050,
+          "headers_sha256": "3e794801b96fb558b7270112ad1f2c86cbeda3bd87e2c05baba2f01e6d7f6661",
+          "disassembly_sha256": "bf1a46d5d841de2bd002a26000463e6d9fc3dbaea8cfb337e6445feee5acfae4",
+          "arc": true
+        },
+        "callbacks/callbacks-arc-O2.exe": {
+          "machine": 16777223,
+          "bytes": 206544,
+          "sha256": "02c9992ef9c8efe3883662f6aac9b7241d45af2d7c9520bd1eb6a0cd9729e566",
+          "c_sha256": "ea51446d387506e4442956672736414f614290eeeb929d369a9847e2746b12c5",
+          "instruction_bytes": 155111,
+          "headers_sha256": "5421e32fcfd9a7a7a2e24d3c183692708b06aec859da4c6e0d571e35eb9f1c64",
+          "disassembly_sha256": "a14eafba083c336d8ed942b54bffc2198f348880e5c04daa1bac4f1dc8fa449a",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-released-O0.exe": {
+          "machine": 16777223,
+          "bytes": 103208,
+          "sha256": "a31549546eb186b84d0dd7fc7002f8a0e72b28b53c70ae32fe9342f3c545b560",
+          "c_sha256": "cc429dec83c046e0153d17c55277fec2abc6a24114aff068db40ee9e20a391aa",
+          "instruction_bytes": 62848,
+          "headers_sha256": "6674dedc94ca059afc46cb87a53097734a944272e0c28d529b2bb9d63b848d03",
+          "disassembly_sha256": "6f604eab723ab1bbbb1b22141c1617d7909f5cdf5ce1de0333a87538cc10c48a",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-missing-free-O0.exe": {
+          "machine": 16777223,
+          "bytes": 103176,
+          "sha256": "8542f15a40f558a8a68f8a4446f1768a644bfb07657b9f7825085dd9bb35c166",
+          "c_sha256": "f047703119135ef055d336d98b146bb3ed2211a419142225eb0eb096e35dad57",
+          "instruction_bytes": 62688,
+          "headers_sha256": "f2eb5746fe0decdce5e191c7732f4870dd714bdadf70d89fe6b5db5aa515e2b9",
+          "disassembly_sha256": "cd7bfddddf1e9b49425f69adf5bd1f141a96d6ebd4c2885969837b77ce7b5794",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-released-O2.exe": {
+          "machine": 16777223,
+          "bytes": 105432,
+          "sha256": "c9b562c4211b54fc312cd2f9794cc10ef42bebce0169bae140053cc33f4b0173",
+          "c_sha256": "cc429dec83c046e0153d17c55277fec2abc6a24114aff068db40ee9e20a391aa",
+          "instruction_bytes": 72080,
+          "headers_sha256": "1722f6a036ef375774c5e454e725da38e63b7be7ba00e8f739acf4ded32fb140",
+          "disassembly_sha256": "bd7158b555cbcf902341d9acbd7ccc0ca983b9d4c2bc1f05dfc20ff6431308ae",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-missing-free-O2.exe": {
+          "machine": 16777223,
+          "bytes": 105240,
+          "sha256": "f9f2726c5dbfbcd38af4179910d9bcf79fd0b9222a350ed7ab54432257180037",
+          "c_sha256": "f047703119135ef055d336d98b146bb3ed2211a419142225eb0eb096e35dad57",
+          "instruction_bytes": 69936,
+          "headers_sha256": "df68b79268ab2d99d5286d35690fae0adedd776dc30c6848ccbdbf75d7536b10",
+          "disassembly_sha256": "2afa99f49119d7ce566e045a7fe4b094c242e5aad3a757eecfba699f902a523b",
+          "arc": true
+        },
+        "raw/wide-integers/tracing-O0.exe": {
+          "machine": 16777223,
+          "bytes": 63280,
+          "sha256": "fd763ff3cf8386a18499b59f5ff0a12b759af5be3e37f6772aa41387920d73dd",
+          "c_sha256": "a1175f2b590a9a71844ce840d87c994ba50fce1e2e6375e00850e91e21d1ef08",
+          "instruction_bytes": 34992,
+          "headers_sha256": "db9062b110a4051112ae17e41bb4f7c2a1a6a1c9bac8c53ac8608614b5866000",
+          "disassembly_sha256": "cf3c18431ead2e78e269a4b227ea3984067ffb4a7bb8588e69f7c7228e1c372b",
+          "arc": false
+        },
+        "raw/wide-integers/tracing-O2.exe": {
+          "machine": 16777223,
+          "bytes": 49920,
+          "sha256": "6e674342b3bd1ec7a82198239fc4afad0b782162a4a2512778f05966b33a5bd0",
+          "c_sha256": "a1175f2b590a9a71844ce840d87c994ba50fce1e2e6375e00850e91e21d1ef08",
+          "instruction_bytes": 27383,
+          "headers_sha256": "ffb9adfc0dc240b6ab0315b761f5642329a007add796f14449ecca252452a7bb",
+          "disassembly_sha256": "67a0c59bd9c89c3403a303324d1ed898e697db75c05bd0a75a0762d61e6c334c",
+          "arc": false
+        },
+        "raw/wide-integers/arc-O0.exe": {
+          "machine": 16777223,
+          "bytes": 54256,
+          "sha256": "2500a7a1e75d0fbc77b79243ac59aaa775ec50b81da03662fe1652237a2c9900",
+          "c_sha256": "c472176da3f6097de526b1df26c99dff922c39c7b69398e11a9e464161a1f80c",
+          "instruction_bytes": 28816,
+          "headers_sha256": "a51de0c1be69605409a525cd0e33648546cf005977044a1971bf2dcca78a51ad",
+          "disassembly_sha256": "d0c5e9acf6b5583d28f8a54b35e37333be9799f61c97e1b2b16c51cb91365f2c",
+          "arc": true
+        },
+        "raw/wide-integers/arc-O2.exe": {
+          "machine": 16777223,
+          "bytes": 45120,
+          "sha256": "84b3ff1d13665384cee9f6238efb04a1f620767f0777c3ac3e7a3bdc22ee235a",
+          "c_sha256": "c472176da3f6097de526b1df26c99dff922c39c7b69398e11a9e464161a1f80c",
+          "instruction_bytes": 22087,
+          "headers_sha256": "376150b68dc5bf0a8f9f32a7f2d3db97822e3d3b525e69a52fb24020a90c8cc1",
+          "disassembly_sha256": "cc49ad95e13bfc001c91663d510b0de82356621e9a5eba4c426f714ef2d3c6fe",
+          "arc": true
+        },
+        "libraries/broken-box.exe": {
+          "machine": 16777223,
+          "bytes": 134312,
+          "sha256": "a94f04a3811b9a821aab925a6db2c22d2a829988f4c9c3b7584d943006b7bccf",
+          "c_sha256": "514f7f9a0eab292c56a836ab108b4314a553b849b474005f3b9234e087f02918",
+          "instruction_bytes": 94071,
+          "headers_sha256": "21739efda277c413631a132845bef0a692549f11bf21556f7fddf374b4c22e4a",
+          "disassembly_sha256": "c571f8005c112f1732cfd9289e0da451e4ac0de001449642a667ea13a03d5852",
+          "arc": true
+        },
+        "libraries/broken-host.exe": {
+          "machine": 16777223,
+          "bytes": 134312,
+          "sha256": "e65801aea2a1e53a6690ebf1e7c871b634c1737588e93e2a8369e8afe3559f24",
+          "c_sha256": "e78da0da8c3a094e9ea26cc17ce16ec7cac860d49432834ae7075af839a49649",
+          "instruction_bytes": 94439,
+          "headers_sha256": "55d06baf6b8c8570384e3733b46700a6ea97aeb812a55b0eaf488fa3c4b50a8a",
+          "disassembly_sha256": "60543eb1e5234428a1629f62b3054bfd9286d5294a565360335175f4f75c49a2",
+          "arc": true
+        },
+        "libraries/broken-extra-box.exe": {
+          "machine": 16777223,
+          "bytes": 134312,
+          "sha256": "65c41dda82b2bff19245fb1dc602ebb14612e0295a3dc0aebe3e00cb2a4fc5d7",
+          "c_sha256": "f723f652ff2ae1399b30961aa45c6c90e34db78cb96e1d2698aca81b89b9c773",
+          "instruction_bytes": 95223,
+          "headers_sha256": "f3bcfcccb0e170c91068b92f63a7f1df8d5ea4a56ff7df62b765936a5e1ae831",
+          "disassembly_sha256": "707234b843f40d51bef8081e09de8b2573aef18471774fffd283131188603942",
+          "arc": true
+        },
+        "libraries/broken-extra-counts.exe": {
+          "machine": 16777223,
+          "bytes": 134312,
+          "sha256": "eec9c8a715970fc75cd3c86e7f1db7d46c6f8c06d5fb3e5f2c373fd794dd5643",
+          "c_sha256": "9080ea3ff78e6143a48e1bf7ba1aac53ff0e3fe96af23e7d583c847b7d482267",
+          "instruction_bytes": 95831,
+          "headers_sha256": "dbdbadae550be4e5d1fda0f957cd423b46f5396141a42a9115a8597351d486a3",
+          "disassembly_sha256": "c339d9ee3270298f32273f2d6c5f8d5be11b85220aecdde2161d3f53b88a9681",
+          "arc": true
+        },
+        "libraries/library--O1-static.a": {
+          "machine": "archive",
+          "bytes": 185184,
+          "sha256": "dddec0afa89ad09aeacf96ce193cae368b2b1629cec614dd21197280fd8aeaf0",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 94762,
+          "headers_sha256": "4430261fcee49973545e901d9ea89eb7bdea21e9547d7c760e698ae07da41986",
+          "disassembly_sha256": "2565d61e1a4359c2c50afc09b54dd823e6910b19f200161f926c2d0b70f200ec",
+          "arc": true
+        },
+        "libraries/library--O1-shared.dylib": {
+          "machine": 16777223,
+          "bytes": 134432,
+          "sha256": "1460440327a165bf7e9467b26ca5bfd257753675d2d61156c926f311c552af77",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 94794,
+          "headers_sha256": "5ca1425e7708df0d80cf0b7e043eb35ca4b08992bbd0665f2f48a1aa2b59e4ae",
+          "disassembly_sha256": "9829cd8cac10fdc065681b6b97c1d58e6669b88bc957f1bcec3e0cd5716ce8b9",
+          "arc": true
+        },
+        "libraries/library--O2-static.a": {
+          "machine": "archive",
+          "bytes": 185592,
+          "sha256": "dcb1a7d510a0385c2904ca4f1d9be08c632bdf2b9cfdc38532b84c03b05bcbf9",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 95319,
+          "headers_sha256": "eee133a6e0f0782d05d836eb2d7b0101e9fb7659f0ddf25f717c378a1b20e211",
+          "disassembly_sha256": "480687512bb0636b90bf01e023c6699c059d6111a47a05b155f50c546de2ed5d",
+          "arc": true
+        },
+        "libraries/library--O2-shared.dylib": {
+          "machine": 16777223,
+          "bytes": 134216,
+          "sha256": "1c532d42b6b3f2248c778a886484e4c547f0fc8176eb54bb4d9e88b6ca4a132c",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 95351,
+          "headers_sha256": "7daac19144bdeb16ec1d4394aa3d155aed0fcc83745068913f568a55db28aa92",
+          "disassembly_sha256": "7e2ba13f291f6af013975278b506ff1d0cab5646f5aeecc69ca2471c718e8fff",
+          "arc": true
+        }
+      },
+      "wide_integer_stdout": "-170141183460469231731687303715884105728\n170141183460469231731687303715884105727\n0\n0\n340282366920938463463374607431768211455\n18446744073709551617\n0\n0\n",
+      "callback_stdout": "2405\n37\nErr \"pointer callback error\"\n37\nNone\n65\n63\n66\nErr \"foreign error\"\n17\n[Some 15, Some 17, Some 19]\nNone\n198\n8.32e3\n",
+      "corpus": {
+        "total": 86,
+        "executed": 82,
+        "intentionalCompileErrors": 3,
+        "invalidDerivativeLifetimeRejected": 1,
+        "nativeBuildErrors": 0
+      }
+    },
+    "windows-2025": {
+      "source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+      "program_source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+      "run": 39721437783,
+      "host": "windows-2025",
+      "artifact": 12401577375,
+      "archive_sha256": "4cc9b0955ccbf81531db20b8e3ad8e025ca6e3078c9662355a82206d51749e2d",
+      "binaries": {
+        "corpus/corpus-ffi.exe": {
+          "machine": 34404,
+          "bytes": 174592,
+          "sha256": "f713dbeb48635d4a31df9cec7f31cdb0badd748dd25d0d25658a2d4e5d56565a",
+          "c_sha256": "54a5867961038f02f132627ca73c331cf6a00b5fe8b21a05269babef1f16c924",
+          "instruction_bytes": 78134,
+          "headers_sha256": "d55904a805c443e4b174a8a7883a3c0fd8ee81ab8e3081f73f9bc467688ae388",
+          "disassembly_sha256": "c2734367698890e36facbdb4e1ef8b56804e2179157430a2f8b0d14593c2cde2",
+          "arc": true
+        },
+        "callbacks/callbacks-tracing-O1.exe": {
+          "machine": 34404,
+          "bytes": 462336,
+          "sha256": "85012e2d06baeee45a5659e5ad0d1f84e5f28688f0434f32a1ac5f227ce99c82",
+          "c_sha256": "1acd19054d5afad617405bbbe0d14268d9cca7d6a1e9b155adfdcf8486ef0558",
+          "instruction_bytes": 196390,
+          "headers_sha256": "e7ee94196d2400a2f04c34f8a3189b8f7526390d31fce03cd25519a352ad1ac4",
+          "disassembly_sha256": "45b5b42a85a19a88d71ad1693600ef49e3efdb2c6bc2718b156a6ec24da28614",
+          "arc": false
+        },
+        "callbacks/callbacks-tracing-O2.exe": {
+          "machine": 34404,
+          "bytes": 466944,
+          "sha256": "adad37c76441951532ac5147671e37576240a094b578da57694a362642da8420",
+          "c_sha256": "1acd19054d5afad617405bbbe0d14268d9cca7d6a1e9b155adfdcf8486ef0558",
+          "instruction_bytes": 201622,
+          "headers_sha256": "c585aaed64a00eb3284249734b313cca98d1dc0671129dfb3cad3256e432ecba",
+          "disassembly_sha256": "62239c2d56d09587b5f12c6b4afa93e87a7fd5d6dc9ccfc3a7da93603347f05d",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-released-O0.exe": {
+          "machine": 34404,
+          "bytes": 191488,
+          "sha256": "ec7dc35801aadfeaa0b9de07af5076a455728b5a542421b633abad7730484305",
+          "c_sha256": "394eddc40fb3999ec8a82cc6503722bf2456fc2bf47ee6404b69068a7c61ee2a",
+          "instruction_bytes": 79334,
+          "headers_sha256": "728aa758b29d75b982cf476168fea08b53b66cbba9aff4d6090193757bf402fe",
+          "disassembly_sha256": "9c5256a9804956a1406f74f97ac084fea996edc7a20edf30755c51faacc82975",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-missing-free-O0.exe": {
+          "machine": 34404,
+          "bytes": 191488,
+          "sha256": "89ed48ef58b556e1ccb41363bbe71815c0908e91319d3314b3b6b01ac76774b5",
+          "c_sha256": "903ce6cf30c7d74bb7dec85b528856f8c9c0f372096bf163b02c3140d376a25c",
+          "instruction_bytes": 79174,
+          "headers_sha256": "ff3cc8cdf0c583a7b3b357b2febb31dd737d0c49ac1066333304d78fe3c25005",
+          "disassembly_sha256": "15fcc616aa251ff91d90f2e5398ea5d669f21d182cd0d194f5b172a0810a0d22",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-released-O2.exe": {
+          "machine": 34404,
+          "bytes": 183296,
+          "sha256": "1a2a49d86b465524c81b87b1c422f6731e1403034bb9b34b41b47d9b2a9be427",
+          "c_sha256": "394eddc40fb3999ec8a82cc6503722bf2456fc2bf47ee6404b69068a7c61ee2a",
+          "instruction_bytes": 86854,
+          "headers_sha256": "b1ce6dce991a6009b6b67f049fcfd3bbb579e8f20a6fbd6f873867854ef0557f",
+          "disassembly_sha256": "2bcd3ab08b7f9eb42fb3711ad61ed1cf348e3563965635241a70e58036f6ac43",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-missing-free-O2.exe": {
+          "machine": 34404,
+          "bytes": 180224,
+          "sha256": "7a0c0a9849ab32110d98492bfde3ae2bb389d75c3201610513153477a26d0fd2",
+          "c_sha256": "903ce6cf30c7d74bb7dec85b528856f8c9c0f372096bf163b02c3140d376a25c",
+          "instruction_bytes": 84054,
+          "headers_sha256": "8a6f7086c5bb08a1130333643ad2f857ab74c73cddd07bde436eb14d121daea3",
+          "disassembly_sha256": "8bf9c1e0e712d145d8c58f47b4c3d4a12a2eccb5bb101d6ab7a335cc2be50e44",
+          "arc": false
+        },
+        "callbacks/callbacks-arc-O1.exe": {
+          "machine": 34404,
+          "bytes": 454656,
+          "sha256": "8876a57390bd6cf7b783080c6453fc06a7186cd3a78b24e67257d29e7545d6be",
+          "c_sha256": "ea51446d387506e4442956672736414f614290eeeb929d369a9847e2746b12c5",
+          "instruction_bytes": 189670,
+          "headers_sha256": "49d3cd55eee73f42d20e1b9f179ab707a6f6566089a4997d1f2ba5c416129dfe",
+          "disassembly_sha256": "47d429dc246e9bebd10a436fc422cec5a55ba3f83143e57363ae1dcb8784bf08",
+          "arc": true
+        },
+        "callbacks/callbacks-arc-O2.exe": {
+          "machine": 34404,
+          "bytes": 458752,
+          "sha256": "eb889e01a91c8349a959c837cd4cd1421cd687a1c76112d2cbbad4b91a868f4d",
+          "c_sha256": "ea51446d387506e4442956672736414f614290eeeb929d369a9847e2746b12c5",
+          "instruction_bytes": 194614,
+          "headers_sha256": "9e516fb9e2a15e43c5279f92e97dff6b03848e5398a3cac89df93d1f35e5f497",
+          "disassembly_sha256": "71649fb374898dac68eeb27610127fa8e89cbf1f206c464cf1186b1c33ba985c",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-released-O0.exe": {
+          "machine": 34404,
+          "bytes": 182272,
+          "sha256": "f6f92a4ea7e20b5a2d9fd792046dd73539b58e8099de5eadb53c6db8b90cfb61",
+          "c_sha256": "cc429dec83c046e0153d17c55277fec2abc6a24114aff068db40ee9e20a391aa",
+          "instruction_bytes": 71606,
+          "headers_sha256": "5121fbadf002acbdb222a9141e8ee1f86cac0b6d42916766106cbb7e17fe23e6",
+          "disassembly_sha256": "301bf5ebc427433d479afd65eb5833ba10edf9105be2e8aaddc36a1d683b1921",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-missing-free-O0.exe": {
+          "machine": 34404,
+          "bytes": 182272,
+          "sha256": "7e32c14ef827055a900739e6f0491994b75d49c0bbb77a72f74ef38a3a57fd70",
+          "c_sha256": "f047703119135ef055d336d98b146bb3ed2211a419142225eb0eb096e35dad57",
+          "instruction_bytes": 71446,
+          "headers_sha256": "94c8232e4092e0ca457e2f13c229b51245c5d832bf9bae89a0327e61d2f191be",
+          "disassembly_sha256": "6b6d5a3f22fd894f6623b8d941841a101aa5a3a2a5df79bb844cd10f8b38e4c2",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-released-O2.exe": {
+          "machine": 34404,
+          "bytes": 175616,
+          "sha256": "bb16b83db7f26bcc7d18eb381a0cb1e6e600679ece2ba9e1390e5c25e6649656",
+          "c_sha256": "cc429dec83c046e0153d17c55277fec2abc6a24114aff068db40ee9e20a391aa",
+          "instruction_bytes": 80342,
+          "headers_sha256": "6a71667d5bd74df3c829b7ef1817cd058bd747c13dccc6931e88d9b3518299ab",
+          "disassembly_sha256": "51a09835f266b6050a5f3e7e85416eb29ab09a37f7986126113f5c46f76799fd",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-missing-free-O2.exe": {
+          "machine": 34404,
+          "bytes": 173056,
+          "sha256": "ad1871920609883b98e58947b7caba717a5c1fdb2367c7d3177ffe2c35472291",
+          "c_sha256": "f047703119135ef055d336d98b146bb3ed2211a419142225eb0eb096e35dad57",
+          "instruction_bytes": 77542,
+          "headers_sha256": "0f3774777d67662440e39cf37bac3cfb801d83c6f188c9a1f3bb8bf26478adce",
+          "disassembly_sha256": "489669be1a005e8cf5e38f1b33934443160190759086e2b8faab657b27f65d95",
+          "arc": true
+        },
+        "raw/wide-integers/tracing-O0.exe": {
+          "machine": 34404,
+          "bytes": 134144,
+          "sha256": "4443d2d65f109e7eae3807237301b0afc75b14f26687cc2d7f5a66718d3f9f55",
+          "c_sha256": "a1175f2b590a9a71844ce840d87c994ba50fce1e2e6375e00850e91e21d1ef08",
+          "instruction_bytes": 42662,
+          "headers_sha256": "a10c044b3a9ae5a1e063886b63cffc583b9f795b3692c000d69d73261a52d178",
+          "disassembly_sha256": "ef3634a5e768d126ecc803dd98ef1b57106b200eecc0cd58b890831dfe0b3458",
+          "arc": false
+        },
+        "raw/wide-integers/tracing-O2.exe": {
+          "machine": 34404,
+          "bytes": 110080,
+          "sha256": "bdb28e78835e0e499d010793472fe0c72088c8731e22a30d62cbd0b490d1d429",
+          "c_sha256": "a1175f2b590a9a71844ce840d87c994ba50fce1e2e6375e00850e91e21d1ef08",
+          "instruction_bytes": 32598,
+          "headers_sha256": "9553c5473ee695b1ad85cdedf9467aee51273a642d55b63b6431729e41eae669",
+          "disassembly_sha256": "9118a35a4ef558b5b4e48f3e10c2369b6656ae0439d537fcf66fa862a8bb2156",
+          "arc": false
+        },
+        "raw/wide-integers/arc-O0.exe": {
+          "machine": 34404,
+          "bytes": 125440,
+          "sha256": "dfe6fc5f2004551ae7037a473633a805f9828a42a024a73bc0a196ff7c828de7",
+          "c_sha256": "c472176da3f6097de526b1df26c99dff922c39c7b69398e11a9e464161a1f80c",
+          "instruction_bytes": 35334,
+          "headers_sha256": "c09f7a6f78e6aaf8b19ea201f61131235337f2640acc040265e79bb748fdf402",
+          "disassembly_sha256": "85513f858f823e080f259f8a762e408570ade69121af456c424641a37c029881",
+          "arc": true
+        },
+        "raw/wide-integers/arc-O2.exe": {
+          "machine": 34404,
+          "bytes": 103424,
+          "sha256": "a2e9a4df5eb35666d4070762582a1f7197849719d53df2cffdd10d54c658b1f4",
+          "c_sha256": "c472176da3f6097de526b1df26c99dff922c39c7b69398e11a9e464161a1f80c",
+          "instruction_bytes": 26950,
+          "headers_sha256": "fd205fa7d1edd937ca696f649aa4d49c5eb6bce5747217445bd8888d60f8c516",
+          "disassembly_sha256": "f708ad0aa1048e56ee36ca3f3f3375abaedfcb17e4d97f02fdbe730e3b6cc366",
+          "arc": true
+        },
+        "libraries/broken-box.exe": {
+          "machine": 34404,
+          "bytes": 201216,
+          "sha256": "f990bcf62a2766c53abbbf4b2a95ba3dd8339b14e13d0f4fb859e5bf458a6380",
+          "c_sha256": "514f7f9a0eab292c56a836ab108b4314a553b849b474005f3b9234e087f02918",
+          "instruction_bytes": 99494,
+          "headers_sha256": "a6d409c4ebd40c2482409649e8b8a9e341b2198dbf8bd73c55d4c4f1e9988575",
+          "disassembly_sha256": "b8c51413afbb71537638294d0028b6cfd3f7116f3968d7b40289f7f57bf410d4",
+          "arc": true
+        },
+        "libraries/broken-host.exe": {
+          "machine": 34404,
+          "bytes": 201216,
+          "sha256": "9d473147091b626f76c790ba1003f951290895b82da5a087a66f20ee4695f112",
+          "c_sha256": "e78da0da8c3a094e9ea26cc17ce16ec7cac860d49432834ae7075af839a49649",
+          "instruction_bytes": 99782,
+          "headers_sha256": "c6999f38eca239ae26a5e8f615429307c58aaa8a0f28729a6faa5f8fff5b2c56",
+          "disassembly_sha256": "f7dbebc1376272f05ebadbef52e937fe61f0c659c3d8de133523a145588b9ca3",
+          "arc": true
+        },
+        "libraries/broken-extra-box.exe": {
+          "machine": 34404,
+          "bytes": 202240,
+          "sha256": "e080134f47b887b3f49e372771949bc122dfadc2d99243c2fa369d11cd9f25a0",
+          "c_sha256": "f723f652ff2ae1399b30961aa45c6c90e34db78cb96e1d2698aca81b89b9c773",
+          "instruction_bytes": 100534,
+          "headers_sha256": "2cd2ef25a7e07d6a57fba0fe48ac55e281c2828ef831955fdcd438d623717147",
+          "disassembly_sha256": "d2bbd80f1bfeb3ed95846de8d30c6a96f2b90d117665d3ebf566807539ee837e",
+          "arc": true
+        },
+        "libraries/broken-extra-counts.exe": {
+          "machine": 34404,
+          "bytes": 202752,
+          "sha256": "82102f150c2deaf82bfb11b1c15f82f1275e226860d9ccc2ae60806c2e189806",
+          "c_sha256": "9080ea3ff78e6143a48e1bf7ba1aac53ff0e3fe96af23e7d583c847b7d482267",
+          "instruction_bytes": 101190,
+          "headers_sha256": "00a736903d847d1219eb01be466e397a2a79f0e7a7141fd10af0dd1427aaf8ab",
+          "disassembly_sha256": "e4094d40d4ed53026b022f739db2188cee9bc8deea432f753f8832221527a5b6",
+          "arc": true
+        },
+        "libraries/library--O1-static.a": {
+          "machine": "archive",
+          "bytes": 180118,
+          "sha256": "de75b7641ea1d2eb86ef4212f47f7f0e14d4e80228faf0b3293ce88c7a642b8b",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 95810,
+          "headers_sha256": "7dfe5653e85017455d958f7adfbd7dbd3dffdb41a0cd746cfc95fc4e0e040141",
+          "disassembly_sha256": "2a222d7b331aaefc5205ac430396882d10d9e27675c196b7de4e079862a1313f",
+          "arc": true
+        },
+        "libraries/library--O1-shared.dll": {
+          "machine": 34404,
+          "bytes": 185856,
+          "sha256": "b41f4485578353275df1572d631c0dde1ba7b24036832b2fa2c89ef0b9bdb69a",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 100486,
+          "headers_sha256": "4ab05450e2ef3522f2cbd172d95b14fc9b7b445ee7f2ec724a2388d12c71c425",
+          "disassembly_sha256": "33738c8da74563347b446d7dd29cc39d246bcb8eb3aa532bfb65426a937b601f",
+          "arc": true
+        },
+        "libraries/library--O2-static.a": {
+          "machine": "archive",
+          "bytes": 178404,
+          "sha256": "f2f502260929c9b8d355bd0a44b105f876f8f3109080f57b025fd48f582914b9",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 94155,
+          "headers_sha256": "33e8115c0383e0dd7f7da888d8a8afb676a6f086a2390e230631321ccd9b7721",
+          "disassembly_sha256": "c4552bd57de37a674500adbe8b0c754e41d88c1da0d9b02710656a17e46e38d1",
+          "arc": true
+        },
+        "libraries/library--O2-shared.dll": {
+          "machine": 34404,
+          "bytes": 183808,
+          "sha256": "e2fe3dfe80a2229153220a873c2db1a09dfe970ea39c6946f833f87e0238a818",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 98822,
+          "headers_sha256": "7c4cd964bfd132851ec1a48a42c1f4a3b939a8aa4f27d03f817ed6edba7ca66e",
+          "disassembly_sha256": "e19bad6b9f630b2cdbf895ac3041d6d4aef242b5171172667eb50f233b345738",
+          "arc": true
+        }
+      },
+      "wide_integer_stdout": "-170141183460469231731687303715884105728\n170141183460469231731687303715884105727\n0\n0\n340282366920938463463374607431768211455\n18446744073709551617\n0\n0\n",
+      "callback_stdout": "2405\n37\nErr \"pointer callback error\"\n37\nNone\n65\n63\n66\nErr \"foreign error\"\n17\n[Some 15, Some 17, Some 19]\nNone\n198\n8.32e3\n",
+      "corpus": {
+        "total": 86,
+        "executed": 82,
+        "intentionalCompileErrors": 3,
+        "invalidDerivativeLifetimeRejected": 1,
+        "nativeBuildErrors": 0
+      }
+    },
+    "windows-11-arm": {
+      "source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+      "program_source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+      "run": 39721437783,
+      "host": "windows-11-arm",
+      "artifact": 12402105615,
+      "archive_sha256": "3091297f251dabb931a44baf06f98a7c90767a24cbb65c17e49eea5984c2334f",
+      "binaries": {
+        "corpus/corpus-ffi.exe": {
+          "machine": 43620,
+          "bytes": 162816,
+          "sha256": "653443e080891d82874d869f6a1bf877f13573b39b4e913da08918f910500a45",
+          "c_sha256": "54a5867961038f02f132627ca73c331cf6a00b5fe8b21a05269babef1f16c924",
+          "instruction_bytes": 69528,
+          "headers_sha256": "56432736eab297216652c82137705272d879b57892cab5b4ebc6cb4f25ecca30",
+          "disassembly_sha256": "235134266cd93a6ae5570645b32cf9135f761590339bc2a466cd5cc1647ba2b6",
+          "arc": true
+        },
+        "callbacks/callbacks-tracing-O1.exe": {
+          "machine": 43620,
+          "bytes": 443392,
+          "sha256": "3f51b5055dd0ae86b7eb12e32195e6d68714c7d2090973303246c50802541e01",
+          "c_sha256": "1acd19054d5afad617405bbbe0d14268d9cca7d6a1e9b155adfdcf8486ef0558",
+          "instruction_bytes": 178580,
+          "headers_sha256": "030645fe7b72d1067860c770ff658a889231777e720215993fc33cc2ffe5ff44",
+          "disassembly_sha256": "34ee6ef35c264da3332f10f3517032a380180773cd787f1d92e9bb0321cd2bb9",
+          "arc": false
+        },
+        "callbacks/callbacks-tracing-O2.exe": {
+          "machine": 43620,
+          "bytes": 446464,
+          "sha256": "a2765cf3d025e8948e9e77ec02d590031bbc323fba203f80c45137ab668dcc18",
+          "c_sha256": "1acd19054d5afad617405bbbe0d14268d9cca7d6a1e9b155adfdcf8486ef0558",
+          "instruction_bytes": 181720,
+          "headers_sha256": "43e54fb0a1ecdeb054fd92c3625d6b74b9433ec3ee52888e5b752a11c49e1aaa",
+          "disassembly_sha256": "8d05f10ea7f74875f7e2c75ab5905a5e412e5c5547a1644aab203a79fe683290",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-released-O0.exe": {
+          "machine": 43620,
+          "bytes": 182784,
+          "sha256": "c6cd1d31a4bd5e92a15815fddba2e1c3f51c356d3c0ee12ce00092b9d4020bc9",
+          "c_sha256": "394eddc40fb3999ec8a82cc6503722bf2456fc2bf47ee6404b69068a7c61ee2a",
+          "instruction_bytes": 73324,
+          "headers_sha256": "baeea509be047d0498e006afb50b3320dfcc558432f4a491da88c8d866a5b063",
+          "disassembly_sha256": "fb6132808e417d6ebe4961009817d4dd5a8c0a152451726f295f88d10a07a9fd",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-missing-free-O0.exe": {
+          "machine": 43620,
+          "bytes": 182272,
+          "sha256": "d1871546ea10df053a1093c4d8931a07c2553961ca0a69fde20836d8b4e63173",
+          "c_sha256": "903ce6cf30c7d74bb7dec85b528856f8c9c0f372096bf163b02c3140d376a25c",
+          "instruction_bytes": 73128,
+          "headers_sha256": "c6d1f8a36fd68b95dcde6f85c5c295415cf62fb99c298acc4ab1ab0b76a50e07",
+          "disassembly_sha256": "2f2c3bdd75a30a6e7ebda4e11c3c3bcbb9b71e65e8a4d488820b8a17231486bd",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-released-O2.exe": {
+          "machine": 43620,
+          "bytes": 166400,
+          "sha256": "3801f34652e522a7e28759b12c9b66094c5a1aeed2d61c8b9a872375f6195a24",
+          "c_sha256": "394eddc40fb3999ec8a82cc6503722bf2456fc2bf47ee6404b69068a7c61ee2a",
+          "instruction_bytes": 73572,
+          "headers_sha256": "8463c1b697a61ae42bfb55d0841ed0559c8d89f30d06db2b3bad32767682eb5b",
+          "disassembly_sha256": "82e20489d5ce41a8ac71286236fcfd26c4482fbd8e7a76db00d227c191d80538",
+          "arc": false
+        },
+        "raw/interop-buffers/tracing-missing-free-O2.exe": {
+          "machine": 43620,
+          "bytes": 164352,
+          "sha256": "892ef3fc66e34404ac078283290076e04bc156d9e04c72c5f37b05aab40d330f",
+          "c_sha256": "903ce6cf30c7d74bb7dec85b528856f8c9c0f372096bf163b02c3140d376a25c",
+          "instruction_bytes": 71584,
+          "headers_sha256": "1cb072611e507b6088646f28eef9a2dbcfdb9036ad144eee006a5ea8673274af",
+          "disassembly_sha256": "ceb684becf63d5b28342eba342e849d92a4375dbfa7175732af1d19559e903f2",
+          "arc": false
+        },
+        "callbacks/callbacks-arc-O1.exe": {
+          "machine": 43620,
+          "bytes": 437248,
+          "sha256": "bfc188c4e0e5a2e5ef5f47553c05609b053cec25ad444947f7f361bdf2fe6150",
+          "c_sha256": "ea51446d387506e4442956672736414f614290eeeb929d369a9847e2746b12c5",
+          "instruction_bytes": 172872,
+          "headers_sha256": "e0b784e4fba80ed6ac4113d20517d697655f10041a6a3ac26eeb7cb0699e5ee7",
+          "disassembly_sha256": "ee868ed70913c807ff205f9b27160a422aa001e0be84eb3ce20e5068f9577475",
+          "arc": true
+        },
+        "callbacks/callbacks-arc-O2.exe": {
+          "machine": 43620,
+          "bytes": 440320,
+          "sha256": "a2c44ef27f6d624b3e9c5b506cd4821728155ad45329dcfd5b17042a2722b852",
+          "c_sha256": "ea51446d387506e4442956672736414f614290eeeb929d369a9847e2746b12c5",
+          "instruction_bytes": 176024,
+          "headers_sha256": "85eca0ec4aec13161fd40757347f4e83e729f6fcf97f71b5d0198cf94fc83fa7",
+          "disassembly_sha256": "c6d16cc97b8e92e3ba8ed05db502ae862608d8508ec46bfa0501286ea5924755",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-released-O0.exe": {
+          "machine": 43620,
+          "bytes": 173568,
+          "sha256": "694798412b8fb772b08465fe7728426f449ba62f1fbf4295aff6070d0e17a263",
+          "c_sha256": "cc429dec83c046e0153d17c55277fec2abc6a24114aff068db40ee9e20a391aa",
+          "instruction_bytes": 65848,
+          "headers_sha256": "063ab6050de0f78d9671a196bd7c6d6869e5c797f42291d42f26242c3aa01e48",
+          "disassembly_sha256": "15e2b7ac98817a029c07d15d2a4d63201b3c97c63c9d3d4fedfc72306b199436",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-missing-free-O0.exe": {
+          "machine": 43620,
+          "bytes": 173568,
+          "sha256": "13d6e0f0178bc50220303412629080ced3f6063726c716c9e7b6a77284529e00",
+          "c_sha256": "f047703119135ef055d336d98b146bb3ed2211a419142225eb0eb096e35dad57",
+          "instruction_bytes": 65652,
+          "headers_sha256": "ec3519691688f8cadb99d8ef4f5378848dbaa60f17f8ad88a7a3c51e6f3c16a2",
+          "disassembly_sha256": "71438057c5351e2267e02f7fdb8dd3420dd0773441f6a5b84d1820dd6b1aeb99",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-released-O2.exe": {
+          "machine": 43620,
+          "bytes": 160768,
+          "sha256": "1feb80c349ce286a4788e012d0794f679691bd6d6c1d1b90856b95e69eb509f4",
+          "c_sha256": "cc429dec83c046e0153d17c55277fec2abc6a24114aff068db40ee9e20a391aa",
+          "instruction_bytes": 68172,
+          "headers_sha256": "59a7bb65430e27a98afb2e852fa2d874d10aee975c2af4e527783972d883a823",
+          "disassembly_sha256": "e6e9f75bde49fbb0f40b445a5a1a7c5af24433866bf38eee57efda161e0833d2",
+          "arc": true
+        },
+        "raw/interop-buffers/arc-missing-free-O2.exe": {
+          "machine": 43620,
+          "bytes": 158208,
+          "sha256": "25055738e0ee834b62136123b1fbaf75d752ca769d945277c6e76db50dadebe2",
+          "c_sha256": "f047703119135ef055d336d98b146bb3ed2211a419142225eb0eb096e35dad57",
+          "instruction_bytes": 66176,
+          "headers_sha256": "d487c6461eddf1e123f498423d0bfaba49ad5df109d963bf5af5be8973e64967",
+          "disassembly_sha256": "20fbfdeda5e0dcc945aaf7187515b7085a903665022875a1e5260ea33fa93a3a",
+          "arc": true
+        },
+        "raw/wide-integers/tracing-O0.exe": {
+          "machine": 43620,
+          "bytes": 132096,
+          "sha256": "86ba516c0d987418a7eb95bc037c68f1f9266c5e72cfdb19f2a56eaa88ac94a9",
+          "c_sha256": "a1175f2b590a9a71844ce840d87c994ba50fce1e2e6375e00850e91e21d1ef08",
+          "instruction_bytes": 42140,
+          "headers_sha256": "86da9990d7c1d5a3e50abbaf241ad9b29bf2bcb8068fc058ec677d51b7a871a1",
+          "disassembly_sha256": "f516f63b15355cc6eb32970b1100d920685d3d6c0f5c2d2d25a6cbe113220ee3",
+          "arc": false
+        },
+        "raw/wide-integers/tracing-O2.exe": {
+          "machine": 43620,
+          "bytes": 102912,
+          "sha256": "b604f949823bce70b75599e3d66e71ec045514feeeeef673ee8446dbeb3bda4d",
+          "c_sha256": "a1175f2b590a9a71844ce840d87c994ba50fce1e2e6375e00850e91e21d1ef08",
+          "instruction_bytes": 29116,
+          "headers_sha256": "42672e3aa8ce97531526b6729b6aa1df3206cffb3f1f04515ad16b970a741523",
+          "disassembly_sha256": "ca21ab14d9354162f83bbce476b4869eed23429d41b1cf4f57f357938ac004ee",
+          "arc": false
+        },
+        "raw/wide-integers/arc-O0.exe": {
+          "machine": 43620,
+          "bytes": 123392,
+          "sha256": "0905e907c2a57d79bb7502179bec75c9dfa78c7bb96ef7d1ead316327af54c1b",
+          "c_sha256": "c472176da3f6097de526b1df26c99dff922c39c7b69398e11a9e464161a1f80c",
+          "instruction_bytes": 34860,
+          "headers_sha256": "44404ab22f92fbe3240e60a64f2f2b0f04ba83e23d4420c4afbdad96be22b9b3",
+          "disassembly_sha256": "21df5f72055088806c5b113d1b060965d398a8364888b74d04bf4b7bd73b0169",
+          "arc": true
+        },
+        "raw/wide-integers/arc-O2.exe": {
+          "machine": 43620,
+          "bytes": 97280,
+          "sha256": "efc5e94835ce74960abfd7b5deb2a4ec5bc9bdad9ed6700f66c2fe61dc1d60d1",
+          "c_sha256": "c472176da3f6097de526b1df26c99dff922c39c7b69398e11a9e464161a1f80c",
+          "instruction_bytes": 24300,
+          "headers_sha256": "092ecc4cf2cbfa8c47e0be36142083829b3a22d862792daf6531eaee4dee5a7f",
+          "disassembly_sha256": "53f699a765891f0f2c3cabc2052ba16b643ad0030a4f4e06491ad465c007b6a1",
+          "arc": true
+        },
+        "libraries/broken-box.exe": {
+          "machine": 43620,
+          "bytes": 188928,
+          "sha256": "189e8be050a478fe10b6c04c4326db5936f362778b35c3399f0835ccaa72ee47",
+          "c_sha256": "514f7f9a0eab292c56a836ab108b4314a553b849b474005f3b9234e087f02918",
+          "instruction_bytes": 91272,
+          "headers_sha256": "d2a7ed7c3299811c67c1f17e8d4248f1d30926845c3a3ea5facb5ff510e76332",
+          "disassembly_sha256": "7e7980eb2aadde9d52dd117c128abb22da17def2388ddee2565234f30e63551a",
+          "arc": true
+        },
+        "libraries/broken-host.exe": {
+          "machine": 43620,
+          "bytes": 188928,
+          "sha256": "cae2da3c4edde9c5401b82ab66887e0b7788ea0c15fdfa524a39d36b1470d94e",
+          "c_sha256": "e78da0da8c3a094e9ea26cc17ce16ec7cac860d49432834ae7075af839a49649",
+          "instruction_bytes": 91608,
+          "headers_sha256": "c4b4ce04706ee2d7a5d18003eba6dfcde624e2fd1704fb31eeb7f71ad5802a45",
+          "disassembly_sha256": "87eb639e943549a31bc3d0a1f877125f80b358535c39d5751dcbdf460f75c6c2",
+          "arc": true
+        },
+        "libraries/broken-extra-box.exe": {
+          "machine": 43620,
+          "bytes": 189952,
+          "sha256": "ee440f4b773922bd3490827b5fb01c1b7f8fb9f6ae48b9bbb71a5db0dc655ada",
+          "c_sha256": "f723f652ff2ae1399b30961aa45c6c90e34db78cb96e1d2698aca81b89b9c773",
+          "instruction_bytes": 92224,
+          "headers_sha256": "58a87821a9e77b1e482543ba8c6a156ce627cc244266803e9e84407a54698d22",
+          "disassembly_sha256": "26563790322612d1b9e65d086b71e23b38c2390e59986b03132ec2c091d13ea0",
+          "arc": true
+        },
+        "libraries/broken-extra-counts.exe": {
+          "machine": 43620,
+          "bytes": 190464,
+          "sha256": "2b1d2e6a954a8bdb7c8e5628d4fac11effb303703ee3c596c203dc94a8b000ed",
+          "c_sha256": "9080ea3ff78e6143a48e1bf7ba1aac53ff0e3fe96af23e7d583c847b7d482267",
+          "instruction_bytes": 92908,
+          "headers_sha256": "a53bfd769cd24e690c6b6b2736d3958a2e8fc582c19e0a20f0ac997580a7af22",
+          "disassembly_sha256": "a948d719309b16981b014f6d2d05ab779820f7a0946eba16f2bb915b0b892b29",
+          "arc": true
+        },
+        "libraries/library--O1-static.a": {
+          "machine": "archive",
+          "bytes": 173320,
+          "sha256": "612ce97298596e31d370cea59a2ef91294bc898f50c200748734905f18fda615",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 86236,
+          "headers_sha256": "117cb61f16375260dcee6ef23cf71e92699acc4249d89c120285b41eb86b1579",
+          "disassembly_sha256": "0884704cf4517da85a671a9c3a94c0136bca3363e6d46a37eaee6a50b7fd0d8c",
+          "arc": true
+        },
+        "libraries/library--O1-shared.dll": {
+          "machine": 43620,
+          "bytes": 172544,
+          "sha256": "e1d3014d49e4ff24d829b2a1ce409c623317ffaaab4d70f5e81e29de9a9998d8",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 90552,
+          "headers_sha256": "f572dc0d9f1eeb286137c00603b0ee1d79199c70020f7e4254f90428aae342c8",
+          "disassembly_sha256": "a51461c2c74e87ae43068c6e61c427ffe0eaebca27819e3e095f710ba4619f60",
+          "arc": true
+        },
+        "libraries/library--O2-static.a": {
+          "machine": "archive",
+          "bytes": 172442,
+          "sha256": "3d270dcd6e894a7d3eb2f8ed61f2ae59be2427e7f73ef7ab98bee2db03e38a6a",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 86636,
+          "headers_sha256": "0bbbcea7d69f5231f9b2dc6585833632dc972da9a785ef6c199355bb766ca038",
+          "disassembly_sha256": "13dd561bd2502a21f6381790936e1d3b1af3cea896615652aa373aec13d565ef",
+          "arc": true
+        },
+        "libraries/library--O2-shared.dll": {
+          "machine": 43620,
+          "bytes": 173568,
+          "sha256": "4575ad2f5ead4a5aa8c152dbfb168cc268055ea1297959638a3a71a820d59b71",
+          "c_sha256": "f1e39fd9cdc90097bd3f90c578a1ad880c5823e435e3cecbd25733b78c753ad7",
+          "instruction_bytes": 90952,
+          "headers_sha256": "fe6073966113d76cde8e73ac190ffe64a3b727adf2ce6008b3eead49db170555",
+          "disassembly_sha256": "ebb4e1cc20610a4043af4cf68ad6d72eb2f6b497ad713a8a900104fe681c0708",
+          "arc": true
+        }
+      },
+      "wide_integer_stdout": "-170141183460469231731687303715884105728\n170141183460469231731687303715884105727\n0\n0\n340282366920938463463374607431768211455\n18446744073709551617\n0\n0\n",
+      "callback_stdout": "2405\n37\nErr \"pointer callback error\"\n37\nNone\n65\n63\n66\nErr \"foreign error\"\n17\n[Some 15, Some 17, Some 19]\nNone\n198\n8.32e3\n",
+      "corpus": {
+        "total": 86,
+        "executed": 82,
+        "intentionalCompileErrors": 3,
+        "invalidDerivativeLifetimeRejected": 1,
+        "nativeBuildErrors": 0
+      }
+    }
+  },
+  "wasm": {
+    "source": "7173927b7bc899f8c43b17e909656d9550bb2bbe",
+    "run": 39721437783,
+    "artifact": 12401511150,
+    "archive_sha256": "f3f771b2cf19ac1b26682d5d5ad60e628d43d5ce7ce6d381b2372273795d344a",
+    "modules": {
+      "raw-missing-bound-O0.wasm": {
+        "format": "WebAssembly 1, 32-bit memory",
+        "bytes": 203757,
+        "sha256": "3ad1d3ed864b121e95d8dcafa9798dfeb20f677001e6b29ece60a24792ae9dec",
+        "sections": [
+          {
+            "id": 1,
+            "payload_bytes": 172,
+            "offset": 8
+          },
+          {
+            "id": 2,
+            "payload_bytes": 407,
+            "offset": 183
+          },
+          {
+            "id": 3,
+            "payload_bytes": 148,
+            "offset": 593
+          },
+          {
+            "id": 4,
+            "payload_bytes": 5,
+            "offset": 744
+          },
+          {
+            "id": 5,
+            "payload_bytes": 4,
+            "offset": 751
+          },
+          {
+            "id": 13,
+            "payload_bytes": 3,
+            "offset": 757
+          },
+          {
+            "id": 6,
+            "payload_bytes": 9,
+            "offset": 762
+          },
+          {
+            "id": 7,
+            "payload_bytes": 19,
+            "offset": 773
+          },
+          {
+            "id": 9,
+            "payload_bytes": 16,
+            "offset": 794
+          },
+          {
+            "id": 10,
+            "payload_bytes": 48303,
+            "offset": 812
+          },
+          {
+            "id": 11,
+            "payload_bytes": 3573,
+            "offset": 49119
+          },
+          {
+            "id": 0,
+            "payload_bytes": 32064,
+            "offset": 52695,
+            "name": ".debug_loc"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 13192,
+            "offset": 84763,
+            "name": ".debug_abbrev"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 51129,
+            "offset": 97958,
+            "name": ".debug_info"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 11942,
+            "offset": 149091,
+            "name": ".debug_str"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 37075,
+            "offset": 161036,
+            "name": ".debug_line"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2942,
+            "offset": 198115,
+            "name": ".debug_ranges"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2542,
+            "offset": 201060,
+            "name": "name"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 71,
+            "offset": 203605,
+            "name": "producers"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 77,
+            "offset": 203678,
+            "name": "target_features"
+          }
+        ],
+        "code_bytes": 48303,
+        "memories": [
+          {
+            "minimum_pages": 517,
+            "maximum_pages": null,
+            "minimum_bytes": 33882112,
+            "shared": false
+          }
+        ],
+        "exports": [
+          {
+            "name": "memory",
+            "kind": 2,
+            "index": 0
+          },
+          {
+            "name": "_start",
+            "kind": 0,
+            "index": 12
+          }
+        ],
+        "producers": {
+          "language": {
+            "C11": ""
+          },
+          "processed-by": {
+            "Ubuntu clang": "16.0.6 (19build1)"
+          }
+        },
+        "named_functions": 157,
+        "named_tracing_functions": [],
+        "c_sha256": "60378eb6e4b9bd86a8db39345670c416271a316e7bc592542d81c747fe760207",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "raw-missing-bound-O2.wasm": {
+        "format": "WebAssembly 1, 32-bit memory",
+        "bytes": 190329,
+        "sha256": "b76fdd08c94ccba9cc0c39251e06deab18d03342e0e5a7ddb1ebbd89c8f95e6a",
+        "sections": [
+          {
+            "id": 1,
+            "payload_bytes": 156,
+            "offset": 8
+          },
+          {
+            "id": 2,
+            "payload_bytes": 407,
+            "offset": 167
+          },
+          {
+            "id": 3,
+            "payload_bytes": 97,
+            "offset": 577
+          },
+          {
+            "id": 4,
+            "payload_bytes": 5,
+            "offset": 676
+          },
+          {
+            "id": 5,
+            "payload_bytes": 4,
+            "offset": 683
+          },
+          {
+            "id": 6,
+            "payload_bytes": 9,
+            "offset": 689
+          },
+          {
+            "id": 7,
+            "payload_bytes": 19,
+            "offset": 700
+          },
+          {
+            "id": 9,
+            "payload_bytes": 14,
+            "offset": 721
+          },
+          {
+            "id": 10,
+            "payload_bytes": 38639,
+            "offset": 737
+          },
+          {
+            "id": 11,
+            "payload_bytes": 3565,
+            "offset": 39380
+          },
+          {
+            "id": 0,
+            "payload_bytes": 31718,
+            "offset": 42948,
+            "name": ".debug_loc"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 12690,
+            "offset": 74670,
+            "name": ".debug_abbrev"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 49902,
+            "offset": 87363,
+            "name": ".debug_info"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 11838,
+            "offset": 137269,
+            "name": ".debug_str"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 36382,
+            "offset": 149110,
+            "name": ".debug_line"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2918,
+            "offset": 185496,
+            "name": ".debug_ranges"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 1757,
+            "offset": 188417,
+            "name": "name"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 71,
+            "offset": 190177,
+            "name": "producers"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 77,
+            "offset": 190250,
+            "name": "target_features"
+          }
+        ],
+        "code_bytes": 38639,
+        "memories": [
+          {
+            "minimum_pages": 517,
+            "maximum_pages": null,
+            "minimum_bytes": 33882112,
+            "shared": false
+          }
+        ],
+        "exports": [
+          {
+            "name": "memory",
+            "kind": 2,
+            "index": 0
+          },
+          {
+            "name": "_start",
+            "kind": 0,
+            "index": 12
+          }
+        ],
+        "producers": {
+          "language": {
+            "C11": ""
+          },
+          "processed-by": {
+            "Ubuntu clang": "16.0.6 (19build1)"
+          }
+        },
+        "named_functions": 107,
+        "named_tracing_functions": [],
+        "c_sha256": "60378eb6e4b9bd86a8db39345670c416271a316e7bc592542d81c747fe760207",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "raw-overflow-max-O0.wasm": {
+        "format": "WebAssembly 1, 32-bit memory",
+        "bytes": 203863,
+        "sha256": "141a6269ead5a6ee7f80bff9041a629a4aed017ae4e841356372d17550fa47a4",
+        "sections": [
+          {
+            "id": 1,
+            "payload_bytes": 172,
+            "offset": 8
+          },
+          {
+            "id": 2,
+            "payload_bytes": 407,
+            "offset": 183
+          },
+          {
+            "id": 3,
+            "payload_bytes": 148,
+            "offset": 593
+          },
+          {
+            "id": 4,
+            "payload_bytes": 5,
+            "offset": 744
+          },
+          {
+            "id": 5,
+            "payload_bytes": 4,
+            "offset": 751
+          },
+          {
+            "id": 13,
+            "payload_bytes": 3,
+            "offset": 757
+          },
+          {
+            "id": 6,
+            "payload_bytes": 9,
+            "offset": 762
+          },
+          {
+            "id": 7,
+            "payload_bytes": 19,
+            "offset": 773
+          },
+          {
+            "id": 9,
+            "payload_bytes": 16,
+            "offset": 794
+          },
+          {
+            "id": 10,
+            "payload_bytes": 48377,
+            "offset": 812
+          },
+          {
+            "id": 11,
+            "payload_bytes": 3605,
+            "offset": 49193
+          },
+          {
+            "id": 0,
+            "payload_bytes": 32064,
+            "offset": 52801,
+            "name": ".debug_loc"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 13192,
+            "offset": 84869,
+            "name": ".debug_abbrev"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 51129,
+            "offset": 98064,
+            "name": ".debug_info"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 11942,
+            "offset": 149197,
+            "name": ".debug_str"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 37075,
+            "offset": 161142,
+            "name": ".debug_line"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2942,
+            "offset": 198221,
+            "name": ".debug_ranges"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2542,
+            "offset": 201166,
+            "name": "name"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 71,
+            "offset": 203711,
+            "name": "producers"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 77,
+            "offset": 203784,
+            "name": "target_features"
+          }
+        ],
+        "code_bytes": 48377,
+        "memories": [
+          {
+            "minimum_pages": 517,
+            "maximum_pages": null,
+            "minimum_bytes": 33882112,
+            "shared": false
+          }
+        ],
+        "exports": [
+          {
+            "name": "memory",
+            "kind": 2,
+            "index": 0
+          },
+          {
+            "name": "_start",
+            "kind": 0,
+            "index": 12
+          }
+        ],
+        "producers": {
+          "language": {
+            "C11": ""
+          },
+          "processed-by": {
+            "Ubuntu clang": "16.0.6 (19build1)"
+          }
+        },
+        "named_functions": 157,
+        "named_tracing_functions": [],
+        "c_sha256": "18a5e42ea7a939905061a9f3acfe34c6ad215a7ac1a4547d49cee08fac973c78",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "06baa9a0df2324d50671761ee762f9881dd87dcf3287b0b2b2d99229b1f46291"
+      },
+      "raw-overflow-max-O2.wasm": {
+        "format": "WebAssembly 1, 32-bit memory",
+        "bytes": 183583,
+        "sha256": "67be6a92592506b2bba72845f59751a4eaac089e5089f3082bf447f6aa2f0534",
+        "sections": [
+          {
+            "id": 1,
+            "payload_bytes": 130,
+            "offset": 8
+          },
+          {
+            "id": 2,
+            "payload_bytes": 370,
+            "offset": 141
+          },
+          {
+            "id": 3,
+            "payload_bytes": 83,
+            "offset": 514
+          },
+          {
+            "id": 4,
+            "payload_bytes": 5,
+            "offset": 599
+          },
+          {
+            "id": 5,
+            "payload_bytes": 4,
+            "offset": 606
+          },
+          {
+            "id": 6,
+            "payload_bytes": 9,
+            "offset": 612
+          },
+          {
+            "id": 7,
+            "payload_bytes": 19,
+            "offset": 623
+          },
+          {
+            "id": 9,
+            "payload_bytes": 14,
+            "offset": 644
+          },
+          {
+            "id": 10,
+            "payload_bytes": 32245,
+            "offset": 660
+          },
+          {
+            "id": 11,
+            "payload_bytes": 3533,
+            "offset": 32909
+          },
+          {
+            "id": 0,
+            "payload_bytes": 31718,
+            "offset": 36445,
+            "name": ".debug_loc"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 12690,
+            "offset": 68167,
+            "name": ".debug_abbrev"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 49902,
+            "offset": 80860,
+            "name": ".debug_info"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 11838,
+            "offset": 130766,
+            "name": ".debug_str"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 36382,
+            "offset": 142607,
+            "name": ".debug_line"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2918,
+            "offset": 178993,
+            "name": ".debug_ranges"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 1514,
+            "offset": 181914,
+            "name": "name"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 71,
+            "offset": 183431,
+            "name": "producers"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 77,
+            "offset": 183504,
+            "name": "target_features"
+          }
+        ],
+        "code_bytes": 32245,
+        "memories": [
+          {
+            "minimum_pages": 517,
+            "maximum_pages": null,
+            "minimum_bytes": 33882112,
+            "shared": false
+          }
+        ],
+        "exports": [
+          {
+            "name": "memory",
+            "kind": 2,
+            "index": 0
+          },
+          {
+            "name": "_start",
+            "kind": 0,
+            "index": 11
+          }
+        ],
+        "producers": {
+          "language": {
+            "C11": ""
+          },
+          "processed-by": {
+            "Ubuntu clang": "16.0.6 (19build1)"
+          }
+        },
+        "named_functions": 92,
+        "named_tracing_functions": [],
+        "c_sha256": "18a5e42ea7a939905061a9f3acfe34c6ad215a7ac1a4547d49cee08fac973c78",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "06baa9a0df2324d50671761ee762f9881dd87dcf3287b0b2b2d99229b1f46291"
+      },
+      "raw-overflow-one-O0.wasm": {
+        "format": "WebAssembly 1, 32-bit memory",
+        "bytes": 203858,
+        "sha256": "f6ae58643d0efab85739b01ef034c3dd2fc491678f76ed486ca120f5d31473ae",
+        "sections": [
+          {
+            "id": 1,
+            "payload_bytes": 172,
+            "offset": 8
+          },
+          {
+            "id": 2,
+            "payload_bytes": 407,
+            "offset": 183
+          },
+          {
+            "id": 3,
+            "payload_bytes": 148,
+            "offset": 593
+          },
+          {
+            "id": 4,
+            "payload_bytes": 5,
+            "offset": 744
+          },
+          {
+            "id": 5,
+            "payload_bytes": 4,
+            "offset": 751
+          },
+          {
+            "id": 13,
+            "payload_bytes": 3,
+            "offset": 757
+          },
+          {
+            "id": 6,
+            "payload_bytes": 9,
+            "offset": 762
+          },
+          {
+            "id": 7,
+            "payload_bytes": 19,
+            "offset": 773
+          },
+          {
+            "id": 9,
+            "payload_bytes": 16,
+            "offset": 794
+          },
+          {
+            "id": 10,
+            "payload_bytes": 48372,
+            "offset": 812
+          },
+          {
+            "id": 11,
+            "payload_bytes": 3605,
+            "offset": 49188
+          },
+          {
+            "id": 0,
+            "payload_bytes": 32064,
+            "offset": 52796,
+            "name": ".debug_loc"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 13192,
+            "offset": 84864,
+            "name": ".debug_abbrev"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 51129,
+            "offset": 98059,
+            "name": ".debug_info"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 11942,
+            "offset": 149192,
+            "name": ".debug_str"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 37075,
+            "offset": 161137,
+            "name": ".debug_line"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2942,
+            "offset": 198216,
+            "name": ".debug_ranges"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2542,
+            "offset": 201161,
+            "name": "name"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 71,
+            "offset": 203706,
+            "name": "producers"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 77,
+            "offset": 203779,
+            "name": "target_features"
+          }
+        ],
+        "code_bytes": 48372,
+        "memories": [
+          {
+            "minimum_pages": 517,
+            "maximum_pages": null,
+            "minimum_bytes": 33882112,
+            "shared": false
+          }
+        ],
+        "exports": [
+          {
+            "name": "memory",
+            "kind": 2,
+            "index": 0
+          },
+          {
+            "name": "_start",
+            "kind": 0,
+            "index": 12
+          }
+        ],
+        "producers": {
+          "language": {
+            "C11": ""
+          },
+          "processed-by": {
+            "Ubuntu clang": "16.0.6 (19build1)"
+          }
+        },
+        "named_functions": 157,
+        "named_tracing_functions": [],
+        "c_sha256": "9f4f7b5cda960e5c1e755fdb31536184db70c3a642a03be6a8c86f0e451c044e",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "06baa9a0df2324d50671761ee762f9881dd87dcf3287b0b2b2d99229b1f46291"
+      },
+      "raw-overflow-one-O2.wasm": {
+        "format": "WebAssembly 1, 32-bit memory",
+        "bytes": 183583,
+        "sha256": "67be6a92592506b2bba72845f59751a4eaac089e5089f3082bf447f6aa2f0534",
+        "sections": [
+          {
+            "id": 1,
+            "payload_bytes": 130,
+            "offset": 8
+          },
+          {
+            "id": 2,
+            "payload_bytes": 370,
+            "offset": 141
+          },
+          {
+            "id": 3,
+            "payload_bytes": 83,
+            "offset": 514
+          },
+          {
+            "id": 4,
+            "payload_bytes": 5,
+            "offset": 599
+          },
+          {
+            "id": 5,
+            "payload_bytes": 4,
+            "offset": 606
+          },
+          {
+            "id": 6,
+            "payload_bytes": 9,
+            "offset": 612
+          },
+          {
+            "id": 7,
+            "payload_bytes": 19,
+            "offset": 623
+          },
+          {
+            "id": 9,
+            "payload_bytes": 14,
+            "offset": 644
+          },
+          {
+            "id": 10,
+            "payload_bytes": 32245,
+            "offset": 660
+          },
+          {
+            "id": 11,
+            "payload_bytes": 3533,
+            "offset": 32909
+          },
+          {
+            "id": 0,
+            "payload_bytes": 31718,
+            "offset": 36445,
+            "name": ".debug_loc"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 12690,
+            "offset": 68167,
+            "name": ".debug_abbrev"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 49902,
+            "offset": 80860,
+            "name": ".debug_info"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 11838,
+            "offset": 130766,
+            "name": ".debug_str"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 36382,
+            "offset": 142607,
+            "name": ".debug_line"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2918,
+            "offset": 178993,
+            "name": ".debug_ranges"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 1514,
+            "offset": 181914,
+            "name": "name"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 71,
+            "offset": 183431,
+            "name": "producers"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 77,
+            "offset": 183504,
+            "name": "target_features"
+          }
+        ],
+        "code_bytes": 32245,
+        "memories": [
+          {
+            "minimum_pages": 517,
+            "maximum_pages": null,
+            "minimum_bytes": 33882112,
+            "shared": false
+          }
+        ],
+        "exports": [
+          {
+            "name": "memory",
+            "kind": 2,
+            "index": 0
+          },
+          {
+            "name": "_start",
+            "kind": 0,
+            "index": 11
+          }
+        ],
+        "producers": {
+          "language": {
+            "C11": ""
+          },
+          "processed-by": {
+            "Ubuntu clang": "16.0.6 (19build1)"
+          }
+        },
+        "named_functions": 92,
+        "named_tracing_functions": [],
+        "c_sha256": "9f4f7b5cda960e5c1e755fdb31536184db70c3a642a03be6a8c86f0e451c044e",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "06baa9a0df2324d50671761ee762f9881dd87dcf3287b0b2b2d99229b1f46291"
+      },
+      "raw-overflow-zero-O0.wasm": {
+        "format": "WebAssembly 1, 32-bit memory",
+        "bytes": 203858,
+        "sha256": "22521da5a26fccb4caed25e1a1209c315a329c3aae44a9f98d8cd272519056b3",
+        "sections": [
+          {
+            "id": 1,
+            "payload_bytes": 172,
+            "offset": 8
+          },
+          {
+            "id": 2,
+            "payload_bytes": 407,
+            "offset": 183
+          },
+          {
+            "id": 3,
+            "payload_bytes": 148,
+            "offset": 593
+          },
+          {
+            "id": 4,
+            "payload_bytes": 5,
+            "offset": 744
+          },
+          {
+            "id": 5,
+            "payload_bytes": 4,
+            "offset": 751
+          },
+          {
+            "id": 13,
+            "payload_bytes": 3,
+            "offset": 757
+          },
+          {
+            "id": 6,
+            "payload_bytes": 9,
+            "offset": 762
+          },
+          {
+            "id": 7,
+            "payload_bytes": 19,
+            "offset": 773
+          },
+          {
+            "id": 9,
+            "payload_bytes": 16,
+            "offset": 794
+          },
+          {
+            "id": 10,
+            "payload_bytes": 48372,
+            "offset": 812
+          },
+          {
+            "id": 11,
+            "payload_bytes": 3605,
+            "offset": 49188
+          },
+          {
+            "id": 0,
+            "payload_bytes": 32064,
+            "offset": 52796,
+            "name": ".debug_loc"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 13192,
+            "offset": 84864,
+            "name": ".debug_abbrev"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 51129,
+            "offset": 98059,
+            "name": ".debug_info"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 11942,
+            "offset": 149192,
+            "name": ".debug_str"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 37075,
+            "offset": 161137,
+            "name": ".debug_line"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2942,
+            "offset": 198216,
+            "name": ".debug_ranges"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2542,
+            "offset": 201161,
+            "name": "name"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 71,
+            "offset": 203706,
+            "name": "producers"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 77,
+            "offset": 203779,
+            "name": "target_features"
+          }
+        ],
+        "code_bytes": 48372,
+        "memories": [
+          {
+            "minimum_pages": 517,
+            "maximum_pages": null,
+            "minimum_bytes": 33882112,
+            "shared": false
+          }
+        ],
+        "exports": [
+          {
+            "name": "memory",
+            "kind": 2,
+            "index": 0
+          },
+          {
+            "name": "_start",
+            "kind": 0,
+            "index": 12
+          }
+        ],
+        "producers": {
+          "language": {
+            "C11": ""
+          },
+          "processed-by": {
+            "Ubuntu clang": "16.0.6 (19build1)"
+          }
+        },
+        "named_functions": 157,
+        "named_tracing_functions": [],
+        "c_sha256": "84a57f23c1fc8a31c9535ea14014575dcd4e114b39521dbe0b190412a60d46b7",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "06baa9a0df2324d50671761ee762f9881dd87dcf3287b0b2b2d99229b1f46291"
+      },
+      "raw-overflow-zero-O2.wasm": {
+        "format": "WebAssembly 1, 32-bit memory",
+        "bytes": 183583,
+        "sha256": "67be6a92592506b2bba72845f59751a4eaac089e5089f3082bf447f6aa2f0534",
+        "sections": [
+          {
+            "id": 1,
+            "payload_bytes": 130,
+            "offset": 8
+          },
+          {
+            "id": 2,
+            "payload_bytes": 370,
+            "offset": 141
+          },
+          {
+            "id": 3,
+            "payload_bytes": 83,
+            "offset": 514
+          },
+          {
+            "id": 4,
+            "payload_bytes": 5,
+            "offset": 599
+          },
+          {
+            "id": 5,
+            "payload_bytes": 4,
+            "offset": 606
+          },
+          {
+            "id": 6,
+            "payload_bytes": 9,
+            "offset": 612
+          },
+          {
+            "id": 7,
+            "payload_bytes": 19,
+            "offset": 623
+          },
+          {
+            "id": 9,
+            "payload_bytes": 14,
+            "offset": 644
+          },
+          {
+            "id": 10,
+            "payload_bytes": 32245,
+            "offset": 660
+          },
+          {
+            "id": 11,
+            "payload_bytes": 3533,
+            "offset": 32909
+          },
+          {
+            "id": 0,
+            "payload_bytes": 31718,
+            "offset": 36445,
+            "name": ".debug_loc"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 12690,
+            "offset": 68167,
+            "name": ".debug_abbrev"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 49902,
+            "offset": 80860,
+            "name": ".debug_info"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 11838,
+            "offset": 130766,
+            "name": ".debug_str"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 36382,
+            "offset": 142607,
+            "name": ".debug_line"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2918,
+            "offset": 178993,
+            "name": ".debug_ranges"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 1514,
+            "offset": 181914,
+            "name": "name"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 71,
+            "offset": 183431,
+            "name": "producers"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 77,
+            "offset": 183504,
+            "name": "target_features"
+          }
+        ],
+        "code_bytes": 32245,
+        "memories": [
+          {
+            "minimum_pages": 517,
+            "maximum_pages": null,
+            "minimum_bytes": 33882112,
+            "shared": false
+          }
+        ],
+        "exports": [
+          {
+            "name": "memory",
+            "kind": 2,
+            "index": 0
+          },
+          {
+            "name": "_start",
+            "kind": 0,
+            "index": 11
+          }
+        ],
+        "producers": {
+          "language": {
+            "C11": ""
+          },
+          "processed-by": {
+            "Ubuntu clang": "16.0.6 (19build1)"
+          }
+        },
+        "named_functions": 92,
+        "named_tracing_functions": [],
+        "c_sha256": "84a57f23c1fc8a31c9535ea14014575dcd4e114b39521dbe0b190412a60d46b7",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "06baa9a0df2324d50671761ee762f9881dd87dcf3287b0b2b2d99229b1f46291"
+      },
+      "raw-storage-O0.wasm": {
+        "format": "WebAssembly 1, 32-bit memory",
+        "bytes": 292093,
+        "sha256": "abcba53c6eb423d1acecc258f783e3a44b00e09e47c6e5f0370890376e3f649f",
+        "sections": [
+          {
+            "id": 1,
+            "payload_bytes": 312,
+            "offset": 8
+          },
+          {
+            "id": 2,
+            "payload_bytes": 443,
+            "offset": 323
+          },
+          {
+            "id": 3,
+            "payload_bytes": 286,
+            "offset": 769
+          },
+          {
+            "id": 4,
+            "payload_bytes": 5,
+            "offset": 1058
+          },
+          {
+            "id": 5,
+            "payload_bytes": 4,
+            "offset": 1065
+          },
+          {
+            "id": 13,
+            "payload_bytes": 3,
+            "offset": 1071
+          },
+          {
+            "id": 6,
+            "payload_bytes": 16,
+            "offset": 1076
+          },
+          {
+            "id": 7,
+            "payload_bytes": 19,
+            "offset": 1094
+          },
+          {
+            "id": 9,
+            "payload_bytes": 53,
+            "offset": 1115
+          },
+          {
+            "id": 10,
+            "payload_bytes": 101052,
+            "offset": 1170
+          },
+          {
+            "id": 11,
+            "payload_bytes": 5557,
+            "offset": 102226
+          },
+          {
+            "id": 0,
+            "payload_bytes": 38987,
+            "offset": 107786,
+            "name": ".debug_loc"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 16831,
+            "offset": 146777,
+            "name": ".debug_abbrev"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 59630,
+            "offset": 163612,
+            "name": ".debug_info"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 13378,
+            "offset": 223246,
+            "name": ".debug_str"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 47779,
+            "offset": 236627,
+            "name": ".debug_line"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 3278,
+            "offset": 284410,
+            "name": ".debug_ranges"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 4247,
+            "offset": 287691,
+            "name": "name"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 71,
+            "offset": 291941,
+            "name": "producers"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 77,
+            "offset": 292014,
+            "name": "target_features"
+          }
+        ],
+        "code_bytes": 101052,
+        "memories": [
+          {
+            "minimum_pages": 517,
+            "maximum_pages": null,
+            "minimum_bytes": 33882112,
+            "shared": false
+          }
+        ],
+        "exports": [
+          {
+            "name": "memory",
+            "kind": 2,
+            "index": 0
+          },
+          {
+            "name": "_start",
+            "kind": 0,
+            "index": 13
+          }
+        ],
+        "producers": {
+          "language": {
+            "C11": ""
+          },
+          "processed-by": {
+            "Ubuntu clang": "16.0.6 (19build1)"
+          }
+        },
+        "named_functions": 296,
+        "named_tracing_functions": [],
+        "c_sha256": "9e35ffa2dbcd16977ee6b8ec26adce0ea59e20ff18ff988d90b76011745fe5ab",
+        "stdout_sha256": "c579f67078122b8ab39a07d8cbef3caae4ca93571e177a144f85c7aa9b541e30",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "raw-storage-O2.wasm": {
+        "format": "WebAssembly 1, 32-bit memory",
+        "bytes": 273249,
+        "sha256": "28bfa5ded82ce009c20eb0ad45f4006b7f4224710700a603e85559d0beb3b226",
+        "sections": [
+          {
+            "id": 1,
+            "payload_bytes": 232,
+            "offset": 8
+          },
+          {
+            "id": 2,
+            "payload_bytes": 443,
+            "offset": 243
+          },
+          {
+            "id": 3,
+            "payload_bytes": 173,
+            "offset": 689
+          },
+          {
+            "id": 4,
+            "payload_bytes": 5,
+            "offset": 865
+          },
+          {
+            "id": 5,
+            "payload_bytes": 4,
+            "offset": 872
+          },
+          {
+            "id": 6,
+            "payload_bytes": 16,
+            "offset": 878
+          },
+          {
+            "id": 7,
+            "payload_bytes": 19,
+            "offset": 896
+          },
+          {
+            "id": 9,
+            "payload_bytes": 43,
+            "offset": 917
+          },
+          {
+            "id": 10,
+            "payload_bytes": 85004,
+            "offset": 962
+          },
+          {
+            "id": 11,
+            "payload_bytes": 5469,
+            "offset": 85970
+          },
+          {
+            "id": 0,
+            "payload_bytes": 38987,
+            "offset": 91442,
+            "name": ".debug_loc"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 16681,
+            "offset": 130433,
+            "name": ".debug_abbrev"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 59397,
+            "offset": 147118,
+            "name": ".debug_info"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 13242,
+            "offset": 206519,
+            "name": ".debug_str"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 47420,
+            "offset": 219764,
+            "name": ".debug_line"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 3278,
+            "offset": 267188,
+            "name": ".debug_ranges"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2625,
+            "offset": 270469,
+            "name": "name"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 71,
+            "offset": 273097,
+            "name": "producers"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 77,
+            "offset": 273170,
+            "name": "target_features"
+          }
+        ],
+        "code_bytes": 85004,
+        "memories": [
+          {
+            "minimum_pages": 517,
+            "maximum_pages": null,
+            "minimum_bytes": 33882112,
+            "shared": false
+          }
+        ],
+        "exports": [
+          {
+            "name": "memory",
+            "kind": 2,
+            "index": 0
+          },
+          {
+            "name": "_start",
+            "kind": 0,
+            "index": 13
+          }
+        ],
+        "producers": {
+          "language": {
+            "C11": ""
+          },
+          "processed-by": {
+            "Ubuntu clang": "16.0.6 (19build1)"
+          }
+        },
+        "named_functions": 183,
+        "named_tracing_functions": [],
+        "c_sha256": "9e35ffa2dbcd16977ee6b8ec26adce0ea59e20ff18ff988d90b76011745fe5ab",
+        "stdout_sha256": "c579f67078122b8ab39a07d8cbef3caae4ca93571e177a144f85c7aa9b541e30",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "raw-wide-integers-O0.wasm": {
+        "format": "WebAssembly 1, 32-bit memory",
+        "bytes": 281472,
+        "sha256": "898364713363fce7bebae30be705f9576d9ad91e402a99c364a0ee8f52ec6827",
+        "sections": [
+          {
+            "id": 1,
+            "payload_bytes": 283,
+            "offset": 8
+          },
+          {
+            "id": 2,
+            "payload_bytes": 443,
+            "offset": 294
+          },
+          {
+            "id": 3,
+            "payload_bytes": 254,
+            "offset": 740
+          },
+          {
+            "id": 4,
+            "payload_bytes": 5,
+            "offset": 997
+          },
+          {
+            "id": 5,
+            "payload_bytes": 4,
+            "offset": 1004
+          },
+          {
+            "id": 13,
+            "payload_bytes": 3,
+            "offset": 1010
+          },
+          {
+            "id": 6,
+            "payload_bytes": 16,
+            "offset": 1015
+          },
+          {
+            "id": 7,
+            "payload_bytes": 19,
+            "offset": 1033
+          },
+          {
+            "id": 9,
+            "payload_bytes": 41,
+            "offset": 1054
+          },
+          {
+            "id": 10,
+            "payload_bytes": 91430,
+            "offset": 1097
+          },
+          {
+            "id": 11,
+            "payload_bytes": 5037,
+            "offset": 92531
+          },
+          {
+            "id": 0,
+            "payload_bytes": 38987,
+            "offset": 97571,
+            "name": ".debug_loc"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 16831,
+            "offset": 136562,
+            "name": ".debug_abbrev"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 59630,
+            "offset": 153397,
+            "name": ".debug_info"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 13378,
+            "offset": 213031,
+            "name": ".debug_str"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 47779,
+            "offset": 226412,
+            "name": ".debug_line"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 3278,
+            "offset": 274195,
+            "name": ".debug_ranges"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 3841,
+            "offset": 277476,
+            "name": "name"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 71,
+            "offset": 281320,
+            "name": "producers"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 77,
+            "offset": 281393,
+            "name": "target_features"
+          }
+        ],
+        "code_bytes": 91430,
+        "memories": [
+          {
+            "minimum_pages": 517,
+            "maximum_pages": null,
+            "minimum_bytes": 33882112,
+            "shared": false
+          }
+        ],
+        "exports": [
+          {
+            "name": "memory",
+            "kind": 2,
+            "index": 0
+          },
+          {
+            "name": "_start",
+            "kind": 0,
+            "index": 13
+          }
+        ],
+        "producers": {
+          "language": {
+            "C11": ""
+          },
+          "processed-by": {
+            "Ubuntu clang": "16.0.6 (19build1)"
+          }
+        },
+        "named_functions": 264,
+        "named_tracing_functions": [],
+        "c_sha256": "65e2d33980a78497b2a75430f35559ac0bc12e5bec0511fabd166bd639ff9b0b",
+        "stdout_sha256": "d9a787171b2227fb58d03ad1cdce1943826e1907ced178401382919455fe8dd8",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "raw-wide-integers-O2.wasm": {
+        "format": "WebAssembly 1, 32-bit memory",
+        "bytes": 264028,
+        "sha256": "00247d241901e03f180f722ccd0a7c6e7d5b3c51cd101897ad349c839377ac8c",
+        "sections": [
+          {
+            "id": 1,
+            "payload_bytes": 226,
+            "offset": 8
+          },
+          {
+            "id": 2,
+            "payload_bytes": 443,
+            "offset": 237
+          },
+          {
+            "id": 3,
+            "payload_bytes": 157,
+            "offset": 683
+          },
+          {
+            "id": 4,
+            "payload_bytes": 5,
+            "offset": 843
+          },
+          {
+            "id": 5,
+            "payload_bytes": 4,
+            "offset": 850
+          },
+          {
+            "id": 6,
+            "payload_bytes": 16,
+            "offset": 856
+          },
+          {
+            "id": 7,
+            "payload_bytes": 19,
+            "offset": 874
+          },
+          {
+            "id": 9,
+            "payload_bytes": 32,
+            "offset": 895
+          },
+          {
+            "id": 10,
+            "payload_bytes": 76484,
+            "offset": 929
+          },
+          {
+            "id": 11,
+            "payload_bytes": 4989,
+            "offset": 77417
+          },
+          {
+            "id": 0,
+            "payload_bytes": 38987,
+            "offset": 82409,
+            "name": ".debug_loc"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 16681,
+            "offset": 121400,
+            "name": ".debug_abbrev"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 59397,
+            "offset": 138085,
+            "name": ".debug_info"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 13242,
+            "offset": 197486,
+            "name": ".debug_str"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 47420,
+            "offset": 210731,
+            "name": ".debug_line"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 3278,
+            "offset": 258155,
+            "name": ".debug_ranges"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 2437,
+            "offset": 261436,
+            "name": "name"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 71,
+            "offset": 263876,
+            "name": "producers"
+          },
+          {
+            "id": 0,
+            "payload_bytes": 77,
+            "offset": 263949,
+            "name": "target_features"
+          }
+        ],
+        "code_bytes": 76484,
+        "memories": [
+          {
+            "minimum_pages": 517,
+            "maximum_pages": null,
+            "minimum_bytes": 33882112,
+            "shared": false
+          }
+        ],
+        "exports": [
+          {
+            "name": "memory",
+            "kind": 2,
+            "index": 0
+          },
+          {
+            "name": "_start",
+            "kind": 0,
+            "index": 13
+          }
+        ],
+        "producers": {
+          "language": {
+            "C11": ""
+          },
+          "processed-by": {
+            "Ubuntu clang": "16.0.6 (19build1)"
+          }
+        },
+        "named_functions": 167,
+        "named_tracing_functions": [],
+        "c_sha256": "65e2d33980a78497b2a75430f35559ac0bc12e5bec0511fabd166bd639ff9b0b",
+        "stdout_sha256": "d9a787171b2227fb58d03ad1cdce1943826e1907ced178401382919455fe8dd8",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "scope": "Actual 32-bit interpreter and generated WASI semantics/cleanup; not native support or timing evidence."
+  },
+  "logs": {
+    "119635562531": {
+      "name": "pointer_width",
+      "conclusion": "success",
+      "sha256": "4b5ac15d874d388b78898531a728253e0d36ae74a196fb68f5841fdaa1d5a74a",
+      "test_summaries": [
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 169 filtered out; finished in 0.00s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 17 filtered out; finished in 10.05s"
+      ]
+    },
+    "119635562880": {
+      "name": "pointer_ownership (ubuntu-24.04-arm)",
+      "conclusion": "success",
+      "sha256": "7cd8013f4228407ef53e0b6c096a1e898ae74456198bd7a07fa8ef761a4adf48",
+      "test_summaries": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 249.47s",
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 57.37s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.70s",
+        "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 17.60s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.28s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 17.60s",
+        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.28s"
+      ]
+    },
+    "119635562918": {
+      "name": "pointer_ownership (windows-11-arm)",
+      "conclusion": "success",
+      "sha256": "86dc317f4b26a4ad62f1fcf1fbf94d64ea7a6ac44ff24d7a73178d3669aaa966",
+      "test_summaries": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 256.08s",
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 48.72s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.45s",
+        "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.95s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.57s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.74s",
+        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.90s"
+      ]
+    },
+    "119635562952": {
+      "name": "pointer_ownership (ubuntu-latest)",
+      "conclusion": "success",
+      "sha256": "5eb36f77e01ea4dc7132c088a74a0efd17fd27b2d3be48ec999d02402fce549c",
+      "test_summaries": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 232.76s",
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 50.54s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.64s",
+        "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.96s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.05s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.11s",
+        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.25s",
+        "test result: ok. 176 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.41s"
+      ]
+    },
+    "119635563014": {
+      "name": "pointer_ownership (windows-2025)",
+      "conclusion": "success",
+      "sha256": "0af916198bbe93f487613e30629de66b77943ee60dd7fea1fec871f646edbbf7",
+      "test_summaries": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 318.93s",
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 62.47s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.16s",
+        "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.48s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.27s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.98s",
+        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.89s"
+      ]
+    },
+    "119635563076": {
+      "name": "pointer_ownership (macos-15)",
+      "conclusion": "success",
+      "sha256": "1ef3b2f6e663a55ccd1efea4b04aa3f9bb6f08faf84a0288f686e8a167738e17",
+      "test_summaries": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 193.91s",
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 27.55s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.78s",
+        "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.64s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.20s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.07s",
+        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.80s"
+      ]
+    },
+    "119635562818": {
+      "name": "pointer_ownership (macos-15-intel)",
+      "conclusion": "success",
+      "sha256": "e889174b77f6fbd301f00d7d8c16d5d99055b24905519f7c45a7170e06bae481",
+      "test_summaries": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 448.97s",
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 57.51s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.50s",
+        "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.90s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.22s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.37s",
+        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.29s"
+      ]
+    }
+  }
+}
