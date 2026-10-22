@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Measure reverse AD, list/packed explicit derivatives and explicit C/Rust."""
 import argparse
+from collections import Counter
 import hashlib
 import importlib.util
 import json
@@ -8,7 +9,9 @@ import math
 import os
 from pathlib import Path
 import platform
+import random
 import re
+import shutil
 import statistics
 import subprocess
 import time
@@ -36,6 +39,25 @@ main = [{point}] | array.from-list | solve | array.to-list | echo
 """
 
 
+def measurement_orders(labels, samples, seed):
+    """Balance positions and every immediate predecessor within each round."""
+    assert len(labels) == len(set(labels)) == 7 and samples > 0 and samples % 14 == 0
+    base = [0, 1, 6, 2, 5, 3, 4]
+    forward = [[labels[(index + shift) % 7] for index in base] for shift in range(7)]
+    block = forward + [list(reversed(row)) for row in forward]
+    assert all(Counter(row[position] for row in block) == Counter({label: 2 for label in labels})
+               for position in range(7))
+    assert Counter((a, b) for row in block for a, b in zip(row, row[1:])) == Counter(
+        {(a, b): 2 for a in labels for b in labels if a != b})
+    rng = random.Random(seed)
+    orders = []
+    for _ in range(samples // 14):
+        shuffled = list(block)
+        rng.shuffle(shuffled)
+        orders.extend(shuffled)
+    return orders
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
@@ -50,12 +72,13 @@ def main():
     parser.add_argument('--case', required=True, action='append', help='DIMENSIONS:UPDATES')
     parser.add_argument('--samples', required=True, type=int)
     parser.add_argument('--warmups', required=True, type=int)
+    parser.add_argument('--order-seed', required=True, type=int)
     parser.add_argument('--timeout', required=True, type=int)
     parser.add_argument('--host', required=True)
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
-    assert args.samples > 0 and args.samples % 12 == 0 and args.warmups > 0 and args.timeout > 0
+    assert args.samples > 0 and args.samples % 14 == 0 and args.warmups > 0 and args.timeout > 0
     assert args.c_arch == {'x86_64': 'x86-64', 'aarch64': 'armv8-a'}[platform.machine()]
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
@@ -170,6 +193,13 @@ def main():
                'overflow-checks=yes', '-C', 'codegen-units=1', '-C', 'target-cpu=generic', '-C',
                'lto=off', rust_source, '-o', rustbin])
         binaries.update({'c-explicit': cbin, 'rust-explicit': rustbin})
+        # Same bytes under a second name expose timing differences unrelated to code.
+        control = directory / 'fwp-packed-identical'
+        shutil.copyfile(binaries['fwp-packed'], control)
+        control.chmod(binaries['fwp-packed'].stat().st_mode)
+        shutil.copyfile(directory / 'fwp-packed.c', directory / 'fwp-packed-identical.c')
+        assert control.read_bytes() == binaries['fwp-packed'].read_bytes()
+        binaries['fwp-packed-identical'] = control
         for label, binary in binaries.items():
             actual = run([binary], environment)
             verify(actual.stdout, expected)
@@ -192,9 +222,10 @@ def main():
             source_path = binary.with_suffix('.rs' if binary.name == 'rust-explicit' else '.c')
             metadata[binary.name] = dict(bytes=len(raw), sha256=digest(raw), sourceSha256=digest(source_path.read_bytes()),
                                         disassemblySha256=digest(assembly))
-        assert len(metadata) == 10
+        assert len(metadata) == 11
+        assert metadata['fwp-packed-identical']['sha256'] == metadata['fwp-packed']['sha256']
         labels = list(binaries)
-        assert labels == ['fwp-ad', 'fwp-explicit', 'fwp-packed', 'fwp-packed-baseline', 'c-explicit', 'rust-explicit']
+        assert labels == ['fwp-ad', 'fwp-explicit', 'fwp-packed', 'fwp-packed-baseline', 'c-explicit', 'rust-explicit', 'fwp-packed-identical']
         baseline_case = baseline_host['report']['results'][name]
         assert profiles['fwp-packed-baseline'] == baseline_case['fwpProfiles']['fwp-packed']
         for label in ['fwp-ad', 'fwp-explicit', 'fwp-packed']:
@@ -213,12 +244,8 @@ def main():
                 actual = run([binaries[label]], environment)
                 assert actual.stdout == outputs[label] and not actual.stderr
         samples = {label: [] for label in labels}
-        orders = []
-        for round_number in range(args.samples):
-            order = labels[round_number % len(labels):] + labels[:round_number % len(labels)]
-            if round_number % (2 * len(labels)) >= len(labels):
-                order.reverse()
-            orders.append(order)
+        orders = measurement_orders(labels, args.samples, args.order_seed)
+        for order in orders:
             for label in order:
                 start = time.perf_counter_ns()
                 actual = run([binaries[label]], environment)
@@ -246,7 +273,7 @@ def main():
         results[name] = dict(dimensions=points, updates=updates, oracle=expected,
             outputSha256={label: digest(value) for label, value in outputs.items()},
             samplesNs=samples, medianNs=medians, orders=orders,
-            ratios={label: {peer: medians[label] / medians[peer] for peer in ['fwp-explicit', 'fwp-packed-baseline', 'c-explicit', 'rust-explicit']}
+            ratios={label: {peer: medians[label] / medians[peer] for peer in ['fwp-explicit', 'fwp-packed-baseline', 'fwp-packed-identical', 'c-explicit', 'rust-explicit']}
                     for label in ['fwp-ad', 'fwp-explicit', 'fwp-packed']},
             peakProcessRssBytes=resident, fwpProfiles=profiles, binaries=metadata, cCompilerStackUsage=stack)
         (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
@@ -265,7 +292,11 @@ def main():
                                    'baseline_report': str(args.baseline_report), 'baseline_archive': str(args.baseline_archive)},
         baseline=dict(source=baseline['source'], run=baseline['run'], reportSha256=digest(baseline_bytes), archiveSha256=digest(archive_bytes)),
         sourceHashes={name: digest((ROOT / name).read_bytes()) for name in paths}, results=results,
-        scope='Six implementations of the same Rosenbrock descent and complete final vector. '
+        scope='Six program forms compute the same Rosenbrock descent and complete final vector. '
+        'A seventh timing entry is a byte-identical copy of fwp-packed under a different filename. '
+        'Its timing ratio is a control for differences unrelated to executable contents. '
+        'Fourteen-round blocks balance every execution position and ordered adjacent pair within rounds; '
+        'block row order is shuffled with the explicit recorded seed. Cross-round boundaries are not balanced. '
         'fwp-ad records and reverses derivatives; the other five use the explicit derivative. '
         'Comparing fwp-ad to a peer includes general AD work and representation costs, not pure compiler overhead. '
         'fwp-explicit uses immutable lists and intermediate pairs/lists; fwp-packed generates a packed array per update, '
