@@ -96,10 +96,30 @@ all 11 native-runner tests and explicit coverage of all 252 native targets pass
 (`fwp-check-string-map-preparation.py`, 15.37s). Negative timeout/exit cases in
 that runner test are intentional and passed. New `string_map_ownership` tests
 compare interpreter/native output and retain cleanup controls at O0/O2 in both
-memory modes. The six-host `string-map` suite is ready for publication. Next:
-run it, audit every completed job, fix all failures together, inspect binaries,
+memory modes. The six-host `string-map` suite is running at
+`972d0fda9a25722f568c7d1163772ac7716619bd`, run `39726199897`. Publication
+passed in 6.88s. Receipts are `/private/tmp/fwp-string-map-{publication,acceptance}.json`;
+audit with `/private/tmp/fwp-audit-string-map.py`. Next: audit every completed
+job, fix all failures together, inspect binaries,
 then repeat equivalent-work word-frequency C/Rust comparisons before selecting
 budgets or claiming improvement. Keep PR #193's final head stable during CI.
+
+The first focused source fails generated C compilation because its new direct
+helper precedes the `FWP_K` macro definition. All six completed jobs have the same
+cause across every failed target; full logs have been audited. The repair moves
+the helper into the existing direct-callback section. A complete-runtime local
+compilation now passes success, source/result cleanup, shared aliases during
+failure/cancellation and partial output-list cleanup; three broken-owner controls
+each exit 245 (`fwp-check-string-map-runtime-order.py`, 2.84s). The earlier
+saved-C helper diagnostic inserted code later and did not check emitted order.
+
+Local pending changes also add a runtime-selected callback and caught-error
+fixture, physical ARC teardown checks for the actual language program, retained
+language binaries, and an explicit baseline revision for word-frequency runs.
+The final host log is audited; publish the combined repair and rerun all six hosts.
+Use the existing accepted word-frequency source/run as the benchmark baseline,
+with the prospective budgets in the preparation report. No new performance
+result is accepted yet.
 
 The preparation report is `docs/measurements/string-map-ownership.md`. Private
 notes remain `/private/tmp/fwp-map-consumption-design.md`. Do not mutate old

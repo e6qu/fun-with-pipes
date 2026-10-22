@@ -7,6 +7,9 @@ unchanged = id
 choose : I64 -> String -> String
 choose = if (eq 0) (const lower) (const upper)
 
+reject-stop : String -> String ! {Error[String]}
+reject-stop = if (eq "STOP") (const "map stopped" | fail) lower
+
 check : List[String] -> () ! {IO}
 check = make {
     original = id,
@@ -17,7 +20,8 @@ check = make {
     tail-normal = drop 1 | map normalize,
     first = take 1,
     captured = map (concat "!"),
-    dynamic = map (1 | choose),
+    dynamic = fork map (length | choose) id,
+    attempted = attempt (map reject-stop),
 } | echo
 
 main = "FWP_TEXT_INPUT" | env.get | match

@@ -21,7 +21,10 @@ separate lifetime reasoning; this change does not establish it.
 
 ## Evidence so far
 
-The compiler changes are not yet verified on runners. A local check inserts the
+The compiler changes are not yet verified on runners. The first preparation
+put its direct helper before the macro definition it uses, so generated C failed
+to compile. The pending repair restores declaration order and extends local
+checks to compile the complete runtime in that order. A local check inserts the
 new runtime helper into previously generated C for the maintained word-frequency
 program. Apple Clang 17 compiles it at O1 on ARM64 macOS. The input has 64 words
 and eight base words, with varied case and punctuation. Both versions
@@ -36,9 +39,9 @@ must match an independent Python word-count result.
 | Final charged storage / collections | 0 / 0 | 0 / 0 |
 
 Separate checks retain the whole list, its tail or one string and verify that
-those aliases remain unchanged. Failure and cancellation checks release source
-nodes, completed results and scratch storage; deliberately omitting source or
-result cleanup is detected. These small local diagnostics are not native-platform
+those aliases remain unchanged. Failure and cancellation checks preserve shared aliases and release source
+nodes, completed strings, partially built output lists and scratch storage;
+deliberately omitting source, result-string or built-list cleanup is detected. These small local diagnostics are not native-platform
 acceptance, elapsed-time measurements or comparisons against C/Rust performance.
 
 ## Required acceptance
@@ -51,3 +54,15 @@ then repeat the [word-frequency comparison](wordfreq.md) on named Linux ARM64
 and AMD64 hosts with the same C/Rust programs, inputs and timing scope. Keep
 slower results and known differences in work. Final production and documentation
 checks must pass before delivery.
+
+The next comparison uses accepted source `54b01db94079e692cddf8ec3fc56ee064c7bbbf1`
+and run `39699466703` as its explicit baseline. Saved baseline C is recompiled
+alongside the candidate on each runner, with two warmups and 24 balanced-order
+samples. The existing 4,096/64 and 65,536/1,024 word/vocabulary inputs and C/Rust
+peers remain unchanged. For the larger input, the initial count budgets are at
+most 230,000 requests and 80,000 retains, with no managed-peak increase over
+7,794,440 bytes. These are targets to test, not achieved results. The timing
+screen is no more than 5% slower than that runner's recompiled ARC baseline;
+a miss requires diagnosis and repeated sampling, rather than removal of the
+slower result. Whole-process timing includes startup and teardown. It does not
+isolate a per-element compiler cost or establish parity with C/Rust.
