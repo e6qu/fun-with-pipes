@@ -76,9 +76,12 @@ controls. Broader ownership boundaries and all seven roadmap areas remain open.
 Branch `borrow-array-captures`, worktree `/private/tmp/fwp-array-capture-borrows`,
 starts at #196's initial `d98abe29139c` head, before the tutorial repair. Preserve
 that repair when integrating the next preparation onto #196's merged tree.
-Source `90d54aaeeab8d3c6a41b75b21a668ffe5ed1ecc4`
-is published; ownership run `39774612966` and measurement run `39774616765`
-have initial results. Receipt: `/private/tmp/fwp-array-captures-publication.json`.
+The repaired source is `f564d587cfdfd5501e32f9644ce78de457ca9ba2`.
+Ownership run `39778557742` passes all six native hosts and 32-bit/WASI;
+all seven complete logs are audited, including 178 Linux AMD64 compiler tests. Both jobs in measurement run `39778562362`
+failed the zero-retain budget with the same last-read retain. Every completed
+log and both generated-C/profile artifacts have been audited. See the repair below.
+Receipt: `/private/tmp/fwp-array-captures-publication.json`.
 Auditors: `fwp-audit-array-captures.py` and `fwp-audit-capture-descent.py`
 under `/private/tmp/`. Its unverified compiler change gives known numeric
 `array.generate` callbacks direct calls and borrows captures while the caller
@@ -92,7 +95,10 @@ failure after partial output, yields and task cancellation. The saved interprete
 matches both expected outputs (0.38s guarded); this does not verify new C generation.
 Native checks require zero retain traffic for pure coordinate reads, final cleanup
 and failure of deliberately added retain/leaked-owner controls, at O0/O2 with
-stack placement on/off and ARC/tracing stress. All six native hosts and 32-bit/WASI pass; every completed log was audited. Guarded `fwp-ready-array-captures.py` passes
+stack placement on/off and ARC/tracing stress. At initial source `90d54aaeeab8`, all six native hosts and 32-bit/WASI pass;
+every completed log was audited. Repaired source `f564d587cfdf` has passed
+32-bit/WASI and all six native hosts. The two Windows
+archives (186 images) and twelve WASI modules are inspected. The numerical result fails as described below. Guarded `fwp-ready-array-captures.py` passes
 in 10.48s: formatting, workflow, docs and exact accepted baseline reconstruction.
 
 Before measurement, require zero retains in all four repeated packed-descent cases,
@@ -103,7 +109,7 @@ fix all failures together. Keep #196's final CI head unchanged.
 
 Both initial measurements failed the zero-retain requirement: the 3-coordinate,
 199-update case still retained 597 times. Generated C shows a temporary record
-acquiring an owner inside the borrowed callback. The uncommitted repair in
+acquiring an owner inside the borrowed callback. The published repair in
 `src/rc.rs` forwards caller-borrowed record fields only through projections and
 proved borrowed calls; two new unit tests cover repeated borrowing and escaping
 owners. The count requirement stays unchanged. Native cleanup checks now also
@@ -113,8 +119,28 @@ include deliberately omitted cleanup. Guarded
 O0/O2, four repetitions each for correct and broken cleanup. This verifies the
 observer, not the new Rust lowering. The #196 tutorial repair has been copied
 into this preparation. Guarded `fwp-ready-array-captures.py` passes in 7.95s: formatting, workflow,
-docs and exact accepted baseline reconstruction. Next: archive the initial
-results, publish one repaired source and rerun both focused suites.
+docs and exact accepted baseline reconstruction. Initial receipts are preserved with suffix `-90d54aaeeab8.json`; all seven
+initial ownership jobs passed, while both measurements failed as described above.
+The first repair removed the record's initial retain, but generated C shows
+597 retains reintroduced by the last local alias of the borrowed array. The
+uncommitted `src/rc.rs` repair reuses alias forwarding with the caller's whole-call
+lifetime and normalizes aliases exposed by record forwarding. A new compiler test
+covers direct/record-exposed aliases and escaping results. The ownership IR and
+checker conventions remain unchanged. A guarded counterfactual C check
+(`fwp-diagnose-capture-last-read.py`, 1.94s) removes only that retain/release pair:
+O0/O2 both change 597 retains to zero, with identical output, 207 allocation
+requests, 6,617 requested bytes, 176-byte peak and zero final charge. This diagnoses
+the cost; it does not verify the new Rust lowering. Receipt:
+`fwp-capture-last-read-diagnosis.json`.
+
+All initial and repaired-source failures have been audited. Guarded
+`fwp-ready-array-captures.py` passes for the full last-read repair in 8.10s.
+Next: publish the last-read repair with the effect-order test and docs using
+`/private/tmp/fwp-publish-capture-last-read.py`, then validate the new source.
+Keep the zero-retain budget. Inspect all final-source native and numerical
+artifacts after their checks pass. `/private/tmp/fwp-record-capture-ownership.py`
+is a prepared report generator; run only after all seven focused gates and all
+558 native/12 WASI inspections pass for the final preparation source.
 
 ## Resume files
 
@@ -134,7 +160,21 @@ Full builds, full suites and benchmarks stay on GitHub. Preserve 64 GiB free dis
 target data below 2 GiB, sampled workload RSS below 1 GiB and the 180-second limit.
 Do not raise limits. Earlier disk cleanup removed only completed downloaded
 archives, preserving reports and hashes; receipt:
-`fwp-completed-archive-cleanup-20261022.json`.
+`fwp-completed-archive-cleanup-20261022.json`. A later clean-checkout review removed
+six inactive, clean worktrees (394 MiB nominal), preserving their branches and
+all modified worktrees. Free space after cleanup: 65.85 GiB. Receipt:
+`/private/tmp/fwp-clean-worktrees-20261022.json`; the review is
+`fwp-old-worktrees-review.json`. Do not rerun the cleanup helper.
+The next preparation also has an uncommitted documentation update in
+`docs/application-acceptance.md` linking completed derivative/array comparisons
+and stating the remaining timing-control and capture-borrowing work.
+An additional uncommitted regression in `tests/array_element_ownership.rs` and
+`tests/fixtures/array_capture_order.{fwp,out}` checks count preparation before
+capture preparation, ordered callback effects and zero/negative lengths with
+no callbacks. The saved interpreter matches the explicit expected output in
+0.25s (guarded `fwp-check-capture-order.py`); native O0/O2, ARC/tracing and stack
+on/off checks must run in final CI. This addition does not change the compiler
+source currently being measured.
 
 Report validation `fwp-check-array-callback-reports.py` passes in 7.43s, including
 the repaired required roadmap-status table. Recent guarded checks: `fwp-check-balanced-descent.py` passes in 6.28s (order

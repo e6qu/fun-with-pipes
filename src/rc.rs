@@ -777,7 +777,9 @@ impl Pass<'_> {
                                 && !crate::resource::contains_resource(&self.prog.shapes, &self.locals[*l as usize])))
                     {
                         if let Some(forwarded) = self.forward_parameter_record(&body, *local, fields) {
-                            return forwarded;
+                            // Projections can expose fresh aliases of borrowed
+                            // parameters after the body's first normalization.
+                            return self.forward_aliases(&forwarded, after);
                         }
                     }
                 }
@@ -849,8 +851,9 @@ impl Pass<'_> {
     }
 
     /// Replace a temporary alias's borrowed call arguments with the original
-    /// read, only while that same storage is needed after each call. This keeps
-    /// destruction timing and field-sensitive liveness unchanged. Calls, traps
+    /// read while that storage is needed after each call or is a caller-borrowed
+    /// parameter, whose owner lasts for the entire call. This keeps destruction
+    /// timing and field-sensitive liveness unchanged. Calls, traps
     /// and branch decisions stay in order; sequence lowering protects the owner
     /// through argument evaluation and failure. Escapes and resource scopes do
     /// not qualify.
@@ -865,7 +868,10 @@ impl Pass<'_> {
             return Some(body.clone());
         }
         match body {
-            Expr::Call(id, args) if borrows::retained_read(value, after) => {
+            Expr::Call(id, args)
+                if borrows::retained_read(value, after)
+                    || matches!(value, Expr::Local(l) if self.borrowed_parameters.contains(l)) =>
+            {
                 let mut forwarded = Vec::with_capacity(args.len());
                 for (j, arg) in args.iter().enumerate() {
                     if !self.free(arg).contains(&local) {
@@ -1949,6 +1955,49 @@ mod tests {
             body: Body::Expr(Expr::Const(Value::I64(0))),
         });
         p
+    }
+
+    #[test]
+    fn caller_borrowed_aliases_borrow_on_last_read_and_own_escapes() {
+        let mut p = hash_record_program(Expr::Local(0), list());
+        let record = p.funcs[1].locals[0].clone();
+        p.funcs[0].locals.extend([list(), record]);
+        p.funcs[1].locals = vec![list()];
+        p.funcs[1].ty = MT::Fun(Box::new(list()), Box::new(MT::con("std::U64")));
+        for through_record in [false, true] {
+            for escapes in [false, true] {
+                p.funcs[0].ty = MT::Fun(
+                    Box::new(list()),
+                    Box::new(if escapes { list() } else { MT::con("std::U64") }),
+                );
+                let value = if through_record {
+                    Expr::Field(Box::new(Expr::Local(2)), 0)
+                } else {
+                    Expr::Local(0)
+                };
+                let alias = Expr::Let(
+                    1,
+                    Box::new(value),
+                    Box::new(if escapes {
+                        Expr::Local(1)
+                    } else {
+                        Expr::Call(1, vec![Expr::Local(1)])
+                    }),
+                );
+                p.funcs[0].body = Body::Expr(if through_record {
+                    Expr::Let(
+                        2,
+                        Box::new(Expr::Record(vec![Expr::Local(0), Expr::Local(0)])),
+                        Box::new(alias),
+                    )
+                } else {
+                    alias
+                });
+                let (body, locals) = insert_function(&p, &p.funcs[0], &[0]).unwrap();
+                ownership_liveness(&p, &p.funcs[0], &body, &locals, &[0]).unwrap();
+                assert_eq!(format!("{body:?}").contains("Dup("), escapes);
+            }
+        }
     }
 
     #[test]

@@ -1,6 +1,7 @@
 //! Array storage owns typed elements across copies, aliases and callbacks.
+use std::io::Write;
 use std::path::PathBuf;
-use std::process::{Command, Output};
+use std::process::{Command, Output, Stdio};
 
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
@@ -512,6 +513,70 @@ fn generated_numeric_arrays_borrow_captures_and_preserve_effect_cleanup() {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn generated_array_captures_preserve_argument_and_callback_order() {
+    let dir = Scratch::new("capture-order");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let source = root.join("tests/fixtures/array_capture_order.fwp");
+    let expected = std::fs::read(root.join("tests/fixtures/array_capture_order.out")).unwrap();
+    let input = |command: &mut Command| {
+        let mut child = command
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        child.stdin.take().unwrap().write_all(b"seed").unwrap();
+        let result = child.wait_with_output().unwrap();
+        assert!(result.status.success(), "{result:?}");
+        assert_eq!(result.stdout, expected);
+        assert!(result.stderr.is_empty(), "{result:?}");
+    };
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    input(
+        Command::new(compiler)
+            .args(["run", "--interp"])
+            .arg(&source)
+            .env("FWP_NO_OPT", "1"),
+    );
+    for gc in ["arc", "tracing"] {
+        for stack in ["0", "1"] {
+            let cfile = dir.0.join(format!("order-{gc}-{stack}.c"));
+            checked(
+                Command::new(compiler)
+                    .args(["build", "--gc", gc, "--emit-c", "-O2"])
+                    .arg(&source)
+                    .arg("-o")
+                    .arg(&cfile)
+                    .env("FWP_STACK", stack)
+                    .env_remove("FWP_NO_OPT"),
+            );
+            let code = std::fs::read_to_string(&cfile).unwrap();
+            assert!(
+                code.contains("/* borrowed array callback"),
+                "{gc}/{stack}: missing capture borrowing"
+            );
+            for opt in ["-O0", "-O2"] {
+                let binary = dir.0.join(format!("order-{gc}-{stack}{opt}.exe"));
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                for stress in if gc == "tracing" {
+                    &["0", "1"][..]
+                } else {
+                    &["0"][..]
+                } {
+                    input(
+                        Command::new(&binary)
+                            .env_remove("FWP_GC")
+                            .env("FWP_GC_STRESS", stress)
+                            .env("FWP_GC_VERIFY", stress)
+                            .env("FWP_REUSE_VERIFY", stress),
+                    );
                 }
             }
         }
