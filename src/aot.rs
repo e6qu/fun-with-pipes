@@ -2,8 +2,8 @@
 //! `fwp serve`: the program is compiled to a native executable through C,
 //! cached by the hash of everything that decides its contents, and run.
 //! The interpreter stays the reference and runs a program when asked
-//! (`--interp`, `FWP_RUN=interp`), inside WebAssembly, and when no C
-//! compiler is found.
+//! (`--interp`, `FWP_RUN=interp`) and inside WebAssembly. Native execution
+//! reports a missing C compiler instead of changing execution engines.
 
 use std::path::{Path, PathBuf};
 
@@ -57,6 +57,39 @@ pub fn take_opt(args: &mut Vec<String>, default: &str) -> String {
         i += 1;
     }
     default.to_string()
+}
+
+/// Take an explicit native ownership mode before the program file.
+pub fn take_gc(args: &mut Vec<String>) -> Result<Option<bool>, String> {
+    let mut selected = None;
+    let mut i = 0;
+    while i < args.len() {
+        let argument = &args[i];
+        if argument.ends_with(".fwp") || argument == "-" || argument == "--" {
+            break;
+        }
+        if argument == "--gc" || argument.starts_with("--gc=") {
+            if selected.is_some() {
+                return Err("choose --gc once: arc or tracing".into());
+            }
+            let option = args.remove(i);
+            let value = if let Some((_, value)) = option.split_once('=') {
+                value.to_string()
+            } else if i < args.len() {
+                args.remove(i)
+            } else {
+                return Err("--gc requires arc or tracing".into());
+            };
+            selected = Some(match value.as_str() {
+                "arc" => true,
+                "tracing" => false,
+                _ => return Err("--gc requires arc or tracing".into()),
+            });
+        } else {
+            i += 1;
+        }
+    }
+    Ok(selected)
 }
 
 /// The C compiler native programs are built with.
@@ -154,7 +187,7 @@ fn key(c_source: &str, opt: &str) -> Result<String, String> {
 /// Why there is no executable.
 #[derive(Debug)]
 pub enum Error {
-    /// The C compiler cannot be started: the program is interpreted.
+    /// The selected C compiler cannot be started.
     NoCc,
     Failed(String),
 }
@@ -282,44 +315,35 @@ pub fn wants_native(mode: Mode) -> bool {
     mode == Mode::Native && !cfg!(target_family = "wasm")
 }
 
-/// The note printed when a program is interpreted for want of a C
-/// compiler (not when `FWP_RUN` chose the mode).
-pub fn note_no_cc(cmd: &str) {
-    if std::env::var_os("FWP_RUN").is_none() {
-        eprintln!(
-            "fwp {}: no C compiler (`{}`), so the program is interpreted; set CC, or pass --interp",
-            cmd,
-            cc()
-        );
-    }
-}
-
 /// Run a program natively: generate its C, compile it into the cache when
-/// missing, and run it. `None` when there is no C compiler, so the caller
-/// interprets the program instead.
+/// missing, and run it. Compilation failures never select another engine.
 pub fn run_native(
     cmd: &str,
     generated: Result<String, String>,
     opt: &str,
     name: &str,
     args: &[String],
-) -> Option<i32> {
+) -> i32 {
     let csrc = match generated {
         Ok(s) => s,
         Err(e) => {
             eprintln!("fwp {}: {}", cmd, e);
-            return Some(1);
+            return 1;
         }
     };
     match executable(&csrc, opt) {
-        Ok(exe) => Some(run(&exe, name, args)),
+        Ok(exe) => run(&exe, name, args),
         Err(Error::NoCc) => {
-            note_no_cc(cmd);
-            None
+            eprintln!(
+                "fwp {}: no C compiler (`{}`); set CC or explicitly select --interp",
+                cmd,
+                cc()
+            );
+            1
         }
         Err(Error::Failed(e)) => {
             eprintln!("fwp {}: {}", cmd, e);
-            Some(1)
+            1
         }
     }
 }

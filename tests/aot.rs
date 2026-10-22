@@ -1,7 +1,7 @@
 //! `fwp run`, `fwp exec`, `fwp test` and `fwp serve --rest` compile
 //! programs to native executables by default, cached by content; the
-//! interpreter runs them with `--interp` or `FWP_RUN=interp`, and when no C
-//! compiler is found. Both must print the same.
+//! interpreter runs them only when explicitly selected. A missing native
+//! compiler fails before execution. Both engines must print the same.
 
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
@@ -105,9 +105,7 @@ fn start(c: &mut Command) -> (std::process::Child, String) {
 
 #[test]
 fn run_compiles_once_and_matches_the_interpreter() {
-    if !have_cc() {
-        return;
-    }
+    assert!(have_cc(), "native command checks require a C compiler");
     let cache = Cache::new("run");
     let dir = root().join("tests/run");
     for name in ["basics.fwp", "effects.fwp", "cli_parse.fwp"] {
@@ -136,9 +134,7 @@ fn run_compiles_once_and_matches_the_interpreter() {
 
 #[test]
 fn the_mode_comes_from_options_and_fwp_run() {
-    if !have_cc() {
-        return;
-    }
+    assert!(have_cc(), "native command checks require a C compiler");
     let cache = Cache::new("mode");
     let hello = root().join("examples/hello.fwp");
     let hello = hello.to_str().unwrap();
@@ -159,35 +155,41 @@ fn the_mode_comes_from_options_and_fwp_run() {
 }
 
 #[test]
-fn programs_are_interpreted_without_a_c_compiler() {
+fn missing_native_compiler_fails_without_running_the_program() {
     let cache = Cache::new("nocc");
     let dir = root().join("tests/run");
     let want = output(
         cache
             .fwp(&["run", "--interp", "basics.fwp"])
-            .current_dir(&dir),
-        b"",
-    );
-    let got = output(
-        cache
-            .fwp(&["run", "basics.fwp"])
             .current_dir(&dir)
             .env("CC", "/nonexistent/cc"),
         b"",
     );
-    assert_eq!(got.stdout, want.stdout);
-    assert_eq!(got.status.code(), want.status.code());
-    let err = String::from_utf8_lossy(&got.stderr);
-    assert!(err.contains("no C compiler"), "{}", err);
+    assert!(want.status.success() && !want.stdout.is_empty());
+    for mode in [None, Some("native"), Some("interp")] {
+        let mut command = cache.fwp(&["run", "--native", "basics.fwp"]);
+        command.current_dir(&dir).env("CC", "/nonexistent/cc");
+        if let Some(mode) = mode {
+            command.env("FWP_RUN", mode);
+        }
+        let got = output(&mut command, b"");
+        assert_eq!(got.status.code(), Some(1), "{}", render(&got));
+        assert!(
+            got.stdout.is_empty(),
+            "missing compiler executed program effects"
+        );
+        assert!(
+            String::from_utf8_lossy(&got.stderr).contains("no C compiler"),
+            "{}",
+            render(&got)
+        );
+    }
     assert!(cache.entries().is_empty());
 }
 
 #[test]
 fn integer_cache_tracks_header_search_paths() {
-    if !have_cc() {
-        eprintln!("skipping native cache test: C compiler unavailable");
-        return;
-    }
+    assert!(have_cc(), "native cache checks require a C compiler");
     let cache = Cache::new("integer-header-paths");
     let dir = fwp::cgen::TempDir::new("integer-header-paths").unwrap();
     let first = dir.join("first");
@@ -285,9 +287,7 @@ fn integer_cache_tracks_header_search_paths() {
 
 #[test]
 fn exec_runs_exported_functions_natively() {
-    if !have_cc() {
-        return;
-    }
+    assert!(have_cc(), "native command checks require a C compiler");
     let cache = Cache::new("exec");
     let tools = root().join("tests/exec/tools.fwp");
     let tools = tools.to_str().unwrap();
@@ -310,9 +310,7 @@ fn exec_runs_exported_functions_natively() {
 
 #[test]
 fn test_runs_tests_natively() {
-    if !have_cc() {
-        return;
-    }
+    assert!(have_cc(), "native command checks require a C compiler");
     let cache = Cache::new("test");
     let dir = std::env::temp_dir().join(format!("fwp-aot-testfile-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
@@ -334,9 +332,7 @@ fn test_runs_tests_natively() {
 
 #[test]
 fn serve_rest_runs_a_native_server() {
-    if !have_cc() {
-        return;
-    }
+    assert!(have_cc(), "native command checks require a C compiler");
     let cache = Cache::new("rest");
     let dir = std::env::temp_dir().join(format!("fwp-aot-api-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
@@ -371,9 +367,7 @@ fn serve_rest_runs_a_native_server() {
 
 #[test]
 fn the_cache_has_a_directory_a_size_and_can_be_cleaned() {
-    if !have_cc() {
-        return;
-    }
+    assert!(have_cc(), "native command checks require a C compiler");
     let cache = Cache::new("clean");
     let o = cache.fwp(&["cache", "dir"]).output().unwrap();
     assert_eq!(
@@ -400,9 +394,7 @@ fn the_cache_has_a_directory_a_size_and_can_be_cleaned() {
 
 #[test]
 fn serve_runs_a_native_service() {
-    if !have_cc() {
-        return;
-    }
+    assert!(have_cc(), "native command checks require a C compiler");
     let cache = Cache::new("service");
     let dir = root().join("examples/services");
     let want = output(
@@ -433,9 +425,7 @@ fn serve_runs_a_native_service() {
 
 #[test]
 fn pipe_reuses_the_same_native_executable() {
-    if !have_cc() {
-        return;
-    }
+    assert!(have_cc(), "native command checks require a C compiler");
     let cache = Cache::new("pipe-same-executable");
     let spec = format!(
         "{t}:scale 2 | {t}:scale 5",
@@ -447,7 +437,12 @@ fn pipe_reuses_the_same_native_executable() {
     // The cold run publishes the same cache key from both stages; warm runs
     // execute that same file while another stage updates its usage timestamp.
     for i in 0..8 {
-        let got = output(&mut cache.fwp(&["pipe", &spec]), b"3\n");
+        let got = output(
+            &mut cache
+                .fwp(&["pipe", "--native", &spec])
+                .env("FWP_RUN", "interp"),
+            b"3\n",
+        );
         assert_eq!(render(&got), render(&want), "native run {i}");
         assert_eq!(cache.entries().len(), 1);
     }
@@ -455,9 +450,7 @@ fn pipe_reuses_the_same_native_executable() {
 
 #[test]
 fn pipe_runs_native_stages() {
-    if !have_cc() {
-        return;
-    }
+    assert!(have_cc(), "native command checks require a C compiler");
     let cache = Cache::new("pipe");
     let spec = format!(
         "{t}:scale 10 | {t}:total",
@@ -471,4 +464,194 @@ fn pipe_runs_native_stages() {
         String::from_utf8_lossy(&o.stderr)
     );
     assert_eq!(cache.entries().len(), 2);
+}
+
+#[test]
+fn native_ownership_modes_are_explicit_and_part_of_the_cache() {
+    assert!(have_cc(), "native ownership checks require a C compiler");
+    let cache = Cache::new("ownership-mode");
+    let dir = fwp::cgen::TempDir::new("ownership-mode").unwrap();
+    let source = dir.join("main.fwp");
+    std::fs::write(&source, "main = \"abc\" | string.repeat 7 | echo\n").unwrap();
+    let mut cached = Vec::new();
+    for mode in ["arc", "tracing", "arc"] {
+        let actual = output(cache.fwp(&["run", "--gc", mode]).arg(&source), b"");
+        assert!(actual.status.success(), "{}", render(&actual));
+        assert_eq!(actual.stdout, b"abcabcabcabcabcabcabc\n");
+        let entries = cache.entries();
+        assert_eq!(entries.len(), if cached.is_empty() { 1 } else { 2 });
+        if cached.is_empty() {
+            let symbols = Command::new("nm").arg(&entries[0]).output().unwrap();
+            assert!(symbols.status.success(), "{}", render(&symbols));
+            for name in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                assert!(!String::from_utf8_lossy(&symbols.stdout).contains(name));
+            }
+            cached = entries;
+        }
+    }
+    let bad = dir.join("bad.fwp");
+    std::fs::write(
+        &bad,
+        "test \"good\" = True\ntest \"missing scope\" = get | eq 0\n",
+    )
+    .unwrap();
+    let rejected = output(cache.fwp(&["test", "--gc", "arc"]).arg(&bad), b"");
+    assert_eq!(rejected.status.code(), Some(1), "{}", render(&rejected));
+    assert!(
+        rejected.stdout.is_empty(),
+        "a test ran before ownership validation"
+    );
+    assert!(
+        String::from_utf8_lossy(&rejected.stderr).contains("outside a State scope"),
+        "{}",
+        render(&rejected)
+    );
+    for options in [
+        vec!["--gc"],
+        vec!["--gc=unknown"],
+        vec!["--gc=arc", "--gc=tracing"],
+        vec!["--interp", "--gc=arc"],
+    ] {
+        let rejected = output(cache.fwp(&["run"]).args(&options).arg(&source), b"");
+        assert_eq!(
+            rejected.status.code(),
+            Some(2),
+            "{options:?}: {}",
+            render(&rejected)
+        );
+        assert!(rejected.stdout.is_empty());
+    }
+    let tools = root().join("tests/exec/tools.fwp");
+    let spec = format!("{t}:scale 2 | {t}:total", t = tools.display());
+    let pipeline = output(&mut cache.fwp(&["pipe", "--gc", "arc", &spec]), b"1\n2\n");
+    assert!(pipeline.status.success(), "{}", render(&pipeline));
+    assert_eq!(pipeline.stdout, b"6\n");
+}
+
+#[test]
+fn failed_native_tests_release_errors_and_print_buffers() {
+    assert!(have_cc(), "native cleanup checks require a C compiler");
+    fwp::driver::with_big_stack(|| {
+        let cache = Cache::new("test-cleanup");
+        let directory = fwp::cgen::TempDir::new("test-cleanup").unwrap();
+        let file = directory.join("tests.fwp");
+        let mut source = String::from("test \"before\" = True\n");
+        for i in 0..64 {
+            source.push_str(&format!(
+                "test \"owned error {i}\" = \"owned\" | string.repeat 7 | fail\n"
+            ));
+        }
+        source.push_str(
+            "test \"scalar error\" = fail 7\ntest \"false\" = False\ntest \"after\" = True\n",
+        );
+        std::fs::write(&file, &source).unwrap();
+        let reference = output(cache.fwp(&["test", "--interp"]).arg(&file), b"");
+        assert_eq!(reference.status.code(), Some(1), "{}", render(&reference));
+        assert!(String::from_utf8_lossy(&reference.stdout).contains("2 passed, 66 failed"));
+        let (_, program) = fwp::driver::compile_source(
+            "native-test-cleanup.fwp",
+            &source,
+            fwp::mono::Roots {
+                tests: true,
+                ..Default::default()
+            },
+        )
+        .unwrap_or_else(|failure| panic!("{}", failure.rendered));
+        let artifacts = std::env::var_os("FWP_NATIVE_COMMAND_ARTIFACTS").map(PathBuf::from);
+        if let Some(path) = &artifacts {
+            std::fs::create_dir_all(path).unwrap();
+        }
+        for arc in [false, true] {
+            let mode = if arc { "arc" } else { "tracing" };
+            let native = output(cache.fwp(&["test", "--gc", mode]).arg(&file), b"");
+            assert_eq!(render(&native), render(&reference), "{mode}");
+            fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+                arc,
+                ..Default::default()
+            });
+            let code = fwp::cgen::generate_tests(&program).unwrap();
+            let marker = "static void fwp_buf_release(void *arg) { free(((fwp_buf *)arg)->d); }";
+            assert_eq!(code.matches(marker).count(), 1);
+            let measured = code.replace(marker, r#"
+static void *test_buffers[128];
+static size_t test_live_buffers;
+static void test_buffer_register(void *pointer) {
+    if (!pointer) return;
+    for (size_t i=0; i<128; i++) if (!test_buffers[i]) {
+        test_buffers[i]=pointer; test_live_buffers++; return;
+    }
+    exit(235);
+}
+static void test_buffer_free(void *pointer) {
+    for (size_t i=0; i<128; i++) if (pointer && test_buffers[i]==pointer) {
+        test_buffers[i]=NULL; test_live_buffers--; break;
+    }
+    free(pointer);
+}
+static void fwp_buf_release(void *arg) { test_buffer_free(((fwp_buf *)arg)->d); }
+"#).replace("            fwp_write(&b, h.value, h.desc, 1);",
+               "            fwp_write(&b, h.value, h.desc, 1); test_buffer_register(b.d);")
+                .replace("    /* Ownership observation point: before runtime teardown. */",
+                    "    /* Ownership observation point: before runtime teardown. */\n    if(test_live_buffers)exit(234);\n    if(fwp_gc.budget < fwp_gc.budget_given)exit(233);");
+            for opt in ["-O0", "-O2"] {
+                let mut cases = vec![("protected", measured.clone(), 1)];
+                if arc {
+                    cases.push((
+                        "missing-error",
+                        measured.replace("fwp_value_release(&error);", "/* omit error release */"),
+                        233,
+                    ));
+                    cases.push((
+                        "missing-buffer",
+                        measured.replace(
+                            "test_buffer_free(((fwp_buf *)arg)->d);",
+                            "/* omit actual buffer free */",
+                        ),
+                        234,
+                    ));
+                }
+                for (control, generated, status) in cases {
+                    let label = format!("tests-{mode}{opt}-{control}");
+                    let binary = directory.join(format!("{label}.exe"));
+                    fwp::cgen::compile_c(&generated, &binary, opt).unwrap();
+                    let actual = Command::new(&binary)
+                        .env_remove("FWP_GC")
+                        .env("FWP_GC_STRESS", "0")
+                        .env("FWP_GC_VERIFY", "0")
+                        .env("FWP_REUSE_VERIFY", "0")
+                        .output()
+                        .unwrap();
+                    assert_eq!(
+                        actual.status.code(),
+                        Some(status),
+                        "{label}: {}",
+                        render(&actual)
+                    );
+                    assert_eq!(actual.stdout, reference.stdout, "{label}");
+                    assert_eq!(actual.stderr, reference.stderr, "{label}");
+                    let symbols = Command::new("nm").arg(&binary).output().unwrap();
+                    assert!(symbols.status.success(), "{}", render(&symbols));
+                    if arc {
+                        for symbol in ["fwp_gc_scan", "fwp_gc_mark_all", "fwp_gc_sweep"] {
+                            assert!(
+                                !String::from_utf8_lossy(&symbols.stdout).contains(symbol),
+                                "{label}: {symbol}"
+                            );
+                        }
+                    }
+                    if let Some(path) = &artifacts {
+                        std::fs::write(path.join(format!("{label}.c")), generated).unwrap();
+                        std::fs::copy(&binary, path.join(format!("{label}.exe"))).unwrap();
+                        std::fs::write(path.join(format!("{label}.stdout")), actual.stdout)
+                            .unwrap();
+                        std::fs::write(path.join(format!("{label}.status")), format!("{status}\n"))
+                            .unwrap();
+                        std::fs::write(path.join(format!("{label}.symbols")), symbols.stdout)
+                            .unwrap();
+                    }
+                }
+            }
+        }
+        fwp::cgen::set_native_options(Default::default());
+    });
 }

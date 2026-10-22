@@ -9583,19 +9583,10 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         &scalar_text
     };
     let arc = native_options().arc;
-    if arc {
-        if !matches!(
-            mode,
-            Mode::Main | Mode::Exec(..) | Mode::Library | Mode::Service
-        ) {
-            return Err("--gc arc requires a checked executable or C library".into());
-        }
-        if !reuse_enabled() || !free_enabled() {
-            return Err(
-                "--gc arc requires counted ownership and freeing; remove FWP_REUSE=0/FWP_FREE=0"
-                    .into(),
-            );
-        }
+    if arc && (!reuse_enabled() || !free_enabled()) {
+        return Err(
+            "--gc arc requires counted ownership and freeing; remove FWP_REUSE=0/FWP_FREE=0".into(),
+        );
     }
     let tests = matches!(mode, Mode::Tests);
     let main = prog.main.unwrap_or(0);
@@ -9651,6 +9642,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     // as well as source locals before claiming a tracing-free ownership graph.
     if arc {
         let entries = match &mode {
+            Mode::Tests => prog.tests.iter().map(|(_, id)| *id).collect(),
             Mode::Exec(commands, _) => commands.iter().map(|c| c.fid).collect(),
             Mode::Service => prog
                 .service
@@ -10817,9 +10809,15 @@ static const fwp_exec_spec exec_spec{i} = {{
             else {{ fail++; printf("test %s ... FAILED\n", {name}); }}
         }} else {{
             fwp_handlers = h.prev; fwp_state_restore(h.state_depth); fail++;
+            fwp_value_owner error = {{h.value, h.desc->drop}};
+            fwp_cleanup error_cleanup; fwp_cleanup_push(&error_cleanup, fwp_value_release, &error);
             fwp_tasks_abort();
-            fwp_buf b = {{0}}; fwp_write(&b, h.value, h.desc, 1);
+            fwp_buf b = {{0}};
+            fwp_cleanup buffer_cleanup; fwp_cleanup_push(&buffer_cleanup, fwp_buf_release, &b);
+            fwp_write(&b, h.value, h.desc, 1);
             printf("test %s ... FAILED (error: %s)\n", {name}, b.d ? b.d : "");
+            fwp_cleanup_pop(&buffer_cleanup); fwp_buf_release(&b);
+            fwp_cleanup_pop(&error_cleanup); fwp_value_release(&error);
         }}
     }}
 "#,

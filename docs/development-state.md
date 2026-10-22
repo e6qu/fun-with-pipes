@@ -11,7 +11,7 @@ records the manual-pointer and foreign-storage changes.
 
 [PR #194](https://github.com/e6qu/fun-with-pipes/pull/194) is open at
 `489d8414e68678e30829df525982ce8790a4aadc`. Production run `39737931809` and
-documentation run `39737931776` are its exact-head gates. Documentation passes; all nine production jobs are
+documentation run `39737931776` are its exact-head gates. Documentation and the benchmark job pass; eight platform jobs are
 running with no failed step in the last audit. Receipt: `/private/tmp/fwp-194-final-acceptance.json`.
 The delivery is branch `move-strings-and-repair-reuse`, worktree
 `/private/tmp/fwp-string-map-delivery`. It groups:
@@ -70,22 +70,39 @@ Full builds, suites and benchmarks run on GitHub. A comparison download hit the
 deadline; checkpointed inspection completed in 5.94s without raising limits.
 The primary checkout is detached at #193 with this live handoff as its only edit.
 
-## Independent preparation: derivative storage
+## Independent preparation: command ownership and derivative storage
 
-While #194 runs, branch `measure-derivative-storage` in
-`/private/tmp/fwp-ad-memory` extends the descent experiment. It counts actual raw
-parent/partial/adjoint/registry allocations, samples idle storage after every
-backward pass, verifies physical shutdown release, and measures process peak RSS
-separately with an uninstrumented executable. Extra profiles disable workspace
-reuse; zero-update and 1,999-update cases extend the original selected dimensions.
-No runtime optimization or total-memory improvement is claimed.
+Branch `measure-derivative-storage`, worktree `/private/tmp/fwp-ad-memory`, is
+based on #194 and will be a separate substantial delivery after #194 merges.
+The measurement source `be8d87f0e56cb6bb496716d102b0b89bff6d9000` is in Linux
+run `39739049666`. It counts raw numeric tape storage independently of managed
+charge, records each backward pass and verifies real shutdown release. Separate
+uninstrumented runs observe process peak RSS. Zero-update and 1,999-update cases
+extend the original selected dimensions; extra untimed profiles disable workspace
+reuse. These are pending measurements, not a runtime speedup.
 
-Guarded `/private/tmp/fwp-check-ad-raw-observer.py` passes in 1.43s against saved
-generated C. Both missing-parent-free and missing-registry-free controls fail
-with workspace reuse on and off. This is local observer validation, not evidence
-for the current compiler or all platforms. The next independent check is the
-runner-only `ad-application` suite on both Linux architectures; do not merge it
-into #194 or open a second PR. Preserve the existing final-head gates.
+Review also found a missing-compiler interpreter fallback and unreleased native
+test errors/formatting buffers. The combined preparation removes the fallback,
+propagates explicit ARC/tracing settings through run/exec/test/serve/pipe, proves
+every native test entry, and releases caught errors. Pipeline `--native` now
+reaches child stages even with `FWP_RUN=interp`. Native command checks no longer
+silently skip missing compilers. Tracing remains the default pending migration.
+The six-host `native-commands` suite and ARC standard-library test are prepared;
+they still need runner validation. Primitive traps/process exits still terminate
+native test execution; per-test recovery needs investigation in this batch.
+
+Local checks (all guarded):
+
+- `/private/tmp/fwp-check-ad-raw-observer.py`, 1.43s: saved C, workspace on/off;
+  missing-parent and missing-registry frees both fail the physical observer.
+- `/private/tmp/fwp-check-native-command-preparation.py`, 6.96s: formatting,
+  workflow syntax, docs and all 68 new error-test fixtures in the saved interpreter.
+  This is not validation of the new native compiler code.
+
+Next independent action: publish the combined command repairs and run all six
+native jobs; audit the derivative run too. Fix all failures together. Preserve
+#194's final head and keep one active delivery PR. Preparation receipts are
+`/private/tmp/fwp-ad-memory-{preparation,publication}.json`.
 
 ## Roadmap status
 

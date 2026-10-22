@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -30,6 +30,137 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  native_commands:
+    if: inputs.suite == 'native-commands'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]' || format('["{0}"]', inputs.native_runner)) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      CC: ${{ startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      FWP_LTO: '0'
+      FWP_NATIVE_COMMAND_ARTIFACTS: native-commands-evidence/tests
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies
+        shell: bash
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
+      - name: Native Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/setup-windows.ps1
+      - uses: actions/cache/restore@v6
+        id: native_commands_windows_tls_cache
+        if: runner.os == 'Windows'
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: Native Windows OpenSSL dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup-windows-tls.ps1
+      - uses: actions/cache/save@v6
+        if: ${{ !cancelled() && runner.os == 'Windows' && env.FWP_WINDOWS_DEPS_READY == '1' && steps.native_commands_windows_tls_cache.outputs.cache-hit != 'true' }}
+        with:
+          path: ${{ runner.temp }}/fwp-windows-deps
+          key: windows-tls-${{ runner.arch }}-${{ hashFiles('scripts/setup-windows-tls.ps1') }}
+      - name: OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - run: cargo fmt --all -- --check
+      - name: Compiler checks for native command ownership
+        id: file_compiler
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p native-commands-evidence
+          cargo clippy --lib --bin fwp --test aot --test std_tests --test arc_execution --test cli_ownership -- -D warnings 2>&1 | tee native-commands-evidence/compiler.log
+      - name: Windows compiler checks for native command ownership
+        id: file_compiler_windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force native-commands-evidence | Out-Null
+          cargo clippy --lib --bin fwp --test aot --test std_tests --test arc_execution --test cli_ownership -- -D warnings 2>&1 | Tee-Object native-commands-evidence/compiler.log
+          exit $LASTEXITCODE
+      - name: Publish compiler failures while independent tests continue
+        if: ${{ !cancelled() && (steps.file_compiler.outcome == 'failure' || steps.file_compiler_windows.outcome == 'failure') }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-commands-compiler-${{ matrix.runner }}
+          path: native-commands-evidence/compiler.log
+          if-no-files-found: error
+      - name: Native execution modes, test cleanup and ownership
+        if: ${{ !cancelled() && runner.os != 'Windows' }}
+        shell: bash
+        run: |
+          cargo test --no-fail-fast --test aot --test std_tests --test arc_execution --test cli_ownership -- --nocapture 2>&1 | tee native-commands-evidence/tests.log
+      - name: Windows native execution modes, test cleanup and ownership
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          whoami /priv | Out-File native-commands-evidence/privileges.txt
+          cargo test --no-fail-fast --test aot --test std_tests --test arc_execution --test cli_ownership -- --nocapture 2>&1 | Tee-Object native-commands-evidence/tests.log
+          exit $LASTEXITCODE
+      - name: Ownership contract and native coverage audits
+        if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
+        shell: bash
+        run: |
+          cargo test --lib -- --nocapture
+          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output native-commands-evidence/contracts.json
+          python3 scripts/test-native-test-runner.py
+      - name: Missing C compilers must fail native command checks
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          python3 - <<'PYCONTROL'
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          for target, test in [('aot', 'run_compiles_once_and_matches_the_interpreter')]:
+              build = subprocess.check_output(['cargo', 'test', '--test', target,
+                  '--no-run', '--message-format=json'], text=True)
+              binary, = [row['executable'] for row in map(json.loads, build.splitlines())
+                  if row.get('reason') == 'compiler-artifact' and row.get('executable')
+                  and row['target']['name'] == target]
+              environment = dict(os.environ, CC=str(Path.cwd() / 'no-such-c-compiler'))
+              environment.pop('FWP_BLESS', None)
+              result = subprocess.run([binary, '--exact', test], env=environment,
+                  capture_output=True, text=True, timeout=180)
+              output = result.stdout + result.stderr
+              Path('native-commands-evidence', target + '-missing-compiler.txt').write_text(output)
+              assert result.returncode != 0 and 'test result: FAILED' in output, output
+              assert 'native command checks require a C compiler' in output, output
+              print(target + ': missing compiler is a failed check, not skipped coverage')
+          PYCONTROL
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: native-commands-${{ matrix.runner }}
+          path: native-commands-evidence/
+          if-no-files-found: error
   string_map:
     if: inputs.suite == 'string-map'
     strategy:
@@ -1684,7 +1815,7 @@ jobs:
         run: cargo test --test aot integer_cache_tracks_header_search_paths -- --exact
       - name: Missing C compiler behavior
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
-        run: cargo test --test aot programs_are_interpreted_without_a_c_compiler -- --exact
+        run: cargo test --test aot missing_native_compiler_fails_without_running_the_program -- --exact
       - name: Exact arithmetic archive identity, concurrent builds and eviction
         if: ${{ !cancelled() && (runner.os != 'Windows' || steps.windows_toolchain.outcome == 'success') }}
         run: cargo test --test float_linking -- --nocapture
