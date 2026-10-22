@@ -2,9 +2,15 @@
 //! `fwp serve`: the program is compiled to a native executable through C,
 //! cached by the hash of everything that decides its contents, and run.
 //! The interpreter stays the reference and runs a program when asked
-//! (`--interp`, `FWP_RUN=interp`), inside WebAssembly, and when no C
-//! compiler is found.
+//! (`--interp`, `FWP_RUN=interp`) and inside WebAssembly. Native execution
+//! reports a missing C compiler instead of changing execution engines.
 
+#[cfg(unix)]
+use std::io::Write;
+#[cfg(unix)]
+use std::os::unix::process::CommandExt;
+#[cfg(windows)]
+use std::os::windows::fs::OpenOptionsExt;
 use std::path::{Path, PathBuf};
 
 /// How a command runs a program.
@@ -57,6 +63,39 @@ pub fn take_opt(args: &mut Vec<String>, default: &str) -> String {
         i += 1;
     }
     default.to_string()
+}
+
+/// Take an explicit native ownership mode before the program file.
+pub fn take_gc(args: &mut Vec<String>) -> Result<Option<bool>, String> {
+    let mut selected = None;
+    let mut i = 0;
+    while i < args.len() {
+        let argument = &args[i];
+        if argument.ends_with(".fwp") || argument == "-" || argument == "--" {
+            break;
+        }
+        if argument == "--gc" || argument.starts_with("--gc=") {
+            if selected.is_some() {
+                return Err("choose --gc once: arc or tracing".into());
+            }
+            let option = args.remove(i);
+            let value = if let Some((_, value)) = option.split_once('=') {
+                value.to_string()
+            } else if i < args.len() {
+                args.remove(i)
+            } else {
+                return Err("--gc requires arc or tracing".into());
+            };
+            selected = Some(match value.as_str() {
+                "arc" => true,
+                "tracing" => false,
+                _ => return Err("--gc requires arc or tracing".into()),
+            });
+        } else {
+            i += 1;
+        }
+    }
+    Ok(selected)
 }
 
 /// The C compiler native programs are built with.
@@ -154,7 +193,7 @@ fn key(c_source: &str, opt: &str) -> Result<String, String> {
 /// Why there is no executable.
 #[derive(Debug)]
 pub enum Error {
-    /// The C compiler cannot be started: the program is interpreted.
+    /// The selected C compiler cannot be started.
     NoCc,
     Failed(String),
 }
@@ -170,23 +209,47 @@ pub fn executable(c_source: &str, opt: &str) -> Result<PathBuf, Error> {
     let exe = dir.join(key(c_source, opt).map_err(Error::Failed)?);
     if exe.is_file() {
         // used now: the cache drops the least recently used first. Open the
-        // executable read-only: a writable open can make concurrent native
-        // stages terminate on macOS, even without writing any bytes.
-        if let Ok(f) = std::fs::File::open(&exe) {
+        // executable without data-write access: a writable open can make
+        // concurrent native stages terminate on macOS. Windows instead needs
+        // FILE_WRITE_ATTRIBUTES to update a timestamp on an executing image.
+        #[cfg(windows)]
+        let used = std::fs::OpenOptions::new()
+            .access_mode(0x0100) // FILE_WRITE_ATTRIBUTES, without writable image data
+            .open(&exe);
+        #[cfg(not(windows))]
+        let used = std::fs::File::open(&exe);
+        if let Ok(f) = used {
             let _ = f.set_modified(std::time::SystemTime::now());
         }
         prune(&dir, &exe);
         return Ok(exe);
     }
-    // compiled under a private name and renamed into place, so concurrent
-    // runs of one program never see half an executable
+    // Compile privately. Serialize only publication, then keep the first
+    // complete image for this key. Replacing an image already running in
+    // another pipeline stage fails on Windows.
     let tmp = dir.join(format!(
         ".{}.{}.tmp",
         exe.file_name().unwrap().to_string_lossy(),
         std::process::id()
     ));
-    let built = crate::cgen::compile_c(c_source, &tmp, opt)
-        .and_then(|_| std::fs::rename(&tmp, &exe).map_err(|e| e.to_string()));
+    let built = crate::cgen::compile_c(c_source, &tmp, opt).and_then(|_| {
+        let publication = std::fs::OpenOptions::new()
+            .create(true)
+            .truncate(false)
+            .read(true)
+            .write(true)
+            .open(dir.join(".publish.lock"))
+            .map_err(|e| format!("cannot open executable cache lock: {e}"))?;
+        publication
+            .lock()
+            .map_err(|e| format!("cannot lock executable cache publication: {e}"))?;
+        if exe.is_file() {
+            std::fs::remove_file(&tmp)
+        } else {
+            std::fs::rename(&tmp, &exe)
+        }
+        .map_err(|e| format!("cannot publish cached executable {}: {e}", exe.display()))
+    });
     if built.is_err() {
         let _ = std::fs::remove_file(&tmp);
     }
@@ -255,8 +318,6 @@ pub fn run(exe: &Path, name: &str, args: &[String]) -> i32 {
     cmd.args(args);
     #[cfg(unix)]
     {
-        use std::io::Write;
-        use std::os::unix::process::CommandExt;
         let _ = std::io::stdout().flush();
         let _ = std::io::stderr().flush();
         let e = cmd.arg0(name).exec();
@@ -282,44 +343,35 @@ pub fn wants_native(mode: Mode) -> bool {
     mode == Mode::Native && !cfg!(target_family = "wasm")
 }
 
-/// The note printed when a program is interpreted for want of a C
-/// compiler (not when `FWP_RUN` chose the mode).
-pub fn note_no_cc(cmd: &str) {
-    if std::env::var_os("FWP_RUN").is_none() {
-        eprintln!(
-            "fwp {}: no C compiler (`{}`), so the program is interpreted; set CC, or pass --interp",
-            cmd,
-            cc()
-        );
-    }
-}
-
 /// Run a program natively: generate its C, compile it into the cache when
-/// missing, and run it. `None` when there is no C compiler, so the caller
-/// interprets the program instead.
+/// missing, and run it. Compilation failures never select another engine.
 pub fn run_native(
     cmd: &str,
     generated: Result<String, String>,
     opt: &str,
     name: &str,
     args: &[String],
-) -> Option<i32> {
+) -> i32 {
     let csrc = match generated {
         Ok(s) => s,
         Err(e) => {
             eprintln!("fwp {}: {}", cmd, e);
-            return Some(1);
+            return 1;
         }
     };
     match executable(&csrc, opt) {
-        Ok(exe) => Some(run(&exe, name, args)),
+        Ok(exe) => run(&exe, name, args),
         Err(Error::NoCc) => {
-            note_no_cc(cmd);
-            None
+            eprintln!(
+                "fwp {}: no C compiler (`{}`); set CC or explicitly select --interp",
+                cmd,
+                cc()
+            );
+            1
         }
         Err(Error::Failed(e)) => {
             eprintln!("fwp {}: {}", cmd, e);
-            Some(1)
+            1
         }
     }
 }

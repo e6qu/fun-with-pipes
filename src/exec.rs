@@ -18,6 +18,7 @@
 //!   binary when `FWP_OUT=bin`. Text records are lines.
 
 use std::io::{BufRead, Write};
+use std::process::{Command, Stdio};
 
 use crate::cli;
 use crate::interp::{report, Ctl, Interp};
@@ -601,8 +602,12 @@ pub fn parse_pipeline(spec: &str) -> Result<Vec<Stage>, String> {
 /// binary typed protocol; the last stage prints text. Returns the exit code
 /// of the first failing stage (or 0). `interp` runs the stages with the
 /// interpreter instead of compiling them.
-pub fn run_pipeline(fwp_exe: &std::path::Path, spec: &str, interp: bool) -> Result<i32, String> {
-    use std::process::{Command, Stdio};
+pub fn run_pipeline(
+    fwp_exe: &std::path::Path,
+    spec: &str,
+    interp: bool,
+    arc: Option<bool>,
+) -> Result<i32, String> {
     let stages = parse_pipeline(spec)?;
     let mut children = Vec::new();
     let mut prev_out: Option<std::process::ChildStdout> = None;
@@ -610,8 +615,9 @@ pub fn run_pipeline(fwp_exe: &std::path::Path, spec: &str, interp: bool) -> Resu
     for (i, st) in stages.iter().enumerate() {
         let mut cmd = Command::new(fwp_exe);
         cmd.arg("exec");
-        if interp {
-            cmd.arg("--interp");
+        cmd.arg(if interp { "--interp" } else { "--native" });
+        if let Some(arc) = arc {
+            cmd.args(["--gc", if arc { "arc" } else { "tracing" }]);
         }
         cmd.arg(&st.file).arg(&st.function).args(&st.args);
         if i + 1 < n {

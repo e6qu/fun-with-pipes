@@ -502,12 +502,27 @@ static fwp_cleanup *fwp_trap_cleanup = 0;
 static int (*fwp_trap_recover)(void) = 0;
 static char fwp_trap_msg[1024];
 
+#ifdef FWP_TESTS
+/* Only the root of an in-language test may resume after a trap or exit.
+ * Child-task failures retain their ordinary process-termination semantics. */
+static int fwp_test_active, fwp_test_failure, fwp_test_exit_code;
+static char *fwp_test_message;
+static jmp_buf fwp_test_jump;
+static fwp_cleanup *fwp_test_cleanup;
+static fwp_handler *fwp_test_handler;
+static size_t fwp_test_state_depth;
+static void fwp_test_abort(int kind, const char *message, int code);
+#endif
+
 static void fwp_trap(const char *msg) {
     if (fwp_trap_recover && fwp_trap_recover() && fwp_trap_jb) {
         snprintf(fwp_trap_msg, sizeof fwp_trap_msg, "%s", msg);
         fwp_cleanup_unwind(fwp_trap_cleanup);
         longjmp(*fwp_trap_jb, 1);
     }
+#ifdef FWP_TESTS
+    fwp_test_abort(1, msg, 0);
+#endif
     fwp_flush();
     fprintf(stderr, "fwp: trap: %s\n", msg);
     exit(101);

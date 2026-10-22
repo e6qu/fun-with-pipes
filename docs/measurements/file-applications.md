@@ -67,18 +67,23 @@ hashes. Nothing here establishes WebAssembly file support.
 
 ## Which maintained examples pass ARC's checks
 
-The [compiler admission inventory](arc-admission-2026-10-22.json) compares C emission
+The [original admission inventory](arc-admission-2026-10-22.json), recorded before
+PR #193's manual-pointer extension, compares C emission
 for 85 top-level execution examples at explicit O1, dynamic storage and enabled
 stack optimization. The imported macro module is not a separate execution case.
 
 - 80 emit C in both tracing and checked ARC modes.
 - Three intentionally invalid compile-time expressions/types fail in both modes.
-- `ffi.fwp` is rejected by ARC because raw C pointers have no admitted lifetime contract.
+- `ffi.fwp` was rejected because raw C pointers had no admitted lifetime contract.
+  [PR #193](../roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193)
+  subsequently added and validated the explicit programmer-managed contract;
+  [manual-pointer checks](manual-pointers.md) supersede this rejection.
 - `ad_task_reuse.fwp` deliberately passes an expired derivative value between tasks.
   ARC rejects it before execution; tracing/interpreter tests require the runtime
   safety trap. This invalid lifetime must remain rejected, rather than being
   enabled to make the inventory green.
 
 C emission alone does not establish native execution, physical reclamation or
-support for every library/service entry. The raw-pointer boundary is concrete
-remaining ownership work; the existing runtime tests remain necessary.
+support for every library/service entry. This inventory identified the pointer
+work that #193 delivered; its old rejection is not an outstanding task. The
+runtime checks and remaining [ownership boundaries](../ownership.md) still apply.

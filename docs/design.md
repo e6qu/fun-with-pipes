@@ -34,6 +34,10 @@ Each stage produces input for the next:
 
 `fwp run`, `exec`, `test`, `serve` and `pipe` compile native code by default and
 cache it by content. The front end still runs to produce current diagnostics.
+Native commands accept explicit `--gc arc` or `--gc tracing` settings; interpreted
+commands reject those native-only settings. Native test execution checks every
+test entry before running and releases caught error values and formatting buffers.
+A missing C compiler is an error; choose `--interp` explicitly to use the evaluator.
 The executable cache includes the selected C compiler's version, target and
 header-search environment for integer-only programs as well as floating-point
 programs. Exact floating-point programs also include their C++ compiler identity;
@@ -41,6 +45,14 @@ integer-only programs do not require a C++ compiler.
 For linked C or preprocessed assembly sources, the cache also fingerprints the
 expanded source so changes to included headers invalidate the executable. A
 missing header reports a compile error even when an older executable is cached.
+Concurrent compilers build private files and briefly lock cache publication.
+The first complete image keeps its content-addressed name; another compiler
+discards its duplicate instead of replacing a running executable. The lock is
+released when its handle closes, including process termination, using Rust's
+[file-lock contract](https://doc.rust-lang.org/std/fs/struct.File.html#method.lock).
+Cache hits update usage timestamps without opening executable data for writing.
+Windows requests the specific [attribute-write access](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfiletime)
+required for that metadata update.
 `--interp` selects interpretation. Both paths normally optimize; use
 `FWP_NO_OPT=1` with `--interp` when checking an optimization against the original
 operation order. Tests compare standard output, standard error and exit status.

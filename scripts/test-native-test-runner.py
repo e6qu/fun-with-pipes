@@ -4,6 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -121,6 +122,40 @@ class Coverage(unittest.TestCase):
             with self.assertRaises(subprocess.CalledProcessError):
                 SHARDS.main()
 
+    def test_focused_targets_are_explicit_and_keep_full_inventory_checks(self):
+        value = metadata(["a", "b", "z"])
+        schedule = {"regular": ["a", "z"], "gc": ["b"]}
+        messages = [{"reason": "compiler-artifact", "package_id": "root",
+                     "target": {"kind": ["test"], "name": name},
+                     "profile": {"test": True}, "executable": f"/{name}"}
+                    for name in ["a", "b"]]
+        built = subprocess.CompletedProcess([], 0,
+                    "\n".join(json.dumps(row) for row in messages))
+        with patch("sys.argv", ["run-native-tests.py", "--targets", "b", "a", "--logs", "/unused", "--idle-timeout", "30"]), \
+             patch.object(SHARDS, "assignment", return_value=schedule), \
+             patch.object(SHARDS.subprocess, "check_output", return_value=json.dumps(value).encode()), \
+             patch.object(SHARDS.subprocess, "run", return_value=built) as build, \
+             patch.object(SHARDS, "run_tests", return_value=1) as run:
+            self.assertEqual(SHARDS.main(), 1)
+            self.assertEqual(build.call_args.args[0], ["cargo", "test", "--no-fail-fast",
+                "--test", "b", "--test", "a", "--no-run", "--message-format=json"])
+            self.assertEqual(run.call_args.args[0], [(("test", "b"), ["/b"]), (("test", "a"), ["/a"])])
+            self.assertEqual(run.call_args.args[1], ["--nocapture"])
+            with patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "gc": ["b"]}):
+                with self.assertRaises(ValueError):
+                    SHARDS.main()
+
+    def test_focused_unknown_or_duplicate_targets_fail_before_building(self):
+        for names in [["a", "a"], ["unknown"]]:
+            with patch("sys.argv", ["run-native-tests.py", "--targets", *names, "--logs", "/unused", "--idle-timeout", "30"]), \
+                 patch.object(SHARDS, "assignment", return_value={"regular": ["a"], "gc": ["b"]}), \
+                 patch.object(SHARDS.subprocess, "check_output", return_value=json.dumps(metadata(["a", "b"])).encode()), \
+                 patch.object(SHARDS.subprocess, "run") as build:
+                with self.assertRaises(SystemExit) as failure:
+                    SHARDS.main()
+                self.assertEqual(failure.exception.code, 2)
+                build.assert_not_called()
+
     def test_artifact_coverage_includes_units_and_rejects_missing_or_duplicate(self):
         value = metadata(["a", "b"])
         keys = [("lib", "fwp"), ("bin", "fwp"), ("example", "demo"),
@@ -162,7 +197,7 @@ class Coverage(unittest.TestCase):
                     "print(f'executed {index}')\n" +
                     "sys.exit(7 if index==1 else 0)\n")
                 executable.chmod(0o755)
-                executables.append((("test", str(index)), str(executable)))
+                executables.append((("test", str(index)), [sys.executable, str(executable)]))
             code = SHARDS.run_tests(executables,
                                     ["--skip", "golden_programs_under_gc_stress"], root / "logs", 10)
             self.assertEqual(code, 1)
@@ -180,7 +215,7 @@ class Coverage(unittest.TestCase):
             executable.write_text("#!/usr/bin/env python3\nimport time\n" +
                 "for i in range(4):\n    time.sleep(0.8)\n    print(f'test case_{i} ... ok', flush=True)\n")
             executable.chmod(0o755)
-            self.assertEqual(SHARDS.run_tests([(("test", "progress"), str(executable))],
+            self.assertEqual(SHARDS.run_tests([(("test", "progress"), [sys.executable, str(executable)])],
                              [], root / "logs", 2), 0)
 
     def test_output_without_completed_cases_cannot_extend_deadline(self):
@@ -190,25 +225,26 @@ class Coverage(unittest.TestCase):
             executable.write_text("#!/usr/bin/env python3\nimport time\n" +
                 "while True:\n    print('still stuck', flush=True)\n    time.sleep(0.1)\n")
             executable.chmod(0o755)
-            self.assertEqual(SHARDS.run_tests([(("test", "noisy"), str(executable))],
+            self.assertEqual(SHARDS.run_tests([(("test", "noisy"), [sys.executable, str(executable)])],
                              [], root / "logs", 1), 1)
             self.assertIn("target timed out", (root / "logs/test-noisy.log").read_text())
 
     def test_timeout_kills_children_preserves_logs_and_runs_remaining_targets(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory(prefix="fwp path ' ") as directory:
             root = Path(directory)
             marker = root / "survived"
             hung = root / "hung"
+            child_code = f"import pathlib,time; time.sleep(2); pathlib.Path({str(marker)!r}).touch()"
             hung.write_text("#!/usr/bin/env python3\nimport subprocess,sys,time\n" +
-                f"subprocess.Popen([sys.executable, '-c', \"import pathlib,time; time.sleep(2); pathlib.Path({str(marker)!r}).touch()\"])\n" +
+                f"subprocess.Popen([sys.executable, '-c', {child_code!r}])\n" +
                 "print('before hang', flush=True)\ntime.sleep(30)\n")
             hung.chmod(0o755)
             passed = root / "passed"
             passed.write_text("#!/usr/bin/env python3\nprint('finished')\n")
             passed.chmod(0o755)
-            targets = [(("test", "hung"), str(hung)),
-                       (("test", "second"), str(passed)),
-                       (("test", "third"), str(passed))]
+            targets = [(("test", "hung"), [sys.executable, str(hung)]),
+                       (("test", "second"), [sys.executable, str(passed)]),
+                       (("test", "third"), [sys.executable, str(passed)])]
             self.assertEqual(SHARDS.run_tests(targets, [], root / "logs", 1), 1)
             time.sleep(2)
             self.assertFalse(marker.exists(), "timed-out child escaped termination")

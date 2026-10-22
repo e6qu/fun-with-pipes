@@ -2,69 +2,99 @@
 
 ## Current delivery
 
-Main is `13680b82e6bd96371d0978bc6a23d5069f5adb93`, the verified squash merge of
-[PR #193](https://github.com/e6qu/fun-with-pipes/pull/193). All nine production
-jobs and documentation passed for `91502f538d2265f3f7afd8606760dfcc4a088005`.
-The merge has identical files and a single-line message with no body or trailers.
-Redundant same-tree push CI `39737137413` was cancelled. [History](roadmap-history.md)
-records the manual-pointer and foreign-storage changes.
+Main is `f74c9d2998d595b4a3c15ee4a225a49963c1a6ea`, the verified squash merge of
+[PR #194](https://github.com/e6qu/fun-with-pipes/pull/194). All nine production
+jobs and documentation passed at `489d8414e68678e30829df525982ce8790a4aadc`;
+complete logs, merge files, parent and single-line message were checked.
+[History](roadmap-history.md#string-map-ownership-and-native-reuse-checks-pr-194)
+records the result. Redundant same-tree push CI `39753088259` was cancelled;
+the documentation run was preserved. Receipt: `/private/tmp/fwp-194-final-acceptance.json`.
 
-The next delivery is branch `move-strings-and-repair-reuse`, worktree
-`/private/tmp/fwp-string-map-delivery`. It groups:
+The next combined delivery is branch `native-command-ownership`, worktree
+`/private/tmp/fwp-native-command-delivery`. Its four prepared commits replay onto
+#194's merge with identical files before documentation updates. Preparation
+source: `3a56acd7bf9003df61293bd71abd01bc1c0d4c60`;
+six-host run: [39752987389](https://github.com/e6qu/fun-with-pipes/actions/runs/39752987389).
+This run is in progress. Full final-head production and documentation gates are
+also required before merge. The batch contains:
 
-- Moving unique strings through known map callbacks and reusing private ASCII
-  case-conversion storage. Shared aliases keep their values.
-- Correct age checks for large immutable allocations, preventing unsafe reuse
-  after collection. Both repaired checks have deliberately broken controls.
-- Real Windows reuse execution, reported native compilation failures and
-  missing-compiler controls, replacing silent test skips.
-- WASI map output, alias and physical-cleanup checks at O0/O2.
+- Explicit `--gc arc`/`--gc tracing` for native run, exec, test, serve and pipe.
+  Every test entry is checked. Missing C compilers report an error; interpretation
+  must be selected explicitly. Tracing remains the default pending migration.
+- Native test recovery after root traps, exits and cancellation. Owners, pending
+  children, state scratch storage and failure messages release before later tests
+  run. Child traps/exits remain process-fatal in both engines. See the
+  [test examples](reference.md#native-tests-with-checked-ownership).
+- Concurrent executable publication under a short file lock, Windows cache
+  timestamp access, server-process cleanup and bounded cross-platform test
+  monitoring with preserved diagnostics.
+- [Derivative measurements](measurements/ad-application.md) separating managed
+  storage, raw tape buffers and process memory. All 104 measured Linux images
+  and cleanup controls were inspected. This is measurement, not a new runtime
+  optimization or a C/Rust parity claim.
 
-[The measurement report](measurements/string-map-ownership.md) explains the code,
-comparisons and remaining costs. For 65,536 words, requests fall 248,807 → 226,961,
-retains 138,250 → 72,714 and peak managed charge 7,794,440 → 5,465,713 bytes.
-Larger-case ARC time improves 6.2–7.7%, but is still 2.57–3.05× C time and
-1.98–2.12× Rust time. Smaller AMD64 ARC is 3.6% slower than previous fwp.
-Code size grows. These are measured cases, not universal performance claims.
+Next: audit every completed job in the six-host run, inspect its generated C and
+executed binaries, and publish this batch as one PR. Fix all encountered failures
+together. Require all nine final-head production jobs and documentation before
+squash merge, with an explicit subject of at most 80 characters and empty body.
+Verify the merge files, parent and message, then continue the plan. Publication
+and merge are already authorized.
 
-Next: audit this batch’s final CI, requiring all nine production jobs and
-documentation for its exact final commit. Audit every failure and fix all known
-causes together. Squash-merge only after passing gates, with an explicit subject
-of at most 80 characters and an empty body. Verify the resulting message, tree
-and parent, then continue the plan. Publication and merge are authorized.
+## Checks and unresolved validation
 
-## Accepted preparation and checks
+At `03e1e6942419565b67b83249ca787a9740e1680a`, run `39749922003` passes both
+Linux and both Mac jobs: 23 integration tests per host and 176 Linux AMD64 unit
+tests. Both Windows jobs failed a synthetic monitor command whose nested quoting
+misread path backslashes; this then skipped evidence-directory creation. The
+repair covers a real quoted/spaced path, creates evidence before checks and lets
+independent compiler checks continue. All six logs were audited. Windows native
+tests did not execute in that run; the current rerun must establish their result.
 
-The delivery replays four commits onto #193's merge. Its compiler/runtime match
-native source `15ee3615d2df858f508ec459e6305fa163037917`; the final preparation
-`66f4a2f6dc9a02baba7154ec5c81923df8d0db29` adds only WASI tests and documentation.
-Final production acceptance is still required; preparation is not a merge gate.
+Earlier run `39741271730` exposed an unnecessary Rust borrow, a malformed state
+fixture, Windows cache replacement of an executing image and surviving server
+children after test completion. All are repaired in this batch; earlier failures
+remain in archived receipts instead of being counted as passing coverage.
 
-| Check | Accepted evidence |
+The derivative experiment at `be8d87f0e56cb6bb496716d102b0b89bff6d9000` passes
+both Linux jobs in run `39739049666`. Its three-coordinate loop keeps 1,792 raw
+bytes between updates at both 199 and 1,999 updates, then frees them at shutdown.
+Timings include a 5.3% slower ARM loop. Complete samples and binary hashes are in
+[the report data](measurements/ad-storage-2026-10-22.json). Repeated identical
+checkpoints are losslessly encoded; reconstructing the original inspection hash
+passes. Do not rerun these accepted measurements with a different source.
+
+Focused local checks, serially through `python3 scripts/local-guard.py python3 SCRIPT`:
+
+- `/private/tmp/fwp-check-test-recovery-fixtures.py`, 0.98s: eight root examples
+  and two child failures in the saved interpreter; formatting passes.
+- `/private/tmp/fwp-check-native-test-runtime.py`, 1.34s: O0/O2 ARC/tracing
+  runtime trap/exit/cancellation and owner/state cleanup pass.
+- `/private/tmp/fwp-ready-native-recovery.py`, 5.93s: Rust formatting, workflow
+  syntax, docs, diff checks and lossless measurement reconstruction pass.
+- Prepared `scripts/test-native-test-runner.py`, 7.67s: all 13 controls pass,
+  including stuck-child termination, noisy hangs and continued target execution.
+
+These focused checks do not replace native runner or final production acceptance.
+The disk guard refused publication below 64 GiB; 411 MiB of downloaded archives
+from completed deliveries were removed, preserving tracked reports, hashes,
+receipts and all current evidence. Publication then passed within the guard.
+Cleanup receipt: `/private/tmp/fwp-completed-archive-cleanup-20261022.json`.
+
+## Resume files
+
+| Purpose | Local path |
 |---|---|
-| Six native hosts | Run `39730741666`: 19 tests per host across seven targets, plus 176 Linux AMD64 unit tests; 228 inspected images and 180 interpreter/native comparisons. All six reuse tests execute on Windows. |
-| Paired C/Rust comparison | Run `39731820120`: both Linux architectures pass; 48 native images and 24 WASI modules inspected. Previous-source C is recompiled on the same runner. |
-| WASI ownership | Run `39733027038`: both Linux hosts pass 28 tests across four targets; eight map modules, their disassembly and missing-free controls inspected. |
-| Local reuse-age probe | Guarded `/private/tmp/fwp-check-reuse-age.py`, 3.31s; saved C at O0/O2, protected exit 0 and broken checks exit 239/238. No local compiler rebuild. |
-| Local WASI fixture comparison | Guarded `/private/tmp/fwp-check-string-map-wasi-preparation.py`, 3.00s; all five reference outputs match. This does not establish WASI execution. |
+| Current focused source/run and audit | `/private/tmp/fwp-native-commands-publication.json`, `/private/tmp/fwp-audit-native-commands.py` |
+| Focused acceptance and all failed-run receipts | `/private/tmp/fwp-native-commands-acceptance*.json` |
+| Replay and exact-file check | `/private/tmp/fwp-native-command-delivery-integration.json` |
+| Accepted derivative check | `/private/tmp/fwp-ad-memory-acceptance.json` |
+| Inspected derivative images | `/private/tmp/fwp-ad-memory-evidence/be8d87f0e56c/inspection.json` |
 
-Complete samples, toolchains, inputs, memory and binary hashes are in the
-[report data](measurements/string-map-2026-10-22.json). Earlier failures and slower
-measurements remain there with their source revisions. Native/WASI acceptance
-receipts and downloaded evidence live under `/private/tmp/fwp-string-map-*`.
-The integration receipt is `/private/tmp/fwp-string-map-delivery-integration.json`;
-#193's accepted merge is `/private/tmp/fwp-193-final-acceptance.json`.
-Do not repeat completed downloads. Official WABT 1.0.42 is checksum-verified at
-`/private/tmp/fwp-wabt-1.0.42/`; it provides the WASM disassembly Apple objdump lacks.
-
-Use the primary checkout for serial bounded checks:
-`python3 scripts/local-guard.py python3 SCRIPT`. Preserve 64 GiB free disk,
-target data below 2 GiB, sampled RSS below 1 GiB and the 180-second deadline.
-Delivery formatting, workflow syntax, documentation links and commit checks
-pass through guarded `/private/tmp/fwp-ready-map-docs.py` (8.26s).
-Full builds, suites and benchmarks run on GitHub. A comparison download hit the
-deadline; checkpointed inspection completed in 5.94s without raising limits.
-The primary checkout is detached at #193 with this live handoff as its only edit.
+The primary checkout is detached at #194 with this handoff as its only edit.
+Use it for guarded checks; full builds, suites and benchmarks run on GitHub.
+Preserve 64 GiB free disk, target data below 2 GiB, sampled RSS below 1 GiB and
+the 180-second deadline. Never raise limits. The preparation worktree
+`/private/tmp/fwp-ad-memory` is clean and remains the focused run's source.
 
 ## Roadmap status
 
@@ -81,5 +111,5 @@ The primary checkout is detached at #193 with this live handoff as its only edit
 All seven [plan](../PLAN.md) areas remain open. Default native execution still
 uses tracing. Retained foreign callbacks, host owners and cyclic data remain
 ownership work; performance and application acceptance also remain incomplete.
-Keep the [application suite](application-acceptance.md) current and continue in
-substantial related batches. JIT is excluded.
+Continue substantial related batches, guided by the
+[application suite](application-acceptance.md). JIT is excluded.

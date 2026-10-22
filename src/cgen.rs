@@ -9583,19 +9583,10 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         &scalar_text
     };
     let arc = native_options().arc;
-    if arc {
-        if !matches!(
-            mode,
-            Mode::Main | Mode::Exec(..) | Mode::Library | Mode::Service
-        ) {
-            return Err("--gc arc requires a checked executable or C library".into());
-        }
-        if !reuse_enabled() || !free_enabled() {
-            return Err(
-                "--gc arc requires counted ownership and freeing; remove FWP_REUSE=0/FWP_FREE=0"
-                    .into(),
-            );
-        }
+    if arc && (!reuse_enabled() || !free_enabled()) {
+        return Err(
+            "--gc arc requires counted ownership and freeing; remove FWP_REUSE=0/FWP_FREE=0".into(),
+        );
     }
     let tests = matches!(mode, Mode::Tests);
     let main = prog.main.unwrap_or(0);
@@ -9651,6 +9642,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     // as well as source locals before claiming a tracing-free ownership graph.
     if arc {
         let entries = match &mode {
+            Mode::Tests => prog.tests.iter().map(|(_, id)| *id).collect(),
             Mode::Exec(commands, _) => commands.iter().map(|c| c.fid).collect(),
             Mode::Service => prog
                 .service
@@ -10471,6 +10463,9 @@ static const fwp_exec_spec exec_spec{i} = {{
     if arc {
         out.push_str("#define FWP_ARC_ONLY 1\n");
     }
+    if tests {
+        out.push_str("#define FWP_TESTS 1\n");
+    }
     if matches!(mode, Mode::Library) {
         out.push_str("#define FWP_LIBRARY 1\n");
     }
@@ -10802,11 +10797,15 @@ static const fwp_exec_spec exec_spec{i} = {{
             ),
         }
     } else if tests {
-        let mut r = String::from("    int pass = 0, fail = 0;\n");
+        let mut r = String::from("    volatile int pass = 0, fail = 0;\n");
         for (name, id) in &prog.tests {
             let _ = write!(
                 r,
                 r#"    {{
+        fwp_test_active = 1; fwp_test_failure = 0;
+        fwp_test_cleanup = fwp_cleanups; fwp_test_handler = fwp_handlers;
+        fwp_test_state_depth = fwp_state_len;
+        if (setjmp(fwp_test_jump) == 0) {{
         fwp_handler h; h.prev = fwp_handlers; h.state_depth = fwp_state_len; h.cleanup = fwp_cleanups; fwp_handlers = &h;
         fwp_budget = 0;
         if (setjmp(h.jb) == 0) {{
@@ -10817,10 +10816,29 @@ static const fwp_exec_spec exec_spec{i} = {{
             else {{ fail++; printf("test %s ... FAILED\n", {name}); }}
         }} else {{
             fwp_handlers = h.prev; fwp_state_restore(h.state_depth); fail++;
+            fwp_value_owner error = {{h.value, h.desc->drop}};
+            fwp_cleanup error_cleanup; fwp_cleanup_push(&error_cleanup, fwp_value_release, &error);
             fwp_tasks_abort();
-            fwp_buf b = {{0}}; fwp_write(&b, h.value, h.desc, 1);
+            fwp_buf b = {{0}};
+            fwp_cleanup buffer_cleanup; fwp_cleanup_push(&buffer_cleanup, fwp_buf_release, &b);
+            fwp_write(&b, h.value, h.desc, 1);
             printf("test %s ... FAILED (error: %s)\n", {name}, b.d ? b.d : "");
+            fwp_cleanup_pop(&buffer_cleanup); fwp_buf_release(&b);
+            fwp_cleanup_pop(&error_cleanup); fwp_value_release(&error);
         }}
+        }} else {{
+            fwp_handlers = fwp_test_handler;
+            fwp_state_restore(fwp_test_state_depth);
+            fail++;
+            if (fwp_test_failure == 1)
+                printf("test %s ... FAILED (trap: %s)\n", {name}, fwp_test_message);
+            else if (fwp_test_failure == 2)
+                printf("test %s ... FAILED (exit %d)\n", {name}, fwp_test_exit_code);
+            else printf("test %s ... FAILED (cancelled)\n", {name});
+            free(fwp_test_message); fwp_test_message = NULL;
+        }}
+        fwp_tasks_finish();
+        fwp_test_active = 0;
     }}
 "#,
                 id = id,

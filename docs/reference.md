@@ -653,6 +653,7 @@ start, so startup is separate from the compiled program's execution time.
 | | |
 |---|---|
 | `--interp`, `FWP_RUN=interp` | run the interpreter instead (`--native` and `FWP_RUN=native` ask for the default) |
+| `--gc arc` or `--gc tracing` before the file/stages | native ownership mode for `run`, `exec`, `test`, `serve` and `pipe`; ARC validates every entry and omits tracing; incompatible with interpretation |
 | `-O0` .. `-O3`, `-Os` before the file | the C optimization level: `-O2`, and `-O1` for tests |
 | `FWP_CACHE_DIR` | the cache: `$XDG_CACHE_HOME/fwp`, else `~/.cache/fwp`, else `fwp-cache` in the temporary directory |
 | `FWP_CACHE_MAX` | how many executables it keeps (256; minimum 1, including when set to 0); pruning preserves the current executable |
@@ -660,9 +661,10 @@ start, so startup is separate from the compiled program's execution time.
 | `CC` | the C compiler (`cc`) |
 | `FWP_LTO` | with GCC, programs over 1 MB of generated C use `-flto=auto` to permit parallel code generation. `FWP_LTO=0` disables it; `FWP_LTO=1` enables it for any size. Compilation-time effects depend on the program and available CPU/memory. This setting participates in the executable cache key. |
 
-Without a C compiler a program is interpreted, with a note on standard
-error (none when `FWP_RUN` is set). The WebAssembly build of fwp always
-interprets. The interpreter is the reference: the golden tests run every
+A missing C compiler fails before native program effects run. Set `CC` to a
+working compiler, or explicitly select `--interp`. Native execution never changes
+engines after a compiler or ownership error. The WebAssembly build of fwp
+interprets; it rejects explicit native ownership settings. The interpreter is the reference: the golden tests run every
 program through both and compare their output byte for byte.
 
 Exit codes:
@@ -1128,3 +1130,23 @@ exports.activate = () => {
 
 exports.deactivate = () => client && client.stop();
 ```
+
+## Native tests with checked ownership
+
+`fwp test --gc arc tests.fwp` checks every test against the ARC ownership rules
+before any test runs. `fwp test --std --gc arc` checks the standard library tests in the same mode.
+A rejected entry produces a compile diagnostic; it does not rerun under tracing.
+The existing default remains tracing while the wider migration is validated.
+
+For example, `test "length" = "abc" | string.length | eq 3` succeeds. A test that
+raises a language `Error` reports its value and fails; the runner releases that
+value and its temporary formatting buffer before continuing. A trap, explicit
+`exit` or cancellation in the test's root—the code running the test itself—also
+fails that test and lets later tests run. Owned values unwind, pending child tasks are cancelled and joined,
+and state storage is released. Both interpreter and native tests display output
+written by the test itself.
+
+For example, `test "stop" = 7 | exit` reports `FAILED (exit 7)` and the runner
+continues. This recovery belongs to the test runner: ordinary programs still
+exit. A trap or exit inside a child task remains process-fatal in both engines.
+The [handoff](development-state.md) records platform validation of these changes.
