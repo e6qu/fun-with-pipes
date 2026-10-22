@@ -410,6 +410,14 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(0)),
             &[0, 1],
         ),
+        // Selected only for String -> String callbacks with no captures.
+        // The source list owner moves; result strings may alias its elements.
+        "list._map-strings" => (
+            &[B, C],
+            ResultOwnership::FreshSpine,
+            Some(Callback::Borrowed(0)),
+            &[0, 1],
+        ),
         "map" => (
             &[B, B],
             ResultOwnership::FreshSpine,

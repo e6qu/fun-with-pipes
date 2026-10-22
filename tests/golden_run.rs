@@ -25,17 +25,10 @@ fn render(stdout: &[u8], stderr: &[u8], code: i32) -> String {
     s
 }
 
-fn have_cc() -> bool {
-    Command::new(std::env::var("CC").unwrap_or_else(|_| "cc".into()))
-        .arg("--version")
-        .output()
-        .is_ok()
-}
-
 /// Build a program natively and run the executable.
 fn run_native(path: &Path, want: &str) -> String {
     let exe = std::env::temp_dir().join(format!(
-        "fwp-golden-{}-{}",
+        "fwp-golden-{}-{}.exe",
         std::process::id(),
         path.file_stem().unwrap().to_string_lossy()
     ));
@@ -114,7 +107,7 @@ fn interpreter_snapshots() {
 
 #[test]
 fn native_snapshots() {
-    if have_cc() && std::env::var("FWP_BLESS").is_err() {
+    if std::env::var("FWP_BLESS").is_err() {
         snapshots(true);
     }
 }

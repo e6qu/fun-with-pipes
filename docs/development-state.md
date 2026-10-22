@@ -1,92 +1,70 @@
 # Session handoff
 
-## Current delivery and next action
+## Current delivery
 
-Main is `3003e2cdebf6e98f45b06b4f523d8dd21d8150c5`, the verified squash merge of
-[PR #192](https://github.com/e6qu/fun-with-pipes/pull/192). All nine production
-jobs and documentation passed at `36998a99f689b254edfc127bbbc8e8aac054c509`;
-complete logs and identical merge files were verified. Its subject is one line,
-with no body or trailers. [History](roadmap-history.md#string-ownership-and-repeated-file-cleanup-pr-192)
-records the result. Redundant same-tree push CI `39724206828` was cancelled;
-the post-merge documentation check is preserved.
+Main is `13680b82e6bd96371d0978bc6a23d5069f5adb93`, the verified squash merge of
+[PR #193](https://github.com/e6qu/fun-with-pipes/pull/193). All nine production
+jobs and documentation passed for `91502f538d2265f3f7afd8606760dfcc4a088005`.
+The merge has identical files and a single-line message with no body or trailers.
+Redundant same-tree push CI `39737137413` was cancelled. [History](roadmap-history.md)
+records the manual-pointer and foreign-storage changes.
 
-The next substantial delivery is `manual-pointer-ownership` in
-`/private/tmp/fwp-manual-pointer-delivery`, based on that merge. It groups manual
-C pointers without tracing, interpreter C-string cleanup, checked 32-bit raw
-allocation bounds, pointer-sized storage, and complete I128/U128 raw access.
-The [report](measurements/manual-pointers.md) explains the contracts and evidence.
-Pointers never acquire ownership of their pointees; callers still manage raw
-storage and may not retain pointers into borrowed managed data. Checked ARC
-callbacks returning managed C string addresses remain excluded.
+The next delivery is branch `move-strings-and-repair-reuse`, worktree
+`/private/tmp/fwp-string-map-delivery`. It groups:
 
-Next: audit this delivery's exact-head production and documentation jobs, fix
-all failures together, then squash-merge only after all nine production jobs and
-docs pass. Use one explicit subject of at most 80 characters and an empty body;
-verify the resulting message, parent and identical files. Publication and merge
-are already authorized. Keep one active PR; continue through the seven plan areas
-after this delivery. No additional permission is needed.
+- Moving unique strings through known map callbacks and reusing private ASCII
+  case-conversion storage. Shared aliases keep their values.
+- Correct age checks for large immutable allocations, preventing unsafe reuse
+  after collection. Both repaired checks have deliberately broken controls.
+- Real Windows reuse execution, reported native compilation failures and
+  missing-compiler controls, replacing silent test skips.
+- WASI map output, alias and physical-cleanup checks at O0/O2.
 
-Find the current PR with `gh pr view manual-pointer-ownership`. Publication and
-final acceptance receipts belong at `/private/tmp/fwp-pointer-delivery-*.json`.
-The integration receipt is `/private/tmp/fwp-pointer-delivery-integration.json`;
-the PR description is `/private/tmp/fwp-pointer-pr-body.md`. If publication has
-not yet been recorded, finish the prepared documentation check and publish this
-branch once; do not create a duplicate PR.
+[The measurement report](measurements/string-map-ownership.md) explains the code,
+comparisons and remaining costs. For 65,536 words, requests fall 248,807 → 226,961,
+retains 138,250 → 72,714 and peak managed charge 7,794,440 → 5,465,713 bytes.
+Larger-case ARC time improves 6.2–7.7%, but is still 2.57–3.05× C time and
+1.98–2.12× Rust time. Smaller AMD64 ARC is 3.6% slower than previous fwp.
+Code size grows. These are measured cases, not universal performance claims.
 
-## Accepted pointer preparation
+Next: audit this batch’s final CI, requiring all nine production jobs and
+documentation for its exact final commit. Audit every failure and fix all known
+causes together. Squash-merge only after passing gates, with an explicit subject
+of at most 80 characters and an empty body. Verify the resulting message, tree
+and parent, then continue the plan. Publication and merge are authorized.
 
-Source `7173927b7bc899f8c43b17e909656d9550bb2bbe`,
-[run 39721437783](https://github.com/e6qu/fun-with-pipes/actions/runs/39721437783),
-passes all six native hosts and the actual 32-bit interpreter/WASI job. All seven
-complete logs were audited. Each native host passes 24 test functions across
-seven targets; Linux AMD64 also passes 176 compiler unit tests. The 32-bit job
-passes three interpreter tests and the generated-code test at O0/O2.
+## Accepted preparation and checks
 
-Independent inspection covers 150 native images and 12 WASI modules, including
-actual architecture/code, absence of tracing in ARC images, exact outputs,
-missing-release/bound controls and library unload ledgers. C/binary/disassembly
-hashes and log hashes are in the [JSON report](measurements/manual-pointers-2026-10-22.json).
-Raw artifacts and individual receipts remain under
-`/private/tmp/fwp-pointer-evidence/7173927b7bc8/`. Do not repeat completed downloads
-or inspection. The guarded all-host inspection passed in 37.18s.
+The delivery replays four commits onto #193's merge. Its compiler/runtime match
+native source `15ee3615d2df858f508ec459e6305fa163037917`; the final preparation
+`66f4a2f6dc9a02baba7154ec5c81923df8d0db29` adds only WASI tests and documentation.
+Final production acceptance is still required; preparation is not a merge gate.
 
-Five preparation commits were replayed onto the identical #192 merge tree.
-Compiler, runtime and program files match the accepted preparation; only the
-report, history and handoff change for delivery. The source branch/tag remains
-available; current preparation/audit receipts are
-`/private/tmp/fwp-pointer-boundary-publication.json` and
-`/private/tmp/fwp-pointer-boundary-acceptance.json`.
+| Check | Accepted evidence |
+|---|---|
+| Six native hosts | Run `39730741666`: 19 tests per host across seven targets, plus 176 Linux AMD64 unit tests; 228 inspected images and 180 interpreter/native comparisons. All six reuse tests execute on Windows. |
+| Paired C/Rust comparison | Run `39731820120`: both Linux architectures pass; 48 native images and 24 WASI modules inspected. Previous-source C is recompiled on the same runner. |
+| WASI ownership | Run `39733027038`: both Linux hosts pass 28 tests across four targets; eight map modules, their disassembly and missing-free controls inspected. |
+| Local reuse-age probe | Guarded `/private/tmp/fwp-check-reuse-age.py`, 3.31s; saved C at O0/O2, protected exit 0 and broken checks exit 239/238. No local compiler rebuild. |
+| Local WASI fixture comparison | Guarded `/private/tmp/fwp-check-string-map-wasi-preparation.py`, 3.00s; all five reference outputs match. This does not establish WASI execution. |
 
-Preparation fixed missing Windows executable suffixes, missing OpenSSL setup,
-and an unexported regression fixture before the accepted run. Every failed
-job/target was audited. Earlier receipts retain their source suffixes; their
-failures are resolved evidence, not next tasks. Native-build errors now aggregate
-through the corpus instead of hiding later cases.
+Complete samples, toolchains, inputs, memory and binary hashes are in the
+[report data](measurements/string-map-2026-10-22.json). Earlier failures and slower
+measurements remain there with their source revisions. Native/WASI acceptance
+receipts and downloaded evidence live under `/private/tmp/fwp-string-map-*`.
+The integration receipt is `/private/tmp/fwp-string-map-delivery-integration.json`;
+#193's accepted merge is `/private/tmp/fwp-193-final-acceptance.json`.
+Do not repeat completed downloads. Official WABT 1.0.42 is checksum-verified at
+`/private/tmp/fwp-wabt-1.0.42/`; it provides the WASM disassembly Apple objdump lacks.
 
-## Next measured optimization candidate
-
-Investigate consuming eligible String-list inputs through `map`, moving unique
-elements instead of retaining them. The existing 64-word/eight-word-vocabulary
-baseline uses 296 allocation requests, 194 retains and 7,744 peak managed bytes.
-A saved-C probe with element moves and unique changed-case string reuse uses
-274 requests, 130 retains and 5,376 peak bytes. This is **not implemented compiler
-code and not a timing claim**.
-
-A shared-tail probe preserves aliases to the whole list, its tail and its first
-string. It keeps a shared tail owned, borrows its cursor and duplicates only the
-callback's string. Those cases use 195/194/131 retains. All four cases match the
-word oracle, preserve alias hashes, and finish with zero managed charge and
-collections. Four actual ARM64 images are inspected per probe. Guarded scripts
-`fwp-probe-map-sharing.py` and `fwp-probe-map-shared-tail.py` pass in 2.55s/2.34s.
-Retained C, images and reports are under `/private/tmp/fwp-map-sharing-evidence/`
-and `/private/tmp/fwp-map-shared-tail-evidence/`.
-
-Before implementation, prove captured/dynamic callback preparation and
-failure/cancellation cleanup, compare interpreter semantics, and test GC stress
-and reuse poisoning. Restrict initial eligibility to resource-free strings.
-Do not mutate immutable list-node fields after a callback: collection may age a
-node, making a later old-to-young field write unsafe. Build a fresh result spine.
-Private investigation notes: `/private/tmp/fwp-map-consumption-design.md`.
+Use the primary checkout for serial bounded checks:
+`python3 scripts/local-guard.py python3 SCRIPT`. Preserve 64 GiB free disk,
+target data below 2 GiB, sampled RSS below 1 GiB and the 180-second deadline.
+Delivery formatting, workflow syntax, documentation links and commit checks
+pass through guarded `/private/tmp/fwp-ready-map-docs.py` (8.26s).
+Full builds, suites and benchmarks run on GitHub. A comparison download hit the
+deadline; checkpointed inspection completed in 5.94s without raising limits.
+The primary checkout is detached at #193 with this live handoff as its only edit.
 
 ## Roadmap status
 
@@ -94,33 +72,14 @@ Private investigation notes: `/private/tmp/fwp-map-consumption-design.md`.
 |---|---|---|
 | 1 | In progress | Remove tracing; limit ARC. |
 | 2 | In progress | Remove avoidable functional costs. |
-| 3 | In progress | Improve measured machine-level performance. |
+| 3 | In progress | Meet measured machine-level budgets. |
 | 4 | In progress | Improve autodiff time, memory and precision. |
 | 5 | In progress | Validate CPU numerical kernels. |
 | 6 | In progress | Establish comparable measurements and budgets. |
 | 7 | In progress | Complete the finite application suite. |
 
-All seven remain open. A completed PR does not finish the language's memory or
-performance goals. JIT compilation is excluded, not deferred. The [plan](../PLAN.md)
-and [application suite](application-acceptance.md) define the remaining work.
-
-## Workspace and local checks
-
-The primary checkout is detached at the verified #192 merge, with this live
-handoff as its only local edit. The pointer preparation remains in
-`/private/tmp/fwp-pointer-ownership`; the delivery worktree above is current.
-Use `python3 scripts/local-guard.py python3 SCRIPT` from the primary checkout.
-Keep checks serial; preserve 64 GiB free disk, target below 2 GiB, sampled
-workload RSS below 1 GiB and the 180-second deadline. Full builds, suites and
-benchmarks run on GitHub. Do not raise limits or use the separate fr guard.
-
-Focused fixture/export, allocator-observer, formatting, workflow, documentation,
-primitive-inventory and native-runner checks passed before publication. Scripts
-and receipts remain in `/private/tmp`; all-host binary inspection and final
-report/handoff validation also passed. The final documentation check was 2.64s.
-
-Completed evidence is archived losslessly under
-`/private/tmp/fwp-task-record-evidence/c10934f5dadf/` and
-`/private/tmp/fwp-task-await-evidence/f2b5d400feda/`. Each contains
-`completed-native-evidence.zip` and a byte-verified receipt. Only extracted
-duplicates were removed; source and current evidence remain intact.
+All seven [plan](../PLAN.md) areas remain open. Default native execution still
+uses tracing. Retained foreign callbacks, host owners and cyclic data remain
+ownership work; performance and application acceptance also remain incomplete.
+Keep the [application suite](application-acceptance.md) current and continue in
+substantial related batches. JIT is excluded.

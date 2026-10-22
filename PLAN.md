@@ -29,7 +29,8 @@ they do not establish that every abstraction is free or every program avoids GC.
 
 Default native execution still combines reference counting with tracing.
 Checked `--gc arc` removes tracing for supported programs, including accepted
-synchronous WASI entries, gRPC clients/services and HTTP clients/servers. Some
+synchronous WASI entries, gRPC clients/services, HTTP clients/servers and
+scoped C calls with manually managed pointers. Some
 closures, containers and call boundaries still allocate, and measured numerical
 workloads still have performance gaps. See [ownership](docs/ownership.md),
 [numerics](docs/numerics.md) and [benchmarks](docs/benchmarks.md) for current limits.
@@ -90,15 +91,15 @@ outside the benchmark suite.
 
 1. Extend [ownership contracts](docs/ownership.md#proposed-cycle-policy) at the
    remaining boundaries: persistent subscriptions, externally retained callbacks,
-   host-owned values and cyclic data graphs. Manual raw-pointer support is under
-   validation; it makes caller obligations explicit rather than proving arbitrary
-   foreign lifetimes. Known queued task/data/response captures
+   host-owned values and cyclic data graphs. [Manual raw-pointer support](docs/measurements/manual-pointers.md)
+   has passed delivery; it makes caller obligations explicit rather than proving
+   arbitrary foreign lifetimes. Known queued task/data/response captures
    have delivery evidence in [ownership](docs/ownership.md); those completed
    extensions are baselines, not new tasks. Prefer borrowing and scoped cleanup.
    Weak handles remain a proposal. Distinguish missing proofs from definite cycles,
    and reject unproved retention instead of silently enabling tracing.
    The [execution-example inventory](docs/measurements/file-applications.md#which-maintained-examples-pass-arcs-checks)
-   identified raw-pointer C interop for the current extension. Keep its
+   records accepted programs and remaining exclusions. Keep
    programmer-managed `Unsafe` obligations explicit; do not admit invalid
    inter-task derivative lifetimes merely to increase the accepted count.
 2. Resolve measured C/Rust gaps while preserving checked arithmetic and trap order.

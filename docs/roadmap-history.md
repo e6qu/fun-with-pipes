@@ -12,6 +12,27 @@ Git trees, even though their commit IDs differ. A focused test run checks a subs
 production acceptance requires every platform job applicable to that delivery.
 Cancelled, skipped or partially passing runs are not acceptance.
 
+## Manual C pointers and foreign storage cleanup (PR #193)
+
+Checked ARC accepts manually managed C pointers in scoped calls, synchronous
+callbacks and exported libraries. Pointers do not own their pointees; callers
+must keep addresses valid and release raw storage. Managed C-string callback
+results still require a separate lifetime contract.
+
+Interpreter temporary C strings now release after results are copied, including
+reentrant calls and errors. Raw allocation bounds are checked before 32-bit
+narrowing; ISize/USize use the target pointer width and I128/U128 access preserves
+all bits. The [report](measurements/manual-pointers.md) retains six-host native
+and actual 32-bit interpreter/WASI evidence, including inspected binaries and
+cleanup controls.
+
+[PR #193](https://github.com/e6qu/fun-with-pipes/pull/193) passed all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39725180238)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39725180233)
+at `91502f538d2265f3f7afd8606760dfcc4a088005`. Complete logs were audited.
+Squash merge `13680b82e6bd96371d0978bc6a23d5069f5adb93` has identical files, one subject
+under 80 characters and no body, trailers or attribution.
+
 ## String ownership and repeated file cleanup (PR #192)
 
 Unchanged text transformations now transfer their existing string owner. Count,

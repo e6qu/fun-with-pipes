@@ -218,6 +218,41 @@ static V fwp_value_finish(fwp_value_owner *owner, fwp_cleanup *cleanup) {
     owner->value = 0;
     return value;
 }
+/* Move uniquely owned String-list heads into the callback. Fresh output
+ * nodes avoid untracked old-to-young links if a callback collects. String
+ * leaves have no resource-close effects; other element types do not use this. */
+static V fwp_p_map_strings_owned(V f, V xs, void (*element_drop)(V), void (*list_drop)(V)) {
+    fwp_value_owner source = {xs, list_drop}; fwp_cleanup source_cleanup;
+    fwp_value_protect(&source, &source_cleanup);
+    size_t n;
+    V *a = fwp_map_items(xs, &n);
+    fwp_map_owner owner = {a, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup;
+    fwp_map_protect(&owner, &cleanup);
+    V cursor = xs;
+    int borrowed_tail = 0;
+    for (size_t i = 0; i < n; i++) {
+        V node = cursor, tail = OBJ(node)->f[1];
+        if (!borrowed_tail && fwp_rc_unique(node) == 1) {
+            source.value = tail;
+            fwp_rc_free_obj(node);
+        } else {
+            /* Keep the first shared tail owned through all remaining calls.
+             * Only callback arguments need additional references. */
+            borrowed_tail = 1;
+            fwp_rc_dup(a[i]);
+        }
+        cursor = tail;
+        a[i] = fwp_apply_borrowed_span(f, 1, &a[i], 0, 1);
+        owner.count++;
+    }
+    V result = fwp_map_finish_protected(&owner, &cleanup);
+    fwp_value_release(&source);
+    fwp_value_finish(&source, &source_cleanup);
+    FWP_KEEP_ALIVE(f);
+    return result;
+}
+
 /* Ternary conversion traverses borrowed input directly. List results own their
  * completed prefix, so allocation failure releases it without tracing scratch. */
 static V fwp_p_tint_trits(V v, int w, void (*drop_list)(V)) {
@@ -611,6 +646,37 @@ FWP_K V fwp_k_map_owned(fwp_fn1 f, V xs, void (*element_drop)(V), void (*list_dr
     FWP_KEEP_ALIVE(xs);
     return result;
 }
+FWP_K V fwp_k_map_strings_owned(V (*f)(V *), V xs, void (*element_drop)(V), void (*list_drop)(V)) {
+    fwp_value_owner source = {xs, list_drop}; fwp_cleanup source_cleanup;
+    fwp_value_protect(&source, &source_cleanup);
+    size_t n;
+    V *a = fwp_map_items(xs, &n);
+    fwp_map_owner owner = {a, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup;
+    fwp_map_protect(&owner, &cleanup);
+    V cursor = xs;
+    int borrowed_tail = 0;
+    for (size_t i = 0; i < n; i++) {
+        V node = cursor, tail = OBJ(node)->f[1];
+        if (!borrowed_tail && fwp_rc_unique(node) == 1) {
+            source.value = tail;
+            fwp_rc_free_obj(node);
+        } else {
+            /* Keep the first shared tail owned through all remaining calls.
+             * Only callback arguments need additional references. */
+            borrowed_tail = 1;
+            fwp_rc_dup(a[i]);
+        }
+        cursor = tail;
+        a[i] = f(&a[i]);
+        owner.count++;
+    }
+    V result = fwp_map_finish_protected(&owner, &cleanup);
+    fwp_value_release(&source);
+    fwp_value_finish(&source, &source_cleanup);
+    return result;
+}
+
 
 FWP_K V fwp_k_filter(fwp_fn1 f, V xs) {
     size_t n, k = 0;
@@ -1212,7 +1278,7 @@ static V fwp_p_case(V s, int upper) {
     char low = upper ? 'a' : 'A', high = upper ? 'z' : 'Z';
     while (first < length && (STR(s)->d[first] < low || STR(s)->d[first] > high)) first++;
     if (first == length) return s;
-    V r = fwp_str_new(STR(s)->d, STR(s)->len);
+    V r = fwp_rc_unique(s) == 1 ? s : fwp_str_new(STR(s)->d, STR(s)->len);
     char *d = STR(r)->d;
     for (size_t i = first; i < length; i++) {
         if (upper && d[i] >= 'a' && d[i] <= 'z') d[i] -= 32;

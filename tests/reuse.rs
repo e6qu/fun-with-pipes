@@ -19,14 +19,6 @@ fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
 
-fn native_cc() -> bool {
-    cfg!(any(target_os = "linux", target_os = "macos"))
-        && Command::new(std::env::var("CC").unwrap_or_else(|_| "cc".into()))
-            .arg("--version")
-            .output()
-            .is_ok_and(|o| o.status.success())
-}
-
 struct TempDir(PathBuf);
 
 impl TempDir {
@@ -50,7 +42,8 @@ fn render(o: &Output) -> String {
         s.push_str("--- stderr\n");
         s.push_str(&String::from_utf8_lossy(&o.stderr));
     }
-    if let Some(c) = o.status.code().filter(|c| *c != 0) {
+    let c = o.status.code().unwrap_or(-1);
+    if c != 0 {
         s.push_str(&format!("--- exit {}\n", c));
     }
     s
@@ -71,10 +64,76 @@ fn run(exe: &Path, cwd: &Path, input: &[u8], env: &[(&str, &str)]) -> Output {
 }
 
 #[test]
-fn golden_programs_with_reuse_verified() {
-    if !native_cc() {
-        return;
+fn large_and_small_objects_obey_collection_age() {
+    let dir = TempDir::new("age");
+    let source = dir.0.join("age.fwp");
+    let cfile = dir.0.join("age.c");
+    std::fs::write(&source, "main = ()\n").unwrap();
+    let emitted = Command::new(fwp())
+        .args(["build", "--gc", "tracing", "--emit-c"])
+        .arg(&source)
+        .arg("-o")
+        .arg(&cfile)
+        .output()
+        .unwrap();
+    assert!(emitted.status.success(), "{emitted:?}");
+    let code = std::fs::read_to_string(cfile).unwrap();
+    assert_eq!(code.matches("int main(int argc, char **argv)").count(), 1);
+    let code = code.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let code = format!("{code}\n{}", include_str!("fixtures/reuse_age_probe.c"));
+    let unique_mark = "m->type == GC_BIG ? m->mark != 0 :";
+    let young_mark = "m->type == GC_BIG ? !m->mark :";
+    assert_eq!(code.matches(unique_mark).count(), 1);
+    assert_eq!(code.matches(young_mark).count(), 1);
+    let broken_unique = code.replace(unique_mark, "");
+    let broken_young = code.replace(young_mark, "");
+    for opt in ["-O0", "-O2"] {
+        for (label, measured, status) in [
+            ("protected", &code, 0),
+            ("missing-large-unique-age", &broken_unique, 239),
+            ("missing-large-young-age", &broken_young, 238),
+        ] {
+            let binary = dir.0.join("age.exe");
+            fwp::cgen::compile_c(measured, &binary, opt).unwrap();
+            for verify in ["0", "1"] {
+                let actual = Command::new(&binary)
+                    .env_remove("FWP_GC")
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", verify)
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    actual.status.code(),
+                    Some(status),
+                    "{opt} {label} {verify}: {actual:?}"
+                );
+                assert!(
+                    actual.stdout.is_empty() && actual.stderr.is_empty(),
+                    "{actual:?}"
+                );
+            }
+            if let Some(destination) = std::env::var_os("FWP_STRING_MAP_ARTIFACTS") {
+                let destination = PathBuf::from(destination);
+                std::fs::create_dir_all(&destination).unwrap();
+                let stem = format!("reuse-age-{}-{label}", &opt[1..]);
+                std::fs::write(destination.join(format!("{stem}.c")), measured).unwrap();
+                std::fs::copy(&binary, destination.join(format!("{stem}.exe"))).unwrap();
+                std::fs::write(
+                    destination.join(format!("{stem}.status")),
+                    format!("{status}\n"),
+                )
+                .unwrap();
+            }
+        }
     }
+}
+
+#[test]
+fn golden_programs_with_reuse_verified() {
     let dir = TempDir::new("golden");
     let mut entries: Vec<PathBuf> = std::fs::read_dir(root().join("tests/run"))
         .unwrap()
@@ -91,21 +150,37 @@ fn golden_programs_with_reuse_verified() {
                     break;
                 };
                 let name = path.file_stem().unwrap().to_string_lossy().to_string();
-                let exe = dir.0.join(&name);
+                let exe = dir.0.join(format!("{name}.exe"));
+                let want = std::fs::read_to_string(path.with_extension("out")).unwrap();
                 let b = Command::new(fwp())
                     .arg("build")
-                    .arg(&path)
+                    .arg(path.file_name().unwrap())
                     .args(["-O1", "-o"])
                     .arg(&exe)
                     .env("FWP_REUSE", "1")
                     .current_dir(path.parent().unwrap())
                     .output()
                     .unwrap();
+                if name.starts_with("err_") {
+                    if b.status.code() != Some(1) || render(&b) != want {
+                        failures.lock().unwrap().push(format!(
+                            "{} (expected compile error):\n--- expected\n{}--- got\n{}",
+                            path.display(),
+                            want,
+                            render(&b)
+                        ));
+                    }
+                    continue;
+                }
                 if !b.status.success() {
-                    continue; // compile errors are covered by tests/golden_run.rs
+                    failures.lock().unwrap().push(format!(
+                        "{} (unexpected native compilation failure):\n{}",
+                        path.display(),
+                        render(&b)
+                    ));
+                    continue;
                 }
                 let input = std::fs::read(path.with_extension("in")).unwrap_or_default();
-                let want = std::fs::read_to_string(path.with_extension("out")).unwrap_or_default();
                 let verify: &[(&str, &str)] = &[
                     ("FWP_REUSE_VERIFY", "1"),
                     ("FWP_GC_VERIFY", "1"),
@@ -131,9 +206,6 @@ fn golden_programs_with_reuse_verified() {
 /// registers) allocates a copy per iteration, and nothing with reuse.
 #[test]
 fn unique_records_are_updated_in_place() {
-    if !native_cc() {
-        return;
-    }
     let dir = TempDir::new("inplace");
     let src = dir.0.join("upd.fwp");
     std::fs::write(
@@ -147,7 +219,7 @@ fn unique_records_are_updated_in_place() {
     )
     .unwrap();
     let allocated = |reuse: &str| -> f64 {
-        let exe = dir.0.join(format!("upd{}", reuse));
+        let exe = dir.0.join(format!("upd{reuse}.exe"));
         let b = Command::new(fwp())
             .arg("build")
             .arg(&src)
@@ -185,9 +257,6 @@ fn unique_records_are_updated_in_place() {
 /// new node into the old one when the tree is unique.
 #[test]
 fn variant_cells_are_reused() {
-    if !native_cc() {
-        return;
-    }
     let dir = TempDir::new("cells");
     let src = dir.0.join("tree.fwp");
     std::fs::write(
@@ -205,7 +274,7 @@ fn variant_cells_are_reused() {
     )
     .unwrap();
     let allocated = |reuse: &str| -> f64 {
-        let exe = dir.0.join(format!("tree{}", reuse));
+        let exe = dir.0.join(format!("tree{reuse}.exe"));
         let b = Command::new(fwp())
             .arg("build")
             .arg(&src)
@@ -243,9 +312,6 @@ fn variant_cells_are_reused() {
 /// per step.
 #[test]
 fn unique_arrays_are_written_in_place() {
-    if !native_cc() {
-        return;
-    }
     let dir = TempDir::new("arrays");
     for (name, want, copied_at_least) in [
         ("push", "199993\n", 1000.0),
@@ -254,7 +320,7 @@ fn unique_arrays_are_written_in_place() {
     ] {
         let src = root().join(format!("tests/reuse/{}.fwp", name));
         let allocated = |reuse: &str| -> f64 {
-            let exe = dir.0.join(format!("{}{}", name, reuse));
+            let exe = dir.0.join(format!("{name}{reuse}.exe"));
             let b = Command::new(fwp())
                 .arg("build")
                 .arg(&src)
@@ -292,13 +358,10 @@ fn unique_arrays_are_written_in_place() {
 /// trees to the collector takes many.
 #[test]
 fn objects_are_freed_by_their_counts() {
-    if !native_cc() {
-        return;
-    }
     let dir = TempDir::new("free");
     let src = root().join("tests/reuse/tree.fwp");
     let stats = |free: &str| -> (f64, u64) {
-        let exe = dir.0.join(format!("tree{}", free));
+        let exe = dir.0.join(format!("tree{free}.exe"));
         let b = Command::new(fwp())
             .arg("build")
             .arg(&src)

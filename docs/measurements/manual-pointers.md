@@ -96,5 +96,5 @@ allocation traps and a deliberately missing-bound control, each at O0/O2.
 The entry points are [raw-memory tests](../../tests/raw_memory_ownership.rs),
 [callback tests](../../tests/foreign_callback_ownership.rs),
 [library tests](../../tests/arc_library.rs) and
-[corpus tests](../../tests/arc_corpus.rs). Full production and documentation checks
-are still required for the exact delivery commit.
+[corpus tests](../../tests/arc_corpus.rs). All nine production jobs and documentation passed for the delivery commit;
+[PR #193](../roadmap-history.md#manual-c-pointers-and-foreign-storage-cleanup-pr-193) records the verified squash merge.

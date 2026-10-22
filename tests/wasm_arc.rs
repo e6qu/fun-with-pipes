@@ -295,6 +295,13 @@ fn synchronous_wasi_programs_match_interpretation_and_free_physical_storage() {
             .unwrap()
             .0,
     );
+    let string_maps = format!(
+        "{}\nmain = [\"\", \"One TWO ,Three. λ\", \"AbC abc AbC\", \"A\\tB\\nC\", \"One TWO STOP Four\"] | each (tap (words | check) | words | map normalize | echo)\n",
+        include_str!("fixtures/string_map_ownership.fwp")
+            .split_once("main =")
+            .unwrap()
+            .0,
+    );
     let programs = [
         ("lists", "main = range 0 64 | map (const [1, 2, 3] | scan add 0 | repeat 4 | flatten | chunks 3 | flatten | sum) | sum | echo\n"),
         ("closures", r#"
@@ -332,6 +339,7 @@ main = range 0 32 | map int.to-float | grad (grad square | sum) | sum | echo
         ("ternary", include_str!("fixtures/ternary_ownership.fwp")),
         ("text-decoders", include_str!("fixtures/text_decoder_ownership.fwp")),
         ("text-transforms", text_transforms.as_str()),
+        ("string-maps", string_maps.as_str()),
         ("count-boundaries", include_str!("fixtures/count_boundaries.fwp")),
         ("metrics", include_str!("fixtures/metrics_ownership.fwp")),
         ("cpu-kernels", include_str!("fixtures/cpu_kernel_ownership.fwp")),
@@ -362,6 +370,10 @@ main = [
         );
         std::fs::write(&source, program).unwrap();
         let code = emit(&source, &dir.join("program.c"), &[], "wasm32-wasi");
+        if name == "string-maps" {
+            assert!(code.contains("fwp_k_map_strings_owned(fwp_owned_entry"));
+            assert!(String::from_utf8_lossy(&reference.stdout).contains("Err \"map stopped\""));
+        }
         let instrumented = measured_program(&code);
         let needle = "    free((void *)(uintptr_t)value);";
         assert_eq!(instrumented.matches(needle).count(), 1);
@@ -386,7 +398,7 @@ main = [
             assert_ne!(missing_metrics_shutdown, instrumented);
             candidates.push((&missing_metrics_shutdown, 244));
         }
-        let levels = if name == "mixed-tail-recursion" {
+        let levels = if matches!(name, "mixed-tail-recursion" | "string-maps") {
             ["-O0", "-O2"]
         } else {
             ["-O1", "-O2"]
@@ -404,7 +416,7 @@ main = [
                     fwp::cgen::Target::Wasi,
                 )
                 .unwrap();
-                if expected == 0 {
+                if expected == 0 && name != "string-maps" {
                     if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
                         let path = std::path::PathBuf::from(path);
                         std::fs::create_dir_all(&path).unwrap();
@@ -420,6 +432,36 @@ main = [
                     }
                 }
                 let output = wasi(&binary, dir.path()).output().unwrap();
+                if name == "string-maps" {
+                    if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                        let path = std::path::PathBuf::from(path);
+                        std::fs::create_dir_all(&path).unwrap();
+                        let label = if expected == 0 {
+                            "checked"
+                        } else {
+                            "missing-free"
+                        };
+                        let stem = format!("{name}{opt}-{label}");
+                        std::fs::write(
+                            path.join(format!("{stem}.c")),
+                            format!(
+                                "{}\n{candidate}",
+                                include_str!("fixtures/wasm_arc_allocations.c")
+                            ),
+                        )
+                        .unwrap();
+                        std::fs::copy(&binary, path.join(format!("{stem}.wasm"))).unwrap();
+                        std::fs::write(path.join(format!("{stem}.stdout")), &output.stdout)
+                            .unwrap();
+                        std::fs::write(path.join(format!("{stem}.reference")), &reference.stdout)
+                            .unwrap();
+                        std::fs::write(
+                            path.join(format!("{stem}.status")),
+                            format!("{}\n", output.status.code().unwrap_or(-1)),
+                        )
+                        .unwrap();
+                    }
+                }
                 assert_eq!(
                     output.status.code(),
                     Some(expected),

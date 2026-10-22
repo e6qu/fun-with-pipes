@@ -1,0 +1,29 @@
+normalize : String -> String
+normalize = lower | replace "," "" | replace "." ""
+
+unchanged : String -> String
+unchanged = id
+
+choose : I64 -> String -> String
+choose = if (eq 0) (const lower) (const upper)
+
+reject-stop : String -> String ! {Error[String]}
+reject-stop = if (eq "STOP") (const "map stopped" | fail) lower
+
+check : List[String] -> () ! {IO}
+check = make {
+    original = id,
+    lower = map lower,
+    normal = map normalize,
+    identity = map unchanged,
+    tail = drop 1,
+    tail-normal = drop 1 | map normalize,
+    first = take 1,
+    captured = map (concat "!"),
+    dynamic = fork map (length | choose) id,
+    attempted = attempt (map reject-stop),
+} | echo
+
+main = "FWP_TEXT_INPUT" | env.get | match
+    Some -> tap (words | check) | words | map normalize | echo
+    None -> "FWP_TEXT_INPUT is required" | prim.trap

@@ -16,6 +16,7 @@ use crate::ownership::ResultOwnership;
 use crate::value::Value;
 
 mod scalar_text;
+mod string_map;
 #[path = "cgen_wide.rs"]
 mod wide;
 
@@ -5334,6 +5335,18 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if !self.g.reuse {
             return None;
         }
+        if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "list._map-strings") {
+            let [Expr::Func(callback), source] = args else {
+                return None;
+            };
+            let callback = *callback;
+            self.g.used_closures[callback] = true;
+            let xs = self.expr(source);
+            let ops = self.g.map_ops(&MT::con("std::String"));
+            return Some(format!(
+                "fwp_k_map_strings_owned(fwp_owned_entry{callback}, {xs}, {ops})"
+            ));
+        }
         let sym = match &self.g.prog.funcs[id].body {
             Body::Prim(s)
                 if matches!(
@@ -6442,6 +6455,10 @@ impl<'p> Gen<'p> {
             ));
         }
 
+        if sym == "list._map-strings" {
+            let ops = self.map_ops(&MT::con("std::String"));
+            return Ok(format!("return fwp_p_map_strings_owned(l0, l1, {ops});"));
+        }
         if sym == "array._map-list" {
             let MT::Con(name, elements) = &result else {
                 return Err("numeric mapped array result has no element type".into());
@@ -9558,7 +9575,13 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     // consumers. Printing's comparison switch does not disable length fusion.
     let direct_output = !std::env::var("FWP_DIRECT_INTEGER_PRINT").is_ok_and(|v| v == "0");
     let scalar_text = scalar_text::lower(prog, direct_output);
-    let prog = &scalar_text;
+    let string_maps;
+    let prog = if reuse_enabled() && free_enabled() {
+        string_maps = string_map::lower(&scalar_text);
+        &string_maps
+    } else {
+        &scalar_text
+    };
     let arc = native_options().arc;
     if arc {
         if !matches!(
