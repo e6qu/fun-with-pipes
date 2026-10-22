@@ -552,8 +552,9 @@ array may have other owners: moving this record's reference does not alter them.
 This removes a duplicate/release pair around projections such as `(weights, i) | .0`.
 The ownership pass must still show that the record is consumed at that point;
 nested stack aggregates and resource lifetimes keep their separate rules.
-This extension is implemented in the current preparation; native acceptance and
-paired numerical measurements are recorded in the [handoff](development-state.md).
+[Focused checks](measurements/stack-array-ownership.md) pass on all six native
+platforms, including aliases, failure and cancellation. Timing and delivery
+acceptance are recorded separately in the [handoff](development-state.md).
 
 The variant-matching change applies the same move principle to a
 constructor with one payload already held in local fields. If a match arm begins

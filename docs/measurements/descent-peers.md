@@ -103,11 +103,10 @@ images and 24 untimed memory profiles. Source/binary hashes, architectures,
 disassembly and ARC tracing-code exclusion were checked. Repeated profile
 checkpoints reconstruct their original hashes exactly.
 
-The next optimization should address intermediate numerical storage and repeated
-ownership work, while preserving arithmetic order and derivative recording.
-The explicit fwp control shows that removing the derivative tape alone cannot
-close the measured gap. Investigate packed-array iteration alongside the list
-forms, record a workload-specific acceptance budget before changing the compiler,
-and repeat timing baselines before treating small differences as regressions.
-This finite experiment does not settle arbitrary nesting, long-running retention
-or C/Rust parity for the language.
+This baseline identified intermediate numerical storage and repeated ownership
+work as costs worth measuring. Removing the derivative tape alone cannot close
+the gap. The [packed-array comparison](packed-descent.md) subsequently reduces
+allocation requests, and the [array-owner move](array-owner-moves.md) halves the
+remaining retains for that program. Both retain slower controls and distinguish
+memory savings from timing claims. This finite experiment does not settle arbitrary
+nesting, long-running retention or C/Rust parity for the language.

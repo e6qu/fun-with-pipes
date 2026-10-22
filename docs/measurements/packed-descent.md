@@ -87,7 +87,7 @@ repeated cases. The AMD64 zero-update packed form is **9.57% slower** than its
 list peer and makes extra conversion allocations. Keep this control: small
 programs can spend more on setup/output than they save in numerical work.
 
-## Memory, code size and the next cost
+## Memory, code size and ownership costs
 
 Both hosts reproduce these managed counts for 129 coordinates/199 updates:
 
@@ -123,16 +123,11 @@ use. Compile-command times are retained separately. All **96 actual images**
 (60 timed executables and 36 untimed profiles) were independently inspected for
 architecture, source/binary hashes, disassembly and ARC tracing-code exclusion.
 
-The next measured target is repeated ownership work around captured array reads.
-In the largest case, 51,342 retains equal two per coordinate per update. Generated
-C duplicates the callback's captured array for its consuming entry, then performs
-another duplicate/drop around the final read. The caller already keeps the array
-alive through generation. A future compiler change must prove that lifetime for
-eligible callbacks, preserve failures/cancellation and keep other call sites safe.
-It must not simply remove counts from unknown or escaping callbacks.
-
-Before measuring that change, require fewer retains in the four repeated packed
-cases, no additional allocation requests or higher managed peak, and zero final
-charge. Recompile this packed baseline with the candidate and C/Rust peers;
-report all timings and code/stack costs. These are the next acceptance requirements,
-not a claim that a borrowed callback convention is already implemented.
+This baseline identified two retains per coordinate per update: one for the
+callback's captured array and another duplicate/drop around its final read.
+The [subsequent array-owner move](array-owner-moves.md) removes the latter,
+halving retains while preserving requests and managed peak. It also records
+mixed timings, the repaired execution-order protocol and stack costs. Borrowing
+the capture remains separate work: the compiler must prove it stays alive for
+the entire callback, including failure and cancellation. Unknown or escaping
+callbacks need their own proof.
