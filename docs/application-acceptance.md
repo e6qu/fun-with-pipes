@@ -198,3 +198,26 @@ frees. Each must fail the observer before shutdown. The tests retain generated C
 that artifacts target the runner's actual architecture. These cases do not yet
 cover forced allocation failure or every file operation and do not complete the
 application suite.
+
+The observer reads Linux `/proc`, macOS `ps`, and Windows
+`K32GetProcessMemoryInfo` working-set counters. Windows sampling opens and closes
+one query handle per sample; it does not start a shell. These are process-wide
+resident-memory observations, separate from the managed and file-buffer ledgers.
+
+## Finding programs that still require tracing
+
+`scripts/inventory-arc-programs.py` compares C emission for every `tests/run/*.fwp`
+program in explicit tracing and ARC modes, with dynamic storage and stack
+optimization enabled. The focused file-application workflow runs this inventory
+on Linux AMD64 at fwp O1 and saves `arc-admission.json` with source/compiler hashes,
+commands' diagnostics, and these categories:
+
+- **Both accepted:** both modes emit C. This alone does not verify execution or cleanup.
+- **ARC rejected:** tracing emits C, but ARC rejects the ownership contract. Investigate
+  each diagnostic before changing the default memory mode.
+- **Tracing rejected:** the program fails ordinary compilation too, including
+  intentional diagnostic fixtures. This is not an ARC migration failure.
+
+Timeouts, compiler crashes and mismatched emitted memory modes fail the inventory.
+Recorded ARC rejections are discovery results, not accepted language coverage.
+The ordinary execution snapshots and the runtime ownership tests remain necessary.

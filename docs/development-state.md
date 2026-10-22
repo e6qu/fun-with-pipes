@@ -11,7 +11,8 @@ but its assertion requires LF. A line-based diagnostic assertion is prepared in
 `application-ownership/tests/text_transform_ownership.rs`. Runtime/interpreter
 byte comparisons stay exact. Audit all remaining jobs and batch all repairs
 before updating the delivery head; no merge is authorized on these failing gates.
-Docs, benchmarks and both regular/GC ARM macOS jobs already pass, fully audited.
+Docs, benchmarks and all four macOS jobs pass, fully audited. The complete Windows
+ARM64 job has finished with only that newline assertion failure; Linux ARM64 now passes fully too; Linux AMD64 and Windows AMD64 remain in progress.
 
 Use `/private/tmp/fwp-audit-192-final.py` and
 `/private/tmp/fwp-read-192-failed-artifacts.py`. Archive the old acceptance receipt
@@ -20,21 +21,24 @@ that head. The existing merge helper still requires the old head and preparation
 code identity, so it must not be used unchanged after test repairs. Require all
 nine final-head production jobs and docs before the authorized squash merge.
 
-Continue independent file-application preparation below; keep one delivery PR.
-All seven plan areas remain open.
+Fold the accepted file-application preparation into #192's repair batch after
+all old-head failures and six-host preparation results are audited. This avoids
+another full production cycle for the same related text/file work. Keep one PR;
+rewrite its description for the combined result. All seven plan areas remain open.
 
 ## Worktrees
 
 - Primary `/Users/zardoz/projects/fun-with-pipes`: detached at verified #191 merge
   `19f3afbcbed22802a96f092d9d0ee3d7913335e3`; only this handoff is dirty.
 - Active delivery: `application-ownership`, `/private/tmp/fwp-application-ownership`,
-  head `71bde450`. Publication receipt:
+  head `71bde450`; newline assertion and handoff are locally dirty. Publication receipt:
   `/private/tmp/fwp-application-delivery-publication.json`; integration receipt:
   `/private/tmp/fwp-application-integration.json`.
 - Next preparation: `file-application-lifetimes`,
   `/private/tmp/fwp-file-application-lifetimes`, based on #192's head. Its directory
-  preparation `8773b7adde025fd89ba91bb9a1d8fb221a9d5ed7` is running focused
-  six-host CI `39705831190`; current-compiler acceptance is pending.
+  preparation `1d090a3209e8c5d99e1084f306f166907b4a6f25` is running focused
+  six-host CI `39706936977`; Windows AMD64 permission setup failed. A combined
+  permission/launch-context correction is locally dirty; acceptance is pending.
   `/private/tmp/fwp-file-application-preparation.json` records the starting scope.
 - `application-baselines` at `/private/tmp/fwp-application-baselines` preserves
   immutable application preparation `54b01db94079`; staged documentation was
@@ -99,12 +103,37 @@ audited in `/private/tmp/fwp-file-application-acceptance.json`; overall acceptan
 is false. The corrected `0o000` permission helper passes local Clippy and an
 actual deny/restore check (`/private/tmp/fwp-check-permission-guard.py`).
 
-Uncommitted expansion groups grep and CSV column selection with the directory
-and word-count checks, so the next preparation covers four maintained programs.
-The output reader now drains large reports while sampling memory, avoiding a
-full stdout pipe. Compiler failures will upload their own log before independent
-tests continue. A stale OpenCL-removal sentence in design-limits is corrected.
-[Application acceptance](application-acceptance.md#repeated-directory-and-file-work)
+Expansion `1d090a3209e8`, run `39706936977`, groups grep and CSV selection with
+counting and directory reports. Linux ARM64/AMD64 and ARM macOS pass completely.
+Windows AMD64 passed all text tools and text-owner checks but its denied-directory
+setup returned an enumerable directory; inspection then correctly failed on missing
+directory artifacts. Intel macOS also passes. ARM Windows hit the same permission
+assertion and then timed out during the expanded text suite. All six full logs
+are audited; this preparation is not accepted.
+
+The preceding preparation passed the same Windows ACL check. The expansion
+changed Windows tests from PowerShell to Bash to tee logs. Git Bash's
+[MSYS initialization](https://raw.githubusercontent.com/git-for-windows/msys2-runtime/main/winsup/cygwin/sec/helper.cc)
+explicitly enables backup/restore privileges, which can bypass ACLs. This explains
+the changed launch context; the native rerun must confirm the repair. The local
+correction restores PowerShell with captured logs, records token privileges, and
+fully consumes the directory iterator before checking its error. If listing still succeeds, the test logs ACLs and privileges and fails;
+there is no skip or permission fallback.
+
+The timed-out ARM Windows artifact `12396882449` was downloaded and hash-verified
+(`/private/tmp/fwp-file-arm-1d090a3209e8.zip`). Its timestamps show steady completion
+of every word-count/grep case and small CSV O1, about 3.5 minutes per case; this
+was not a deadlock. Each case starts PowerShell nine times for working-set samples.
+The repair replaces those launches with `K32GetProcessMemoryInfo`, using the same
+working-set bytes/KiB definition and closing the query handle even on failure.
+The 40-minute deadline and all inputs/rounds stay unchanged. New case-progress
+messages make future slow stages visible. Native validation must confirm both
+Windows fixes. `/private/tmp/fwp-check-file-repair.py` through the guard passes
+Windows-block type/layout checks, actual Unix permission restoration, formatting,
+workflow validation and docs checks in 6.1 seconds; it does not execute Win32 APIs.
+
+The output reader drains large reports while sampling memory, avoiding a full
+stdout pipe. A stale OpenCL-removal sentence is corrected. [Application acceptance](application-acceptance.md#repeated-directory-and-file-work)
 specifies inputs, counters and limits; full current-compiler acceptance is pending.
 
 Directory inputs have 64/1,024 files. Word-count and grep use two 128/4,096-line
@@ -127,8 +156,58 @@ interpretation, Clang O1, permission failures, deliberate leaks, shared Rust
 observer and RSS handshake. It takes about seventeen seconds below local limits.
 The old compiler predates the named teardown marker; this local probe uses its
 known observation location, while committed tests require the current marker.
-Next: run final formatting/docs/workflow checks and publish the complete repair
-plus grep/CSV group; audit all six hosts before the next substantial delivery.
+Next: finish auditing all six jobs, validate/publish the complete permission
+repair, and require six-host acceptance before folding this group into #192.
+`/private/tmp/fwp-inspect-file-applications.py` is ready for accepted artifacts;
+it verifies hashes, actual architecture/instructions and all live-memory series
+without extracting whole archives. Preserve the 64 GiB floor (about 64.9 GiB free).
+
+
+## ARC admission inventory
+
+The repair preparation also adds `scripts/inventory-arc-programs.py` to report
+C-emission acceptance for the 86 maintained `tests/run/*.fwp` examples, in tracing
+and ARC modes at explicit O1/dynamic/stack-enabled settings. It runs once on Linux
+AMD64 using the already-built compiler. It distinguishes ARC-only rejections from
+ordinary compile-error fixtures; acceptance is not runtime or cleanup verification.
+The report retains source/compiler hashes and full diagnostics. Timeouts/crashes
+fail the inventory. A three-program prior-compiler check through
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-check-arc-inventory.py`
+passes for accepted code, an unproved raw-pointer lifetime and an ordinary type
+error, followed by format/workflow/docs checks (7.3 seconds). The full inventory
+remains pending CI. Incidental inline imports in `tests/golden_run.rs` move to
+its top-level import block; full snapshot tests stay on production CI.
+
+## Next optimization evidence
+
+A small 64-word/eight-word-vocabulary probe tested reusing uniquely owned changed
+case-conversion strings in the saved `54b01db94079` word-frequency C program.
+The proposed C-only change saved nothing: both variants request 296 allocations/
+9,058 bytes, retain 194 times and peak at 7,744 managed bytes. Every changed input
+has two owners because `map` borrows its source list and retains callback arguments.
+The runtime change was **not adopted**. Receipt:
+`/private/tmp/fwp-owned-case-small-probe.json`; reproduction:
+`/private/tmp/fwp-probe-owned-case.py` through the guard. This is a small allocation
+diagnostic, not a timing or platform claim.
+
+A subsequent generated-C probe confirms useful savings for this unique split-list
+input. Moving its 64 elements reduces retains 194 → 130 and peak managed storage
+7,744 → 5,376 bytes, with allocations unchanged. Adding unique case reuse removes
+22 requests; also reusing the same-typed list nodes removes 65 more, reaching
+209 requests/6,574 requested bytes. All four variants match the independent word
+oracle and end with zero charged storage and collections. This is **not adopted
+compiler code**: it asserts unique nodes and does not establish shared-spine,
+alias, failure/cancellation or resource-lifetime safety. Script
+`/private/tmp/fwp-probe-map-moves.py`, receipt
+`/private/tmp/fwp-map-moves-small-probe.json`; the final guarded check passes in
+1.9 seconds. The first run had a result-key typo, corrected before recording.
+
+This makes ownership transfer/reuse for eligible string-list maps a concrete next
+optimization candidate. `src/ownership.rs` currently borrows map inputs; generated
+helpers in `src/cgen.rs` keep the original list through callback execution. A real
+implementation must prove consumption, preserve shared aliases, protect partial
+results and leave observable resource lifetimes unchanged. Keep file-resource
+payloads out of an initial string-only transformation.
 
 ## Local limits
 

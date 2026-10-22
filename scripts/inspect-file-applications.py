@@ -28,6 +28,8 @@ report = dict(source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=
     compiler=subprocess.check_output([os.environ['CC'], '--version'], text=True),
     rust=subprocess.check_output(['rustc', '-Vv'], text=True),
     optimization=dict(fwp='O1', native=['-O1', '-O2'], lto=False),
+    rss_source={'Linux': '/proc/PID/status VmRSS', 'macOS': 'ps -o rss=',
+                'Windows': 'K32GetProcessMemoryInfo WorkingSetSize / 1024'}[system],
     scope='Cleanup checks, not timing comparisons. RSS includes allocator pages and observer overhead.',
     binaries={}, observations={})
 expected = {f'{program}-{variant}-O{opt}' for program, variants in [

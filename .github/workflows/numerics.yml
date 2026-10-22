@@ -69,22 +69,44 @@ jobs:
       - run: cargo fmt --all -- --check
       - name: Compiler checks for the file applications
         id: file_compiler
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           mkdir -p file-application-evidence
           cargo clippy --test directory_report --test text_file_tools --test text_transform_ownership -- -D warnings 2>&1 | tee file-application-evidence/compiler.log
+      - name: Windows compiler checks for the file applications
+        id: file_compiler_windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force file-application-evidence | Out-Null
+          cargo clippy --test directory_report --test text_file_tools --test text_transform_ownership -- -D warnings 2>&1 | Tee-Object file-application-evidence/compiler.log
+          exit $LASTEXITCODE
       - name: Publish compiler failures while independent tests continue
-        if: ${{ !cancelled() && steps.file_compiler.outcome == 'failure' }}
+        if: ${{ !cancelled() && (steps.file_compiler.outcome == 'failure' || steps.file_compiler_windows.outcome == 'failure') }}
         uses: actions/upload-artifact@v7
         with:
           name: file-compiler-${{ matrix.runner }}
           path: file-application-evidence/compiler.log
           if-no-files-found: error
       - name: File applications, repeated failures and deliberate leaks
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && runner.os != 'Windows' }}
         shell: bash
         run: |
           cargo test --no-fail-fast --test directory_report --test text_file_tools --test text_transform_ownership -- --nocapture 2>&1 | tee file-application-evidence/tests.log
+      # Git Bash's MSYS runtime enables backup/restore privileges, which can
+      # bypass the denied-directory ACL. Launch native tests from PowerShell.
+      - name: Windows file applications, repeated failures and deliberate leaks
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          whoami /priv | Out-File file-application-evidence/privileges.txt
+          cargo test --no-fail-fast --test directory_report --test text_file_tools --test text_transform_ownership -- --nocapture 2>&1 | Tee-Object file-application-evidence/tests.log
+          exit $LASTEXITCODE
+      - name: Inventory execution examples admitted without tracing
+        if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
+        shell: bash
+        run: python3 scripts/inventory-arc-programs.py --compiler target/debug/fwp --root . --sources tests/run --optimization O1 --timeout 30 --output file-application-evidence/arc-admission.json
       - name: Inspect native binaries and save memory observations
         if: ${{ !cancelled() }}
         shell: bash

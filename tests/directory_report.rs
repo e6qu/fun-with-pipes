@@ -127,7 +127,21 @@ impl DeniedDirectory {
             #[cfg(unix)]
             original,
         };
-        let error = std::fs::read_dir(&denied.path).unwrap_err();
+        // Directory enumeration can report access failures while advancing the
+        // iterator, after its constructor succeeded.
+        let listing = std::fs::read_dir(&denied.path)
+            .and_then(|entries| entries.collect::<Result<Vec<_>, _>>());
+        #[cfg(windows)]
+        if listing.is_ok() {
+            for command in [
+                Command::new("icacls").arg(&denied.path),
+                Command::new("whoami").arg("/priv"),
+            ] {
+                let output = checked(command);
+                eprintln!("{}", String::from_utf8_lossy(&output.stdout));
+            }
+        }
+        let error = listing.unwrap_err();
         assert_eq!(
             error.kind(),
             std::io::ErrorKind::PermissionDenied,
@@ -288,6 +302,7 @@ fn scaled_directory_reports_bound_live_storage_and_release_error_paths() {
     let control = dir.join("missing-release.exe");
     let handle_control = dir.join("missing-close.exe");
     for opt in ["-O1", "-O2"] {
+        eprintln!("directory application: compile ownership controls at {opt}");
         fwp::cgen::compile_c(&measured, &binary, opt).unwrap();
         fwp::cgen::compile_c(&omitted, &control, opt).unwrap();
         fwp::cgen::compile_c(&unclosed, &handle_control, opt).unwrap();
@@ -305,6 +320,7 @@ fn scaled_directory_reports_bound_live_storage_and_release_error_paths() {
             }
         }
         for files in [64, 1024] {
+            eprintln!("directory application: {files} files at {opt}");
             let tree = dir.join("tree");
             if tree.exists() {
                 std::fs::remove_dir_all(&tree).unwrap();

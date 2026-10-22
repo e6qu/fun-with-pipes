@@ -332,6 +332,7 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
                 ("missing-close", &unclosed, &binaries[2]),
                 ("missing-buffer-free", &raw_leak, &binaries[3]),
             ] {
+                eprintln!("file application {program}: compile {label} at {opt}");
                 fwp::cgen::compile_c(code, binary, opt).unwrap();
                 if let Some(path) = std::env::var_os("FWP_FILE_APPLICATION_ARTIFACTS") {
                     let path = std::path::PathBuf::from(path);
@@ -373,6 +374,7 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
                         counts[0].2 + counts[1].2,
                     ),
                 ];
+                eprintln!("file application {program}: interpret {lines} lines for {opt}");
                 let reference = checked(
                     Command::new(compiler)
                         .current_dir(dir.path())
@@ -430,6 +432,9 @@ fn scaled_text_tools_release_partial_results_and_file_handles() {
                     assert_eq!(reference.stdout, expected.as_bytes(), "{program}, {lines}");
                 }
                 for (index, binary) in binaries.iter().enumerate() {
+                    eprintln!(
+                        "file application {program}: run variant {index}, {lines} lines, {opt}"
+                    );
                     let mut command = Command::new(binary);
                     command
                         .current_dir(dir.path())

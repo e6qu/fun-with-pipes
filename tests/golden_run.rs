@@ -3,8 +3,11 @@
 //! the exit code of both must match the `.out` file byte for byte. Run with
 //! `FWP_BLESS=1` to regenerate (from the interpreter).
 
+use std::io::Write;
+#[cfg(unix)]
+use std::os::unix::process::ExitStatusExt;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 fn fwp() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_fwp"))
@@ -74,8 +77,6 @@ fn run_native(path: &Path, want: &str) -> String {
 }
 
 fn exec(mut cmd: Command, path: &Path) -> String {
-    use std::io::Write;
-    use std::process::Stdio;
     let input = std::fs::read(path.with_extension("in")).unwrap_or_default();
     let mut child = cmd
         .current_dir(path.parent().unwrap())
@@ -89,7 +90,6 @@ fn exec(mut cmd: Command, path: &Path) -> String {
     let out = child.wait_with_output().unwrap();
     #[cfg(unix)]
     {
-        use std::os::unix::process::ExitStatusExt;
         if let Some(signal) = out.status.signal() {
             eprintln!(
                 "{}: child terminated by signal {signal}, core dumped: {}",
