@@ -9352,7 +9352,7 @@ pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, Strin
     if native_options().arc {
         h.push_str("/* Checked ARC: owned results require no tracing collector. */\n\n");
     }
-    h.push_str("/* Inputs are copied for each call; keep input strings valid until return.\n * Each result containing strings owns those strings. Release the complete,\n * unchanged result exactly once with its matching fwp_release_FUNCTION.\n * Do not use free(), modify string bytes, or release copied result aliases.\n * No result may be used after release. Serialize calls (including releases),\n * release all owned results and finish all calls before unloading the library. */\n\n");
+    h.push_str("/* Inputs are copied for each call; keep input strings valid until return.\n * Raw pointer bits are copied without owning or freeing their pointees.\n * Their validity, synchronization and cleanup remain the caller's responsibility.\n * Each result containing strings owns those strings. Release the complete,\n * unchanged result exactly once with its matching fwp_release_FUNCTION.\n * Do not use free(), modify string bytes, or release copied result aliases.\n * No result may be used after release. Serialize calls (including releases),\n * release all owned results and finish all calls before unloading the library. */\n\n");
     let mut all = Vec::new();
     for (_, _, ps, r) in &sigs {
         all.extend(ps.iter().map(|(_, c)| c.clone()));
@@ -9631,7 +9631,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                         || !crate::ffi::copied_result(result)
                     {
                         return Err(format!(
-                            "--gc arc: exported function `{name}` requires copied C inputs and scalar or owned-string results; raw pointers have no checked host lifetime"
+                            "--gc arc: exported function `{name}` requires copied C inputs and scalar, manual-pointer or owned-string results; callbacks have no retained host lifetime"
                         ));
                     }
                 }

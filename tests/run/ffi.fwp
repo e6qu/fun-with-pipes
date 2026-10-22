@@ -11,7 +11,7 @@ repr(C) DivResult = { quot: I32, rem: I32 }
 foreign "C" div : I32 -> I32 -> DivResult
 
 foreign "C" getenv : String -> Option[Ptr[U8]] ! {IO}
-foreign "C" strchr : String -> I32 -> Option[Ptr[U8]]
+foreign "C" strchr : Ptr[U8] -> I32 -> Option[Ptr[U8]] ! {Unsafe}
 
 foreign "C" qsort : Ptr[I32] -> USize -> USize -> (Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}) -> () ! {Unsafe}
 foreign "C" snprintf : Ptr[U8] -> USize -> String -> I64 -> String -> I32 ! {Unsafe} variadic 3
@@ -80,7 +80,11 @@ main = [
     div 17 5 | echo,
     "FWP_SEED" | getenv | option.map ptr.read-string | echo,
     "FWP_NO_SUCH_VARIABLE" | getenv | option.is-none | echo,
-    strchr "hello" 108 | option.map ptr.read-string | echo,
+    "hello"
+    | mem.string
+    | both (strchr | apply 108 | option.map ptr.read-string) mem.free
+    | .0
+    | echo,
     [5, -2, 9, 0, 3] | sorted | echo,
     [5, -2, 9, 0, 3, 7, 1] | sorted-desc | echo,
     () | formatted | print,

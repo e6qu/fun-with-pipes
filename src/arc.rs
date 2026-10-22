@@ -41,6 +41,7 @@ fn channel_payload(
             }
             Ok(())
         }
+        MT::Con(name, _) if name == "std::Ptr" => Ok(()),
         MT::Con(name, args) => {
             let reason = match name.as_str() {
                 "std::H2Stream" => Some("stream handler captures can retain the receiving channel"),
@@ -101,6 +102,11 @@ fn value_type(prog: &Program, ty: &MT, seen: &mut HashSet<MT>) -> Result<(), Str
             Ok(())
         }
         MT::Con(name, args) => {
+            // Ptr carries an unmanaged address, not an owner of its type argument.
+            // Dereferencing and freeing it retain the existing Unsafe obligations.
+            if name == "std::Ptr" {
+                return Ok(());
+            }
             for arg in args {
                 value_type(prog, arg, seen)?;
             }
@@ -170,8 +176,8 @@ pub(crate) fn check(
                 let (params, result) = crate::ffi::signature(prog, f).map_err(reject)?;
                 // Check the actual C ABI: scoped borrows and copied results
                 // cannot publish managed pointers after this call returns.
-                // Raw pointers and callbacks returning managed C addresses
-                // still lack a checked retention policy.
+                // Raw addresses remain manually managed. Callbacks returning
+                // managed C addresses still lack a checked retention policy.
                 if params.iter().all(|(_, ty)| crate::ffi::scoped_argument(ty))
                     && crate::ffi::copied_result(&result)
                 {
@@ -197,12 +203,7 @@ pub(crate) fn check(
         };
         // Child tasks get fresh dynamic scopes (proved above). Channel payloads
         // cannot hold handles/captures that publish a mutable back-edge. Raw
-        // addresses still have no checked pointee lifetime.
-        if symbol.starts_with("mem.") || symbol.starts_with("ptr.") {
-            return Err(reject(format!(
-                "primitive `{symbol}` has no tracing-free lifetime policy"
-            )));
-        }
+        // memory primitives use their explicit manual lifetime contracts below.
         let (args, result) = f.ty.params(f.arity as usize);
         if let Some(contract) = crate::ownership::primitive(symbol) {
             if matches!(
@@ -245,6 +246,17 @@ mod tests {
 
     fn channel(payload: MT) -> MT {
         MT::Con("std::Channel".into(), vec![payload])
+    }
+
+    #[test]
+    fn raw_addresses_do_not_own_their_pointee_types() {
+        let prog = Program::default();
+        let pointee = channel(MT::con("OpaqueHostType"));
+        let pointer = MT::Con("std::Ptr".into(), vec![pointee.clone()]);
+        value_type(&prog, &pointer, &mut HashSet::new()).unwrap();
+        channel_payload(&prog, &pointer, &pointee, &mut HashSet::new(), "payload").unwrap();
+        assert!(!crate::rc::needs_rc(&prog.shapes, &pointer));
+        assert!(value_type(&prog, &pointee, &mut HashSet::new()).is_err());
     }
 
     #[test]

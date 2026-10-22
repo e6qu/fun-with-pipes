@@ -100,8 +100,36 @@ Use the result before releasing it, and release it exactly once. Do not call
 one release function for the whole record; copied pointer bits are aliases,
 not separately owned results. Scalar-only results need no release. Release all
 results and finish all calls before unloading a shared library. Host calls and
-releases must be serialized. This result-ownership extension is undergoing the
-checks recorded in [the handoff](../../development-state.md).
+releases must be serialized. Accepted result-ownership evidence is in [delivery history](../../roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165).
+
+## A pointer into a C buffer
+
+`strchr` finds a byte in a NUL-terminated C string and returns an address inside
+that string, or NULL if absent. The source buffer must outlive the returned
+address. Use a manually allocated copy when calling it ([suffix.fwp](suffix.fwp)):
+
+```fwp
+foreign "C" strchr : Ptr[U8] -> I32 -> Option[Ptr[U8]] ! {Unsafe}
+suffix : String -> Option[String] ! {Unsafe}
+suffix =
+    mem.string
+    | both (strchr | apply 108 | option.map ptr.read-string) mem.free
+    | .0
+main = "hello" | suffix | echo
+```
+
+This prints `Some "llo"`: 108 is the byte for `l`. `mem.string` allocates a C
+copy. The first branch of `both` searches it and copies the suffix into an fwp
+string; the second branch frees the C buffer. `.0` selects the copied result.
+An absent byte produces `None` and still frees the buffer. Passing a borrowed
+fwp `String` directly would not guarantee the returned address stays valid.
+
+The same manual lifetime applies in tracing and ARC modes. ARC counts the
+option and any owned strings, never the raw pointee. Foreign host storage uses
+its host's release operation, not necessarily `mem.free`. If adding failure or
+cancellation inside this sequence, provide cleanup for those paths too; a raw
+pointer has no automatic destructor. The pointer extension's native acceptance
+is tracked in [the handoff](../../development-state.md).
 
 ## The program
 

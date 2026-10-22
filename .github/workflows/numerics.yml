@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [pointer-ownership, file-inspection, file-applications, wordfreq-repeat, ad-application, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, gc-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -30,6 +30,97 @@ on:
         description: Earlier matching cost run for paired revision comparison
         type: string
 jobs:
+  pointer_ownership:
+    if: inputs.suite == 'pointer-ownership'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm","macos-15","macos-15-intel","windows-2025","windows-11-arm"]' || format('["{0}"]', inputs.native_runner)) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      CC: ${{ startsWith(matrix.runner, 'ubuntu-') && 'gcc' || 'clang' }}
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      FWP_LTO: '0'
+      FWP_ARC_ARTIFACTS: pointer-evidence/corpus
+      FWP_LIBRARY_RESULT_ARTIFACTS: pointer-evidence/libraries
+      FWP_QUEUED_FUNCTION_ARTIFACTS: pointer-evidence/raw
+      FWP_POINTER_ARTIFACTS: pointer-evidence/callbacks
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked Rust dependencies
+        shell: bash
+        run: |
+          cargo fetch --locked
+          echo "CARGO_NET_OFFLINE=true" >> "$GITHUB_ENV"
+      - name: Native Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/setup-windows.ps1
+      - run: cargo fmt --all -- --check
+      - name: Compiler checks for manual pointer ownership
+        id: file_compiler
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p pointer-evidence
+          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic -- -D warnings 2>&1 | tee pointer-evidence/compiler.log
+      - name: Windows compiler checks for manual pointer ownership
+        id: file_compiler_windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force pointer-evidence | Out-Null
+          cargo clippy --lib --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic -- -D warnings 2>&1 | Tee-Object pointer-evidence/compiler.log
+          exit $LASTEXITCODE
+      - name: Publish compiler failures while independent tests continue
+        if: ${{ !cancelled() && (steps.file_compiler.outcome == 'failure' || steps.file_compiler_windows.outcome == 'failure') }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: pointer-compiler-${{ matrix.runner }}
+          path: pointer-evidence/compiler.log
+          if-no-files-found: error
+      - name: Raw pointers, callbacks, libraries and the ARC corpus
+        if: ${{ !cancelled() && runner.os != 'Windows' }}
+        shell: bash
+        run: |
+          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic -- --nocapture 2>&1 | tee pointer-evidence/tests.log
+      - name: Windows raw pointers, callbacks, libraries and the ARC corpus
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          whoami /priv | Out-File pointer-evidence/privileges.txt
+          cargo test --no-fail-fast --test raw_memory_ownership --test foreign_callback_ownership --test arc_library --test arc_execution --test arc_corpus --test ffi --test ffi_pointer_arithmetic -- --nocapture 2>&1 | Tee-Object pointer-evidence/tests.log
+          exit $LASTEXITCODE
+      - name: Inventory execution examples admitted without tracing
+        if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
+        shell: bash
+        run: python3 scripts/inventory-arc-programs.py --compiler target/debug/fwp --root . --sources tests/run --optimization O1 --timeout 30 --output pointer-evidence/arc-admission.json
+      - name: Ownership contract and native coverage audits
+        if: ${{ !cancelled() && matrix.runner == 'ubuntu-latest' }}
+        shell: bash
+        run: |
+          cargo test --lib -- --nocapture
+          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output pointer-evidence/contracts.json
+          python3 scripts/test-native-test-runner.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pointer-ownership-${{ matrix.runner }}
+          path: pointer-evidence/
+          if-no-files-found: error
   file_inspection:
     if: inputs.suite == 'file-inspection'
     permissions:

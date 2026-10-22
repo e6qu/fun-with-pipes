@@ -19,6 +19,16 @@ int64_t invoke(int64_t (*f)(int64_t),int64_t x) { return f(x)+f(x+1); }
 int64_t byte_sum(const uint8_t *s, int64_t n) { int64_t r=0;for(int64_t i=0;i<n;i++)r+=s[i];return r; }
 struct fwp_binary128 { uint64_t low, high; };
 struct fwp_binary128 invoke_quad(struct fwp_binary128 (*f)(struct fwp_binary128),struct fwp_binary128 x) { return f(f(x)); }
+/* The stack buffer belongs to C for this call, including nested callbacks. */
+int64_t invoke_pointer(void *(*f)(void *)) {
+    int64_t value=37;
+    return f(&value)==&value && f(NULL)==NULL ? value : -1;
+}
+int64_t invoke_pointer_error(void *(*f)(void *)) {
+    int64_t value=37;
+    (void)f(&value);
+    return 0;
+}
 "#).unwrap();
     let source = dir.join("owners.fwp");
     std::fs::write(
@@ -30,6 +40,19 @@ foreign "C" invoke-error : (I64 -> I64 ! {Error[String]}) -> I64 -> I64 ! {Error
 foreign "C" invoke-async : (I64 -> I64 ! {Async}) -> I64 -> I64 ! {Async} = "invoke"
 foreign "C" byte-sum : Bytes -> I64 -> I64 = "byte_sum"
 foreign "C" invoke-quad : (F128 -> F128) -> F128 -> F128 = "invoke_quad"
+foreign "C" invoke-pointer : (Option[Ptr[I64]] -> Option[Ptr[I64]]) -> I64 = "invoke_pointer"
+foreign "C" invoke-pointer-error : (Option[Ptr[I64]] -> Option[Ptr[I64]] ! {Error[String]}) -> I64 ! {Error[String]} = "invoke_pointer_error"
+foreign "C" invoke-pointer-async : (Option[Ptr[I64]] -> Option[Ptr[I64]] ! {Async}) -> I64 ! {Async} = "invoke_pointer"
+pointer-error : Option[Ptr[I64]] -> Option[Ptr[I64]] ! {Error[String]}
+pointer-error = const "pointer callback error" | fail
+pointer-yield : Option[Ptr[I64]] -> Option[Ptr[I64]] ! {Async}
+pointer-yield = tap (const () | task.yield)
+pointer-block : Option[Ptr[I64]] -> Option[Ptr[I64]] ! {Async}
+pointer-block = tap (const 1h | task.sleep)
+pointer-work : () -> I64 ! {Async}
+pointer-work = const pointer-block | invoke-pointer-async
+pointer-nested : Option[Ptr[I64]] -> Option[Ptr[I64]]
+pointer-nested = tap (const id | invoke-pointer | ignore)
 quad-work : F128 -> F128
 quad-work = invoke-quad (mul 2.0f128)
 capture : String -> I64 -> I64
@@ -47,6 +70,11 @@ blocked = tap (const 1h | task.sleep)
 blocked-work : () -> I64 ! {Async}
 blocked-work = const 1 | invoke-async blocked
 main = [
+    range 0 65 | map (const id | invoke-pointer) | sum | echo,
+    invoke-pointer pointer-nested | echo,
+    attempt invoke-pointer-error pointer-error | echo,
+    invoke-pointer-async pointer-yield | echo,
+    task.spawn pointer-work | tap (const () | task.yield) | tap task.cancel | task.await | echo,
     range 0 65 | map (show | string.repeat 3 | text-alias | both id string.length) | length | echo,
     invoke (capture ("captured" | string.repeat 3)) 7 | echo,
     invoke nested 5 | echo,
@@ -112,6 +140,17 @@ main = [
             );
             assert_eq!(output.stdout, reference.stdout, "{gc} {opt}");
             assert_eq!(output.stderr, reference.stderr, "{gc} {opt}");
+            if let Some(root) = std::env::var_os("FWP_POINTER_ARTIFACTS") {
+                let root = std::path::PathBuf::from(root);
+                std::fs::create_dir_all(&root).unwrap();
+                let stem = format!("callbacks-{gc}{opt}");
+                std::fs::write(root.join(format!("{stem}.c")), &code).unwrap();
+                std::fs::copy(&binary, root.join(format!("{stem}.exe"))).unwrap();
+                std::fs::write(root.join(format!("{stem}.stdout")), &output.stdout).unwrap();
+                std::fs::write(root.join(format!("{stem}.stderr")), &output.stderr).unwrap();
+                std::fs::write(root.join(format!("{stem}.status")), "0\n").unwrap();
+            }
+
             if gc == "arc" {
                 let release = code
                     .lines()

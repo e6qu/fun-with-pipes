@@ -78,7 +78,6 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
             // a newly added example, needs a repair rather than a passing count.
             let expected = match name {
                 "ad_task_reuse" => Some("outside an autodiff scope"),
-                "ffi" => Some("type `Ptr[U8]` has no tracing-free ownership contract"),
                 _ => None,
             };
             if !expected.is_some_and(|message| reason.contains(message)) {
@@ -142,6 +141,15 @@ fn eligible_golden_programs_preserve_semantics_and_reclaim_values() {
                 );
             }
             let actual = execute(&mut Command::new(&binary));
+            if name == "ffi" {
+                if let Some(path) = &artifacts {
+                    std::fs::write(path.join("corpus-ffi.c"), &measured).unwrap();
+                    std::fs::copy(&binary, path.join("corpus-ffi.exe")).unwrap();
+                    std::fs::write(path.join("corpus-ffi.stdout"), &actual.stdout).unwrap();
+                    std::fs::write(path.join("corpus-ffi.stderr"), &actual.stderr).unwrap();
+                }
+            }
+
             let matches = actual.status.code().is_some()
                 && actual.status.code() == reference.status.code()
                 && actual.stdout == reference.stdout

@@ -7,15 +7,17 @@ ownership, 32-bit bounds repairs, application comparisons and repeated file
 cleanup. All seven [plan](../PLAN.md) areas remain open. Removing tracing GC and
 reducing ARC remain the primary design goals; JIT compilation is excluded.
 
-The combined repair is integrated in `application-ownership` at
-`/private/tmp/fwp-application-ownership`, based on published head
-`71bde4502267a033221446a52b7bc0b5d08d4753`. Reports and the shorter handoff are ready.
-Next: run the final documentation/diff checks, then publish with
-`/private/tmp/fwp-publish-192-repair.py` through the local guard. The script updates
-the same PR and records its new production/documentation run IDs. No second PR
-is open. Do not reuse the old merge helper.
+The combined repair is published at `36998a99f689b254edfc127bbbc8e8aac054c509`
+on `application-ownership` (`/private/tmp/fwp-application-ownership`). Production
+run `39714665578` is running its eight platform jobs; its benchmark job and
+documentation `39714665552` pass with audited logs. The PR description
+covers the combined scope and names the comparisons. Keep this head stable while
+its gates run; no second PR is open. Next: audit final-head CI, fix every failure,
+and prepare the next ownership group independently. Do not reuse the old merge
+helper. Publication receipt:
+`/private/tmp/fwp-application-delivery-publication.json`.
 
-After publication, audit every final-head job with
+Audit every final-head job with
 `/private/tmp/fwp-audit-192-final.py`. Fix all discovered failures together.
 Only after all nine production jobs and documentation pass, run
 `/private/tmp/fwp-merge-192-repaired.py`. It supplies a one-line subject of at most
@@ -67,14 +69,34 @@ Receipts are `/private/tmp/fwp-count-verification-acceptance.json`,
 
 ## Next ownership and optimization work
 
-The compiler inventory covers 85 top-level execution examples: 80 emit C in
-both memory modes, three are intentional compile errors, and two reject ARC.
-`ffi.fwp` uses manually managed C pointers and needs an admitted lifetime policy.
-`ad_task_reuse.fwp` deliberately passes expired derivative values between tasks;
-its earlier rejection is correct and must remain. C emission alone does not
-verify execution or cleanup. Extend native ARC execution coverage as the foreign
-boundary is implemented; preserve explicit `Unsafe` obligations and the existing
-rule that callbacks may run only on the calling task during the foreign call.
+The next group is on `pointer-ownership` in
+`/private/tmp/fwp-pointer-ownership`, based on the final #192 head. It admits
+manual raw addresses without counting/freeing pointees, including nullable
+pointers, scoped callbacks and C exports. It preserves explicit Unsafe/caller
+obligations; borrowed managed storage cannot escape as a raw address. The C
+example now copies into a raw buffer before strchr and frees it after copying
+its result. This is candidate code, not accepted native support.
+
+The existing `arc_corpus` already executes admitted examples and checks final
+managed storage; extend it rather than duplicate it. The 85-program inventory
+had 80 admitted examples, three intentional compile errors and two ARC-only
+rejections. The pointer change should admit ffi. `ad_task_reuse` deliberately
+passes expired derivative values between tasks; its early rejection stays.
+Tests now cover raw buffer releases separately from managed charges, nullable
+callback values through reentry/failure/suspension/cancellation, and static/shared
+library pointer aliases with independent owned strings. No pointee-lifetime proof
+or automatic raw-buffer cleanup is claimed.
+
+Focused commands passed through the local guard:
+`python3 /private/tmp/fwp-check-pointer-fixtures.py` (2.75s: saved-compiler raw
+interpretation, exact ffi golden, pointer tutorial and callback/library fixtures)
+and `python3 /private/tmp/fwp-check-pointer-preflight.py` (17.30s: actionlint,
+docs, native coverage/failure propagation, all 392 primitive declarations against
+the frozen inventory, tutorial source copies, diff checks). Initial edit syntax
+and callback application errors were corrected before these passes. Compiler
+changes still require the new six-host `pointer-ownership` evidence suite and
+final production gates. No additional PR is open; next publish this preparation,
+audit every native result, and inspect retained binaries before delivery.
 
 A separate 64-word/eight-word-vocabulary generated-C probe identifies the next
 list optimization candidate. Moving unique list elements into `map` removes

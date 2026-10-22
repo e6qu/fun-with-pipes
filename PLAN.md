@@ -90,7 +90,9 @@ outside the benchmark suite.
 
 1. Extend [ownership contracts](docs/ownership.md#proposed-cycle-policy) at the
    remaining boundaries: persistent subscriptions, externally retained callbacks,
-   raw pointers and cyclic data graphs. Known queued task/data/response captures
+   host-owned values and cyclic data graphs. Manual raw-pointer support is under
+   validation; it makes caller obligations explicit rather than proving arbitrary
+   foreign lifetimes. Known queued task/data/response captures
    have delivery evidence in [ownership](docs/ownership.md); those completed
    extensions are baselines, not new tasks. Prefer borrowing and scoped cleanup.
    Weak handles remain a proposal. Distinguish missing proofs from definite cycles,

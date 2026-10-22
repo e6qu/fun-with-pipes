@@ -512,9 +512,15 @@ pointer element widths use the same representation (2/2/16 bytes).
 - A callback may only be used on the calling task while the foreign call that
   received it is running. Native callback frames follow that task across
   suspension and are restored after nested calls, failure and cancellation.
-  Checked ARC admits callbacks with copied numeric/Boolean/unit C arguments and
-  results; raw pointers and callbacks returning managed C addresses remain
-  outside that ownership contract.
+  Checked ARC admits copied numeric/Boolean/unit values and manually managed
+  pointers, including nullable pointers. The pointer extension is under
+  [validation](development-state.md). Callback results containing managed C
+  string addresses remain excluded.
+- Raw pointers never acquire ownership of their pointees. The caller controls
+  validity, synchronization and deallocation, including failure/cancellation.
+  C must not return or retain a raw alias into borrowed managed string/byte
+  storage. Use `mem.string` for a manually owned C copy, then `mem.free` after
+  all uses; `ptr.read-string` makes an independent fwp copy.
 - Before evaluation, the interpreter builds and loads a small C bridge using
   the system C compiler. The bridge converts fwp values to C arguments and back.
   Preparation failure prevents the program from starting; foreign calls during

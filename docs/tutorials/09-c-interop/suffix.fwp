@@ -1,0 +1,7 @@
+foreign "C" strchr : Ptr[U8] -> I32 -> Option[Ptr[U8]] ! {Unsafe}
+suffix : String -> Option[String] ! {Unsafe}
+suffix =
+    mem.string
+    | both (strchr | apply 108 | option.map ptr.read-string) mem.free
+    | .0
+main = "hello" | suffix | echo
